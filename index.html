@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js" defer></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js" defer></script>
+    <!-- initialization script-->
+
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js" async></script>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c" async></script>
+
+    <!-- application files-->
+
+    <script src="js/init.js" defer></script>
+    <script src="js/services.js" defer></script>
+    <script src="js/conversation.js" defer></script>
+    <script src="js/panel.js" defer></script>
+
+
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="css/conversation.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+    <div id="login-container"></div>
+    <div class="mdc-layout-grid mdc-typography app">
+        <div class="mdc-layout-grid__inner" style="grid-gap:0px">
+            <div class="mdc-layout-grid__cell--span-3-desktop app-left-panel"></div>
+            <div class="mdc-layout-grid__cell--span-5-desktop app-center-panel">
+                <header class="mdc-toolbar mdc-elevation--z1">
+                    <div class="mdc-toolbar__row">
+                        <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
+                            <div class="activity--toolbar-info">
+                                <span class="activity-title mdc-typography--subtitle1">
+                                </span>
+                                <div class="activity-info-meta">
+                                    <div class="activity-desc mdc-typography--caption">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section class="mdc-toolbar__section mdc-toolbar__section--align-end">
+                            <div class="activity--toolbar-info">
+                                <div class="activity-status mdc-typography--caption"></div>
+                            </div>
+                        </section>
+                    </div>
+                </header>
+
+                <div class="activity--chat-card-container mdc-card">
+
+                    <div id="chat-container">
+
+                    </div>
+
+                    <div class="user-comment--container mdc-layout-grid__inner">
+                        <div class="comment--container mdc-layout-grid__cell--span-11">
+                            <div class="input--text-padding mdc-text-field mdc-text-field--dense">
+                                <input class="mdc-text-field__input comment-field mdc-elevation--z6" type="text" style: "position:absolute">
+
+                            </div>
+                        </div>
+                        <div class="send--container mdc-layout-grid__cell--span-1">
+                            <button class="mdc-fab mdc-fab--mini" aria-label="send-message" id="send-chat--input">
+                                <span class="mdc-fab__icon material-icons">send</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="mdc-layout-grid__cell--span-4-desktop app-right-panel">
+                <aside class="mdc-drawer mdc-drawer--temporary mdc-typography share--drawer">
+                    <nav class="mdc-drawer__drawer" dir="rtl">
+
+                        <div class="mdc-drawer__toolbar-spacer" dir="ltr">
+                            <span class="back-share">
+                                <i class="material-icons">arrow_back</i>
+                            </span>
+                        </div>
+
+                        <nav id="share--container" class="mdc-drawer__content" dir="ltr">
+                            <div class="mdc-text-field mdc-text-field--box mdc-text-field--dense contact--text-field">
+                                <input class="mdc-text-field__input" type="text">
+                            </div>
+                            <div class="mdc-button" id="add-contact">ADD</div>
+                            <div id="contacts">
+                                <ul class="mdc-list" id="contacts--container">
+                                </ul>
+                            </div>
+                        </nav>
+                    </nav>
+                </aside>
+                <header class="mdc-toolbar mdc-elevation--z1">
+                    <div class="mdc-toolbar__row">
+                        <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
+                            <div class="activity--toolbar-info">
+                                <span class="activity-office mdc-typography--caption">
+
+                                </span>
+
+                            </div>
+                        </section>
+                    </div>
+                </header>
+                <div class="mdc-card activity-detail">
+                    <div class="activity--title-container">
+                        <span class="detail--static-text" style="float:left;">
+                            Title
+                        </span>
+                        <span class="activity--edit-icon" id="activity--edit-title" style="float:right">
+                        </span>
+                        <div class="mdc-text-field activity--title-input">
+                            <input class="mdc-text-field__input border-bottom--none" disabled type="text">
+                        </div>
+                    </div>
+                    <div class="activity--desc-container">
+                        <span class="detail--static-text" style="float:left;">
+                            Description
+                        </span>
+                        <span class="activity--edit-icon" id="activity--edit-desc" style="float:right">
+                        </span>
+                        <div class="mdc-text-field activity--desc-input">
+                            <input class="mdc-text-field__input border-bottom--none" disabled type="text">
+                        </div>
+                    </div>
+                    <div class="activity--status-container">
+                        <span class="detail--static-text" style="float:left;">
+                            Status
+                        </span>
+                        <div class="current-status">
+
+                        </div>
+
+                        <div id="available-status">
+
+                        </div>
+                    </div>
+                    <div class="activity--office-container">
+                        <span class="detail--static-text" style="float:left;">
+                            Office
+                        </span>
+
+                        <p class="activity--office">
+
+                        </p>
+                    </div>
+                    <div class="activity--template-container">
+                        <span class="detail--static-text" style="float:left;">
+                            Template
+                        </span>
+
+                        <p class="activity--template">
+
+                        </p>
+                    </div>
+
+                    <div class="activity--schedule-container">
+                        <span class="detail--static-text detail--static-text-schedule" style="float:left;">
+                            Schedule
+                        </span>
+                        <span class="detail--static-text-startTime">
+                            Start Time
+                        </span>
+                        <span class="detail--static-text-endTime">
+                            End Time
+                        </span>
+                        <ul class="mdc-list" id="schedule--list">
+
+                        </ul>
+
+                    </div>
+                    <div class="activity--venue-container">
+                        <span class="detail--static-text" style="float:left">
+                            Venue
+                        </span>
+                        <ul class="mdc-list" id="venue--list">
+
+                        </ul>
+                    </div>
+                    <div class="activity--share-container">
+                        <span class="detail--static-text" style="float:left">
+                            Assignees
+                        </span>
+                        <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id="assignee--list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

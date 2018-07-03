@@ -1,0 +1,271 @@
+body {
+    margin: 0;
+}
+
+#login-container {
+    top: 10rem;
+    position: relative;
+}
+.app {
+    padding:0px;
+}
+
+.activity--chat-card-container {
+    background-color: #f5f5f5;
+}
+
+.mdc-toolbar  {
+background-color: #f0f3f5;
+color:#737780;
+
+}
+
+
+.activity--chat-card-container .activity-title{
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    color: #737780
+}
+.activity--chat-card-container .activity-desc {
+    color: #73777f;
+    font-size: 12px;
+}
+.activity--chat-card-container .activity-status {
+    color: #278f73;
+    font-size: 12px;
+}
+
+#chat-container {
+    height: 500px;
+    overflow-y: auto;
+}
+#chat-container .tri-right.btm-left:after {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: 0px;
+    right: auto;
+    top: auto;
+    bottom: -20px;
+    border: 22px solid;
+    border-color: transparent transparent transparent white;
+}
+#chat-container .comment-box {
+    width: 50%;
+    padding: 10px;
+    webkit-border-radius: 30px;
+    margin: 20px 40px 20px 20px;
+    display: inline-block;
+    position: relative;
+    background-color: white;
+}
+.comment-box .talktext .user-name--comment {
+    font-size: 12px;
+    color:#8295ab;
+    font-weight: 500px;
+}
+.comment-box .talktext .comment {
+    margin: 0;
+    word-break: break-all;
+    color: #2b2e34;
+    font-size: 14px;
+    line-height: 17px;
+    text-align: left;
+    
+}
+.comment-box .talktext span {
+    color: #969aa1;
+    float: right;
+    font-size: 13px;
+    padding-top: 10px;
+}
+.user-map--span {
+    font-size: 15px;
+}
+.mini-map--chat {
+    
+}
+.comment--container {
+    padding: 20px 20px 10px 0px;
+    position: relative;
+}
+.input--text-padding {
+    margin: 0 auto;
+    display: block !important;
+    margin-top: 0px !important;
+    margin-right: 0px !important;
+    width: 96%;
+}
+.comment-field {
+    width: 100%;
+    padding: 0px;
+    border-bottom: none !important;
+    border-radius: 25px;
+    border: 1px solid #4c000000;
+    padding: 20px;
+    width: 200px;
+    height: 0px;
+    background-color: white;
+    width: 90%;
+    display: block;
+    margin: 0 auto;
+}
+.send--container {
+    position: relative;
+}
+
+#send-chat--input {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background-color: #6abbf9;
+}
+
+.activity-office {
+    color:#737780;
+    font-size: 16px;
+}
+
+.border-bottom--none {
+    border-bottom:  none;
+    transition: 0.3s ease;
+}
+
+
+.activity-detail {
+    padding: 20px;
+    height: 578px;
+    overflow-y: auto;
+}
+.activity--edit-icon i {
+    float: right;
+    font-size: 18px;
+    cursor: pointer;
+}
+.activity--status-container , .activity--title-container , .activity--desc-container, .activity--office-container , .activity--template-container {
+    padding: 0px 0px 30px 0px;
+
+}
+.detail--static-text {
+    color: #598aeb;
+    font-size:14px;
+}
+.activity--title-input , .activity--desc-input {
+        width: 100%;
+        margin-top: 0px !important;
+}
+.activity--office-container p , .activity--template-container p {
+    padding: 10px 0px 0px 0px;
+    margin-bottom: 0px;
+}
+
+
+.PENDING  , .status-pending{
+    color:#c7db10;
+    cursor: pointer;
+}
+.CANCELLED , .status-cancel{
+    color:#d42947;
+    cursor: pointer;
+
+}
+.CONFIRMED , .status-confirmed{
+    color:#278f73;
+    cursor: pointer;
+
+}
+
+
+.current-status {
+    padding: 0px 20px 10px 20px;
+    text-align: center;
+    margin-top: 20px;
+}
+#available-status {
+    padding: 0px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+#available-status i {
+    padding:0px 10px 0px 10px;
+    font-size: 30px;
+}
+.detail--static-text-schedule , .schedule-name--list {
+    width:60%;
+}
+
+
+#schedule--list li .mdc-text-field:nth-child(2) , #schedule--list li .mdc-text-field:nth-child(3), .detail--static-text-startTime , .detail--static-text-endTime  {
+    width:15%;
+    font-size: 14px;
+}
+.detail--static-text-startTime , .detail--static-text-endTime {
+    margin-right: 27px;
+    margin-left: -16px;
+}
+#schedule--list li .mdc-text-field:nth-child(2) , #schedule--list li .mdc-text-field:nth-child(3) {
+    margin-right:20px;
+
+}
+#schedule--list li {
+    padding: 0px;
+}
+#schedule--list li .schedule-edit--icon {
+    width:10%;
+}
+#schedule--list li div {
+    margin-top:0px !important;
+}
+
+#venue--list li div:nth-child(1) {
+    padding: 20px 20px 0px 0px
+}
+#venue--list li .venue-location--name {
+    float: left;
+    height: 20px !important;
+}
+
+#venue--list li div:nth-child(3){
+    float: right;
+}
+#venue--list li div:nth-child(3) i {
+    font-size: 18px;
+}
+#venue--list li .venue-address--name {
+    width: 100% !important;
+    height: 20px !important;
+}
+.add--assignee-icon {
+    float: right;
+}
+
+.assignee-li:nth-child(1) {
+    margin-top: 30px;
+}
+.assignee-li span:nth-child(3) {
+    cursor: pointer;
+}
+#share--container {
+    padding: 20px;
+}
+#share-btn {
+    cursor: pointer;
+}
+.contact--text-field {
+    width:75%;
+}
+
+
+#contacts--container li {
+    padding: 0px;
+}
+#contacts--container li span:nth-child(1) {
+margin-left:0px; 
+}
+#contacts--container li span:nth-child(2) {
+    padding: 0px 90px 0px 20px;
+}

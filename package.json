@@ -1,0 +1,23 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "Growthfile frontend application",
+  "main": "index.html",
+  "dependencies": {},
+  "devDependencies": {
+    "standard": "^11.0.1"
+  },
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Growthfilev2/frontend.git"
+  },
+  "author": "shikhar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Growthfilev2/frontend/issues"
+  },
+  "homepage": "https://github.com/Growthfilev2/frontend#readme"
+}
