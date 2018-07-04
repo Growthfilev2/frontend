@@ -1,12 +1,20 @@
+function getTextInput (currentActivityId) {
+
+}
+function getTimeInput (currentActivityId) {
+
+}
+
+function selectForm (currentActivityId) {
+
+}
+
 function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
+
   const requestGenerator = {
     type: requestType,
     body: requestBody
-  }
-
-  const responseFunctionCaller = {
-    'someFn': ''
   }
 
   // spawn a new worker called apiHandler.
@@ -21,10 +29,10 @@ function requestCreator (requestType, requestBody) {
   // handle the response from apiHandler when operation is completed
 
   apiHandler.onmessage = function (response) {
-    responseFunctionCaller[response.fn]()
+
   }
 
   apiHandler.onerror = function (error) {
-    console.log(error.data)
+    console.log(error)
   }
 }

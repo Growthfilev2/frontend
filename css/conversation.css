@@ -7,7 +7,7 @@ body {
     position: relative;
 }
 .app {
-    padding:0px;
+    padding:0;
 }
 
 .activity--chat-card-container {
@@ -24,8 +24,8 @@ color:#737780;
 .activity--chat-card-container .activity-title{
     font-size: 16px;
     font-weight: 600;
-    margin-bottom: 0px;
-    margin-top: 0px;
+    margin-bottom: 0;
+    margin-top: 0;
     color: #737780
 }
 .activity--chat-card-container .activity-desc {
@@ -46,7 +46,7 @@ color:#737780;
     position: absolute;
     width: 0;
     height: 0;
-    left: 0px;
+    left: 0;
     right: auto;
     top: auto;
     bottom: -20px;
@@ -65,7 +65,7 @@ color:#737780;
 .comment-box .talktext .user-name--comment {
     font-size: 12px;
     color:#8295ab;
-    font-weight: 500px;
+    font-weight:500;
 }
 .comment-box .talktext .comment {
     margin: 0;
@@ -89,25 +89,25 @@ color:#737780;
     
 }
 .comment--container {
-    padding: 20px 20px 10px 0px;
+    padding: 20px 20px 10px 0;
     position: relative;
 }
 .input--text-padding {
     margin: 0 auto;
     display: block !important;
-    margin-top: 0px !important;
-    margin-right: 0px !important;
+    margin-top: 0 !important;
+    margin-right: 0 !important;
     width: 96%;
 }
 .comment-field {
     width: 100%;
-    padding: 0px;
+    padding: 0;
     border-bottom: none !important;
     border-radius: 25px;
     border: 1px solid #4c000000;
     padding: 20px;
     width: 200px;
-    height: 0px;
+    height: 0;
     background-color: white;
     width: 90%;
     display: block;
@@ -146,7 +146,7 @@ color:#737780;
     cursor: pointer;
 }
 .activity--status-container , .activity--title-container , .activity--desc-container, .activity--office-container , .activity--template-container {
-    padding: 0px 0px 30px 0px;
+    padding: 0 0 30px 0;
 
 }
 .detail--static-text {
@@ -155,11 +155,11 @@ color:#737780;
 }
 .activity--title-input , .activity--desc-input {
         width: 100%;
-        margin-top: 0px !important;
+        margin-top: 0 !important;
 }
 .activity--office-container p , .activity--template-container p {
-    padding: 10px 0px 0px 0px;
-    margin-bottom: 0px;
+    padding: 10px 0 0 0;
+    margin-bottom: 0;
 }
 
 
@@ -180,18 +180,18 @@ color:#737780;
 
 
 .current-status {
-    padding: 0px 20px 10px 20px;
+    padding: 0 20px 10px 20px;
     text-align: center;
     margin-top: 20px;
 }
 #available-status {
-    padding: 0px;
+    padding: 0;
     margin-top: 10px;
     text-align: center;
 }
 
 #available-status i {
-    padding:0px 10px 0px 10px;
+    padding:0 10px 0 10px;
     font-size: 30px;
 }
 .detail--static-text-schedule , .schedule-name--list {
@@ -212,17 +212,17 @@ color:#737780;
 
 }
 #schedule--list li {
-    padding: 0px;
+    padding: 0;
 }
 #schedule--list li .schedule-edit--icon {
     width:10%;
 }
 #schedule--list li div {
-    margin-top:0px !important;
+    margin-top:0 !important;
 }
 
 #venue--list li div:nth-child(1) {
-    padding: 20px 20px 0px 0px
+    padding: 20px 20px 0 0;
 }
 #venue--list li .venue-location--name {
     float: left;
@@ -261,11 +261,11 @@ color:#737780;
 
 
 #contacts--container li {
-    padding: 0px;
+    padding:0;
 }
 #contacts--container li span:nth-child(1) {
-margin-left:0px; 
+margin-left:0;
 }
 #contacts--container li span:nth-child(2) {
-    padding: 0px 90px 0px 20px;
+    padding: 0 90px 0 20px;
 }
