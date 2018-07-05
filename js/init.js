@@ -1,17 +1,13 @@
 
-// firebase config object
+// Initialize the firebase application
 
-const config = {
+firebase.initializeApp({
   apiKey: 'AIzaSyB0D7Ln4r491ESzGA28rs6oQ_3C6RDeP-s',
   authDomain: 'growthfilev2-0.firebaseapp.com',
   databaseURL: 'https://growthfilev2-0.firebaseio.com',
   projectId: 'growthfilev2-0',
   storageBucket: 'growthfilev2-0.appspot.com'
-}
-
-// Initialize the firebase application
-
-firebase.initializeApp(config)
+})
 
 // firebaseUI login config object
 function firebaseUiConfig () {
@@ -35,43 +31,41 @@ function firebaseUiConfig () {
           size: 'normal',
           badge: 'bottomleft'
         },
-        defaultCountry: 'IN',
-        defaultNationalNumber: ''
+        defaultCountry: 'IN'
       }
-
     ]
   }
 }
 
 firebase.auth().onAuthStateChanged(function (auth) {
   // if user is signed in then run userIsSigned fn else run userSignedOut fn
-  auth ? userIsSigned(auth) : userSignedOut()
+  auth ? userSignedIn(auth) : userSignedOut()
 })
 
 // when user is signed in call requestCreator function inside services.js
-function userIsSigned (auth) {
+function userSignedIn (auth) {
   document.querySelector('.app').style.display = 'block'
 
   if (window.Worker && window.indexedDB) {
     // requestCreator is present inside service.js
-    requestCreator('init')
+    requestCreator('initializeIDB')
     // listView is present inside panel.js
     listView(auth.uid)
     return
   }
-  console.log('not supported')
-  firebase.auth().signOut().then(function () {
-    console.log('Signed Out')
-  }, function (error) {
-    console.error('Sign Out Error', error)
-  })
+  firebase.auth().signOut().catch(signOutError)
 }
 
 // When user is signed out
 function userSignedOut () {
   document.querySelector('.app').style.display = 'none'
+
   const ui = new firebaseui.auth.AuthUI(firebase.auth())
 
   // DOM element to insert firebaseui login UI
   ui.start('#login-container', firebaseUiConfig())
+}
+
+function signOutError (error) {
+// handler error with snackbar
 }

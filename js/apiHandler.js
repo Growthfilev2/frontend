@@ -8,27 +8,24 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 /** reinitialize the firebase app */
-const config = {
+
+firebase.initializeApp({
   apiKey: 'AIzaSyB0D7Ln4r491ESzGA28rs6oQ_3C6RDeP-s',
   authDomain: 'growthfilev2-0.firebaseapp.com',
   databaseURL: 'https://growthfilev2-0.firebaseio.com',
   projectId: 'growthfilev2-0',
   storageBucket: 'growthfilev2-0.appspot.com'
-}
-
-firebase.initializeApp(config)
+})
 
 // get Device time
 function getTime () {
   return Date.now()
 }
 
-const responseObject = {}
-
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
 const requestFunctionCaller = {
-  init: initializeIDB
+  initializeIDB: initializeIDB
 
 }
 
@@ -153,8 +150,6 @@ function getDateRange (startTime, endTime) {
 
 // removes id from activityId array inside map object store
 function popIdFromMapStore (db, venueArray, id) {
-  if (venueArray.length === 0) return
-
   const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
 
   venueArray.forEach(function (venue) {
@@ -170,7 +165,6 @@ function popIdFromMapStore (db, venueArray, id) {
       if (indexOfActivityId > -1) {
         record.activityId.splice(indexOfActivityId, 1)
       }
-
       mapObjectStore.put(record)
     }
   })
@@ -227,14 +221,6 @@ function removeActivityFromRootStore (db, id) {
     .transaction('activity', 'readwrite')
     .objectStore('activity')
     .delete(id)
-
-  removeRequest.onsuccess = function (event) {
-    console.log(event)
-  }
-
-  removeRequest.onerror = function (event) {
-    console.log(event)
-  }
 }
 
 //  if location from venue array in read response matches the location present
@@ -242,8 +228,6 @@ function removeActivityFromRootStore (db, id) {
 //  that record. else create a new record with that location
 
 function pushIdIntoMapStore (db, venueArray, id) {
-  if (venueArray.length === 0) return
-
   const mapObjectStore = db
     .transaction('map', 'readwrite')
     .objectStore('map')
@@ -258,6 +242,7 @@ function pushIdIntoMapStore (db, venueArray, id) {
 
       if (record) {
         record.activityId.push(id)
+        record.activityId = [...new Set(record.activityId)]
         mapObjectStore.put(record)
         return
       }
@@ -279,8 +264,6 @@ function pushIdIntoMapStore (db, venueArray, id) {
 //  record with that date and activityId
 
 function pushIdIntoCalendarStore (db, scheduleArray, id) {
-  if (scheduleArray.length === 0) return
-
   scheduleArray.forEach(function (schedule) {
     if (!schedule.startTime) return
     if (!schedule.endTime) return
@@ -314,19 +297,18 @@ function pushIdIntoCalendarStore (db, scheduleArray, id) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function addAttachment (db, attachment, id, status, template, office) {
-  if (Object.keys(attachment).length) return
+function addAttachment (db, record, activity) {
+  if (Object.keys(record.attachment).length) return
 
   const attachmentObjectStore = db.transaction('attachment', 'readwrite').objectStore('attachment')
 
-  const newAttachment = JSON.parse(JSON.stringify(attachment))
-  newAttachment['activityId'] = id
-  newAttachment['status'] = status
-  newAttachment['template'] = template
-  newAttachment['office'] = office
-  attachmentObjectStore.add(
-    newAttachment
-  )
+  const newAttachment = JSON.parse(JSON.stringify(record.attachment))
+  newAttachment['activityId'] = activity.activityId
+  newAttachment['status'] = record.status
+  newAttachment['template'] = activity.template
+  newAttachment['office'] = activity.office
+
+  attachmentObjectStore.add(newAttachment)
 }
 
 // if an assugnee's phone number is present inside the users object store then
@@ -334,6 +316,7 @@ function addAttachment (db, attachment, id, status, template, office) {
 
 function writeAssigneeIntoUsers (db, assigneeArray) {
   if (assigneeArray.length === 0) return
+
   let assigneeString = ''
 
   // create a basic users api url
@@ -361,17 +344,16 @@ function writeAssigneeIntoUsers (db, assigneeArray) {
 
       Object.keys(userProfile).forEach(function (number) {
         usersObjectStore.get(number).onsuccess = function (event) {
-          if (!event.target.result) {
-            const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+          if (event.target.result) return
 
-            usersObjectStore.add({
-              mobile: number,
-              photoURL: userProfile[number].photoURL,
-              displayName: userProfile[number].displayName,
-              lastSignInTime: userProfile[number].lastSignInTime
-            })
-          }
-          return void (0)
+          const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+
+          usersObjectStore.add({
+            mobile: number,
+            photoURL: userProfile[number].photoURL,
+            displayName: userProfile[number].displayName,
+            lastSignInTime: userProfile[number].lastSignInTime
+          })
         }
       })
     }).catch(console.log)
@@ -384,9 +366,7 @@ function writeAssigneeIntoUsers (db, assigneeArray) {
 function insertActivityIntoActivityStore (db, activity) {
   const activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity')
 
-  activityObjectStore.add(
-    activity
-  )
+  activityObjectStore.add(activity)
 
   activityObjectStore.get(activity.activityId).onsuccess = function (event) {
     const venueArray = event.target.result.venue
@@ -395,19 +375,14 @@ function insertActivityIntoActivityStore (db, activity) {
 
     const assigneeArray = event.target.result.assignees
 
-    const status = event.target.result.status
-
     pushIdIntoMapStore(db, venueArray, activity.activityId)
 
     pushIdIntoCalendarStore(db, scheduleArray, activity.activityId)
 
     addAttachment(
       db,
-      event.target.result.attachment,
-      activity.activityId,
-      status,
-      activity.template,
-      activity.office
+      event.target.result,
+      activity
     )
 
     writeAssigneeIntoUsers(db, assigneeArray)
@@ -446,8 +421,6 @@ function updateSubscription (db, subscription) {
     .transaction('subscriptions', 'readwrite')
     .objectStore('subscriptions')
 
-  const officeIndex = subscriptionObjectStore.index('office')
-
   const templateIndex = subscriptionObjectStore.index('template')
 
   templateIndex.get(subscription.template).onsuccess = function (templateEvent) {
@@ -475,7 +448,9 @@ function updateSubscription (db, subscription) {
 
 function successResponse (response) {
   const user = firebase.auth().currentUser
-  const request = indexedDB.open(user.uid, 1)
+  const IDB_VERSION = 1
+
+  const request = indexedDB.open(user.uid, IDB_VERSION)
 
   request.onsuccess = function () {
     const db = request.result
@@ -500,16 +475,23 @@ function successResponse (response) {
     })
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
-    responseObject.success = true
-    responseObject.msg = 'IDB updated successfully'
-    responseObject.value = user.uid
+    const responseObject = {
+      success: true,
+      msg: 'IDB updated successfully',
+      value: user.uid
+    }
+
     self.postMessage(responseObject)
   }
 }
 
 function updateIDB () {
   const user = firebase.auth().currentUser
-  const req = indexedDB.open(user.uid, 1)
+
+  const IDB_VERSION = 1
+
+  const req = indexedDB.open(user.uid, IDB_VERSION)
+
   req.onsuccess = function () {
     const db = req.result
     // open root object store to read fromTime value.
@@ -534,7 +516,6 @@ function updateIDB () {
               venue: ['when']
             })
           }
-
           successResponse(response)
         })
         .catch(console.log)

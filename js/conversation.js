@@ -1,3 +1,3 @@
-function conversation (db, id) {
-
+function conversation (id) {
+  console.log(id)
 }

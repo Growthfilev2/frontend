@@ -33,7 +33,44 @@
     <div id="login-container"></div>
     <div class="mdc-layout-grid mdc-typography app">
         <div class="mdc-layout-grid__inner" style="grid-gap:0">
-            <div class="mdc-layout-grid__cell--span-3-desktop app-left-panel"></div>
+            <div class="mdc-layout-grid__cell--span-3-desktop app-left-panel">
+                <aside class="mdc-drawer mdc-drawer--temporary mdc-typography" id="map-drawer">
+                    <nav class="mdc-drawer__drawer">
+
+                        <div class="mdc-drawer__toolbar-spacer">
+                            <span id="close-map--drawer"><i class="material-icons">arrow_back</i></span>
+                        </div>
+
+                        <nav id="map-view--container" class="mdc-drawer__content">
+                                <div id="map"></div>
+                                <div id="list-view--map"></div>
+                        </nav>
+                    </nav>
+                </aside>
+                <header class="mdc-toolbar mdc-elevation--z1">
+                    <div class="mdc-toolbar__row">
+                        <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
+                            <div class="toolbar--user">
+                                <img src='' class="profile-image--small" id="toolbar--image">
+                            </div>
+                        </section>
+                        <section class="mdc-toolbar__section mdc-toolbar__section--align-end">
+                            <div class="drawer--icons">
+                                <div id="map-drawer--icon">
+                                    <span>
+                                        <i class="material-icons">location_on</i>
+                                    </span>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </header>
+                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id="activity--list" aria-orientation="vertical">
+
+                </ul>
+
+
+            </div>
             <div class="mdc-layout-grid__cell--span-5-desktop app-center-panel">
                 <header class="mdc-toolbar mdc-elevation--z1">
                     <div class="mdc-toolbar__row">

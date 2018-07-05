@@ -18,13 +18,26 @@ function requestCreator (requestType, requestBody) {
 
   // handle the response from apiHandler when operation is completed
 
-  apiHandler.onmessage = function (response) {
-    if (response.data.success) {
-      listView(response.data.value)
+  apiHandler.onmessage = onSuccessMessage
+  apiHandler.onerror = onErrorMessage
+}
+
+function onSuccessMessage (response) {
+  const IDB_VERSION = 1
+  const req = window.indexedDB.open(response.data.value, IDB_VERSION)
+
+  req.onsuccess = function () {
+    const db = req.result
+    const activityObjectStore = db.transaction('activity').objectStore('activity')
+
+    activityObjectStore.oncomplete = function () {
+      if (response.data.success) {
+        listView(response.data.value)
+      }
     }
   }
+}
 
-  apiHandler.onerror = function (error) {
-    console.log(error)
-  }
+function onErrorMessage (error) {
+  console.log(error)
 }

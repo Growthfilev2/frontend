@@ -269,3 +269,7 @@ margin-left:0;
 #contacts--container li span:nth-child(2) {
     padding: 0 90px 0 20px;
 }
+
+#map {
+    height: 300px;
+}
