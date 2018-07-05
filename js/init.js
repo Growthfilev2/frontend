@@ -1,12 +1,3 @@
-/*
-Initialize the application with firebase app and firebase UI config parameters.
-The app first checks if the application is opened in a private browsing mode or not.
-If it is, then an infoText is generated in the DOM to notify the user. If not,
-then it checks the IDB and Web Worker support. If both are available then User
-is taken to login screen if not already logged in. if either or both a.ka. IDB &
-Web Worker are not supported then infoText is generated in the DOM to notify the
-user.
-*/
 
 // firebase config object
 
@@ -62,7 +53,10 @@ function userIsSigned (auth) {
   document.querySelector('.app').style.display = 'block'
 
   if (window.Worker && window.indexedDB) {
+    // requestCreator is present inside service.js
     requestCreator('init')
+    // listView is present inside panel.js
+    listView(auth.uid)
     return
   }
   console.log('not supported')

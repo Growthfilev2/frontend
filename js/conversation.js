@@ -1,3 +1,3 @@
-function conversation (id) {
+function conversation (db, id) {
 
 }
