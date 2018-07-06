@@ -24,16 +24,18 @@ function requestCreator (requestType, requestBody) {
 
 function onSuccessMessage (response) {
   const IDB_VERSION = 1
-  const req = window.indexedDB.open(response.data.value, IDB_VERSION)
+
+  console.log(response)
+
+  const req = window.indexedDB.open(response.data.value)
+
+  console.log(req)
 
   req.onsuccess = function () {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
-
-    activityObjectStore.oncomplete = function () {
-      if (response.data.success) {
-        listView(response.data.value)
-      }
+    if (response.data.success) {
+      listView(response.data.value)
     }
   }
 }

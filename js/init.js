@@ -1,4 +1,3 @@
-
 // Initialize the firebase application
 
 firebase.initializeApp({
@@ -45,15 +44,46 @@ firebase.auth().onAuthStateChanged(function (auth) {
 // when user is signed in call requestCreator function inside services.js
 function userSignedIn (auth) {
   document.querySelector('.app').style.display = 'block'
+  const IDB_VERSION = 1
+  const req = window.indexedDB.open(auth.uid)
 
   if (window.Worker && window.indexedDB) {
     // requestCreator is present inside service.js
     requestCreator('initializeIDB')
     // listView is present inside panel.js
-    listView(auth.uid)
+    req.onsuccess = dbOpenSuccess
+    req.onerror = dbOpenError
+
     return
   }
+
   firebase.auth().signOut().catch(signOutError)
+}
+
+function dbOpenSuccess (idbSuccess) {
+  const db = idbSuccess.target.result
+  if (Object.values(db.objectStoreNames).indexOf('activity') === -1) return
+  const activityObjectStore = db.transaction(['activity'], 'readonly').objectStore('activity')
+
+  const recordCount = activityObjectStore.count()
+
+  recordCount.onsuccess = recordCountReqSuccess
+  recordCount.onerror = recordCountReqError
+}
+
+function dbOpenError (error) {
+  console.log(error)
+}
+
+function recordCountReqSuccess (recordReqSuccess) {
+  console.log(recordReqSuccess)
+  if (!recordReqSuccess.target.result) return
+  const dbName = recordReqSuccess.target.transaction.db.name
+  listView(dbName)
+}
+
+function recordCountReqError (recordReqError) {
+  console.log(recordReqError)
 }
 
 // When user is signed out
@@ -67,5 +97,5 @@ function userSignedOut () {
 }
 
 function signOutError (error) {
-// handler error with snackbar
+  // handler error with snackbar
 }

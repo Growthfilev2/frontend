@@ -70,9 +70,14 @@ function http (method, url, data) {
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
 function initializeIDB () {
+  console.log('init db')
   // onAuthStateChanged is added because app is reinitialized
   firebase.auth().onAuthStateChanged(function (auth) {
-    const request = indexedDB.open(auth.uid, 1)
+    const request = indexedDB.open(auth.uid, 2)
+
+    request.onerror = function (event) {
+      console.log(event)
+    }
 
     request.onupgradeneeded = function () {
       const db = request.result
@@ -88,9 +93,10 @@ function initializeIDB () {
       })
 
       const addendum = db.createObjectStore('addendum', {
-        autoIncrement: true
+        keyPath: 'activityId'
       })
-      addendum.createIndex('activityId', 'activityId')
+
+      addendum.createIndex('addendumId', 'addendumId')
 
       const subscriptions = db.createObjectStore('subscriptions', {
         autoIncrement: true
@@ -124,7 +130,7 @@ function initializeIDB () {
         uid: auth.uid
       })
     }
-    request.onsuccess = function () {
+    request.onsuccess = function (event) {
       // when Object stores are created, call the updateIDB() to update the data
       // in IDB
       updateIDB()
@@ -207,8 +213,6 @@ function popAttachment (db, attachment, id) {
     .transaction('attachment', 'readwrite')
     .objectStore('attachment')
 
-  if (Object.keys(attachment).length === 0) return
-
   attachmentObjectStore.get(id).onsuccess = function (event) {
     attachmentObjectStore.delete(id)
   }
@@ -232,7 +236,7 @@ function pushIdIntoMapStore (db, venueArray, id) {
     .transaction('map', 'readwrite')
     .objectStore('map')
 
-  venueArray.forEach(function (venue) {
+  Array.apply(null, venueArray).forEach(function (venue) {
     if (!venue.location) return
     if (!venue.address) return
     if (!venue.geopoint) return
@@ -264,7 +268,7 @@ function pushIdIntoMapStore (db, venueArray, id) {
 //  record with that date and activityId
 
 function pushIdIntoCalendarStore (db, scheduleArray, id) {
-  scheduleArray.forEach(function (schedule) {
+  Array.apply(null, scheduleArray).forEach(function (schedule) {
     if (!schedule.startTime) return
     if (!schedule.endTime) return
 
@@ -297,16 +301,15 @@ function pushIdIntoCalendarStore (db, scheduleArray, id) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function addAttachment (db, record, activity) {
-  if (Object.keys(record.attachment).length) return
-
+function addAttachment (db, record) {
   const attachmentObjectStore = db.transaction('attachment', 'readwrite').objectStore('attachment')
 
   const newAttachment = JSON.parse(JSON.stringify(record.attachment))
-  newAttachment['activityId'] = activity.activityId
+  newAttachment['activityId'] = record.activityId
   newAttachment['status'] = record.status
-  newAttachment['template'] = activity.template
-  newAttachment['office'] = activity.office
+  newAttachment['template'] = record.template
+  newAttachment['office'] = record.office
+  newAttachment['attachment'] = record.attachment
 
   attachmentObjectStore.add(newAttachment)
 }
@@ -329,6 +332,7 @@ function writeAssigneeIntoUsers (db, assigneeArray) {
 
     assigneeString += `${assigneeFormat.replace('+', '')}`
   })
+
   // concat the basic users api url with the assigneeString
 
   const fullReadUserString = `${defaultReadUserString}${assigneeString}`
@@ -381,8 +385,7 @@ function insertActivityIntoActivityStore (db, activity) {
 
     addAttachment(
       db,
-      event.target.result,
-      activity
+      event.target.result
     )
 
     writeAssigneeIntoUsers(db, assigneeArray)
@@ -402,14 +405,14 @@ function PopIdFromObjectStores (db, activity) {
       insertActivityIntoActivityStore(db, activity)
       return
     }
-
+    console.log(activity)
     const venueArray = event.target.result.venue
     const scheduleArray = event.target.result.schedule
     const attachmentObject = event.target.result.attachment
 
     popIdFromMapStore(db, venueArray, activity.activityId)
     popIdFromCalendarStore(db, scheduleArray, activity.activityId)
-    popAttachment(db, attachmentObject, attachmentObject.activityId)
+    popAttachment(db, attachmentObject, activity.activityId)
     removeActivityFromRootStore(db, activity.activityId)
 
     insertActivityIntoActivityStore(db, activity)
@@ -448,9 +451,8 @@ function updateSubscription (db, subscription) {
 
 function successResponse (response) {
   const user = firebase.auth().currentUser
-  const IDB_VERSION = 1
 
-  const request = indexedDB.open(user.uid, IDB_VERSION)
+  const request = indexedDB.open(user.uid)
 
   request.onsuccess = function () {
     const db = request.result
@@ -480,7 +482,7 @@ function successResponse (response) {
       msg: 'IDB updated successfully',
       value: user.uid
     }
-
+    console.log('asd')
     self.postMessage(responseObject)
   }
 }
@@ -488,9 +490,7 @@ function successResponse (response) {
 function updateIDB () {
   const user = firebase.auth().currentUser
 
-  const IDB_VERSION = 1
-
-  const req = indexedDB.open(user.uid, IDB_VERSION)
+  const req = indexedDB.open(user.uid)
 
   req.onsuccess = function () {
     const db = req.result
@@ -506,16 +506,7 @@ function updateIDB () {
       )
         .then(function (response) {
           console.log(response)
-          // adds template if template array is empty. FOR TESTING ONLY
-          if (response.templates.length === 0) {
-            response.templates.push({
-              attachment: {},
-              office: 'personal',
-              schedule: ['where'],
-              template: 'plan',
-              venue: ['when']
-            })
-          }
+
           successResponse(response)
         })
         .catch(console.log)
