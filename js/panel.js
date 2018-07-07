@@ -48,10 +48,12 @@ function listView (dbName) {
     }
   }
 }
+
 document.getElementById('map-drawer--icon').addEventListener('click', function () {
   const user = firebase.auth().currentUser
   mapView(user.uid)
 })
+
 function mapView (dbName) {
   // initialize mdc instance for map drawer
 
@@ -78,6 +80,7 @@ function mapView (dbName) {
       if (!cursor) {
         mapRecords.push({
           location: 'your location',
+
           geopoint: {
             '_latitude': 28.6667,
             '_longitude': 77.2167
@@ -131,13 +134,12 @@ function showVisibleMarkers (map, markers) {
   for (let i = 0; i < markers.length; i++) {
     const currentMarker = markers[i]
 
-    if (bounds.contains(currentMarker.getPosition()) === true) {
+    if (bounds.contains(currentMarker.getPosition())) {
       console.log(currentMarker)
-    } else {
-      console.log('no marker found')
     }
   }
 }
+
 function calendarView () {
 
 }

@@ -94,10 +94,10 @@ function initializeIDB () {
       users.createIndex('isUpdated', 'isUpdated')
 
       const addendum = db.createObjectStore('addendum', {
-        keyPath: 'activityId'
+        keyPath: 'addendumId'
       })
 
-      addendum.createIndex('addendumId', 'addendumId')
+      addendum.createIndex('activityId', 'activityId')
 
       const subscriptions = db.createObjectStore('subscriptions', {
         autoIncrement: true
@@ -351,6 +351,7 @@ function readNonUpdatedAssignee (db) {
         fullReadUserString = `${defaultReadUserString}${assigneeString}`
         cursor.continue()
       } else {
+        console.log(fullReadUserString)
         resolve(fullReadUserString)
       }
     }
@@ -358,6 +359,7 @@ function readNonUpdatedAssignee (db) {
 }
 
 function writeAssigneeIntoUsers (db, userProfileRead) {
+  console.log(userProfileRead)
   http(
     'GET',
     userProfileRead
@@ -487,6 +489,7 @@ function successResponse (response) {
     })
 
     readNonUpdatedAssignee(db).then(function (profileApiString) {
+      console.log(profileApiString)
       writeAssigneeIntoUsers(db, profileApiString)
     })
 
