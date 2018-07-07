@@ -35,7 +35,7 @@ function onSuccessMessage (response) {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     if (response.data.success) {
-      listView(response.data.value)
+      // listView(response.data.value)
     }
   }
 }

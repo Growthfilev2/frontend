@@ -91,6 +91,7 @@ function initializeIDB () {
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
       })
+      users.createIndex('isUpdated', 'isUpdated')
 
       const addendum = db.createObjectStore('addendum', {
         keyPath: 'activityId'
@@ -236,7 +237,7 @@ function pushIdIntoMapStore (db, venueArray, id) {
     .transaction('map', 'readwrite')
     .objectStore('map')
 
-  Array.apply(null, venueArray).forEach(function (venue) {
+  venueArray.forEach(function (venue) {
     if (!venue.location) return
     if (!venue.address) return
     if (!venue.geopoint) return
@@ -268,7 +269,7 @@ function pushIdIntoMapStore (db, venueArray, id) {
 //  record with that date and activityId
 
 function pushIdIntoCalendarStore (db, scheduleArray, id) {
-  Array.apply(null, scheduleArray).forEach(function (schedule) {
+  scheduleArray.forEach(function (schedule) {
     if (!schedule.startTime) return
     if (!schedule.endTime) return
 
@@ -316,56 +317,71 @@ function addAttachment (db, record) {
 
 // if an assugnee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
-
-function writeAssigneeIntoUsers (db, assigneeArray) {
-  if (assigneeArray.length === 0) return
-
-  let assigneeString = ''
-
-  // create a basic users api url
-  const defaultReadUserString = `${apiUrl}services/users/read?q=`
-  // iterate the assignee array and create a string with all the assignee's
-  // phone number added into it.
-
+function initializeAssigneeStore (db, assigneeArray) {
   assigneeArray.forEach(function (assignee) {
-    const assigneeFormat = `%2B${assignee}&q=`
+    const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
-    assigneeString += `${assigneeFormat.replace('+', '')}`
-  })
+    usersObjectStore.openCursor().onsuccess = function (event) {
+      cursor = event.target.result
+      if (cursor) return
 
-  // concat the basic users api url with the assigneeString
-
-  const fullReadUserString = `${defaultReadUserString}${assigneeString}`
-
-  // pass the api string into the http fn and get the profile details of all the
-  // assignees
-  http(
-    'GET',
-    fullReadUserString
-  )
-    .then(function (userProfile) {
-      const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
-
-      Object.keys(userProfile).forEach(function (number) {
-        usersObjectStore.get(number).onsuccess = function (event) {
-          if (event.target.result) return
-
-          const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
-
-          usersObjectStore.add({
-            mobile: number,
-            photoURL: userProfile[number].photoURL,
-            displayName: userProfile[number].displayName,
-            lastSignInTime: userProfile[number].lastSignInTime
-          })
-        }
+      usersObjectStore.add({
+        mobile: assignee,
+        isUpdated: false.toString()
       })
-    }).catch(console.log)
+    }
+  })
 }
 
-// insert activity into activityStore then check each object store's record if
-// it consists of that activityId. if it does then push the activityId into the
-// activityId array if not then create a new record with that activityId
+function readNonUpdatedAssignee (db) {
+  const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+  const isUpdatedIndex = usersObjectStore.index('isUpdated')
+  const NON_UPDATED_USERS = 'false'
+  let assigneeString = ''
+
+  const defaultReadUserString = `${apiUrl}services/users/read?q=`
+  let fullReadUserString = ''
+
+  return new Promise(function (resolve) {
+    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+      const cursor = event.target.result
+      if (cursor) {
+        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+        assigneeString += `${assigneeFormat.replace('+', '')}`
+        fullReadUserString = `${defaultReadUserString}${assigneeString}`
+        cursor.continue()
+      } else {
+        resolve(fullReadUserString)
+      }
+    }
+  })
+}
+
+function writeAssigneeIntoUsers (db, userProfileRead) {
+  http(
+    'GET',
+    userProfileRead
+  )
+    .then(function (userProfile) {
+      console.log(userProfile)
+      const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+      const isUpdatedIndex = usersObjectStore.index('isUpdated')
+      isUpdatedIndex.openCursor('false').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return
+
+        console.log(cursor.primaryKey)
+        usersObjectStore.put({
+
+          mobile: cursor.primaryKey,
+          photoURL: userProfile[cursor.primaryKey].photoURL,
+          displayName: userProfile[cursor.primaryKey].displayName,
+          isUpdated: 'true'
+        })
+        cursor.continue()
+      }
+    }).catch(console.log)
+}
 
 function insertActivityIntoActivityStore (db, activity) {
   const activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity')
@@ -387,8 +403,6 @@ function insertActivityIntoActivityStore (db, activity) {
       db,
       event.target.result
     )
-
-    writeAssigneeIntoUsers(db, assigneeArray)
   }
 }
 
@@ -465,10 +479,15 @@ function successResponse (response) {
 
     response.activities.forEach(function (activity) {
       PopIdFromObjectStores(db, activity)
+      initializeAssigneeStore(db, activity.assignees)
     })
 
     response.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
+    })
+
+    readNonUpdatedAssignee(db).then(function (profileApiString) {
+      writeAssigneeIntoUsers(db, profileApiString)
     })
 
     rootObjectStore.put({

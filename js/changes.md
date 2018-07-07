@@ -1,19 +1,9 @@
 # Changelog
 All changes to js/  will be documented in this file.
 ## init.js
-##### Changed
-- changed signout method to only handle error case by using a callback  
-- ```firebase.initializeApp``` now directly passes the firebase config object to the method
-##### Removed
-- removed ```defaultNationalNumber``` in ```firebaseUIConfig``` 
-## service.js
-##### Changed
-- changed ```onmessage``` & ```onerror``` function events to use a callback flow
-##### Added 
-- added flow for calling ```listView()``` after getting success response from apiHandler 
-## apiHandler
-##### Changed
-- responseObject from global scope to local scope.
-- reduced parameters to ```addAttachment()```
-##### Removed
-- control flow logic to check for empty ```schedule``` & ```venue``` array
+##### Added
+-  IDB's db is created with version number 1 and if ```activityObjectStore``` is not found inside IDB then a default empty view is created and if found then it load listView()  
+
+## panel.js
+## Removed
+- removed functionality for getting record count inside activity object store
