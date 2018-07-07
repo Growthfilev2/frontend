@@ -7,3 +7,5 @@ All changes to js/  will be documented in this file.
 ## panel.js
 ## Removed
 - removed functionality for getting record count inside activity object store
+
+

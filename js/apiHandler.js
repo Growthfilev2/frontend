@@ -109,10 +109,13 @@ function initializeIDB () {
       const calendar = db.createObjectStore('calendar', {
         keyPath: 'date'
       })
+      calendar.createIndex('activityId', 'activities.activityId')
 
       const map = db.createObjectStore('map', {
         keyPath: 'location'
       })
+
+      map.createIndex('activityId', 'activities.activityId')
 
       const attachment = db.createObjectStore('attachment', {
         keyPath: 'activityId'
@@ -131,6 +134,7 @@ function initializeIDB () {
         uid: auth.uid
       })
     }
+
     request.onsuccess = function (event) {
       // when Object stores are created, call the updateIDB() to update the data
       // in IDB
@@ -139,185 +143,110 @@ function initializeIDB () {
   })
 }
 
-// helper function to get dates
-function getDateRange (startTime, endTime) {
-  const dates = []
-  let start = new Date(startTime)
-  const end = new Date(endTime)
-
-  while (start <= end) {
-    dates.push(start.toDateString())
-    start = new Date(start.setDate(start.getDate() + 1))
-  }
-
-  dates.push(end.toDateString())
-
-  return dates
-}
-
-// removes id from activityId array inside map object store
-function popIdFromMapStore (db, venueArray, id) {
+function putMap (db, id, removeVenue, addVenue) {
   const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
+  const mapIndex = mapObjectStore.index('activityId')
 
-  venueArray.forEach(function (venue) {
-    if (!venue.location) return
-    if (!venue.address) return
-    if (!venue.geopoint) return
+  const activitiesObject = {}
 
-    mapObjectStore.get(venue.location).onsuccess = function (event) {
-      const record = event.target.result
-
-      const indexOfActivityId = record.activityId.indexOf(id)
-
-      if (indexOfActivityId > -1) {
-        record.activityId.splice(indexOfActivityId, 1)
-      }
-      mapObjectStore.put(record)
-    }
-  })
-}
-
-// removes id from activityId array inside calendar object store
-
-function popIdFromCalendarStore (db, scheduleArray, id) {
-  const calendarObjectStore = db
-    .transaction('calendar', 'readwrite')
-    .objectStore('calendar')
-
-  let range
-
-  scheduleArray.forEach(function (schedule) {
-    if (!schedule.startTime) return
-    if (!schedule.endTime) return
-
-    range = getDateRange(schedule.startTime, schedule.endTime)
-
-    range.forEach(function (date) {
-      calendarObjectStore.get(date).onsuccess = function (event) {
-        const record = event.target.result
-
-        const indexOfActivityId = record.activityId.indexOf(id)
-
-        if (indexOfActivityId > -1) {
-          record.activityId.splice(indexOfActivityId, 1)
-        }
-
-        calendarObjectStore.put(record)
-      }
-    })
-  })
-}
-
-// remove attachment from the attachment object store
-function popAttachment (db, attachment, id) {
-  const attachmentObjectStore = db
-    .transaction('attachment', 'readwrite')
-    .objectStore('attachment')
-
-  attachmentObjectStore.get(id).onsuccess = function (event) {
-    attachmentObjectStore.delete(id)
-  }
-}
-
-// remove activity from the attachment activity store
-
-function removeActivityFromRootStore (db, id) {
-  const removeRequest = db
-    .transaction('activity', 'readwrite')
-    .objectStore('activity')
-    .delete(id)
-}
-
-//  if location from venue array in read response matches the location present
-//  inside map object then push the activityid inside the activityId array of
-//  that record. else create a new record with that location
-
-function pushIdIntoMapStore (db, venueArray, id) {
-  const mapObjectStore = db
-    .transaction('map', 'readwrite')
-    .objectStore('map')
-
-  venueArray.forEach(function (venue) {
-    if (!venue.location) return
-    if (!venue.address) return
-    if (!venue.geopoint) return
-
-    mapObjectStore.get(venue.location).onsuccess = function (event) {
+  removeVenue.forEach(function (oldVenue) {
+    mapIndex.get(id).onsuccess = function (event) {
       const record = event.target.result
 
       if (record) {
-        record.activityId.push(id)
-        record.activityId = [...new Set(record.activityId)]
+        record.activities.activityId = ''
         mapObjectStore.put(record)
-        return
       }
-      mapObjectStore.add({
-        activityId: [
-          id
-        ],
-        location: venue.location,
-        address: venue.address,
-        geopoint: venue.geopoint
-
-      })
     }
   })
+
+  addVenue.forEach(function (newVenue) {
+    activitiesObject['activityId'] = id
+
+    mapObjectStore.put({
+      location: newVenue.location,
+      geopoint: newVenue.geopoint,
+      address: newVenue.address,
+      activities: activitiesObject
+    })
+  })
 }
-//  if date between startTime and endTime from schedule array in read response
-//  matches the date present inside calendar object store then push the
-//  activityid inside the activityId array of that record. else create a new
-//  record with that date and activityId
 
-function pushIdIntoCalendarStore (db, scheduleArray, id) {
-  scheduleArray.forEach(function (schedule) {
-    if (!schedule.startTime) return
-    if (!schedule.endTime) return
+function puDates (db, id, removeSchedule, addSchedule) {
+  const tempDates = []
 
-    const dates = getDateRange(schedule.startTime, schedule.endTime)
+  const minMax = {}
 
-    dates.forEach(function (date) {
-      const calendarObjectStore = db
-        .transaction('calendar', 'readwrite')
-        .objectStore('calendar')
+  const calendarObjectStore = db.transaction('calendar', 'readwrite').objectStore('calendar')
+  const calendarIndex = calendarObjectStore.index('activityId')
+  removeSchedule.forEach(function (oldSchedule) {
+    // parse each date into UTC
+    tempDates.push(Date.parse(oldSchedule.startTime))
+    tempDates.push(Date.parse(oldSchedule.endTime))
+  })
 
-      calendarObjectStore.get(date).onsuccess = function (event) {
+  addSchedule.forEach(function (newSchedule) {
+    tempDates.push(Date.parse(newSchedule.startTime))
+    tempDates.push(Date.parse(newSchedule.endTime))
+  })
+
+  minMax['min'] = Math.min(...tempDates)
+  minMax['max'] = Math.max(...tempDates)
+
+  eachDateInRange(minMax, function (date) {
+    addSchedule.forEach(function (newSchedule) {
+      console.log(date)
+      console.log(new Date(newSchedule.startTime))
+      console.log(new Date(newSchedule.endTime))
+
+      if (date >= new Date(newSchedule.startTime) && date <= new Date(newSchedule.endTime)) {
+        calendarObjectStore.put({
+
+          date: date,
+          activities: {
+            activityId: id
+          }
+        })
+      }
+
+      calendarIndex.get(id).onsuccess = function (event) {
         const record = event.target.result
 
         if (record) {
-          record.activityId.push(id)
-          record.activityId = [...new Set(record.activityId)]
+          delete record.activities.activityId
           calendarObjectStore.put(record)
-          return
         }
-
-        calendarObjectStore.add({
-          date: date,
-          activityId: [id]
-        })
       }
     })
   })
+}
+
+function eachDateInRange (minMax, block) {
+  const start = minMax.min
+  const end = minMax.max
+  for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
+    block.call(null, new Date(currentDate))
+  }
 }
 
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function addAttachment (db, record) {
+function putAttachment (db, record) {
   const attachmentObjectStore = db.transaction('attachment', 'readwrite').objectStore('attachment')
 
-  const newAttachment = JSON.parse(JSON.stringify(record.attachment))
-  newAttachment['activityId'] = record.activityId
-  newAttachment['status'] = record.status
-  newAttachment['template'] = record.template
-  newAttachment['office'] = record.office
-  newAttachment['attachment'] = record.attachment
-
-  attachmentObjectStore.add(newAttachment)
+  attachmentObjectStore.put({
+    activityId: record.activityId,
+    status: record.status,
+    template: record.template,
+    office: record.office,
+    attachment: record.attachment
+  })
 }
 
 // if an assugnee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
-function initializeAssigneeStore (db, assigneeArray) {
+function putAssignessInStore (db, assigneeArray) {
   assigneeArray.forEach(function (assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
@@ -327,7 +256,7 @@ function initializeAssigneeStore (db, assigneeArray) {
 
       usersObjectStore.add({
         mobile: assignee,
-        isUpdated: false.toString()
+        isUpdated: 0
       })
     }
   })
@@ -336,7 +265,7 @@ function initializeAssigneeStore (db, assigneeArray) {
 function readNonUpdatedAssignee (db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
   const isUpdatedIndex = usersObjectStore.index('isUpdated')
-  const NON_UPDATED_USERS = 'false'
+  const NON_UPDATED_USERS = 0
   let assigneeString = ''
 
   const defaultReadUserString = `${apiUrl}services/users/read?q=`
@@ -358,7 +287,7 @@ function readNonUpdatedAssignee (db) {
   })
 }
 
-function writeAssigneeIntoUsers (db, userProfileRead) {
+function updateUserObjectStore (db, userProfileRead) {
   console.log(userProfileRead)
   http(
     'GET',
@@ -366,73 +295,27 @@ function writeAssigneeIntoUsers (db, userProfileRead) {
   )
     .then(function (userProfile) {
       console.log(userProfile)
+
       const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+
       const isUpdatedIndex = usersObjectStore.index('isUpdated')
-      isUpdatedIndex.openCursor('false').onsuccess = function (event) {
+      const USER_NOT_UPDATED = 0
+      const USER_UPDATED = 1
+      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
+
         if (!cursor) return
 
-        console.log(cursor.primaryKey)
         usersObjectStore.put({
 
           mobile: cursor.primaryKey,
           photoURL: userProfile[cursor.primaryKey].photoURL,
           displayName: userProfile[cursor.primaryKey].displayName,
-          isUpdated: 'true'
+          isUpdated: USER_UPDATED
         })
         cursor.continue()
       }
     }).catch(console.log)
-}
-
-function insertActivityIntoActivityStore (db, activity) {
-  const activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity')
-
-  activityObjectStore.add(activity)
-
-  activityObjectStore.get(activity.activityId).onsuccess = function (event) {
-    const venueArray = event.target.result.venue
-
-    const scheduleArray = event.target.result.schedule
-
-    const assigneeArray = event.target.result.assignees
-
-    pushIdIntoMapStore(db, venueArray, activity.activityId)
-
-    pushIdIntoCalendarStore(db, scheduleArray, activity.activityId)
-
-    addAttachment(
-      db,
-      event.target.result
-    )
-  }
-}
-
-// if there is no activity present inside activity object store for which it is
-// being checked , then insert the activity into the activity store. if it is
-// present , then pop all instances of that activityId from all the object
-// stores.
-
-function PopIdFromObjectStores (db, activity) {
-  const activityObjectStore = db.transaction('activity').objectStore('activity')
-
-  activityObjectStore.get(activity.activityId).onsuccess = function (event) {
-    if (!event.target.result) {
-      insertActivityIntoActivityStore(db, activity)
-      return
-    }
-    console.log(activity)
-    const venueArray = event.target.result.venue
-    const scheduleArray = event.target.result.schedule
-    const attachmentObject = event.target.result.attachment
-
-    popIdFromMapStore(db, venueArray, activity.activityId)
-    popIdFromCalendarStore(db, scheduleArray, activity.activityId)
-    popAttachment(db, attachmentObject, activity.activityId)
-    removeActivityFromRootStore(db, activity.activityId)
-
-    insertActivityIntoActivityStore(db, activity)
-  }
 }
 
 function updateSubscription (db, subscription) {
@@ -460,12 +343,12 @@ function updateSubscription (db, subscription) {
 
 // after getting the responseText from the read api , insert addendum into the
 // corresponding object store. for each activity present inside the activities
-// array in response perform the pop/put operation. for each template present
+// array in response perform the put operations. for each template present
 // inside the templates array in response perform the updat subscription logic.
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse (response) {
+function successResponse (read) {
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
@@ -474,28 +357,42 @@ function successResponse (response) {
     const db = request.result
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+    const activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity')
 
-    response.addendum.forEach(function (addendum) {
+    read.addendum.forEach(function (addendum) {
       addendumObjectStore.add(addendum)
     })
 
-    response.activities.forEach(function (activity) {
-      PopIdFromObjectStores(db, activity)
-      initializeAssigneeStore(db, activity.assignees)
+    read.activities.forEach(function (activity) {
+      activityObjectStore.get(activity.activityId).onsuccess = function (event) {
+        const oldActivity = event.target.result
+
+        putMap(db, activity.activityId, oldActivity ? oldActivity.venue : [], activity.venue)
+        puDates(db, activity.activityId, oldActivity ? oldActivity.schedule : [], activity.schedule)
+      }
+
+      // put attachemnt in the attachment object store
+      putAttachment(db, activity)
+
+      // put each assignee (number) in the users object store
+      putAssignessInStore(db, activity.assignees)
+
+      // put activity in activity object store
+      activityObjectStore.put(activity)
     })
 
-    response.templates.forEach(function (subscription) {
+    read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
+    })
+
+    rootObjectStore.put({
+      fromTime: Date.parse(new Date(read.upto)),
+      uid: user.uid
     })
 
     readNonUpdatedAssignee(db).then(function (profileApiString) {
       console.log(profileApiString)
-      writeAssigneeIntoUsers(db, profileApiString)
-    })
-
-    rootObjectStore.put({
-      fromTime: Date.parse(new Date(response.upto)),
-      uid: user.uid
+      // updateUserObjectStore(db, profileApiString)
     })
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
@@ -504,7 +401,6 @@ function successResponse (response) {
       msg: 'IDB updated successfully',
       value: user.uid
     }
-    console.log('asd')
     self.postMessage(responseObject)
   }
 }
