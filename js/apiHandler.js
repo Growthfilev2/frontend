@@ -244,7 +244,7 @@ function putAttachment (db, record) {
   })
 }
 
-// if an assugnee's phone number is present inside the users object store then
+// if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
 function putAssignessInStore (db, assigneeArray) {
   assigneeArray.forEach(function (assignee) {
@@ -287,8 +287,9 @@ function readNonUpdatedAssignee (db) {
   })
 }
 
+// query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
+
 function updateUserObjectStore (db, userProfileRead) {
-  console.log(userProfileRead)
   http(
     'GET',
     userProfileRead
