@@ -32,14 +32,10 @@ function onSuccessMessage (response) {
   console.log(req)
 
   req.onsuccess = function () {
-    const db = req.result
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
-    if (response.data.success) {
-      // listView(response.data.value)
-    }
+
   }
 }
 
 function onErrorMessage (error) {
-  console.log(error)
+  console.table({'line-number': error.lineno, 'error': error.message})
 }

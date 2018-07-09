@@ -31,9 +31,19 @@ const requestFunctionCaller = {
 
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
-  if (firebase) {
-    requestFunctionCaller[event.data.type](event.data.body)
-  }
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      self.postMessage({
+        code: 404,
+        msg: 'firebase auth not readable',
+        dbName: null
+      })
+      return void (0)
+    }
+
+    requestFunctionCaller[event.data.type](auth, event.data.body)
+    updateIDB()
+  })
 }
 
 // Performs XMLHTTPRequest for the API's.
@@ -69,163 +79,172 @@ function http (method, url, data) {
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
-function initializeIDB () {
-  console.log('init db')
+function initializeIDB (auth) {
   // onAuthStateChanged is added because app is reinitialized
-  firebase.auth().onAuthStateChanged(function (auth) {
-    const request = indexedDB.open(auth.uid, 2)
+  var auth = firebase.auth().currentUser
+  console.log(auth)
 
-    request.onerror = function (event) {
-      console.log(event)
-    }
+  const request = indexedDB.open(auth.uid, 2)
 
-    request.onupgradeneeded = function () {
-      const db = request.result
+  request.onerror = function (event) {
+    console.log(event)
+  }
 
-      const activity = db.createObjectStore('activity', {
-        keyPath: 'activityId'
-      })
+  request.onupgradeneeded = function () {
+    const db = request.result
 
-      activity.createIndex('timestamp', 'timestamp')
+    const activity = db.createObjectStore('activity', {
+      keyPath: 'activityId'
+    })
 
-      const users = db.createObjectStore('users', {
-        keyPath: 'mobile'
-      })
-      users.createIndex('isUpdated', 'isUpdated')
+    activity.createIndex('timestamp', 'timestamp')
 
-      const addendum = db.createObjectStore('addendum', {
-        keyPath: 'addendumId'
-      })
+    const users = db.createObjectStore('users', {
+      keyPath: 'mobile'
+    })
+    users.createIndex('isUpdated', 'isUpdated')
 
-      addendum.createIndex('activityId', 'activityId')
+    const addendum = db.createObjectStore('addendum', {
+      keyPath: 'addendumId'
+    })
 
-      const subscriptions = db.createObjectStore('subscriptions', {
-        autoIncrement: true
-      })
+    addendum.createIndex('activityId', 'activityId')
 
-      subscriptions.createIndex('office', 'office')
-      subscriptions.createIndex('template', 'template')
+    const subscriptions = db.createObjectStore('subscriptions', {
+      autoIncrement: true
+    })
 
-      const calendar = db.createObjectStore('calendar', {
-        keyPath: 'date'
-      })
-      calendar.createIndex('activityId', 'activities.activityId')
+    subscriptions.createIndex('office', 'office')
+    subscriptions.createIndex('template', 'template')
 
-      const map = db.createObjectStore('map', {
-        keyPath: 'location'
-      })
+    const calendar = db.createObjectStore('calendar', {
+      keyPath: 'date'
+    })
 
-      map.createIndex('activityId', 'activities.activityId')
+    const map = db.createObjectStore('map', {
+      keyPath: 'location'
+    })
 
-      const attachment = db.createObjectStore('attachment', {
-        keyPath: 'activityId'
-      })
+    map.createIndex('activityId', 'activities.activityId')
 
-      attachment.createIndex('template', 'template')
-      attachment.createIndex('office', 'office')
+    const attachment = db.createObjectStore('attachment', {
+      keyPath: 'activityId'
+    })
 
-      const root = db.createObjectStore('root', {
-        keyPath: 'uid'
-      })
+    attachment.createIndex('template', 'template')
+    attachment.createIndex('office', 'office')
 
-      // add defaultFromTime value here in order to load it only once
-      root.put({
-        fromTime: 0,
-        uid: auth.uid
-      })
-    }
+    const root = db.createObjectStore('root', {
+      keyPath: 'uid'
+    })
 
-    request.onsuccess = function (event) {
-      // when Object stores are created, call the updateIDB() to update the data
-      // in IDB
-      updateIDB()
-    }
-  })
+    // add defaultFromTime value here in order to load it only once
+    root.put({
+      fromTime: 0,
+      uid: auth.uid
+    })
+  }
+
+  request.onsuccess = function (event) {
+    // when Object stores are created, send a response back to requestCreator
+
+    self.postMessage({
+      code: 200,
+      msg: 'IDB initialized successfully',
+      dbName: auth.uid
+    })
+  }
 }
 
-function putMap (db, id, removeVenue, addVenue) {
+function putMap (db, activity, removeVenue) {
   const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
   const mapIndex = mapObjectStore.index('activityId')
 
   const activitiesObject = {}
 
   removeVenue.forEach(function (oldVenue) {
-    mapIndex.get(id).onsuccess = function (event) {
+    mapIndex.get(activity.activityId).onsuccess = function (event) {
       const record = event.target.result
 
       if (record) {
-        record.activities.activityId = ''
+        delete record.activities.activityId
+
         mapObjectStore.put(record)
       }
     }
   })
 
-  addVenue.forEach(function (newVenue) {
-    activitiesObject['activityId'] = id
+  activity.venue.forEach(function (newVenue) {
+    activitiesObject['activityId'] = activity.activityId
 
     mapObjectStore.put({
+
       location: newVenue.location,
       geopoint: newVenue.geopoint,
       address: newVenue.address,
       activities: activitiesObject
+
     })
   })
 }
 
-function puDates (db, id, removeSchedule, addSchedule) {
-  const tempDates = []
-
-  const minMax = {}
+function putDates (db, activity, removeSchedule) {
+  // 31st dec 2038
+  let min = new Date('2038-12-31')
+  // 1st Jan 2000
+  let max = new Date('2000-01-1')
 
   const calendarObjectStore = db.transaction('calendar', 'readwrite').objectStore('calendar')
-  const calendarIndex = calendarObjectStore.index('activityId')
+
   removeSchedule.forEach(function (oldSchedule) {
-    // parse each date into UTC
-    tempDates.push(Date.parse(oldSchedule.startTime))
-    tempDates.push(Date.parse(oldSchedule.endTime))
+    const startTime = new Date(oldSchedule.startTime)
+    const endTime = new Date(oldSchedule.endTime)
+    if (min > startTime) {
+      min = startTime
+    }
+    if (max < endTime) {
+      max = endTime
+    }
   })
 
-  addSchedule.forEach(function (newSchedule) {
-    tempDates.push(Date.parse(newSchedule.startTime))
-    tempDates.push(Date.parse(newSchedule.endTime))
+  activity.schedule.forEach(function (newSchedule) {
+    const startTime = new Date(newSchedule.startTime)
+    const endTime = new Date(newSchedule.endTime)
+
+    if (min > startTime) {
+      min = startTime
+    }
+    if (max < endTime) {
+      max = endTime
+    }
   })
 
-  minMax['min'] = Math.min(...tempDates)
-  minMax['max'] = Math.max(...tempDates)
+  for (let currentDate = min; currentDate <= max; currentDate.setDate(currentDate.getDate() + 1)) {
+    const calendarObjectStore = db.transaction('calendar', 'readwrite').objectStore('calendar')
+    calendarObjectStore.get(currentDate.toUTCString()).onsuccess = function (event) {
+      const record = event.target.result
 
-  eachDateInRange(minMax, function (date) {
-    addSchedule.forEach(function (newSchedule) {
-      console.log(date)
-      console.log(new Date(newSchedule.startTime))
-      console.log(new Date(newSchedule.endTime))
+      console.log(currentDate.toDateString())
 
-      if (date >= new Date(newSchedule.startTime) && date <= new Date(newSchedule.endTime)) {
-        calendarObjectStore.put({
-
-          date: date,
-          activities: {
-            activityId: id
-          }
+      if (!record) {
+        calendarObjectStore.add({
+          date: currentDate.toDateString(),
+          activities: {}
         })
       }
+    }
 
-      calendarIndex.get(id).onsuccess = function (event) {
-        const record = event.target.result
+    // activity.schedule.forEach(function (newSchedule) {
+    //   if (eachDate >= new Date(newSchedule.startTime) && eachDate <= new Date(newSchedule.endTime)) {
+    //     // const record = event.target.result.activities
 
-        if (record) {
-          delete record.activities.activityId
-          calendarObjectStore.put(record)
-        }
-      }
-    })
-  })
-}
-
-function eachDateInRange (minMax, block) {
-  const start = minMax.min
-  const end = minMax.max
-  for (let currentDate = new Date(start); currentDate <= end; currentDate.setDate(currentDate.getDate() + 1)) {
-    block.call(null, new Date(currentDate))
+    //     console.log(eachDate)
+    //     // calendarObjectStore.get(eachDate.toUTCString()).onsuccess = function (event) {
+    //     //   record[activity.activityId] = newSchedule.name
+    //     //   console.log(record)
+    //     // }
+    //   }
+    // })
   }
 }
 
@@ -251,7 +270,7 @@ function putAssignessInStore (db, assigneeArray) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
     usersObjectStore.openCursor().onsuccess = function (event) {
-      cursor = event.target.result
+      const cursor = event.target.result
       if (cursor) return
 
       usersObjectStore.add({
@@ -271,33 +290,44 @@ function readNonUpdatedAssignee (db) {
   const defaultReadUserString = `${apiUrl}services/users/read?q=`
   let fullReadUserString = ''
 
-  return new Promise(function (resolve) {
+  return new Promise(function (resolve, reject) {
     isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
       const cursor = event.target.result
-      if (cursor) {
-        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-        assigneeString += `${assigneeFormat.replace('+', '')}`
-        fullReadUserString = `${defaultReadUserString}${assigneeString}`
-        cursor.continue()
-      } else {
-        console.log(fullReadUserString)
-        resolve(fullReadUserString)
+
+      if (!cursor) {
+        reject({
+          code: 304,
+          msg: 'User object store not modified',
+          dbName: db.name
+        })
+        return
       }
+
+      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+      assigneeString += `${assigneeFormat.replace('+', '')}`
+      fullReadUserString = `${defaultReadUserString}${assigneeString}`
+      cursor.continue()
+
+      console.log(fullReadUserString)
+      resolve({
+        db: db,
+        url: fullReadUserString
+      })
     }
   })
 }
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
-function updateUserObjectStore (db, userProfileRead) {
+function updateUserObjectStore (successUrl) {
   http(
     'GET',
-    userProfileRead
+    successUrl.url
   )
     .then(function (userProfile) {
       console.log(userProfile)
 
-      const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+      const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
 
       const isUpdatedIndex = usersObjectStore.index('isUpdated')
       const USER_NOT_UPDATED = 0
@@ -364,12 +394,23 @@ function successResponse (read) {
       addendumObjectStore.add(addendum)
     })
 
+    let venue, schedule
+
     read.activities.forEach(function (activity) {
       activityObjectStore.get(activity.activityId).onsuccess = function (event) {
         const oldActivity = event.target.result
 
-        putMap(db, activity.activityId, oldActivity ? oldActivity.venue : [], activity.venue)
-        puDates(db, activity.activityId, oldActivity ? oldActivity.schedule : [], activity.schedule)
+        if (oldActivity) {
+          venue = oldActivity.venue
+
+          schedule = oldActivity.schedule
+        } else {
+          venue = []
+          schedule = []
+        }
+        putMap(db, activity, venue)
+
+        putDates(db, activity, schedule)
       }
 
       // put attachemnt in the attachment object store
@@ -391,24 +432,23 @@ function successResponse (read) {
       uid: user.uid
     })
 
-    readNonUpdatedAssignee(db).then(function (profileApiString) {
-      console.log(profileApiString)
-      // updateUserObjectStore(db, profileApiString)
-    })
+    readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
-    const responseObject = {
+    self.postMessage({
       success: true,
       msg: 'IDB updated successfully',
-      value: user.uid
-    }
-    self.postMessage(responseObject)
+      dbName: user.uid
+    })
   }
+}
+
+function notUpdateUserObjectStore (errorUrl) {
+  console.log(errorUrl)
 }
 
 function updateIDB () {
   const user = firebase.auth().currentUser
-
   const req = indexedDB.open(user.uid)
 
   req.onsuccess = function () {
