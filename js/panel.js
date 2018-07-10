@@ -13,6 +13,7 @@ function listView (dbName) {
 
     activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
       let cursor = event.target.result
+
       if (!cursor) {
         console.log('all enteries displayed')
 
@@ -20,6 +21,7 @@ function listView (dbName) {
       }
 
       listViewUI(cursor.value, 'activity--list')
+
       cursor.continue()
     }
   }
@@ -54,9 +56,12 @@ function listViewUI (data, target) {
   document.getElementById(target).appendChild(li)
 }
 
-document.getElementById('map-drawer--icon').addEventListener('click', function () {
-  const user = firebase.auth().currentUser
-  mapView(user.uid)
+const drawerIcons = ['map-drawer--icon', 'calendar-drawer--icon']
+drawerIcons.forEach(function (selector) {
+  document.getElementById(selector).addEventListener('click', function () {
+    const user = firebase.auth().currentUser
+    mapView(user.uid)
+  })
 })
 
 function mapView (dbName) {
@@ -192,9 +197,9 @@ function generateActivityFromMarker (dbName, map, markers) {
   req.onsuccess = function () {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
+
     for (let i = 0; i < markers.length; i++) {
       // marker.customInfo is the activityId related to a marker
-
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
 
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
@@ -211,10 +216,32 @@ function generateActivityFromMarker (dbName, map, markers) {
   }
 }
 
-function calendarView () {
+function calendarView (dbName) {
+// calendar drawer
+  const mdcCalendarDrawer = mdc
+    .drawer
+    .MDCTemporaryDrawer
+    .attachTo(document.getElementById('calendar-drawer'))
 
+  // open IDB
+  const req = indexedDB.open(dbName, 1)
+
+  req.onsuccess = function () {
+    const db = req.result
+    const calendarTx = db.transaction(['calendar'], 'readonly')
+    const calendarObjectStore = calendarTx.objectStore('calendar')
+    const calendarDateIndex = calendarObjectStore.index('date')
+    const range = IDBKeyRange(0, 10)
+    calendarDateIndex.openCursor(range).onsuccess = function (event) {
+      const cursor = event.target.result
+      if (cursor) {
+        console.log(cursor.value)
+        cursor.continue()
+      }
+    }
+  }
 }
 
-function profileView () {
+function profileView (dbName) {
 
 }

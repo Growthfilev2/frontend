@@ -134,8 +134,6 @@ function initializeIDB (auth) {
     map.createIndex('activityId', 'activityId')
     map.createIndex('location', 'location')
 
-    // map.createIndex('activityId', 'activityId')
-
     const attachment = db.createObjectStore('attachment', {
       keyPath: 'activityId'
     })
@@ -160,16 +158,19 @@ function initializeIDB (auth) {
   }
 }
 
-function putMap (db, activity, removeVenue) {
+function updateMap (db, activity) {
   const mapTx = db.transaction(['map'], 'readwrite')
   const mapObjectStore = mapTx.objectStore('map')
+  const mapActivityIdIndex = mapObjectStore.index('activtiyId')
 
-  removeVenue.forEach(function (oldVenue) {
-    const recordDeleteReq = mapObjectStore.delete(oldVenue.location)
-
-    recordDeleteReq.onsuccess = requestHandlerResponse(200, 'successfully removed record from map', db.name)
-    recordDeleteReq.onerror = requestHandlerResponse(404, 'error removing record from map', db.name)
-  })
+  mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+    const cursor = event.target.result
+    if (cursor) {
+      let deleteRecordReq = cursor.delete()
+      cursor.continue()
+      deleteRecordReq.onerror = errorDeletingRecord
+    }
+  }
 
   mapTx.oncomplete = function () {
     const mapTx = db.transaction(['map'], 'readwrite')
@@ -186,41 +187,24 @@ function putMap (db, activity, removeVenue) {
       })
     })
   }
-  mapTx.onerror = requestHandlerResponse(404, 'transaction not completed in map', db.name)
+  mapTx.onerror = errorDeletingRecord
 }
 
-function putDates (db, activity, removeSchedule) {
+function errorDeletingRecord (event) {
+  console.log(event.target.error)
+}
+function transactionError (event) {
+  console.log(event.target.error)
+}
+
+function updateCalendar (db, activity) {
   // 31st dec 2038
   let min = new Date('2038-12-31')
   // 1st Jan 2000
   let max = new Date('2000-01-1')
 
-  removeSchedule.forEach(function (oldSchedule) {
-    const startTime = new Date(oldSchedule.startTime)
-    const endTime = new Date(oldSchedule.endTime)
-    if (min > startTime) {
-      min = startTime
-    }
-    if (max < endTime) {
-      max = endTime
-    }
-  })
-
-  activity.schedule.forEach(function (newSchedule) {
-    const startTime = new Date(newSchedule.startTime)
-    const endTime = new Date(newSchedule.endTime)
-
-    if (min > startTime) {
-      min = startTime
-    }
-    if (max < endTime) {
-      max = endTime
-    }
-  })
-
   const calendarTx = db.transaction(['calendar'], 'readwrite')
   const calendarObjectStore = calendarTx.objectStore('calendar')
-
   const calendarActivityIndex = calendarObjectStore.index('activityId')
 
   calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
@@ -228,41 +212,35 @@ function putDates (db, activity, removeSchedule) {
     const cursor = event.target.result
     if (cursor) {
       let recordDeleteReq = cursor.delete()
-
-      recordDeleteReq.onsuccess = requestHandlerResponse(
-        200,
-        'successfully removed record from calendar',
-        db.name
-      )
-
-      recordDeleteReq.onerror = requestHandlerResponse(
-        200,
-        'error removing record from calendar',
-        db.name
-      )
-
+      recordDeleteReq.onerror = errorDeletingRecord
       cursor.continue()
     }
   }
 
   calendarTx.oncomplete = function () {
+    activity.schedule.forEach(function (schedule) {
+      const startTime = new Date(schedule.startTime)
+      const endTime = new Date(schedule.endTime)
+      if (min > startTime) {
+        min = startTime
+      }
+      if (max < endTime) {
+        max = endTime
+      }
+    })
+
     const calendarTx = db.transaction(['calendar'], 'readwrite')
     const calendarObjectStore = calendarTx.objectStore('calendar')
 
     for (let currentDate = min; currentDate <= max; currentDate.setDate(currentDate.getDate() + 1)) {
-      activity.schedule.forEach(function (schedule) {
-        if (currentDate >= new Date(schedule.startTime) && currentDate <= new Date(schedule.endTime)) {
-          calendarObjectStore.add({
-            date: currentDate.toDateString(),
-            activityId: activity.activityId
-          })
-          // console.log('record added')
-        }
+      calendarObjectStore.add({
+        date: currentDate.toDateString(),
+        activityId: activity.activityId
       })
     }
   }
 
-  calendarTx.onerror = requestHandlerResponse(404, 'transaction not completed in calendar', db.name)
+  calendarTx.onerror = transactionError
 }
 
 // create attachment record with status,template and office values from activity
@@ -403,6 +381,7 @@ function successResponse (read) {
 
   request.onsuccess = function () {
     const db = request.result
+    const calendarMapTx = db.transaction(['calendar', 'map'], 'readwrite')
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
     const activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity')
@@ -411,33 +390,22 @@ function successResponse (read) {
       addendumObjectStore.add(addendum)
     })
 
-    let venue, schedule
-
     read.activities.forEach(function (activity) {
-      activityObjectStore.get(activity.activityId).onsuccess = function (event) {
-        const oldActivity = event.target.result
+      // put activity in activity object store
 
-        if (oldActivity) {
-          venue = oldActivity.venue
+      activityObjectStore.put(activity)
 
-          schedule = oldActivity.schedule
-        } else {
-          venue = []
-          schedule = []
-        }
-        putMap(db, activity, venue)
+      updateMap(db, activity)
 
-        putDates(db, activity, schedule)
-      }
-
-      // put attachemnt in the attachment object store
-      putAttachment(db, activity)
+      updateCalendar(db, activity)
 
       // put each assignee (number) in the users object store
+
       putAssignessInStore(db, activity.assignees)
 
-      // put activity in activity object store
-      activityObjectStore.put(activity)
+      // put attachemnt in the attachment object store
+
+      putAttachment(db, activity)
     })
 
     read.templates.forEach(function (subscription) {

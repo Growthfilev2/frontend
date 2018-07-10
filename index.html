@@ -46,7 +46,23 @@
                                 <div id="list-view--map"></div>
                         </nav>
                     </nav>
+
+
+
+
                 </aside>
+                <aside class="mdc-drawer mdc-drawer--temporary mdc-typography" id="calendar-drawer">
+                    <nav class="mdc-drawer__drawer">
+
+                        <div class="mdc-drawer__toolbar-spacer">
+                            <span id="close-calendar--drawer"><i class="material-icons">arrow_back</i></span>
+                        </div>
+
+                        <nav id="calendar-view--container" class="mdc-drawer__content">
+                        </nav>
+                    </nav>
+                </aside>
+                
                 <header class="mdc-toolbar mdc-elevation--z1">
                     <div class="mdc-toolbar__row">
                         <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
@@ -61,10 +77,16 @@
                                         <i class="material-icons">location_on</i>
                                     </span>
                                 </div>
+                                <div id="calendar-drawer--icon">
+                                    <span>
+                                        <i class="material-icons">today</i>
+                                    </span>
+                                </div>
                             </div>
                         </section>
                     </div>
                 </header>
+                
                 <div class="mdc-card" style="height:578px; overflow-y: auto">
                 <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id="activity--list" aria-orientation="vertical">
 
