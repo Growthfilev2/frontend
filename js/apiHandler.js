@@ -29,15 +29,19 @@ const requestFunctionCaller = {
 
 }
 
+function requestHandlerResponse (code, message, dbName) {
+  self.postMessage({
+    code: code,
+    msg: message,
+    dbName: dbName
+  })
+}
+
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
-      self.postMessage({
-        code: 404,
-        msg: 'firebase auth not readable',
-        dbName: null
-      })
+      requestHandlerResponse(404, 'firebase auth not completed', null)
       return void (0)
     }
 
@@ -57,7 +61,7 @@ function http (method, url, data) {
       .then(function (idToken) {
         const xhr = new XMLHttpRequest()
 
-        xhr.open(method, url, true)
+        xhr.open(method, url)
 
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
         xhr.setRequestHeader('Content-Type', 'application/json')
@@ -120,13 +124,16 @@ function initializeIDB (auth) {
     const calendar = db.createObjectStore('calendar', {
       autoIncrement: true
     })
+
     calendar.createIndex('date', 'date')
     calendar.createIndex('activityId', 'activityId')
 
     const map = db.createObjectStore('map', {
-      keyPath: 'activityId', autoIncrement: true
+      autoIncrement: true
     })
+    map.createIndex('activityId', 'activityId')
     map.createIndex('location', 'location')
+
     // map.createIndex('activityId', 'activityId')
 
     const attachment = db.createObjectStore('attachment', {
@@ -149,34 +156,25 @@ function initializeIDB (auth) {
 
   request.onsuccess = function (event) {
     // when Object stores are created, send a response back to requestCreator
-
-    self.postMessage({
-      code: 200,
-      msg: 'IDB initialized successfully',
-      dbName: auth.uid
-    })
+    requestHandlerResponse(200, 'IDB initialized successfully', request.result.name)
   }
 }
 
 function putMap (db, activity, removeVenue) {
-  console.log('put map')
   const mapTx = db.transaction(['map'], 'readwrite')
   const mapObjectStore = mapTx.objectStore('map')
 
   removeVenue.forEach(function (oldVenue) {
-    mapObjectStore.get(activity.activityId).onsuccess = function (event) {
-      const record = event.target.result
+    const recordDeleteReq = mapObjectStore.delete(oldVenue.location)
 
-      if (record) {
-        mapObjectStore.delete(activity.activityId)
-
-        console.log(activity.activityId)
-      }
-    }
+    recordDeleteReq.onsuccess = requestHandlerResponse(200, 'successfully removed record from map', db.name)
+    recordDeleteReq.onerror = requestHandlerResponse(404, 'error removing record from map', db.name)
   })
+
   mapTx.oncomplete = function () {
     const mapTx = db.transaction(['map'], 'readwrite')
     const mapObjectStore = mapTx.objectStore('map')
+
     activity.venue.forEach(function (newVenue) {
       mapObjectStore.add({
 
@@ -188,10 +186,10 @@ function putMap (db, activity, removeVenue) {
       })
     })
   }
+  mapTx.onerror = requestHandlerResponse(404, 'transaction not completed in map', db.name)
 }
 
 function putDates (db, activity, removeSchedule) {
-  console.log('put dates')
   // 31st dec 2038
   let min = new Date('2038-12-31')
   // 1st Jan 2000
@@ -229,8 +227,20 @@ function putDates (db, activity, removeSchedule) {
     // console.log(activity.activityId)
     const cursor = event.target.result
     if (cursor) {
-      console.log(cursor)
-      cursor.delete()
+      let recordDeleteReq = cursor.delete()
+
+      recordDeleteReq.onsuccess = requestHandlerResponse(
+        200,
+        'successfully removed record from calendar',
+        db.name
+      )
+
+      recordDeleteReq.onerror = requestHandlerResponse(
+        200,
+        'error removing record from calendar',
+        db.name
+      )
+
       cursor.continue()
     }
   }
@@ -252,13 +262,7 @@ function putDates (db, activity, removeSchedule) {
     }
   }
 
-  calendarTx.onerror = function (event) {
-    self.postMessage({
-      code: 404,
-      msg: event.error,
-      dbName: db.name
-    })
-  }
+  calendarTx.onerror = requestHandlerResponse(404, 'transaction not completed in calendar', db.name)
 }
 
 // create attachment record with status,template and office values from activity
@@ -441,18 +445,16 @@ function successResponse (read) {
     })
 
     rootObjectStore.put({
-      fromTime: Date.parse(new Date(read.upto)),
+
+      fromTime: Date.parse(read.upto),
       uid: user.uid
     })
 
     readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
-    self.postMessage({
-      success: true,
-      msg: 'IDB updated successfully',
-      dbName: user.uid
-    })
+
+    requestHandlerResponse(200, 'IDB updated successfully', db.name)
   }
 }
 
@@ -461,6 +463,7 @@ function notUpdateUserObjectStore (errorUrl) {
 }
 
 function updateIDB () {
+  console.log('run update idb')
   const user = firebase.auth().currentUser
   const req = indexedDB.open(user.uid)
 

@@ -1,5 +1,6 @@
 function listView (dbName) {
   const req = window.indexedDB.open(dbName)
+
   req.onerror = function (event) {
     console.log(event)
   }
@@ -18,39 +19,40 @@ function listView (dbName) {
         return
       }
 
-      listViewUI(cursor)
+      listViewUI(cursor.value, 'activity--list')
       cursor.continue()
     }
   }
 }
 
-function listViewUI (cursor) {
+function listViewUI (data, target) {
+  console.log('run')
   const li = document.createElement('li')
-  li.classList.add('mdc-list-item')
-  li.dataset.id = cursor.value.activityId
+  li.classList.add('mdc-list-item', 'insert-slow')
+  li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
-  leftTextContainer.textContent = cursor.value.title
+  leftTextContainer.textContent = data.title
 
   const leftTextSecondaryContainer = document.createElement('span')
   leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
-  leftTextSecondaryContainer.textContent = cursor.value.office
+  leftTextSecondaryContainer.textContent = data.office
 
   leftTextContainer.appendChild(leftTextSecondaryContainer)
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
-  metaTextContainer.textContent = new Date(cursor.value.timestamp).toDateString()
+  metaTextContainer.textContent = new Date(data.timestamp).toDateString()
 
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text')
-  metaTextActivityStatus.textContent = cursor.value.status
+  metaTextActivityStatus.textContent = data.status
   metaTextContainer.appendChild(metaTextActivityStatus)
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
 
-  document.getElementById('activity--list').appendChild(li)
+  document.getElementById(target).appendChild(li)
 }
 
 document.getElementById('map-drawer--icon').addEventListener('click', function () {
@@ -68,6 +70,9 @@ function mapView (dbName) {
   // open map drawer
 
   mdcMapDrawer.open = true
+  document.getElementById('close-map--drawer').addEventListener('click', function () {
+    mdcMapDrawer.open = false
+  })
 
   const req = window.indexedDB.open(dbName)
 
@@ -77,8 +82,9 @@ function mapView (dbName) {
     const db = req.result
 
     const mapObjectStore = db.transaction('map').objectStore('map')
+    const mapLocationIndex = mapObjectStore.index('location')
     const activityObjectStore = db.transaction('activity').objectStore('activity')
-    mapObjectStore.openCursor().onsuccess = function (event) {
+    mapLocationIndex.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
 
       if (!cursor) {
@@ -106,18 +112,25 @@ function initMap (dbName, mapRecord) {
 
   const map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
-    center: new google.maps.LatLng(centerGeopoints.geopoint['_latitude'],
-      centerGeopoints.geopoint['_longitude']),
+    center: new google.maps.LatLng(
+      centerGeopoints.geopoint['_latitude'],
+      centerGeopoints.geopoint['_longitude']
+    ),
+
+    streetViewControl: false,
+    mapTypeControl: false,
+    rotateControl: false,
+    fullscreenControl: false,
 
     mapTypeId: google.maps.MapTypeId.ROADMAP
-
   })
 
   displayMarkers(dbName, map, mapRecord)
 }
 
 function displayMarkers (dbName, map, locationData) {
-  const markers = []
+  let bounds = new google.maps.LatLngBounds()
+  const allMarkers = []
   for (let i = 0; i < locationData.length; i++) {
     const marker = new google.maps.Marker({
       position: new google.maps.LatLng(locationData[i].geopoint['_latitude'], locationData[i].geopoint['_longitude']),
@@ -126,24 +139,54 @@ function displayMarkers (dbName, map, locationData) {
       customInfo: locationData[i].activityId
 
     })
+    bounds.extend(marker.getPosition())
 
     marker.setMap(map)
-    markers.push(marker)
+    allMarkers.push(marker)
+
+    marker.addListener('click', function () {
+      map.setZoom(14)
+      map.setCenter(marker.getPosition())
+      generateActivityFromMarker(dbName, map, allMarkers)
+    })
   }
 
-  google.maps.event.addListener(map, 'idle', function () {
-    showVisibleMarkers(dbName, map, markers)
+  map.fitBounds(bounds)
+
+  google.maps.event.addListener(map, 'zoom_changed', function () {
+    generateActivityFromMarker(dbName, map, allMarkers)
+  })
+
+  google.maps.event.addListener(map, 'dragend', function () {
+    generateActivityFromMarker(dbName, map, allMarkers)
   })
 }
 
-function showVisibleMarkers (dbName, map, markers) {
+function generateActivityFromMarker (dbName, map, markers) {
+  const PARENT_EL_SELECTOR = 'list-view--map'
+  const target = document.getElementById(PARENT_EL_SELECTOR)
+  while (target.lastChild) {
+    target.removeChild(target.lastChild)
+  }
+
   let bounds = map.getBounds()
 
-  for (let i = 0; i < markers.length; i++) {
-    const currentMarker = markers[i]
+  let req = indexedDB.open(dbName)
 
-    if (bounds.contains(currentMarker.getPosition())) {
-      console.log(Array.isArray(currentMarker.customInfo))
+  req.onsuccess = function () {
+    const db = req.result
+    const activityObjectStore = db.transaction('activity').objectStore('activity')
+    for (let i = 0; i < markers.length; i++) {
+      console.log(markers[i])
+      if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
+        activityObjectStore.openCursor(markers[i].customInfo).onsuccess = function (event) {
+          const cursor = event.target.result
+
+          if (!cursor) return
+
+          listViewUI(cursor.value, 'list-view--map')
+        }
+      }
     }
   }
 }

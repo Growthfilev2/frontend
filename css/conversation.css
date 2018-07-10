@@ -273,3 +273,9 @@ margin-left:0;
 #map {
     height: 300px;
 }
+.insert-slow {
+    transition: all 1s;
+}
+#close-map--drawer, #map-drawer--icon {
+    cursor: pointer;
+}
