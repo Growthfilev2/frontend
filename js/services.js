@@ -37,5 +37,6 @@ function onSuccessMessage (response) {
 }
 
 function onErrorMessage (error) {
-  console.table({'line-number': error.lineno, 'error': error.message})
+  console.log(error)
+  console.table({'line-number': error.lineno, 'error': error.message, 'file': error.filename})
 }

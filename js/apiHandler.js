@@ -118,14 +118,16 @@ function initializeIDB (auth) {
     subscriptions.createIndex('template', 'template')
 
     const calendar = db.createObjectStore('calendar', {
-      keyPath: 'date'
+      autoIncrement: true
     })
+    calendar.createIndex('date', 'date')
+    calendar.createIndex('activityId', 'activityId')
 
     const map = db.createObjectStore('map', {
-      keyPath: 'location'
+      keyPath: 'activityId', autoIncrement: true
     })
-
-    map.createIndex('activityId', 'activities.activityId')
+    map.createIndex('location', 'location')
+    // map.createIndex('activityId', 'activityId')
 
     const attachment = db.createObjectStore('attachment', {
       keyPath: 'activityId'
@@ -157,44 +159,43 @@ function initializeIDB (auth) {
 }
 
 function putMap (db, activity, removeVenue) {
-  const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
-  const mapIndex = mapObjectStore.index('activityId')
-
-  const activitiesObject = {}
+  console.log('put map')
+  const mapTx = db.transaction(['map'], 'readwrite')
+  const mapObjectStore = mapTx.objectStore('map')
 
   removeVenue.forEach(function (oldVenue) {
-    mapIndex.get(activity.activityId).onsuccess = function (event) {
+    mapObjectStore.get(activity.activityId).onsuccess = function (event) {
       const record = event.target.result
 
       if (record) {
-        delete record.activities.activityId
+        mapObjectStore.delete(activity.activityId)
 
-        mapObjectStore.put(record)
+        console.log(activity.activityId)
       }
     }
   })
+  mapTx.oncomplete = function () {
+    const mapTx = db.transaction(['map'], 'readwrite')
+    const mapObjectStore = mapTx.objectStore('map')
+    activity.venue.forEach(function (newVenue) {
+      mapObjectStore.add({
 
-  activity.venue.forEach(function (newVenue) {
-    activitiesObject['activityId'] = activity.activityId
+        location: newVenue.location,
+        geopoint: newVenue.geopoint,
+        address: newVenue.address,
+        activityId: activity.activityId
 
-    mapObjectStore.put({
-
-      location: newVenue.location,
-      geopoint: newVenue.geopoint,
-      address: newVenue.address,
-      activities: activitiesObject
-
+      })
     })
-  })
+  }
 }
 
 function putDates (db, activity, removeSchedule) {
+  console.log('put dates')
   // 31st dec 2038
   let min = new Date('2038-12-31')
   // 1st Jan 2000
   let max = new Date('2000-01-1')
-
-  const calendarObjectStore = db.transaction('calendar', 'readwrite').objectStore('calendar')
 
   removeSchedule.forEach(function (oldSchedule) {
     const startTime = new Date(oldSchedule.startTime)
@@ -219,32 +220,44 @@ function putDates (db, activity, removeSchedule) {
     }
   })
 
-  for (let currentDate = min; currentDate <= max; currentDate.setDate(currentDate.getDate() + 1)) {
-    const calendarObjectStore = db.transaction('calendar', 'readwrite').objectStore('calendar')
-    calendarObjectStore.get(currentDate.toUTCString()).onsuccess = function (event) {
-      const record = event.target.result
+  const calendarTx = db.transaction(['calendar'], 'readwrite')
+  const calendarObjectStore = calendarTx.objectStore('calendar')
 
-      console.log(currentDate.toDateString())
+  const calendarActivityIndex = calendarObjectStore.index('activityId')
 
-      if (!record) {
-        calendarObjectStore.add({
-          date: currentDate.toDateString(),
-          activities: {}
-        })
-      }
+  calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+    // console.log(activity.activityId)
+    const cursor = event.target.result
+    if (cursor) {
+      console.log(cursor)
+      cursor.delete()
+      cursor.continue()
     }
+  }
 
-    // activity.schedule.forEach(function (newSchedule) {
-    //   if (eachDate >= new Date(newSchedule.startTime) && eachDate <= new Date(newSchedule.endTime)) {
-    //     // const record = event.target.result.activities
+  calendarTx.oncomplete = function () {
+    const calendarTx = db.transaction(['calendar'], 'readwrite')
+    const calendarObjectStore = calendarTx.objectStore('calendar')
 
-    //     console.log(eachDate)
-    //     // calendarObjectStore.get(eachDate.toUTCString()).onsuccess = function (event) {
-    //     //   record[activity.activityId] = newSchedule.name
-    //     //   console.log(record)
-    //     // }
-    //   }
-    // })
+    for (let currentDate = min; currentDate <= max; currentDate.setDate(currentDate.getDate() + 1)) {
+      activity.schedule.forEach(function (schedule) {
+        if (currentDate >= new Date(schedule.startTime) && currentDate <= new Date(schedule.endTime)) {
+          calendarObjectStore.add({
+            date: currentDate.toDateString(),
+            activityId: activity.activityId
+          })
+          // console.log('record added')
+        }
+      })
+    }
+  }
+
+  calendarTx.onerror = function (event) {
+    self.postMessage({
+      code: 404,
+      msg: event.error,
+      dbName: db.name
+    })
   }
 }
 
