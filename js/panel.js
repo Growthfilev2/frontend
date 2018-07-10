@@ -26,7 +26,6 @@ function listView (dbName) {
 }
 
 function listViewUI (data, target) {
-  console.log('run')
   const li = document.createElement('li')
   li.classList.add('mdc-list-item', 'insert-slow')
   li.dataset.id = data.activityId
@@ -130,8 +129,11 @@ function initMap (dbName, mapRecord) {
 
 function displayMarkers (dbName, map, locationData) {
   let bounds = new google.maps.LatLngBounds()
+
   const allMarkers = []
+
   for (let i = 0; i < locationData.length; i++) {
+    // create marker
     const marker = new google.maps.Marker({
       position: new google.maps.LatLng(locationData[i].geopoint['_latitude'], locationData[i].geopoint['_longitude']),
 
@@ -139,11 +141,16 @@ function displayMarkers (dbName, map, locationData) {
       customInfo: locationData[i].activityId
 
     })
+    // set bounds to extend to a marker
     bounds.extend(marker.getPosition())
 
+    // set marker to map
     marker.setMap(map)
+
+    // push marker to allMarkers array
     allMarkers.push(marker)
 
+    // add click listener on each marker , to zoom on marker when clicked
     marker.addListener('click', function () {
       map.setZoom(14)
       map.setCenter(marker.getPosition())
@@ -151,11 +158,16 @@ function displayMarkers (dbName, map, locationData) {
     })
   }
 
+  // fit all markers to default view of map
   map.fitBounds(bounds)
+
+  // add zoom_changed listener on map ,so that when zoom changes, markers will give the acitivtyId attached to them
 
   google.maps.event.addListener(map, 'zoom_changed', function () {
     generateActivityFromMarker(dbName, map, allMarkers)
   })
+
+  // add drag_end listener on map ,so that when draggins is done , markers will give the acitivtyId attached to them
 
   google.maps.event.addListener(map, 'dragend', function () {
     generateActivityFromMarker(dbName, map, allMarkers)
@@ -165,25 +177,33 @@ function displayMarkers (dbName, map, locationData) {
 function generateActivityFromMarker (dbName, map, markers) {
   const PARENT_EL_SELECTOR = 'list-view--map'
   const target = document.getElementById(PARENT_EL_SELECTOR)
+
+  // remove dom when zoom,drag or click events are fired, to remove previous listview inside the map drawer
+
   while (target.lastChild) {
     target.removeChild(target.lastChild)
   }
 
   let bounds = map.getBounds()
 
+  // open IndexedDB
   let req = indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     for (let i = 0; i < markers.length; i++) {
-      console.log(markers[i])
+      // marker.customInfo is the activityId related to a marker
+
+      // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
+
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
         activityObjectStore.openCursor(markers[i].customInfo).onsuccess = function (event) {
           const cursor = event.target.result
 
           if (!cursor) return
 
+          // call listViewUI to render listView
           listViewUI(cursor.value, 'list-view--map')
         }
       }
