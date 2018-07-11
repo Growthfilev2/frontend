@@ -161,7 +161,7 @@ function initializeIDB (auth) {
 function updateMap (db, activity) {
   const mapTx = db.transaction(['map'], 'readwrite')
   const mapObjectStore = mapTx.objectStore('map')
-  const mapActivityIdIndex = mapObjectStore.index('activtiyId')
+  const mapActivityIdIndex = mapObjectStore.index('activityId')
 
   mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
     const cursor = event.target.result
