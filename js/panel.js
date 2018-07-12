@@ -45,7 +45,7 @@ function listViewUI (data, target) {
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
-  metaTextContainer.textContent = new Date(data.timestamp).toDateString()
+  metaTextContainer.textContent = `${new Date(data.timestamp).getHours()} : ${new Date(data.timestamp).getMinutes()}`
 
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text')
@@ -60,7 +60,6 @@ const drawerIcons = ['map-drawer--icon', 'calendar-drawer--icon']
 drawerIcons.forEach(function (selector) {
   document.getElementById(selector).addEventListener('click', function () {
     const user = firebase.auth().currentUser
-    console.log(selector)
     switch (selector) {
       case 'map-drawer--icon':
         mapView(user.uid)
@@ -163,20 +162,12 @@ function displayMarkers (dbName, map, locationData) {
 
     // push marker to allMarkers array
     allMarkers.push(marker)
-
-    // add click listener on each marker , to zoom on marker when clicked
-    marker.addListener('click', function () {
-      map.setZoom(14)
-      map.setCenter(marker.getPosition())
-      generateActivityFromMarker(dbName, map, allMarkers)
-    })
   }
 
   // fit all markers to default view of map
   map.fitBounds(bounds)
 
   // add zoom_changed listener on map ,so that when zoom changes, markers will give the acitivtyId attached to them
-
   google.maps.event.addListener(map, 'zoom_changed', function () {
     generateActivityFromMarker(dbName, map, allMarkers)
   })
@@ -189,14 +180,7 @@ function displayMarkers (dbName, map, locationData) {
 }
 
 function generateActivityFromMarker (dbName, map, markers) {
-  const PARENT_EL_SELECTOR = 'list-view--map'
-  const target = document.getElementById(PARENT_EL_SELECTOR)
-
-  // remove dom when zoom,drag or click events are fired, to remove previous listview inside the map drawer
-
-  while (target.lastChild) {
-    target.removeChild(target.lastChild)
-  }
+  removeDom('list-view--map')
 
   let bounds = map.getBounds()
 
@@ -210,7 +194,6 @@ function generateActivityFromMarker (dbName, map, markers) {
     for (let i = 0; i < markers.length; i++) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
-
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
         activityObjectStore.openCursor(markers[i].customInfo).onsuccess = function (event) {
           const cursor = event.target.result
@@ -232,6 +215,7 @@ function calendarView (dbName) {
     .attachTo(document.getElementById('calendar-drawer'))
 
   mdcCalendarDrawer.open = true
+  removeDom('calendar-view--container')
 
   // open IDB
   const req = window.indexedDB.open(dbName)
@@ -245,8 +229,12 @@ function calendarView (dbName) {
       const cursor = event.target.result
 
       if (cursor) {
-        getActivityForDate(db, cursor.value)
+        calendarViewUI(db, cursor.value)
         cursor.continue()
+      } else {
+        document.querySelectorAll('.activity--row li').forEach(function (li) {
+          li.classList.add('calendar-activity--list-item')
+        })
       }
     }
   }
@@ -256,36 +244,47 @@ function calendarView (dbName) {
   }
 }
 
-function getActivityForDate (db, data) {
+function calendarViewUI (db, data) {
   const commonDate = data.date.toDateString()
   const commonParsedDate = Date.parse(commonDate)
 
-  // ISO string converts the date to yyyy-mm-dd format with time
-  // splitting the date from 'T' and removed the hyphen  will give only yyyy-mm-dd
-  // commonIsoDate will be the ul element's className where list will be inserted
-  // const commonIsoDate = data.date.toISOString().split('T')[0].replace(/-/g, '')
   if (!document.getElementById(commonParsedDate)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = commonParsedDate
-    dateDiv.className = 'date-container'
+    dateDiv.className = 'date-container mdc-elevation--z1'
 
-    const span = document.createElement('span')
-    span.className = 'date-col'
-    span.textContent = commonDate
+    const dateCol = document.createElement('div')
+    dateCol.className = 'date-col'
+
+    const borderCol = document.createElement('div')
+    borderCol.className = 'border--circle-date'
+
+    const dateSpan = document.createElement('span')
+    dateSpan.textContent = commonDate.split(' ')[2]
+    dateSpan.className = 'mdc-typography--headline5'
+
+    const monthSpan = document.createElement('span')
+    monthSpan.className = 'month-row mdc-list-item__secondary-text mdc-typography--subtitle2'
+    monthSpan.textContent = commonDate.split(' ')[1]
+
+    borderCol.appendChild(dateSpan)
+    borderCol.appendChild(monthSpan)
+
+    dateCol.appendChild(borderCol)
 
     const activityRow = document.createElement('div')
     activityRow.className = 'activity--row'
     activityRow.id = `row-${commonParsedDate}`
 
-    dateDiv.appendChild(span)
+    dateDiv.appendChild(dateCol)
     dateDiv.appendChild(activityRow)
 
     document.getElementById('calendar-view--container').appendChild(dateDiv)
-    getActivity(db, data)
+    getActivity(db, data, `row-${commonParsedDate}`)
+    return
   }
 
   getActivity(db, data, `row-${commonParsedDate}`)
-  document.querySelector('.activity--row li').classList.add('calendar-activity--list-item')
 }
 
 function getActivity (db, data, target) {
@@ -299,4 +298,14 @@ function getActivity (db, data, target) {
 
 function profileView (dbName) {
 
+}
+
+function removeDom (selector) {
+  const target = document.getElementById(selector)
+
+  // remove dom when zoom,drag or click events are fired, to remove previous listview inside the map drawer
+
+  while (target.lastChild) {
+    target.removeChild(target.lastChild)
+  }
 }
