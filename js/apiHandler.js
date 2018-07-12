@@ -133,6 +133,7 @@ function initializeIDB (auth) {
     })
     map.createIndex('activityId', 'activityId')
     map.createIndex('location', 'location')
+    map.createIndex('office','office')
 
     const attachment = db.createObjectStore('attachment', {
       keyPath: 'activityId'
@@ -183,7 +184,8 @@ function updateMap (db, activity) {
         geopoint: newVenue.geopoint,
         address: newVenue.address,
         activityId: activity.activityId,
-        venueDescriptor: newVenue.venueDescriptor
+        venueDescriptor: newVenue.venueDescriptor,
+        office:activity.office
 
       })
     })
@@ -270,15 +272,15 @@ function updateCalendar (db, activity) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment (db, record) {
+function putAttachment (db, activity) {
   const attachmentObjectStore = db.transaction('attachment', 'readwrite').objectStore('attachment')
 
   attachmentObjectStore.put({
-    activityId: record.activityId,
-    status: record.status,
-    template: record.template,
-    office: record.office,
-    attachment: record.attachment
+    activityId: activity.activityId,
+    status: activity.status,
+    template: activity.template,
+    office: activity.office,
+    attachment: activity.attachment
   })
 }
 
