@@ -29,7 +29,7 @@ function listView (dbName) {
 
 function listViewUI (data, target) {
   const li = document.createElement('li')
-  li.classList.add('mdc-list-item', 'insert-slow')
+  li.classList.add('mdc-list-item', 'activity--list-item')
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
 
@@ -60,7 +60,16 @@ const drawerIcons = ['map-drawer--icon', 'calendar-drawer--icon']
 drawerIcons.forEach(function (selector) {
   document.getElementById(selector).addEventListener('click', function () {
     const user = firebase.auth().currentUser
-    mapView(user.uid)
+    console.log(selector)
+    switch (selector) {
+      case 'map-drawer--icon':
+        mapView(user.uid)
+        break
+
+      case 'calendar-drawer--icon':
+        calendarView(user.uid)
+        break
+    }
   })
 })
 
@@ -217,28 +226,74 @@ function generateActivityFromMarker (dbName, map, markers) {
 }
 
 function calendarView (dbName) {
-// calendar drawer
   const mdcCalendarDrawer = mdc
     .drawer
     .MDCTemporaryDrawer
     .attachTo(document.getElementById('calendar-drawer'))
 
-  // open IDB
-  const req = indexedDB.open(dbName, 1)
+  mdcCalendarDrawer.open = true
 
+  // open IDB
+  const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
     const calendarTx = db.transaction(['calendar'], 'readonly')
     const calendarObjectStore = calendarTx.objectStore('calendar')
     const calendarDateIndex = calendarObjectStore.index('date')
-    const range = IDBKeyRange(0, 10)
-    calendarDateIndex.openCursor(range).onsuccess = function (event) {
+
+    calendarDateIndex.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
+
       if (cursor) {
-        console.log(cursor.value)
+        getActivityForDate(db, cursor.value)
         cursor.continue()
       }
     }
+  }
+
+  req.onerror = function (event) {
+    console.log(event.target.result)
+  }
+}
+
+function getActivityForDate (db, data) {
+  const commonDate = data.date.toDateString()
+  const commonParsedDate = Date.parse(commonDate)
+
+  // ISO string converts the date to yyyy-mm-dd format with time
+  // splitting the date from 'T' and removed the hyphen  will give only yyyy-mm-dd
+  // commonIsoDate will be the ul element's className where list will be inserted
+  // const commonIsoDate = data.date.toISOString().split('T')[0].replace(/-/g, '')
+  if (!document.getElementById(commonParsedDate)) {
+    const dateDiv = document.createElement('div')
+    dateDiv.id = commonParsedDate
+    dateDiv.className = 'date-container'
+
+    const span = document.createElement('span')
+    span.className = 'date-col'
+    span.textContent = commonDate
+
+    const activityRow = document.createElement('div')
+    activityRow.className = 'activity--row'
+    activityRow.id = `row-${commonParsedDate}`
+
+    dateDiv.appendChild(span)
+    dateDiv.appendChild(activityRow)
+
+    document.getElementById('calendar-view--container').appendChild(dateDiv)
+    getActivity(db, data)
+  }
+
+  getActivity(db, data, `row-${commonParsedDate}`)
+  document.querySelector('.activity--row li').classList.add('calendar-activity--list-item')
+}
+
+function getActivity (db, data, target) {
+  const activityObjectStore = db.transaction('activity').objectStore('activity')
+  activityObjectStore.openCursor(data.activityId).onsuccess = function (event) {
+    const cursor = event.target.result
+
+    listViewUI(cursor.value, target)
   }
 }
 

@@ -127,7 +127,7 @@ function initializeIDB (auth) {
 
     calendar.createIndex('date', 'date')
     calendar.createIndex('activityId', 'activityId')
-
+    calendar.createIndex('isUpdated', 'isUpdated')
     const map = db.createObjectStore('map', {
       autoIncrement: true
     })
@@ -182,7 +182,8 @@ function updateMap (db, activity) {
         location: newVenue.location,
         geopoint: newVenue.geopoint,
         address: newVenue.address,
-        activityId: activity.activityId
+        activityId: activity.activityId,
+        venueDescriptor: newVenue.venueDescriptor
 
       })
     })
@@ -193,16 +194,12 @@ function updateMap (db, activity) {
 function errorDeletingRecord (event) {
   console.log(event.target.error)
 }
+
 function transactionError (event) {
   console.log(event.target.error)
 }
 
 function updateCalendar (db, activity) {
-  // 31st dec 2038
-  let min = new Date('2038-12-31')
-  // 1st Jan 2000
-  let max = new Date('2000-01-1')
-
   const calendarTx = db.transaction(['calendar'], 'readwrite')
   const calendarObjectStore = calendarTx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
@@ -218,25 +215,52 @@ function updateCalendar (db, activity) {
   }
 
   calendarTx.oncomplete = function () {
+    const calendarTx = db.transaction(['calendar'], 'readwrite')
+    const calendarObjectStore = calendarTx.objectStore('calendar')
+    const calendarActivityIndex = calendarObjectStore.index('activityId')
+    const calendarIsUpdatedIndex = calendarObjectStore.index('isUpdated')
+
     activity.schedule.forEach(function (schedule) {
       const startTime = new Date(schedule.startTime)
       const endTime = new Date(schedule.endTime)
-      if (min > startTime) {
-        min = startTime
-      }
-      if (max < endTime) {
-        max = endTime
-      }
+
+      calendarObjectStore.add({
+        isUpdated: 0,
+        activityId: activity.activityId,
+        scheduleName: schedule.name,
+        date: {
+          start: startTime,
+          end: endTime
+        }
+      })
     })
 
-    const calendarTx = db.transaction(['calendar'], 'readwrite')
-    const calendarObjectStore = calendarTx.objectStore('calendar')
+    calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+      const cursor = event.target.result
 
-    for (let currentDate = min; currentDate <= max; currentDate.setDate(currentDate.getDate() + 1)) {
-      calendarObjectStore.add({
-        date: currentDate.toDateString(),
-        activityId: activity.activityId
-      })
+      if (!cursor) return
+
+      let record = cursor.value
+
+      for (let currentDate = record.date.start; currentDate <= record.date.end; currentDate.setDate(currentDate.getDate() + 1)) {
+        calendarObjectStore.add({
+          isUpdated: 1,
+          activityId: record.activityId,
+          scheduleName: record.scheduleName,
+          date: currentDate
+        })
+      }
+      cursor.continue()
+    }
+
+    calendarIsUpdatedIndex.openCursor(0).onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (cursor) {
+        let deleteRecordReq = cursor.delete()
+        deleteRecordReq.onerror = errorDeletingRecord
+        cursor.continue()
+      }
     }
   }
 
@@ -264,7 +288,7 @@ function putAssignessInStore (db, assigneeArray) {
   assigneeArray.forEach(function (assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
-    usersObjectStore.openCursor().onsuccess = function (event) {
+    usersObjectStore.openCursor(assignee).onsuccess = function (event) {
       const cursor = event.target.result
       if (cursor) return
 
@@ -285,29 +309,23 @@ function readNonUpdatedAssignee (db) {
   const defaultReadUserString = `${apiUrl}services/users/read?q=`
   let fullReadUserString = ''
 
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
       const cursor = event.target.result
 
       if (!cursor) {
-        reject({
-          code: 304,
-          msg: 'User object store not modified',
-          dbName: db.name
+        fullReadUserString = `${defaultReadUserString}${assigneeString}`
+        console.log(fullReadUserString)
+        resolve({
+          db: db,
+          url: fullReadUserString
         })
         return
       }
 
       const assigneeFormat = `%2B${cursor.value.mobile}&q=`
       assigneeString += `${assigneeFormat.replace('+', '')}`
-      fullReadUserString = `${defaultReadUserString}${assigneeString}`
       cursor.continue()
-
-      console.log(fullReadUserString)
-      resolve({
-        db: db,
-        url: fullReadUserString
-      })
     }
   })
 }
@@ -323,22 +341,26 @@ function updateUserObjectStore (successUrl) {
       console.log(userProfile)
 
       const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
-
       const isUpdatedIndex = usersObjectStore.index('isUpdated')
       const USER_NOT_UPDATED = 0
       const USER_UPDATED = 1
+
       isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
+        console.log(cursor.value)
 
         if (!cursor) return
+        if (!userProfile[cursor.primaryKey].displayName) return
 
-        usersObjectStore.put({
+        if (!userProfile[cursor.primaryKey].photoURL) return
 
-          mobile: cursor.primaryKey,
-          photoURL: userProfile[cursor.primaryKey].photoURL,
-          displayName: userProfile[cursor.primaryKey].displayName,
-          isUpdated: USER_UPDATED
-        })
+        const record = cursor.value
+
+        record.photoURL = userProfile[cursor.primaryKey].photoURL
+        record.displayName = userProfile[cursor.primaryKey].displayName
+        record.isUpdated = USER_UPDATED
+        console.log(record)
+        usersObjectStore.put(record)
         cursor.continue()
       }
     }).catch(console.log)
@@ -381,7 +403,6 @@ function successResponse (read) {
 
   request.onsuccess = function () {
     const db = request.result
-    const calendarMapTx = db.transaction(['calendar', 'map'], 'readwrite')
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
     const activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity')
@@ -414,6 +435,7 @@ function successResponse (read) {
 
     rootObjectStore.put({
 
+      // fromTime: Date.parse(read.upto),
       fromTime: Date.parse(read.upto),
       uid: user.uid
     })

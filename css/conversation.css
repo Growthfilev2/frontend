@@ -273,9 +273,23 @@ margin-left:0;
 #map {
     height: 300px;
 }
-.insert-slow {
+.activity--list-item {
     transition: all 1s;
+
+}
+.calendar-activity--list-item {
+    width: 90%;
+    padding-left: 0px;
+    height: 70px;
 }
 #close-map--drawer, #map-drawer--icon {
     cursor: pointer;
+}
+.date-container {
+    display: table
+}
+.date-col {
+    padding-right: 10px;
+    display: table-cell;
+    vertical-align: middle;
 }
