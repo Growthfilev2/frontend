@@ -10,7 +10,7 @@ const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 /** reinitialize the firebase app */
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyB0D7Ln4r491ESzGA28rs6oQ_3C6RDeP-s',
+  apiKey: 'AIzaSyBgbeCmkuveYZwqKp43KNvlEgwumxRroVY',
   authDomain: 'growthfilev2-0.firebaseapp.com',
   databaseURL: 'https://growthfilev2-0.firebaseio.com',
   projectId: 'growthfilev2-0',

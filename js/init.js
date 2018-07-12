@@ -1,11 +1,13 @@
 // Initialize the firebase application
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyB0D7Ln4r491ESzGA28rs6oQ_3C6RDeP-s',
+
+  apiKey: 'AIzaSyBgbeCmkuveYZwqKp43KNvlEgwumxRroVY',
   authDomain: 'growthfilev2-0.firebaseapp.com',
   databaseURL: 'https://growthfilev2-0.firebaseio.com',
   projectId: 'growthfilev2-0',
   storageBucket: 'growthfilev2-0.appspot.com'
+
 })
 
 // firebaseUI login config object
@@ -25,6 +27,7 @@ function firebaseUiConfig () {
 
       {
         provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+
         recaptchaParameters: {
           type: 'image',
           size: 'normal',

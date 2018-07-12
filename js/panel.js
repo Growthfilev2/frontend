@@ -56,7 +56,7 @@ function listViewUI (data, target) {
   document.getElementById(target).appendChild(li)
 }
 
-const drawerIcons = ['map-drawer--icon', 'calendar-drawer--icon']
+const drawerIcons = ['map-drawer--icon', 'calendar-drawer--icon', 'profile-drawer--icon']
 drawerIcons.forEach(function (selector) {
   document.getElementById(selector).addEventListener('click', function () {
     const user = firebase.auth().currentUser
@@ -68,6 +68,8 @@ drawerIcons.forEach(function (selector) {
       case 'calendar-drawer--icon':
         calendarView(user.uid)
         break
+      case 'profile-drawer--icon':
+        profileView()
     }
   })
 })
@@ -95,7 +97,7 @@ function mapView (dbName) {
 
     const mapObjectStore = db.transaction('map').objectStore('map')
     const mapLocationIndex = mapObjectStore.index('location')
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
+
     mapLocationIndex.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
 
@@ -185,7 +187,7 @@ function generateActivityFromMarker (dbName, map, markers) {
   let bounds = map.getBounds()
 
   // open IndexedDB
-  let req = indexedDB.open(dbName)
+  let req = window.indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const db = req.result
@@ -296,15 +298,82 @@ function getActivity (db, data, target) {
   }
 }
 
-function profileView (dbName) {
+function profileView () {
+  const mdcProfileDrawer = mdc
+    .drawer
+    .MDCTemporaryDrawer
+    .attachTo(document.getElementById('profile-drawer'))
 
+  mdcProfileDrawer.open = true
+
+  document.getElementById('uploadProfileImage').addEventListener('change', readURL)
+}
+
+function readURL (event) {
+  const file = event.target.files[0]
+  var reader = new FileReader()
+
+  if (file) {
+    reader.readAsDataURL(file)
+    processImage(file)
+  }
+}
+
+function processImage (image) {
+  const metadata = {
+    contentType: 'image/jpeg'
+  }
+
+  console.log(image)
+  const storageRef = firebase.storage().ref(`ProfileImage/${image.name}`)
+  const uploadTask = storageRef.put(image, metadata)
+
+  uploadTask.on(
+    firebase.storage.TaskEvent.STATE_CHANGED,
+    snapshotHandler,
+    storageErrorHandler,
+    storageSuccessHandler
+  )
+
+  function snapshotHandler (snapshot) {
+    if (firebase.storage.TaskState.RUNNING) {
+      console.log('running')
+      // show gola
+    }
+  }
+
+  function storageErrorHandler (error) {
+    if (error.code === 'storage/unknown') {
+      console.log(error)
+    }
+    console.log(error)
+  }
+
+  function storageSuccessHandler () {
+    uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
+  }
+}
+
+function updateAuth (url) {
+  const user = firebase.auth().currentUser
+  user.updateProfile({
+    photoURL: url
+  }).then(authUpdatedSuccess).catch(authUpdatedError)
+}
+
+function authUpdatedSuccess () {
+  // remove gola
+  // preview image on profile drawer and toolbar in list view
+  const user = firebase.auth().currentUser
+  document.getElementById('user-profile--image').src = user.photoURL
+}
+
+function authUpdatedError (error) {
+  console.log(error)
 }
 
 function removeDom (selector) {
   const target = document.getElementById(selector)
-
-  // remove dom when zoom,drag or click events are fired, to remove previous listview inside the map drawer
-
   while (target.lastChild) {
     target.removeChild(target.lastChild)
   }
