@@ -1,3 +1,23 @@
+function inputText () {
+
+}
+
+function inputSelect () {
+
+}
+
+function inputTime () {
+
+}
+
+function inputFile () {
+  document.getElementById('uploadProfileImage').addEventListener('change', function () {
+    readURL(event.target.files[0])
+  })
+}
+
+inputFile()
+
 function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // getGeoLocation method will be added later
@@ -37,5 +57,9 @@ function onSuccessMessage (response) {
 
 function onErrorMessage (error) {
   console.log(error)
-  console.table({'line-number': error.lineno, 'error': error.message, 'file': error.filename})
+  console.table({
+    'line-number': error.lineno,
+    'error': error.message,
+    'file': error.filename
+  })
 }

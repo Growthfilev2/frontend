@@ -305,12 +305,9 @@ function profileView () {
     .attachTo(document.getElementById('profile-drawer'))
 
   mdcProfileDrawer.open = true
-
-  document.getElementById('uploadProfileImage').addEventListener('change', readURL)
 }
 
-function readURL (event) {
-  const file = event.target.files[0]
+function readURL (file) {
   var reader = new FileReader()
 
   if (file) {
@@ -324,8 +321,8 @@ function processImage (image) {
     contentType: 'image/jpeg'
   }
 
-  console.log(image)
-  const storageRef = firebase.storage().ref(`ProfileImage/${image.name}`)
+  const uid = firebase.auth().currentUser.uid
+  const storageRef = firebase.storage().ref(`ProfileImage/${uid}`)
   const uploadTask = storageRef.put(image, metadata)
 
   uploadTask.on(
