@@ -39,12 +39,14 @@
                     <nav class="mdc-drawer__drawer">
 
                         <div class="mdc-drawer__toolbar-spacer">
-                            <span id="close-map--drawer"><i class="material-icons">arrow_back</i></span>
+                            <span id="close-map--drawer">
+                                <i class="material-icons">arrow_back</i>
+                            </span>
                         </div>
 
                         <nav id="map-view--container" class="mdc-drawer__content">
-                                <div id="map"></div>
-                                <div id="list-view--map"></div>
+                            <div id="map"></div>
+                            <div id="list-view--map"></div>
                         </nav>
                     </nav>
 
@@ -56,7 +58,9 @@
                     <nav class="mdc-drawer__drawer">
 
                         <div class="mdc-drawer__toolbar-spacer">
-                            <span id="close-calendar--drawer"><i class="material-icons">arrow_back</i></span>
+                            <span id="close-calendar--drawer">
+                                <i class="material-icons">arrow_back</i>
+                            </span>
                         </div>
 
                         <nav id="calendar-view--container" class="mdc-drawer__content">
@@ -67,28 +71,47 @@
                     <nav class="mdc-drawer__drawer">
 
                         <div class="mdc-drawer__toolbar-spacer">
-                            <span id="close-profile--drawer"><i class="material-icons">arrow_back</i></span>
+                            <span id="close-profile--drawer">
+                                <i class="material-icons">arrow_back</i>
+                            </span>
                         </div>
 
                         <nav id="profile-view--container" class="mdc-drawer__content">
                             <input type="file" id='uploadProfileImage'>
-                            <div id ="profile--image-container">
-                                <img src= '' id ='user-profile--image'
+                            <div id="profile--image-container">
+                                <img src='' id='user-profile--image'>
                             </div>
-                        </nav>
+
+                            <div class="mdc-text-field mdc-button--dense" id="displayName">
+                                <input type="text" class="mdc-text-field__input">
+                                <button id="edit--name" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
+                                    data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='displayName'>edit</button>
+                            </div>
+
+                            <div class="mdc-text-field mdc-button--dense" id="email">
+                                <input type="text" class="mdc-text-field__input">
+                                <button id="edit--name" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
+                                data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='displayName'>edit
+                                </button>
+                                
+                                
+                            
+                            </div>
+                        
+                            </nav>
                     </nav>
                 </aside>
-                
+
 
                 <header class="mdc-toolbar mdc-elevation--z1">
                     <div class="mdc-toolbar__row">
                         <section class="mdc-toolbar__section mdc-toolbar__section--align-start">
                             <div class="toolbar--user">
-                                    <div id="profile-drawer--icon">
-                                            <span>
-                                                <i class="material-icons">account_circle</i>
-                                            </span>
-                                        </div>
+                                <div id="profile-drawer--icon">
+                                    <span>
+                                        <i class="material-icons">account_circle</i>
+                                    </span>
+                                </div>
                             </div>
                         </section>
                         <section class="mdc-toolbar__section mdc-toolbar__section--align-end">
@@ -103,17 +126,17 @@
                                         <i class="material-icons">today</i>
                                     </span>
                                 </div>
-                                
+
                             </div>
                         </section>
                     </div>
                 </header>
-                
-                <div class="mdc-card" style="height:578px; overflow-y: auto">
-                <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id="activity--list" aria-orientation="vertical">
 
-                </ul>
-            </div>
+                <div class="mdc-card" style="height:578px; overflow-y: auto">
+                    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id="activity--list" aria-orientation="vertical">
+
+                    </ul>
+                </div>
 
             </div>
             <div class="mdc-layout-grid__cell--span-5-desktop app-center-panel">

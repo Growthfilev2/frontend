@@ -69,7 +69,7 @@ drawerIcons.forEach(function (selector) {
         calendarView(user.uid)
         break
       case 'profile-drawer--icon':
-        profileView()
+        profileView(user)
     }
   })
 })
@@ -298,17 +298,55 @@ function getActivity (db, data, target) {
   }
 }
 
-function profileView () {
+function profileView (user) {
   const mdcProfileDrawer = mdc
     .drawer
     .MDCTemporaryDrawer
     .attachTo(document.getElementById('profile-drawer'))
 
   mdcProfileDrawer.open = true
+
+  showProfilePicture()
+
+  inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
+  changeDisplayName(user)
+  changePhoneNumber(user)
 }
 
-function readURL (file) {
-  var reader = new FileReader()
+function toggleIconData (icon, inputFieldSelector) {
+  const iconEl = document.getElementById(icon)
+
+  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
+  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
+    detail
+  }) {
+    if (!detail.isOn) {
+      const key = this.dataset.toggleOffLabel
+      const text = getInputText(inputFieldSelector).value
+      handleFieldInput(key, text)
+    }
+  })
+}
+
+function handleFieldInput (key, value) {
+  const user = firebase.auth().currentUser
+
+  if (key === 'displayName') {
+    user.updateProfile({
+      key: value
+    }).then(displayNameUpdated).catch(authUpdatedError)
+  }
+
+  if (key === 'updateEmail') {
+    reauthUser()
+    user.updateEmail(value).then().catch(authUpdatedError)
+  }
+}
+
+function readUploadedFile (event) {
+  const file = event.target.files[0]
+
+  const reader = new FileReader()
 
   if (file) {
     reader.readAsDataURL(file)
@@ -355,17 +393,50 @@ function updateAuth (url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
-  }).then(authUpdatedSuccess).catch(authUpdatedError)
+  }).then(showProfilePicture).catch(authUpdatedError)
 }
 
-function authUpdatedSuccess () {
+function showProfilePicture () {
   // remove gola
   // preview image on profile drawer and toolbar in list view
   const user = firebase.auth().currentUser
-  document.getElementById('user-profile--image').src = user.photoURL
+  // document.getElementById('user-profile--image').src = user.photoURL
 }
 
 function authUpdatedError (error) {
+  console.log(error)
+}
+
+function changeDisplayName (user) {
+  const displayNameField = getInputText('displayName')
+
+  if (!user.displayName) {
+    displayNameField['input_'].placeholder = 'choose a user name'
+  } else {
+    displayNameField.value = user.displayName
+  }
+
+  toggleIconData('edit--name', 'displayName')
+}
+
+function reauthUser () {
+  const applicationVerifier = firebase.auth.RecaptchaVerifier('reauth-recaptcha')
+  const provider = firbase.auth.PhoneAuthProvider()
+  const userPhoneNumber = firebase.auth().phoneNumber
+  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(generateVerificationId).then(generateCredential)
+}
+
+function generateVerificationId (verificationId) {
+  const otp = getInputText('reauth-otp').value
+  return firbase.auth.PhoneAuthProvider.credential(verificationId, otp)
+}
+
+function generateCredential (credential) {
+  const user = firebase.auth().currentUser
+  user.reauthenticateAndRetrieveDataWithCredential(credential).then(updateEmailInAauth).catch(handleReauthError)
+}
+
+function handleReauthError (error) {
   console.log(error)
 }
 
@@ -374,4 +445,28 @@ function removeDom (selector) {
   while (target.lastChild) {
     target.removeChild(target.lastChild)
   }
+}
+
+function changePhoneNumber (user) {
+  document.getElementById('updatePhone').addEventListener('click', function () {
+    const newCountryCode = getInputText('current-country--code').value
+    const newPhoneNumber = getInputText('current-phone--number').value
+    const currentCountryCode = getInputText('new-country--code').value
+    const currentPhoneNumber = getInputText('new-phone--number').value
+
+    if (verifyCurrentPhoneNumber(user.phoneNumber) && verifyCurrentPhoneNumber()) {
+    }
+  })
+}
+
+function verifyNewPhoneNumber () {
+  const expression = /^\+[1-9]\d{5,14}$/
+  return regex.test(expression)
+}
+
+function verifyCurrentPhoneNumber (currentNumber) {
+  if (currentCountryCode.concat(currentPhoneNumber) !== currentNumber) {
+    return false
+  }
+  return true
 }

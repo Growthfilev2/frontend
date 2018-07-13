@@ -25,7 +25,8 @@ function getTime () {
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
 const requestFunctionCaller = {
-  initializeIDB: initializeIDB
+  initializeIDB: initializeIDB,
+  updateNumber: updateNumber
 
 }
 
@@ -133,7 +134,7 @@ function initializeIDB (auth) {
     })
     map.createIndex('activityId', 'activityId')
     map.createIndex('location', 'location')
-    map.createIndex('office','office')
+    map.createIndex('office', 'office')
 
     const attachment = db.createObjectStore('attachment', {
       keyPath: 'activityId'
@@ -185,7 +186,7 @@ function updateMap (db, activity) {
         address: newVenue.address,
         activityId: activity.activityId,
         venueDescriptor: newVenue.venueDescriptor,
-        office:activity.office
+        office: activity.office
 
       })
     })

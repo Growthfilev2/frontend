@@ -1,5 +1,9 @@
-function inputText () {
+function iconEditable () {
 
+}
+
+function getInputText (selector) {
+  return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
 function inputSelect () {
@@ -10,13 +14,9 @@ function inputTime () {
 
 }
 
-function inputFile () {
-  document.getElementById('uploadProfileImage').addEventListener('change', function () {
-    readURL(event.target.files[0])
-  })
+function inputFile (selector) {
+  return document.getElementById(selector)
 }
-
-inputFile()
 
 function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
