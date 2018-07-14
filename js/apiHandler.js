@@ -26,7 +26,7 @@ function getTime () {
 // function name
 const requestFunctionCaller = {
   initializeIDB: initializeIDB,
-  updateNumber: updateNumber
+  // updateNumber: updateNumber
 
 }
 
