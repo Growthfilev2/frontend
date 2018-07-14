@@ -1,4 +1,6 @@
-function listView (dbName) {
+function listView () {
+  removeDom('activity--list')
+  const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
 
   req.onerror = function (event) {
@@ -76,24 +78,41 @@ drawerIcons.forEach(function (selector) {
 
 function mapView (dbName) {
   // initialize mdc instance for map drawer
-
-  const mdcMapDrawer = mdc
-    .drawer
-    .MDCTemporaryDrawer
-    .attachTo(document.getElementById('map-drawer'))
-  // open map drawer
-
-  mdcMapDrawer.open = true
-  document.getElementById('close-map--drawer').addEventListener('click', function () {
-    mdcMapDrawer.open = false
-  })
-
   const req = window.indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const mapRecords = []
 
     const db = req.result
+    const rootTx = db.transaction(['root'], 'readwrite')
+    const rootObjectStore = rootTx.objectStore('root')
+
+    rootObjectStore.get(dbName).onsuccess = function (event) {
+      const record = event.target.result
+      record.view = 'map'
+      rootObjectStore.put(record)
+    }
+
+    const mdcMapDrawer = mdc
+      .drawer
+      .MDCTemporaryDrawer
+      .attachTo(document.getElementById('map-drawer'))
+    // open map drawer
+
+    mdcMapDrawer.open = true
+
+    document.getElementById('close-map--drawer').addEventListener('click', function () {
+      const db = req.result
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootObjectStore = rootTx.objectStore('root')
+
+      rootObjectStore.get(dbName).onsuccess = function (event) {
+        const record = event.target.result
+        record.view = 'default'
+        rootObjectStore.put(record)
+      }
+      mdcMapDrawer.open = false
+    })
 
     const mapObjectStore = db.transaction('map').objectStore('map')
     const mapLocationIndex = mapObjectStore.index('location')
@@ -309,6 +328,7 @@ function profileView (user) {
   showProfilePicture()
 
   inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
+  toggleIconData('edit--email', 'email')
   changeDisplayName(user)
   changePhoneNumber(user)
 }
@@ -339,8 +359,13 @@ function handleFieldInput (key, value) {
 
   if (key === 'updateEmail') {
     reauthUser()
-    user.updateEmail(value).then().catch(authUpdatedError)
+
+    user.updateEmail(value).then(emailUpdateSuccess).catch(authUpdatedError)
   }
+}
+
+function emailUpdateSuccess () {
+  console.log('done')
 }
 
 function readUploadedFile (event) {
@@ -420,43 +445,56 @@ function changeDisplayName (user) {
 }
 
 function reauthUser () {
-  const applicationVerifier = firebase.auth.RecaptchaVerifier('reauth-recaptcha')
-  const provider = firbase.auth.PhoneAuthProvider()
-  const userPhoneNumber = firebase.auth().phoneNumber
-  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(generateVerificationId).then(generateCredential)
+  const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
+  const provider = new firebase.auth.PhoneAuthProvider()
+  const userPhoneNumber = firebase.auth().currentUser.phoneNumber
+  console.log(userPhoneNumber)
+  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(generateVerificationId)
 }
 
 function generateVerificationId (verificationId) {
-  const otp = getInputText('reauth-otp').value
-  return firbase.auth.PhoneAuthProvider.credential(verificationId, otp)
+  removeDom('reauth-recaptcha')
+
+  const otpDiv = document.createElement('div')
+  otpDiv.classList.add('mdc-text-field')
+  otpDiv.id = 'reauth-otp'
+  const otpInput = document.createElement('input')
+  otpInput.classList.add('mdc-text-field__input')
+  const submitButtonOtp = document.createElement('button')
+  submitButtonOtp.textContent = 'submit'
+  submitButtonOtp.classList.add('mdc-button', 'getOtp')
+  otpDiv.appendChild(otpInput)
+  otpDiv.appendChild(submitButtonOtp)
+
+  document.getElementById('email--change-container').appendChild(otpDiv)
+
+  document.querySelector('.getOtp').addEventListener('click', function () {
+    const otp = getInputText('reauth-otp').value
+    const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp)
+    generateCredential(credential)
+  })
 }
 
 function generateCredential (credential) {
+  console.log(credential)
   const user = firebase.auth().currentUser
-  user.reauthenticateAndRetrieveDataWithCredential(credential).then(updateEmailInAauth).catch(handleReauthError)
+  user.reauthenticateAndRetrieveDataWithCredential(credential).then().catch(handleReauthError)
 }
 
 function handleReauthError (error) {
   console.log(error)
 }
 
-function removeDom (selector) {
-  const target = document.getElementById(selector)
-  while (target.lastChild) {
-    target.removeChild(target.lastChild)
-  }
-}
-
 function changePhoneNumber (user) {
-  document.getElementById('updatePhone').addEventListener('click', function () {
-    const newCountryCode = getInputText('current-country--code').value
-    const newPhoneNumber = getInputText('current-phone--number').value
-    const currentCountryCode = getInputText('new-country--code').value
-    const currentPhoneNumber = getInputText('new-phone--number').value
+  // document.getElementById('updatePhone').addEventListener('click', function () {
+  //   const newCountryCode = getInputText('current-country--code').value
+  //   const newPhoneNumber = getInputText('current-phone--number').value
+  //   const currentCountryCode = getInputText('new-country--code').value
+  //   const currentPhoneNumber = getInputText('new-phone--number').value
 
-    if (verifyCurrentPhoneNumber(user.phoneNumber) && verifyCurrentPhoneNumber()) {
-    }
-  })
+  //   if (verifyCurrentPhoneNumber(user.phoneNumber) && verifyCurrentPhoneNumber()) {
+  //   }
+  // })
 }
 
 function verifyNewPhoneNumber () {
@@ -469,4 +507,11 @@ function verifyCurrentPhoneNumber (currentNumber) {
     return false
   }
   return true
+}
+
+function removeDom (selector) {
+  const target = document.getElementById(selector)
+  while (target.lastChild) {
+    target.removeChild(target.lastChild)
+  }
 }

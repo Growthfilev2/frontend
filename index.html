@@ -22,11 +22,12 @@
     <script src="js/panel.js" defer></script>
 
 
-    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" />
-    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="css/conversation.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" async defer>
+    <link href="css/conversation.css" rel="stylesheet" type="text/css" async defer>
+
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" async>
 </head>
 
 <body>
@@ -88,12 +89,16 @@
                                     data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='displayName'>edit</button>
                             </div>
 
-                            <div class="mdc-text-field mdc-button--dense" id="email">
-                                <input type="text" class="mdc-text-field__input">
-                                <button id="edit--name" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
-                                data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='displayName'>edit
+                            <div id="email--change-container">
+
+                                <div class="mdc-text-field mdc-button--dense" id="email">
+                                    <input type="text" class="mdc-text-field__input">
+                                    <button id="edit--email" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
+                                    data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='updateEmail'>edit
                                 </button>
                                 
+                            </div>
+                            <div id="reauth-recaptcha" style="position: absolute;top: 50%;"></div>
                                 
                             
                             </div>
@@ -169,7 +174,7 @@
 
                     <div class="user-comment--container mdc-layout-grid__inner">
                         <div class="comment--container mdc-layout-grid__cell--span-11">
-                            <div class="input--text-padding mdc-text-field mdc-text-field--dense">
+                            <div class="input--text-padding mdc-text-field mdc-text-field--dense" id="write--comment">
                                 <input class="mdc-text-field__input comment-field mdc-elevation--z6" type="text" style="position:absolute">
 
                             </div>
@@ -224,7 +229,7 @@
                         </span>
                         <span class="activity--edit-icon" id="activity--edit-title" style="float:right">
                         </span>
-                        <div class="mdc-text-field activity--title-input">
+                        <div class="mdc-text-field" id="activity--title-input">
                             <input class="mdc-text-field__input border-bottom--none" disabled type="text">
                         </div>
                     </div>
@@ -234,7 +239,7 @@
                         </span>
                         <span class="activity--edit-icon" id="activity--edit-desc" style="float:right">
                         </span>
-                        <div class="mdc-text-field activity--desc-input">
+                        <div class="mdc-text-field" id="activity--desc-input">
                             <input class="mdc-text-field__input border-bottom--none" disabled type="text">
                         </div>
                     </div>

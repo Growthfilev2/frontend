@@ -26,15 +26,18 @@ function getTime () {
 // function name
 const requestFunctionCaller = {
   initializeIDB: initializeIDB,
-  // updateNumber: updateNumber
+  comment: comment
 
 }
 
-function requestHandlerResponse (code, message, dbName) {
+function requestHandlerResponse (code, message, body) {
   self.postMessage({
     code: code,
     msg: message,
-    dbName: dbName
+    handler: {
+      dbName: body.database,
+      id: body.id
+    }
   })
 }
 
@@ -42,12 +45,11 @@ function requestHandlerResponse (code, message, dbName) {
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
-      requestHandlerResponse(404, 'firebase auth not completed', null)
+      // requestHandlerResponse(404, 'firebase auth not completed', null)
       return void (0)
     }
 
-    requestFunctionCaller[event.data.type](auth, event.data.body)
-    updateIDB()
+    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
   })
 }
 
@@ -71,7 +73,7 @@ function http (method, url, data) {
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) return reject(xhr)
-
+            console.log(JSON.parse(xhr.responseText))
             resolve(JSON.parse(xhr.responseText))
           }
         }
@@ -84,80 +86,119 @@ function http (method, url, data) {
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
-function initializeIDB (auth) {
+function initializeIDB () {
   // onAuthStateChanged is added because app is reinitialized
-  var auth = firebase.auth().currentUser
-  console.log(auth)
+  return new Promise(function (resolve, reject) {
+    var auth = firebase.auth().currentUser
+    console.log(auth)
 
-  const request = indexedDB.open(auth.uid, 2)
+    const request = indexedDB.open(auth.uid, 1)
+    request.onerror = function (event) {
+      reject(event.error)
+    }
 
-  request.onerror = function (event) {
-    console.log(event)
-  }
+    request.onupgradeneeded = function () {
+      console.log(request)
+      const db = request.result
 
-  request.onupgradeneeded = function () {
-    const db = request.result
+      const activity = db.createObjectStore('activity', {
+        keyPath: 'activityId'
+      })
 
-    const activity = db.createObjectStore('activity', {
-      keyPath: 'activityId'
+      activity.createIndex('timestamp', 'timestamp')
+
+      const users = db.createObjectStore('users', {
+        keyPath: 'mobile'
+      })
+      users.createIndex('isUpdated', 'isUpdated')
+
+      const addendum = db.createObjectStore('addendum', {
+        keyPath: 'addendumId'
+      })
+
+      addendum.createIndex('activityId', 'activityId')
+
+      const subscriptions = db.createObjectStore('subscriptions', {
+        autoIncrement: true
+      })
+
+      subscriptions.createIndex('office', 'office')
+      subscriptions.createIndex('template', 'template')
+
+      const calendar = db.createObjectStore('calendar', {
+        autoIncrement: true
+      })
+
+      calendar.createIndex('date', 'date')
+      calendar.createIndex('activityId', 'activityId')
+      calendar.createIndex('isUpdated', 'isUpdated')
+      const map = db.createObjectStore('map', {
+        autoIncrement: true
+      })
+      map.createIndex('activityId', 'activityId')
+      map.createIndex('location', 'location')
+      map.createIndex('office', 'office')
+
+      const attachment = db.createObjectStore('attachment', {
+        keyPath: 'activityId'
+      })
+
+      attachment.createIndex('template', 'template')
+      attachment.createIndex('office', 'office')
+
+      const root = db.createObjectStore('root', {
+        keyPath: 'uid'
+      })
+
+      // add defaultFromTime value here in order to load it only once
+      root.put({
+        uid: auth.uid,
+        fromTime: 0,
+        view: 'default',
+        id: ''
+      })
+    }
+
+    request.onsuccess = function (event) {
+      console.log(event)
+      const db = request.result
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootObjectStore = rootTx.objectStore('root')
+
+      rootObjectStore.get(db.name).onsuccess = function (rootEvent) {
+        const record = rootEvent.target.result
+        record.view = 'default'
+        rootObjectStore.put(record)
+
+        rootTx.oncomplete = function () {
+          console.log(rootEvent)
+          resolve({
+            dbName: db.name,
+            id: rootEvent.target.result.id
+          })
+        }
+      }
+      // when Object stores are created, send a response back to requestCreator
+    }
+  })
+}
+
+function comment (body) {
+  console.log(body)
+  return new Promise(function (resolve, reject) {
+    http(
+      'POST',
+      `${apiUrl}activities/comment`,
+      JSON.stringify(body)
+    ).then(function () {
+      resolve({
+        dbName: firebase.auth().currentUser.uid,
+        id: body.activityId
+      })
+    }).catch(function (error) {
+      reject(error)
     })
-
-    activity.createIndex('timestamp', 'timestamp')
-
-    const users = db.createObjectStore('users', {
-      keyPath: 'mobile'
-    })
-    users.createIndex('isUpdated', 'isUpdated')
-
-    const addendum = db.createObjectStore('addendum', {
-      keyPath: 'addendumId'
-    })
-
-    addendum.createIndex('activityId', 'activityId')
-
-    const subscriptions = db.createObjectStore('subscriptions', {
-      autoIncrement: true
-    })
-
-    subscriptions.createIndex('office', 'office')
-    subscriptions.createIndex('template', 'template')
-
-    const calendar = db.createObjectStore('calendar', {
-      autoIncrement: true
-    })
-
-    calendar.createIndex('date', 'date')
-    calendar.createIndex('activityId', 'activityId')
-    calendar.createIndex('isUpdated', 'isUpdated')
-    const map = db.createObjectStore('map', {
-      autoIncrement: true
-    })
-    map.createIndex('activityId', 'activityId')
-    map.createIndex('location', 'location')
-    map.createIndex('office', 'office')
-
-    const attachment = db.createObjectStore('attachment', {
-      keyPath: 'activityId'
-    })
-
-    attachment.createIndex('template', 'template')
-    attachment.createIndex('office', 'office')
-
-    const root = db.createObjectStore('root', {
-      keyPath: 'uid'
-    })
-
-    // add defaultFromTime value here in order to load it only once
-    root.put({
-      fromTime: 0,
-      uid: auth.uid
-    })
-  }
-
-  request.onsuccess = function (event) {
-    // when Object stores are created, send a response back to requestCreator
-    requestHandlerResponse(200, 'IDB initialized successfully', request.result.name)
-  }
+  })
 }
 
 function updateMap (db, activity) {
@@ -399,7 +440,7 @@ function updateSubscription (db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse (read) {
+function successResponse (read, activityId) {
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
@@ -440,14 +481,19 @@ function successResponse (read) {
 
       // fromTime: Date.parse(read.upto),
       fromTime: Date.parse(read.upto),
-      uid: user.uid
+      uid: user.uid,
+      view: 'default',
+      id: activityId
     })
 
     readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
 
-    requestHandlerResponse(200, 'IDB updated successfully', db.name)
+    requestHandlerResponse(200, 'IDB updated successfully', {
+      database: db.name,
+      id: activityId
+    })
   }
 }
 
@@ -455,17 +501,19 @@ function notUpdateUserObjectStore (errorUrl) {
   console.log(errorUrl)
 }
 
-function updateIDB () {
-  console.log('run update idb')
-  const user = firebase.auth().currentUser
-  const req = indexedDB.open(user.uid)
+function updateIDB (reqObject) {
+  const dbName = reqObject.dbName
+  const activityId = reqObject.id
+
+  console.log(activityId)
+  const req = indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const db = req.result
     // open root object store to read fromTime value.
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
-    rootObjectStore.get(user.uid).onsuccess = function (root) {
+    rootObjectStore.get(dbName).onsuccess = function (root) {
       http(
 
         'GET',
@@ -475,7 +523,7 @@ function updateIDB () {
         .then(function (response) {
           console.log(response)
 
-          successResponse(response)
+          successResponse(response, activityId)
         })
         .catch(console.log)
     }

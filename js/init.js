@@ -47,29 +47,14 @@ firebase.auth().onAuthStateChanged(function (auth) {
 // when user is signed in call requestCreator function inside services.js
 function userSignedIn (auth) {
   document.querySelector('.app').style.display = 'block'
-  const req = window.indexedDB.open(auth.uid)
 
   if (window.Worker && window.indexedDB) {
     // requestCreator is present inside service.js
     requestCreator('initializeIDB')
-    // listView is present inside panel.js
-    req.onsuccess = dbOpenSuccess
-    req.onerror = dbOpenError
-
     return
   }
 
   firebase.auth().signOut().catch(signOutError)
-}
-
-function dbOpenSuccess (idbSuccess) {
-  const db = idbSuccess.target.result
-  if (Object.values(db.objectStoreNames).indexOf('activity') === -1) return
-  listView(db.name)
-}
-
-function dbOpenError (error) {
-  console.log(error)
 }
 
 // When user is signed out

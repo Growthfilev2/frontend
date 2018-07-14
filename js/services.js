@@ -10,8 +10,19 @@ function inputSelect () {
 
 }
 
-function inputTime () {
+function fetchCurrentTime () {
+  return Date.now()
+}
 
+function fetchCurrentLocation () {
+  return new Promise(function (resolve) {
+    navigator.geolocation.getCurrentPosition(function (position) {
+      resolve({
+        'latitude': position.coords.latitude,
+        'longitude': position.coords.longitude
+      })
+    })
+  })
 }
 
 function inputFile (selector) {
@@ -24,6 +35,7 @@ function requestCreator (requestType, requestBody) {
   const requestGenerator = {
     type: requestType,
     body: requestBody
+
   }
 
   // spawn a new worker called apiHandler.
@@ -32,7 +44,7 @@ function requestCreator (requestType, requestBody) {
 
   // post the requestGenerator object to the apiHandler to perform IDB and api
   // operations
-
+  console.log(requestGenerator)
   apiHandler.postMessage(requestGenerator)
 
   // handle the response from apiHandler when operation is completed
@@ -41,17 +53,31 @@ function requestCreator (requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
+const responseFunctionCaller = {
+  map: map
+}
+function map (dbName) {
+  mapView(dbName)
+}
 function onSuccessMessage (response) {
   const IDB_VERSION = 1
 
   console.log(response)
 
-  const req = window.indexedDB.open(response.data.value)
+  const req = window.indexedDB.open(response.data.handler.dbName)
 
   console.log(req)
 
   req.onsuccess = function () {
+    listView()
+    if (!response.data.handler.id) return
+    conversation(response.data.handler.id)
 
+    const db = req.result
+    const rootObjectStore = db.transaction('root').objectStore('root')
+    rootObjectStore.get(response.data.handler.dbName).onsuccess = function (event) {
+      responseFunctionCaller[event.target.result.view](response.data.handler.dbName)
+    }
   }
 }
 
