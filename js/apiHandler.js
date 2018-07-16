@@ -159,25 +159,9 @@ function initializeIDB () {
     }
 
     request.onsuccess = function (event) {
-      console.log(event)
-      const db = request.result
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootObjectStore = rootTx.objectStore('root')
-
-      rootObjectStore.get(db.name).onsuccess = function (rootEvent) {
-        const record = rootEvent.target.result
-        record.view = 'default'
-        rootObjectStore.put(record)
-
-        rootTx.oncomplete = function () {
-          console.log(rootEvent)
-          resolve({
-            dbName: db.name,
-            id: rootEvent.target.result.id
-          })
-        }
-      }
-      // when Object stores are created, send a response back to requestCreator
+      resolve({
+        dbName: auth.uid
+      })
     }
   })
 }
@@ -191,8 +175,8 @@ function comment (body) {
       JSON.stringify(body)
     ).then(function () {
       resolve({
-        dbName: firebase.auth().currentUser.uid,
-        id: body.activityId
+        dbName: firebase.auth().currentUser.uid
+
       })
     }).catch(function (error) {
       reject(error)
@@ -210,8 +194,7 @@ function statusChange (body) {
     )
       .then(function () {
         resolve({
-          dbName: firebase.auth().currentUser.uid,
-          id: body.activityId
+          dbName: firebase.auth().currentUser.uid
         })
       }).catch(function (error) {
         reject(error)
@@ -228,8 +211,7 @@ function removeAssignee (body) {
     )
       .then(function () {
         resolve({
-          dbName: firebase.auth().currentUser.uid,
-          id: body.activityId
+          dbName: firebase.auth().currentUser.uid
         })
       })
       .catch(function (error) {
@@ -248,8 +230,7 @@ function share (body) {
     )
       .then(function (success) {
         resolve({
-          dbName: firebase.auth().currentUser.uid,
-          id: body.activityId
+          dbName: firebase.auth().currentUser.uid
         })
       })
       .catch(function (error) {
@@ -496,7 +477,7 @@ function updateSubscription (db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse (read, activityId) {
+function successResponse (read) {
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
@@ -533,23 +514,18 @@ function successResponse (read, activityId) {
       updateSubscription(db, subscription)
     })
 
-    rootObjectStore.get(user.uid).onsuccess = function (event) {
-      const record = event.target.result
-      rootObjectStore.put({
+    rootObjectStore.put({
 
-        // fromTime: Date.parse(read.upto),
-        fromTime: Date.parse(read.upto),
-        uid: user.uid,
-        view: record.view,
-        id: activityId
-      })
-    }
+      fromTime: Date.parse(read.upto),
+      uid: user.uid
+
+    })
 
     readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
 
-    requestHandlerResponse(200, 'IDB updated successfully', db.name)
+    requestHandlerResponse(200, 'IDB updated successfully', user.uid)
   }
 }
 
@@ -557,11 +533,7 @@ function notUpdateUserObjectStore (errorUrl) {
   console.log(errorUrl)
 }
 
-function updateIDB (reqObject) {
-  const dbName = reqObject.dbName
-  const activityId = reqObject.id
-
-  console.log(activityId)
+function updateIDB (dbName) {
   const req = indexedDB.open(dbName)
 
   req.onsuccess = function () {
@@ -579,7 +551,7 @@ function updateIDB (reqObject) {
         .then(function (response) {
           console.log(response)
 
-          successResponse(response, activityId)
+          successResponse(response)
         })
         .catch(console.log)
     }
