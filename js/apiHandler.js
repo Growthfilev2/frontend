@@ -174,10 +174,10 @@ function comment (body) {
       `${apiUrl}activities/comment`,
       JSON.stringify(body)
     ).then(function () {
-      resolve({
-        dbName: firebase.auth().currentUser.uid
+      resolve(
+        firebase.auth().currentUser.uid
 
-      })
+      )
     }).catch(function (error) {
       reject(error)
     })
@@ -193,9 +193,9 @@ function statusChange (body) {
       JSON.stringify(body)
     )
       .then(function () {
-        resolve({
-          dbName: firebase.auth().currentUser.uid
-        })
+        resolve(
+          firebase.auth().currentUser.uid
+        )
       }).catch(function (error) {
         reject(error)
       })
@@ -210,9 +210,9 @@ function removeAssignee (body) {
       JSON.stringify(body)
     )
       .then(function () {
-        resolve({
-          dbName: firebase.auth().currentUser.uid
-        })
+        resolve(
+          firebase.auth().currentUser.uid
+        )
       })
       .catch(function (error) {
         reject(error)
@@ -221,6 +221,7 @@ function removeAssignee (body) {
 }
 
 function share (body) {
+  console.log(body)
   return new Promise(function (resolve, reject) {
     http(
       'PATCH',
@@ -229,9 +230,9 @@ function share (body) {
 
     )
       .then(function (success) {
-        resolve({
-          dbName: firebase.auth().currentUser.uid
-        })
+        resolve(
+          firebase.auth().currentUser.uid
+        )
       })
       .catch(function (error) {
         resolve(error)
@@ -514,12 +515,11 @@ function successResponse (read) {
       updateSubscription(db, subscription)
     })
 
-    rootObjectStore.put({
-
-      fromTime: Date.parse(read.upto),
-      uid: user.uid
-
-    })
+    rootObjectStore.get(user.uid).onsuccess = function (event) {
+      const record = event.target.result
+      record.fromTime = Date.parse(read.upto)
+      rootObjectStore.put(record)
+    }
 
     readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
@@ -534,11 +534,13 @@ function notUpdateUserObjectStore (errorUrl) {
 }
 
 function updateIDB (dbName) {
+  console.log(dbName)
   const req = indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const db = req.result
     console.log(db)
+
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
     rootObjectStore.get(dbName).onsuccess = function (root) {

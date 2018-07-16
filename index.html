@@ -119,10 +119,10 @@
                             </div>
     
                             <nav id="share--container" class="mdc-drawer__content" dir="ltr">
-                                <div class="mdc-text-field mdc-text-field--box mdc-text-field--dense" id="contact--text-field">
-                                    <input class="mdc-text-field__input" type="text">
+                                <div class="mdc-text-field mdc-text-field--box mdc-text-field--dense" id="contact--text-field" onkeyup="autosuggestContacts()">
+                                    <input class="mdc-text-field__input" type="text" >
                                 </div>
-                                <div class="mdc-button" id="add-contact">ADD</div>
+                                <div class="mdc-button" id="add-contact" onclick="addContact()">ADD</div>
                                 <div id="contacts">
                                     <ul class="mdc-list" id="contacts--container">
                                     </ul>
@@ -303,6 +303,7 @@
                         <span class="detail--static-text" style="float:left">
                             Assignees
                         </span>
+                        <div id="share--icon-container"></div>
                         <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id="assignee--list">
                         </ul>
                     </div>

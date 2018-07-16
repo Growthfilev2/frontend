@@ -318,10 +318,10 @@ function assigneeListUI (userRecord, record, target, type) {
   const assigneeLi = document.createElement('li')
 
   assigneeLi.dataset.num = userRecord.mobile
-  assigneeLi.dataset.id = record.activityId
+
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (type === 'share' && record.canEdit) {
-    assigneeLi.setAttribute('onclick', 'displaySelectedContact(this.dataset)')
+    assigneeLi.setAttribute('onclick', 'displaySelectedContact(this.dataset.num)')
   }
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
@@ -365,8 +365,6 @@ function assigneeListUI (userRecord, record, target, type) {
     assigneeLi.appendChild(removeIcon)
   }
 
-  console.log(document.querySelector(`#${target}`))
-
   document.querySelector(`#${target}`).appendChild(assigneeLi)
 }
 
@@ -381,8 +379,7 @@ function renderShareIcon (record) {
   icon.textContent = 'add'
   IconParent.appendChild(icon)
 
-  const parentDiv = document.querySelector('.activity--share-container .detail--static-text').parentNode
-  parentDiv.insertBefore(IconParent, document.querySelector('.activity--share-container .detail--static-text'))
+  document.getElementById('share--icon-container').innerHTML = IconParent.outerHTML
 
   document.getElementById('share-btn').onclick = function (e) {
     renderShareDrawer(record)
@@ -394,13 +391,22 @@ function renderShareDrawer (record) {
   const req = window.indexedDB.open(user.uid)
   req.onsuccess = function () {
     const db = req.result
-
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+    const rootTx = db.transaction(['root'], 'readwrite')
+    const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const rootRecord = event.target.result
       rootRecord.view = 'share'
       rootObjectStore.put(rootRecord)
+      rootTx.oncomplete = fetchUsersData(record)
     }
+  }
+}
+
+function fetchUsersData (record) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = window.indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
 
     const mdcShareDrawer = mdc
       .drawer
@@ -413,6 +419,8 @@ function renderShareDrawer (record) {
       .transaction('users')
       .objectStore('users')
 
+    document.getElementById('add-contact').dataset.id = record.activityId
+
     userObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -421,49 +429,57 @@ function renderShareDrawer (record) {
       cursor.continue()
     }
   }
+}
 
-  getInputText('contact--text-field')['input_'].onkeyup = function (keychange) {
-    removeDom('contacts--container')
+function autosuggestContacts () {
+  removeDom('contacts--container')
 
-    const boundKeyRange = IDBKeyRange
-      .bound(
-        keychange.target.value,
-        `${keychange.target.value}\uffff`
-      )
-    const dbName = firebase.auth().currentUser.uid
-    const request = window.indexedDB.open(dbName)
-    request.onsuccess = function () {
-      const db = request.result
-      console.log(db)
-      const userObjectStore = db
-        .transaction('users')
-        .objectStore('users')
+  const boundKeyRange = IDBKeyRange
+    .bound(
+      getInputText('contact--text-field').value,
+      `${getInputText('contact--text-field').value}\uffff`
+    )
 
-      userObjectStore.openCursor(boundKeyRange).onsuccess = function (cursorEvent) {
-        const cursor = cursorEvent.target.result
+  const dbName = firebase.auth().currentUser.uid
+  const request = window.indexedDB.open(dbName)
+  request.onsuccess = function () {
+    const db = request.result
+    const userObjectStore = db
+      .transaction('users')
+      .objectStore('users')
+
+    userObjectStore.openCursor(boundKeyRange).onsuccess = function (cursorEvent) {
+      const cursor = cursorEvent.target.result
+      if (!cursor) {
+        console.log('done')
+      } else {
         console.log(cursor)
-
-        if (!cursor) { return }
-
+        const record = {
+          activityId: document.getElementById('add-contact').dataset.id,
+          canEdit: true
+        }
         assigneeListUI(cursor.value, record, 'contacts--container', 'share')
 
         cursor.continue()
       }
     }
   }
-
-  // initDrawer.close('.share--drawer', '.back-share')
 }
-function displaySelectedContact (dataset) {
-  getInputText('contact--text-field').value = dataset.num
 
+function displaySelectedContact (dataset) {
+  console.log(dataset)
+  getInputText('contact--text-field').value = dataset.num
+}
+
+function addContact () {
   document.querySelector('#add-contact').onclick = function (e) {
+    console.log(e)
     fetchCurrentLocation().then(function (geopoints) {
       const reqBody = {
-        activityId: dataset.id,
-        timestamp: fetchCurrentTime(),
-        share: [getInputText('contact--text-field').value],
-        geopoint: geopoints
+        'activityId': e.target.dataset.id,
+        'timestamp': fetchCurrentTime(),
+        'share': [getInputText('contact--text-field').value],
+        'geopoint': geopoints
       }
       requestCreator('share', reqBody)
     })

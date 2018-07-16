@@ -81,8 +81,6 @@ function mapView (dbName) {
   const req = window.indexedDB.open(dbName)
 
   req.onsuccess = function () {
-    const mapRecords = []
-
     const db = req.result
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
@@ -91,33 +89,31 @@ function mapView (dbName) {
       const record = event.target.result
       record.view = 'map'
       rootObjectStore.put(record)
+      rootTx.oncomplete = fetchMapData
     }
+  }
+}
+function fetchMapData () {
+  const mdcMapDrawer = mdc
+    .drawer
+    .MDCTemporaryDrawer
+    .attachTo(document.getElementById('map-drawer'))
+  // open map drawer
 
-    const mdcMapDrawer = mdc
-      .drawer
-      .MDCTemporaryDrawer
-      .attachTo(document.getElementById('map-drawer'))
-    // open map drawer
+  mdcMapDrawer.open = true
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
 
-    mdcMapDrawer.open = true
-
-    document.getElementById('close-map--drawer').addEventListener('click', function () {
-      const db = req.result
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootObjectStore = rootTx.objectStore('root')
-
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        const record = event.target.result
-        record.view = 'default'
-        rootObjectStore.put(record)
-        listView()
-        conversation(record.id)
-      }
-      mdcMapDrawer.open = false
-    })
-
+  req.onsuccess = function () {
+    const db = req.result
     const mapObjectStore = db.transaction('map').objectStore('map')
     const mapLocationIndex = mapObjectStore.index('location')
+
+    document.getElementById('close-map--drawer').addEventListener('click', function () {
+      loadDefaultView(db, mdcMapDrawer)
+    })
+
+    const mapRecords = []
 
     mapLocationIndex.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
@@ -232,49 +228,65 @@ function generateActivityFromMarker (dbName, map, markers) {
 }
 
 function calendarView (dbName) {
-  console.log(dbName)
-
   // open IDB
   const req = window.indexedDB.open(dbName)
+
   req.onsuccess = function () {
     const db = req.result
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+    const rootTx = db.transaction(['root'], 'readwrite')
+
+    const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.view = 'calendar'
-      rootObjectStore.put(record)
-      removeDom('calendar-view--container')
-
-      const mdcCalendarDrawer = mdc
-        .drawer
-        .MDCTemporaryDrawer
-        .attachTo(document.getElementById('calendar-drawer'))
-
-      mdcCalendarDrawer.open = true
-      console.log(db)
-      const calendarTx = db.transaction(['calendar'], 'readonly')
-      const calendarObjectStore = calendarTx.objectStore('calendar')
-      const calendarDateIndex = calendarObjectStore.index('date')
-      console.log(calendarDateIndex)
-
-      calendarDateIndex.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-        console.log(event.target.result)
-
-        if (cursor) {
-          calendarViewUI(db, cursor.value)
-          cursor.continue()
-        } else {
-          document.querySelectorAll('.activity--row li').forEach(function (li) {
-            li.classList.add('calendar-activity--list-item')
-          })
-        }
-      }
+      rootObjectStore.put(record
+      )
+      rootTx.oncomplete = fetchCalendarData
     }
   }
 
   req.onerror = function (event) {
     console.log(event.target.result)
+  }
+}
+function fetchCalendarData () {
+  removeDom('calendar-view--container')
+
+  const mdcCalendarDrawer = mdc
+    .drawer
+    .MDCTemporaryDrawer
+    .attachTo(document.getElementById('calendar-drawer'))
+
+  mdcCalendarDrawer.open = true
+
+  const dbName = firebase.auth().currentUser.uid
+  const request = window.indexedDB.open(dbName)
+
+  request.onsuccess = function () {
+    const db = request.result
+    const calendarObjectStore = db.transaction('calendar', 'readonly').objectStore('calendar')
+    const calendarDateIndex = calendarObjectStore.index('date')
+
+    document.getElementById('close-calendar--drawer').addEventListener('click', function () {
+      loadDefaultView(db, mdcCalendarDrawer)
+    })
+
+    calendarDateIndex.openCursor().onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (cursor) {
+        calendarViewUI(db, cursor.value)
+        cursor.continue()
+      } else {
+        document.querySelectorAll('.activity--row li').forEach(function (li) {
+          li.classList.add('calendar-activity--list-item')
+        })
+      }
+    }
+  }
+
+  request.onerror = function (event) {
+    console.log(event)
   }
 }
 
@@ -555,6 +567,21 @@ function verifyCurrentPhoneNumber (currentNumber) {
   return true
 }
 
+function loadDefaultView (db, drawer) {
+  const rootTx = db.transaction(['root'], 'readwrite')
+  const rootObjectStore = rootTx.objectStore('root')
+  const dbName = firebase.auth().currentUser.uid
+  rootObjectStore.get(dbName).onsuccess = function (event) {
+    const record = event.target.result
+    record.view = 'default'
+    rootObjectStore.put(record)
+    rootTx.oncomplete = function () {
+      listView()
+      conversation(record.id)
+      drawer.open = false
+    }
+  }
+}
 function removeDom (selector) {
   const target = document.getElementById(selector)
   while (target.lastChild) {

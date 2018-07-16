@@ -67,6 +67,7 @@ function onSuccessMessage (response) {
     const rootObjectStore = db.transaction('root').objectStore('root')
     rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
       const currentView = event.target.result.view
+      console.log(currentView)
       switch (currentView) {
         case 'default':
           listView()
@@ -79,7 +80,13 @@ function onSuccessMessage (response) {
           calendarView(response.data.dbName)
           break
         case 'share':
-          renderShareDrawer()
+
+          const activityObjectStore = db.transaction('activity').objectStore('activity')
+
+          activityObjectStore.get(event.target.result.id).onsuccess = function (activityEvent) {
+            console.log(activityEvent)
+            renderShareDrawer(activityEvent.target.result)
+          }
       }
     }
   }
