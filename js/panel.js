@@ -230,18 +230,27 @@ function generateActivityFromMarker (dbName, map, markers) {
 }
 
 function calendarView (dbName) {
-  const mdcCalendarDrawer = mdc
-    .drawer
-    .MDCTemporaryDrawer
-    .attachTo(document.getElementById('calendar-drawer'))
-
-  mdcCalendarDrawer.open = true
   removeDom('calendar-view--container')
-
+  
   // open IDB
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
+    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+  rootObjectStore.get(dbName).onsuccess = function(event){
+    const record = event.target.result
+    record.view = 'calendar'
+    rootObjectStore.put(record)
+    
+    const mdcCalendarDrawer = mdc
+    .drawer
+    .MDCTemporaryDrawer
+    .attachTo(document.getElementById('calendar-drawer'))
+    
+    mdcCalendarDrawer.open = true
+    
+  }    
+    
     const calendarTx = db.transaction(['calendar'], 'readonly')
     const calendarObjectStore = calendarTx.objectStore('calendar')
     const calendarDateIndex = calendarObjectStore.index('date')
@@ -328,12 +337,14 @@ function profileView (user) {
   showProfilePicture()
 
   inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
-  toggleIconData('edit--email', 'email')
+  
   changeDisplayName(user)
+  changeEmailAddress(user)
+  
   changePhoneNumber(user)
 }
 
-function toggleIconData (icon, inputFieldSelector) {
+function toggleIconData (icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
@@ -341,32 +352,38 @@ function toggleIconData (icon, inputFieldSelector) {
     detail
   }) {
     if (!detail.isOn) {
+      inputField['input_'].disabled = true
+      inputField['input_'].style.borderBottom = 'none'
       const key = this.dataset.toggleOffLabel
-      const text = getInputText(inputFieldSelector).value
+      const text = inputField.value
       handleFieldInput(key, text)
+      
+    }
+    else {
+      inputField.style.borderBottom = '1px solid rgba(0,0,0,.42)'
+      inputField.disabled = false
     }
   })
 }
 
 function handleFieldInput (key, value) {
   const user = firebase.auth().currentUser
-
+  console.log(typeof value)
   if (key === 'displayName') {
     user.updateProfile({
-      key: value
-    }).then(displayNameUpdated).catch(authUpdatedError)
+      [key]: value
+    }).then(function(){
+      console.log(user)
+    }).catch(authUpdatedError)
   }
 
   if (key === 'updateEmail') {
-    reauthUser()
-
-    user.updateEmail(value).then(emailUpdateSuccess).catch(authUpdatedError)
+    reauthUser(value)
+    
   }
 }
 
-function emailUpdateSuccess () {
-  console.log('done')
-}
+
 
 function readUploadedFile (event) {
   const file = event.target.files[0]
@@ -441,18 +458,31 @@ function changeDisplayName (user) {
     displayNameField.value = user.displayName
   }
 
-  toggleIconData('edit--name', 'displayName')
+  toggleIconData('edit--name', displayNameField)
 }
 
-function reauthUser () {
+function changeEmailAddress(user){
+  const emailField = getInputText('email')
+  if (!user.email) {
+    emailField['input_'].placeholder = 'set an email address'
+  } else {
+    emailField.value = user.email
+  }
+
+  toggleIconData('edit--email', emailField)
+
+}
+
+function reauthUser (email) {
   const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
   const provider = new firebase.auth.PhoneAuthProvider()
   const userPhoneNumber = firebase.auth().currentUser.phoneNumber
-  console.log(userPhoneNumber)
-  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(generateVerificationId)
+  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(function(verificationId){
+    generateVerificationId(verificationId,email)
+  })
 }
 
-function generateVerificationId (verificationId) {
+function generateVerificationId (verificationId,email) {
   removeDom('reauth-recaptcha')
 
   const otpDiv = document.createElement('div')
@@ -466,19 +496,38 @@ function generateVerificationId (verificationId) {
   otpDiv.appendChild(otpInput)
   otpDiv.appendChild(submitButtonOtp)
 
-  document.getElementById('email--change-container').appendChild(otpDiv)
+  document.getElementById('reauth-otp--container').appendChild(otpDiv)
 
   document.querySelector('.getOtp').addEventListener('click', function () {
     const otp = getInputText('reauth-otp').value
     const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp)
-    generateCredential(credential)
+    generateCredential(credential,email)
   })
 }
 
-function generateCredential (credential) {
+function generateCredential (credential,email) {
+  removeDom('reauth-otp--container')
   console.log(credential)
   const user = firebase.auth().currentUser
-  user.reauthenticateAndRetrieveDataWithCredential(credential).then().catch(handleReauthError)
+  user.reauthenticateAndRetrieveDataWithCredential(credential).then(function (){
+    updateEmail(user,email)
+  }).catch(handleReauthError)
+}
+function updateEmail(user,email){
+  user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
+}
+
+
+function emailUpdateSuccess () {
+  const user = firebase.auth().currentUser
+  user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
+}
+
+function emailVerificationSuccess(){
+  console.log('email verified')
+}
+function emailVerificationError(error){
+  console.log(error)
 }
 
 function handleReauthError (error) {

@@ -22,7 +22,8 @@
     <script src="js/panel.js" defer></script>
 
 
-    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" async defer>
+    <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" async
+        defer>
     <link href="css/conversation.css" rel="stylesheet" type="text/css" async defer>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
@@ -82,31 +83,53 @@
                             <div id="profile--image-container">
                                 <img src='' id='user-profile--image'>
                             </div>
+                            <div id="name--change-container">
 
-                            <div class="mdc-text-field mdc-button--dense" id="displayName">
-                                <input type="text" class="mdc-text-field__input">
+                                <div class="mdc-text-field mdc-button--dense" id="displayName">
+                                    <input type="text" class="mdc-text-field__input" disabled>
+                                </div>
                                 <button id="edit--name" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
-                                    data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='displayName'>edit</button>
+                                data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='displayName'>edit</button>
                             </div>
 
                             <div id="email--change-container">
 
                                 <div class="mdc-text-field mdc-button--dense" id="email">
                                     <input type="text" class="mdc-text-field__input">
-                                    <button id="edit--email" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
+
+                                </div>
+                                <button id="edit--email" class="mdc-icon-button material-icons" aria-hidden="true" aria-pressed="false" data-toggle-on-content="check"
                                     data-toggle-on-label='check' data-toggle-off-content="edit" data-toggle-off-label='updateEmail'>edit
                                 </button>
-                                
+                                <div id="reauth-recaptcha" style="position: absolute;top: 50%;"></div>
+                                <div id="reauth-otp--container"></div>
+
                             </div>
-                            <div id="reauth-recaptcha" style="position: absolute;top: 50%;"></div>
-                                
-                            
-                            </div>
-                        
-                            </nav>
+
+                        </nav>
                     </nav>
                 </aside>
-
+                <aside class="mdc-drawer mdc-drawer--temporary mdc-typography share--drawer">
+                        <nav class="mdc-drawer__drawer" dir="rtl">
+    
+                            <div class="mdc-drawer__toolbar-spacer" dir="ltr">
+                                <span class="back-share">
+                                    <i class="material-icons">arrow_back</i>
+                                </span>
+                            </div>
+    
+                            <nav id="share--container" class="mdc-drawer__content" dir="ltr">
+                                <div class="mdc-text-field mdc-text-field--box mdc-text-field--dense" id="contact--text-field">
+                                    <input class="mdc-text-field__input" type="text">
+                                </div>
+                                <div class="mdc-button" id="add-contact">ADD</div>
+                                <div id="contacts">
+                                    <ul class="mdc-list" id="contacts--container">
+                                    </ul>
+                                </div>
+                            </nav>
+                        </nav>
+                    </aside>
 
                 <header class="mdc-toolbar mdc-elevation--z1">
                     <div class="mdc-toolbar__row">

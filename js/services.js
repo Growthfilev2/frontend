@@ -54,11 +54,23 @@ function requestCreator (requestType, requestBody) {
 }
 
 const responseFunctionCaller = {
-  map: map
+  map: map,
+  calendar : calendar,
+  default : app
 }
-function map (dbName) {
-  mapView(dbName)
+function app(data){
+  listView()
+  if (!data.id) return
+  conversation(data.id)
+
 }
+function map (data) {
+  mapView(data.dbName)
+}
+function calendar(data){
+  calendarView(data.dbName)
+}
+
 function onSuccessMessage (response) {
   const IDB_VERSION = 1
 
@@ -69,14 +81,12 @@ function onSuccessMessage (response) {
   console.log(req)
 
   req.onsuccess = function () {
-    listView()
-    if (!response.data.handler.id) return
-    conversation(response.data.handler.id)
-
+ 
     const db = req.result
     const rootObjectStore = db.transaction('root').objectStore('root')
     rootObjectStore.get(response.data.handler.dbName).onsuccess = function (event) {
-      responseFunctionCaller[event.target.result.view](response.data.handler.dbName)
+      console.log(event.target.result)
+      responseFunctionCaller[event.target.result.view](response.data.handler)
     }
   }
 }
