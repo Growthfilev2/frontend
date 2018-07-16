@@ -50,7 +50,25 @@ function userSignedIn (auth) {
 
   if (window.Worker && window.indexedDB) {
     // requestCreator is present inside service.js
-    requestCreator('initializeIDB')
+    const req = window.indexedDB.open(auth.uid)
+    req.onsuccess = function () {
+      const db = req.result
+      if (Object.keys(db.objectStoreNames).length === 0) {
+        requestCreator('initializeIDB')
+      } else {
+        const rootTx = db.transaction(['root'], 'readwrite')
+        const rootObjectStore = rootTx.objectStore('root')
+        rootObjectStore.get(auth.uid).onsuccess = function (event) {
+          const record = event.target.result
+          record.view = 'default'
+          rootObjectStore.put(record)
+          rootTx.oncomplete = function () {
+            listView()
+            conversation(event.target.result.id)
+          }
+        }
+      }
+    }
     return
   }
 

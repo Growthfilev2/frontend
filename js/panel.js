@@ -110,6 +110,8 @@ function mapView (dbName) {
         const record = event.target.result
         record.view = 'default'
         rootObjectStore.put(record)
+        listView()
+        conversation(record.id)
       }
       mdcMapDrawer.open = false
     })
@@ -230,41 +232,43 @@ function generateActivityFromMarker (dbName, map, markers) {
 }
 
 function calendarView (dbName) {
-  removeDom('calendar-view--container')
-  
+  console.log(dbName)
+
   // open IDB
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-  rootObjectStore.get(dbName).onsuccess = function(event){
-    const record = event.target.result
-    record.view = 'calendar'
-    rootObjectStore.put(record)
-    
-    const mdcCalendarDrawer = mdc
-    .drawer
-    .MDCTemporaryDrawer
-    .attachTo(document.getElementById('calendar-drawer'))
-    
-    mdcCalendarDrawer.open = true
-    
-  }    
-    
-    const calendarTx = db.transaction(['calendar'], 'readonly')
-    const calendarObjectStore = calendarTx.objectStore('calendar')
-    const calendarDateIndex = calendarObjectStore.index('date')
+    rootObjectStore.get(dbName).onsuccess = function (event) {
+      const record = event.target.result
+      record.view = 'calendar'
+      rootObjectStore.put(record)
+      removeDom('calendar-view--container')
 
-    calendarDateIndex.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
+      const mdcCalendarDrawer = mdc
+        .drawer
+        .MDCTemporaryDrawer
+        .attachTo(document.getElementById('calendar-drawer'))
 
-      if (cursor) {
-        calendarViewUI(db, cursor.value)
-        cursor.continue()
-      } else {
-        document.querySelectorAll('.activity--row li').forEach(function (li) {
-          li.classList.add('calendar-activity--list-item')
-        })
+      mdcCalendarDrawer.open = true
+      console.log(db)
+      const calendarTx = db.transaction(['calendar'], 'readonly')
+      const calendarObjectStore = calendarTx.objectStore('calendar')
+      const calendarDateIndex = calendarObjectStore.index('date')
+      console.log(calendarDateIndex)
+
+      calendarDateIndex.openCursor().onsuccess = function (event) {
+        const cursor = event.target.result
+        console.log(event.target.result)
+
+        if (cursor) {
+          calendarViewUI(db, cursor.value)
+          cursor.continue()
+        } else {
+          document.querySelectorAll('.activity--row li').forEach(function (li) {
+            li.classList.add('calendar-activity--list-item')
+          })
+        }
       }
     }
   }
@@ -337,10 +341,10 @@ function profileView (user) {
   showProfilePicture()
 
   inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
-  
+
   changeDisplayName(user)
   changeEmailAddress(user)
-  
+
   changePhoneNumber(user)
 }
 
@@ -357,9 +361,7 @@ function toggleIconData (icon, inputField) {
       const key = this.dataset.toggleOffLabel
       const text = inputField.value
       handleFieldInput(key, text)
-      
-    }
-    else {
+    } else {
       inputField.style.borderBottom = '1px solid rgba(0,0,0,.42)'
       inputField.disabled = false
     }
@@ -372,18 +374,15 @@ function handleFieldInput (key, value) {
   if (key === 'displayName') {
     user.updateProfile({
       [key]: value
-    }).then(function(){
+    }).then(function () {
       console.log(user)
     }).catch(authUpdatedError)
   }
 
   if (key === 'updateEmail') {
     reauthUser(value)
-    
   }
 }
-
-
 
 function readUploadedFile (event) {
   const file = event.target.files[0]
@@ -461,7 +460,7 @@ function changeDisplayName (user) {
   toggleIconData('edit--name', displayNameField)
 }
 
-function changeEmailAddress(user){
+function changeEmailAddress (user) {
   const emailField = getInputText('email')
   if (!user.email) {
     emailField['input_'].placeholder = 'set an email address'
@@ -470,19 +469,18 @@ function changeEmailAddress(user){
   }
 
   toggleIconData('edit--email', emailField)
-
 }
 
 function reauthUser (email) {
   const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
   const provider = new firebase.auth.PhoneAuthProvider()
   const userPhoneNumber = firebase.auth().currentUser.phoneNumber
-  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(function(verificationId){
-    generateVerificationId(verificationId,email)
+  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(function (verificationId) {
+    generateVerificationId(verificationId, email)
   })
 }
 
-function generateVerificationId (verificationId,email) {
+function generateVerificationId (verificationId, email) {
   removeDom('reauth-recaptcha')
 
   const otpDiv = document.createElement('div')
@@ -501,32 +499,31 @@ function generateVerificationId (verificationId,email) {
   document.querySelector('.getOtp').addEventListener('click', function () {
     const otp = getInputText('reauth-otp').value
     const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp)
-    generateCredential(credential,email)
+    generateCredential(credential, email)
   })
 }
 
-function generateCredential (credential,email) {
+function generateCredential (credential, email) {
   removeDom('reauth-otp--container')
   console.log(credential)
   const user = firebase.auth().currentUser
-  user.reauthenticateAndRetrieveDataWithCredential(credential).then(function (){
-    updateEmail(user,email)
+  user.reauthenticateAndRetrieveDataWithCredential(credential).then(function () {
+    updateEmail(user, email)
   }).catch(handleReauthError)
 }
-function updateEmail(user,email){
+function updateEmail (user, email) {
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
-
 
 function emailUpdateSuccess () {
   const user = firebase.auth().currentUser
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
-function emailVerificationSuccess(){
+function emailVerificationSuccess () {
   console.log('email verified')
 }
-function emailVerificationError(error){
+function emailVerificationError (error) {
   console.log(error)
 }
 

@@ -53,40 +53,34 @@ function requestCreator (requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-const responseFunctionCaller = {
-  map: map,
-  calendar : calendar,
-  default : app
-}
-function app(data){
-  listView()
-  if (!data.id) return
-  conversation(data.id)
-
-}
-function map (data) {
-  mapView(data.dbName)
-}
-function calendar(data){
-  calendarView(data.dbName)
-}
-
 function onSuccessMessage (response) {
   const IDB_VERSION = 1
 
   console.log(response)
 
-  const req = window.indexedDB.open(response.data.handler.dbName)
+  const req = window.indexedDB.open(response.data.dbName)
 
   console.log(req)
 
   req.onsuccess = function () {
- 
     const db = req.result
     const rootObjectStore = db.transaction('root').objectStore('root')
-    rootObjectStore.get(response.data.handler.dbName).onsuccess = function (event) {
-      console.log(event.target.result)
-      responseFunctionCaller[event.target.result.view](response.data.handler)
+    rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
+      const currentView = event.target.result.view
+      switch (currentView) {
+        case 'default':
+          listView()
+          conversation(event.target.result.id)
+          break
+        case 'map':
+          mapView(response.data.dbName)
+          break
+        case 'calendar':
+          calendarView(response.data.dbName)
+          break
+        case 'share':
+          renderShareDrawer()
+      }
     }
   }
 }
