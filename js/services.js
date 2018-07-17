@@ -28,6 +28,7 @@ function fetchCurrentLocation () {
 function inputFile (selector) {
   return document.getElementById(selector)
 }
+let offset
 
 function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
@@ -72,20 +73,23 @@ function onSuccessMessage (response) {
         case 'default':
           listView()
           conversation(event.target.result.id)
+          handleTimeout()
           break
         case 'map':
           mapView(response.data.dbName)
+          handleTimeout()
+
           break
         case 'calendar':
           calendarView(response.data.dbName)
+          handleTimeout()
           break
         case 'share':
-
           const activityObjectStore = db.transaction('activity').objectStore('activity')
-
           activityObjectStore.get(event.target.result.id).onsuccess = function (activityEvent) {
             console.log(activityEvent)
             renderShareDrawer(activityEvent.target.result)
+            handleTimeout()
           }
       }
     }
@@ -99,4 +103,13 @@ function onErrorMessage (error) {
     'error': error.message,
     'file': error.filename
   })
+}
+
+function handleTimeout () {
+  const TIME_OUT_VALUE = 60000
+  clearTimeout(offset)
+
+  offset = setTimeout(function () {
+    requestCreator('Null')
+  }, TIME_OUT_VALUE)
 }

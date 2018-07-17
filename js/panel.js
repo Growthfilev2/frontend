@@ -547,11 +547,11 @@ function phoneNumberDialog (event) {
   const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
 
   mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
-  mdcDialog.listen('MDCDialog:cancel', function(){
-    console.log('canceled')
-  })
+  mdcDialog.listen('MDCDialog:cancel' , function(){
+    console.log('canceled');
+  });
 
-  mdcDialog.lastFocusedTarget = event.target
+  mdcDialog.lastFocusedTarget = event.target;
   mdcDialog.show()
 
 }
@@ -605,10 +605,9 @@ document.getElementById('phone-number--change-container').innerHTML = currentcou
 document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
   document.getElementById('updatePhone').addEventListener('click', function (e) {
-   console.log(e)
+  console.log(e)
 
     if (verifyCurrentPhoneNumber() && verifyNewPhoneNumber()) {
-      console.log('yes')
       fetchCurrentLocation().then(function(geopoints){
 
         const reqBody = {
@@ -621,7 +620,7 @@ document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.o
     }
   })
 
-  document.getElementById('cancelUpdate').addEventListener('click',function(){
+  document.getElementById('cancelUpdate').addEventListener('click', function( event){
     removeDom('phone-number--change-container')
     removeDom('submit-action')
   })

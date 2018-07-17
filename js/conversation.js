@@ -24,10 +24,10 @@ function conversation (id) {
     //   console.log(cursor.value)
     //   cursor.advance(100)
     // }
-   
+
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
-      if(!cursor) return;
+      if (!cursor) return
       let commentBox = document.createElement('div')
       commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
       currentUser.phoneNumber === cursor.value.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
@@ -95,21 +95,18 @@ function fillActivityDetailPage (db, id) {
     renderAssigneeList(db, record, 'assignee--list', 'activity-detail')
     renderShareIcon(record)
   }
-  document.getElementById('updateActivity').addEventListener('click',function(){
+  document.getElementById('updateActivity').addEventListener('click', function () {
     makeFieldsEditable(id)
   })
-
 }
 
-function makeFieldsEditable(id){
-    getInputText('activity--title-input')['input_'].disabled = false
-    getInputText('activity--desc-input')['input_'].disabled = false
-    const schedules = document.querySelectorAll('.schedule--list');
-    [...schedules].forEach(function(li){
-      console.log(li.children)
-    })
-
-
+function makeFieldsEditable (id) {
+  getInputText('activity--title-input')['input_'].disabled = false
+  getInputText('activity--desc-input')['input_'].disabled = false
+  const schedules = document.querySelectorAll('.schedule--list');
+  [...schedules].forEach(function (li) {
+    console.log(li.children)
+  })
 }
 
 function availableStatus (record, id) {
@@ -220,7 +217,7 @@ function showSchedule (schedules, canEdit) {
     scheduleName.innerHTML = schedule.name
 
     const scheduleStartTime = document.createElement('div')
-    scheduleStartTime.classList.add('mdc-text-field','startTimeInputs')
+    scheduleStartTime.classList.add('mdc-text-field', 'startTimeInputs')
     scheduleStartTime.id = `schedule-start--list${scheduleCount}`
 
     const scheduleStartTimeInput = document.createElement('input')
@@ -229,10 +226,8 @@ function showSchedule (schedules, canEdit) {
     scheduleStartTimeInput.value = getMonthDate(schedule.startTime)
     scheduleStartTime.appendChild(scheduleStartTimeInput)
 
-
-
     const scheduleEndTime = document.createElement('div')
-    scheduleEndTime.classList.add('mdc-text-field','endTimeInputs')
+    scheduleEndTime.classList.add('mdc-text-field', 'endTimeInputs')
     scheduleEndTime.id = `schedule-end--list${scheduleCount}`
 
     const scheduleEndTimeInput = document.createElement('input')
@@ -252,11 +247,7 @@ function showSchedule (schedules, canEdit) {
 
     document.querySelector('#schedule--list').appendChild(scheduleLi)
 
-   
-
     if (!canEdit) return
-
-  
   })
 }
 
@@ -407,7 +398,7 @@ function renderShareIcon (record) {
 
 function renderShareDrawer (record) {
   removeDom('contacts--container')
- 
+
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
   req.onsuccess = function () {
@@ -435,9 +426,8 @@ function fetchUsersData (record) {
       .attachTo(document.getElementById('share-drawer'))
 
     mdcShareDrawer.open = true
-    document.getElementById('back-share').addEventListener('click',function(){
+    document.getElementById('back-share').addEventListener('click', function () {
       loadDefaultView(db, mdcShareDrawer)
-
     })
     const userObjectStore = db
       .transaction('users')

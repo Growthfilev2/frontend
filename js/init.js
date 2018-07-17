@@ -56,7 +56,6 @@ function userSignedIn (auth) {
       if (Object.keys(db.objectStoreNames).length === 0) {
         console.log('done')
         requestCreator('initializeIDB')
-        return;
       } else {
         console.log('no')
         const rootTx = db.transaction(['root'], 'readwrite')
@@ -66,10 +65,9 @@ function userSignedIn (auth) {
           record.view = 'default'
           rootObjectStore.put(record)
           rootTx.oncomplete = function () {
-            
+            requestCreator('Null')
             listView()
             conversation(event.target.result.id)
-            requestCreator('initializeIDB')
           }
         }
       }

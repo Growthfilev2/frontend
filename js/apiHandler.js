@@ -30,8 +30,8 @@ const requestFunctionCaller = {
   statusChange: statusChange,
   removeAssignee: removeAssignee,
   share: share,
-  updateUserNumber:updateUserNumber
-
+  updateUserNumber: updateUserNumber,
+  Null: Null
 }
 
 function requestHandlerResponse (code, message, dbName) {
@@ -93,7 +93,7 @@ function initializeIDB () {
     var auth = firebase.auth().currentUser
     console.log(auth)
 
-    const request = indexedDB.open(auth.uid,2)
+    const request = indexedDB.open(auth.uid, 2)
 
     request.onerror = function (event) {
       reject(event.error)
@@ -115,7 +115,7 @@ function initializeIDB () {
       users.createIndex('isUpdated', 'isUpdated')
 
       const addendum = db.createObjectStore('addendum', {
-        autoIncrement:true
+        autoIncrement: true
       })
 
       addendum.createIndex('activityId', 'activityId')
@@ -177,11 +177,8 @@ function comment (body) {
       `${apiUrl}activities/comment`,
       JSON.stringify(body)
     ).then(function () {
-      requestHandlerResponse(200,'comment added successfully',firebase.auth().currentUser.uid)
-      resolve(
-        firebase.auth().currentUser.uid
-
-      )
+      requestHandlerResponse(200, 'comment added successfully', firebase.auth().currentUser.uid)
+      resolve(firebase.auth().currentUser.uid)
     }).catch(function (error) {
       reject(error)
     })
@@ -197,7 +194,7 @@ function statusChange (body) {
       JSON.stringify(body)
     )
       .then(function () {
-        requestHandlerResponse(200,'status changed successfully',firebase.auth().currentUser.uid)
+        requestHandlerResponse(200, 'status changed successfully', firebase.auth().currentUser.uid)
 
         resolve(
           firebase.auth().currentUser.uid
@@ -216,7 +213,7 @@ function removeAssignee (body) {
       JSON.stringify(body)
     )
       .then(function () {
-        requestHandlerResponse(200,'assignee removed successfully',firebase.auth().currentUser.uid)
+        requestHandlerResponse(200, 'assignee removed successfully', firebase.auth().currentUser.uid)
 
         resolve(
           firebase.auth().currentUser.uid
@@ -238,19 +235,18 @@ function share (body) {
 
     )
       .then(function (success) {
+        requestHandlerResponse(200, 'assignne added successfully', firebase.auth().currentUser.uid)
         resolve(
-          requestHandlerResponse(200,'assignne added successfully',firebase.auth().currentUser.uid)
-
           firebase.auth().currentUser.uid
         )
       })
       .catch(function (error) {
-        resolve(error)
+        reject(error)
       })
   })
 }
 
-function updateUserNumber(body){
+function updateUserNumber (body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -259,15 +255,24 @@ function updateUserNumber(body){
       JSON.stringify(body)
     )
       .then(function (success) {
-        requestHandlerResponse(200,'number updated successfully',firebase.auth().currentUser.uid )
+        requestHandlerResponse(200, 'number updated successfully', firebase.auth().currentUser.uid)
 
-        resolve(
-          firebase.auth().currentUser.uid
-        )
+        resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {
-        resolve(error)
+        reject(error)
       })
+  })
+}
+
+function Null () {
+  return new Promise(function (resolve, reject) {
+    const user = firebase.auth().currentUser
+    if (!user) {
+      reject(null)
+      return
+    }
+    resolve(user.uid)
   })
 }
 
@@ -461,15 +466,15 @@ function updateUserObjectStore (successUrl) {
 
       isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
-        
+
         if (!cursor) {
-          requestHandlerResponse(200, 'user object store modified',successUrl.db.name)
-          return;
+          requestHandlerResponse(200, 'user object store modified', successUrl.db.name)
+          return
         }
         if (!userProfile[cursor.primaryKey].displayName) return
-        
+
         if (!userProfile[cursor.primaryKey].photoURL) return
-        
+
         const record = cursor.value
         console.log(record)
 
