@@ -106,7 +106,7 @@ function makeFieldsEditable(id){
     getInputText('activity--desc-input')['input_'].disabled = false
     const schedules = document.querySelectorAll('.schedule--list');
     [...schedules].forEach(function(li){
-      console.log(li.target.children)
+      console.log(li.children)
     })
 
 

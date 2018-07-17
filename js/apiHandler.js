@@ -259,7 +259,7 @@ function updateUserNumber(body){
       JSON.stringify(body)
     )
       .then(function (success) {
-        requestHandlerResponse(200,'number updated successfully',firebase.auth().currentUser.uid)
+        requestHandlerResponse(200,'number updated successfully',firebase.auth().currentUser.uid )
 
         resolve(
           firebase.auth().currentUser.uid
