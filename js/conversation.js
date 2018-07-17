@@ -316,23 +316,30 @@ function renderAssigneeList (db, record, target, type) {
   record.assignees.forEach((mobileNumber) => {
     console.log(mobileNumber)
     usersStore
+
       .get(mobileNumber)
       .onsuccess = function (e) {
         const userRecord = e.target.result
-        assigneeListUI(userRecord, record, target, type)
+        assigneeListUI(userRecord, target, type)
+        if (!record.canEdit) return
+        renderRemoveIcons(record, userRecord.mobile)
       }
   })
 }
 
-function assigneeListUI (userRecord, record, target, type) {
+function assigneeListUI (userRecord, target, type) {
+  const div = document.createElement('div')
+  div.id = userRecord.mobile
+  console.log(target)
+
   const assigneeLi = document.createElement('li')
 
-  assigneeLi.dataset.num = userRecord.mobile
-
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
-  if (type === 'share' && record.canEdit) {
-    assigneeLi.setAttribute('onclick', 'displaySelectedContact(this.dataset.num)')
+
+  if (type === 'share') {
+    assigneeLi.setAttribute('onclick', 'inputSelect(this.dataset.num)')
   }
+
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
 
@@ -351,31 +358,34 @@ function assigneeListUI (userRecord, record, target, type) {
   assigneeListTextSecondary.textContent = userRecord.mobile
   assigneeListText.appendChild(assigneeListTextSecondary)
 
+  assigneeLi.appendChild(photoGraphic)
+  assigneeLi.appendChild(assigneeListText)
+  div.appendChild(assigneeLi)
+  console.log(div)
+  document.getElementById(target).innerHTML += div.outerHTML
+}
+
+function renderRemoveIcons (record, mobileNumber) {
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
   removeIcon.textContent = 'cancel'
 
+  const activityId = record.activityId
   removeIcon.onclick = function (e) {
-    const phoneNumber = e.target.parentElement.dataset.num
+    const phoneNumber = e.target.parentNode.id
     fetchCurrentLocation().then(function (geopoints) {
       const reqBody = {
-        'activityId': record.activityId,
+        'activityId': activityId,
         'timestamp': fetchCurrentTime(),
         'geopoint': geopoints,
         'remove': [phoneNumber]
       }
+      console.log(reqBody)
       requestCreator('removeAssignee', reqBody)
     })
   }
-
-  assigneeLi.appendChild(photoGraphic)
-  assigneeLi.appendChild(assigneeListText)
-
-  if (type === 'activity-detail' && record.canEdit) {
-    assigneeLi.appendChild(removeIcon)
-  }
-
-  document.querySelector(`#${target}`).appendChild(assigneeLi)
+  console.log(document.getElementById(mobileNumber))
+  document.getElementById(mobileNumber).appendChild(removeIcon)
 }
 
 function renderShareIcon (record) {
@@ -426,28 +436,29 @@ function fetchUsersData (record) {
       .attachTo(document.getElementById('share-drawer'))
 
     mdcShareDrawer.open = true
+
     document.getElementById('back-share').addEventListener('click', function () {
       loadDefaultView(db, mdcShareDrawer)
     })
+
     const userObjectStore = db
       .transaction('users')
       .objectStore('users')
 
     document.getElementById('add-contact').dataset.id = record.activityId
-
+    inputSelect(userObjectStore)
     userObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
 
-      assigneeListUI(cursor.value, record, 'contacts--container', 'share')
+      assigneeListUI(cursor.value, 'contacts--container', 'share')
       cursor.continue()
     }
   }
 }
 
 function autosuggestContacts () {
-  removeDom('contacts--container')
-
+  console.log('run')
   const boundKeyRange = IDBKeyRange
     .bound(
       getInputText('contact--text-field').value,
@@ -456,6 +467,7 @@ function autosuggestContacts () {
 
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
+
   request.onsuccess = function () {
     const db = request.result
     const userObjectStore = db
@@ -467,12 +479,14 @@ function autosuggestContacts () {
       if (!cursor) {
         console.log('done')
       } else {
-        console.log(cursor)
         const record = {
           activityId: document.getElementById('add-contact').dataset.id,
           canEdit: true
         }
-        assigneeListUI(cursor.value, record, 'contacts--container', 'share')
+        console.log('start')
+        // b
+        // a = document.getElementById('contacts--container').innerHTML +=
+        assigneeListUI(cursor.value, 'contacts--container', 'share')
 
         cursor.continue()
       }

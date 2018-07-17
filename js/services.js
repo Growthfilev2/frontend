@@ -6,8 +6,13 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect () {
+function inputSelect (objectStore) {
+  objectStore.openCursor().onsuccess = function (event) {
+    const cursor = event.target.result
+    if (!cursor) return
 
+    assigneeListUI()
+  }
 }
 
 function fetchCurrentTime () {
@@ -106,7 +111,7 @@ function onErrorMessage (error) {
 }
 
 function handleTimeout () {
-  const TIME_OUT_VALUE = 60000
+  const TIME_OUT_VALUE = 600000
   clearTimeout(offset)
 
   offset = setTimeout(function () {
