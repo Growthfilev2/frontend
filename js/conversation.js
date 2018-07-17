@@ -17,9 +17,17 @@ function conversation (id) {
 
     fillActivityDetailPage(db, id)
 
+    // addendumIndex.openCursor(IDBKeyRange.lowerBound(id)).onsuccess = function (event) {
+    //   const cursor = event.target.result
+    //   if(!cursor) return;
+
+    //   console.log(cursor.value)
+    //   cursor.advance(100)
+    // }
+   
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) return
+      if(!cursor) return;
       let commentBox = document.createElement('div')
       commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
       currentUser.phoneNumber === cursor.value.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
@@ -37,7 +45,7 @@ function conversation (id) {
 
       let commentInfo = document.createElement('span')
       commentInfo.style.float = 'right'
-      commentInfo.appendChild(document.createTextNode(cursor.value.timestamp.split('T')[1].split('.')[0]))
+      commentInfo.appendChild(document.createTextNode(new Date(cursor.value.timestamp).toLocaleTimeString()))
 
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
@@ -387,6 +395,8 @@ function renderShareIcon (record) {
 }
 
 function renderShareDrawer (record) {
+  removeDom('contacts--container')
+ 
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
   req.onsuccess = function () {
@@ -414,7 +424,10 @@ function fetchUsersData (record) {
       .attachTo(document.getElementById('share-drawer'))
 
     mdcShareDrawer.open = true
+    document.getElementById('back-share').addEventListener('click',function(){
+      loadDefaultView(db, mdcShareDrawer)
 
+    })
     const userObjectStore = db
       .transaction('users')
       .objectStore('users')
@@ -466,9 +479,8 @@ function autosuggestContacts () {
   }
 }
 
-function displaySelectedContact (dataset) {
-  console.log(dataset)
-  getInputText('contact--text-field').value = dataset.num
+function displaySelectedContact (number) {
+  getInputText('contact--text-field').value = number
 }
 
 function addContact () {

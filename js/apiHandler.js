@@ -29,7 +29,8 @@ const requestFunctionCaller = {
   comment: comment,
   statusChange: statusChange,
   removeAssignee: removeAssignee,
-  share: share
+  share: share,
+  updateUserNumber:updateUserNumber
 
 }
 
@@ -92,7 +93,8 @@ function initializeIDB () {
     var auth = firebase.auth().currentUser
     console.log(auth)
 
-    const request = indexedDB.open(auth.uid, 1)
+    const request = indexedDB.open(auth.uid,2)
+
     request.onerror = function (event) {
       reject(event.error)
     }
@@ -113,10 +115,11 @@ function initializeIDB () {
       users.createIndex('isUpdated', 'isUpdated')
 
       const addendum = db.createObjectStore('addendum', {
-        keyPath: 'addendumId'
+        autoIncrement:true
       })
 
       addendum.createIndex('activityId', 'activityId')
+      // addendum.createIndex('timestamp', 'timestamp')
 
       const subscriptions = db.createObjectStore('subscriptions', {
         autoIncrement: true
@@ -154,14 +157,14 @@ function initializeIDB () {
       root.put({
         uid: auth.uid,
         fromTime: 0
-
       })
     }
 
-    request.onsuccess = function (event) {
-      resolve({
-        dbName: auth.uid
-      })
+    request.onsuccess = function () {
+      console.log('request success')
+      resolve(
+        auth.uid
+      )
     }
   })
 }
@@ -174,6 +177,7 @@ function comment (body) {
       `${apiUrl}activities/comment`,
       JSON.stringify(body)
     ).then(function () {
+      requestHandlerResponse(200,'comment added successfully',firebase.auth().currentUser.uid)
       resolve(
         firebase.auth().currentUser.uid
 
@@ -193,6 +197,8 @@ function statusChange (body) {
       JSON.stringify(body)
     )
       .then(function () {
+        requestHandlerResponse(200,'status changed successfully',firebase.auth().currentUser.uid)
+
         resolve(
           firebase.auth().currentUser.uid
         )
@@ -210,6 +216,8 @@ function removeAssignee (body) {
       JSON.stringify(body)
     )
       .then(function () {
+        requestHandlerResponse(200,'assignee removed successfully',firebase.auth().currentUser.uid)
+
         resolve(
           firebase.auth().currentUser.uid
         )
@@ -230,6 +238,29 @@ function share (body) {
 
     )
       .then(function (success) {
+        resolve(
+          requestHandlerResponse(200,'assignne added successfully',firebase.auth().currentUser.uid)
+
+          firebase.auth().currentUser.uid
+        )
+      })
+      .catch(function (error) {
+        resolve(error)
+      })
+  })
+}
+
+function updateUserNumber(body){
+  console.log(body)
+  return new Promise(function (resolve, reject) {
+    http(
+      'PATCH',
+      `${apiUrl}services/users/update`,
+      JSON.stringify(body)
+    )
+      .then(function (success) {
+        requestHandlerResponse(200,'number updated successfully',firebase.auth().currentUser.uid)
+
         resolve(
           firebase.auth().currentUser.uid
         )
@@ -430,13 +461,17 @@ function updateUserObjectStore (successUrl) {
 
       isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
-
-        if (!cursor) return
+        
+        if (!cursor) {
+          requestHandlerResponse(200, 'user object store modified',successUrl.db.name)
+          return;
+        }
         if (!userProfile[cursor.primaryKey].displayName) return
-
+        
         if (!userProfile[cursor.primaryKey].photoURL) return
-
+        
         const record = cursor.value
+        console.log(record)
 
         record.photoURL = userProfile[cursor.primaryKey].photoURL
         record.displayName = userProfile[cursor.primaryKey].displayName
