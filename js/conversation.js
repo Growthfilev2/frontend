@@ -95,6 +95,21 @@ function fillActivityDetailPage (db, id) {
     renderAssigneeList(db, record, 'assignee--list', 'activity-detail')
     renderShareIcon(record)
   }
+  document.getElementById('updateActivity').addEventListener('click',function(){
+    makeFieldsEditable(id)
+  })
+
+}
+
+function makeFieldsEditable(id){
+    getInputText('activity--title-input')['input_'].disabled = false
+    getInputText('activity--desc-input')['input_'].disabled = false
+    const schedules = document.querySelectorAll('.schedule--list');
+    [...schedules].forEach(function(li){
+      console.log(li.target.children)
+    })
+
+
 }
 
 function availableStatus (record, id) {
@@ -198,14 +213,15 @@ function showSchedule (schedules, canEdit) {
     scheduleCount++
 
     const scheduleLi = document.createElement('li')
-    scheduleLi.classList.add('mdc-list-item')
+    scheduleLi.classList.add('mdc-list-item', 'schedule--list')
 
     const scheduleName = document.createElement('span')
     scheduleName.classList.add('schedule-name--list')
     scheduleName.innerHTML = schedule.name
 
     const scheduleStartTime = document.createElement('div')
-    scheduleStartTime.classList.add('mdc-text-field', `schedule-start--list${scheduleCount}`)
+    scheduleStartTime.classList.add('mdc-text-field','startTimeInputs')
+    scheduleStartTime.id = `schedule-start--list${scheduleCount}`
 
     const scheduleStartTimeInput = document.createElement('input')
     scheduleStartTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
@@ -213,8 +229,11 @@ function showSchedule (schedules, canEdit) {
     scheduleStartTimeInput.value = getMonthDate(schedule.startTime)
     scheduleStartTime.appendChild(scheduleStartTimeInput)
 
+
+
     const scheduleEndTime = document.createElement('div')
-    scheduleEndTime.classList.add('mdc-text-field', `schedule-end--list${scheduleCount}`)
+    scheduleEndTime.classList.add('mdc-text-field','endTimeInputs')
+    scheduleEndTime.id = `schedule-end--list${scheduleCount}`
 
     const scheduleEndTimeInput = document.createElement('input')
     scheduleEndTimeInput.disabled = true
@@ -233,19 +252,11 @@ function showSchedule (schedules, canEdit) {
 
     document.querySelector('#schedule--list').appendChild(scheduleLi)
 
-    const scheduleStartTextField = mdc.textField.MDCTextField.attachTo(document.querySelector(`.schedule-start--list${scheduleCount}`))
-
-    const scheduleEndTextField = mdc.textField.MDCTextField.attachTo(document.querySelector(`.schedule-end--list${scheduleCount}`))
+   
 
     if (!canEdit) return
 
-    // renderFieldIcons(
-    //     `schedule-edit--icon${scheduleCount}`,
-    //     `edit-schedule${scheduleCount}`, [
-    //         scheduleStartTextField,
-    //         scheduleEndTextField,
-    //     ]
-    // );
+  
   })
 }
 
