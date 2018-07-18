@@ -1,6 +1,7 @@
 function conversation (id) {
   if (!id) return
   removeDom('chat-container')
+  // document.getElementById('send-chat--input').removeEventListener('click', createCommentReq)
 
   const currentUser = firebase.auth().currentUser
 
@@ -16,14 +17,6 @@ function conversation (id) {
     }
 
     fillActivityDetailPage(db, id)
-
-    // addendumIndex.openCursor(IDBKeyRange.lowerBound(id)).onsuccess = function (event) {
-    //   const cursor = event.target.result
-    //   if(!cursor) return;
-
-    //   console.log(cursor.value)
-    //   cursor.advance(100)
-    // }
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
@@ -61,17 +54,23 @@ function conversation (id) {
       cursor.continue()
     }
 
-    document.getElementById('send-chat--input').addEventListener('click', function () {
-      fetchCurrentLocation().then(function (geopoints) {
-        const reqBody = {
-          'activityId': id,
-          'comment': getInputText('write--comment').value,
-          'timestamp': fetchCurrentTime(),
-          'geopoint': geopoints
-        }
+    const btn = document.createElement('button')
+    btn.classList.add('mdc-fab', 'mdc-fab--mini')
+    btn.id = 'send-chat--input'
 
-        requestCreator('comment', reqBody)
-      })
+    const btnIcon = document.createElement('span')
+    btnIcon.classList.add('mdc-fac__icon', 'material-icons')
+    btnIcon.textContent = 'send'
+    btn.innerHTML = btnIcon.outerHTML
+    document.getElementById('button-cont').innerHTML = btn.outerHTML
+
+    document.getElementById('send-chat--input').addEventListener('click', function () {
+      const reqBody = {
+        'activityId': id,
+        'comment': getInputText('write--comment').value
+      }
+
+      requestCreator('comment', reqBody)
     })
   }
 }
@@ -183,16 +182,12 @@ function availableStatus (record, id) {
 }
 
 function updateStatus (status, id) {
-  fetchCurrentLocation().then(function (geopoints) {
-    const reqBody = {
-      'activityId': id,
-      'status': status,
-      'timestamp': fetchCurrentTime(),
-      'geopoint': geopoints
-    }
+  const reqBody = {
+    'activityId': id,
+    'status': status
+  }
 
-    requestCreator('statusChange', reqBody)
-  })
+  requestCreator('statusChange', reqBody)
 }
 
 function showSchedule (schedules, canEdit) {
@@ -322,7 +317,7 @@ function renderAssigneeList (db, record, target, type) {
         const userRecord = e.target.result
         assigneeListUI(userRecord, target, type)
         if (!record.canEdit) return
-        renderRemoveIcons(record, userRecord.mobile,type)
+        renderRemoveIcons(record, userRecord.mobile, type)
       }
   })
 }
@@ -331,15 +326,11 @@ function assigneeListUI (userRecord, target, type) {
   const div = document.createElement('div')
   div.id = `${type}${userRecord.mobile}`
   div.classList.add(type)
-  div.dataset.num = userRecord.mobile
-
+  div.dataset.userId = userRecord.mobile
   const assigneeLi = document.createElement('li')
+  assigneeLi.dataset.num = userRecord.mobile
 
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
-
-  if (type === 'share') {
-    assigneeLi.setAttribute('onclick', 'inputSelect(this.dataset.num)')
-  }
 
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
@@ -365,25 +356,22 @@ function assigneeListUI (userRecord, target, type) {
   document.getElementById(target).appendChild(div)
 }
 
-function renderRemoveIcons (record, mobileNumber,type) {
-
+function renderRemoveIcons (record, mobileNumber, type) {
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
   removeIcon.textContent = 'cancel'
 
   const activityId = record.activityId
+
   removeIcon.onclick = function (e) {
-    const phoneNumber = e.target.parentNode.id
-    fetchCurrentLocation().then(function (geopoints) {
-      const reqBody = {
-        'activityId': activityId,
-        'timestamp': fetchCurrentTime(),
-        'geopoint': geopoints,
-        'remove': [phoneNumber]
-      }
-      console.log(reqBody)
-      requestCreator('removeAssignee', reqBody)
-    })
+    const phoneNumber = e.target.parentNode.dataset.userId
+
+    const reqBody = {
+      'activityId': activityId,
+      'remove': [phoneNumber]
+    }
+    console.log(reqBody)
+    requestCreator('removeAssignee', reqBody)
   }
 
   document.getElementById(`${type}${mobileNumber}`).appendChild(removeIcon)
@@ -448,15 +436,7 @@ function fetchUsersData (record) {
 
     document.getElementById('add-contact').dataset.id = record.activityId
 
-    // inputSelect(userObjectStore)
-    
-    userObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
-      console.log(cursor.value)
-      assigneeListUI(cursor.value, 'contacts--container', 'share')
-      cursor.continue()
-    }
+    inputSelect(userObjectStore, null, 'share')
   }
 }
 
@@ -477,19 +457,12 @@ function autosuggestContacts () {
       .transaction('users')
       .objectStore('users')
 
-    const contactEl = document.querySelectorAll('.share') 
-    contactEl.forEach(function(el){
+    const contactEl = document.querySelectorAll('.share')
+    contactEl.forEach(function (el) {
       el.style.display = 'none'
     })
-    userObjectStore.openCursor(boundKeyRange).onsuccess = function (cursorEvent) {
-      const cursor = cursorEvent.target.result
-      if (!cursor) {
-        console.log('done')
-      } else {
-        document.getElementById(`share${cursor.value.mobile}`).style.display = 'block'
-        cursor.continue()
-      }
-    }
+
+    inputSelect(userObjectStore, boundKeyRange, 'share')
   }
 }
 
@@ -498,16 +471,18 @@ function displaySelectedContact (number) {
 }
 
 function addContact () {
+  const expression = /^\+[1-9]\d{5,14}$/
+
   document.querySelector('#add-contact').onclick = function (e) {
     console.log(e)
-    fetchCurrentLocation().then(function (geopoints) {
-      const reqBody = {
-        'activityId': e.target.dataset.id,
-        'timestamp': fetchCurrentTime(),
-        'share': [getInputText('contact--text-field').value],
-        'geopoint': geopoints
-      }
-      requestCreator('share', reqBody)
-    })
+    const inputValue = getInputText('contact--text-field').value
+
+    if (!expression.test(inputValue)) return
+
+    const reqBody = {
+      'activityId': e.target.dataset.id,
+      'share': [inputValue]
+    }
+    requestCreator('share', reqBody)
   }
 }

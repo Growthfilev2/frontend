@@ -356,8 +356,7 @@ function profileView (user) {
 
   changeDisplayName(user)
   changeEmailAddress(user)
-  document.getElementById('change-link').addEventListener('click',phoneNumberDialog)
-
+  document.getElementById('change-link').addEventListener('click', phoneNumberDialog)
 }
 
 function toggleIconData (icon, inputField) {
@@ -547,85 +546,73 @@ function phoneNumberDialog (event) {
   const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
 
   mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
-  mdcDialog.listen('MDCDialog:cancel' , function(){
-    console.log('canceled');
-  });
+  mdcDialog.listen('MDCDialog:cancel', function () {
+    console.log('canceled')
+  })
 
-  mdcDialog.lastFocusedTarget = event.target;
+  mdcDialog.lastFocusedTarget = event.target
   mdcDialog.show()
-
 }
 
-function changePhoneNumber(){
+function changePhoneNumber () {
+  const currentcountryDiv = document.createElement('div')
+  currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
+  const currentCountryInput = document.createElement('input')
+  currentCountryInput.classList.add('mdc-text-field__input')
+  currentcountryDiv.id = 'current-country--code'
+  currentcountryDiv.appendChild(currentCountryInput)
 
-const currentcountryDiv = document.createElement('div')
-currentcountryDiv.classList.add('mdc-text-field','mdc-layout-grid__cell--span-2')
-const currentCountryInput = document.createElement('input')
-currentCountryInput.classList.add('mdc-text-field__input')
-currentcountryDiv.id ='current-country--code'
-currentcountryDiv.appendChild(currentCountryInput)
+  const currentNumberDiv = document.createElement('div')
+  currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
+  currentNumberDiv.id = 'current-phone--number'
+  const currentNumberInput = document.createElement('input')
+  currentNumberInput.classList.add('mdc-text-field__input')
+  currentNumberDiv.appendChild(currentNumberInput)
 
-const currentNumberDiv = document.createElement('div')
-currentNumberDiv.classList.add('mdc-text-field','mdc-layout-grid__cell--span-10')
-currentNumberDiv.id ='current-phone--number'
-const currentNumberInput = document.createElement('input')
-currentNumberInput.classList.add('mdc-text-field__input')
-currentNumberDiv.appendChild(currentNumberInput)
+  const newcountryDiv = document.createElement('div')
+  newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
+  newcountryDiv.id = 'new-country--code'
+  const newCountryInput = document.createElement('input')
+  newCountryInput.classList.add('mdc-text-field__input')
+  newcountryDiv.appendChild(newCountryInput)
 
+  const newNumberDiv = document.createElement('div')
+  newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
+  newNumberDiv.id = 'new-phone--number'
+  const newNumberInput = document.createElement('input')
+  newNumberInput.classList.add('mdc-text-field__input')
+  newNumberDiv.appendChild(newNumberInput)
 
-const newcountryDiv = document.createElement('div')
-newcountryDiv.classList.add('mdc-text-field','mdc-layout-grid__cell--span-2') 
-newcountryDiv.id ='new-country--code'
-const newCountryInput = document.createElement('input')
-newCountryInput.classList.add('mdc-text-field__input')
-newcountryDiv.appendChild(newCountryInput)
+  const submit = document.createElement('button')
+  submit.classList.add('mdc-button')
+  submit.id = 'updatePhone'
+  submit.textContent = 'submit'
 
+  const cancel = document.createElement('button')
+  cancel.classList.add('mdc-button')
+  cancel.id = 'cancelUpdate'
+  cancel.textContent = 'cancel'
 
-
-const newNumberDiv = document.createElement('div')
-newNumberDiv.classList.add('mdc-text-field','mdc-layout-grid__cell--span-10')
-newNumberDiv.id ='new-phone--number'
-const newNumberInput = document.createElement('input')
-newNumberInput.classList.add('mdc-text-field__input')
-newNumberDiv.appendChild(newNumberInput)
-
-
-const submit = document.createElement('button')
-submit.classList.add('mdc-button')
-submit.id = 'updatePhone'
-submit.textContent = 'submit'
-
-const cancel = document.createElement('button')
-cancel.classList.add('mdc-button')
-cancel.id = 'cancelUpdate'
-cancel.textContent = 'cancel'
-
-
-document.getElementById('phone-number--change-container').innerHTML = currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML
-document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
+  document.getElementById('phone-number--change-container').innerHTML = currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML
+  document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
   document.getElementById('updatePhone').addEventListener('click', function (e) {
-  console.log(e)
+    console.log(e)
 
     if (verifyCurrentPhoneNumber() && verifyNewPhoneNumber()) {
-      fetchCurrentLocation().then(function(geopoints){
-
-        const reqBody = {
-          'timestamp':fetchCurrentTime(),
-          'geopoint': geopoints,
-          'phoneNumber': newPhoneNumber()
-        }
-        requestCreator('updateUserNumber',reqBody)
-      })
+      const reqBody = {
+        'phoneNumber': newPhoneNumber()
+      }
+      requestCreator('updateUserNumber', reqBody)
     }
   })
 
-  document.getElementById('cancelUpdate').addEventListener('click', function( event){
+  document.getElementById('cancelUpdate').addEventListener('click', function (event) {
     removeDom('phone-number--change-container')
     removeDom('submit-action')
   })
 }
-function newPhoneNumber() {
+function newPhoneNumber () {
   const newCountryCode = getInputText('new-country--code').value
   const newNumber = getInputText('new-phone--number').value
   return newCountryCode.concat(newNumber)

@@ -6,12 +6,19 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect (objectStore) {
-  objectStore.openCursor().onsuccess = function (event) {
+function inputSelect (objectStore, keyRange, selector) {
+  objectStore.openCursor(keyRange).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return
-
-    assigneeListUI()
+    if (!keyRange) {
+      assigneeListUI(cursor.value, 'contacts--container', 'share')
+      document.getElementById(`${selector}${cursor.value.mobile}`).addEventListener('click', function () {
+        displaySelectedContact(cursor.value.mobile)
+      })
+    } else {
+      document.getElementById(`${selector}${cursor.value.mobile}`).style.display = 'block'
+    }
+    cursor.continue()
   }
 }
 
@@ -37,21 +44,28 @@ let offset
 
 function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
-  // getGeoLocation method will be added later
-  const requestGenerator = {
-    type: requestType,
-    body: requestBody
-
-  }
-
   // spawn a new worker called apiHandler.
 
   const apiHandler = new Worker('js/apiHandler.js')
 
-  // post the requestGenerator object to the apiHandler to perform IDB and api
-  // operations
-  console.log(requestGenerator)
-  apiHandler.postMessage(requestGenerator)
+  const requestGenerator = {
+    type: requestType,
+    body: ''
+  }
+
+  if (!requestBody) {
+    apiHandler.postMessage(requestGenerator)
+  } else {
+    fetchCurrentLocation().then(function (geopoints) {
+      requestBody['timestamp'] = fetchCurrentTime()
+      requestBody['geopoint'] = geopoints
+      requestGenerator.body = requestBody
+      // post the requestGenerator object to the apiHandler to perform IDB and api
+      // operations
+
+      apiHandler.postMessage(requestGenerator)
+    })
+  }
 
   // handle the response from apiHandler when operation is completed
 

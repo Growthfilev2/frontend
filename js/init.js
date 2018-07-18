@@ -54,10 +54,8 @@ function userSignedIn (auth) {
     req.onsuccess = function () {
       const db = req.result
       if (Object.keys(db.objectStoreNames).length === 0) {
-        console.log('done')
         requestCreator('initializeIDB')
       } else {
-        console.log('no')
         const rootTx = db.transaction(['root'], 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
         rootObjectStore.get(auth.uid).onsuccess = function (event) {
