@@ -7,18 +7,25 @@ function getInputText (selector) {
 }
 
 function inputSelect (objectStore, keyRange, selector) {
-  objectStore.openCursor(keyRange).onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) return
-    if (!keyRange) {
+  if (!keyRange) {
+    objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (!cursor) return
       assigneeListUI(cursor.value, 'contacts--container', 'share')
       document.getElementById(`${selector}${cursor.value.mobile}`).addEventListener('click', function () {
         displaySelectedContact(cursor.value.mobile)
       })
-    } else {
-      document.getElementById(`${selector}${cursor.value.mobile}`).style.display = 'block'
+      cursor.continue()
     }
-    cursor.continue()
+  } else {
+    objectStore.openCursor(keyRange).onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (!cursor) return
+      document.getElementById(`${selector}${cursor.value.mobile}`).style.display = 'block'
+      cursor.continue()
+    }
   }
 }
 

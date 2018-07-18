@@ -113,6 +113,7 @@ function initializeIDB () {
         keyPath: 'mobile'
       })
       users.createIndex('isUpdated', 'isUpdated')
+      users.createIndex('count', 'count')
 
       const addendum = db.createObjectStore('addendum', {
         autoIncrement: true
@@ -413,7 +414,8 @@ function putAssignessInStore (db, assigneeArray) {
 
       usersObjectStore.add({
         mobile: assignee,
-        isUpdated: 0
+        isUpdated: 0,
+        count: 0
       })
     }
   })
@@ -558,6 +560,7 @@ function successResponse (read) {
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
       record.fromTime = Date.parse(read.upto)
+
       rootObjectStore.put(record)
     }
 

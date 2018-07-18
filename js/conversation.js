@@ -1,11 +1,12 @@
 function conversation (id) {
   if (!id) return
   removeDom('chat-container')
-  // document.getElementById('send-chat--input').removeEventListener('click', createCommentReq)
 
   const currentUser = firebase.auth().currentUser
 
   const req = window.indexedDB.open(currentUser.uid)
+  let mapToggle = false
+
   req.onsuccess = function () {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
@@ -43,6 +44,9 @@ function conversation (id) {
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
+      mapIcon.onclick = function (iconEvent) {
+        window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
+      }
 
       commentInfo.appendChild(mapIcon)
       textContainer.appendChild(user)
@@ -50,7 +54,9 @@ function conversation (id) {
       textContainer.appendChild(commentInfo)
 
       commentBox.appendChild(textContainer)
+
       document.getElementById('chat-container').appendChild(commentBox)
+
       cursor.continue()
     }
 
@@ -427,27 +433,27 @@ function fetchUsersData (record) {
     mdcShareDrawer.open = true
 
     document.getElementById('back-share').addEventListener('click', function () {
-      loadDefaultView(db, mdcShareDrawer)
     })
+    loadDefaultView(db, mdcShareDrawer)
 
-    const userObjectStore = db
+    const userCountIndex = db
       .transaction('users')
-      .objectStore('users')
+      .objectStore('users').index('count')
 
     document.getElementById('add-contact').dataset.id = record.activityId
 
-    inputSelect(userObjectStore, null, 'share')
+    inputSelect(userCountIndex, null, 'share')
   }
 }
 
 function autosuggestContacts () {
-  console.log('run')
   const boundKeyRange = IDBKeyRange
     .bound(
       getInputText('contact--text-field').value,
       `${getInputText('contact--text-field').value}\uffff`
     )
 
+  console.log(boundKeyRange)
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
@@ -470,19 +476,40 @@ function displaySelectedContact (number) {
   getInputText('contact--text-field').value = number
 }
 
-function addContact () {
-  const expression = /^\+[1-9]\d{5,14}$/
+function updateContact (activityId) {
+  const dbName = firebase.auth().currentUser.uid
+  console.log(activityId)
 
-  document.querySelector('#add-contact').onclick = function (e) {
-    console.log(e)
-    const inputValue = getInputText('contact--text-field').value
+  const inputValue = getInputText('contact--text-field').value
+  console.log(inputValue)
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const usersTx = db.transaction(['users'], 'readwrite')
+    const usersObjectStore = usersTx.objectStore('users')
 
-    if (!expression.test(inputValue)) return
-
-    const reqBody = {
-      'activityId': e.target.dataset.id,
-      'share': [inputValue]
+    usersObjectStore.get(inputValue).onsuccess = function (event) {
+      const record = event.target.result
+      if (!record) {
+        addContact(inputValue, activityId)
+      } else {
+        record.count = record.count + 1
+        usersObjectStore.put(record)
+      }
     }
-    requestCreator('share', reqBody)
+    usersTx.oncomplete = function () {
+      addContact(inputValue, activityId)
+    }
   }
+}
+
+function addContact (number, id) {
+  const expression = /^\+[1-9]\d{5,14}$/
+  if (!expression.test(number)) return
+
+  const reqBody = {
+    'activityId': id,
+    'share': [number]
+  }
+  requestCreator('share', reqBody)
 }
