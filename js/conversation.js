@@ -332,6 +332,7 @@ function assigneeListUI (userRecord, target, type) {
   const div = document.createElement('div')
   div.id = `${type}${userRecord.mobile}`
   div.classList.add(type)
+  div.style.position = 'relative'
   div.dataset.userId = userRecord.mobile
   const assigneeLi = document.createElement('li')
   assigneeLi.dataset.num = userRecord.mobile
@@ -366,7 +367,7 @@ function renderRemoveIcons (record, mobileNumber, type) {
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
   removeIcon.textContent = 'cancel'
-
+  removeIcon.classList.add('remove')
   const activityId = record.activityId
 
   removeIcon.onclick = function (e) {
@@ -433,8 +434,8 @@ function fetchUsersData (record) {
     mdcShareDrawer.open = true
 
     document.getElementById('back-share').addEventListener('click', function () {
+      loadDefaultView(db, mdcShareDrawer)
     })
-    loadDefaultView(db, mdcShareDrawer)
 
     const userCountIndex = db
       .transaction('users')
@@ -453,7 +454,6 @@ function autosuggestContacts () {
       `${getInputText('contact--text-field').value}\uffff`
     )
 
-  console.log(boundKeyRange)
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 

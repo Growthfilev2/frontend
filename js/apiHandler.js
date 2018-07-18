@@ -65,7 +65,7 @@ function http (method, url, data) {
       .then(function (idToken) {
         const xhr = new XMLHttpRequest()
 
-        xhr.open(method, url)
+        xhr.open(method, url, true)
 
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
         xhr.setRequestHeader('Content-Type', 'application/json')

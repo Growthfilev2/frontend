@@ -298,3 +298,9 @@ margin-left:0;
     display: table-cell;
     vertical-align: middle;
 }
+
+.remove {
+    posistion:absolute;
+    right:0;
+    top:50px
+}

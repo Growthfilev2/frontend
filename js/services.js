@@ -13,6 +13,7 @@ function inputSelect (objectStore, keyRange, selector) {
 
       if (!cursor) return
       assigneeListUI(cursor.value, 'contacts--container', 'share')
+
       document.getElementById(`${selector}${cursor.value.mobile}`).addEventListener('click', function () {
         displaySelectedContact(cursor.value.mobile)
       })

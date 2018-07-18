@@ -373,6 +373,7 @@ function toggleIconData (icon, inputField) {
       const text = inputField.value
       handleFieldInput(key, text)
     } else {
+      console.log(inputField)
       inputField.style.borderBottom = '1px solid rgba(0,0,0,.42)'
       inputField.disabled = false
     }
@@ -452,7 +453,7 @@ function showProfilePicture () {
   // remove gola
   // preview image on profile drawer and toolbar in list view
   const user = firebase.auth().currentUser
-  // document.getElementById('user-profile--image').src = user.photoURL
+  document.getElementById('user-profile--image').src = user.photoURL
 }
 
 function authUpdatedError (error) {
