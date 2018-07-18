@@ -92,7 +92,7 @@ function fillActivityDetailPage (db, id) {
 
     showSchedule(record.schedule, record.canEdit)
     showVenue(record.venue, record.canEdit)
-    renderAssigneeList(db, record, 'assignee--list', 'activity-detail')
+    renderAssigneeList(db, record, 'assignee--list', 'assigneeList')
     renderShareIcon(record)
   }
   document.getElementById('updateActivity').addEventListener('click', function () {
@@ -322,15 +322,16 @@ function renderAssigneeList (db, record, target, type) {
         const userRecord = e.target.result
         assigneeListUI(userRecord, target, type)
         if (!record.canEdit) return
-        renderRemoveIcons(record, userRecord.mobile)
+        renderRemoveIcons(record, userRecord.mobile,type)
       }
   })
 }
 
 function assigneeListUI (userRecord, target, type) {
   const div = document.createElement('div')
-  div.id = userRecord.mobile
-  console.log(target)
+  div.id = `${type}${userRecord.mobile}`
+  div.classList.add(type)
+  div.dataset.num = userRecord.mobile
 
   const assigneeLi = document.createElement('li')
 
@@ -361,11 +362,11 @@ function assigneeListUI (userRecord, target, type) {
   assigneeLi.appendChild(photoGraphic)
   assigneeLi.appendChild(assigneeListText)
   div.appendChild(assigneeLi)
-  console.log(div)
-  document.getElementById(target).innerHTML += div.outerHTML
+  document.getElementById(target).appendChild(div)
 }
 
-function renderRemoveIcons (record, mobileNumber) {
+function renderRemoveIcons (record, mobileNumber,type) {
+
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
   removeIcon.textContent = 'cancel'
@@ -384,8 +385,8 @@ function renderRemoveIcons (record, mobileNumber) {
       requestCreator('removeAssignee', reqBody)
     })
   }
-  console.log(document.getElementById(mobileNumber))
-  document.getElementById(mobileNumber).appendChild(removeIcon)
+
+  document.getElementById(`${type}${mobileNumber}`).appendChild(removeIcon)
 }
 
 function renderShareIcon (record) {
@@ -446,11 +447,13 @@ function fetchUsersData (record) {
       .objectStore('users')
 
     document.getElementById('add-contact').dataset.id = record.activityId
-    inputSelect(userObjectStore)
+
+    // inputSelect(userObjectStore)
+    
     userObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-
+      console.log(cursor.value)
       assigneeListUI(cursor.value, 'contacts--container', 'share')
       cursor.continue()
     }
@@ -474,20 +477,16 @@ function autosuggestContacts () {
       .transaction('users')
       .objectStore('users')
 
+    const contactEl = document.querySelectorAll('.share') 
+    contactEl.forEach(function(el){
+      el.style.display = 'none'
+    })
     userObjectStore.openCursor(boundKeyRange).onsuccess = function (cursorEvent) {
       const cursor = cursorEvent.target.result
       if (!cursor) {
         console.log('done')
       } else {
-        const record = {
-          activityId: document.getElementById('add-contact').dataset.id,
-          canEdit: true
-        }
-        console.log('start')
-        // b
-        // a = document.getElementById('contacts--container').innerHTML +=
-        assigneeListUI(cursor.value, 'contacts--container', 'share')
-
+        document.getElementById(`share${cursor.value.mobile}`).style.display = 'block'
         cursor.continue()
       }
     }
