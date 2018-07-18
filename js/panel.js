@@ -374,8 +374,8 @@ function toggleIconData (icon, inputField) {
       handleFieldInput(key, text)
     } else {
       console.log(inputField)
-      inputField.style.borderBottom = '1px solid rgba(0,0,0,.42)'
-      inputField.disabled = false
+      inputField['input_'].style.borderBottom = '1px solid rgba(0,0,0,.42)'
+      inputField['input_'].disabled = false
     }
   })
 }
