@@ -5,7 +5,6 @@ function conversation (id) {
   const currentUser = firebase.auth().currentUser
 
   const req = window.indexedDB.open(currentUser.uid)
-  let mapToggle = false
 
   req.onsuccess = function () {
     const db = req.result
@@ -39,7 +38,8 @@ function conversation (id) {
 
       let commentInfo = document.createElement('span')
       commentInfo.style.float = 'right'
-      commentInfo.appendChild(document.createTextNode(new Date(cursor.value.timestamp).toLocaleTimeString()))
+      console.log(cursor.value.timestamp)
+      commentInfo.textContent = moment(moment.utc(cursor.value.timestamp)).fromNow()
 
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')

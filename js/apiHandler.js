@@ -74,6 +74,7 @@ function http (method, url, data) {
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) return reject(xhr)
+            console.log(xhr)
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
           }

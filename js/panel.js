@@ -47,7 +47,7 @@ function listViewUI (data, target) {
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
-  metaTextContainer.textContent = `${new Date(data.timestamp).getHours()} : ${new Date(data.timestamp).getMinutes()}`
+  metaTextContainer.textContent = moment(moment.utc(data.timestamp)).calendar()
 
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text')

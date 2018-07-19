@@ -39,6 +39,18 @@ function firebaseUiConfig () {
   }
 }
 
+moment.locale('en', {
+  calendar: {
+    lastDay: '[yesterday]',
+    sameDay: 'LT',
+    nextDay: '[Tomorrow at] LT',
+    lastWeek: 'dddd',
+    nextWeek: 'dddd [at] LT',
+    sameElse: 'L'
+
+  }
+})
+
 firebase.auth().onAuthStateChanged(function (auth) {
   // if user is signed in then run userIsSigned fn else run userSignedOut fn
   auth ? userSignedIn(auth) : userSignedOut()
