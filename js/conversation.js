@@ -38,8 +38,7 @@ function conversation (id) {
 
       let commentInfo = document.createElement('span')
       commentInfo.style.float = 'right'
-      console.log(cursor.value.timestamp)
-      commentInfo.textContent = moment(moment.utc(cursor.value.timestamp)).fromNow()
+      commentInfo.textContent = moment(cursor.value.timestamp).calendar()
 
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')

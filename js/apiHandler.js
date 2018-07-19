@@ -3,7 +3,7 @@
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
-
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
 // Backend API Url
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
@@ -342,8 +342,8 @@ function updateCalendar (db, activity) {
     const calendarIsUpdatedIndex = calendarObjectStore.index('isUpdated')
 
     activity.schedule.forEach(function (schedule) {
-      const startTime = new Date(schedule.startTime)
-      const endTime = new Date(schedule.endTime)
+      const startTime = moment(schedule.startTime).toDate()
+      const endTime = moment(schedule.endTime).toDate()
 
       calendarObjectStore.add({
         isUpdated: 0,
@@ -368,7 +368,7 @@ function updateCalendar (db, activity) {
           isUpdated: 1,
           activityId: record.activityId,
           scheduleName: record.scheduleName,
-          date: currentDate
+          date: moment(currentDate).format('YYYY-MM-DD')
         })
       }
       cursor.continue()

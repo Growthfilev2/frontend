@@ -47,7 +47,7 @@ function listViewUI (data, target) {
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
-  metaTextContainer.textContent = moment(moment.utc(data.timestamp)).calendar()
+  metaTextContainer.textContent = moment(data.timestamp).calendar()
 
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text')
@@ -249,9 +249,10 @@ function calendarView (dbName) {
     console.log(event.target.result)
   }
 }
-function fetchCalendarData () {
-  removeDom('calendar-view--container')
 
+function fetchCalendarData () {
+  removeDom('beforeToday')
+  removeDom('afterToday')
   const mdcCalendarDrawer = mdc
     .drawer
     .MDCTemporaryDrawer
@@ -271,16 +272,30 @@ function fetchCalendarData () {
       loadDefaultView(db, mdcCalendarDrawer)
     })
 
-    calendarDateIndex.openCursor().onsuccess = function (event) {
+    const lowerKeyRange = IDBKeyRange.lowerBound('2018-07-19')
+    calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
       const cursor = event.target.result
-
       if (cursor) {
-        calendarViewUI(db, cursor.value)
+        console.log(cursor.value)
+        if (!document.getElementById(cursor.value.date)) {
+          insertCalendarUI('afterToday', calendarViewUI(cursor.value))
+          getActivity(db, cursor.value)
+        } else {
+          getActivity(db, cursor.value)
+        }
         cursor.continue()
       } else {
         document.querySelectorAll('.activity--row li').forEach(function (li) {
           li.classList.add('calendar-activity--list-item')
         })
+        if (document.getElementById('2018-06-26')) {
+          insertDatesBeforeToday(db, calendarDateIndex)
+          document.getElementById('calendar-view--container').scrollTo(0,500)
+        } else {
+          console.log('user')
+          document.getElementById('afterToday').insertBefore(calendarViewUI({date: '2018-07-19'}), document.getElementById('afterToday').firstChild)
+          insertDatesBeforeToday(db, calendarDateIndex)
+        }
       }
     }
   }
@@ -290,55 +305,76 @@ function fetchCalendarData () {
   }
 }
 
-function calendarViewUI (db, data) {
-  const commonDate = data.date.toDateString()
-  const commonParsedDate = Date.parse(commonDate)
+function insertDatesBeforeToday (db, calendarDateIndex) {
+  const upperKeyRange = IDBKeyRange.upperBound('2018-07-19', true)
 
-  if (!document.getElementById(commonParsedDate)) {
-    const dateDiv = document.createElement('div')
-    dateDiv.id = commonParsedDate
-    dateDiv.className = 'date-container mdc-elevation--z1'
+  calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
+    const cursor = event.target.result
+    if (cursor) {
+      console.log(cursor.value)
+      if (!document.getElementById(cursor.value.date)) {
+        insertCalendarUI('beforeToday', calendarViewUI(cursor.value))
 
-    const dateCol = document.createElement('div')
-    dateCol.className = 'date-col'
-
-    const borderCol = document.createElement('div')
-    borderCol.className = 'border--circle-date'
-
-    const dateSpan = document.createElement('span')
-    dateSpan.textContent = commonDate.split(' ')[2]
-    dateSpan.className = 'mdc-typography--headline5'
-
-    const monthSpan = document.createElement('span')
-    monthSpan.className = 'month-row mdc-list-item__secondary-text mdc-typography--subtitle2'
-    monthSpan.textContent = commonDate.split(' ')[1]
-
-    borderCol.appendChild(dateSpan)
-    borderCol.appendChild(monthSpan)
-
-    dateCol.appendChild(borderCol)
-
-    const activityRow = document.createElement('div')
-    activityRow.className = 'activity--row'
-    activityRow.id = `row-${commonParsedDate}`
-
-    dateDiv.appendChild(dateCol)
-    dateDiv.appendChild(activityRow)
-
-    document.getElementById('calendar-view--container').appendChild(dateDiv)
-    getActivity(db, data, `row-${commonParsedDate}`)
-    return
+        getActivity(db, cursor.value)
+      } else {
+        getActivity(db, cursor.value)
+      }
+      // console.log(cursor.value)
+      cursor.continue()
+    } else {
+      document.querySelectorAll('.activity--row li').forEach(function (li) {
+        li.classList.add('calendar-activity--list-item')
+      })
+    }
   }
-
-  getActivity(db, data, `row-${commonParsedDate}`)
 }
 
-function getActivity (db, data, target) {
+function calendarViewUI (data) {
+  // if (!document.getElementById(data.date)) {
+  const dateDiv = document.createElement('div')
+  dateDiv.id = data.date
+  dateDiv.className = 'date-container mdc-elevation--z1'
+
+  const dateCol = document.createElement('div')
+  dateCol.className = 'date-col'
+
+  const borderCol = document.createElement('div')
+  borderCol.className = 'border--circle-date'
+
+  const dateSpan = document.createElement('span')
+  dateSpan.textContent = moment(data.date).format('DD')
+  dateSpan.className = 'mdc-typography--headline5'
+
+  const monthSpan = document.createElement('span')
+  monthSpan.className = 'month-row mdc-list-item__secondary-text mdc-typography--subtitle2'
+  monthSpan.textContent = moment(data.date).format('MMMM')
+
+  borderCol.appendChild(dateSpan)
+  borderCol.appendChild(monthSpan)
+
+  dateCol.appendChild(borderCol)
+
+  const activityRow = document.createElement('div')
+  activityRow.className = 'activity--row'
+
+  dateDiv.appendChild(dateCol)
+  dateDiv.appendChild(activityRow)
+  return dateDiv
+  // }
+  // return null
+}
+
+function insertCalendarUI (target, domNode) {
+  if (!domNode) return
+  document.getElementById(target).appendChild(domNode)
+}
+
+function getActivity (db, data) {
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   activityObjectStore.openCursor(data.activityId).onsuccess = function (event) {
     const cursor = event.target.result
 
-    listViewUI(cursor.value, target)
+    listViewUI(cursor.value, data.date)
   }
 }
 

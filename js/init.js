@@ -48,7 +48,11 @@ moment.locale('en', {
     nextWeek: 'dddd [at] LT',
     sameElse: 'L'
 
-  }
+  },
+  months: [
+    'January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'
+  ]
 })
 
 firebase.auth().onAuthStateChanged(function (auth) {
