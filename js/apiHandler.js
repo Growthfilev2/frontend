@@ -522,6 +522,7 @@ function updateSubscription (db, subscription) {
 // with the uptoTime received from response.
 
 function successResponse (read) {
+  console.log('start success')
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
@@ -595,9 +596,12 @@ function updateIDB (dbName) {
 
       )
         .then(function (response) {
-          console.log(response)
+          if(response.from !== response.upto) {
 
-          successResponse(response)
+            successResponse(response)
+          }
+          return
+
         })
         .catch(console.log)
     }

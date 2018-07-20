@@ -138,7 +138,7 @@ function onErrorMessage (error) {
 }
 
 function handleTimeout () {
-  const TIME_OUT_VALUE = 600000
+  const TIME_OUT_VALUE = 60000
   clearTimeout(offset)
 
   offset = setTimeout(function () {

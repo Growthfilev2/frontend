@@ -343,12 +343,13 @@ function assigneeListUI (userRecord, target, type) {
 
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
-
+  
   if (!userRecord.photoURL) {
-    photoGraphic.classList.add('material-icons')
-    photoGraphic.textContent = 'account_circle'
+    photoGraphic.src = './img/empty-user.jpg'
   }
-  photoGraphic.src = userRecord.photoURL
+  else {
+    photoGraphic.src = userRecord.photoURL
+  }
 
   const assigneeListText = document.createElement('span')
   assigneeListText.classList.add('mdc-list-item__text')
@@ -382,8 +383,11 @@ function renderRemoveIcons (record, mobileNumber, type) {
     console.log(reqBody)
     requestCreator('removeAssignee', reqBody)
   }
-  if(mobileNumber === firebase.auth().currentUser.phoneNumber) return
-  document.getElementById(`${type}${mobileNumber}`).appendChild(removeIcon)
+  if(mobileNumber !== firebase.auth().currentUser.phoneNumber) {
+    console.log(mobileNumber)
+
+    document.getElementById(`${type}${mobileNumber}`).appendChild(removeIcon)
+  }
 }
 
 function renderShareIcon (record) {
