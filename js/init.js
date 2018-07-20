@@ -71,6 +71,7 @@ function userSignedIn (auth) {
       const db = req.result
       if (Object.keys(db.objectStoreNames).length === 0) {
         requestCreator('initializeIDB')
+       
       } else {
         const rootTx = db.transaction(['root'], 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')

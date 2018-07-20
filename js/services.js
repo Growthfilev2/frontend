@@ -118,6 +118,11 @@ function onSuccessMessage (response) {
             renderShareDrawer(activityEvent.target.result)
             handleTimeout()
           }
+          break
+          default:
+          listView()
+          conversation(event.target.result.id)
+          handleTimeout()
       }
     }
   }
