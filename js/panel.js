@@ -50,7 +50,7 @@ function listViewUI(data, target) {
   metaTextContainer.textContent = moment(data.timestamp).calendar()
 
   const metaTextActivityStatus = document.createElement('span')
-  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text')
+  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text',`${data.status}`)
   metaTextActivityStatus.textContent = data.status
   metaTextContainer.appendChild(metaTextActivityStatus)
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
