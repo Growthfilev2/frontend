@@ -41,7 +41,7 @@ function conversation (id) {
       const datespan = document.createElement('span')
       datespan.textContent =  moment(cursor.value.timestamp).calendar()
       datespan.classList.add('comment-date')
-      
+
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
@@ -382,7 +382,7 @@ function renderRemoveIcons (record, mobileNumber, type) {
     console.log(reqBody)
     requestCreator('removeAssignee', reqBody)
   }
-
+  if(mobileNumber === firebase.auth().currentUser.phoneNumber) return
   document.getElementById(`${type}${mobileNumber}`).appendChild(removeIcon)
 }
 
