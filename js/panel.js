@@ -172,11 +172,11 @@ function displayMarkers(dbName, map, locationData) {
     // create marker
     const marker = new google.maps.Marker({
       position: new google.maps.LatLng(locationData[i].geopoint['_latitude'], locationData[i].geopoint['_longitude']),
-
+      icon: i == locationData.length -1 ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png': '' ,
       title: locationData[i].location,
       customInfo: locationData[i].activityId
-
     })
+
     // set bounds to extend to a marker
     bounds.extend(marker.getPosition())
 
