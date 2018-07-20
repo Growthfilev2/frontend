@@ -47,8 +47,8 @@ moment.locale('en', {
     lastWeek: 'dddd',
     nextWeek: 'dddd [at] LT',
     sameElse: 'L'
-
   },
+
   months: [
     'January', 'February', 'March', 'April', 'May', 'June', 'July',
     'August', 'September', 'October', 'November', 'December'
@@ -71,7 +71,6 @@ function userSignedIn (auth) {
       const db = req.result
       if (Object.keys(db.objectStoreNames).length === 0) {
         requestCreator('initializeIDB')
-       
       } else {
         const rootTx = db.transaction(['root'], 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')

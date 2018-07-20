@@ -6,28 +6,81 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect (objectStore, keyRange, selector) {
-  if (!keyRange) {
-    objectStore.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result
+function inputSelect (objectStore, selector, inputField, id) {
+  const objectStoreName = objectStore.objectStore.name
 
-      if (!cursor) return
-      assigneeListUI(cursor.value, 'contacts--container', 'share')
+  objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+    const cursor = event.target.result
 
-      document.getElementById(`${selector}${cursor.value.mobile}`).addEventListener('click', function () {
-        displaySelectedContact(cursor.value.mobile)
-      })
-      cursor.continue()
-    }
-  } else {
-    objectStore.openCursor(keyRange).onsuccess = function (event) {
-      const cursor = event.target.result
+    if (!cursor) return
 
-      if (!cursor) return
-      document.getElementById(`${selector}${cursor.value.mobile}`).style.display = 'block'
-      cursor.continue()
-    }
+    assigneeListUI(cursor, `${selector}--container`)
+    document.querySelector(`[data-contact="${cursor.primaryKey}"]`).addEventListener('click', function () {
+      getInputText(inputField).value = this.dataset.contact
+    })
+    cursor.continue()
   }
+  const updateSelector = document.createElement('button')
+  updateSelector.classList.add('mdc-button')
+  updateSelector.dataset.id = id
+  updateSelector.textContent = 'Add'
+  switch (objectStoreName) {
+    case 'users':
+      if (document.querySelector('[data-type="users"]')) return
+
+      updateSelector.dataset.type = 'users'
+
+      document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
+
+      document.querySelector(`[data-type="users"]`)
+        .addEventListener('click', function () {
+          updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
+        })
+      break
+    case 'map':
+      updateSelector.dataset.type = 'map'
+      document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
+        .addEventListener('click', function () {
+          updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
+        })
+      break
+    case 'subscription':
+      updateSelector.dataset.type = 'update'
+      document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
+        .addEventListener('click', function () {
+          updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
+        })
+      break
+  }
+  console.log(updateSelector)
+
+  document.getElementById(inputField).addEventListener('input', function () {
+    const dbName = firebase.auth().currentUser.uid
+    const req = window.indexedDB.open(dbName)
+    document.querySelectorAll('[data-contact]').forEach(function (list) {
+      list.style.display = 'none'
+    })
+
+    req.onsuccess = function () {
+      const db = req.result
+      const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName)
+
+      const boundKeyRange = IDBKeyRange
+        .bound(
+          getInputText(inputField).value,
+          `${getInputText(inputField).value}\uffff`
+        )
+      objectStore.openCursor(boundKeyRange).onsuccess = function (event) {
+        const cursor = event.target.result
+        console.log(cursor)
+
+        if (!cursor) return
+
+        document.querySelector(`[data-contact="${cursor.primaryKey}"]`).style.display = 'block'
+        cursor.continue()
+      }
+    }
+  })
 }
 
 function fetchCurrentTime () {
@@ -119,7 +172,7 @@ function onSuccessMessage (response) {
             handleTimeout()
           }
           break
-          default:
+        default:
           listView()
           conversation(event.target.result.id)
           handleTimeout()

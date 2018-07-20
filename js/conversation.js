@@ -39,7 +39,7 @@ function conversation (id) {
       let commentInfo = document.createElement('span')
       commentInfo.style.width = '100%'
       const datespan = document.createElement('span')
-      datespan.textContent =  moment(cursor.value.timestamp).calendar()
+      datespan.textContent = moment(cursor.value.timestamp).calendar()
       datespan.classList.add('comment-date')
 
       let mapIcon = document.createElement('i')
@@ -48,7 +48,7 @@ function conversation (id) {
       mapIcon.onclick = function (iconEvent) {
         window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
       }
-      
+
       commentInfo.appendChild(datespan)
       commentInfo.appendChild(mapIcon)
       textContainer.appendChild(user)
@@ -99,7 +99,7 @@ function fillActivityDetailPage (db, id) {
 
     showSchedule(record.schedule, record.canEdit)
     showVenue(record.venue, record.canEdit)
-    renderAssigneeList(db, record, 'assignee--list', 'assigneeList')
+    renderAssigneeList(db, record, 'assignee--list')
     renderShareIcon(record)
   }
   document.getElementById('updateActivity').addEventListener('click', function () {
@@ -309,7 +309,7 @@ function showVenue (venues, canEdit) {
   })
 }
 
-function renderAssigneeList (db, record, target, type) {
+function renderAssigneeList (db, record, target) {
   const usersStore = db
     .transaction('users')
     .objectStore('users')
@@ -317,47 +317,47 @@ function renderAssigneeList (db, record, target, type) {
   removeDom(target)
 
   record.assignees.forEach((mobileNumber) => {
-    console.log(mobileNumber)
-    usersStore
-
-      .get(mobileNumber)
+    usersStore.openCursor(mobileNumber)
       .onsuccess = function (e) {
-        const userRecord = e.target.result
-        assigneeListUI(userRecord, target, type)
-        if (!record.canEdit) return
-        renderRemoveIcons(record, userRecord.mobile, type)
+        const cursor = e.target.result
+        assigneeListUI(cursor, target)
+        if (record.canEdit) {
+          renderRemoveIcons(record, cursor.primaryKey)
+        }
       }
   })
 }
 
-function assigneeListUI (userRecord, target, type) {
+function assigneeListUI (userRecord, target) {
   const div = document.createElement('div')
-  div.id = `${type}${userRecord.mobile}`
-  div.classList.add(type)
+  console.log(userRecord)
   div.style.position = 'relative'
-  div.dataset.userId = userRecord.mobile
+  if (target === 'assignee--list') {
+    div.dataset.user = userRecord.primaryKey
+  } else {
+    div.dataset.contact = userRecord.primaryKey
+  }
+
   const assigneeLi = document.createElement('li')
-  assigneeLi.dataset.num = userRecord.mobile
 
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
 
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
-  
-  if (!userRecord.photoURL) {
+
+  if (!userRecord.value.photoURL) {
     photoGraphic.src = './img/empty-user.jpg'
-  }
-  else {
-    photoGraphic.src = userRecord.photoURL
+  } else {
+    photoGraphic.src = userRecord.value.photoURL
   }
 
   const assigneeListText = document.createElement('span')
   assigneeListText.classList.add('mdc-list-item__text')
-  assigneeListText.textContent = userRecord.displayName
+  assigneeListText.textContent = userRecord.value.displayName
 
   const assigneeListTextSecondary = document.createElement('span')
   assigneeListTextSecondary.classList.add('mdc-list-item__secondary-text')
-  assigneeListTextSecondary.textContent = userRecord.mobile
+  assigneeListTextSecondary.textContent = userRecord.value.mobile
   assigneeListText.appendChild(assigneeListTextSecondary)
 
   assigneeLi.appendChild(photoGraphic)
@@ -366,15 +366,17 @@ function assigneeListUI (userRecord, target, type) {
   document.getElementById(target).appendChild(div)
 }
 
-function renderRemoveIcons (record, mobileNumber, type) {
+function renderRemoveIcons (record, mobileNumber) {
+  console.log('run')
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
   removeIcon.textContent = 'cancel'
+
   removeIcon.classList.add('remove')
   const activityId = record.activityId
 
   removeIcon.onclick = function (e) {
-    const phoneNumber = e.target.parentNode.dataset.userId
+    const phoneNumber = e.target.parentNode.dataset.user
 
     const reqBody = {
       'activityId': activityId,
@@ -383,10 +385,8 @@ function renderRemoveIcons (record, mobileNumber, type) {
     console.log(reqBody)
     requestCreator('removeAssignee', reqBody)
   }
-  if(mobileNumber !== firebase.auth().currentUser.phoneNumber) {
-    console.log(mobileNumber)
-
-    document.getElementById(`${type}${mobileNumber}`).appendChild(removeIcon)
+  if (mobileNumber !== firebase.auth().currentUser.phoneNumber) {
+    document.querySelector(`[data-user="${mobileNumber}"]`).appendChild(removeIcon)
   }
 }
 
@@ -410,7 +410,6 @@ function renderShareIcon (record) {
 
 function renderShareDrawer (record) {
   removeDom('contacts--container')
-
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
   req.onsuccess = function () {
@@ -447,75 +446,51 @@ function fetchUsersData (record) {
       .transaction('users')
       .objectStore('users').index('count')
 
-    document.getElementById('add-contact').dataset.id = record.activityId
-
-    inputSelect(userCountIndex, null, 'share')
+    inputSelect(userCountIndex, 'contacts', 'contact--text-field', record.activityId)
   }
 }
 
-function autosuggestContacts () {
-  const boundKeyRange = IDBKeyRange
-    .bound(
-      getInputText('contact--text-field').value,
-      `${getInputText('contact--text-field').value}\uffff`
-    )
-
+function updateSelectorObjectStore (dataset, input, objectStoreName) {
+  console.log(dataset)
   const dbName = firebase.auth().currentUser.uid
-  const request = window.indexedDB.open(dbName)
 
-  request.onsuccess = function () {
-    const db = request.result
-    const userObjectStore = db
-      .transaction('users')
-      .objectStore('users')
-
-    const contactEl = document.querySelectorAll('.share')
-    contactEl.forEach(function (el) {
-      el.style.display = 'none'
-    })
-
-    inputSelect(userObjectStore, boundKeyRange, 'share')
-  }
-}
-
-function displaySelectedContact (number) {
-  getInputText('contact--text-field').value = number
-}
-
-function updateContact (activityId) {
-  const dbName = firebase.auth().currentUser.uid
-  console.log(activityId)
-
-  const inputValue = getInputText('contact--text-field').value
+  const inputValue = getInputText(input).value
   console.log(inputValue)
   const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const usersTx = db.transaction(['users'], 'readwrite')
-    const usersObjectStore = usersTx.objectStore('users')
 
-    usersObjectStore.get(inputValue).onsuccess = function (event) {
-      const record = event.target.result
-      if (!record) {
-        addContact(inputValue, activityId)
-      } else {
+  return new Promise(function (resolve, reject) {
+    req.onsuccess = function () {
+      const db = req.result
+      const storeTx = db.transaction([objectStoreName], 'readwrite')
+
+      const objectStore = storeTx.objectStore(objectStoreName)
+
+      objectStore.get(inputValue).onsuccess = function (event) {
+        const record = event.target.result
+        if (!record) return
         record.count = record.count + 1
-        usersObjectStore.put(record)
+        objectStore.put(record)
+      }
+      storeTx.oncomplete = function () {
+        resolve({value: inputValue, activityId: dataset.id})
+      }
+      storeTx.onerror = function (event) {
+        reject(event.error)
       }
     }
-    usersTx.oncomplete = function () {
-      addContact(inputValue, activityId)
-    }
-  }
+  })
 }
 
-function addContact (number, id) {
+function errorUpdatingSelectorObjectStore (error) {
+  console.log(error)
+}
+function addContact (data) {
   const expression = /^\+[1-9]\d{5,14}$/
-  if (!expression.test(number)) return
+  if (!expression.test(data.value)) return
 
   const reqBody = {
-    'activityId': id,
-    'share': [number]
+    'activityId': data.activityId,
+    'share': [data.value]
   }
   requestCreator('share', reqBody)
 }
