@@ -1,4 +1,4 @@
-function listView () {
+function listView() {
   removeDom('activity--list')
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
@@ -29,7 +29,7 @@ function listView () {
   }
 }
 
-function listViewUI (data, target) {
+function listViewUI(data, target) {
   const li = document.createElement('li')
   li.classList.add('mdc-list-item', 'activity--list-item')
   li.dataset.id = data.activityId
@@ -76,7 +76,7 @@ drawerIcons.forEach(function (selector) {
   })
 })
 
-function mapView (dbName) {
+function mapView(dbName) {
   // initialize mdc instance for map drawer
   const req = window.indexedDB.open(dbName)
 
@@ -93,7 +93,8 @@ function mapView (dbName) {
     }
   }
 }
-function fetchMapData () {
+
+function fetchMapData() {
   const mdcMapDrawer = mdc
     .drawer
     .MDCTemporaryDrawer
@@ -137,7 +138,7 @@ function fetchMapData () {
   }
 }
 
-function initMap (dbName, mapRecord) {
+function initMap(dbName, mapRecord) {
   // user current geolocation  is set as map center
   const centerGeopoints = mapRecord[mapRecord.length - 1]
 
@@ -159,7 +160,7 @@ function initMap (dbName, mapRecord) {
   displayMarkers(dbName, map, mapRecord)
 }
 
-function displayMarkers (dbName, map, locationData) {
+function displayMarkers(dbName, map, locationData) {
   let bounds = new google.maps.LatLngBounds()
 
   const allMarkers = []
@@ -198,7 +199,7 @@ function displayMarkers (dbName, map, locationData) {
   })
 }
 
-function generateActivityFromMarker (dbName, map, markers) {
+function generateActivityFromMarker(dbName, map, markers) {
   removeDom('list-view--map')
 
   let bounds = map.getBounds()
@@ -227,7 +228,7 @@ function generateActivityFromMarker (dbName, map, markers) {
   }
 }
 
-function calendarView (dbName) {
+function calendarView(dbName) {
   // open IDB
   const req = window.indexedDB.open(dbName)
 
@@ -239,8 +240,7 @@ function calendarView (dbName) {
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.view = 'calendar'
-      rootObjectStore.put(record
-      )
+      rootObjectStore.put(record)
       rootTx.oncomplete = fetchCalendarData
     }
   }
@@ -250,7 +250,7 @@ function calendarView (dbName) {
   }
 }
 
-function fetchCalendarData () {
+function fetchCalendarData() {
   removeDom('beforeToday')
   removeDom('afterToday')
   const mdcCalendarDrawer = mdc
@@ -272,113 +272,118 @@ function fetchCalendarData () {
       loadDefaultView(db, mdcCalendarDrawer)
     })
 
-    const lowerKeyRange = IDBKeyRange.lowerBound('2018-07-19')
-    calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (cursor) {
-        console.log(cursor.value)
-        if (!document.getElementById(cursor.value.date)) {
-          insertCalendarUI('afterToday', calendarViewUI(cursor.value))
-          getActivity(db, cursor.value)
-        } else {
-          getActivity(db, cursor.value)
-        }
-        cursor.continue()
-      } else {
-        document.querySelectorAll('.activity--row li').forEach(function (li) {
-          li.classList.add('calendar-activity--list-item')
+    const today = moment().format('YYYY-MM-DD')
+
+    calendarDateIndex.get(today).onsuccess = function (event) {
+      const record = event.target.result
+      if (!record) {
+        calendarViewUI('afterToday', db, {
+          date: today
         })
-        if (document.getElementById('2018-06-26')) {
-          insertDatesBeforeToday(db, calendarDateIndex)
-          document.getElementById('calendar-view--container').scrollTo(0,500)
-        } else {
-          console.log('user')
-          document.getElementById('afterToday').insertBefore(calendarViewUI({date: '2018-07-19'}), document.getElementById('afterToday').firstChild)
-          insertDatesBeforeToday(db, calendarDateIndex)
-        }
       }
+      insertDatesAfterToday(db, calendarDateIndex,today)
     }
   }
-
   request.onerror = function (event) {
     console.log(event)
   }
 }
 
-function insertDatesBeforeToday (db, calendarDateIndex) {
-  const upperKeyRange = IDBKeyRange.upperBound('2018-07-19', true)
-
-  calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
+function insertDatesAfterToday(db, calendarDateIndex,today) {
+  const lowerKeyRange = IDBKeyRange.lowerBound(today)
+  calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
     if (cursor) {
-      console.log(cursor.value)
-      if (!document.getElementById(cursor.value.date)) {
-        insertCalendarUI('beforeToday', calendarViewUI(cursor.value))
-
-        getActivity(db, cursor.value)
-      } else {
-        getActivity(db, cursor.value)
-      }
       // console.log(cursor.value)
+
+      calendarViewUI('afterToday', db, cursor.value)
       cursor.continue()
     } else {
       document.querySelectorAll('.activity--row li').forEach(function (li) {
         li.classList.add('calendar-activity--list-item')
       })
+      const cont = document.getElementById('afterToday')
+
+      insertDatesBeforeToday(db, calendarDateIndex,today)
+
     }
   }
 }
 
-function calendarViewUI (data) {
-  // if (!document.getElementById(data.date)) {
-  const dateDiv = document.createElement('div')
-  dateDiv.id = data.date
-  dateDiv.className = 'date-container mdc-elevation--z1'
+function insertDatesBeforeToday(db, calendarDateIndex,today) {
+  const upperKeyRange = IDBKeyRange.upperBound(today, true)
 
-  const dateCol = document.createElement('div')
-  dateCol.className = 'date-col'
-
-  const borderCol = document.createElement('div')
-  borderCol.className = 'border--circle-date'
-
-  const dateSpan = document.createElement('span')
-  dateSpan.textContent = moment(data.date).format('DD')
-  dateSpan.className = 'mdc-typography--headline5'
-
-  const monthSpan = document.createElement('span')
-  monthSpan.className = 'month-row mdc-list-item__secondary-text mdc-typography--subtitle2'
-  monthSpan.textContent = moment(data.date).format('MMMM')
-
-  borderCol.appendChild(dateSpan)
-  borderCol.appendChild(monthSpan)
-
-  dateCol.appendChild(borderCol)
-
-  const activityRow = document.createElement('div')
-  activityRow.className = 'activity--row'
-
-  dateDiv.appendChild(dateCol)
-  dateDiv.appendChild(activityRow)
-  return dateDiv
-  // }
-  // return null
-}
-
-function insertCalendarUI (target, domNode) {
-  if (!domNode) return
-  document.getElementById(target).appendChild(domNode)
-}
-
-function getActivity (db, data) {
-  const activityObjectStore = db.transaction('activity').objectStore('activity')
-  activityObjectStore.openCursor(data.activityId).onsuccess = function (event) {
+  calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
+    if (cursor) {
+      // console.log(cursor.value)
+      calendarViewUI('beforeToday', db, cursor.value)
+      cursor.continue()
+    } else {
+      document.querySelectorAll('.activity--row li').forEach(function (li) {
+        li.classList.add('calendar-activity--list-item')
+      })
+      const cont = document.getElementById('afterToday')
 
-    listViewUI(cursor.value, data.date)
+      document.getElementById('calendar-view--container').scrollTop = cont.offsetTop -50
+
+    }
   }
 }
 
-function profileView (user) {
+function calendarViewUI(target, db, data) {
+  if (!document.getElementById(data.date)) {
+    const dateDiv = document.createElement('div')
+    dateDiv.id = data.date
+    dateDiv.className = 'date-container mdc-elevation--z1'
+
+    const dateCol = document.createElement('div')
+    dateCol.className = 'date-col'
+
+    const borderCol = document.createElement('div')
+    borderCol.className = 'border--circle-date'
+
+    const dateSpan = document.createElement('span')
+    dateSpan.textContent = moment(data.date).format('DD')
+    dateSpan.className = 'mdc-typography--headline5'
+
+    const monthSpan = document.createElement('span')
+    monthSpan.className = 'month-row mdc-list-item__secondary-text mdc-typography--subtitle2'
+    monthSpan.textContent = moment(data.date).format('MMMM')
+
+    borderCol.appendChild(dateSpan)
+    borderCol.appendChild(monthSpan)
+
+    dateCol.appendChild(borderCol)
+
+    const activityRow = document.createElement('div')
+    activityRow.className = 'activity--row'
+
+    dateDiv.appendChild(dateCol)
+    dateDiv.appendChild(activityRow)
+    document.getElementById(target).appendChild(dateDiv)
+    getActivity(db, data)
+    return
+  }
+  getActivity(db, data)
+}
+
+function getActivity(db, data) {
+  if(data.hasOwnProperty('activityId')) {
+        
+    const activityObjectStore = db.transaction('activity').objectStore('activity')
+    activityObjectStore.get(data.activityId).onsuccess = function (event) {
+      const record = event.target.result
+      
+      listViewUI(record, data.date)
+    }
+    return
+  }
+  return
+  
+}
+
+function profileView(user) {
   const mdcProfileDrawer = mdc
     .drawer
     .MDCTemporaryDrawer
@@ -395,7 +400,7 @@ function profileView (user) {
   document.getElementById('change-link').addEventListener('click', phoneNumberDialog)
 }
 
-function toggleIconData (icon, inputField) {
+function toggleIconData(icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
@@ -416,7 +421,7 @@ function toggleIconData (icon, inputField) {
   })
 }
 
-function handleFieldInput (key, value) {
+function handleFieldInput(key, value) {
   const user = firebase.auth().currentUser
   console.log(typeof value)
   if (key === 'displayName') {
@@ -432,7 +437,7 @@ function handleFieldInput (key, value) {
   }
 }
 
-function readUploadedFile (event) {
+function readUploadedFile(event) {
   const file = event.target.files[0]
 
   const reader = new FileReader()
@@ -443,7 +448,7 @@ function readUploadedFile (event) {
   }
 }
 
-function processImage (image) {
+function processImage(image) {
   const metadata = {
     contentType: 'image/jpeg'
   }
@@ -459,44 +464,44 @@ function processImage (image) {
     storageSuccessHandler
   )
 
-  function snapshotHandler (snapshot) {
+  function snapshotHandler(snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
       console.log('running')
       // show gola
     }
   }
 
-  function storageErrorHandler (error) {
+  function storageErrorHandler(error) {
     if (error.code === 'storage/unknown') {
       console.log(error)
     }
     console.log(error)
   }
 
-  function storageSuccessHandler () {
+  function storageSuccessHandler() {
     uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
   }
 }
 
-function updateAuth (url) {
+function updateAuth(url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
   }).then(showProfilePicture).catch(authUpdatedError)
 }
 
-function showProfilePicture () {
+function showProfilePicture() {
   // remove gola
   // preview image on profile drawer and toolbar in list view
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL
 }
 
-function authUpdatedError (error) {
+function authUpdatedError(error) {
   console.log(error)
 }
 
-function changeDisplayName (user) {
+function changeDisplayName(user) {
   const displayNameField = getInputText('displayName')
 
   if (!user.displayName) {
@@ -508,7 +513,7 @@ function changeDisplayName (user) {
   toggleIconData('edit--name', displayNameField)
 }
 
-function changeEmailAddress (user) {
+function changeEmailAddress(user) {
   const emailField = getInputText('email')
   if (!user.email) {
     emailField['input_'].placeholder = 'set an email address'
@@ -519,7 +524,7 @@ function changeEmailAddress (user) {
   toggleIconData('edit--email', emailField)
 }
 
-function reauthUser (email) {
+function reauthUser(email) {
   const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
   const provider = new firebase.auth.PhoneAuthProvider()
   const userPhoneNumber = firebase.auth().currentUser.phoneNumber
@@ -528,7 +533,7 @@ function reauthUser (email) {
   })
 }
 
-function generateVerificationId (verificationId, email) {
+function generateVerificationId(verificationId, email) {
   removeDom('reauth-recaptcha')
 
   const otpDiv = document.createElement('div')
@@ -551,7 +556,7 @@ function generateVerificationId (verificationId, email) {
   })
 }
 
-function generateCredential (credential, email) {
+function generateCredential(credential, email) {
   removeDom('reauth-otp--container')
   console.log(credential)
   const user = firebase.auth().currentUser
@@ -559,27 +564,29 @@ function generateCredential (credential, email) {
     updateEmail(user, email)
   }).catch(handleReauthError)
 }
-function updateEmail (user, email) {
+
+function updateEmail(user, email) {
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
-function emailUpdateSuccess () {
+function emailUpdateSuccess() {
   const user = firebase.auth().currentUser
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
-function emailVerificationSuccess () {
+function emailVerificationSuccess() {
   console.log('email verified')
 }
-function emailVerificationError (error) {
+
+function emailVerificationError(error) {
   console.log(error)
 }
 
-function handleReauthError (error) {
+function handleReauthError(error) {
   console.log(error)
 }
 
-function phoneNumberDialog (event) {
+function phoneNumberDialog(event) {
   const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
 
   mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
@@ -591,7 +598,7 @@ function phoneNumberDialog (event) {
   mdcDialog.show()
 }
 
-function changePhoneNumber () {
+function changePhoneNumber() {
   const currentcountryDiv = document.createElement('div')
   currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
   const currentCountryInput = document.createElement('input')
@@ -649,17 +656,19 @@ function changePhoneNumber () {
     removeDom('submit-action')
   })
 }
-function newPhoneNumber () {
+
+function newPhoneNumber() {
   const newCountryCode = getInputText('new-country--code').value
   const newNumber = getInputText('new-phone--number').value
   return newCountryCode.concat(newNumber)
 }
-function verifyNewPhoneNumber () {
+
+function verifyNewPhoneNumber() {
   const expression = /^\+[1-9]\d{5,14}$/
   return expression.test(newPhoneNumber())
 }
 
-function verifyCurrentPhoneNumber () {
+function verifyCurrentPhoneNumber() {
   const currentCountryCode = getInputText('current-country--code').value
   const currentNumber = getInputText('current-phone--number').value
   const numberInAuth = firebase.auth().currentUser.phoneNumber
@@ -671,7 +680,7 @@ function verifyCurrentPhoneNumber () {
   return false
 }
 
-function loadDefaultView (db, drawer) {
+function loadDefaultView(db, drawer) {
   const rootTx = db.transaction(['root'], 'readwrite')
   const rootObjectStore = rootTx.objectStore('root')
   const dbName = firebase.auth().currentUser.uid
@@ -686,7 +695,8 @@ function loadDefaultView (db, drawer) {
     }
   }
 }
-function removeDom (selector) {
+
+function removeDom(selector) {
   const target = document.getElementById(selector)
   while (target.lastChild) {
     target.removeChild(target.lastChild)
