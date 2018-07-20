@@ -109,8 +109,6 @@ function initializeIDB () {
       })
 
       activity.createIndex('timestamp', 'timestamp')
-      activity.createIndex('compound', ['activityId', 'timestamp'])
-
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
       })
@@ -144,6 +142,7 @@ function initializeIDB () {
       map.createIndex('activityId', 'activityId')
       map.createIndex('location', 'location')
       map.createIndex('office', 'office')
+      map.createIndex('timestamp', 'timestamp')
 
       const attachment = db.createObjectStore('attachment', {
         keyPath: 'activityId'
@@ -305,8 +304,8 @@ function updateMap (db, activity) {
         address: newVenue.address,
         activityId: activity.activityId,
         venueDescriptor: newVenue.venueDescriptor,
-        office: activity.office
-
+        office: activity.office,
+        timestamp: activity.timestamp
       })
     })
   }
@@ -540,7 +539,6 @@ function successResponse (read) {
 
     read.activities.forEach(function (activity) {
       // put activity in activity object store
-
       activityObjectStore.put(activity)
 
       updateMap(db, activity)

@@ -171,7 +171,7 @@ function displayMarkers (dbName, map, locationData) {
     // create marker
     const marker = new google.maps.Marker({
       position: new google.maps.LatLng(locationData[i].geopoint['_latitude'], locationData[i].geopoint['_longitude']),
-      icon: i == locationData.length - 1 ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' : '',
+      icon: i === locationData.length - 1 ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' : '',
       title: locationData[i].location,
       customInfo: locationData[i].activityId
     })
@@ -211,27 +211,21 @@ function generateActivityFromMarker (dbName, map, markers) {
 
   req.onsuccess = function () {
     const db = req.result
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
 
     for (let i = 0; i < markers.length; i++) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
-      if(!markers[i].customInfo) return
-      if(!bounds.contains(markers[i].getPosition())) return
-        
-      const activityObjectStoreIndex = activityObjectStore.index('timestamp')
-
-        activityObjectStoreIndex.openCursor(null,'prev').onsuccess = function (event) {
+      if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
+        const activityIndex = db.transaction('activity').objectStore('activity').index('timestamp')
+        activityIndex.openCursor(null, 'prev').onsuccess = function (event) {
           const cursor = event.target.result
           if (!cursor) return
-          if(cursor.value.activityId === markers[i].customInfo){
-            console.log(i)
-
+          if (cursor.value.activityId === markers[i].customInfo) {
             // call listViewUI to render listView
             listViewUI(cursor.value, 'list-view--map')
           }
           cursor.continue()
-        
+        }
       }
     }
   }
@@ -312,9 +306,8 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
         li.classList.add('calendar-activity--list-item')
       })
       const cont = document.getElementById('afterToday')
-      insertDatesBeforeToday(db, calendarDateIndex,today)
+      insertDatesBeforeToday(db, calendarDateIndex, today)
       document.getElementById('calendar-view--container').scrollTop = cont.offsetTop - 50
-
     }
   }
 }
@@ -340,7 +333,6 @@ function insertDatesBeforeToday (db, calendarDateIndex, today) {
 }
 
 function calendarViewUI (target, db, data) {
-  console.log(data)
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -377,19 +369,21 @@ function calendarViewUI (target, db, data) {
   getActivity(db, data)
 }
 
-function getActivity(db, data) {
+function getActivity (db, data) {
+  console.log(data.date)
   if (data.hasOwnProperty('activityId')) {
-
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
-    activityObjectStore.get(data.activityId).onsuccess = function (event) {
+    const activityObjectStore = db.transaction('activity').objectStore('activity').index('timestamp')
+    activityObjectStore.get(data.date).onsuccess = function (event) {
       const record = event.target.result
+      console.log(record)
+      if (record === undefined) {
 
-      listViewUI(record, data.date)
+      } else {
+        console.log(record)
+        listViewUI(record, data.date)
+      }
     }
-    
   }
-
-
 }
 
 function profileView (user) {
@@ -705,7 +699,7 @@ function loadDefaultView (db, drawer) {
   }
 }
 
-function removeDom(selector) {
+function removeDom (selector) {
   const target = document.getElementById(selector)
   while (target.lastChild) {
     target.removeChild(target.lastChild)
