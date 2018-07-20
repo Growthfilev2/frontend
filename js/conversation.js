@@ -37,16 +37,19 @@ function conversation (id) {
       comment.appendChild(document.createTextNode(cursor.value.comment))
 
       let commentInfo = document.createElement('span')
-      commentInfo.style.float = 'right'
-      commentInfo.textContent = moment(cursor.value.timestamp).calendar()
-
+      commentInfo.style.width = '100%'
+      const datespan = document.createElement('span')
+      datespan.textContent =  moment(cursor.value.timestamp).calendar()
+      datespan.classList.add('comment-date')
+      
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
       mapIcon.onclick = function (iconEvent) {
         window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
       }
-
+      
+      commentInfo.appendChild(datespan)
       commentInfo.appendChild(mapIcon)
       textContainer.appendChild(user)
       textContainer.appendChild(comment)

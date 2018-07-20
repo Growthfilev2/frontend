@@ -68,7 +68,7 @@ color:#737780;
 }
 .comment-box .talktext span {
     color: #969aa1;
-    float: right;
+    float: left;
     font-size: 13px;
     padding-top: 10px;
 }
@@ -81,6 +81,7 @@ color:#737780;
 }
 .user-map--span {
     font-size: 15px;
+    float: right;
 }
 .mini-map--chat {
     
