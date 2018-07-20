@@ -6,23 +6,26 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect (objectStore, selector, inputField, id) {
+function inputSelect (objectStore, selector, inputField, activityRecord) {
   const objectStoreName = objectStore.objectStore.name
+  activityRecord.assignees.forEach(function (number) {
+    objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+      const cursor = event.target.result
+      if (!cursor) return
 
-  objectStore.openCursor(null, 'prev').onsuccess = function (event) {
-    const cursor = event.target.result
+      if (cursor.primaryKey !== number) {
+        assigneeListUI(cursor, `${selector}--container`)
+        dataElement(cursor.primaryKey).addEventListener('click', function () {
+          getInputText(inputField).value = this.dataset.contact
+        })
+      }
 
-    if (!cursor) return
-
-    assigneeListUI(cursor, `${selector}--container`)
-    document.querySelector(`[data-contact="${cursor.primaryKey}"]`).addEventListener('click', function () {
-      getInputText(inputField).value = this.dataset.contact
-    })
-    cursor.continue()
-  }
+      cursor.continue()
+    }
+  })
   const updateSelector = document.createElement('button')
   updateSelector.classList.add('mdc-button')
-  updateSelector.dataset.id = id
+  updateSelector.dataset.id = activityRecord.activityId
   updateSelector.textContent = 'Add'
   switch (objectStoreName) {
     case 'users':
@@ -73,10 +76,10 @@ function inputSelect (objectStore, selector, inputField, id) {
       objectStore.openCursor(boundKeyRange).onsuccess = function (event) {
         const cursor = event.target.result
         console.log(cursor)
-
         if (!cursor) return
-
-        document.querySelector(`[data-contact="${cursor.primaryKey}"]`).style.display = 'block'
+        if (dataElement(cursor.primaryKey)) {
+          dataElement(cursor.primaryKey).style.display = 'block'
+        }
         cursor.continue()
       }
     }

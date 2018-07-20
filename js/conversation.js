@@ -426,6 +426,8 @@ function renderShareDrawer (record) {
 }
 
 function fetchUsersData (record) {
+  removeDom('contacts--container')
+
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -446,7 +448,7 @@ function fetchUsersData (record) {
       .transaction('users')
       .objectStore('users').index('count')
 
-    inputSelect(userCountIndex, 'contacts', 'contact--text-field', record.activityId)
+    inputSelect(userCountIndex, 'contacts', 'contact--text-field', record)
   }
 }
 
@@ -467,7 +469,10 @@ function updateSelectorObjectStore (dataset, input, objectStoreName) {
 
       objectStore.get(inputValue).onsuccess = function (event) {
         const record = event.target.result
-        if (!record) return
+        if (!record) {
+          resolve({value: inputValue, activityId: dataset.id})
+          return
+        }
         record.count = record.count + 1
         objectStore.put(record)
       }
@@ -493,4 +498,8 @@ function addContact (data) {
     'share': [data.value]
   }
   requestCreator('share', reqBody)
+}
+
+function dataElement (key) {
+  return document.querySelector(`[data-contact="${key}"]`)
 }

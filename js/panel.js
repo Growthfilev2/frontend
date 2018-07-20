@@ -305,6 +305,9 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
         li.classList.add('calendar-activity--list-item')
       })
       const cont = document.getElementById('afterToday')
+      insertDatesBeforeToday(db, calendarDateIndex,today)
+      document.getElementById('calendar-view--container').scrollTop = cont.offsetTop - 50
+
     }
   }
 }
@@ -330,6 +333,7 @@ function insertDatesBeforeToday (db, calendarDateIndex, today) {
 }
 
 function calendarViewUI (target, db, data) {
+  console.log(data)
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
