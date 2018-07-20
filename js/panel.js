@@ -120,15 +120,18 @@ function fetchMapData() {
       const cursor = event.target.result
 
       if (!cursor) {
-        mapRecords.push({
-          location: 'your location',
+        fetchCurrentLocation().then(function(geopoints){
 
-          geopoint: {
-            '_latitude': 28.6667,
-            '_longitude': 77.2167
-          }
+          mapRecords.push({
+            location: 'your location',
+            
+            geopoint: {
+              '_latitude': geopoints.latitude,
+              '_longitude': geopoints.longitude
+            }
+          })
+          initMap(dbName, mapRecords)
         })
-        initMap(dbName, mapRecords)
         return
       }
 
