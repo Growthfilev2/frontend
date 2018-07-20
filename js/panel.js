@@ -216,15 +216,22 @@ function generateActivityFromMarker (dbName, map, markers) {
     for (let i = 0; i < markers.length; i++) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
-      if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
-        activityObjectStore.openCursor(markers[i].customInfo).onsuccess = function (event) {
+      if(!markers[i].customInfo) return
+      if(!bounds.contains(markers[i].getPosition())) return
+        
+      const activityObjectStoreIndex = activityObjectStore.index('timestamp')
+
+        activityObjectStoreIndex.openCursor(null,'prev').onsuccess = function (event) {
           const cursor = event.target.result
-
           if (!cursor) return
+          if(cursor.value.activityId === markers[i].customInfo){
+            console.log(i)
 
-          // call listViewUI to render listView
-          listViewUI(cursor.value, 'list-view--map')
-        }
+            // call listViewUI to render listView
+            listViewUI(cursor.value, 'list-view--map')
+          }
+          cursor.continue()
+        
       }
     }
   }

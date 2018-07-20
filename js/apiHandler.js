@@ -109,6 +109,7 @@ function initializeIDB () {
       })
 
       activity.createIndex('timestamp', 'timestamp')
+      activity.createIndex('compound', ['activityId', 'timestamp'])
 
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
@@ -596,12 +597,9 @@ function updateIDB (dbName) {
 
       )
         .then(function (response) {
-          if(response.from !== response.upto) {
-
+          if (response.from !== response.upto) {
             successResponse(response)
           }
-          return
-
         })
         .catch(console.log)
     }
