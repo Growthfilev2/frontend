@@ -382,7 +382,14 @@ function profileView (user) {
     .attachTo(document.getElementById('profile-drawer'))
 
   mdcProfileDrawer.open = true
-
+  document.getElementById('close-profile--drawer').addEventListener('click', function () {
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      loadDefaultView(db, mdcProfileDrawer)
+    }
+  })
   showProfilePicture()
 
   inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
@@ -678,7 +685,7 @@ function loadDefaultView (db, drawer) {
   const dbName = firebase.auth().currentUser.uid
   rootObjectStore.get(dbName).onsuccess = function (event) {
     const record = event.target.result
-    record.view = 'default'
+    record.view = 'main'
     rootObjectStore.put(record)
     rootTx.oncomplete = function () {
       listView()

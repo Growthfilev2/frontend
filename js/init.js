@@ -70,13 +70,16 @@ function userSignedIn (auth) {
     req.onsuccess = function () {
       const db = req.result
       if (Object.keys(db.objectStoreNames).length === 0) {
-        requestCreator('initializeIDB')
+        setTimeout(function () {
+          requestCreator('initializeIDB')
+          return void (0)
+        }, 300)
       } else {
         const rootTx = db.transaction(['root'], 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
         rootObjectStore.get(auth.uid).onsuccess = function (event) {
           const record = event.target.result
-          record.view = 'default'
+          record.view = 'main'
           rootObjectStore.put(record)
           rootTx.oncomplete = function () {
             requestCreator('Null')

@@ -2,8 +2,6 @@ function conversation (id) {
   if (!id) return
   // removeDom('chat-container')
 
-  document.getElementById('chat-container').innerHTML = ''
-
   const currentUser = firebase.auth().currentUser
 
   const req = window.indexedDB.open(currentUser.uid)
@@ -15,57 +13,57 @@ function conversation (id) {
     rootObjectStore.get(currentUser.uid).onsuccess = function (event) {
       const record = event.target.result
       record.id = id
+      record.view = 'main'
       rootObjectStore.put(record)
     }
 
     fillActivityDetailPage(db, id)
+
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
 
-      if (!document.getElementById(cursor.value.addendumId)) {
-        let commentBox = document.createElement('div')
-        commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
-        currentUser.phoneNumber === cursor.value.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
-        commentBox.id = cursor.value.addendumId
+      let commentBox = document.createElement('div')
+      commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
+      currentUser.phoneNumber === cursor.value.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
+      commentBox.id = cursor.value.addendumId
 
-        let textContainer = document.createElement('div')
-        textContainer.classList.add('talktext')
+      let textContainer = document.createElement('div')
+      textContainer.classList.add('talktext')
 
-        let user = document.createElement('p')
-        user.classList.add('user-name--comment')
-        user.appendChild(document.createTextNode(cursor.value.user))
+      let user = document.createElement('p')
+      user.classList.add('user-name--comment')
+      user.appendChild(document.createTextNode(cursor.value.user))
 
-        let comment = document.createElement('p')
-        comment.classList.add('comment')
-        comment.appendChild(document.createTextNode(cursor.value.comment))
+      let comment = document.createElement('p')
+      comment.classList.add('comment')
+      comment.appendChild(document.createTextNode(cursor.value.comment))
 
-        let commentInfo = document.createElement('span')
-        commentInfo.style.width = '100%'
-        const datespan = document.createElement('span')
-        datespan.textContent = moment(cursor.value.timestamp).calendar()
-        datespan.classList.add('comment-date')
+      let commentInfo = document.createElement('span')
+      commentInfo.style.width = '100%'
+      const datespan = document.createElement('span')
+      datespan.textContent = moment(cursor.value.timestamp).calendar()
+      datespan.classList.add('comment-date')
 
-        let mapIcon = document.createElement('i')
-        mapIcon.classList.add('user-map--span', 'material-icons')
-        mapIcon.appendChild(document.createTextNode('location_on'))
-        mapIcon.onclick = function (iconEvent) {
-          window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
-        }
-
-        commentInfo.appendChild(datespan)
-        commentInfo.appendChild(mapIcon)
-        textContainer.appendChild(user)
-        textContainer.appendChild(comment)
-        textContainer.appendChild(commentInfo)
-
-        commentBox.appendChild(textContainer)
-        document.getElementById('chat-container').appendChild(commentBox)
-
-        cursor.continue()
+      let mapIcon = document.createElement('i')
+      mapIcon.classList.add('user-map--span', 'material-icons')
+      mapIcon.appendChild(document.createTextNode('location_on'))
+      mapIcon.onclick = function (iconEvent) {
+        window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
       }
+
+      commentInfo.appendChild(datespan)
+      commentInfo.appendChild(mapIcon)
+      textContainer.appendChild(user)
+      textContainer.appendChild(comment)
+      textContainer.appendChild(commentInfo)
+
+      commentBox.appendChild(textContainer)
+      document.getElementById('chat-container').appendChild(commentBox)
+
+      cursor.continue()
       const container = document.getElementById('chat-container')
-      container.scrollTop = container.offsetTop + container.scrollHeight
+      container.scrollTop = container.scrollHeight
       // container.scrollTop = container.scrollHeight
     }
 
@@ -86,6 +84,7 @@ function conversation (id) {
       }
 
       requestCreator('comment', reqBody)
+      getInputText('write--comment').value = ''
     })
   }
 }
@@ -117,9 +116,20 @@ function fillActivityDetailPage (db, id) {
 function makeFieldsEditable (id) {
   getInputText('activity--title-input')['input_'].disabled = false
   getInputText('activity--desc-input')['input_'].disabled = false
-  const schedules = document.querySelectorAll('.schedule--list');
-  [...schedules].forEach(function (li) {
-    console.log(li.children)
+  const startSchedule = document.querySelectorAll('.startTimeInputs')
+  const endSchedules = document.querySelectorAll('.endTimeInputs');
+  [...startSchedule].forEach(function (li) {
+    console.log(li)
+    if (li.classList.contains('mdc-text-field')) {
+      getInputText(li.id)['input_'].disabled = false
+    }
+  });
+
+  [...endSchedules].forEach(function (li) {
+    console.log(li)
+    if (li.classList.contains('mdc-text-field')) {
+      getInputText(li.id)['input_'].disabled = false
+    }
   })
 }
 
@@ -324,14 +334,15 @@ function renderAssigneeList (db, record, target) {
   removeDom(target)
 
   record.assignees.forEach((mobileNumber) => {
-    usersStore.openCursor(mobileNumber)
-      .onsuccess = function (e) {
-        const cursor = e.target.result
-        assigneeListUI(cursor, target)
-        if (record.canEdit) {
-          renderRemoveIcons(record, cursor.primaryKey)
-        }
+    console.log(record)
+    usersStore.openCursor(mobileNumber).onsuccess = function (e) {
+      const cursor = e.target.result
+      console.log(cursor)
+      assigneeListUI(cursor, target)
+      if (record.canEdit) {
+        renderRemoveIcons(record, cursor.primaryKey)
       }
+    }
   })
 }
 
@@ -416,7 +427,7 @@ function renderShareIcon (record) {
 }
 
 function renderShareDrawer (record) {
-  removeDom('contacts--container')
+  console.log(record)
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
   req.onsuccess = function () {

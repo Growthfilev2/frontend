@@ -7,22 +7,27 @@ function getInputText (selector) {
 }
 
 function inputSelect (objectStore, selector, inputField, activityRecord) {
+  getInputText(inputField).value = ''
   const objectStoreName = objectStore.objectStore.name
-  activityRecord.assignees.forEach(function (number) {
-    objectStore.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
 
-      if (cursor.primaryKey !== number) {
-        assigneeListUI(cursor, `${selector}--container`)
-        dataElement(cursor.primaryKey).addEventListener('click', function () {
-          getInputText(inputField).value = this.dataset.contact
-        })
-      }
-
-      cursor.continue()
+  objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+    const cursor = event.target.result
+    if (!cursor) {
+      activityRecord.assignees.forEach(function (number) {
+        document.querySelector(`[data-contact="${number}"]`).remove()
+      })
+      return
     }
-  })
+
+    assigneeListUI(cursor, `${selector}--container`)
+
+    dataElement(cursor.primaryKey).addEventListener('click', function () {
+      getInputText(inputField).value = this.dataset.contact
+    })
+
+    cursor.continue()
+  }
+
   const updateSelector = document.createElement('button')
   updateSelector.classList.add('mdc-button')
   updateSelector.dataset.id = activityRecord.activityId
@@ -147,12 +152,13 @@ function onSuccessMessage (response) {
 
   req.onsuccess = function () {
     const db = req.result
-    const rootObjectStore = db.transaction('root').objectStore('root')
+    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
     rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
-      const currentView = event.target.result.view
-      console.log(currentView)
+      const record = event.target.result
+      const currentView = record.view
+
       switch (currentView) {
-        case 'default':
+        case 'main':
           listView()
           conversation(event.target.result.id)
           handleTimeout()
@@ -175,8 +181,11 @@ function onSuccessMessage (response) {
           }
           break
         default:
+          record.currentView = 'main'
+          rootObjectStore.put(record)
+          console.log('nani')
           listView()
-          conversation(event.target.result.id)
+          conversation()
           handleTimeout()
       }
     }
