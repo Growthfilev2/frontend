@@ -108,7 +108,7 @@ function fetchMapData () {
   req.onsuccess = function () {
     const db = req.result
     const mapObjectStore = db.transaction('map').objectStore('map')
-    const mapLocationIndex = mapObjectStore.index('location')
+    const mapTimestampIndex = mapObjectStore.index('timestamp')
 
     document.getElementById('close-map--drawer').addEventListener('click', function () {
       loadDefaultView(db, mdcMapDrawer)
@@ -116,7 +116,7 @@ function fetchMapData () {
 
     const mapRecords = []
 
-    mapLocationIndex.openCursor().onsuccess = function (event) {
+    mapTimestampIndex.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
 
       if (!cursor) {
@@ -216,17 +216,13 @@ function generateActivityFromMarker (dbName, map, markers) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
-        const activityIndex = db.transaction('activity').objectStore('activity').index('timestamp')
-        activityIndex.openCursor(null, 'prev').onsuccess = function (event) {
-          const cursor = event.target.result
-          if (!cursor) return
-          if (cursor.value.activityId === markers[i].customInfo) {
-            // call listViewUI to render listView
-            listViewUI(cursor.value, 'list-view--map')
-          }
-          cursor.continue()
+          const activityObjectStore = db.transaction('activity').objectStore('activity')
+        activityObjectStore.get(markers[i].customInfo).onsuccess = function(event){
+          const record = event.target.result
+          listViewUI(record,'list-view--map')
         }
-      }
+        }
+
     }
   }
 }

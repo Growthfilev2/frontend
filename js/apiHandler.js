@@ -136,6 +136,8 @@ function initializeIDB () {
       calendar.createIndex('date', 'date')
       calendar.createIndex('activityId', 'activityId')
       calendar.createIndex('isUpdated', 'isUpdated')
+      calendar.createIndex('timestamp','timestamp')
+
       const map = db.createObjectStore('map', {
         autoIncrement: true
       })
@@ -349,6 +351,7 @@ function updateCalendar (db, activity) {
         isUpdated: 0,
         activityId: activity.activityId,
         scheduleName: schedule.name,
+        timestamp:activity.timestamp,
         date: {
           start: startTime,
           end: endTime
@@ -368,6 +371,7 @@ function updateCalendar (db, activity) {
           isUpdated: 1,
           activityId: record.activityId,
           scheduleName: record.scheduleName,
+          timestamp:record.timestamp,
           date: moment(currentDate).format('YYYY-MM-DD')
         })
       }
