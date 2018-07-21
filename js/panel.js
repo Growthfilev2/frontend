@@ -1,22 +1,24 @@
 function listView () {
-  removeDom('activity--list')
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
-
+  
   req.onerror = function (event) {
     console.log(event)
   }
-
+  
   req.onsuccess = function () {
     const db = req.result
     const activityStoreTx = db.transaction('activity')
     const activityObjectStore = activityStoreTx.objectStore('activity')
     const activityObjectStoreIndex = activityObjectStore.index('timestamp')
-
+    removeDom('activity--list')
+    // document.getElementById('activity--list').style.display ='none'
     activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
       let cursor = event.target.result
 
       if (!cursor) {
+        // document.getElementById('activity--list').style.display ='block'
+
         console.log('all enteries displayed')
 
         return
@@ -31,6 +33,7 @@ function listView () {
 
 function listViewUI (data, target) {
   const li = document.createElement('li')
+  
   li.classList.add('mdc-list-item', 'activity--list-item')
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
@@ -697,7 +700,8 @@ function loadDefaultView (db, drawer) {
 
 function removeDom (selector) {
   const target = document.getElementById(selector)
-  while (target.lastChild) {
-    target.removeChild(target.lastChild)
-  }
+  target.innerHTML = ''
+  // while (target.lastChild) {
+  //   target.removeChild(target.lastChild)
+  // }
 }

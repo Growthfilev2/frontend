@@ -272,10 +272,7 @@ margin-left:0;
 #map {
     height: 300px;
 }
-.activity--list-item {
-    transition: all 0.3s;
 
-}
 .calendar-activity--list-item {
     width: 85%;
     padding-left: 0px;
