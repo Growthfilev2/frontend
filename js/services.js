@@ -138,8 +138,7 @@ function requestCreator (requestType, requestBody) {
 }
 
 function onSuccessMessage (response) {
-  const IDB_VERSION = 1
-
+  if (response.data.type !== 'updateIDB') return
   console.log(response)
 
   const req = window.indexedDB.open(response.data.dbName)

@@ -34,8 +34,9 @@ const requestFunctionCaller = {
   Null: Null
 }
 
-function requestHandlerResponse (code, message, dbName) {
+function requestHandlerResponse (type, code, message, dbName) {
   self.postMessage({
+    type: type,
     code: code,
     msg: message,
     dbName: dbName
@@ -136,7 +137,7 @@ function initializeIDB () {
       calendar.createIndex('date', 'date')
       calendar.createIndex('activityId', 'activityId')
       calendar.createIndex('isUpdated', 'isUpdated')
-      calendar.createIndex('timestamp','timestamp')
+      calendar.createIndex('timestamp', 'timestamp')
 
       const map = db.createObjectStore('map', {
         autoIncrement: true
@@ -181,7 +182,7 @@ function comment (body) {
       `${apiUrl}activities/comment`,
       JSON.stringify(body)
     ).then(function () {
-      requestHandlerResponse(200, 'comment added successfully', firebase.auth().currentUser.uid)
+      requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
       resolve(firebase.auth().currentUser.uid)
     }).catch(function (error) {
       reject(error)
@@ -198,7 +199,7 @@ function statusChange (body) {
       JSON.stringify(body)
     )
       .then(function () {
-        requestHandlerResponse(200, 'status changed successfully', firebase.auth().currentUser.uid)
+        requestHandlerResponse('notification', 200, 'status changed successfully', firebase.auth().currentUser.uid)
 
         resolve(
           firebase.auth().currentUser.uid
@@ -217,7 +218,7 @@ function removeAssignee (body) {
       JSON.stringify(body)
     )
       .then(function () {
-        requestHandlerResponse(200, 'assignee removed successfully', firebase.auth().currentUser.uid)
+        requestHandlerResponse('notification', 200, 'assignee removed successfully', firebase.auth().currentUser.uid)
 
         resolve(
           firebase.auth().currentUser.uid
@@ -239,7 +240,7 @@ function share (body) {
 
     )
       .then(function (success) {
-        requestHandlerResponse(200, 'assignne added successfully', firebase.auth().currentUser.uid)
+        requestHandlerResponse('notification', 200, 'assignne added successfully', firebase.auth().currentUser.uid)
         resolve(
           firebase.auth().currentUser.uid
         )
@@ -259,7 +260,7 @@ function updateUserNumber (body) {
       JSON.stringify(body)
     )
       .then(function (success) {
-        requestHandlerResponse(200, 'number updated successfully', firebase.auth().currentUser.uid)
+        requestHandlerResponse('notification', 200, 'number updated successfully', firebase.auth().currentUser.uid)
 
         resolve(firebase.auth().currentUser.uid)
       })
@@ -351,7 +352,7 @@ function updateCalendar (db, activity) {
         isUpdated: 0,
         activityId: activity.activityId,
         scheduleName: schedule.name,
-        timestamp:activity.timestamp,
+        timestamp: activity.timestamp,
         date: {
           start: startTime,
           end: endTime
@@ -371,7 +372,7 @@ function updateCalendar (db, activity) {
           isUpdated: 1,
           activityId: record.activityId,
           scheduleName: record.scheduleName,
-          timestamp:record.timestamp,
+          timestamp: record.timestamp,
           date: moment(currentDate).format('YYYY-MM-DD')
         })
       }
@@ -573,7 +574,7 @@ function successResponse (read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
 
-    requestHandlerResponse(200, 'IDB updated successfully', user.uid)
+    requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
   }
 }
 

@@ -1,6 +1,8 @@
 function conversation (id) {
   if (!id) return
-  removeDom('chat-container')
+  // removeDom('chat-container')
+
+  document.getElementById('chat-container').innerHTML = ''
 
   const currentUser = firebase.auth().currentUser
 
@@ -17,49 +19,54 @@ function conversation (id) {
     }
 
     fillActivityDetailPage(db, id)
-
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      let commentBox = document.createElement('div')
-      commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
-      currentUser.phoneNumber === cursor.value.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
 
-      let textContainer = document.createElement('div')
-      textContainer.classList.add('talktext')
+      if (!document.getElementById(cursor.value.addendumId)) {
+        let commentBox = document.createElement('div')
+        commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
+        currentUser.phoneNumber === cursor.value.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
+        commentBox.id = cursor.value.addendumId
 
-      let user = document.createElement('p')
-      user.classList.add('user-name--comment')
-      user.appendChild(document.createTextNode(cursor.value.user))
+        let textContainer = document.createElement('div')
+        textContainer.classList.add('talktext')
 
-      let comment = document.createElement('p')
-      comment.classList.add('comment')
-      comment.appendChild(document.createTextNode(cursor.value.comment))
+        let user = document.createElement('p')
+        user.classList.add('user-name--comment')
+        user.appendChild(document.createTextNode(cursor.value.user))
 
-      let commentInfo = document.createElement('span')
-      commentInfo.style.width = '100%'
-      const datespan = document.createElement('span')
-      datespan.textContent = moment(cursor.value.timestamp).calendar()
-      datespan.classList.add('comment-date')
+        let comment = document.createElement('p')
+        comment.classList.add('comment')
+        comment.appendChild(document.createTextNode(cursor.value.comment))
 
-      let mapIcon = document.createElement('i')
-      mapIcon.classList.add('user-map--span', 'material-icons')
-      mapIcon.appendChild(document.createTextNode('location_on'))
-      mapIcon.onclick = function (iconEvent) {
-        window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
+        let commentInfo = document.createElement('span')
+        commentInfo.style.width = '100%'
+        const datespan = document.createElement('span')
+        datespan.textContent = moment(cursor.value.timestamp).calendar()
+        datespan.classList.add('comment-date')
+
+        let mapIcon = document.createElement('i')
+        mapIcon.classList.add('user-map--span', 'material-icons')
+        mapIcon.appendChild(document.createTextNode('location_on'))
+        mapIcon.onclick = function (iconEvent) {
+          window.open(`https://www.google.co.in/maps/@${cursor.value.location['_latitude']},${cursor.value.location['_longitude']}`)
+        }
+
+        commentInfo.appendChild(datespan)
+        commentInfo.appendChild(mapIcon)
+        textContainer.appendChild(user)
+        textContainer.appendChild(comment)
+        textContainer.appendChild(commentInfo)
+
+        commentBox.appendChild(textContainer)
+        document.getElementById('chat-container').appendChild(commentBox)
+
+        cursor.continue()
       }
-
-      commentInfo.appendChild(datespan)
-      commentInfo.appendChild(mapIcon)
-      textContainer.appendChild(user)
-      textContainer.appendChild(comment)
-      textContainer.appendChild(commentInfo)
-
-      commentBox.appendChild(textContainer)
-
-      document.getElementById('chat-container').appendChild(commentBox)
-
-      cursor.continue()
+      const container = document.getElementById('chat-container')
+      container.scrollTop = container.offsetTop + container.scrollHeight
+      // container.scrollTop = container.scrollHeight
     }
 
     const btn = document.createElement('button')

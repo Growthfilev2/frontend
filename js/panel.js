@@ -216,13 +216,12 @@ function generateActivityFromMarker (dbName, map, markers) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
-          const activityObjectStore = db.transaction('activity').objectStore('activity')
-        activityObjectStore.get(markers[i].customInfo).onsuccess = function(event){
+        const activityObjectStore = db.transaction('activity').objectStore('activity')
+        activityObjectStore.get(markers[i].customInfo).onsuccess = function (event) {
           const record = event.target.result
-          listViewUI(record,'list-view--map')
+          listViewUI(record, 'list-view--map')
         }
-        }
-
+      }
     }
   }
 }
@@ -230,7 +229,6 @@ function generateActivityFromMarker (dbName, map, markers) {
 function calendarView (dbName) {
   // open IDB
   const req = window.indexedDB.open(dbName)
-
   req.onsuccess = function () {
     const db = req.result
     const rootTx = db.transaction(['root'], 'readwrite')
@@ -368,13 +366,11 @@ function calendarViewUI (target, db, data) {
 function getActivity (db, data) {
   if (data.hasOwnProperty('activityId')) {
     const activityObjectStore = db.transaction('activity').objectStore('activity')
-    activityObjectStore.get(data.activityId).onsuccess = function(event){
+    activityObjectStore.get(data.activityId).onsuccess = function (event) {
       const record = event.target.result
-     
+      listViewUI(record, data.date)
       // if(cursor.value.activityId === data.activityId) {
-        listViewUI(record, data.date)
       // }
-     
     }
   }
 }
