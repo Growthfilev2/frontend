@@ -366,18 +366,15 @@ function calendarViewUI (target, db, data) {
 }
 
 function getActivity (db, data) {
-  console.log(data.date)
   if (data.hasOwnProperty('activityId')) {
-    const activityObjectStore = db.transaction('activity').objectStore('activity').index('timestamp')
-    activityObjectStore.get(data.date).onsuccess = function (event) {
+    const activityObjectStore = db.transaction('activity').objectStore('activity')
+    activityObjectStore.get(data.activityId).onsuccess = function(event){
       const record = event.target.result
-      console.log(record)
-      if (record === undefined) {
-
-      } else {
-        console.log(record)
+     
+      // if(cursor.value.activityId === data.activityId) {
         listViewUI(record, data.date)
-      }
+      // }
+     
     }
   }
 }
