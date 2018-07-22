@@ -11,7 +11,7 @@ firebase.initializeApp({
 })
 
 // firebaseUI login config object
-function firebaseUiConfig () {
+function firebaseUiConfig() {
   return {
     'callbacks': {
       'signInSuccess': function (user, credential, redirectUrl) {
@@ -61,10 +61,12 @@ firebase.auth().onAuthStateChanged(function (auth) {
 })
 
 // when user is signed in call requestCreator function inside services.js
-function userSignedIn (auth) {
-  document.querySelector('.app').style.display = 'block'
+function userSignedIn(auth) {
+  // document.querySelector('.app').style.display = 'block'
 
   if (window.Worker && window.indexedDB) {
+    layoutGrid()
+
     // requestCreator is present inside service.js
     const req = window.indexedDB.open(auth.uid)
     req.onsuccess = function () {
@@ -72,19 +74,19 @@ function userSignedIn (auth) {
       if (Object.keys(db.objectStoreNames).length === 0) {
         setTimeout(function () {
           requestCreator('initializeIDB')
-          return void (0)
+          return void(0)
         }, 300)
       } else {
         const rootTx = db.transaction(['root'], 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
         rootObjectStore.get(auth.uid).onsuccess = function (event) {
           const record = event.target.result
-          record.view = 'main'
+          record.view = 'list'
           rootObjectStore.put(record)
           rootTx.oncomplete = function () {
-            requestCreator('Null')
+            // requestCreator('Null')
             listView()
-            conversation(event.target.result.id)
+            // conversation(event.target.result.id)
           }
         }
       }
@@ -96,8 +98,12 @@ function userSignedIn (auth) {
 }
 
 // When user is signed out
-function userSignedOut () {
-  document.querySelector('.app').style.display = 'none'
+function userSignedOut() {
+  const login = document.createElement('div')
+  login.id = "login-container"
+  document.body.innerHTML = login.outerHTML
+
+  // document.querySelector('.app').style.display = 'none'
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth())
 
@@ -105,6 +111,33 @@ function userSignedOut () {
   ui.start('#login-container', firebaseUiConfig())
 }
 
-function signOutError (error) {
+function signOutError(error) {
   // handler error with snackbar
 }
+
+function layoutGrid() {
+  const layout = document.createElement('div')
+  layout.classList.add("mdc-layout-grid", "mdc-typography", "app")
+
+  const layoutInner = document.createElement("div")
+  layoutInner.className = 'mdc-layout-grid__inner cell-space'
+  
+  const headerDiv = document.createElement('div')
+  headerDiv.id = "header"
+  const currentPanel = document.createElement('div')
+  currentPanel.id = "app-current-panel"
+  currentPanel.className ='mdc-layout-grid__cell--span-12'
+
+  layoutInner.appendChild(headerDiv)
+  layoutInner.appendChild(currentPanel)
+  
+  // const conversationPanelParent = document.createElement('div')
+  // conversationPanelParent.className ='mdc-layout-grid__cell--span-12-mobile app-center-panel'
+  // const activityParentPanel = document.createElement('div')
+  // activityParentPanel.className ='mdc-layout-grid__cell--span-12-mobile app-right-panel'
+
+  layout.appendChild(layoutInner)
+  document.body.innerHTML = layout.outerHTML
+
+}
+

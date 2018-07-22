@@ -9,9 +9,15 @@ body {
 .app {
     padding:0;
 }
-
+.cell-space {
+    grid-gap: 0
+}
+.panel-card {
+    width: 100vw;
+    min-height: 100vh;
+    /* margin-top: 50% */
+}
 .activity--chat-card-container {
-    height: 578px;
     background-color: #f5f5f5;
 }
 
@@ -38,10 +44,6 @@ color:#737780;
     font-size: 12px;
 }
 
-#chat-container {
-    height: 500px;
-    overflow: scroll
-}
 
 #chat-container .comment-box {
     width: 50%;
@@ -87,8 +89,9 @@ color:#737780;
     
 }
 .comment--container {
-    padding: 20px 20px 10px 0;
-    position: relative;
+   width:80%;
+   float: left;
+
 }
 .input--text-padding {
     margin: 0 auto;
@@ -113,12 +116,15 @@ color:#737780;
 }
 .send--container {
     position: relative;
+    width: 20%;
+    float: right;
+
 }
 
 #send-chat--input {
     position: absolute;
     bottom: 1rem;
-    top: 1rem;
+    top: 0rem;
     right: 1rem;
     background-color: #6abbf9;
 }
@@ -306,4 +312,27 @@ margin-left:0;
 ::-webkit-scrollbar {
     width: 0px;  /* remove scrollbar space */
     background: transparent;  /* optional: just make scrollbar invisible */
+}
+.profile--icon-small {
+    width:40px;
+    height: 40px;
+    border-radius: 50%
+}
+
+#chat-container {
+    height: 85vh;
+    overflow: scroll
+}
+
+.back-icon {
+    padding: 10px;
+    position: absolute;
+    top: 5px;
+}
+
+.comment-header-primary {
+    padding: 5px 5px 5px 50px
+}
+#calendar-view--container {
+    /* overflow-y :scroll */
 }
