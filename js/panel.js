@@ -1,5 +1,4 @@
-function listView() {
-
+function listView () {
   listPanel()
   creatListHeader()
 
@@ -23,8 +22,7 @@ function listView() {
   }
 }
 
-function fetchDataForActivityList(db) {
-
+function fetchDataForActivityList (db) {
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
@@ -48,8 +46,7 @@ function fetchDataForActivityList(db) {
   }
 }
 
-function listPanel() {
-
+function listPanel () {
   const listCard = document.createElement('div')
   listCard.className = 'mdc-card panel-card mdc-top-app-bar--fixed-adjust'
 
@@ -62,7 +59,7 @@ function listPanel() {
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 }
 
-function creatListHeader() {
+function creatListHeader () {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -100,7 +97,6 @@ function creatListHeader() {
   parentIconDiv.appendChild(mapIconCont)
   parentIconDiv.appendChild(calendarIconCont)
 
-
   header(profileIconDiv.outerHTML, parentIconDiv.outerHTML)
   const drawerIcons = ['map-panel--icon', 'calendar-panel--icon', 'profile-panel--icon']
   drawerIcons.forEach(function (selector) {
@@ -122,7 +118,7 @@ function creatListHeader() {
   })
 }
 
-function createActivityList(data, target) {
+function createActivityList (data, target) {
   const li = document.createElement('li')
 
   li.classList.add('mdc-list-item', 'activity--list-item')
@@ -153,7 +149,6 @@ function createActivityList(data, target) {
 }
 
 const header = function (contentStart, contentEnd) {
-
   const header = document.createElement('header')
   header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed'
 
@@ -176,7 +171,6 @@ const header = function (contentStart, contentEnd) {
   rightUI.id = 'action-data'
   if (contentEnd) {
     rightUI.innerHTML = contentEnd
-
   }
   sectionEnd.appendChild(rightUI)
   row.appendChild(sectionStart)
@@ -185,9 +179,7 @@ const header = function (contentStart, contentEnd) {
   document.getElementById('header').innerHTML = header.outerHTML
 }
 
-
-
-function mapView(dbName) {
+function mapView (dbName) {
   console.log(dbName)
   // initialize mdc instance for map drawer
   const req = window.indexedDB.open(dbName)
@@ -206,8 +198,7 @@ function mapView(dbName) {
   }
 }
 
-
-function fetchMapData() {
+function fetchMapData () {
   createMapPanel()
   backIconHeader('close-map--drawer')
 
@@ -238,8 +229,6 @@ function fetchMapData() {
             }
           })
           initMap(dbName, mapRecords)
-
-
         })
         return
       }
@@ -250,7 +239,7 @@ function fetchMapData() {
   }
 }
 
-function backIconHeader(id) {
+function backIconHeader (id) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
@@ -261,8 +250,7 @@ function backIconHeader(id) {
   header(backSpan.outerHTML)
 }
 
-function createMapPanel() {
-
+function createMapPanel () {
   const mapParent = document.createElement('div')
   mapParent.id = 'map-view--container'
   mapParent.className = 'mdc-top-app-bar--fixed-adjust'
@@ -276,14 +264,12 @@ function createMapPanel() {
   mapParent.appendChild(map)
   mapParent.appendChild(mapList)
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
-
 }
 
-function initMap(dbName, mapRecord) {
+function initMap (dbName, mapRecord) {
   console.log('amp')
   // user current geolocation  is set as map center
   const centerGeopoints = mapRecord[mapRecord.length - 1]
-
 
   const map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
@@ -303,7 +289,7 @@ function initMap(dbName, mapRecord) {
   displayMarkers(dbName, map, mapRecord)
 }
 
-function displayMarkers(dbName, map, locationData) {
+function displayMarkers (dbName, map, locationData) {
   let bounds = new google.maps.LatLngBounds()
   console.log(locationData)
   const allMarkers = []
@@ -332,7 +318,6 @@ function displayMarkers(dbName, map, locationData) {
 
   // add zoom_changed listener on map ,so that when zoom changes, markers will give the acitivtyId attached to them
   google.maps.event.addListener(map, 'zoom_changed', function (e) {
-
     generateActivityFromMarker(dbName, map, allMarkers)
   })
 
@@ -346,10 +331,9 @@ function displayMarkers(dbName, map, locationData) {
   google.maps.event.addListener(map, 'idle', function () {
     generateActivityFromMarker(dbName, map, allMarkers)
   })
-
 }
 
-function generateActivityFromMarker(dbName, map, markers) {
+function generateActivityFromMarker (dbName, map, markers) {
   removeDom('list-view--map')
   console.log(markers)
 
@@ -372,12 +356,11 @@ function generateActivityFromMarker(dbName, map, markers) {
         }
       }
     }
-    google.maps.event.clearListeners(map, 'idle');
-
+    google.maps.event.clearListeners(map, 'idle')
   }
 }
 
-function calendarView(dbName) {
+function calendarView (dbName) {
   // open IDB
   createCalendarPanel()
   backIconHeader('close-calendar--drawer')
@@ -401,7 +384,7 @@ function calendarView(dbName) {
   }
 }
 
-function createCalendarPanel() {
+function createCalendarPanel () {
   const calendarView = document.createElement('div')
   calendarView.id = 'calendar-view--container'
   calendarView.className = 'mdc-top-app-bar--fixed-adjust'
@@ -415,8 +398,7 @@ function createCalendarPanel() {
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
 }
 
-
-function fetchCalendarData() {
+function fetchCalendarData () {
   removeDom('beforeToday')
   removeDom('afterToday')
 
@@ -428,7 +410,6 @@ function fetchCalendarData() {
     const db = request.result
     const calendarObjectStore = db.transaction('calendar', 'readonly').objectStore('calendar')
     const calendarDateIndex = calendarObjectStore.index('date')
-
 
     const today = moment().format('YYYY-MM-DD')
 
@@ -447,7 +428,7 @@ function fetchCalendarData() {
   }
 }
 
-function insertDatesAfterToday(db, calendarDateIndex, today) {
+function insertDatesAfterToday (db, calendarDateIndex, today) {
   const lowerKeyRange = IDBKeyRange.lowerBound(today)
   calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
@@ -463,14 +444,11 @@ function insertDatesAfterToday(db, calendarDateIndex, today) {
       const parent = document.getElementById('calendar-view--container')
       const lastScrollHeight = parent.scrollHeight
       insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight)
-
-
     }
   }
 }
 
-function insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight) {
-
+function insertDatesBeforeToday (db, calendarDateIndex, today, lastScrollHeight) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
 
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
@@ -486,12 +464,11 @@ function insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight) 
       document.querySelectorAll('.activity--row li').forEach(function (li) {
         li.classList.add('calendar-activity--list-item')
       })
-
     }
   }
 }
 
-function calendarViewUI(target, db, data) {
+function calendarViewUI (target, db, data) {
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -528,9 +505,8 @@ function calendarViewUI(target, db, data) {
   getActivity(db, data)
 }
 
-function getActivity(db, data) {
+function getActivity (db, data) {
   if (data.hasOwnProperty('activityId')) {
-
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     activityObjectStore.get(data.activityId).onsuccess = function (event) {
       const record = event.target.result
@@ -541,26 +517,27 @@ function getActivity(db, data) {
   }
 }
 
-function profileView(user) {
-
+function profileView (user) {
   const dbName = firebase.auth().currentUser.uid
 
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
-    const rootTx = db.transaction(['root'],'readwrite')
+    const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.view = 'profile'
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
+        backIconHeader('close-profile--panel')
         createProfilePanel()
-        // document.getElementById('close-profile--drawer').addEventListener('click', listView)
+
+        document.getElementById('close-profile--panel').addEventListener('click', listView)
         showProfilePicture()
-      
+
         inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
-      
+
         changeDisplayName(user)
         changeEmailAddress(user)
         document.getElementById('change-link').addEventListener('click', phoneNumberDialog)
@@ -569,90 +546,99 @@ function profileView(user) {
   }
 }
 
-function createProfilePanel(){
+function createProfilePanel () {
   const profileView = document.createElement('div')
-  profileView.id ='profile-view--container'
+  profileView.id = 'profile-view--container'
+  profileView.className = 'mdc-top-app-bar--fixed-adjust'
 
-  const uploadImg = document.createElement('img')
-  uploadImg.id = 'upload--profile-img'
-  uploadImg.src = ''
+  const uploadBtn = document.createElement('button')
+  uploadBtn.className = 'mdc-fab'
+
+  const label = document.createElement('label')
+  label.setAttribute('for', 'uploadProfileImage')
+  const btnText = document.createElement('span')
+  btnText.className = 'mdc-fab__icon material-icons'
+  btnText.textContent = 'add_a_photo'
+
+  label.appendChild(btnText)
+  uploadBtn.appendChild(label)
 
   const fileInput = document.createElement('input')
   fileInput.type = 'file'
   fileInput.style.display = 'none'
-  fileInput.id ='uploadProfileImage'
-
+  fileInput.id = 'uploadProfileImage'
 
   const profileImgCont = document.createElement('div')
-  profileImgCont.id ='profile--image-container'
+  profileImgCont.id = 'profile--image-container'
 
   const profileImg = document.createElement('img')
-  profileImg.id ='user-profile--image'
+  profileImg.id = 'user-profile--image'
+
   // profileImg.src =''
 
   profileImgCont.appendChild(profileImg)
-
+  profileImgCont.appendChild(uploadBtn)
+  profileImgCont.appendChild(fileInput)
 
   const nameChangeCont = document.createElement('div')
-  nameChangeCont.id ='name--change-container'
+  nameChangeCont.id = 'name--change-container'
 
   const nameTextField = document.createElement('div')
   nameTextField.className = 'mdc-text-field mdc-button--dense'
-  nameTextField.id= 'displayName'
+  nameTextField.id = 'displayName'
 
   const nameInput = document.createElement('input')
   nameInput.type = 'text'
-  nameInput.className ='mdc-text-field__input'
+  nameInput.className = 'mdc-text-field__input'
   nameInput.disabled = true
+  nameInput.style.borderBottom = 'none'
 
   nameTextField.appendChild(nameInput)
 
   const toggleBtnName = document.createElement('button')
   toggleBtnName.className = 'mdc-icon-button material-icons'
-  toggleBtnName.id ='edit--name'
+  toggleBtnName.id = 'edit--name'
 
-  toggleBtnName.setAttribute('aria-hidden','true')
-  toggleBtnName.setAttribute('aria-pressed','false')
-  toggleBtnName.setAttribute('data-toggle-on-conten','check')
-  toggleBtnName.setAttribute('data-toggle-on-label','check')
-  toggleBtnName.setAttribute('data-toggle-off-content','edit')
-  toggleBtnName.setAttribute('data-toggle-off-label','displayName')
+  toggleBtnName.setAttribute('aria-hidden', 'true')
+  toggleBtnName.setAttribute('aria-pressed', 'false')
+  toggleBtnName.setAttribute('data-toggle-on-content', 'check')
+  toggleBtnName.setAttribute('data-toggle-on-label', 'check')
+  toggleBtnName.setAttribute('data-toggle-off-content', 'edit')
+  toggleBtnName.setAttribute('data-toggle-off-label', 'displayName')
 
   toggleBtnName.textContent = 'edit'
 
   nameChangeCont.appendChild(nameTextField)
   nameChangeCont.appendChild(toggleBtnName)
 
-
-
   const emailCont = document.createElement('div')
-  emailCont.id ='email--change-container'
+  emailCont.id = 'email--change-container'
 
   const emailTextField = document.createElement('div')
-  emailTextField.className ='mdc-text-field mdc-button--dense'
-  emailTextField.id ='email'
+  emailTextField.className = 'mdc-text-field mdc-button--dense'
+  emailTextField.id = 'email'
 
   const emailInput = document.createElement('input')
-  emailInput.className ='mdc-text-field__input'
-  emailInput.type ='text'
+  emailInput.className = 'mdc-text-field__input'
+  emailInput.type = 'text'
+  emailInput.style.borderBottom = 'none'
 
   emailTextField.appendChild(emailInput)
-
 
   const toggleBtnEmail = document.createElement('button')
   toggleBtnEmail.className = 'mdc-icon-button material-icons'
   toggleBtnEmail.id = 'edit--email'
-  toggleBtnEmail.setAttribute('aria-hidden','true')
-  toggleBtnEmail.setAttribute('aria-pressed','false')
-  toggleBtnEmail.setAttribute('data-toggle-on-conten','check')
-  toggleBtnEmail.setAttribute('data-toggle-on-label','check')
-  toggleBtnEmail.setAttribute('data-toggle-off-content','edit')
-  toggleBtnEmail.setAttribute('data-toggle-off-label','updateEmail')
+  toggleBtnEmail.setAttribute('aria-hidden', 'true')
+  toggleBtnEmail.setAttribute('aria-pressed', 'false')
+  toggleBtnEmail.setAttribute('data-toggle-on-content', 'check')
+  toggleBtnEmail.setAttribute('data-toggle-on-label', 'check')
+  toggleBtnEmail.setAttribute('data-toggle-off-content', 'edit')
+  toggleBtnEmail.setAttribute('data-toggle-off-label', 'updateEmail')
 
-  toggleBtnEmail.textContent ='email'
+  toggleBtnEmail.textContent = 'email'
 
   const reauthCont = document.createElement('div')
-  reauthCont.id ='reauth-recaptcha'
+  reauthCont.id = 'reauth-recaptcha'
   reauthCont.className = 'reauthCont'
 
   const otpCont = document.createElement('div')
@@ -663,43 +649,42 @@ function createProfilePanel(){
   emailCont.appendChild(reauthCont)
   emailCont.appendChild(otpCont)
 
-
   const changeNumCont = document.createElement('div')
-  changeNumCont.id ='change--number-container'
+  changeNumCont.id = 'change--number-container'
 
+  const changeNumberText = document.createElement('div')
+  changeNumberText.className = 'change--span'
   const infoText = document.createElement('span')
-  infoText.className ='info--span-number'
-  
+  infoText.className = 'info--span-number'
+
   const info = document.createElement('span')
   info.id = 'change-link'
-  info.textContent ='click here'
-  //first append
-  infoText.appendChild(info)
+  info.textContent = 'click here '
+  // first append
 
   infoText.textContent = 'to change your number'
+  changeNumberText.appendChild(info)
+  changeNumberText.appendChild(infoText)
 
   const mainChange = document.createElement('div')
-  mainChange.id ='phone-number--change-container'
+  mainChange.id = 'phone-number--change-container'
   mainChange.className = 'mdc-layout-grid__inner'
 
-const submitCont = document.createElement('div')
-submitCont.id ='submit-action'
+  const submitCont = document.createElement('div')
+  submitCont.id = 'submit-action'
 
-changeNumCont.appendChild(infoText)
-changeNumCont.appendChild(mainChange)
-changeNumCont.appendChild(submitCont)
+  changeNumCont.appendChild(mainChange)
+  changeNumCont.appendChild(submitCont)
 
-profileView.appendChild(uploadImg)
-profileView.appendChild(fileInput)
-profileView.appendChild(profileImgCont)
-profileView.appendChild(nameChangeCont)
-profileView.appendChild(emailCont)
-profileView.appendChild(changeNumCont)
-document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
-
+  profileView.appendChild(profileImgCont)
+  profileView.appendChild(nameChangeCont)
+  profileView.appendChild(emailCont)
+  profileView.appendChild(changeNumCont)
+  profileView.appendChild(changeNumberText)
+  document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 }
 
-function toggleIconData(icon, inputField) {
+function toggleIconData (icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
@@ -720,7 +705,7 @@ function toggleIconData(icon, inputField) {
   })
 }
 
-function handleFieldInput(key, value) {
+function handleFieldInput (key, value) {
   const user = firebase.auth().currentUser
   console.log(typeof value)
   if (key === 'displayName') {
@@ -736,7 +721,8 @@ function handleFieldInput(key, value) {
   }
 }
 
-function readUploadedFile(event) {
+function readUploadedFile (event) {
+  console.log(event)
   const file = event.target.files[0]
 
   const reader = new FileReader()
@@ -747,7 +733,7 @@ function readUploadedFile(event) {
   }
 }
 
-function processImage(image) {
+function processImage (image) {
   const metadata = {
     contentType: 'image/jpeg'
   }
@@ -763,44 +749,44 @@ function processImage(image) {
     storageSuccessHandler
   )
 
-  function snapshotHandler(snapshot) {
+  function snapshotHandler (snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
       console.log('running')
       // show gola
     }
   }
 
-  function storageErrorHandler(error) {
+  function storageErrorHandler (error) {
     if (error.code === 'storage/unknown') {
       console.log(error)
     }
     console.log(error)
   }
 
-  function storageSuccessHandler() {
+  function storageSuccessHandler () {
     uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
   }
 }
 
-function updateAuth(url) {
+function updateAuth (url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
   }).then(showProfilePicture).catch(authUpdatedError)
 }
 
-function showProfilePicture() {
+function showProfilePicture () {
   // remove gola
   // preview image on profile drawer and toolbar in list view
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL
 }
 
-function authUpdatedError(error) {
+function authUpdatedError (error) {
   console.log(error)
 }
 
-function changeDisplayName(user) {
+function changeDisplayName (user) {
   const displayNameField = getInputText('displayName')
 
   if (!user.displayName) {
@@ -812,7 +798,7 @@ function changeDisplayName(user) {
   toggleIconData('edit--name', displayNameField)
 }
 
-function changeEmailAddress(user) {
+function changeEmailAddress (user) {
   const emailField = getInputText('email')
   if (!user.email) {
     emailField['input_'].placeholder = 'set an email address'
@@ -823,7 +809,7 @@ function changeEmailAddress(user) {
   toggleIconData('edit--email', emailField)
 }
 
-function reauthUser(email) {
+function reauthUser (email) {
   const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
   const provider = new firebase.auth.PhoneAuthProvider()
   const userPhoneNumber = firebase.auth().currentUser.phoneNumber
@@ -832,7 +818,7 @@ function reauthUser(email) {
   })
 }
 
-function generateVerificationId(verificationId, email) {
+function generateVerificationId (verificationId, email) {
   removeDom('reauth-recaptcha')
 
   const otpDiv = document.createElement('div')
@@ -855,7 +841,7 @@ function generateVerificationId(verificationId, email) {
   })
 }
 
-function generateCredential(credential, email) {
+function generateCredential (credential, email) {
   removeDom('reauth-otp--container')
   console.log(credential)
   const user = firebase.auth().currentUser
@@ -864,66 +850,137 @@ function generateCredential(credential, email) {
   }).catch(handleReauthError)
 }
 
-function updateEmail(user, email) {
+function updateEmail (user, email) {
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
-function emailUpdateSuccess() {
+function emailUpdateSuccess () {
   const user = firebase.auth().currentUser
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
-function emailVerificationSuccess() {
+function emailVerificationSuccess () {
   console.log('email verified')
 }
 
-function emailVerificationError(error) {
+function emailVerificationError (error) {
   console.log(error)
 }
 
-function handleReauthError(error) {
+function handleReauthError (error) {
   console.log(error)
 }
 
-function phoneNumberDialog(event) {
+function createConfirmDialog () {
+  const aside = document.createElement('aside')
+
+  aside.id = 'change-number-dialog'
+  aside.className = 'mdc-dialog'
+  aside.role = 'alertdialog'
+  aside.setAttribute('aria-labelledby', 'change-number-dialog-label')
+  aside.setAttribute('ariadescribedby', 'change-number-dialog-description')
+
+  const dialogSurface = document.createElement('div')
+  dialogSurface.className = 'mdc-dialog__surface'
+
+  const dialogHeader = document.createElement('header')
+  dialogHeader.className = 'mdc-dialog__header'
+  const heading = document.createElement('h2')
+  heading.id = 'change-number-dialog-label'
+  heading.className = 'mdc-dialog__header__title'
+  heading.textContent = 'Are you sure you want to change your number'
+
+  dialogHeader.appendChild(heading)
+
+  const section = document.createElement('section')
+  section.textContent = 'lorem ipsum'
+  section.className = 'mdc-dialog__body'
+  section.id = 'change-number-dialog-description'
+
+  const footer = document.createElement('footer')
+  footer.className = 'mdc-dialog__footer'
+
+  const decline = document.createElement('button')
+  decline.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
+  decline.type = 'button'
+  decline.textContent = 'Cancel'
+
+  const accept = document.createElement('button')
+  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
+  accept.type = 'button'
+  accept.textContent = 'Agree'
+
+  footer.appendChild(decline)
+  footer.appendChild(accept)
+
+  dialogSurface.appendChild(dialogHeader)
+  dialogSurface.appendChild(section)
+  dialogSurface.appendChild(footer)
+
+  aside.appendChild(dialogSurface)
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mdc-dialog__backdrop'
+  aside.appendChild(backdrop)
+  document.body.appendChild(aside)
+}
+function phoneNumberDialog (event) {
+  createConfirmDialog()
   const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
 
   mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
-  mdcDialog.listen('MDCDialog:cancel', function () {
-    console.log('canceled')
-  })
+  mdcDialog.listen('MDCDialog:cancel', resetInputs)
 
   mdcDialog.lastFocusedTarget = event.target
   mdcDialog.show()
 }
 
-function changePhoneNumber() {
+function resetInputs () {
+  document.getElementsByClassName('change--span')[0].style.display = 'block'
+  document.getElementById('edit--name').disabled = false
+  document.getElementById('edit--email').disabled = false
+  document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-50%, -50%)'
+}
+
+function disableInputs () {
+  document.getElementsByClassName('change--span')[0].style.display = 'none'
+  document.getElementById('edit--name').disabled = true
+  document.getElementById('edit--email').disabled = true
+  document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-190%, -50%)'
+}
+function changePhoneNumber () {
+  disableInputs()
+
   const currentcountryDiv = document.createElement('div')
-  currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
+  currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
+  currentcountryDiv.id = 'current-country--code'
   const currentCountryInput = document.createElement('input')
   currentCountryInput.classList.add('mdc-text-field__input')
-  currentcountryDiv.id = 'current-country--code'
+  currentCountryInput.maxLength = 4
   currentcountryDiv.appendChild(currentCountryInput)
 
   const currentNumberDiv = document.createElement('div')
-  currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
-  currentNumberDiv.id = 'current-phone--number'
+  currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
+  currentcountryDiv.id = 'current-phone--number'
+
   const currentNumberInput = document.createElement('input')
+  currentNumberInput.maxLength = 14
   currentNumberInput.classList.add('mdc-text-field__input')
   currentNumberDiv.appendChild(currentNumberInput)
 
   const newcountryDiv = document.createElement('div')
-  newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
+  newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
   newcountryDiv.id = 'new-country--code'
   const newCountryInput = document.createElement('input')
   newCountryInput.classList.add('mdc-text-field__input')
+  newCountryInput.maxLength = 4
   newcountryDiv.appendChild(newCountryInput)
 
   const newNumberDiv = document.createElement('div')
-  newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
+  newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
   newNumberDiv.id = 'new-phone--number'
   const newNumberInput = document.createElement('input')
   newNumberInput.classList.add('mdc-text-field__input')
+  newNumberInput.maxLength = 14
   newNumberDiv.appendChild(newNumberInput)
 
   const submit = document.createElement('button')
@@ -951,23 +1008,24 @@ function changePhoneNumber() {
   })
 
   document.getElementById('cancelUpdate').addEventListener('click', function (event) {
+    resetInputs()
     removeDom('phone-number--change-container')
     removeDom('submit-action')
   })
 }
 
-function newPhoneNumber() {
+function newPhoneNumber () {
   const newCountryCode = getInputText('new-country--code').value
   const newNumber = getInputText('new-phone--number').value
   return newCountryCode.concat(newNumber)
 }
 
-function verifyNewPhoneNumber() {
+function verifyNewPhoneNumber () {
   const expression = /^\+[1-9]\d{5,14}$/
   return expression.test(newPhoneNumber())
 }
 
-function verifyCurrentPhoneNumber() {
+function verifyCurrentPhoneNumber () {
   const currentCountryCode = getInputText('current-country--code').value
   const currentNumber = getInputText('current-phone--number').value
   const numberInAuth = firebase.auth().currentUser.phoneNumber
@@ -979,7 +1037,7 @@ function verifyCurrentPhoneNumber() {
   return false
 }
 
-function loadDefaultView(db, drawer) {
+function loadDefaultView (db, drawer) {
   const rootTx = db.transaction(['root'], 'readwrite')
   const rootObjectStore = rootTx.objectStore('root')
   const dbName = firebase.auth().currentUser.uid
@@ -995,8 +1053,7 @@ function loadDefaultView(db, drawer) {
   }
 }
 
-function removeDom(selector) {
+function removeDom (selector) {
   const target = document.getElementById(selector)
   target.innerHTML = ''
-
 }

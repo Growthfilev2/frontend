@@ -2,12 +2,12 @@ function conversation (id) {
   if (!id) return
   // removeDom('chat-container')
   const currentUser = firebase.auth().currentUser
-  
+
   const req = window.indexedDB.open(currentUser.uid)
-  
+
   req.onsuccess = function () {
     const db = req.result
-    createHeaderContent(db,id)
+    createHeaderContent(db, id)
 
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
@@ -17,55 +17,51 @@ function conversation (id) {
       record.view = 'conversation'
       rootObjectStore.put(record)
     }
-  
+
     // fillActivityDetailPage(db, id)
     commentPanel(id)
-
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      createComment(cursor.value,currentUser)
+      createComment(cursor.value, currentUser)
       cursor.continue()
-  
+    }
   }
 }
 
-}
-
-function commentPanel(id){
+function commentPanel (id) {
   const commentPanel = document.createElement('div')
-  commentPanel.className ='activity--chat-card-container mdc-card mdc-top-app-bar--fixed-adjust panel-card'
+  commentPanel.className = 'activity--chat-card-container mdc-card mdc-top-app-bar--fixed-adjust panel-card'
 
   const chatCont = document.createElement('div')
-  chatCont.id ='chat-container'
+  chatCont.id = 'chat-container'
   const userCommentCont = document.createElement('div')
   userCommentCont.className = 'user-comment--container'
-  
+
   const commentCont = document.createElement('div')
-  commentCont.className =  'comment--container'
-  
+  commentCont.className = 'comment--container'
+
   const inputField = document.createElement('div')
   inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
   inputField.id = 'write--comment'
-  
+
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
   input.type = 'text'
-  input.style.position ='absolute'
-  
+  input.style.position = 'absolute'
+
   inputField.innerHTML = input.outerHTML
   commentCont.innerHTML = inputField.outerHTML
-  
+
   const sendButton = document.createElement('div')
   sendButton.className = 'send--container'
-  sendButton.id ='send-message'
-  
-  
+  sendButton.id = 'send-message'
+
   const btn = document.createElement('button')
   btn.classList.add('mdc-fab', 'mdc-fab--mini')
   btn.id = 'send-chat--input'
- 
+
   const btnIcon = document.createElement('span')
   btnIcon.classList.add('mdc-fac__icon', 'material-icons')
   btnIcon.textContent = 'send'
@@ -78,21 +74,21 @@ function commentPanel(id){
   commentPanel.appendChild(userCommentCont)
 
   document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML
-  document.getElementById('send-chat--input').onclick = function(){
+  document.getElementById('send-chat--input').onclick = function () {
     const reqBody = {
       'activityId': id,
       'comment': getInputText('write--comment').value
     }
-  
+
     requestCreator('comment', reqBody)
     getInputText('write--comment').value = ''
   }
 }
 
-function createComment(addendum,currentUser){
+function createComment (addendum, currentUser) {
   let commentBox = document.createElement('div')
   commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
-  currentUser.phoneNumber ===addendum.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
+  currentUser.phoneNumber === addendum.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
   commentBox.id = addendum.addendumId
 
   let textContainer = document.createElement('div')
@@ -133,47 +129,42 @@ function createComment(addendum,currentUser){
   // container.scrollTop = container.scrollHeight
 }
 
-function createHeaderContent(db,id) {
-const activityObjectStore = db.transaction('activity').objectStore('activity')
-const leftDiv = document.createElement('div')
+function createHeaderContent (db, id) {
+  const activityObjectStore = db.transaction('activity').objectStore('activity')
+  const leftDiv = document.createElement('div')
 
-const backSpan= document.createElement('span')
-backSpan.className =  'back-icon'
-backSpan.id = 'back-conv'
-const backIcon = document.createElement('i')
-backIcon.className ='material-icons'
-backIcon.textContent ='arrow_back'
+  const backSpan = document.createElement('span')
+  backSpan.className = 'back-icon'
+  backSpan.id = 'back-conv'
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons'
+  backIcon.textContent = 'arrow_back'
 
-backSpan.appendChild(backIcon)
+  backSpan.appendChild(backIcon)
 
+  activityObjectStore.get(id).onsuccess = function (event) {
+    const record = event.target.result
 
-activityObjectStore.get(id).onsuccess = function(event){
-  const record = event.target.result
-  
-  const primarySpan = document.createElement('span')
-  primarySpan.className ='mdc-list-item__text comment-header-primary'
-  primarySpan.textContent = record.title
+    const primarySpan = document.createElement('span')
+    primarySpan.className = 'mdc-list-item__text comment-header-primary'
+    primarySpan.textContent = record.title
 
-  const secondarySpan = document.createElement('span')
-  secondarySpan.className = 'mdc-list-item__secondary-text'
-  secondarySpan.textContent = record.office
-  
-  primarySpan.appendChild(secondarySpan)
-  leftDiv.appendChild(backSpan)
-  leftDiv.appendChild(primarySpan)
+    const secondarySpan = document.createElement('span')
+    secondarySpan.className = 'mdc-list-item__secondary-text'
+    secondarySpan.textContent = record.office
 
-  const status = document.createElement('span')
-  status.className = `${record.status} header-status`
-  status.textContent = record.status
+    primarySpan.appendChild(secondarySpan)
+    leftDiv.appendChild(backSpan)
+    leftDiv.appendChild(primarySpan)
 
-  header(leftDiv.outerHTML, status.outerHTML)
-  document.getElementById('back-conv').addEventListener('click',listView)
- 
+    const status = document.createElement('span')
+    status.className = `${record.status} header-status`
+    status.textContent = record.status
+
+    header(leftDiv.outerHTML, status.outerHTML)
+    document.getElementById('back-conv').addEventListener('click', listView)
+  }
 }
-
-
-}
-
 
 // function fillActivityDetailPage (db, id) {
 //   const activityObjectStore = db.transaction('activity').objectStore('activity')

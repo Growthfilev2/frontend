@@ -1,12 +1,12 @@
-function iconEditable() {
+function iconEditable () {
 
 }
 
-function getInputText(selector) {
+function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect(objectStore, selector, inputField, activityRecord) {
+function inputSelect (objectStore, selector, inputField, activityRecord) {
   getInputText(inputField).value = ''
   const objectStoreName = objectStore.objectStore.name
 
@@ -91,11 +91,11 @@ function inputSelect(objectStore, selector, inputField, activityRecord) {
   })
 }
 
-function fetchCurrentTime() {
+function fetchCurrentTime () {
   return Date.now()
 }
 
-function fetchCurrentLocation() {
+function fetchCurrentLocation () {
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
@@ -106,12 +106,12 @@ function fetchCurrentLocation() {
   })
 }
 
-function inputFile(selector) {
+function inputFile (selector) {
   return document.getElementById(selector)
 }
 let offset
 
-function requestCreator(requestType, requestBody) {
+function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -142,7 +142,7 @@ function requestCreator(requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-function onSuccessMessage(response) {
+function onSuccessMessage (response) {
   if (response.data.type !== 'updateIDB') return
   console.log(response)
 
@@ -166,15 +166,15 @@ function onSuccessMessage(response) {
         case 'conversation':
           conversation(event.target.result.id)
           handleTimeout()
-
-
+          break
         case 'map':
           mapView(response.data.dbName)
           handleTimeout()
           break
-         case 'profile':
-         profileView()
-         handleTimeout() 
+        case 'profile':
+          // profileView()
+          handleTimeout()
+          break
         case 'calendar':
           calendarView(response.data.dbName)
           handleTimeout()
@@ -199,7 +199,7 @@ function onSuccessMessage(response) {
   }
 }
 
-function onErrorMessage(error) {
+function onErrorMessage (error) {
   console.log(error)
   console.table({
     'line-number': error.lineno,
@@ -208,7 +208,7 @@ function onErrorMessage(error) {
   })
 }
 
-function handleTimeout() {
+function handleTimeout () {
   const TIME_OUT_VALUE = 60000
   clearTimeout(offset)
 
