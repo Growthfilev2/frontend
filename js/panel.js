@@ -197,7 +197,9 @@ function fetchMapData () {
               '_longitude': geopoints.longitude
             }
           })
-          initMap(dbName, mapRecords)
+          setTimeout(function () {
+            initMap(dbName, mapRecords)
+          }, 300)
         })
         return
       }
@@ -215,13 +217,13 @@ function createMapPanel () {
 
   const mapList = document.createElement('div')
   mapList.id = 'list-view--map'
-  if (document.getElementById('map')) {
+  if (!document.getElementById('map')) {
     console.log('yes')
-  } else {
     const map = document.createElement('div')
     map.id = 'map'
     mapParent.appendChild(map)
   }
+
   mapParent.appendChild(mapList)
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
 }
@@ -277,20 +279,20 @@ function displayMarkers (dbName, map, locationData) {
   map.fitBounds(bounds)
 
   // add zoom_changed listener on map ,so that when zoom changes, markers will give the acitivtyId attached to them
-  google.maps.event.addListener(map, 'zoom_changed', function (e) {
-    generateActivityFromMarker(dbName, map, allMarkers)
-  })
+  // google.maps.event.addListener(map, 'zoom_changed', function (e) {
+  //   generateActivityFromMarker(dbName, map, allMarkers)
+  // })
 
   // add drag_end listener on map ,so that when draggins is done , markers will give the acitivtyId attached to them
 
-  google.maps.event.addListener(map, 'dragend', function (e) {
-    console.log(e)
-    generateActivityFromMarker(dbName, map, allMarkers)
-  })
-
-  // google.maps.event.addListener(map, 'idle', function () {
+  // google.maps.event.addListener(map, 'dragend', function (e) {
+  //   console.log(e)
   //   generateActivityFromMarker(dbName, map, allMarkers)
   // })
+
+  google.maps.event.addListener(map, 'idle', function () {
+    generateActivityFromMarker(dbName, map, allMarkers)
+  })
 }
 
 function generateActivityFromMarker (dbName, map, markers) {
