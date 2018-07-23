@@ -27,7 +27,7 @@ function fetchDataForActivityList (db) {
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
 
-  removeDom('activity--list')
+  // removeDom('activity--list')
   // document.getElementById('activity--list').style.display ='none'
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
@@ -145,38 +145,7 @@ function createActivityList (data, target) {
   metaTextContainer.appendChild(metaTextActivityStatus)
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
 
-  document.getElementById(target).appendChild(li)
-}
-
-const header = function (contentStart, contentEnd) {
-  const header = document.createElement('header')
-  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed'
-
-  const row = document.createElement('div')
-  row.className = 'mdc-top-app-bar__row'
-
-  const sectionStart = document.createElement('section')
-  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
-
-  const leftUI = document.createElement('div')
-  leftUI.id = 'view-type'
-  leftUI.innerHTML = contentStart
-
-  sectionStart.appendChild(leftUI)
-
-  const sectionEnd = document.createElement('div')
-  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
-
-  const rightUI = document.createElement('div')
-  rightUI.id = 'action-data'
-  if (contentEnd) {
-    rightUI.innerHTML = contentEnd
-  }
-  sectionEnd.appendChild(rightUI)
-  row.appendChild(sectionStart)
-  row.appendChild(sectionEnd)
-  header.innerHTML = row.outerHTML
-  document.getElementById('header').innerHTML = header.outerHTML
+  document.getElementById(target).innerHTML += li.outerHTML
 }
 
 function mapView (dbName) {
@@ -239,29 +208,20 @@ function fetchMapData () {
   }
 }
 
-function backIconHeader (id) {
-  const backSpan = document.createElement('span')
-  backSpan.id = id
-  const backIcon = document.createElement('i')
-  backIcon.className = 'material-icons'
-  backIcon.textContent = 'arrow_back'
-  backSpan.appendChild(backIcon)
-
-  header(backSpan.outerHTML)
-}
-
 function createMapPanel () {
   const mapParent = document.createElement('div')
   mapParent.id = 'map-view--container'
   mapParent.className = 'mdc-top-app-bar--fixed-adjust'
 
-  const map = document.createElement('div')
-  map.id = 'map'
-
   const mapList = document.createElement('div')
   mapList.id = 'list-view--map'
-
-  mapParent.appendChild(map)
+  if (document.getElementById('map')) {
+    console.log('yes')
+  } else {
+    const map = document.createElement('div')
+    map.id = 'map'
+    mapParent.appendChild(map)
+  }
   mapParent.appendChild(mapList)
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
 }
@@ -328,9 +288,9 @@ function displayMarkers (dbName, map, locationData) {
     generateActivityFromMarker(dbName, map, allMarkers)
   })
 
-  google.maps.event.addListener(map, 'idle', function () {
-    generateActivityFromMarker(dbName, map, allMarkers)
-  })
+  // google.maps.event.addListener(map, 'idle', function () {
+  //   generateActivityFromMarker(dbName, map, allMarkers)
+  // })
 }
 
 function generateActivityFromMarker (dbName, map, markers) {
@@ -356,7 +316,7 @@ function generateActivityFromMarker (dbName, map, markers) {
         }
       }
     }
-    google.maps.event.clearListeners(map, 'idle')
+    // google.maps.event.clearListeners(map, 'idle')
   }
 }
 
@@ -1037,20 +997,46 @@ function verifyCurrentPhoneNumber () {
   return false
 }
 
-function loadDefaultView (db, drawer) {
-  const rootTx = db.transaction(['root'], 'readwrite')
-  const rootObjectStore = rootTx.objectStore('root')
-  const dbName = firebase.auth().currentUser.uid
-  rootObjectStore.get(dbName).onsuccess = function (event) {
-    const record = event.target.result
-    record.view = 'main'
-    rootObjectStore.put(record)
-    rootTx.oncomplete = function () {
-      listView()
-      conversation(record.id)
-      drawer.open = false
-    }
+const header = function (contentStart, contentEnd) {
+  const header = document.createElement('header')
+  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed'
+
+  const row = document.createElement('div')
+  row.className = 'mdc-top-app-bar__row'
+
+  const sectionStart = document.createElement('section')
+  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
+
+  const leftUI = document.createElement('div')
+  leftUI.id = 'view-type'
+  leftUI.innerHTML = contentStart
+
+  sectionStart.appendChild(leftUI)
+
+  const sectionEnd = document.createElement('div')
+  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
+
+  const rightUI = document.createElement('div')
+  rightUI.id = 'action-data'
+  if (contentEnd) {
+    rightUI.innerHTML = contentEnd
   }
+  sectionEnd.appendChild(rightUI)
+  row.appendChild(sectionStart)
+  row.appendChild(sectionEnd)
+  header.innerHTML = row.outerHTML
+  document.getElementById('header').innerHTML = header.outerHTML
+}
+
+function backIconHeader (id) {
+  const backSpan = document.createElement('span')
+  backSpan.id = id
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons'
+  backIcon.textContent = 'arrow_back'
+  backSpan.appendChild(backIcon)
+
+  header(backSpan.outerHTML)
 }
 
 function removeDom (selector) {

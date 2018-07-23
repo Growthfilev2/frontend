@@ -600,10 +600,14 @@ function updateIDB (dbName) {
 
       )
         .then(function (response) {
-          if (response.from !== response.upto) {
-            successResponse(response)
+          console.log(response)
+          if (response.from === response.upto) {
+            requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', dbName)
+            return
           }
+          successResponse(response)
         })
+
         .catch(console.log)
     }
   }

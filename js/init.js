@@ -11,7 +11,7 @@ firebase.initializeApp({
 })
 
 // firebaseUI login config object
-function firebaseUiConfig() {
+function firebaseUiConfig () {
   return {
     'callbacks': {
       'signInSuccess': function (user, credential, redirectUrl) {
@@ -61,7 +61,7 @@ firebase.auth().onAuthStateChanged(function (auth) {
 })
 
 // when user is signed in call requestCreator function inside services.js
-function userSignedIn(auth) {
+function userSignedIn (auth) {
   // document.querySelector('.app').style.display = 'block'
 
   if (window.Worker && window.indexedDB) {
@@ -74,21 +74,10 @@ function userSignedIn(auth) {
       if (Object.keys(db.objectStoreNames).length === 0) {
         setTimeout(function () {
           requestCreator('initializeIDB')
-          return void(0)
+          return void (0)
         }, 300)
       } else {
-        const rootTx = db.transaction(['root'], 'readwrite')
-        const rootObjectStore = rootTx.objectStore('root')
-        rootObjectStore.get(auth.uid).onsuccess = function (event) {
-          const record = event.target.result
-          record.view = 'list'
-          rootObjectStore.put(record)
-          rootTx.oncomplete = function () {
-            // requestCreator('Null')
-            listView()
-            // conversation(event.target.result.id)
-          }
-        }
+        requestCreator('Null')
       }
     }
     return
@@ -98,9 +87,9 @@ function userSignedIn(auth) {
 }
 
 // When user is signed out
-function userSignedOut() {
+function userSignedOut () {
   const login = document.createElement('div')
-  login.id = "login-container"
+  login.id = 'login-container'
   document.body.innerHTML = login.outerHTML
 
   // document.querySelector('.app').style.display = 'none'
@@ -111,26 +100,26 @@ function userSignedOut() {
   ui.start('#login-container', firebaseUiConfig())
 }
 
-function signOutError(error) {
+function signOutError (error) {
   // handler error with snackbar
 }
 
-function layoutGrid() {
+function layoutGrid () {
   const layout = document.createElement('div')
-  layout.classList.add("mdc-layout-grid", "mdc-typography", "app")
+  layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
 
-  const layoutInner = document.createElement("div")
+  const layoutInner = document.createElement('div')
   layoutInner.className = 'mdc-layout-grid__inner cell-space'
-  
+
   const headerDiv = document.createElement('div')
-  headerDiv.id = "header"
+  headerDiv.id = 'header'
   const currentPanel = document.createElement('div')
-  currentPanel.id = "app-current-panel"
-  currentPanel.className ='mdc-layout-grid__cell--span-12'
+  currentPanel.id = 'app-current-panel'
+  currentPanel.className = 'mdc-layout-grid__cell--span-12'
 
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
-  
+
   // const conversationPanelParent = document.createElement('div')
   // conversationPanelParent.className ='mdc-layout-grid__cell--span-12-mobile app-center-panel'
   // const activityParentPanel = document.createElement('div')
@@ -138,6 +127,4 @@ function layoutGrid() {
 
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
-
 }
-
