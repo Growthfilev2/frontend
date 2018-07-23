@@ -26,7 +26,7 @@ function fetchDataForActivityList (db) {
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
-
+  let activityCount = 0
   // removeDom('activity--list')
   // document.getElementById('activity--list').style.display ='none'
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
@@ -39,17 +39,19 @@ function fetchDataForActivityList (db) {
 
       return
     }
-
-    createActivityList(cursor.value, 'activity--list')
+    activityCount++
+    createActivityList(cursor.value, 'activity--list', activityCount)
 
     cursor.continue()
   }
 }
 
 function listPanel () {
+  if (document.getElementById('activity-list-main')) return
+
   const listCard = document.createElement('div')
   listCard.className = 'mdc-card panel-card mdc-top-app-bar--fixed-adjust'
-
+  listCard.id = 'activity-list-main'
   const listUl = document.createElement('ul')
   listUl.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
   listUl.id = 'activity--list'
@@ -118,7 +120,9 @@ function creatListHeader () {
   })
 }
 
-function createActivityList (data, target) {
+function createActivityList (data, target, count) {
+  if (changeExistingActivities(data, target, count)) return
+
   const li = document.createElement('li')
 
   li.classList.add('mdc-list-item', 'activity--list-item')
@@ -127,7 +131,11 @@ function createActivityList (data, target) {
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
-  leftTextContainer.textContent = data.title
+  const customText = document.createElement('span')
+  customText.className = 'mdc-primary__custom-text'
+
+  customText.textContent = data.title
+  leftTextContainer.appendChild(customText)
 
   const leftTextSecondaryContainer = document.createElement('span')
   leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
@@ -137,7 +145,12 @@ function createActivityList (data, target) {
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
-  metaTextContainer.textContent = moment(data.timestamp).calendar()
+
+  const timeCustomText = document.createElement('span')
+  timeCustomText.className = 'mdc-meta__custom-text'
+  timeCustomText.textContent = moment(data.timestamp).calendar()
+
+  metaTextContainer.appendChild(timeCustomText)
 
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', `${data.status}`)
@@ -146,6 +159,26 @@ function createActivityList (data, target) {
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
 
   document.getElementById(target).innerHTML += li.outerHTML
+}
+
+function changeExistingActivities (data, target, count) {
+  const activitySelector = `[data-id="${data.activityId}"]`
+
+  if (document.querySelector(activitySelector)) {
+    document.querySelector(`${activitySelector} > .mdc-list-item__text  .mdc-list-item__secondary-text`).textContent = data.office
+    document.querySelector(`${activitySelector} > .mdc-list-item__text .mdc-primary__custom-text`).textContent = data.title
+    document.querySelector(`${activitySelector} > .mdc-list-item__meta .mdc-meta__custom-text`).textContent = moment(data.timestamp).calendar()
+    document.querySelector(`${activitySelector} > .mdc-list-item__meta .mdc-list-item__secondary-text 
+    `).textContent = data.status
+    document.querySelector(`${activitySelector} > .mdc-list-item__meta .mdc-list-item__secondary-text 
+    `).className = `mdc-list-item__secondary-text ${data.status}`
+
+    if (!count) return false
+
+    document.getElementById(target).insertBefore(document.querySelector(activitySelector), document.getElementById(target)[count])
+    return true
+  }
+  return false
 }
 
 function mapView (dbName) {
@@ -197,9 +230,7 @@ function fetchMapData () {
               '_longitude': geopoints.longitude
             }
           })
-          setTimeout(function () {
-            initMap(dbName, mapRecords)
-          }, 300)
+          initMap(dbName, mapRecords)
         })
         return
       }
@@ -217,12 +248,9 @@ function createMapPanel () {
 
   const mapList = document.createElement('div')
   mapList.id = 'list-view--map'
-  if (!document.getElementById('map')) {
-    console.log('yes')
-    const map = document.createElement('div')
-    map.id = 'map'
-    mapParent.appendChild(map)
-  }
+  const map = document.createElement('div')
+  map.id = 'map'
+  mapParent.appendChild(map)
 
   mapParent.appendChild(mapList)
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
@@ -232,7 +260,7 @@ function initMap (dbName, mapRecord) {
   console.log('amp')
   // user current geolocation  is set as map center
   const centerGeopoints = mapRecord[mapRecord.length - 1]
-
+  console.log(document.getElementById('map'))
   const map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
     center: new google.maps.LatLng(
@@ -303,7 +331,7 @@ function generateActivityFromMarker (dbName, map, markers) {
 
   // open IndexedDB
   let req = window.indexedDB.open(dbName)
-
+  let activityCount = 0
   req.onsuccess = function () {
     const db = req.result
 
@@ -314,7 +342,8 @@ function generateActivityFromMarker (dbName, map, markers) {
         const activityObjectStore = db.transaction('activity').objectStore('activity')
         activityObjectStore.get(markers[i].customInfo).onsuccess = function (event) {
           const record = event.target.result
-          createActivityList(record, 'list-view--map')
+          activityCount++
+          createActivityList(record, 'list-view--map', activityCount)
         }
       }
     }
@@ -395,8 +424,6 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
   calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
     if (cursor) {
-      // console.log(cursor.value)
-
       calendarViewUI('afterToday', db, cursor.value)
       cursor.continue()
     } else {
@@ -412,7 +439,6 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
 
 function insertDatesBeforeToday (db, calendarDateIndex, today, lastScrollHeight) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
-
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
     if (cursor) {
@@ -456,11 +482,12 @@ function calendarViewUI (target, db, data) {
     dateCol.appendChild(borderCol)
 
     const activityRow = document.createElement('div')
-    activityRow.className = 'activity--row'
+    activityRow.id = `activity--row${data.date}`
 
     dateDiv.appendChild(dateCol)
     dateDiv.appendChild(activityRow)
     document.getElementById(target).appendChild(dateDiv)
+
     getActivity(db, data)
     return
   }
@@ -468,13 +495,12 @@ function calendarViewUI (target, db, data) {
 }
 
 function getActivity (db, data) {
+  // console.log(count)
   if (data.hasOwnProperty('activityId')) {
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     activityObjectStore.get(data.activityId).onsuccess = function (event) {
       const record = event.target.result
-      createActivityList(record, data.date)
-      // if(cursor.value.activityId === data.activityId) {
-      // }
+      createActivityList(record, `activity--row${data.date}`)
     }
   }
 }
