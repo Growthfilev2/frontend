@@ -8,70 +8,88 @@ function getInputText (selector) {
 
 function inputSelect (objectStore, selector, inputField, activityRecord) {
   getInputText(inputField).value = ''
-  const objectStoreName = objectStore.objectStore.name
 
-  objectStore.openCursor(null, 'prev').onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) {
-      activityRecord.assignees.forEach(function (number) {
-        document.querySelector(`[data-contact="${number}"]`).remove()
-      })
-      return
-    }
-
-    assigneeListUI(cursor, `${selector}--container`)
-
-    dataElement(cursor.primaryKey).addEventListener('click', function () {
-      getInputText(inputField).value = this.dataset.contact
-    })
-
-    cursor.continue()
-  }
+  const objectStoreName = objectStore
 
   const updateSelector = document.createElement('button')
   updateSelector.classList.add('mdc-button')
   updateSelector.dataset.id = activityRecord.activityId
   updateSelector.textContent = 'Add'
-  switch (objectStoreName) {
-    case 'users':
-      if (document.querySelector('[data-type="users"]')) return
 
-      updateSelector.dataset.type = 'users'
+  const dbName = firebase.auth().currentUser.uid
+  const req = window.indexedDB.open(dbName)
 
-      document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
+  req.onsuccess = function () {
+    const db = req.result
+    const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName)
 
-      document.querySelector(`[data-type="users"]`)
-        .addEventListener('click', function () {
-          updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
+    objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+      const cursor = event.target.result
+      if (!cursor) {
+        activityRecord.venue.forEach(function (venue) {
+          document.querySelector(`[data-location="${venue.location}"]`).remove()
         })
-      break
-    case 'map':
-      updateSelector.dataset.type = 'map'
-      document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
-        .addEventListener('click', function () {
-          updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
-        })
-      break
-    case 'subscription':
-      updateSelector.dataset.type = 'update'
-      document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
-        .addEventListener('click', function () {
-          updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
-        })
-      break
+      }
+      switch (objectStoreName) {
+        case 'users':
+
+          assigneeListUI(cursor, `${selector}--container`)
+
+          dataElement(cursor.primaryKey).addEventListener('click', function () {
+            getInputText(inputField).value = this.dataset.contact
+          })
+
+          if (document.querySelector('[data-type="users"]')) return
+
+          updateSelector.dataset.type = 'users'
+
+          document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
+
+          document.querySelector(`[data-type="users"]`)
+            .addEventListener('click', function () {
+              updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
+            })
+
+          break
+
+        case 'map':
+
+          updateSelector.dataset.type = 'map'
+          locationUI(cursor, selector)
+          console.log(cursor)
+          dataElement(cursor.value.location).addEventListener('click', function () {
+            getInputText(inputField).value = this.dataset.location
+          })
+
+          // document.querySelector(`[data-location="${updateSelector.dataset.type}"]`)
+          //   .addEventListener('click', function () {
+          //     updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
+          //   })
+
+          break
+        case 'subscription':
+          updateSelector.dataset.type = 'update'
+          document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
+            .addEventListener('click', function () {
+              updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
+            })
+          break
+      }
+
+      cursor.continue()
+    }
   }
-  console.log(updateSelector)
 
   document.getElementById(inputField).addEventListener('input', function () {
     const dbName = firebase.auth().currentUser.uid
     const req = window.indexedDB.open(dbName)
-    document.querySelectorAll('[data-contact]').forEach(function (list) {
+    document.querySelectorAll('[data-location]').forEach(function (list) {
       list.style.display = 'none'
     })
 
     req.onsuccess = function () {
       const db = req.result
-      const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName)
+      const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName).index('location')
 
       const boundKeyRange = IDBKeyRange
         .bound(
@@ -82,8 +100,8 @@ function inputSelect (objectStore, selector, inputField, activityRecord) {
         const cursor = event.target.result
         console.log(cursor)
         if (!cursor) return
-        if (dataElement(cursor.primaryKey)) {
-          dataElement(cursor.primaryKey).style.display = 'block'
+        if (dataElement(cursor.value.location)) {
+          dataElement(cursor.value.location).style.display = 'block'
         }
         cursor.continue()
       }
@@ -179,6 +197,11 @@ function onSuccessMessage (response) {
           calendarView(response.data.dbName)
           handleTimeout()
           break
+
+        case 'detail':
+          fillActivityDetailPage(record.id)
+          handleTimeout()
+          break
         case 'share':
           const activityObjectStore = db.transaction('activity').objectStore('activity')
           activityObjectStore.get(event.target.result.id).onsuccess = function (activityEvent) {
@@ -188,11 +211,9 @@ function onSuccessMessage (response) {
           }
           break
         default:
-          record.currentView = 'main'
+          record.currentView = 'list'
           rootObjectStore.put(record)
-          console.log('nani')
           listView()
-          conversation()
           handleTimeout()
       }
     }

@@ -226,24 +226,10 @@ color:#737780;
     margin-top:0 !important;
 }
 
-#venue--list li div:nth-child(1) {
-    padding: 20px 20px 0 0;
-}
-#venue--list li .venue-location--name {
-    float: left;
-    height: 20px !important;
+#venue--list li{
+display: table
 }
 
-#venue--list li div:nth-child(3){
-    float: right;
-}
-#venue--list li div:nth-child(3) i {
-    font-size: 18px;
-}
-#venue--list li .venue-address--name {
-    width: 100% !important;
-    height: 20px !important;
-}
 .add--assignee-icon {
     float: right;
 }

@@ -143,6 +143,7 @@ function createHeaderContent (db, id) {
   const backSpan = document.createElement('span')
   backSpan.className = 'back-icon'
   backSpan.id = 'back-conv'
+
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
   backIcon.textContent = 'arrow_back'
@@ -169,35 +170,164 @@ function createHeaderContent (db, id) {
     status.textContent = record.status
 
     header(leftDiv.outerHTML, status.outerHTML)
+
     document.getElementById('back-conv').addEventListener('click', listView)
+
+    document.querySelector('.comment-header-primary').addEventListener('click', function () {
+      fillActivityDetailPage(id)
+    })
   }
 }
 
-function fillActivityDetailPage (db, id) {
-  const activityObjectStore = db.transaction('activity').objectStore('activity')
-  activityObjectStore.get(id).onsuccess = function (event) {
-    const record = event.target.result
-    console.log(record)
-    getInputText('activity--title-input').value = record.title
-    getInputText('activity--desc-input').value = record.description
-    document.querySelector('.current-status').innerHTML = record.status
+function fillActivityDetailPage (id) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = window.indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const rootTx = db.transaction(['root'], 'readwrite')
 
-    availableStatus(record, id)
+    const rootObjectStore = rootTx.objectStore('root')
+    rootObjectStore.get(dbName).onsuccess = function (event) {
+      const record = event.target.result
+      record.id = id
+      record.view = 'detail'
+      rootObjectStore.put(record)
+    }
 
-    document.querySelector('.activity--office').innerHTML = record.office
-    document.querySelector('.activity--template').innerHTML = record.template
+    rootTx.oncomplete = function () {
+      const req = window.indexedDB.open(dbName)
 
-    showSchedule(record.schedule, record.canEdit)
-    showVenue(record.venue, record.canEdit)
-    renderAssigneeList(db, record, 'assignee--list')
-    renderShareIcon(record)
+      req.onsuccess = function () {
+        const db = req.result
+        const activityObjectStore = db.transaction('activity').objectStore('activity')
+        const mapObjectStore = db.transaction('map').objectStore('map').index('location')
+
+        activityObjectStore.get(id).onsuccess = function (event) {
+          const record = event.target.result
+          console.log(record)
+          createActivityDetailHeader(id)
+
+          createActivityPanel(db, id, record)
+
+          getInputText('activity--title-input').value = record.title
+          getInputText('activity--desc-input').value = record.description
+          fetchAssigneeData(db, record, 'assignee--list')
+        }
+      }
+    }
   }
-  document.getElementById('updateActivity').addEventListener('click', function () {
-    makeFieldsEditable(id)
+}
+
+function createActivityDetailHeader (id) {
+  const leftDiv = document.createElement('div')
+
+  const backSpan = document.createElement('span')
+  backSpan.className = 'back-icon'
+  backSpan.id = 'back-conv'
+
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons'
+  backIcon.textContent = 'arrow_back'
+
+  backSpan.appendChild(backIcon)
+  leftDiv.appendChild(backSpan)
+
+  const rigthDiv = document.createElement('div')
+  const edit = document.createElement('button')
+  edit.className = 'mdc-button'
+  edit.id = 'edit-activity'
+  edit.dataset.id = id
+  edit.textContent = 'edit'
+  rigthDiv.appendChild(edit)
+
+  header(leftDiv.outerHTML, rigthDiv.outerHTML)
+}
+
+function createActivityPanel (db, id, record) {
+  const detail = document.createElement('div')
+  detail.className = 'mdc-top-app-bar--fixed-adjust'
+  detail.innerHTML = activityTitle(record.title) + activityDesc(record.description) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderAssigneeList(db, record, 'assignee--list') + renderShareIcon(record)
+
+  document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+
+  document.getElementById('edit-activity').addEventListener('click', function () {
+    makeFieldsEditable(record)
   })
 }
 
-function makeFieldsEditable (id) {
+function activityTitle () {
+  const container = document.createElement('div')
+  container.className = 'activity--title-container'
+  const span = document.createElement('span')
+  span.className = 'detail--static-text'
+  span.textContent = 'Title'
+
+  const textField = document.createElement('div')
+  textField.className = 'mdc-text-field'
+  textField.id = 'activity--title-input'
+
+  const input = document.createElement('input')
+  input.className = 'mdc-text-field__input border-bottom--none'
+  input.disabled = true
+  input.type = 'text'
+
+  textField.appendChild(input)
+  container.appendChild(span)
+  container.appendChild(textField)
+  return container.outerHTML
+}
+
+function activityDesc () {
+  const container = document.createElement('div')
+  container.className = 'activity--desc-container'
+  const span = document.createElement('span')
+  span.className = 'detail--static-text'
+  span.textContent = 'Description'
+
+  const textField = document.createElement('div')
+  textField.className = 'mdc-text-field'
+  textField.id = 'activity--desc-input'
+
+  const input = document.createElement('input')
+  input.className = 'mdc-text-field__input border-bottom--none'
+  input.disabled = true
+  input.type = 'text'
+
+  textField.appendChild(input)
+  container.appendChild(textField)
+  container.appendChild(span)
+
+  return container.outerHTML
+}
+function office (office) {
+  const officeCont = document.createElement('div')
+  officeCont.className = 'activity--office-container'
+  const span = document.createElement('span')
+  span.textContent = 'Office'
+
+  const p = document.createElement('p')
+  p.className = 'activity--office'
+  p.textContent = office
+  officeCont.appendChild(span)
+  officeCont.appendChild(p)
+  return officeCont.outerHTML
+}
+
+function template (template) {
+  const templateCont = document.createElement('div')
+  templateCont.className = 'activity--template-container'
+  const span = document.createElement('span')
+  span.textContent = 'Template'
+
+  const p = document.createElement('p')
+  p.className = 'activity--template'
+  p.textContent = template
+  templateCont.appendChild(span)
+  templateCont.appendChild(p)
+  return templateCont.outerHTML
+}
+
+function makeFieldsEditable (record) {
   getInputText('activity--title-input')['input_'].disabled = false
   getInputText('activity--desc-input')['input_'].disabled = false
   const startSchedule = document.querySelectorAll('.startTimeInputs')
@@ -215,17 +345,28 @@ function makeFieldsEditable (id) {
       getInputText(li.id)['input_'].disabled = false
     }
   })
+  const locationsearch = document.createElement('ul')
+  locationsearch.id = 'location--search'
+  locationsearch.className = 'mdc-list'
+
+  document.querySelector('.activity--venue-container').appendChild(locationsearch)
+  inputSelect('map', 'location--search', 'venue-location1', record)
 }
 
 function availableStatus (record, id) {
-  document.querySelector('.current-status').classList.add(record.status)
-  if (document.querySelector('.current-status').classList.length > 2) {
-    const previousStatus = document.querySelector('.current-status').classList[1]
-    document.querySelector('.current-status').classList.remove(previousStatus)
-  }
+  const statusCont = document.createElement('div')
+  statusCont.id = 'activity--status-container'
 
-  if (!record.canEdit) return
-  removeDom('available-status')
+  const currentStatus = document.createElement('div')
+  currentStatus.className = 'current-status'
+  currentStatus.textContent = record.status
+  statusCont.appendChild(currentStatus)
+  currentStatus.classList.add(record.status)
+
+  if (!record.canEdit) return statusCont.outerHTML
+
+  const avalStatus = document.createElement('div')
+  avalStatus.id = 'available-status'
 
   const pendingIcon = document.createElement('i')
   pendingIcon.classList.add('status-pending', 'material-icons')
@@ -263,31 +404,32 @@ function availableStatus (record, id) {
   }
 
   if (record.status === 'PENDING') {
-    document.querySelector('#available-status').appendChild(
+    avalStatus.appendChild(
       cancelIcon
     )
-    document.querySelector('#available-status').appendChild(
+    avalStatus.appendChild(
       confirmedIcon
     )
-    return
   }
   if (record.status === 'CANCELLED') {
-    document.querySelector('#available-status').appendChild(
+    avalStatus.appendChild(
       pendingIcon
     )
-    document.querySelector('#available-status').appendChild(
+    avalStatus.appendChild(
       confirmedIcon
     )
-    return
   }
   if (record.status === 'CONFIRMED') {
-    document.querySelector('#available-status').appendChild(
+    avalStatus.appendChild(
       cancelIcon
     )
-    document.querySelector('#available-status').appendChild(
+    avalStatus.appendChild(
       pendingIcon
     )
   }
+  statusCont.appendChild(avalStatus)
+
+  return statusCont.outerHTML
 }
 
 function updateStatus (status, id) {
@@ -299,10 +441,28 @@ function updateStatus (status, id) {
   requestCreator('statusChange', reqBody)
 }
 
-function showSchedule (schedules, canEdit) {
-  let scheduleCount = 0
+function showSchedule (schedules) {
+  const scheduleCont = document.createElement('div')
+  scheduleCont.className = 'activity--schedule-container'
+  const spanCont = document.createElement('span')
+  spanCont.className = 'detail--static-text detail--static-text-schedule'
+  spanCont.textContent = 'Schedule'
 
-  removeDom('schedule--list')
+  const startTimeSpan = document.createElement('span')
+  startTimeSpan.className = 'detail--static-text-startTime'
+  startTimeSpan.textContent = 'from'
+
+  const endTimeSpan = document.createElement('span')
+  endTimeSpan.className = 'detail--static-text-endTime'
+  endTimeSpan.textContent = 'to'
+
+  const scheduleList = document.createElement('ul')
+  scheduleList.className = 'mdc-list'
+  scheduleList.id = 'schedule--list'
+
+  scheduleCont.appendChild(spanCont)
+  scheduleCont.appendChild(startTimeSpan)
+  scheduleCont.appendChild(endTimeSpan)
 
   function getMonthDate (dateString) {
     const split = dateString.split('T')[0].split('-').slice(1, 3)
@@ -311,8 +471,6 @@ function showSchedule (schedules, canEdit) {
   }
 
   schedules.forEach((schedule) => {
-    scheduleCount++
-
     const scheduleLi = document.createElement('li')
     scheduleLi.classList.add('mdc-list-item', 'schedule--list')
 
@@ -322,26 +480,29 @@ function showSchedule (schedules, canEdit) {
 
     const scheduleStartTime = document.createElement('div')
     scheduleStartTime.classList.add('mdc-text-field', 'startTimeInputs')
-    scheduleStartTime.id = `schedule-start--list${scheduleCount}`
+    scheduleStartTime.id = `schedule-start--list$`
 
     const scheduleStartTimeInput = document.createElement('input')
+    scheduleStartTimeInput.type = 'date'
     scheduleStartTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
     scheduleStartTimeInput.disabled = true
-    scheduleStartTimeInput.value = getMonthDate(schedule.startTime)
+    scheduleStartTimeInput.setAttribute('value', getMonthDate(schedule.startTime))
+    // scheduleStartTimeInput.value = getMonthDate(schedule.startTime)
     scheduleStartTime.appendChild(scheduleStartTimeInput)
 
     const scheduleEndTime = document.createElement('div')
     scheduleEndTime.classList.add('mdc-text-field', 'endTimeInputs')
-    scheduleEndTime.id = `schedule-end--list${scheduleCount}`
+    scheduleEndTime.id = `schedule-end--list$`
 
     const scheduleEndTimeInput = document.createElement('input')
+    scheduleEndTimeInput.type = 'date'
     scheduleEndTimeInput.disabled = true
     scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-    scheduleEndTimeInput.value = getMonthDate(schedule.endTime)
+    scheduleEndTimeInput.setAttribute('value', getMonthDate(schedule.endTime))
     scheduleEndTime.appendChild(scheduleEndTimeInput)
 
     const scheduleEditIconSpan = document.createElement('span')
-    scheduleEditIconSpan.id = `schedule-edit--icon${scheduleCount}`
+    scheduleEditIconSpan.id = `schedule-edit--icon$`
     scheduleEditIconSpan.classList.add('activity--edit-icon')
 
     scheduleLi.appendChild(scheduleName)
@@ -349,74 +510,86 @@ function showSchedule (schedules, canEdit) {
     scheduleLi.appendChild(scheduleEndTime)
     scheduleLi.appendChild(scheduleEditIconSpan)
 
-    document.querySelector('#schedule--list').appendChild(scheduleLi)
-
-    if (!canEdit) return
+    scheduleList.appendChild(scheduleLi)
   })
+  scheduleCont.appendChild(scheduleList)
+  return scheduleCont.outerHTML
 }
 
 function showVenue (venues, canEdit) {
-  let venueCount = 0
+  const venueCont = document.createElement('div')
+  venueCont.className = 'activity--venue-container'
+  const span = document.createElement('span')
+  span.className = 'detail--static-text'
+  span.textContent = 'Venue'
+  const venueList = document.createElement('ul')
+  venueList.className = 'mdc-list'
+  venueList.id = 'venue--list'
 
-  removeDom('venue--list')
-
+  venueCont.appendChild(span)
+  var count = 0
   venues.forEach((venue) => {
     if (venue.geopoint) {
-      venueCount++
-
+      count++
       const venueLi = document.createElement('li')
-      const venueDesc = document.createElement('div')
+      venueLi.className = 'mdc-list-item'
+      const venueDesc = document.createElement('span')
       venueDesc.appendChild(document.createTextNode(venue.venueDescriptor))
-      venueLi.appendChild(venueDesc)
 
       const venueLocation = document.createElement('div')
-      venueLocation.classList.add('mdc-text-field', 'venue-location--name', `venue-location${venueCount}`)
+      venueLocation.classList.add('mdc-text-field', 'venue-location--name')
+      venueLocation.id = `venue-location${count}`
       const venueLocationInput = document.createElement('input')
       venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-      venueLocationInput.value = venue.location
+      venueLocationInput.setAttribute('value', venue.location)
+
       venueLocation.appendChild(venueLocationInput)
 
-      const venueEditableIcons = document.createElement('div')
-      const venueMapIcon = document.createElement('i')
-      venueMapIcon.classList.add('material-icons')
-      venueMapIcon.textContent = 'location_on'
-
-      const venueEditIconCont = document.createElement('span')
-      venueEditIconCont.classList.add(venueCount, 'activity--edit-icon')
-      venueEditIconCont.id = `venue--edit-cont${venueCount}`
-
-      venueEditableIcons.appendChild(venueMapIcon)
-      venueEditableIcons.appendChild(venueEditIconCont)
-
       const venueAddress = document.createElement('div')
-      venueAddress.classList.add('mdc-text-field', 'venue-address--name', `venue-address${venueCount}`)
+      venueAddress.classList.add('mdc-text-field', 'venue-address--name', `venue-address`)
       const venueAddressInput = document.createElement('input')
       venueAddressInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-      venueAddressInput.value = venue.address
+      venueAddressInput.setAttribute('value', venue.address)
+
       venueAddress.appendChild(venueAddressInput)
 
-      venueLi.appendChild(venueDesc)
       venueLi.appendChild(venueLocation)
-      venueLi.appendChild(venueEditableIcons)
       venueLi.appendChild(venueAddress)
+      venueLi.appendChild(document.createElement('br'))
+      venueLi.appendChild(venueDesc)
 
-      document.querySelector('#venue--list').appendChild(venueLi)
-      const venueLocationTextField = mdc.textField.MDCTextField.attachTo(document.querySelector(`.venue-location${venueCount}`))
-      const venueAddressTextField = mdc.textField.MDCTextField.attachTo(document.querySelector(`.venue-address${venueCount}`))
-      if (!canEdit) return
-
-      // renderFieldIcons(`venue--edit-cont${venueCount}`, `edit-venue${venueCount}`, [venueLocationTextField, venueAddressTextField, ]);
+      venueList.appendChild(venueLi)
     }
   })
+
+  venueCont.appendChild(venueList)
+  return venueCont.outerHTML
 }
 
-function renderAssigneeList (db, record, target) {
+function renderAssigneeList () {
+  const shareCont = document.createElement('div')
+  shareCont.className = 'activity--share-container'
+  const span = document.createElement('span')
+  span.className = 'detail--static-text'
+  span.textContent = 'Assignees'
+
+  const shareIcon = document.createElement('div')
+  shareIcon.id = 'share--icon-container'
+  const assigneeList = document.createElement('ul')
+  assigneeList.id = 'assignee--list'
+  assigneeList.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
+
+  shareCont.appendChild(span)
+  shareCont.appendChild(shareIcon)
+  shareCont.appendChild(assigneeList)
+
+  return shareCont.outerHTML
+}
+
+function fetchAssigneeData (db, record, target) {
   const usersStore = db
     .transaction('users')
     .objectStore('users')
-
-  removeDom(target)
-
   record.assignees.forEach((mobileNumber) => {
     console.log(record)
     usersStore.openCursor(mobileNumber).onsuccess = function (e) {
@@ -468,6 +641,31 @@ function assigneeListUI (userRecord, target) {
   document.getElementById(target).appendChild(div)
 }
 
+function locationUI (userRecord, target) {
+  if (document.querySelector(`[data-location="${userRecord.value.location}"]`)) return
+
+  const div = document.createElement('div')
+  div.style.position = 'relative'
+  div.dataset.location = userRecord.value.location
+  div.id = userRecord.value.location.replace(/\s/g, '')
+
+  const Li = document.createElement('li')
+
+  Li.classList.add('mdc-list-item', 'location-li')
+
+  const locationListText = document.createElement('span')
+  locationListText.classList.add('mdc-list-item__text')
+  locationListText.textContent = userRecord.value.location
+
+  const locationListTextSecondary = document.createElement('span')
+  locationListTextSecondary.classList.add('mdc-list-item__secondary-text')
+  locationListTextSecondary.textContent = userRecord.value.address
+  locationListText.appendChild(locationListTextSecondary)
+
+  Li.appendChild(locationListText)
+  div.appendChild(Li)
+  document.getElementById(target).appendChild(div)
+}
 function renderRemoveIcons (record, mobileNumber) {
   console.log('run')
   const removeIcon = document.createElement('span')
@@ -503,17 +701,18 @@ function renderShareIcon (record) {
   icon.textContent = 'add'
   IconParent.appendChild(icon)
 
-  document.getElementById('share--icon-container').innerHTML = IconParent.outerHTML
+  // document.getElementById('share--icon-container').innerHTML = IconParent.outerHTML
 
-  document.getElementById('share-btn').onclick = function (e) {
+  icon.onclick = function (e) {
     renderShareDrawer(record)
   }
+  return IconParent.outerHTML
 }
 
 function renderShareDrawer (record) {
-  console.log(record)
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
+
   req.onsuccess = function () {
     const db = req.result
     const rootTx = db.transaction(['root'], 'readwrite')
@@ -528,29 +727,21 @@ function renderShareDrawer (record) {
 }
 
 function fetchUsersData (record) {
-  removeDom('contacts--container')
-
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
+
   req.onsuccess = function () {
     const db = req.result
 
-    const mdcShareDrawer = mdc
-      .drawer
-      .MDCTemporaryDrawer
-      .attachTo(document.getElementById('share-drawer'))
-
-    mdcShareDrawer.open = true
-
     document.getElementById('back-share').addEventListener('click', function () {
-      loadDefaultView(db, mdcShareDrawer)
+      fillActivityDetailPage(db, id)
     })
 
     const userCountIndex = db
       .transaction('users')
       .objectStore('users').index('count')
 
-    inputSelect(userCountIndex, 'contacts', 'contact--text-field', record)
+    // inputSelect(userCountIndex, 'contacts', 'contact--text-field', record)
   }
 }
 
@@ -591,6 +782,7 @@ function updateSelectorObjectStore (dataset, input, objectStoreName) {
 function errorUpdatingSelectorObjectStore (error) {
   console.log(error)
 }
+
 function addContact (data) {
   const expression = /^\+[1-9]\d{5,14}$/
   if (!expression.test(data.value)) return
@@ -603,5 +795,5 @@ function addContact (data) {
 }
 
 function dataElement (key) {
-  return document.querySelector(`[data-contact="${key}"]`)
+  return document.querySelector(`[data-location="${key}"]`)
 }
