@@ -336,3 +336,8 @@ margin-left:0;
 #calendar-view--container {
     /* overflow-y :scroll */
 }
+
+.reauth-recaptcha {
+    position: absolute;
+    top: 50%;
+}

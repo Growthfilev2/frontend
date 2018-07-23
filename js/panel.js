@@ -377,11 +377,11 @@ function generateActivityFromMarker(dbName, map, markers) {
   }
 }
 
-function calendarView (dbName) {
+function calendarView(dbName) {
   // open IDB
   createCalendarPanel()
   backIconHeader('close-calendar--drawer')
-  
+
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
@@ -401,22 +401,22 @@ function calendarView (dbName) {
   }
 }
 
-function createCalendarPanel(){
+function createCalendarPanel() {
   const calendarView = document.createElement('div')
   calendarView.id = 'calendar-view--container'
-  calendarView.className ='mdc-top-app-bar--fixed-adjust'
+  calendarView.className = 'mdc-top-app-bar--fixed-adjust'
   const beforeDiv = document.createElement('div')
-  beforeDiv.id ='beforeToday'
+  beforeDiv.id = 'beforeToday'
   const afterDiv = document.createElement('div')
   afterDiv.id = 'afterToday'
-  
+
   calendarView.appendChild(beforeDiv)
   calendarView.appendChild(afterDiv)
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
 }
 
 
-function fetchCalendarData () {
+function fetchCalendarData() {
   removeDom('beforeToday')
   removeDom('afterToday')
 
@@ -447,7 +447,7 @@ function fetchCalendarData () {
   }
 }
 
-function insertDatesAfterToday (db, calendarDateIndex, today) {
+function insertDatesAfterToday(db, calendarDateIndex, today) {
   const lowerKeyRange = IDBKeyRange.lowerBound(today)
   calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
@@ -462,17 +462,17 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
       })
       const parent = document.getElementById('calendar-view--container')
       const lastScrollHeight = parent.scrollHeight
-      insertDatesBeforeToday(db,calendarDateIndex,today,lastScrollHeight)    
+      insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight)
 
 
     }
   }
 }
 
-function insertDatesBeforeToday (db, calendarDateIndex, today,lastScrollHeight) {
-  
+function insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight) {
+
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
-  
+
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
     if (cursor) {
@@ -482,16 +482,16 @@ function insertDatesBeforeToday (db, calendarDateIndex, today,lastScrollHeight) 
     } else {
       const parent = document.getElementById('calendar-view--container')
       document.documentElement.scrollTop = parent.scrollHeight - lastScrollHeight
-      
+
       document.querySelectorAll('.activity--row li').forEach(function (li) {
         li.classList.add('calendar-activity--list-item')
       })
-     
+
     }
   }
 }
 
-function calendarViewUI (target, db, data) {
+function calendarViewUI(target, db, data) {
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -528,8 +528,9 @@ function calendarViewUI (target, db, data) {
   getActivity(db, data)
 }
 
-function getActivity (db, data) {
+function getActivity(db, data) {
   if (data.hasOwnProperty('activityId')) {
+
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     activityObjectStore.get(data.activityId).onsuccess = function (event) {
       const record = event.target.result
@@ -540,330 +541,462 @@ function getActivity (db, data) {
   }
 }
 
-// function profileView (user) {
-//   const mdcProfileDrawer = mdc
-//     .drawer
-//     .MDCTemporaryDrawer
-//     .attachTo(document.getElementById('profile-drawer'))
+function profileView(user) {
 
-//   mdcProfileDrawer.open = true
-//   document.getElementById('close-profile--drawer').addEventListener('click', function () {
-//     const dbName = firebase.auth().currentUser.uid
-//     const req = indexedDB.open(dbName)
-//     req.onsuccess = function () {
-//       const db = req.result
-//       loadDefaultView(db, mdcProfileDrawer)
-//     }
-//   })
-//   showProfilePicture()
+  const dbName = firebase.auth().currentUser.uid
 
-//   inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const rootTx = db.transaction(['root'],'readwrite')
+    const rootObjectStore = rootTx.objectStore('root')
+    rootObjectStore.get(dbName).onsuccess = function (event) {
+      const record = event.target.result
+      record.view = 'profile'
+      rootObjectStore.put(record)
+      rootTx.oncomplete = function () {
+        createProfilePanel()
+        // document.getElementById('close-profile--drawer').addEventListener('click', listView)
+        showProfilePicture()
+      
+        inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
+      
+        changeDisplayName(user)
+        changeEmailAddress(user)
+        document.getElementById('change-link').addEventListener('click', phoneNumberDialog)
+      }
+    }
+  }
+}
 
-//   changeDisplayName(user)
-//   changeEmailAddress(user)
-//   document.getElementById('change-link').addEventListener('click', phoneNumberDialog)
-// }
+function createProfilePanel(){
+  const profileView = document.createElement('div')
+  profileView.id ='profile-view--container'
 
-// function toggleIconData (icon, inputField) {
-//   const iconEl = document.getElementById(icon)
+  const uploadImg = document.createElement('img')
+  uploadImg.id = 'upload--profile-img'
+  uploadImg.src = ''
 
-//   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
-//   toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
-//     detail
-//   }) {
-//     if (!detail.isOn) {
-//       inputField['input_'].disabled = true
-//       inputField['input_'].style.borderBottom = 'none'
-//       const key = this.dataset.toggleOffLabel
-//       const text = inputField.value
-//       handleFieldInput(key, text)
-//     } else {
-//       console.log(inputField)
-//       inputField['input_'].style.borderBottom = '1px solid rgba(0,0,0,.42)'
-//       inputField['input_'].disabled = false
-//     }
-//   })
-// }
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.style.display = 'none'
+  fileInput.id ='uploadProfileImage'
 
-// function handleFieldInput (key, value) {
-//   const user = firebase.auth().currentUser
-//   console.log(typeof value)
-//   if (key === 'displayName') {
-//     user.updateProfile({
-//       [key]: value
-//     }).then(function () {
-//       console.log(user)
-//     }).catch(authUpdatedError)
-//   }
 
-//   if (key === 'updateEmail') {
-//     reauthUser(value)
-//   }
-// }
+  const profileImgCont = document.createElement('div')
+  profileImgCont.id ='profile--image-container'
 
-// function readUploadedFile (event) {
-//   const file = event.target.files[0]
+  const profileImg = document.createElement('img')
+  profileImg.id ='user-profile--image'
+  // profileImg.src =''
 
-//   const reader = new FileReader()
+  profileImgCont.appendChild(profileImg)
 
-//   if (file) {
-//     reader.readAsDataURL(file)
-//     processImage(file)
-//   }
-// }
 
-// function processImage (image) {
-//   const metadata = {
-//     contentType: 'image/jpeg'
-//   }
+  const nameChangeCont = document.createElement('div')
+  nameChangeCont.id ='name--change-container'
 
-//   const uid = firebase.auth().currentUser.uid
-//   const storageRef = firebase.storage().ref(`ProfileImage/${uid}`)
-//   const uploadTask = storageRef.put(image, metadata)
+  const nameTextField = document.createElement('div')
+  nameTextField.className = 'mdc-text-field mdc-button--dense'
+  nameTextField.id= 'displayName'
 
-//   uploadTask.on(
-//     firebase.storage.TaskEvent.STATE_CHANGED,
-//     snapshotHandler,
-//     storageErrorHandler,
-//     storageSuccessHandler
-//   )
+  const nameInput = document.createElement('input')
+  nameInput.type = 'text'
+  nameInput.className ='mdc-text-field__input'
+  nameInput.disabled = true
 
-//   function snapshotHandler (snapshot) {
-//     if (firebase.storage.TaskState.RUNNING) {
-//       console.log('running')
-//       // show gola
-//     }
-//   }
+  nameTextField.appendChild(nameInput)
 
-//   function storageErrorHandler (error) {
-//     if (error.code === 'storage/unknown') {
-//       console.log(error)
-//     }
-//     console.log(error)
-//   }
+  const toggleBtnName = document.createElement('button')
+  toggleBtnName.className = 'mdc-icon-button material-icons'
+  toggleBtnName.id ='edit--name'
 
-//   function storageSuccessHandler () {
-//     uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
-//   }
-// }
+  toggleBtnName.setAttribute('aria-hidden','true')
+  toggleBtnName.setAttribute('aria-pressed','false')
+  toggleBtnName.setAttribute('data-toggle-on-conten','check')
+  toggleBtnName.setAttribute('data-toggle-on-label','check')
+  toggleBtnName.setAttribute('data-toggle-off-content','edit')
+  toggleBtnName.setAttribute('data-toggle-off-label','displayName')
 
-// function updateAuth (url) {
-//   const user = firebase.auth().currentUser
-//   user.updateProfile({
-//     photoURL: url
-//   }).then(showProfilePicture).catch(authUpdatedError)
-// }
+  toggleBtnName.textContent = 'edit'
 
-// function showProfilePicture () {
-//   // remove gola
-//   // preview image on profile drawer and toolbar in list view
-//   const user = firebase.auth().currentUser
-//   document.getElementById('user-profile--image').src = user.photoURL
-// }
+  nameChangeCont.appendChild(nameTextField)
+  nameChangeCont.appendChild(toggleBtnName)
 
-// function authUpdatedError (error) {
-//   console.log(error)
-// }
 
-// function changeDisplayName (user) {
-//   const displayNameField = getInputText('displayName')
 
-//   if (!user.displayName) {
-//     displayNameField['input_'].placeholder = 'choose a user name'
-//   } else {
-//     displayNameField.value = user.displayName
-//   }
+  const emailCont = document.createElement('div')
+  emailCont.id ='email--change-container'
 
-//   toggleIconData('edit--name', displayNameField)
-// }
+  const emailTextField = document.createElement('div')
+  emailTextField.className ='mdc-text-field mdc-button--dense'
+  emailTextField.id ='email'
 
-// function changeEmailAddress (user) {
-//   const emailField = getInputText('email')
-//   if (!user.email) {
-//     emailField['input_'].placeholder = 'set an email address'
-//   } else {
-//     emailField.value = user.email
-//   }
+  const emailInput = document.createElement('input')
+  emailInput.className ='mdc-text-field__input'
+  emailInput.type ='text'
 
-//   toggleIconData('edit--email', emailField)
-// }
+  emailTextField.appendChild(emailInput)
 
-// function reauthUser (email) {
-//   const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
-//   const provider = new firebase.auth.PhoneAuthProvider()
-//   const userPhoneNumber = firebase.auth().currentUser.phoneNumber
-//   provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(function (verificationId) {
-//     generateVerificationId(verificationId, email)
-//   })
-// }
 
-// function generateVerificationId (verificationId, email) {
-//   removeDom('reauth-recaptcha')
+  const toggleBtnEmail = document.createElement('button')
+  toggleBtnEmail.className = 'mdc-icon-button material-icons'
+  toggleBtnEmail.id = 'edit--email'
+  toggleBtnEmail.setAttribute('aria-hidden','true')
+  toggleBtnEmail.setAttribute('aria-pressed','false')
+  toggleBtnEmail.setAttribute('data-toggle-on-conten','check')
+  toggleBtnEmail.setAttribute('data-toggle-on-label','check')
+  toggleBtnEmail.setAttribute('data-toggle-off-content','edit')
+  toggleBtnEmail.setAttribute('data-toggle-off-label','updateEmail')
 
-//   const otpDiv = document.createElement('div')
-//   otpDiv.classList.add('mdc-text-field')
-//   otpDiv.id = 'reauth-otp'
-//   const otpInput = document.createElement('input')
-//   otpInput.classList.add('mdc-text-field__input')
-//   const submitButtonOtp = document.createElement('button')
-//   submitButtonOtp.textContent = 'submit'
-//   submitButtonOtp.classList.add('mdc-button', 'getOtp')
-//   otpDiv.appendChild(otpInput)
-//   otpDiv.appendChild(submitButtonOtp)
+  toggleBtnEmail.textContent ='email'
 
-//   document.getElementById('reauth-otp--container').appendChild(otpDiv)
+  const reauthCont = document.createElement('div')
+  reauthCont.id ='reauth-recaptcha'
+  reauthCont.className = 'reauthCont'
 
-//   document.querySelector('.getOtp').addEventListener('click', function () {
-//     const otp = getInputText('reauth-otp').value
-//     const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp)
-//     generateCredential(credential, email)
-//   })
-// }
+  const otpCont = document.createElement('div')
+  otpCont.id = 'reauth-otp--container'
 
-// function generateCredential (credential, email) {
-//   removeDom('reauth-otp--container')
-//   console.log(credential)
-//   const user = firebase.auth().currentUser
-//   user.reauthenticateAndRetrieveDataWithCredential(credential).then(function () {
-//     updateEmail(user, email)
-//   }).catch(handleReauthError)
-// }
+  emailCont.appendChild(emailTextField)
+  emailCont.appendChild(toggleBtnEmail)
+  emailCont.appendChild(reauthCont)
+  emailCont.appendChild(otpCont)
 
-// function updateEmail (user, email) {
-//   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
-// }
 
-// function emailUpdateSuccess () {
-//   const user = firebase.auth().currentUser
-//   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
-// }
+  const changeNumCont = document.createElement('div')
+  changeNumCont.id ='change--number-container'
 
-// function emailVerificationSuccess () {
-//   console.log('email verified')
-// }
+  const infoText = document.createElement('span')
+  infoText.className ='info--span-number'
+  
+  const info = document.createElement('span')
+  info.id = 'change-link'
+  info.textContent ='click here'
+  //first append
+  infoText.appendChild(info)
 
-// function emailVerificationError (error) {
-//   console.log(error)
-// }
+  infoText.textContent = 'to change your number'
 
-// function handleReauthError (error) {
-//   console.log(error)
-// }
+  const mainChange = document.createElement('div')
+  mainChange.id ='phone-number--change-container'
+  mainChange.className = 'mdc-layout-grid__inner'
 
-// function phoneNumberDialog (event) {
-//   const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
+const submitCont = document.createElement('div')
+submitCont.id ='submit-action'
 
-//   mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
-//   mdcDialog.listen('MDCDialog:cancel', function () {
-//     console.log('canceled')
-//   })
+changeNumCont.appendChild(infoText)
+changeNumCont.appendChild(mainChange)
+changeNumCont.appendChild(submitCont)
 
-//   mdcDialog.lastFocusedTarget = event.target
-//   mdcDialog.show()
-// }
+profileView.appendChild(uploadImg)
+profileView.appendChild(fileInput)
+profileView.appendChild(profileImgCont)
+profileView.appendChild(nameChangeCont)
+profileView.appendChild(emailCont)
+profileView.appendChild(changeNumCont)
+document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 
-// function changePhoneNumber () {
-//   const currentcountryDiv = document.createElement('div')
-//   currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
-//   const currentCountryInput = document.createElement('input')
-//   currentCountryInput.classList.add('mdc-text-field__input')
-//   currentcountryDiv.id = 'current-country--code'
-//   currentcountryDiv.appendChild(currentCountryInput)
+}
 
-//   const currentNumberDiv = document.createElement('div')
-//   currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
-//   currentNumberDiv.id = 'current-phone--number'
-//   const currentNumberInput = document.createElement('input')
-//   currentNumberInput.classList.add('mdc-text-field__input')
-//   currentNumberDiv.appendChild(currentNumberInput)
+function toggleIconData(icon, inputField) {
+  const iconEl = document.getElementById(icon)
 
-//   const newcountryDiv = document.createElement('div')
-//   newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
-//   newcountryDiv.id = 'new-country--code'
-//   const newCountryInput = document.createElement('input')
-//   newCountryInput.classList.add('mdc-text-field__input')
-//   newcountryDiv.appendChild(newCountryInput)
+  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
+  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
+    detail
+  }) {
+    if (!detail.isOn) {
+      inputField['input_'].disabled = true
+      inputField['input_'].style.borderBottom = 'none'
+      const key = this.dataset.toggleOffLabel
+      const text = inputField.value
+      handleFieldInput(key, text)
+    } else {
+      console.log(inputField)
+      inputField['input_'].style.borderBottom = '1px solid rgba(0,0,0,.42)'
+      inputField['input_'].disabled = false
+    }
+  })
+}
 
-//   const newNumberDiv = document.createElement('div')
-//   newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
-//   newNumberDiv.id = 'new-phone--number'
-//   const newNumberInput = document.createElement('input')
-//   newNumberInput.classList.add('mdc-text-field__input')
-//   newNumberDiv.appendChild(newNumberInput)
+function handleFieldInput(key, value) {
+  const user = firebase.auth().currentUser
+  console.log(typeof value)
+  if (key === 'displayName') {
+    user.updateProfile({
+      [key]: value
+    }).then(function () {
+      console.log(user)
+    }).catch(authUpdatedError)
+  }
 
-//   const submit = document.createElement('button')
-//   submit.classList.add('mdc-button')
-//   submit.id = 'updatePhone'
-//   submit.textContent = 'submit'
+  if (key === 'updateEmail') {
+    reauthUser(value)
+  }
+}
 
-//   const cancel = document.createElement('button')
-//   cancel.classList.add('mdc-button')
-//   cancel.id = 'cancelUpdate'
-//   cancel.textContent = 'cancel'
+function readUploadedFile(event) {
+  const file = event.target.files[0]
 
-//   document.getElementById('phone-number--change-container').innerHTML = currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML
-//   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
+  const reader = new FileReader()
 
-//   document.getElementById('updatePhone').addEventListener('click', function (e) {
-//     console.log(e)
+  if (file) {
+    reader.readAsDataURL(file)
+    processImage(file)
+  }
+}
 
-//     if (verifyCurrentPhoneNumber() && verifyNewPhoneNumber()) {
-//       const reqBody = {
-//         'phoneNumber': newPhoneNumber()
-//       }
-//       requestCreator('updateUserNumber', reqBody)
-//     }
-//   })
+function processImage(image) {
+  const metadata = {
+    contentType: 'image/jpeg'
+  }
 
-//   document.getElementById('cancelUpdate').addEventListener('click', function (event) {
-//     removeDom('phone-number--change-container')
-//     removeDom('submit-action')
-//   })
-// }
+  const uid = firebase.auth().currentUser.uid
+  const storageRef = firebase.storage().ref(`ProfileImage/${uid}`)
+  const uploadTask = storageRef.put(image, metadata)
 
-// function newPhoneNumber () {
-//   const newCountryCode = getInputText('new-country--code').value
-//   const newNumber = getInputText('new-phone--number').value
-//   return newCountryCode.concat(newNumber)
-// }
+  uploadTask.on(
+    firebase.storage.TaskEvent.STATE_CHANGED,
+    snapshotHandler,
+    storageErrorHandler,
+    storageSuccessHandler
+  )
 
-// function verifyNewPhoneNumber () {
-//   const expression = /^\+[1-9]\d{5,14}$/
-//   return expression.test(newPhoneNumber())
-// }
+  function snapshotHandler(snapshot) {
+    if (firebase.storage.TaskState.RUNNING) {
+      console.log('running')
+      // show gola
+    }
+  }
 
-// function verifyCurrentPhoneNumber () {
-//   const currentCountryCode = getInputText('current-country--code').value
-//   const currentNumber = getInputText('current-phone--number').value
-//   const numberInAuth = firebase.auth().currentUser.phoneNumber
+  function storageErrorHandler(error) {
+    if (error.code === 'storage/unknown') {
+      console.log(error)
+    }
+    console.log(error)
+  }
 
-//   console.log(currentCountryCode.concat(currentNumber))
-//   if (currentCountryCode.concat(currentNumber) === numberInAuth) {
-//     return true
-//   }
-//   return false
-// }
+  function storageSuccessHandler() {
+    uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
+  }
+}
 
-// function loadDefaultView (db, drawer) {
-//   const rootTx = db.transaction(['root'], 'readwrite')
-//   const rootObjectStore = rootTx.objectStore('root')
-//   const dbName = firebase.auth().currentUser.uid
-//   rootObjectStore.get(dbName).onsuccess = function (event) {
-//     const record = event.target.result
-//     record.view = 'main'
-//     rootObjectStore.put(record)
-//     rootTx.oncomplete = function () {
-//       listView()
-//       conversation(record.id)
-//       drawer.open = false
-//     }
-//   }
-// }
+function updateAuth(url) {
+  const user = firebase.auth().currentUser
+  user.updateProfile({
+    photoURL: url
+  }).then(showProfilePicture).catch(authUpdatedError)
+}
+
+function showProfilePicture() {
+  // remove gola
+  // preview image on profile drawer and toolbar in list view
+  const user = firebase.auth().currentUser
+  document.getElementById('user-profile--image').src = user.photoURL
+}
+
+function authUpdatedError(error) {
+  console.log(error)
+}
+
+function changeDisplayName(user) {
+  const displayNameField = getInputText('displayName')
+
+  if (!user.displayName) {
+    displayNameField['input_'].placeholder = 'choose a user name'
+  } else {
+    displayNameField.value = user.displayName
+  }
+
+  toggleIconData('edit--name', displayNameField)
+}
+
+function changeEmailAddress(user) {
+  const emailField = getInputText('email')
+  if (!user.email) {
+    emailField['input_'].placeholder = 'set an email address'
+  } else {
+    emailField.value = user.email
+  }
+
+  toggleIconData('edit--email', emailField)
+}
+
+function reauthUser(email) {
+  const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
+  const provider = new firebase.auth.PhoneAuthProvider()
+  const userPhoneNumber = firebase.auth().currentUser.phoneNumber
+  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(function (verificationId) {
+    generateVerificationId(verificationId, email)
+  })
+}
+
+function generateVerificationId(verificationId, email) {
+  removeDom('reauth-recaptcha')
+
+  const otpDiv = document.createElement('div')
+  otpDiv.classList.add('mdc-text-field')
+  otpDiv.id = 'reauth-otp'
+  const otpInput = document.createElement('input')
+  otpInput.classList.add('mdc-text-field__input')
+  const submitButtonOtp = document.createElement('button')
+  submitButtonOtp.textContent = 'submit'
+  submitButtonOtp.classList.add('mdc-button', 'getOtp')
+  otpDiv.appendChild(otpInput)
+  otpDiv.appendChild(submitButtonOtp)
+
+  document.getElementById('reauth-otp--container').appendChild(otpDiv)
+
+  document.querySelector('.getOtp').addEventListener('click', function () {
+    const otp = getInputText('reauth-otp').value
+    const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp)
+    generateCredential(credential, email)
+  })
+}
+
+function generateCredential(credential, email) {
+  removeDom('reauth-otp--container')
+  console.log(credential)
+  const user = firebase.auth().currentUser
+  user.reauthenticateAndRetrieveDataWithCredential(credential).then(function () {
+    updateEmail(user, email)
+  }).catch(handleReauthError)
+}
+
+function updateEmail(user, email) {
+  user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
+}
+
+function emailUpdateSuccess() {
+  const user = firebase.auth().currentUser
+  user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
+}
+
+function emailVerificationSuccess() {
+  console.log('email verified')
+}
+
+function emailVerificationError(error) {
+  console.log(error)
+}
+
+function handleReauthError(error) {
+  console.log(error)
+}
+
+function phoneNumberDialog(event) {
+  const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
+
+  mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
+  mdcDialog.listen('MDCDialog:cancel', function () {
+    console.log('canceled')
+  })
+
+  mdcDialog.lastFocusedTarget = event.target
+  mdcDialog.show()
+}
+
+function changePhoneNumber() {
+  const currentcountryDiv = document.createElement('div')
+  currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
+  const currentCountryInput = document.createElement('input')
+  currentCountryInput.classList.add('mdc-text-field__input')
+  currentcountryDiv.id = 'current-country--code'
+  currentcountryDiv.appendChild(currentCountryInput)
+
+  const currentNumberDiv = document.createElement('div')
+  currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
+  currentNumberDiv.id = 'current-phone--number'
+  const currentNumberInput = document.createElement('input')
+  currentNumberInput.classList.add('mdc-text-field__input')
+  currentNumberDiv.appendChild(currentNumberInput)
+
+  const newcountryDiv = document.createElement('div')
+  newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-2')
+  newcountryDiv.id = 'new-country--code'
+  const newCountryInput = document.createElement('input')
+  newCountryInput.classList.add('mdc-text-field__input')
+  newcountryDiv.appendChild(newCountryInput)
+
+  const newNumberDiv = document.createElement('div')
+  newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-10')
+  newNumberDiv.id = 'new-phone--number'
+  const newNumberInput = document.createElement('input')
+  newNumberInput.classList.add('mdc-text-field__input')
+  newNumberDiv.appendChild(newNumberInput)
+
+  const submit = document.createElement('button')
+  submit.classList.add('mdc-button')
+  submit.id = 'updatePhone'
+  submit.textContent = 'submit'
+
+  const cancel = document.createElement('button')
+  cancel.classList.add('mdc-button')
+  cancel.id = 'cancelUpdate'
+  cancel.textContent = 'cancel'
+
+  document.getElementById('phone-number--change-container').innerHTML = currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML
+  document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
+
+  document.getElementById('updatePhone').addEventListener('click', function (e) {
+    console.log(e)
+
+    if (verifyCurrentPhoneNumber() && verifyNewPhoneNumber()) {
+      const reqBody = {
+        'phoneNumber': newPhoneNumber()
+      }
+      requestCreator('updateUserNumber', reqBody)
+    }
+  })
+
+  document.getElementById('cancelUpdate').addEventListener('click', function (event) {
+    removeDom('phone-number--change-container')
+    removeDom('submit-action')
+  })
+}
+
+function newPhoneNumber() {
+  const newCountryCode = getInputText('new-country--code').value
+  const newNumber = getInputText('new-phone--number').value
+  return newCountryCode.concat(newNumber)
+}
+
+function verifyNewPhoneNumber() {
+  const expression = /^\+[1-9]\d{5,14}$/
+  return expression.test(newPhoneNumber())
+}
+
+function verifyCurrentPhoneNumber() {
+  const currentCountryCode = getInputText('current-country--code').value
+  const currentNumber = getInputText('current-phone--number').value
+  const numberInAuth = firebase.auth().currentUser.phoneNumber
+
+  console.log(currentCountryCode.concat(currentNumber))
+  if (currentCountryCode.concat(currentNumber) === numberInAuth) {
+    return true
+  }
+  return false
+}
+
+function loadDefaultView(db, drawer) {
+  const rootTx = db.transaction(['root'], 'readwrite')
+  const rootObjectStore = rootTx.objectStore('root')
+  const dbName = firebase.auth().currentUser.uid
+  rootObjectStore.get(dbName).onsuccess = function (event) {
+    const record = event.target.result
+    record.view = 'main'
+    rootObjectStore.put(record)
+    rootTx.oncomplete = function () {
+      listView()
+      conversation(record.id)
+      drawer.open = false
+    }
+  }
+}
 
 function removeDom(selector) {
   const target = document.getElementById(selector)
   target.innerHTML = ''
-  // while (target.lastChild) {
-  //   target.removeChild(target.lastChild)
-  // }
+
 }

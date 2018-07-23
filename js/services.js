@@ -172,7 +172,9 @@ function onSuccessMessage(response) {
           mapView(response.data.dbName)
           handleTimeout()
           break
-          
+         case 'profile':
+         profileView()
+         handleTimeout() 
         case 'calendar':
           calendarView(response.data.dbName)
           handleTimeout()
