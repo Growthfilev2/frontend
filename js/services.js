@@ -29,11 +29,7 @@ function inputSelectMap (objectStore, selector, inputFields, activityRecord) {
 
   document.getElementById(inputFields.location).addEventListener('input', function () {
     const dbName = firebase.auth().currentUser.uid
-    const req = window.indexedDB.open(dbName);
-    // document.getElementById(selector).style.display = 'none';
-    [...document.getElementById(selector).children].forEach(function (list) {
-      list.style.display = 'none'
-    })
+    const req = window.indexedDB.open(dbName)
 
     req.onsuccess = function () {
       const db = req.result
@@ -41,48 +37,36 @@ function inputSelectMap (objectStore, selector, inputFields, activityRecord) {
       const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
       const boundKeyRange = IDBKeyRange
         .bound(
-          getInputText(inputFields.location).value,
-          `${getInputText(inputFields.location).value}\uffff`
+          getInputText(inputFields.location).value.toLowerCase(),
+          `${getInputText(inputFields.location).value.toLowerCase()}\uffff`
         )
+      document.getElementById(selector).innerHTML = ''
 
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) {
-          const link = document.createElement('a')
-          link.textContent = 'google maps'
-          link.href = '#'
-
-          document.getElementById(selector).appendChild(link)
-          return
-        }
-
-        if (dataElement(cursor.value.location)) {
-          console.log(dataElement(cursor.value.location))
-
-          dataElement(cursor.value.location).style.display = 'block'
-        }
-        cursor.continue()
+        fetchRecordsForBothIndexs(event, selector, inputFields)
       }
       indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) {
-          const link = document.createElement('a')
-          link.textContent = 'google maps'
-          link.href = '#'
-
-          document.getElementById(selector).appendChild(link)
-          return
-        }
-
-        if (dataElement(cursor.value.location)) {
-          console.log(dataElement(cursor.value.location))
-
-          dataElement(cursor.value.location).style.display = 'block'
-        }
-        cursor.continue()
+        fetchRecordsForBothIndexs(event, selector, inputFields)
       }
     }
   })
+}
+
+function fetchRecordsForBothIndexs (event, selector, inputFields) {
+  const cursor = event.target.result
+  if (!cursor) {
+    const link = document.createElement('a')
+    link.textContent = 'google maps'
+    link.href = '#'
+    link.id = 'find-new-location'
+    if (!document.getElementById('find-new-location')) {
+      document.getElementById(selector).appendChild(link)
+    }
+    return
+  }
+
+  locationUI(cursor, selector, inputFields)
+  cursor.continue()
 }
 
 // function inputSelect (objectStore, selector, inputField, activityRecord) {

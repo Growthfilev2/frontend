@@ -748,7 +748,7 @@ function locationUI (userRecord, target, inputFields) {
 
   Li.appendChild(locationListText)
   div.appendChild(Li)
-  document.getElementById(target).appendChild(div)
+  document.getElementById(target).innerHTML += div.outerHTML
 
   document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function () {
     getInputText(inputFields.location).value = this.dataset.location
@@ -758,8 +758,6 @@ function locationUI (userRecord, target, inputFields) {
     this.parentNode.previousSibling.dataset.inputlat = this.dataset.lat
     this.parentNode.previousSibling.dataset.inputlon = this.dataset.lon
     this.parentNode.previousSibling.dataset.descrip = this.dataset.desc
-
-    document.getElementById('location--search').style.display = 'none'
   })
 }
 function renderRemoveIcons (record, mobileNumber) {

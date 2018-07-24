@@ -323,9 +323,9 @@ function updateMap (db, activity) {
     activity.venue.forEach(function (newVenue) {
       mapObjectStore.add({
 
-        location: newVenue.location,
+        location: newVenue.location.toLowerCase(),
         geopoint: newVenue.geopoint,
-        address: newVenue.address,
+        address: newVenue.address.toLowerCase(),
         activityId: activity.activityId,
         venueDescriptor: newVenue.venueDescriptor,
         office: activity.office,
