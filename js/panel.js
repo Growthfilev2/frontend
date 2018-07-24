@@ -40,6 +40,7 @@ function fetchDataForActivityList (db) {
       span.textContent = 'add'
       fab.appendChild(span)
       document.getElementById('activity--list').appendChild(fab)
+      document.querySelector('.create-activity').addEventListener('click',createActivity)
       return
     }
     activityCount++

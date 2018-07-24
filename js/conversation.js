@@ -209,10 +209,8 @@ function fillActivityDetailPage (id) {
           document.getElementById('back-detail').addEventListener('click', function () {
             conversation(id)
           })
-          createActivityPanel(db, id, record)
 
-          getInputText('activity--title-input').value = record.title
-          getInputText('activity--desc-input').value = record.description
+          updateActivityPanel(db, id, record)
           fetchAssigneeData(db, record, 'assignee--list')
         }
       }
@@ -261,10 +259,10 @@ function createActivityDetailHeader (record) {
   header(leftDiv.outerHTML, rigthDiv.outerHTML)
 }
 
-function createActivityPanel (db, id, record) {
+function updateActivityPanel (db, id, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
-  detail.innerHTML = activityTitle(record.title) + activityDesc(record.description) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record)  + renderAssigneeList(db, record, 'assignee--list') 
+  detail.innerHTML = activityTitle(record.title,true) + activityDesc(record.description,true) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record)  + renderAssigneeList(db, record, 'assignee--list') 
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
 
@@ -293,7 +291,7 @@ function createActivityPanel (db, id, record) {
   })
 }
 
-function activityTitle () {
+function activityTitle (title,value) {
   const container = document.createElement('div')
   container.className = 'activity--title-container'
   const span = document.createElement('span')
@@ -305,9 +303,14 @@ function activityTitle () {
   textField.id = 'activity--title-input'
 
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input border-bottom--none'
-  input.disabled = true
+  input.className = 'mdc-text-field__input'
+  if(value){
+    input.classList.add ='border-bottom--none'
+  }
+
+  input.disabled = value
   input.type = 'text'
+  input.setAttribute('value',title)
 
   textField.appendChild(input)
   container.appendChild(span)
@@ -315,7 +318,7 @@ function activityTitle () {
   return container.outerHTML
 }
 
-function activityDesc () {
+function activityDesc (desc) {
   const container = document.createElement('div')
   container.className = 'activity--desc-container'
   const span = document.createElement('span')
@@ -330,7 +333,7 @@ function activityDesc () {
   input.className = 'mdc-text-field__input border-bottom--none'
   input.disabled = true
   input.type = 'text'
-
+  input.setAttribute('value',desc)
   container.appendChild(span)
   textField.appendChild(input)
   container.appendChild(textField)
@@ -553,60 +556,63 @@ function showSchedule (schedules) {
   let count = 0
   schedules.forEach((schedule) => {
     count++
-    const scheduleLi = document.createElement('li')
-    scheduleLi.classList.add('mdc-list-item', 'schedule--list')
-
-    const scheduleName = document.createElement('span')
-    scheduleName.classList.add('schedule-name--list')
-    scheduleName.dataset.value = schedule.name
-    scheduleName.innerHTML = schedule.name
-
-    const scheduleStartTime = document.createElement('div')
-    scheduleStartTime.classList.add('mdc-text-field', 'startTimeInputs')
-    scheduleStartTime.id = `schedule-start--list${count}`
-
-    const scheduleStartTimeInput = document.createElement('input')
-    scheduleStartTimeInput.type = 'date'
-    scheduleStartTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-    scheduleStartTimeInput.disabled = true
-    console.log(schedule)
-    scheduleStartTimeInput.setAttribute('value', moment(schedule.startTime).format('YYYY-MM-DD'))
-
-    scheduleStartTime.appendChild(scheduleStartTimeInput)
-
-    const scheduleEndTime = document.createElement('div')
-    scheduleEndTime.classList.add('mdc-text-field', 'endTimeInputs')
-    scheduleEndTime.id = `schedule-end--list${count}`
-
-    const scheduleEndTimeInput = document.createElement('input')
-    scheduleEndTimeInput.type = 'date'
-    scheduleEndTimeInput.disabled = true
-    scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-
-    scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DD'))
-
-    scheduleEndTime.appendChild(scheduleEndTimeInput)
-
-    const scheduleEditIconSpan = document.createElement('span')
-    scheduleEditIconSpan.id = `schedule-edit--icon$`
-    scheduleEditIconSpan.classList.add('activity--edit-icon')
-
-    scheduleLi.appendChild(scheduleName)
-    scheduleLi.appendChild(scheduleStartTime)
-    scheduleLi.appendChild(scheduleEndTime)
-    scheduleLi.appendChild(scheduleEditIconSpan)
-
-    scheduleList.appendChild(scheduleLi)
+    showScheduleUI(scheduleList, count)
   })
   scheduleCont.appendChild(scheduleList)
   return scheduleCont.outerHTML
 }
 
+function showScheduleUI(scheduleList, count){
+  const scheduleLi = document.createElement('li')
+  scheduleLi.classList.add('mdc-list-item', 'schedule--list')
+
+  const scheduleName = document.createElement('span')
+  scheduleName.classList.add('schedule-name--list')
+  scheduleName.dataset.value = schedule.name
+  scheduleName.innerHTML = schedule.name
+
+  const scheduleStartTime = document.createElement('div')
+  scheduleStartTime.classList.add('mdc-text-field', 'startTimeInputs')
+  scheduleStartTime.id = `schedule-start--list${count}`
+
+  const scheduleStartTimeInput = document.createElement('input')
+  scheduleStartTimeInput.type = 'date'
+  scheduleStartTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
+  scheduleStartTimeInput.disabled = true
+  console.log(schedule)
+  scheduleStartTimeInput.setAttribute('value', moment(schedule.startTime).format('YYYY-MM-DD'))
+
+  scheduleStartTime.appendChild(scheduleStartTimeInput)
+
+  const scheduleEndTime = document.createElement('div')
+  scheduleEndTime.classList.add('mdc-text-field', 'endTimeInputs')
+  scheduleEndTime.id = `schedule-end--list${count}`
+
+  const scheduleEndTimeInput = document.createElement('input')
+  scheduleEndTimeInput.type = 'date'
+  scheduleEndTimeInput.disabled = true
+  scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
+
+  scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DD'))
+
+  scheduleEndTime.appendChild(scheduleEndTimeInput)
+
+  const scheduleEditIconSpan = document.createElement('span')
+  scheduleEditIconSpan.id = `schedule-edit--icon$`
+  scheduleEditIconSpan.classList.add('activity--edit-icon')
+
+  scheduleLi.appendChild(scheduleName)
+  scheduleLi.appendChild(scheduleStartTime)
+  scheduleLi.appendChild(scheduleEndTime)
+  scheduleLi.appendChild(scheduleEditIconSpan)
+
+  scheduleList.appendChild(scheduleLi)
+ 
+}
+
 function showVenue (venues, canEdit) {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
-
-  const div = document.createElement('div')
 
   const span = document.createElement('span')
   span.className = 'detail--static-text'
@@ -621,47 +627,7 @@ function showVenue (venues, canEdit) {
     if (venue.geopoint) {
       count++
 
-      const venueLi = document.createElement('li')
-
-      venueLi.className = 'mdc-list-item map-select'
-      venueLi.dataset.location = venue.location
-      venueLi.dataset.address = venue.address
-      venueLi.dataset.inputlat = venue.geopoint['_latitude']
-      venueLi.dataset.inputlon = venue.geopoint['_longitude']
-      venueLi.dataset.descrip = venue.venueDescriptor
-
-      const venueDesc = document.createElement('div')
-
-      venueDesc.id = `venue-desc${count}`
-      venueDesc.dataset.descriptor = venue.venueDescriptor
-      venueDesc.textContent = venue.venueDescriptor
-
-      const venueLocation = document.createElement('div')
-      venueLocation.classList.add('mdc-text-field', 'venue-location--name')
-      venueLocation.id = `venue-location${count}`
-      const venueLocationInput = document.createElement('input')
-      venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none', 'venue-location--input')
-      venueLocationInput.setAttribute('value', venue.location)
-
-      venueLocationInput.disabled = true
-      venueLocation.appendChild(venueLocationInput)
-
-      const venueAddress = document.createElement('div')
-      venueAddress.classList.add('mdc-text-field', 'venue-address--name')
-      venueAddress.id = 'venue-address' + count
-      const venueAddressInput = document.createElement('input')
-      venueAddressInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-      venueAddressInput.setAttribute('value', venue.address)
-      venueAddressInput.disabled = true
-
-      venueAddress.appendChild(venueAddressInput)
-
-      venueLi.appendChild(venueLocation)
-      venueLi.appendChild(venueAddress)
-      venueLi.appendChild(venueDesc)
-
-      div.appendChild(venueLi)
-      venueList.appendChild(div)
+      showVenueUI(venueList,count)
     }
   })
 
@@ -669,6 +635,49 @@ function showVenue (venues, canEdit) {
   return venueCont.outerHTML
 }
 
+function showVenueUI(venueList,count){
+  const venueLi = document.createElement('li')
+
+  venueLi.className = 'mdc-list-item map-select'
+  venueLi.dataset.location = venue.location
+  venueLi.dataset.address = venue.address
+  venueLi.dataset.inputlat = venue.geopoint['_latitude']
+  venueLi.dataset.inputlon = venue.geopoint['_longitude']
+  venueLi.dataset.descrip = venue.venueDescriptor
+
+  const venueDesc = document.createElement('div')
+
+  venueDesc.id = `venue-desc${count}`
+  venueDesc.dataset.descriptor = venue.venueDescriptor
+  venueDesc.textContent = venue.venueDescriptor
+
+  const venueLocation = document.createElement('div')
+  venueLocation.classList.add('mdc-text-field', 'venue-location--name')
+  venueLocation.id = `venue-location${count}`
+  const venueLocationInput = document.createElement('input')
+  venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none', 'venue-location--input')
+  venueLocationInput.setAttribute('value', venue.location)
+
+  venueLocationInput.disabled = true
+  venueLocation.appendChild(venueLocationInput)
+
+  const venueAddress = document.createElement('div')
+  venueAddress.classList.add('mdc-text-field', 'venue-address--name')
+  venueAddress.id = 'venue-address' + count
+  const venueAddressInput = document.createElement('input')
+  venueAddressInput.classList.add('mdc-text-field__input', 'border-bottom--none')
+  venueAddressInput.setAttribute('value', venue.address)
+  venueAddressInput.disabled = true
+
+  venueAddress.appendChild(venueAddressInput)
+
+  venueLi.appendChild(venueLocation)
+  venueLi.appendChild(venueAddress)
+  venueLi.appendChild(venueDesc)
+
+  div.appendChild(venueLi)
+  venueList.appendChild(div)
+}
 function renderAssigneeList () {
   const shareCont = document.createElement('div')
   shareCont.className = 'activity--share-container'
@@ -708,11 +717,12 @@ function fetchAssigneeData (db, record, target) {
 
 function assigneeListUI (userRecord, target) {
   const div = document.createElement('div')
-  console.log(userRecord)
   div.style.position = 'relative'
   if (target === 'assignee--list') {
     div.dataset.user = userRecord.primaryKey
-  } else {
+  } 
+
+  else {
     div.dataset.contact = userRecord.primaryKey
   }
 
@@ -1005,3 +1015,116 @@ function addContact (data) {
 function dataElement (target, key) {
   return document.querySelector(`[data-${target}="${key}"]`)
 }
+
+
+function createActivity(){
+  const detail = document.createElement('div')
+  detail.className = 'mdc-top-app-bar--fixed-adjust'
+  detail.id = 'create-activity--container'
+
+  detail.innerHTML = officeTemplate() + office('') + template('')+
+    activityTitle('',false) + activityDesc('',false) + createScheduleContainer() +
+    createVenueContainer()  
+  document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+  inputSelect({name:'subscriptions',indexone:'office',indextwo:'template'},'officeTemplate--container',{main:'officeTemplate--text-field'})
+
+}
+
+function officeTemplate (){
+
+  const cont = document.createElement('div')
+  cont.id = 'select-officeTemplate--container'
+
+  const mainTextField = document.createElement('div')
+  mainTextField.className ='mdc-text-field mdc-text-field--box mdc-text-field--dense'
+  mainTextField.id = 'officeTemplate--text-field'
+
+  const mainInput = document.createElement('input')
+  mainInput.className = 'mdc-text-field__input'
+  mainInput.type = 'text'
+
+  mainTextField.appendChild(mainInput)
+
+  const combination = document.createElement('div')
+  combination.id ='combination-selector'
+
+  const ul = document.createElement('ul')
+  ul.className = 'mdc-list'
+  ul.id ='officeTemplate--container'
+
+  combination.appendChild(ul)
+
+  cont.appendChild(mainTextField)
+  cont.appendChild(combination)
+  return cont.outerHTML
+
+}
+
+function officeTemplateCombo(cursor,target){
+  
+  const li = document.createElement('li')
+  li.dataset.office = cursor.value.office
+  li.dataset.template = cursor.value.template
+
+  li.classList.add('mdc-list-item', 'combo-li')
+
+  const liText = document.createElement('span')
+  liText.classList.add('mdc-list-item__text')
+  liText.textContent = cursor.value.office
+  
+  const liTextSecondary = document.createElement('span')
+  liTextSecondary.classList.add('mdc-list-item__secondary-text')
+  liTextSecondary.textContent = cursor.value.template
+
+  liText.appendChild(liTextSecondary)
+
+  li.appendChild(liText)
+  document.getElementById(target).appendChild(li)
+
+}
+
+function createVenueContainer(){
+  const venueCont = document.createElement('div')
+  venueCont.className = 'activity--venue-container'
+
+  const span = document.createElement('span')
+  span.className = 'detail--static-text'
+  span.textContent = 'Venue'
+  const venueList = document.createElement('ul')
+  venueList.className = 'mdc-list'
+  venueList.id = 'venue--list'
+
+  venueCont.appendChild(span)
+  return venueCont.outerHTML
+}
+
+function createScheduleContainer(){
+  const scheduleCont = document.createElement('div')
+  scheduleCont.className = 'activity--schedule-container'
+  const spanDiv = document.createElement('div')
+  spanDiv.className = 'schedule--text'
+
+  const spanCont = document.createElement('span')
+  spanCont.className = 'detail--static-text detail--static-text-schedule'
+  spanCont.textContent = 'Schedule'
+
+  const startTimeSpan = document.createElement('span')
+  startTimeSpan.className = 'detail--static-text-startTime'
+  startTimeSpan.textContent = 'from'
+
+  const endTimeSpan = document.createElement('span')
+  endTimeSpan.className = 'detail--static-text-endTime'
+  endTimeSpan.textContent = 'to'
+
+  const scheduleList = document.createElement('ul')
+  scheduleList.className = 'mdc-list'
+  scheduleList.id = 'schedule--list'
+
+  spanDiv.appendChild(spanCont)
+  spanDiv.appendChild(endTimeSpan)
+  spanDiv.appendChild(startTimeSpan)
+
+  scheduleCont.appendChild(spanDiv)
+  return scheduleCont.outerHTML
+}
+

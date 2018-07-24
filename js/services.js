@@ -1,26 +1,29 @@
-function iconEditable() {
-
-}
-
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
+
 
 function inputSelect(objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
-
+  let primaryObjectStore = ''
   req.onsuccess = function () {
     const db = req.result
-    const primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
+
+    if (objectStore.name === 'subscriptions') {
+      primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
+
+    } else {
+      primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
+    }
 
     primaryObjectStore.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
 
         if (objectStore.name === 'map') return
-        if (objectStore.name === 'subscription') return
+        if (objectStore.name === 'subscriptions') return
 
         activityRecord.assignees.forEach(function (people) {
           document.querySelector(`[data-contact="${people}"]`).remove()
@@ -54,11 +57,19 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
           dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
             getInputText(inputFields.main).value = this.dataset.contact
           })
-
           break
+        case 'subscriptions':
+          officeTemplateCombo(cursor, selector)
+          console.log(  dataElement('office', cursor.value.office))
+          dataElement('office', cursor.value.office).addEventListener('click', function () {
+           document.querySelector('.activity--office').textContent = this.dataset.office
+           document.querySelector('.activity--template').textContent = this.dataset.template
+           document.getElementById('combination-selector').innerHTML =''
+            
+          })
+          break
+
       }
-
-
       cursor.continue()
     }
   }
@@ -68,7 +79,14 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
     const req = window.indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result
-      const indexMain = db.transaction(objectStore.name).objectStore(objectStore.name)
+      let indexMain
+      if (objectStore.name === 'subscriptions') {
+        indexMain = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexone)
+
+      } else {
+
+        indexMain = db.transaction(objectStore.name).objectStore(objectStore.name)
+      }
       const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
 
       const boundKeyRange = IDBKeyRange
@@ -79,12 +97,9 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
       document.getElementById(selector).innerHTML = ''
 
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        console.log(event)
         fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
       indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
-        console.log(event)
-
         fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
     }
@@ -97,7 +112,7 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
   if (!cursor) {
 
     if (objectStore.name === 'users') return
-    if (objectStore.name === 'subscription') return
+    if (objectStore.name === 'subscriptions') return
 
     const link = document.createElement('a')
     link.textContent = 'google maps'
@@ -120,125 +135,16 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
         getInputText(inputFields.main).value = this.dataset.contact
       })
       break
+    case 'subscriptions':
+      console.log(cursor.value)
+      officeTemplateCombo(cursor, selector)
+      break
+
   }
 
   cursor.continue()
 
 }
-
-// function inputSelect (objectStore, selector, inputField, activityRecord) {
-//   getInputText(inputField).value = ''
-
-//   const objectStoreName = objectStore
-
-//   const updateSelector = document.createElement('button')
-//   updateSelector.classList.add('mdc-button')
-//   updateSelector.dataset.id = activityRecord.activityId
-//   updateSelector.textContent = 'Add'
-
-//   const dbName = firebase.auth().currentUser.uid
-//   const req = window.indexedDB.open(dbName)
-
-//   req.onsuccess = function () {
-//     const db = req.result
-//     const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName)
-
-//     objectStore.openCursor(null, 'prev').onsuccess = function (event) {
-//       const cursor = event.target.result
-//       if (!cursor) {
-//         activityRecord.venue.forEach(function (venue) {
-//           document.querySelector(`[data-location="${venue.location}"]`).remove()
-//         })
-//         return
-//       }
-//       switch (objectStoreName) {
-//         case 'users':
-
-//           assigneeListUI(cursor, `${selector}--container`)
-
-//           dataElement(cursor.primaryKey).addEventListener('click', function () {
-//             getInputText(inputField).value = this.dataset.contact
-//           })
-
-//           if (document.querySelector('[data-type="users"]')) return
-
-//           updateSelector.dataset.type = 'users'
-
-//           document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
-//           document.querySelector(`[data-type="users"]`)
-//             .addEventListener('click', function () {
-//               updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
-//             })
-
-
-//           break
-
-//         case 'map':
-
-//           updateSelector.dataset.type = 'map'
-//           locationUI(cursor, selector)
-//           console.log(cursor)
-//           dataElement(cursor.value.location).addEventListener('click', function () {
-//             getInputText(inputField).value = this.dataset.location
-//             getInputText(document.getElementById(inputField).nextSibling.id).value = this.dataset.address
-//             getInputText(inputField)['input_'].dataset.location = this.dataset.location
-//             getInputText(inputField)['input_'].dataset.inputAddress = this.dataset.address
-//             getInputText(inputField)['input_'].dataset.inputlat = this.dataset.lat
-//             getInputText(inputField)['input_'].dataset.inputlon = this.dataset.lon
-//             getInputText(inputField)['input_'].dataset.inputDescrip = this.dataset.desc
-
-//             document.getElementById('location--search').style.display = 'none'
-//           })
-
-//           // document.querySelector(`[data-location="${updateSelector.dataset.type}"]`)
-//           //   .addEventListener('click', function () {
-//           //     updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
-//           //   })
-
-//           break
-//         case 'subscription':
-//           updateSelector.dataset.type = 'update'
-//           document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
-//             .addEventListener('click', function () {
-//               updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
-//             })
-//           break
-//       }
-
-//       cursor.continue()
-//     }
-//   }
-
-//   document.getElementById(inputField).addEventListener('input', function () {
-//     const dbName = firebase.auth().currentUser.uid
-//     const req = window.indexedDB.open(dbName)
-//     document.getElementById('location--search').style.display = 'block'
-
-//     document.querySelectorAll('[data-location]').forEach(function (list) {
-//       list.style.display = 'none'
-//     })
-
-//     req.onsuccess = function () {
-//       const db = req.result
-//       const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName).index('location')
-
-//       const boundKeyRange = IDBKeyRange
-//         .bound(
-//           getInputText(inputField).value,
-//           `${getInputText(inputField).value}\uffff`
-//         )
-//       objectStore.openCursor(boundKeyRange).onsuccess = function (event) {
-//         const cursor = event.target.result
-//         console.log(cursor)
-//         if (!cursor) return
-//         if (dataElement(cursor.value.location)) {
-//           dataElement(cursor.value.location).style.display = 'block'
-//         }
-//         cursor.continue()
-//       }
-//     }
-//   })
-// }
 
 function fetchCurrentTime() {
   return Date.now()
