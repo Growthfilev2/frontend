@@ -363,3 +363,15 @@ margin-left:0;
     padding-bottom: 20px;
     
 }
+.create-activity {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+  }
+  
+  @media(min-width: 1024px) {
+     .create-activity {
+      bottom: 1.5rem;
+      right: 1.5rem;
+    }
+  }

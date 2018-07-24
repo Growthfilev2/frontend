@@ -27,16 +27,19 @@ function fetchDataForActivityList (db) {
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
   let activityCount = 0
-  // removeDom('activity--list')
-  // document.getElementById('activity--list').style.display ='none'
+
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
 
     if (!cursor) {
-      // document.getElementById('activity--list').style.display ='block'
-
-      console.log('all enteries displayed')
-
+      const fab = document.createElement('button')
+      fab.className = 'mdc-fab create-activity'
+      fab.setAttribute('aria-label', 'Add')
+      const span = document.createElement('span')
+      span.className = 'mdc-fab_icon material-icons'
+      span.textContent = 'add'
+      fab.appendChild(span)
+      document.getElementById('activity--list').appendChild(fab)
       return
     }
     activityCount++
