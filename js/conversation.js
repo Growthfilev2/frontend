@@ -537,11 +537,6 @@ function showSchedule (schedules) {
 
   scheduleCont.appendChild(spanDiv)
 
-  function getMonthDate (dateString) {
-    const split = dateString.split('T')[0].split('-').slice(1, 3)
-    const dateArr = [split[1], split[0]]
-    return dateArr.join('/')
-  }
   let count = 0
   schedules.forEach((schedule) => {
     count++
@@ -561,8 +556,9 @@ function showSchedule (schedules) {
     scheduleStartTimeInput.type = 'date'
     scheduleStartTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
     scheduleStartTimeInput.disabled = true
-    scheduleStartTimeInput.setAttribute('value', getMonthDate(schedule.startTime))
-    // scheduleStartTimeInput.value = getMonthDate(schedule.startTime)
+    console.log(schedule)
+    scheduleStartTimeInput.setAttribute('value', moment(schedule.startTime).format('YYYY-MM-DD'))
+
     scheduleStartTime.appendChild(scheduleStartTimeInput)
 
     const scheduleEndTime = document.createElement('div')
@@ -573,7 +569,9 @@ function showSchedule (schedules) {
     scheduleEndTimeInput.type = 'date'
     scheduleEndTimeInput.disabled = true
     scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-    scheduleEndTimeInput.setAttribute('value', getMonthDate(schedule.endTime))
+
+    scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DD'))
+
     scheduleEndTime.appendChild(scheduleEndTimeInput)
 
     const scheduleEditIconSpan = document.createElement('span')
