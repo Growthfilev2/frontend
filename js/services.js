@@ -60,7 +60,7 @@ function fetchRecordsForBothIndexs (event, selector, inputFields) {
     link.href = '#'
     link.id = 'find-new-location'
     if (!document.getElementById('find-new-location')) {
-      document.getElementById(selector).appendChild(link)
+      // document.getElementById(selector).appendChild(link)
     }
     return
   }

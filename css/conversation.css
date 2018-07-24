@@ -150,22 +150,16 @@ color:#737780;
     font-size: 18px;
     cursor: pointer;
 }
-.activity--status-container , .activity--title-container , .activity--desc-container, .activity--office-container , .activity--template-container {
-    padding: 0 0 30px 0;
 
-}
 .detail--static-text {
     color: #598aeb;
     font-size:14px;
 }
-.activity--title-input , .activity--desc-input {
-        width: 100%;
+#activity--title-input , #activity--desc-input {
+        width: 100% !important;
         margin-top: 0 !important;
 }
-.activity--office-container p , .activity--template-container p {
-    padding: 10px 0 0 0;
-    margin-bottom: 0;
-}
+
 
 
 .PENDING  , .status-pending{
@@ -204,17 +198,14 @@ color:#737780;
 }
 
 
-#schedule--list li .mdc-text-field:nth-child(2) , #schedule--list li .mdc-text-field:nth-child(3), .detail--static-text-startTime , .detail--static-text-endTime  {
-    width:15%;
-    font-size: 14px;
-}
 .detail--static-text-startTime , .detail--static-text-endTime {
-    margin-right: 27px;
-    margin-left: -16px;
+ width:30%;
+ float: right;
 }
-#schedule--list li .mdc-text-field:nth-child(2) , #schedule--list li .mdc-text-field:nth-child(3) {
-    margin-right:20px;
 
+
+#schedule--list li .mdc-text-field:nth-child(2) , #schedule--list li .mdc-text-field:nth-child(3) {
+width: 30%
 }
 #schedule--list li {
     padding: 0;

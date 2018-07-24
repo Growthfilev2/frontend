@@ -267,6 +267,23 @@ function createActivityPanel (db, id, record) {
   detail.innerHTML = activityTitle(record.title) + activityDesc(record.description) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderAssigneeList(db, record, 'assignee--list') + renderShareIcon(record)
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+
+  if (document.getElementById('select-pending')) {
+    document.getElementById('select-pending').addEventListener('click', function () {
+      updateStatus('PENDING', record.activityId)
+    })
+  }
+  if (document.getElementById('select-confirmed')) {
+    document.getElementById('select-confirmed').addEventListener('click', function () {
+      updateStatus('CONFIRMED', record.activityId)
+    })
+  }
+  if (document.getElementById('select-cancelled')) {
+    document.getElementById('select-cancelled').addEventListener('click', function () {
+      updateStatus('CANCELLED', record.activityId)
+    })
+  }
+
   if (!record.canEdit) return
   document.getElementById('edit-activity').addEventListener('click', function () {
     makeFieldsEditable(record)
@@ -311,18 +328,19 @@ function activityDesc () {
   input.disabled = true
   input.type = 'text'
 
+  container.appendChild(span)
   textField.appendChild(input)
   container.appendChild(textField)
-  container.appendChild(span)
 
   return container.outerHTML
 }
+
 function office (office) {
   const officeCont = document.createElement('div')
   officeCont.className = 'activity--office-container'
   const span = document.createElement('span')
   span.textContent = 'Office'
-
+  span.className = 'detail--static-text'
   const p = document.createElement('p')
   p.className = 'activity--office'
   p.textContent = office
@@ -336,6 +354,7 @@ function template (template) {
   templateCont.className = 'activity--template-container'
   const span = document.createElement('span')
   span.textContent = 'Template'
+  span.className = 'detail--static-text'
 
   const p = document.createElement('p')
   p.className = 'activity--template'
@@ -387,14 +406,26 @@ function makeFieldsEditable (record) {
   [...venueLocations].forEach(function (input) {
     input.disabled = false
   });
+
   [...venueFields].forEach(function (field) {
     const locationsearch = document.createElement('ul')
     locationsearch.id = 'location--search'
     locationsearch.className = 'mdc-list'
 
     document.querySelector('#venue--list').children[0].appendChild(locationsearch)
+
     field.children[0].addEventListener('click', function () {
-      inputSelectMap({name: 'map', indexone: 'location', indextwo: 'address'}, 'location--search', {location: this.id, address: field.children[1].id}, record)
+      if (this.dataset.active) return
+
+      this.dataset.active = true
+      inputSelectMap({
+        name: 'map',
+        indexone: 'location',
+        indextwo: 'address'
+      }, 'location--search', {
+        location: this.id,
+        address: field.children[1].id
+      }, record)
     })
   })
 
@@ -407,9 +438,6 @@ function makeFieldsEditable (record) {
 
 function cancelUpdate (id) {
   fillActivityDetailPage(id)
-  // document.getElementById('activity--status-container').style.display = 'block'
-  // document.querySelector('.activity--share-container').style.display = 'block'
-  // document.querySelector('.add--assignee-icon').style.dispaly = 'block'
 }
 
 function availableStatus (record, id) {
@@ -432,35 +460,16 @@ function availableStatus (record, id) {
   pendingIcon.appendChild(document.createTextNode('undo'))
   pendingIcon.id = 'select-pending'
 
-  pendingIcon.onclick = function () {
-    updateStatus(
-      'PENDING',
-      id
-    )
-  }
-
   const cancelIcon = document.createElement('i')
   cancelIcon.classList.add('status-cancel', 'material-icons')
   cancelIcon.appendChild(document.createTextNode('clear'))
   cancelIcon.id = 'select-cancel'
-  cancelIcon.onclick = function () {
-    updateStatus(
-      'CANCELLED',
-      id
-    )
-  }
 
   const confirmedIcon = document.createElement('i')
   confirmedIcon.classList.add('status-confirmed', 'material-icons')
   confirmedIcon.appendChild(document.createTextNode('check'))
 
   confirmedIcon.id = 'select-confirmed'
-  confirmedIcon.onclick = function () {
-    updateStatus(
-      'CONFIRMED',
-      id
-    )
-  }
 
   if (record.status === 'PENDING') {
     avalStatus.appendChild(
@@ -503,6 +512,9 @@ function updateStatus (status, id) {
 function showSchedule (schedules) {
   const scheduleCont = document.createElement('div')
   scheduleCont.className = 'activity--schedule-container'
+  const spanDiv = document.createElement('div')
+  spanDiv.className = 'schedule--text'
+
   const spanCont = document.createElement('span')
   spanCont.className = 'detail--static-text detail--static-text-schedule'
   spanCont.textContent = 'Schedule'
@@ -519,9 +531,11 @@ function showSchedule (schedules) {
   scheduleList.className = 'mdc-list'
   scheduleList.id = 'schedule--list'
 
-  scheduleCont.appendChild(spanCont)
-  scheduleCont.appendChild(startTimeSpan)
-  scheduleCont.appendChild(endTimeSpan)
+  spanDiv.appendChild(spanCont)
+  spanDiv.appendChild(endTimeSpan)
+  spanDiv.appendChild(startTimeSpan)
+
+  scheduleCont.appendChild(spanDiv)
 
   function getMonthDate (dateString) {
     const split = dateString.split('T')[0].split('-').slice(1, 3)
@@ -760,6 +774,7 @@ function locationUI (userRecord, target, inputFields) {
     this.parentNode.previousSibling.dataset.descrip = this.dataset.desc
   })
 }
+
 function renderRemoveIcons (record, mobileNumber) {
   console.log('run')
   const removeIcon = document.createElement('span')
@@ -835,7 +850,7 @@ function fetchUsersData (record) {
       .transaction('users')
       .objectStore('users').index('count')
 
-    // inputSelect(userCountIndex, 'contacts', 'contact--text-field', record)
+      // inputSelect(userCountIndex, 'contacts', 'contact--text-field', record)
   }
 }
 
@@ -898,14 +913,20 @@ function updateSelectorObjectStore (dataset, input, objectStoreName) {
       objectStore.get(inputValue).onsuccess = function (event) {
         const record = event.target.result
         if (!record) {
-          resolve({value: inputValue, activityId: dataset.id})
+          resolve({
+            value: inputValue,
+            activityId: dataset.id
+          })
           return
         }
         record.count = record.count + 1
         objectStore.put(record)
       }
       storeTx.oncomplete = function () {
-        resolve({value: inputValue, activityId: dataset.id})
+        resolve({
+          value: inputValue,
+          activityId: dataset.id
+        })
       }
       storeTx.onerror = function (event) {
         reject(event.error)
