@@ -114,6 +114,7 @@ function initializeIDB () {
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
       })
+      users.createIndex('displayName','displayName')
       users.createIndex('isUpdated', 'isUpdated')
       users.createIndex('count', 'count')
 
@@ -442,7 +443,8 @@ function putAssignessInStore (db, assigneeArray) {
       usersObjectStore.add({
         mobile: assignee,
         isUpdated: 0,
-        count: 0
+        count: 0,
+        displayName:''
       })
     }
   })

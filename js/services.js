@@ -1,60 +1,104 @@
-function iconEditable () {
+function iconEditable() {
 
 }
 
-function getInputText (selector) {
+function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelectMap (objectStore, selector, inputFields, activityRecord) {
+function inputSelectMap(objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const db = req.result
-    const primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
+    const primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
 
     primaryObjectStore.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
-        return
+
+        if (objectStore.name === 'map') return
+        if (objectStore.name === 'subscription') return
+
+        activityRecord.assignees.forEach(function (people) {
+          document.querySelector(`[data-contact="${people}"]`).remove()
+        })
+
+        if (document.querySelector('[data-type="users"]')) return
+        const updateSelector = document.createElement('button')
+        updateSelector.classList.add('mdc-button')
+        updateSelector.dataset.id = activityRecord.activityId
+        updateSelector.textContent = 'Add'
+
+
+        updateSelector.dataset.type = 'users'
+        document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
+
+        document.querySelector(`[data-type="users"]`)
+          .addEventListener('click', function () {
+            updateSelectorObjectStore(this.dataset, inputFields.main, objectStore.name).then(addContact).catch(errorUpdatingSelectorObjectStore)
+          })
+
+        return;
+      }
+      switch (objectStore.name) {
+        case 'map':
+          locationUI(cursor, selector, inputFields)
+
+          break
+        case 'users':
+          assigneeListUI(cursor, selector)
+
+          dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
+            getInputText(inputFields.main).value = this.dataset.contact
+          })
+
+          break
       }
 
-      locationUI(cursor, selector, inputFields)
 
       cursor.continue()
     }
   }
 
-  document.getElementById(inputFields.location).addEventListener('input', function () {
+  document.getElementById(inputFields.main).addEventListener('input', function () {
     const dbName = firebase.auth().currentUser.uid
     const req = window.indexedDB.open(dbName)
-
     req.onsuccess = function () {
       const db = req.result
-      const indexMain = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexone)
+      const indexMain = db.transaction(objectStore.name).objectStore(objectStore.name)
       const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
+
       const boundKeyRange = IDBKeyRange
         .bound(
-          getInputText(inputFields.location).value.toLowerCase(),
-          `${getInputText(inputFields.location).value.toLowerCase()}\uffff`
+          getInputText(inputFields.main).value.toLowerCase(),
+          `${getInputText(inputFields.main).value.toLowerCase()}\uffff`
         )
       document.getElementById(selector).innerHTML = ''
 
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(event, selector, inputFields)
+        console.log(event)
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
       indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(event, selector, inputFields)
+        console.log(event)
+
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
     }
   })
 }
 
-function fetchRecordsForBothIndexs (event, selector, inputFields) {
+function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
+
   const cursor = event.target.result
   if (!cursor) {
+
+    if (objectStore.name === 'users') return
+    if (objectStore.name === 'subscription') return
+
     const link = document.createElement('a')
     link.textContent = 'google maps'
     link.href = '#'
@@ -65,8 +109,21 @@ function fetchRecordsForBothIndexs (event, selector, inputFields) {
     return
   }
 
-  locationUI(cursor, selector, inputFields)
+  switch (objectStore.name) {
+    case 'map':
+      locationUI(cursor, selector, inputFields)
+      break
+    case 'users':
+      console.log(cursor)
+      assigneeListUI(cursor, selector)
+      dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
+        getInputText(inputFields.main).value = this.dataset.contact
+      })
+      break
+  }
+
   cursor.continue()
+
 }
 
 // function inputSelect (objectStore, selector, inputField, activityRecord) {
@@ -108,11 +165,11 @@ function fetchRecordsForBothIndexs (event, selector, inputFields) {
 //           updateSelector.dataset.type = 'users'
 
 //           document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
-
 //           document.querySelector(`[data-type="users"]`)
 //             .addEventListener('click', function () {
 //               updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
 //             })
+
 
 //           break
 
@@ -183,11 +240,11 @@ function fetchRecordsForBothIndexs (event, selector, inputFields) {
 //   })
 // }
 
-function fetchCurrentTime () {
+function fetchCurrentTime() {
   return Date.now()
 }
 
-function fetchCurrentLocation () {
+function fetchCurrentLocation() {
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
@@ -198,12 +255,12 @@ function fetchCurrentLocation () {
   })
 }
 
-function inputFile (selector) {
+function inputFile(selector) {
   return document.getElementById(selector)
 }
 let offset
 
-function requestCreator (requestType, requestBody) {
+function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -234,7 +291,7 @@ function requestCreator (requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-function onSuccessMessage (response) {
+function onSuccessMessage(response) {
   if (response.data.type !== 'updateIDB') return
   console.log(response)
 
@@ -294,7 +351,7 @@ function onSuccessMessage (response) {
   }
 }
 
-function onErrorMessage (error) {
+function onErrorMessage(error) {
   console.log(error)
   console.table({
     'line-number': error.lineno,
@@ -303,7 +360,7 @@ function onErrorMessage (error) {
   })
 }
 
-function handleTimeout () {
+function handleTimeout() {
   const TIME_OUT_VALUE = 600000
   clearTimeout(offset)
 
