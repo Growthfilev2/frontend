@@ -6,107 +6,77 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect (objectStore, selector, inputField, activityRecord) {
-  getInputText(inputField).value = ''
-
-  const objectStoreName = objectStore
-
-  const updateSelector = document.createElement('button')
-  updateSelector.classList.add('mdc-button')
-  updateSelector.dataset.id = activityRecord.activityId
-  updateSelector.textContent = 'Add'
-
+function inputSelectMap (objectStore, selector, inputFields, activityRecord) {
+  // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
 
   req.onsuccess = function () {
     const db = req.result
-    const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName)
+    const primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
 
-    objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+    primaryObjectStore.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
-        activityRecord.venue.forEach(function (venue) {
-          document.querySelector(`[data-location="${venue.location}"]`).remove()
-        })
         return
       }
-      switch (objectStoreName) {
-        case 'users':
 
-          assigneeListUI(cursor, `${selector}--container`)
-
-          dataElement(cursor.primaryKey).addEventListener('click', function () {
-            getInputText(inputField).value = this.dataset.contact
-          })
-
-          if (document.querySelector('[data-type="users"]')) return
-
-          updateSelector.dataset.type = 'users'
-
-          document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
-
-          document.querySelector(`[data-type="users"]`)
-            .addEventListener('click', function () {
-              updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
-            })
-
-          break
-
-        case 'map':
-
-          updateSelector.dataset.type = 'map'
-          locationUI(cursor, selector)
-          console.log(cursor)
-          dataElement(cursor.value.location).addEventListener('click', function () {
-            getInputText(inputField).value = this.dataset.location
-            document.getElementById('location--search').style.display = 'none'
-            inputField['input_'].parentNode.nextSibling.dataset.value = this.dataset.address
-            inputField['input_'].parentNode.nextSibling
-          })
-
-          // document.querySelector(`[data-location="${updateSelector.dataset.type}"]`)
-          //   .addEventListener('click', function () {
-          //     updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
-          //   })
-
-          break
-        case 'subscription':
-          updateSelector.dataset.type = 'update'
-          document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
-            .addEventListener('click', function () {
-              updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
-            })
-          break
-      }
+      locationUI(cursor, selector, inputFields)
 
       cursor.continue()
     }
   }
 
-  document.getElementById(inputField).addEventListener('input', function () {
+  document.getElementById(inputFields.location).addEventListener('input', function () {
     const dbName = firebase.auth().currentUser.uid
-    const req = window.indexedDB.open(dbName)
-    document.getElementById('location--search').style.display = 'block'
-
-    document.querySelectorAll('[data-location]').forEach(function (list) {
+    const req = window.indexedDB.open(dbName);
+    // document.getElementById(selector).style.display = 'none';
+    [...document.getElementById(selector).children].forEach(function (list) {
       list.style.display = 'none'
     })
 
     req.onsuccess = function () {
       const db = req.result
-      const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName).index('location')
-
+      const indexMain = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexone)
+      const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
       const boundKeyRange = IDBKeyRange
         .bound(
-          getInputText(inputField).value,
-          `${getInputText(inputField).value}\uffff`
+          getInputText(inputFields.location).value,
+          `${getInputText(inputFields.location).value}\uffff`
         )
-      objectStore.openCursor(boundKeyRange).onsuccess = function (event) {
+
+      indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
         const cursor = event.target.result
-        console.log(cursor)
-        if (!cursor) return
+        if (!cursor) {
+          const link = document.createElement('a')
+          link.textContent = 'google maps'
+          link.href = '#'
+
+          document.getElementById(selector).appendChild(link)
+          return
+        }
+
         if (dataElement(cursor.value.location)) {
+          console.log(dataElement(cursor.value.location))
+
+          dataElement(cursor.value.location).style.display = 'block'
+        }
+        cursor.continue()
+      }
+      indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) {
+          const link = document.createElement('a')
+          link.textContent = 'google maps'
+          link.href = '#'
+
+          document.getElementById(selector).appendChild(link)
+          return
+        }
+
+        if (dataElement(cursor.value.location)) {
+          console.log(dataElement(cursor.value.location))
+
           dataElement(cursor.value.location).style.display = 'block'
         }
         cursor.continue()
@@ -114,6 +84,120 @@ function inputSelect (objectStore, selector, inputField, activityRecord) {
     }
   })
 }
+
+// function inputSelect (objectStore, selector, inputField, activityRecord) {
+//   getInputText(inputField).value = ''
+
+//   const objectStoreName = objectStore
+
+//   const updateSelector = document.createElement('button')
+//   updateSelector.classList.add('mdc-button')
+//   updateSelector.dataset.id = activityRecord.activityId
+//   updateSelector.textContent = 'Add'
+
+//   const dbName = firebase.auth().currentUser.uid
+//   const req = window.indexedDB.open(dbName)
+
+//   req.onsuccess = function () {
+//     const db = req.result
+//     const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName)
+
+//     objectStore.openCursor(null, 'prev').onsuccess = function (event) {
+//       const cursor = event.target.result
+//       if (!cursor) {
+//         activityRecord.venue.forEach(function (venue) {
+//           document.querySelector(`[data-location="${venue.location}"]`).remove()
+//         })
+//         return
+//       }
+//       switch (objectStoreName) {
+//         case 'users':
+
+//           assigneeListUI(cursor, `${selector}--container`)
+
+//           dataElement(cursor.primaryKey).addEventListener('click', function () {
+//             getInputText(inputField).value = this.dataset.contact
+//           })
+
+//           if (document.querySelector('[data-type="users"]')) return
+
+//           updateSelector.dataset.type = 'users'
+
+//           document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
+
+//           document.querySelector(`[data-type="users"]`)
+//             .addEventListener('click', function () {
+//               updateSelectorObjectStore(this.dataset, inputField, objectStoreName).then(addContact).catch(errorUpdatingSelectorObjectStore)
+//             })
+
+//           break
+
+//         case 'map':
+
+//           updateSelector.dataset.type = 'map'
+//           locationUI(cursor, selector)
+//           console.log(cursor)
+//           dataElement(cursor.value.location).addEventListener('click', function () {
+//             getInputText(inputField).value = this.dataset.location
+//             getInputText(document.getElementById(inputField).nextSibling.id).value = this.dataset.address
+//             getInputText(inputField)['input_'].dataset.location = this.dataset.location
+//             getInputText(inputField)['input_'].dataset.inputAddress = this.dataset.address
+//             getInputText(inputField)['input_'].dataset.inputlat = this.dataset.lat
+//             getInputText(inputField)['input_'].dataset.inputlon = this.dataset.lon
+//             getInputText(inputField)['input_'].dataset.inputDescrip = this.dataset.desc
+
+//             document.getElementById('location--search').style.display = 'none'
+//           })
+
+//           // document.querySelector(`[data-location="${updateSelector.dataset.type}"]`)
+//           //   .addEventListener('click', function () {
+//           //     updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
+//           //   })
+
+//           break
+//         case 'subscription':
+//           updateSelector.dataset.type = 'update'
+//           document.querySelector(`[data-type="${updateSelector.dataset.type}"]`)
+//             .addEventListener('click', function () {
+//               updateSelectorObjectStore(this.dataset, inputField, objectStoreName)
+//             })
+//           break
+//       }
+
+//       cursor.continue()
+//     }
+//   }
+
+//   document.getElementById(inputField).addEventListener('input', function () {
+//     const dbName = firebase.auth().currentUser.uid
+//     const req = window.indexedDB.open(dbName)
+//     document.getElementById('location--search').style.display = 'block'
+
+//     document.querySelectorAll('[data-location]').forEach(function (list) {
+//       list.style.display = 'none'
+//     })
+
+//     req.onsuccess = function () {
+//       const db = req.result
+//       const objectStore = db.transaction(objectStoreName).objectStore(objectStoreName).index('location')
+
+//       const boundKeyRange = IDBKeyRange
+//         .bound(
+//           getInputText(inputField).value,
+//           `${getInputText(inputField).value}\uffff`
+//         )
+//       objectStore.openCursor(boundKeyRange).onsuccess = function (event) {
+//         const cursor = event.target.result
+//         console.log(cursor)
+//         if (!cursor) return
+//         if (dataElement(cursor.value.location)) {
+//           dataElement(cursor.value.location).style.display = 'block'
+//         }
+//         cursor.continue()
+//       }
+//     }
+//   })
+// }
 
 function fetchCurrentTime () {
   return Date.now()

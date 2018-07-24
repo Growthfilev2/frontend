@@ -31,6 +31,7 @@ const requestFunctionCaller = {
   removeAssignee: removeAssignee,
   share: share,
   updateUserNumber: updateUserNumber,
+  update: update,
   Null: Null
 }
 
@@ -144,6 +145,7 @@ function initializeIDB () {
       })
       map.createIndex('activityId', 'activityId')
       map.createIndex('location', 'location')
+      map.createIndex('address', 'address')
       map.createIndex('office', 'office')
       map.createIndex('timestamp', 'timestamp')
 
@@ -278,6 +280,25 @@ function Null () {
       return
     }
     resolve(user.uid)
+  })
+}
+
+function update (body) {
+  console.log(body)
+  return new Promise(function (resolve, reject) {
+    http(
+      'PATCH',
+      `${apiUrl}activities/update`,
+      JSON.stringify(body)
+    )
+      .then(function (success) {
+        requestHandlerResponse('notification', 200, 'activity update  successfully', firebase.auth().currentUser.uid)
+
+        resolve(firebase.auth().currentUser.uid)
+      })
+      .catch(function (error) {
+        reject(error)
+      })
   })
 }
 
@@ -527,6 +548,7 @@ function updateSubscription (db, subscription) {
 // with the uptoTime received from response.
 
 function successResponse (read) {
+  console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
 
@@ -543,6 +565,7 @@ function successResponse (read) {
     })
 
     read.activities.forEach(function (activity) {
+      console.log(activity)
       // put activity in activity object store
       activityObjectStore.put(activity)
 

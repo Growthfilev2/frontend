@@ -206,7 +206,7 @@ function fillActivityDetailPage (id) {
           const record = event.target.result
           console.log(record)
           createActivityDetailHeader(record)
-          document.getElementById('back-detail').addEventListener('click',function(){
+          document.getElementById('back-detail').addEventListener('click', function () {
             conversation(id)
           })
           createActivityPanel(db, id, record)
@@ -234,35 +234,31 @@ function createActivityDetailHeader (record) {
   backSpan.appendChild(backIcon)
   leftDiv.appendChild(backSpan)
 
-  if(!record.canEdit) {
-
-  header(leftDiv.outerHTML)
-  return
+  if (!record.canEdit) {
+    header(leftDiv.outerHTML)
+    return
   }
 
   const rigthDiv = document.createElement('div')
 
   const cancel = document.createElement('button')
-  cancel.className   ='mdc-button'
+  cancel.className = 'mdc-button'
   cancel.id = 'cancel-update'
   cancel.dataset.id = record.activityId
-  cancel.textContent ='cancel'
-  cancel.style.color ='white'
-  cancel.style.display ='none'
+  cancel.textContent = 'cancel'
+  cancel.style.color = 'white'
+  cancel.style.display = 'none'
   rigthDiv.appendChild(cancel)
-
 
   const edit = document.createElement('button')
   edit.className = 'mdc-button'
   edit.id = 'edit-activity'
   edit.dataset.id = record.activityId
   edit.textContent = 'edit'
-  edit.style.color ='white'
+  edit.style.color = 'white'
 
   rigthDiv.appendChild(edit)
   header(leftDiv.outerHTML, rigthDiv.outerHTML)
-
-
 }
 
 function createActivityPanel (db, id, record) {
@@ -271,7 +267,7 @@ function createActivityPanel (db, id, record) {
   detail.innerHTML = activityTitle(record.title) + activityDesc(record.description) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderAssigneeList(db, record, 'assignee--list') + renderShareIcon(record)
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
-  if(!record.canEdit) return
+  if (!record.canEdit) return
   document.getElementById('edit-activity').addEventListener('click', function () {
     makeFieldsEditable(record)
   })
@@ -350,25 +346,30 @@ function template (template) {
 }
 
 function makeFieldsEditable (record) {
+  document.getElementById('edit-activity').remove()
+  document.getElementById('cancel-update').style.display = 'block'
 
-document.getElementById('edit-activity').remove()
-document.getElementById('cancel-update').style.display ='block'
+  document.getElementById('activity--status-container').style.display = 'none'
+  document.querySelector('.activity--share-container').style.display = 'none'
+  document.querySelector('.add--assignee-icon').style.dispaly = 'none'
 
-const updatebtn = document.createElement('btn')
-updatebtn.id = 'update-activity'
-updatebtn.className ='mdc-button'
-updatebtn.textContent = 'update'
-updatebtn.dataset.id  = record.activityId
-updatebtn.style.color ='white'
+  const updatebtn = document.createElement('btn')
+  updatebtn.id = 'update-activity'
+  updatebtn.className = 'mdc-button'
+  updatebtn.textContent = 'update'
+  updatebtn.dataset.id = record.activityId
+  updatebtn.style.color = 'white'
 
-document.getElementById('action-data').appendChild(updatebtn)
-
+  document.getElementById('action-data').appendChild(updatebtn)
 
   getInputText('activity--title-input')['input_'].disabled = false
   getInputText('activity--desc-input')['input_'].disabled = false
   const startSchedule = document.querySelectorAll('.startTimeInputs')
-  const endSchedules = document.querySelectorAll('.endTimeInputs');
-  const venueLocations = document.querySelectorAll('.venue-location--input');
+  const endSchedules = document.querySelectorAll('.endTimeInputs')
+  const venueLocations = document.querySelectorAll('.venue-location--input')
+
+  const venueFields = document.querySelectorAll('.map-select');
+
   [...startSchedule].forEach(function (li) {
     console.log(li)
     if (li.classList.contains('mdc-text-field')) {
@@ -383,21 +384,32 @@ document.getElementById('action-data').appendChild(updatebtn)
     }
   });
 
-  [...venueLocations].forEach(function(input){
+  [...venueLocations].forEach(function (input) {
     input.disabled = false
+  });
+  [...venueFields].forEach(function (field) {
+    const locationsearch = document.createElement('ul')
+    locationsearch.id = 'location--search'
+    locationsearch.className = 'mdc-list'
+
+    document.querySelector('#venue--list').children[0].appendChild(locationsearch)
+    field.children[0].addEventListener('click', function () {
+      inputSelectMap({name: 'map', indexone: 'location', indextwo: 'address'}, 'location--search', {location: this.id, address: field.children[1].id}, record)
+    })
   })
 
+  document.getElementById('cancel-update').addEventListener('click', function () {
+    cancelUpdate(record.activityId)
+  })
 
+  document.getElementById('update-activity').addEventListener('click', createUpdateReqBody)
+}
 
-  const locationsearch = document.createElement('ul')
-  locationsearch.id = 'location--search'
-  locationsearch.className = 'mdc-list'
-
-  document.querySelector('.activity--venue-container').appendChild(locationsearch)
-  
-  inputSelect('map', 'location--search', 'venue-location1', record)
-
-  document.getElementById('update-activity').addEventListener('click',createUpdateReqBody)
+function cancelUpdate (id) {
+  fillActivityDetailPage(id)
+  // document.getElementById('activity--status-container').style.display = 'block'
+  // document.querySelector('.activity--share-container').style.display = 'block'
+  // document.querySelector('.add--assignee-icon').style.dispaly = 'block'
 }
 
 function availableStatus (record, id) {
@@ -516,7 +528,7 @@ function showSchedule (schedules) {
     const dateArr = [split[1], split[0]]
     return dateArr.join('/')
   }
-let count =0;
+  let count = 0
   schedules.forEach((schedule) => {
     count++
     const scheduleLi = document.createElement('li')
@@ -524,6 +536,7 @@ let count =0;
 
     const scheduleName = document.createElement('span')
     scheduleName.classList.add('schedule-name--list')
+    scheduleName.dataset.value = schedule.name
     scheduleName.innerHTML = schedule.name
 
     const scheduleStartTime = document.createElement('div')
@@ -567,6 +580,9 @@ let count =0;
 function showVenue (venues, canEdit) {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
+
+  const div = document.createElement('div')
+
   const span = document.createElement('span')
   span.className = 'detail--static-text'
   span.textContent = 'Venue'
@@ -579,27 +595,35 @@ function showVenue (venues, canEdit) {
   venues.forEach((venue) => {
     if (venue.geopoint) {
       count++
+
       const venueLi = document.createElement('li')
-      venueLi.className = 'mdc-list-item'
-      
+
+      venueLi.className = 'mdc-list-item map-select'
+      venueLi.dataset.location = venue.location
+      venueLi.dataset.address = venue.address
+      venueLi.dataset.inputlat = venue.geopoint['_latitude']
+      venueLi.dataset.inputlon = venue.geopoint['_longitude']
+      venueLi.dataset.descrip = venue.venueDescriptor
+
       const venueDesc = document.createElement('div')
-    
+
       venueDesc.id = `venue-desc${count}`
-      venueDesc.dataset.descriptor =  venue.venueDescriptor
+      venueDesc.dataset.descriptor = venue.venueDescriptor
       venueDesc.textContent = venue.venueDescriptor
 
       const venueLocation = document.createElement('div')
       venueLocation.classList.add('mdc-text-field', 'venue-location--name')
       venueLocation.id = `venue-location${count}`
       const venueLocationInput = document.createElement('input')
-      venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none' ,'venue-location--input')
+      venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none', 'venue-location--input')
       venueLocationInput.setAttribute('value', venue.location)
+
       venueLocationInput.disabled = true
       venueLocation.appendChild(venueLocationInput)
 
       const venueAddress = document.createElement('div')
       venueAddress.classList.add('mdc-text-field', 'venue-address--name')
-      venueAddress.id ='venue-address'
+      venueAddress.id = 'venue-address' + count
       const venueAddressInput = document.createElement('input')
       venueAddressInput.classList.add('mdc-text-field__input', 'border-bottom--none')
       venueAddressInput.setAttribute('value', venue.address)
@@ -611,7 +635,8 @@ function showVenue (venues, canEdit) {
       venueLi.appendChild(venueAddress)
       venueLi.appendChild(venueDesc)
 
-      venueList.appendChild(venueLi)
+      div.appendChild(venueLi)
+      venueList.appendChild(div)
     }
   })
 
@@ -694,12 +719,18 @@ function assigneeListUI (userRecord, target) {
   document.getElementById(target).appendChild(div)
 }
 
-function locationUI (userRecord, target) {
+function locationUI (userRecord, target, inputFields) {
   if (document.querySelector(`[data-location="${userRecord.value.location}"]`)) return
 
   const div = document.createElement('div')
   div.style.position = 'relative'
+
   div.dataset.location = userRecord.value.location
+  div.dataset.address = userRecord.value.address
+  div.dataset.desc = userRecord.value.venueDescriptor
+  div.dataset.lat = userRecord.value.geopoint['_latitude']
+  div.dataset.lon = userRecord.value.geopoint['_longitude']
+
   div.id = userRecord.value.location.replace(/\s/g, '')
 
   const Li = document.createElement('li')
@@ -718,6 +749,18 @@ function locationUI (userRecord, target) {
   Li.appendChild(locationListText)
   div.appendChild(Li)
   document.getElementById(target).appendChild(div)
+
+  document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function () {
+    getInputText(inputFields.location).value = this.dataset.location
+    getInputText(inputFields.address).value = this.dataset.address
+    this.parentNode.previousSibling.dataset.location = this.dataset.location
+    this.parentNode.previousSibling.dataset.address = this.dataset.address
+    this.parentNode.previousSibling.dataset.inputlat = this.dataset.lat
+    this.parentNode.previousSibling.dataset.inputlon = this.dataset.lon
+    this.parentNode.previousSibling.dataset.descrip = this.dataset.desc
+
+    document.getElementById('location--search').style.display = 'none'
+  })
 }
 function renderRemoveIcons (record, mobileNumber) {
   console.log('run')
@@ -798,7 +841,7 @@ function fetchUsersData (record) {
   }
 }
 
-function createUpdateReqBody(event){
+function createUpdateReqBody (event) {
   const title = getInputText('activity--title-input').value
   const desc = getInputText('activity--desc-input').value
   const activityId = event.target.dataset.id
@@ -807,22 +850,36 @@ function createUpdateReqBody(event){
 
   const allSchedule = document.querySelectorAll('.schedule--list');
   [...allSchedule].forEach(function (li) {
-   const scheduleBody = {}
+    const scheduleBody = {}
 
-   scheduleBody.name = li.children[0].dataset.value
-   scheduleBody.startTime = getInputText(li.children[1].id)
-   scheduleBody.endTime = getInputText(li.children[2].id)
-   schedule.push(scheduleBody)
-  });
+    scheduleBody.name = li.children[0].dataset.value
+    scheduleBody.startTime = getInputText(li.children[1].id).value
+    scheduleBody.endTime = getInputText(li.children[2].id).value
+    schedule.push(scheduleBody)
+  })
 
-  const allVenues = document.querySelectorAll('.venue-location--name');
-  // [...allVenues].forEach(function(li){
-  //   const venueBody = {}
+  const allVenues = document.querySelectorAll('.map-select');
+  [...allVenues].forEach(function (li) {
+    geopoint = {}
+    const venueBody = {}
 
-  //   venueBody.venueDescriptor = 
-  // })
-
-
+    venueBody.venueDescriptor = li.dataset.descrip
+    venueBody.location = li.dataset.location
+    venueBody.address = li.dataset.address
+    geopoint.latitude = parseInt(li.dataset.inputlat)
+    geopoint.longitude = parseInt(li.dataset.inputlon)
+    venueBody['geopoint'] = geopoint
+    venue.push(venueBody)
+  })
+  const body = {
+    'activityId': activityId,
+    'title': title,
+    'description': desc,
+    'schedule': schedule,
+    'venue': venue
+  }
+  console.log(body)
+  requestCreator('update', body)
 }
 
 function updateSelectorObjectStore (dataset, input, objectStoreName) {
