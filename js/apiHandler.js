@@ -149,6 +149,7 @@ function initializeIDB () {
       map.createIndex('address', 'address')
       map.createIndex('office', 'office')
       map.createIndex('timestamp', 'timestamp')
+      map.createIndex('count','count')
 
       const attachment = db.createObjectStore('attachment', {
         keyPath: 'activityId'
@@ -330,6 +331,7 @@ function updateMap (db, activity) {
         activityId: activity.activityId,
         venueDescriptor: newVenue.venueDescriptor,
         office: activity.office,
+        count:0,
         timestamp: activity.timestamp
       })
     })

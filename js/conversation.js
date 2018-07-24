@@ -278,8 +278,8 @@ function createActivityPanel (db, id, record) {
       updateStatus('CONFIRMED', record.activityId)
     })
   }
-  if (document.getElementById('select-cancelled')) {
-    document.getElementById('select-cancelled').addEventListener('click', function () {
+  if (document.getElementById('select-cancel')) {
+    document.getElementById('select-cancel').addEventListener('click', function () {
       updateStatus('CANCELLED', record.activityId)
     })
   }
@@ -429,10 +429,11 @@ function makeFieldsEditable (record) {
       if (this.dataset.active) return
 
       this.dataset.active = true
-      inputSelectMap({
+      inputSelect({
         name: 'map',
         indexone: 'location',
-        indextwo: 'address'
+        indextwo: 'address',
+        indexThree:'count'
       }, 'location--search', {
         main: this.id,
         address: field.children[1].id
@@ -898,7 +899,7 @@ function fetchUsersData (record) {
   const req = window.indexedDB.open(dbName)
 
   req.onsuccess = function () {
-      inputSelectMap({name:'users',indexone:'users',indextwo:'displayName',indexThree:'count'}, 'contacts', {main:'contact--text-field'}, record)
+      inputSelect({name:'users',indexone:'users',indextwo:'displayName',indexThree:'count'}, 'contacts', {main:'contact--text-field'}, record)
   }
 }
 
@@ -940,6 +941,9 @@ function createUpdateReqBody (event) {
     'venue': venue
   }
   console.log(body)
+
+
+
   requestCreator('update', body)
 }
 

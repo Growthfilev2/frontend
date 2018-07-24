@@ -6,7 +6,7 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelectMap(objectStore, selector, inputFields, activityRecord) {
+function inputSelect(objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
