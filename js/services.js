@@ -29,6 +29,7 @@ function inputSelect (objectStore, selector, inputField, activityRecord) {
         activityRecord.venue.forEach(function (venue) {
           document.querySelector(`[data-location="${venue.location}"]`).remove()
         })
+        return
       }
       switch (objectStoreName) {
         case 'users':
@@ -59,6 +60,9 @@ function inputSelect (objectStore, selector, inputField, activityRecord) {
           console.log(cursor)
           dataElement(cursor.value.location).addEventListener('click', function () {
             getInputText(inputField).value = this.dataset.location
+            document.getElementById('location--search').style.display = 'none'
+            inputField['input_'].parentNode.nextSibling.dataset.value = this.dataset.address
+            inputField['input_'].parentNode.nextSibling
           })
 
           // document.querySelector(`[data-location="${updateSelector.dataset.type}"]`)
@@ -83,6 +87,8 @@ function inputSelect (objectStore, selector, inputField, activityRecord) {
   document.getElementById(inputField).addEventListener('input', function () {
     const dbName = firebase.auth().currentUser.uid
     const req = window.indexedDB.open(dbName)
+    document.getElementById('location--search').style.display = 'block'
+
     document.querySelectorAll('[data-location]').forEach(function (list) {
       list.style.display = 'none'
     })
