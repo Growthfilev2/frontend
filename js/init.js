@@ -66,21 +66,21 @@ function userSignedIn (auth) {
 
   if (window.Worker && window.indexedDB) {
     layoutGrid()
+    requestCreator('initializeIDB')
 
     // requestCreator is present inside service.js
-    const req = window.indexedDB.open(auth.uid)
-    req.onsuccess = function () {
-      const db = req.result
-      if (Object.keys(db.objectStoreNames).length === 0) {
-        setTimeout(function () {
-          console.log('delay')
-          requestCreator('initializeIDB')
-          return void (0)
-        }, 300)
-      } else {
-        requestCreator('Null')
-      }
-    }
+    // const req = window.indexedDB.open(auth.uid)
+    // req.onsuccess = function () {
+    //   const db = req.result
+    //   if (Object.keys(db.objectStoreNames).length === 0) {
+    //     setTimeout(function () {
+    //       console.log('delay')
+    //       // return void (0)
+    //     }, 300)
+    //   } else {
+    //     requestCreator('Null')
+    //   }
+    // }
     return
   }
 
