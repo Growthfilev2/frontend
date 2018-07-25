@@ -223,7 +223,13 @@ function createActivityDetailHeader(record,value) {
 
   const backSpan = document.createElement('span')
   backSpan.className = 'back-icon'
-  backSpan.id = 'back-detail'
+  if(value === 'edit'){
+
+    backSpan.id = 'back-detail'
+  }
+  if(value === 'create') {
+    backSpan.id = 'back-list'
+  }
 
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
@@ -1065,6 +1071,8 @@ function createActivity() {
 
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+  document.getElementById('back-list').addEventListener('click',listView)
+
   console.log(document.querySelector('#venue--list'))
   // document.querySelector('#venue--list').children[0].appendChild(locationsearch)
 
