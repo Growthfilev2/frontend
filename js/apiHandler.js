@@ -32,7 +32,7 @@ const requestFunctionCaller = {
   share: share,
   updateUserNumber: updateUserNumber,
   update: update,
-  create:create,
+  create: create,
   Null: Null
 }
 
@@ -115,7 +115,7 @@ function initializeIDB () {
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
       })
-      users.createIndex('displayName','displayName')
+      users.createIndex('displayName', 'displayName')
       users.createIndex('isUpdated', 'isUpdated')
       users.createIndex('count', 'count')
 
@@ -150,7 +150,7 @@ function initializeIDB () {
       map.createIndex('address', 'address')
       map.createIndex('office', 'office')
       map.createIndex('timestamp', 'timestamp')
-      map.createIndex('count','count')
+      map.createIndex('count', 'count')
 
       const attachment = db.createObjectStore('attachment', {
         keyPath: 'activityId'
@@ -305,21 +305,21 @@ function update (body) {
   })
 }
 
-function create(body){
+function create (body) {
   console.log(body)
-  return new Promise(function (resolve,reject){
+  return new Promise(function (resolve, reject) {
     http(
       'POST',
       `${apiUrl}activities/create`,
       JSON.stringify(body)
     )
-    .then(function(success){
-      requestHandlerResponse('notification',200,'activity created successfully',firebase.auth().currentUser.uid)
-      resolve(firebase.auth().currentUser.uid)
-    })
-    .catch(function(error){
-      reject(error)
-    })
+      .then(function (success) {
+        requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
+        resolve(firebase.auth().currentUser.uid)
+      })
+      .catch(function (error) {
+        reject(error)
+      })
   })
 }
 
@@ -350,7 +350,7 @@ function updateMap (db, activity) {
         activityId: activity.activityId,
         venueDescriptor: newVenue.venueDescriptor,
         office: activity.office,
-        count:0,
+        count: 0,
         timestamp: activity.timestamp
       })
     })
@@ -465,7 +465,7 @@ function putAssignessInStore (db, assigneeArray) {
         mobile: assignee,
         isUpdated: 0,
         count: 0,
-        displayName:''
+        displayName: ''
       })
     }
   })

@@ -73,6 +73,7 @@ function userSignedIn (auth) {
       const db = req.result
       if (Object.keys(db.objectStoreNames).length === 0) {
         setTimeout(function () {
+          console.log('delay')
           requestCreator('initializeIDB')
           return void (0)
         }, 300)

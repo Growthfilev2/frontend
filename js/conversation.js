@@ -1,4 +1,4 @@
-function conversation(id) {
+function conversation (id) {
   if (!id) return
   // removeDom('chat-container')
   const currentUser = firebase.auth().currentUser
@@ -30,7 +30,7 @@ function conversation(id) {
   }
 }
 
-function commentPanel(id) {
+function commentPanel (id) {
   if (document.getElementById('chat-container')) {
     return
   }
@@ -89,7 +89,7 @@ function commentPanel(id) {
   }
 }
 
-function createComment(addendum, currentUser) {
+function createComment (addendum, currentUser) {
   console.log(addendum)
   if (document.getElementById(addendum.addendumId)) {
     return
@@ -136,7 +136,7 @@ function createComment(addendum, currentUser) {
   container.scrollTop = container.scrollHeight
 }
 
-function createHeaderContent(db, id) {
+function createHeaderContent (db, id) {
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   const leftDiv = document.createElement('div')
 
@@ -179,7 +179,7 @@ function createHeaderContent(db, id) {
   }
 }
 
-function fillActivityDetailPage(id) {
+function fillActivityDetailPage (id) {
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -205,7 +205,7 @@ function fillActivityDetailPage(id) {
         activityObjectStore.get(id).onsuccess = function (event) {
           const record = event.target.result
           console.log(record)
-          createActivityDetailHeader(record,'edit')
+          createActivityDetailHeader(record, 'edit')
           document.getElementById('back-detail').addEventListener('click', function () {
             conversation(id)
           })
@@ -218,16 +218,15 @@ function fillActivityDetailPage(id) {
   }
 }
 
-function createActivityDetailHeader(record,value) {
+function createActivityDetailHeader (record, value) {
   const leftDiv = document.createElement('div')
 
   const backSpan = document.createElement('span')
   backSpan.className = 'back-icon'
-  if(value === 'edit'){
-
+  if (value === 'edit') {
     backSpan.id = 'back-detail'
   }
-  if(value === 'create') {
+  if (value === 'create') {
     backSpan.id = 'back-list'
   }
 
@@ -265,7 +264,7 @@ function createActivityDetailHeader(record,value) {
   header(leftDiv.outerHTML, rigthDiv.outerHTML)
 }
 
-function updateActivityPanel(db, id, record) {
+function updateActivityPanel (db, id, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
   detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
@@ -290,14 +289,29 @@ function updateActivityPanel(db, id, record) {
 
   if (!record.canEdit) return
   document.getElementById('edit-activity').addEventListener('click', function () {
-    makeFieldsEditable(record)
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootObjectStore = rootTx.objectStore('root')
+      rootObjectStore.get(dbName).onsuccess = function (event) {
+        const rootRecord = event.target.result
+        rootRecord.view = 'update'
+        rootObjectStore.put(rootRecord)
+
+        rootTx.oncomplete = function () {
+          makeFieldsEditable(record)
+        }
+      }
+    }
   })
   document.getElementById('share-btn').addEventListener('click', function (e) {
     renderShareDrawer(record)
   })
 }
 
-function activityTitle(title, value) {
+function activityTitle (title, value) {
   const container = document.createElement('div')
   container.className = 'activity--title-container'
   const span = document.createElement('span')
@@ -324,7 +338,7 @@ function activityTitle(title, value) {
   return container.outerHTML
 }
 
-function activityDesc(desc, value) {
+function activityDesc (desc, value) {
   const container = document.createElement('div')
   container.className = 'activity--desc-container'
   const span = document.createElement('span')
@@ -350,7 +364,7 @@ function activityDesc(desc, value) {
   return container.outerHTML
 }
 
-function office(office) {
+function office (office) {
   const officeCont = document.createElement('div')
   officeCont.className = 'activity--office-container'
   const span = document.createElement('span')
@@ -364,7 +378,7 @@ function office(office) {
   return officeCont.outerHTML
 }
 
-function template(template) {
+function template (template) {
   const templateCont = document.createElement('div')
   templateCont.className = 'activity--template-container'
   const span = document.createElement('span')
@@ -379,7 +393,7 @@ function template(template) {
   return templateCont.outerHTML
 }
 
-function makeFieldsEditable(record) {
+function makeFieldsEditable (record) {
   document.getElementById('edit-activity').remove()
   document.getElementById('cancel-update').style.display = 'block'
 
@@ -405,7 +419,7 @@ function makeFieldsEditable(record) {
   const endSchedules = document.querySelectorAll('.endTimeInputs')
   const venueLocations = document.querySelectorAll('.venue-location--input')
 
-  const venueFields = document.querySelectorAll('.map-select');
+  const venueFields = document.querySelectorAll('.map-select-type');
 
   [...startSchedule].forEach(function (li) {
     console.log(li)
@@ -420,14 +434,12 @@ function makeFieldsEditable(record) {
     if (li.classList.contains('mdc-text-field')) {
       getInputText(li.id)['input_'].disabled = false
       getInputText(li.id)['input_'].classList.remove('border-bottom--none')
-
     }
   });
 
   [...venueLocations].forEach(function (input) {
     input.disabled = false
     input.classList.remove('border-bottom--none')
-
   });
 
   [...venueFields].forEach(function (field) {
@@ -439,7 +451,7 @@ function makeFieldsEditable(record) {
 
     field.children[0].addEventListener('click', function () {
       if (this.dataset.active) return
-
+      console.log('hello')
       this.dataset.active = true
       inputSelect({
         name: 'map',
@@ -453,21 +465,22 @@ function makeFieldsEditable(record) {
     })
   })
 
-
   document.getElementById('cancel-update').addEventListener('click', function () {
+    console.log(record.activityId)
     cancelUpdate(record.activityId)
   })
 
-  document.getElementById('update-activity').addEventListener('click', function(event){
-    createUpdateReqBody(event,'update')
+  document.getElementById('update-activity').addEventListener('click', function (event) {
+    createUpdateReqBody(event, 'update')
   })
 }
 
-function cancelUpdate(id) {
+function cancelUpdate (id) {
+  console.log(id)
   fillActivityDetailPage(id)
 }
 
-function availableStatus(record, id) {
+function availableStatus (record, id) {
   const statusCont = document.createElement('div')
   statusCont.id = 'activity--status-container'
 
@@ -527,7 +540,7 @@ function availableStatus(record, id) {
   return statusCont.outerHTML
 }
 
-function updateStatus(status, id) {
+function updateStatus (status, id) {
   const reqBody = {
     'activityId': id,
     'status': status
@@ -536,7 +549,7 @@ function updateStatus(status, id) {
   requestCreator('statusChange', reqBody)
 }
 
-function showSchedule(schedules) {
+function showSchedule (schedules) {
   const scheduleCont = document.createElement('div')
   scheduleCont.className = 'activity--schedule-container'
   const spanDiv = document.createElement('div')
@@ -573,7 +586,7 @@ function showSchedule(schedules) {
   return scheduleCont.outerHTML
 }
 
-function showScheduleUI(schedule, count, scheduleList, value) {
+function showScheduleUI (schedule, count, scheduleList, value) {
   const scheduleLi = document.createElement('li')
   scheduleLi.classList.add('mdc-list-item', 'schedule--list')
 
@@ -618,10 +631,9 @@ function showScheduleUI(schedule, count, scheduleList, value) {
   scheduleLi.appendChild(scheduleEditIconSpan)
 
   scheduleList.appendChild(scheduleLi)
-
 }
 
-function showVenue(venues, canEdit) {
+function showVenue (venues, canEdit) {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
 
@@ -646,7 +658,7 @@ function showVenue(venues, canEdit) {
   return venueCont.outerHTML
 }
 
-function showVenueUI(venue, count, venueList, value) {
+function showVenueUI (venue, count, venueList, value) {
   const venueLi = document.createElement('li')
 
   venueLi.className = 'mdc-list-item map-select-type map-select' + count
@@ -691,7 +703,7 @@ function showVenueUI(venue, count, venueList, value) {
   venueList.appendChild(div)
 }
 
-function renderAssigneeList() {
+function renderAssigneeList () {
   const shareCont = document.createElement('div')
   shareCont.className = 'activity--share-container'
   const span = document.createElement('span')
@@ -711,7 +723,7 @@ function renderAssigneeList() {
   return shareCont.outerHTML
 }
 
-function fetchAssigneeData(db, record, target) {
+function fetchAssigneeData (db, record, target) {
   const usersStore = db
     .transaction('users')
     .objectStore('users')
@@ -728,7 +740,7 @@ function fetchAssigneeData(db, record, target) {
   })
 }
 
-function assigneeListUI(userRecord, target) {
+function assigneeListUI (userRecord, target) {
   const div = document.createElement('div')
   div.style.position = 'relative'
   if (target === 'assignee--list') {
@@ -765,7 +777,7 @@ function assigneeListUI(userRecord, target) {
   document.getElementById(target).appendChild(div)
 }
 
-function locationUI(userRecord, target, inputFields) {
+function locationUI (userRecord, target, inputFields) {
   if (document.querySelector(`[data-location="${userRecord.value.location}"]`)) return
 
   const div = document.createElement('div')
@@ -807,10 +819,9 @@ function locationUI(userRecord, target, inputFields) {
     this.parentNode.previousSibling.dataset.descrip = this.dataset.desc
     document.getElementById('location--search').innerHTML = ''
   })
-
 }
 
-function renderRemoveIcons(record, mobileNumber) {
+function renderRemoveIcons (record, mobileNumber) {
   console.log('run')
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
@@ -834,7 +845,7 @@ function renderRemoveIcons(record, mobileNumber) {
   }
 }
 
-function renderShareIcon(record) {
+function renderShareIcon (record) {
   if (!record.canEdit) return
 
   const IconParent = document.createElement('span')
@@ -847,11 +858,10 @@ function renderShareIcon(record) {
 
   // document.getElementById('share--icon-container').innerHTML = IconParent.outerHTML
 
-
   return IconParent.outerHTML
 }
 
-function renderShareDrawer(record) {
+function renderShareDrawer (record) {
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
   document.getElementById('app-current-panel').innerHTML = renderShareDrawerUI()
@@ -870,7 +880,7 @@ function renderShareDrawer(record) {
   }
 }
 
-function renderShareDrawerUI(){
+function renderShareDrawerUI () {
   const cont = document.createElement('div')
   cont.id = 'share--container'
 
@@ -898,7 +908,7 @@ function renderShareDrawerUI(){
   return cont.outerHTML
 }
 
-function createUsersHeader(id) {
+function createUsersHeader (id) {
   const leftDiv = document.createElement('div')
 
   const backSpan = document.createElement('span')
@@ -916,10 +926,9 @@ function createUsersHeader(id) {
   document.getElementById('back-users').addEventListener('click', function () {
     fillActivityDetailPage(id)
   })
-  return
 }
 
-function fetchUsersData(record) {
+function fetchUsersData (record) {
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
 
@@ -935,7 +944,7 @@ function fetchUsersData(record) {
   }
 }
 
-function createUpdateReqBody(event, reqType) {
+function createUpdateReqBody (event, reqType) {
   const title = getInputText('activity--title-input').value
   const desc = getInputText('activity--desc-input').value
   const activityId = event.target.dataset.id
@@ -966,8 +975,7 @@ function createUpdateReqBody(event, reqType) {
     venue.push(venueBody)
   })
 
-  if(reqType === 'update'){
-
+  if (reqType === 'update') {
     const body = {
       'activityId': activityId,
       'title': title,
@@ -975,32 +983,29 @@ function createUpdateReqBody(event, reqType) {
       'schedule': schedule,
       'venue': venue
     }
-      
+
     console.log(body)
- 
+
     requestCreator('update', body)
     return
   }
 
-  if(reqType === 'create'){
+  if (reqType === 'create') {
     const body = {
-      'office':document.querySelector('.activity--office').textContent,
-      'template':document.querySelector('.activity--template').textContent,
+      'office': document.querySelector('.activity--office').textContent,
+      'template': document.querySelector('.activity--template').textContent,
       'title': title,
       'description': desc,
       'schedule': schedule,
       'venue': venue,
-      'share':getInputText('contact--text-field').value
+      'share': getInputText('contact--text-field').value
     }
-      console.log(body)
-      requestCreator('create', body)
-
-      
- 
+    console.log(body)
+    requestCreator('create', body)
   }
 }
 
-function updateSelectorObjectStore(dataset, input, objectStoreName) {
+function updateSelectorObjectStore (dataset, input, objectStoreName) {
   console.log(dataset)
   const dbName = firebase.auth().currentUser.uid
 
@@ -1040,11 +1045,11 @@ function updateSelectorObjectStore(dataset, input, objectStoreName) {
   })
 }
 
-function errorUpdatingSelectorObjectStore(error) {
+function errorUpdatingSelectorObjectStore (error) {
   console.log(error)
 }
 
-function addContact(data) {
+function addContact (data) {
   const expression = /^\+[1-9]\d{5,14}$/
   if (!expression.test(data.value)) return
 
@@ -1055,23 +1060,21 @@ function addContact(data) {
   requestCreator('share', reqBody)
 }
 
-function dataElement(target, key) {
+function dataElement (target, key) {
   return document.querySelector(`[data-${target}="${key}"]`)
 }
 
-
-function createActivity() {
+function createActivity () {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
   detail.id = 'create-activity--container'
 
-  detail.innerHTML = createActivityDetailHeader({canEdit:true},'create')+ officeTemplate() + office('') + template('') +
+  detail.innerHTML = createActivityDetailHeader({canEdit: true}, 'create') + officeTemplate() + office('') + template('') +
     activityTitle('', false) + activityDesc('', false) + createScheduleContainer() +
     createVenueContainer() + renderShareDrawerUI()
 
-
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
-  document.getElementById('back-list').addEventListener('click',listView)
+  document.getElementById('back-list').addEventListener('click', listView)
 
   console.log(document.querySelector('#venue--list'))
   // document.querySelector('#venue--list').children[0].appendChild(locationsearch)
@@ -1084,7 +1087,6 @@ function createActivity() {
     main: 'officeTemplate--text-field'
   })
 
-
   inputSelect({
     name: 'users',
     indexone: 'users',
@@ -1093,7 +1095,6 @@ function createActivity() {
   }, 'contacts', {
     main: 'contact--text-field'
   })
-
 
   let scheduleCount = 0
 
@@ -1108,8 +1109,6 @@ function createActivity() {
 
   let venueCont = 0
   document.getElementById('add-venue').addEventListener('click', function () {
-
-
     venueCont++
     const locationsearch = document.createElement('ul')
     locationsearch.id = 'location--search'
@@ -1133,17 +1132,31 @@ function createActivity() {
       indexThree: 'count'
     }, 'location--search', {
       main: 'venue-location' + venueCont,
-      address: 'venue-address' + venueCont,
+      address: 'venue-address' + venueCont
     })
   })
 
-  document.getElementById('create-activity').addEventListener('click', function(event){
-    createUpdateReqBody(event,'create')
+  document.getElementById('create-activity').addEventListener('click', function (clickEvent) {
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootObjectStore = rootTx.objectStore('root')
+      rootObjectStore.get(dbName).onsuccess = function (event) {
+        const record = event.target.result
+        record.view = 'create'
+        rootObjectStore.put(record)
+
+        rootTx.oncomplete = function () {
+          createUpdateReqBody(clickEvent, 'create')
+        }
+      }
+    }
   })
 }
 
-function officeTemplate() {
-
+function officeTemplate () {
   const cont = document.createElement('div')
   cont.id = 'select-officeTemplate--container'
 
@@ -1169,11 +1182,11 @@ function officeTemplate() {
   cont.appendChild(mainTextField)
   cont.appendChild(combination)
   return cont.outerHTML
-
 }
 
-function officeTemplateCombo(cursor, target) {
+function officeTemplateCombo (cursor, target) {
   if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
+
   const li = document.createElement('li')
   li.dataset.office = cursor.value.office
   li.dataset.template = cursor.value.template
@@ -1192,10 +1205,9 @@ function officeTemplateCombo(cursor, target) {
 
   li.appendChild(liText)
   document.getElementById(target).appendChild(li)
-
 }
 
-function createVenueContainer() {
+function createVenueContainer () {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
 
@@ -1222,7 +1234,7 @@ function createVenueContainer() {
   return venueCont.outerHTML
 }
 
-function createScheduleContainer() {
+function createScheduleContainer () {
   const scheduleCont = document.createElement('div')
   scheduleCont.className = 'activity--schedule-container'
   const spanDiv = document.createElement('div')
