@@ -32,6 +32,7 @@ const requestFunctionCaller = {
   share: share,
   updateUserNumber: updateUserNumber,
   update: update,
+  create:create,
   Null: Null
 }
 
@@ -301,6 +302,24 @@ function update (body) {
       .catch(function (error) {
         reject(error)
       })
+  })
+}
+
+function create(body){
+  console.log(body)
+  return new Promise(function (resolve,reject){
+    http(
+      'POST',
+      `${apiUrl}activities/create`,
+      JSON.stringify(body)
+    )
+    .then(function(success){
+      requestHandlerResponse('notification',200,'activity created successfully',firebase.auth().currentUser.uid)
+      resolve(firebase.auth().currentUser.uid)
+    })
+    .catch(function(error){
+      reject(error)
+    })
   })
 }
 

@@ -24,7 +24,8 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
 
         if (objectStore.name === 'map') return
         if (objectStore.name === 'subscriptions') return
-
+        if(!activityRecord) return
+        
         activityRecord.assignees.forEach(function (people) {
           document.querySelector(`[data-contact="${people}"]`).remove()
         })
@@ -48,6 +49,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
       }
       switch (objectStore.name) {
         case 'map':
+        console.log(selector)
           locationUI(cursor, selector, inputFields)
 
           break
@@ -60,12 +62,13 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
           break
         case 'subscriptions':
           officeTemplateCombo(cursor, selector)
-          console.log(  dataElement('office', cursor.value.office))
           dataElement('office', cursor.value.office).addEventListener('click', function () {
+
            document.querySelector('.activity--office').textContent = this.dataset.office
            document.querySelector('.activity--template').textContent = this.dataset.template
-           document.getElementById('combination-selector').innerHTML =''
-            
+           document.getElementById('add-schedule').dataset.value = cursor.value.schedule[0]
+           document.getElementById('add-venue').dataset.value = cursor.value.venue[0]
+
           })
           break
 
@@ -138,6 +141,17 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
     case 'subscriptions':
       console.log(cursor.value)
       officeTemplateCombo(cursor, selector)
+      dataElement('office', cursor.value.office).addEventListener('click', function () {
+        document.querySelector('.activity--office').textContent = this.dataset.office
+        document.querySelector('.activity--template').textContent = this.dataset.template
+        console.log(cursor.value.schedule[0])
+
+        document.getElementById('add-schedule').dataset.value = cursor.value.schedule[0]
+        document.getElementById('add-venue').dataset.value = cursor.value.venue[0]
+
+        document.getElementById(selector).innerHTML = ''
+
+       })
       break
 
   }
