@@ -289,22 +289,7 @@ function updateActivityPanel (db, id, record) {
 
   if (!record.canEdit) return
   document.getElementById('edit-activity').addEventListener('click', function () {
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootObjectStore = rootTx.objectStore('root')
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        const rootRecord = event.target.result
-        rootRecord.view = 'update'
-        rootObjectStore.put(rootRecord)
-
-        rootTx.oncomplete = function () {
-          makeFieldsEditable(record)
-        }
-      }
-    }
+    makeFieldsEditable(record)
   })
   document.getElementById('share-btn').addEventListener('click', function (e) {
     renderShareDrawer(record)
@@ -419,7 +404,7 @@ function makeFieldsEditable (record) {
   const endSchedules = document.querySelectorAll('.endTimeInputs')
   const venueLocations = document.querySelectorAll('.venue-location--input')
 
-  const venueFields = document.querySelectorAll('.map-select-type');
+  const venueFields = document.querySelectorAll('.map-select');
 
   [...startSchedule].forEach(function (li) {
     console.log(li)
@@ -451,7 +436,7 @@ function makeFieldsEditable (record) {
 
     field.children[0].addEventListener('click', function () {
       if (this.dataset.active) return
-      console.log('hello')
+
       this.dataset.active = true
       inputSelect({
         name: 'map',
@@ -466,7 +451,6 @@ function makeFieldsEditable (record) {
   })
 
   document.getElementById('cancel-update').addEventListener('click', function () {
-    console.log(record.activityId)
     cancelUpdate(record.activityId)
   })
 
@@ -476,7 +460,6 @@ function makeFieldsEditable (record) {
 }
 
 function cancelUpdate (id) {
-  console.log(id)
   fillActivityDetailPage(id)
 }
 
@@ -1136,23 +1119,8 @@ function createActivity () {
     })
   })
 
-  document.getElementById('create-activity').addEventListener('click', function (clickEvent) {
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootObjectStore = rootTx.objectStore('root')
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        const record = event.target.result
-        record.view = 'create'
-        rootObjectStore.put(record)
-
-        rootTx.oncomplete = function () {
-          createUpdateReqBody(clickEvent, 'create')
-        }
-      }
-    }
+  document.getElementById('create-activity').addEventListener('click', function (event) {
+    createUpdateReqBody(event, 'create')
   })
 }
 
@@ -1186,7 +1154,6 @@ function officeTemplate () {
 
 function officeTemplateCombo (cursor, target) {
   if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
-
   const li = document.createElement('li')
   li.dataset.office = cursor.value.office
   li.dataset.template = cursor.value.template

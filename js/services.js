@@ -45,6 +45,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       }
       switch (objectStore.name) {
         case 'map':
+          console.log(selector)
           locationUI(cursor, selector, inputFields)
 
           break
@@ -75,7 +76,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
     req.onsuccess = function () {
       const db = req.result
       let indexMain
-      if (objectStore.name === 'subscriptions' || objectStore.name === 'map') {
+      if (objectStore.name === 'subscriptions') {
         indexMain = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexone)
       } else {
         indexMain = db.transaction(objectStore.name).objectStore(objectStore.name)
@@ -117,8 +118,6 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
 
   switch (objectStore.name) {
     case 'map':
-      console.log(cursor.value)
-
       locationUI(cursor, selector, inputFields)
       break
     case 'users':
@@ -228,10 +227,9 @@ function onSuccessMessage (response) {
           handleTimeout()
           break
         case 'profile':
-          initProfile({user: firebase.auth().currentUser})
+          // profileView()
           handleTimeout()
           break
-
         case 'calendar':
           calendarView(response.data.dbName)
           handleTimeout()
@@ -241,16 +239,6 @@ function onSuccessMessage (response) {
           fillActivityDetailPage(record.id)
           handleTimeout()
           break
-
-        case 'update':
-          fillActivityDetailPage(record.id)
-          handleTimeout()
-          break
-        case 'create':
-          listView()
-          handleTimeout()
-          break
-
         case 'share':
           const activityObjectStore = db.transaction('activity').objectStore('activity')
           activityObjectStore.get(event.target.result.id).onsuccess = function (activityEvent) {
@@ -258,9 +246,6 @@ function onSuccessMessage (response) {
             renderShareDrawer(activityEvent.target.result)
             handleTimeout()
           }
-          break
-        case 'state-active':
-          handleTimeout()
           break
         default:
           record.currentView = 'list'
@@ -282,10 +267,10 @@ function onErrorMessage (error) {
 }
 
 function handleTimeout () {
-  const TIME_OUT_VALUE = 2000
+  const TIME_OUT_VALUE = 600000
   clearTimeout(offset)
 
   offset = setTimeout(function () {
-    // requestCreator('Null')
+    requestCreator('Null')
   }, TIME_OUT_VALUE)
 }
