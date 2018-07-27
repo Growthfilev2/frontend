@@ -132,6 +132,7 @@ function initializeIDB () {
 
       subscriptions.createIndex('office', 'office')
       subscriptions.createIndex('template', 'template')
+      subscriptions.createIndex('officeTemplate', ['office', 'template'])
 
       const calendar = db.createObjectStore('calendar', {
         autoIncrement: true
@@ -647,7 +648,159 @@ function updateIDB (dbName) {
       )
         .then(function (response) {
           console.log(response)
-          if (response.from === response.upto) {
+          const dummy = {
+            'addendum': [],
+            'activities': [
+
+              {
+                'canEdit': true,
+                'status': 'CONFIRMED',
+                'schedule': [{
+                  'endTime': '2018-06-28T10:04:51.699Z',
+                  'startTime': '2018-06-28T09:25:32.304Z',
+                  'name': 'Shift Timing'
+                }],
+                'venue': [{
+                  'venueDescriptor': 'Base Location',
+                  'geopoint': {
+                    '_latitude': 28.5728858,
+                    '_longitude': 77.2185796
+                  },
+                  'address': '141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049',
+                  'location': 'DUMMY SQUARE'
+                },
+                {
+                  'venueDescriptor': 'Residence',
+                  'geopoint': {
+                    '_latitude': 28.5545653,
+                    '_longitude': 77.3328355
+                  },
+                  'address': 'Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303',
+                  'location': 'Lodge Residence'
+                }
+                ],
+                'timestamp': '2018-06-28T09:25:32.304Z',
+                'template': 'employee',
+                'title': 'employee',
+                'description': 'Employee created for dummy office',
+                'office': 'dummy',
+                'assignees': [
+                  '+918080808080',
+                  '+918178135274',
+                  '+919090909090',
+                  '+919090909091'
+                ],
+                'attachment': {
+                  'Base Location': {
+                    'geopoint': {
+                      '_latitude': 28.5728858,
+                      '_longitude': 77.2185796
+                    },
+                    'address': '141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049',
+                    'location': 'DUMMY SQUARE'
+                  },
+                  'Residence': {
+                    'geopoint': {
+                      '_latitude': 28.5545653,
+                      '_longitude': 77.3328355
+                    },
+                    'address': 'Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303',
+                    'location': 'Lodge Residence'
+                  },
+                  'department': 'Marketing',
+                  'name': 'dummy',
+                  'Shift Timing': {
+                    'endTime': '2018-06-28T10:04:51.699Z',
+                    'startTime': '2018-06-28T09:25:32.304Z'
+                  },
+                  'supervisorOne': '+919090909090',
+                  'supervisorTwo': '+919090909091',
+                  'code': '12345'
+                },
+                'activityId': 'WmZ9x7Uo8p9OJJd62MtY'
+              },
+
+              {
+                'canEdit': false,
+                'status': 'PENDING',
+                'schedule': [{
+                  'endTime': '2018-06-28T10:04:51.699Z',
+                  'startTime': '2018-06-28T09:25:32.304Z',
+                  'name': 'Trial Period'
+                }],
+                'venue': [{
+                  'location': 'DUMMY SQUARE',
+                  'venueDescriptor': 'Head Office',
+                  'geopoint': {
+                    '_latitude': 28.5728858,
+                    '_longitude': 77.2185796
+                  },
+                  'address': '141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049'
+                }],
+                'timestamp': '2018-07-20T07:09:09.597Z',
+                'template': 'office',
+                'title': 'office',
+                'description': 'Creating an office with the name Dummy.',
+                'office': 'dummy',
+                'assignees': [
+                  '+918010101923'
+                ],
+                'attachment': {
+                  'Head Office': {
+                    'location': 'DUMMY SQUARE',
+                    'geopoint': {
+                      '_latitude': 28.5728858,
+                      '_longitude': 77.2185796
+                    },
+                    'address': '141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049'
+                  },
+                  'name': 'dummy',
+                  'Trial Period': {
+                    'startTime': '2018-06-28T09:25:32.304Z',
+                    'endTime': '2018-06-28T10:04:51.699Z'
+                  },
+                  'gstNumber': 'AAAA99999',
+                  'paymentReference': '123456789'
+                },
+                'activityId': '1bL0YzwSxFmIvz4SFvxK'
+              }
+
+            ],
+            'templates': [{
+              'schedule': [
+                'when'
+              ],
+              'venue': [
+                'where'
+              ],
+              'template': 'plan',
+              'attachment': {},
+              'office': 'personal'
+            },
+            {
+              'schedule': [
+                'Shift Timing'
+              ],
+              'venue': [
+                'Base Location',
+                'Residence'
+              ],
+              'template': 'Employee',
+              'attachment': {
+                'department': 'string',
+                'supervisorOne': 'phoneNumber',
+                'name': 'string',
+                'supervisorTwo': 'phoneNumber',
+                'code': 'string',
+                'phoneNumber': 'phoneNumber'
+              },
+              'office': 'dummy'
+            }
+            ],
+            'from': '1970-01-01T00:00:00.090Z',
+            'upto': '2018-07-24T08:05:59.938Z'
+          }
+          if (dummy.from === response.upto) {
             requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', dbName)
             return
           }

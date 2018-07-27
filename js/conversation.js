@@ -200,7 +200,6 @@ function fillActivityDetailPage (id) {
       req.onsuccess = function () {
         const db = req.result
         const activityObjectStore = db.transaction('activity').objectStore('activity')
-        const mapObjectStore = db.transaction('map').objectStore('map').index('location')
 
         activityObjectStore.get(id).onsuccess = function (event) {
           const record = event.target.result
@@ -404,7 +403,7 @@ function makeFieldsEditable (record) {
   const endSchedules = document.querySelectorAll('.endTimeInputs')
   const venueLocations = document.querySelectorAll('.venue-location--input')
 
-  const venueFields = document.querySelectorAll('.map-select');
+  const venueFields = document.querySelectorAll('.map-select-type');
 
   [...startSchedule].forEach(function (li) {
     console.log(li)
@@ -432,9 +431,9 @@ function makeFieldsEditable (record) {
     locationsearch.id = 'location--search'
     locationsearch.className = 'mdc-list'
 
-    document.querySelector('#venue--list').children[0].appendChild(locationsearch)
+    field.appendChild(locationsearch)
 
-    field.children[0].addEventListener('click', function () {
+    field.addEventListener('click', function () {
       if (this.dataset.active) return
 
       this.dataset.active = true
@@ -444,7 +443,7 @@ function makeFieldsEditable (record) {
         indextwo: 'address',
         indexThree: 'count'
       }, 'location--search', {
-        main: this.id,
+        main: field.children[0].id,
         address: field.children[1].id
       }, record)
     })
@@ -724,6 +723,7 @@ function fetchAssigneeData (db, record, target) {
 }
 
 function assigneeListUI (userRecord, target) {
+  console.log(target)
   const div = document.createElement('div')
   div.style.position = 'relative'
   if (target === 'assignee--list') {
@@ -757,12 +757,13 @@ function assigneeListUI (userRecord, target) {
   assigneeLi.appendChild(photoGraphic)
   assigneeLi.appendChild(assigneeListText)
   div.appendChild(assigneeLi)
+
   document.getElementById(target).appendChild(div)
 }
 
 function locationUI (userRecord, target, inputFields) {
   if (document.querySelector(`[data-location="${userRecord.value.location}"]`)) return
-
+  console.log(target)
   const div = document.createElement('div')
   div.style.position = 'relative'
 
@@ -789,18 +790,19 @@ function locationUI (userRecord, target, inputFields) {
 
   Li.appendChild(locationListText)
   div.appendChild(Li)
+
   document.getElementById(target).appendChild(div)
 
   document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function () {
     console.log(this)
     getInputText(inputFields.main).value = this.dataset.location
     getInputText(inputFields.address).value = this.dataset.address
-    this.parentNode.previousSibling.dataset.location = this.dataset.location
-    this.parentNode.previousSibling.dataset.address = this.dataset.address
-    this.parentNode.previousSibling.dataset.inputlat = this.dataset.lat
-    this.parentNode.previousSibling.dataset.inputlon = this.dataset.lon
-    this.parentNode.previousSibling.dataset.descrip = this.dataset.desc
-    document.getElementById('location--search').innerHTML = ''
+    this.dataset.location = this.dataset.location
+    this.dataset.address = this.dataset.address
+    this.dataset.inputlat = this.dataset.lat
+    this.dataset.inputlon = this.dataset.lon
+    this.dataset.descrip = this.dataset.desc
+    document.getElementById(target).innerHTML = ''
   })
 }
 
@@ -958,6 +960,17 @@ function createUpdateReqBody (event, reqType) {
     venue.push(venueBody)
   })
 
+  const attachments = {}
+  const allAttachments = document.querySelectorAll('.attachment');
+  [...allAttachments].forEach(function (field) {
+    attachments[field.id] = {
+      value: getInputText(field.id).value,
+      type: field.dataset.type
+
+    }
+    console.log(attachments)
+  })
+
   if (reqType === 'update') {
     const body = {
       'activityId': activityId,
@@ -981,7 +994,8 @@ function createUpdateReqBody (event, reqType) {
       'description': desc,
       'schedule': schedule,
       'venue': venue,
-      'share': getInputText('contact--text-field').value
+      // 'share': getInputText('contact--text-field').value,
+      'attachment': attachments
     }
     console.log(body)
     requestCreator('create', body)
@@ -1043,18 +1057,24 @@ function addContact (data) {
   requestCreator('share', reqBody)
 }
 
-function dataElement (target, key) {
-  return document.querySelector(`[data-${target}="${key}"]`)
+function dataElement (target, key, parent) {
+  if (target === 'contact') {
+    return document.querySelector(`#contacts${parent}  [data-${target}="${key}"]`)
+  } else {
+    return document.querySelector(`[data-${target}="${key}"]`)
+  }
 }
 
 function createActivity () {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
   detail.id = 'create-activity--container'
-
-  detail.innerHTML = createActivityDetailHeader({canEdit: true}, 'create') + officeTemplate() + office('') + template('') +
+  createActivityDetailHeader({
+    canEdit: true
+  }, 'create')
+  detail.innerHTML = officeTemplate() + office('') + template('') +
     activityTitle('', false) + activityDesc('', false) + createScheduleContainer() +
-    createVenueContainer() + renderShareDrawerUI()
+    createVenueContainer()
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
   document.getElementById('back-list').addEventListener('click', listView)
@@ -1068,55 +1088,6 @@ function createActivity () {
     indextwo: 'template'
   }, 'officeTemplate--container', {
     main: 'officeTemplate--text-field'
-  })
-
-  inputSelect({
-    name: 'users',
-    indexone: 'users',
-    indextwo: 'displayName',
-    indexThree: 'count'
-  }, 'contacts', {
-    main: 'contact--text-field'
-  })
-
-  let scheduleCount = 0
-
-  document.getElementById('add-schedule').addEventListener('click', function () {
-    scheduleCount++
-    showScheduleUI({
-      name: this.dataset.value,
-      startTime: '',
-      endTime: ''
-    }, scheduleCount, document.querySelector('.activity--schedule-container'), false)
-  })
-
-  let venueCont = 0
-  document.getElementById('add-venue').addEventListener('click', function () {
-    venueCont++
-    const locationsearch = document.createElement('ul')
-    locationsearch.id = 'location--search'
-    locationsearch.className = 'mdc-list'
-    showVenueUI({
-      venueDescriptor: this.dataset.value,
-      location: '',
-      address: '',
-      geopoint: {
-        '_latitude': '',
-        '_longitude': ''
-      }
-    }, venueCont, document.querySelector('.activity--venue-container'), false)
-    document.querySelector('.map-select' + venueCont).parentNode.appendChild(locationsearch)
-    console.log(this)
-
-    inputSelect({
-      name: 'map',
-      indexone: 'location',
-      indextwo: 'address',
-      indexThree: 'count'
-    }, 'location--search', {
-      main: 'venue-location' + venueCont,
-      address: 'venue-address' + venueCont
-    })
   })
 
   document.getElementById('create-activity').addEventListener('click', function (event) {
@@ -1154,6 +1125,7 @@ function officeTemplate () {
 
 function officeTemplateCombo (cursor, target) {
   if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
+
   const li = document.createElement('li')
   li.dataset.office = cursor.value.office
   li.dataset.template = cursor.value.template
@@ -1187,16 +1159,6 @@ function createVenueContainer () {
 
   venueCont.appendChild(span)
 
-  const div = document.createElement('div')
-  div.id = 'add-venue'
-  const minspan = document.createElement('span')
-  const i = document.createElement('i')
-  i.className = 'material-icons'
-  i.textContent = 'add'
-  minspan.appendChild(i)
-
-  div.appendChild(minspan)
-  venueCont.appendChild(div)
   // venueCont.appendChild(venueList)
   return venueCont.outerHTML
 }
@@ -1229,16 +1191,110 @@ function createScheduleContainer () {
 
   scheduleCont.appendChild(spanDiv)
 
-  const div = document.createElement('div')
-  div.id = 'add-schedule'
-  const span = document.createElement('span')
-  const i = document.createElement('i')
-  i.className = 'material-icons'
-  i.textContent = 'add'
-  span.appendChild(i)
-  div.appendChild(span)
-
-  scheduleCont.appendChild(div)
-
   return scheduleCont.outerHTML
+}
+
+function createInput (key, type, classtype) {
+  const mainTextField = document.createElement('div')
+  mainTextField.className = `mdc-text-field mdc-text-field--box mdc-text-field--dense ${classtype}`
+  mainTextField.id = key
+  mainTextField.dataset.type = type
+  const mainInput = document.createElement('input')
+  mainInput.className = 'mdc-text-field__input'
+  mainInput.type = 'text'
+
+  mainTextField.appendChild(mainInput)
+  return mainTextField.outerHTML
+}
+
+function createAttachmentContainer (attachment) {
+  Object.keys(attachment).forEach(function (key) {
+    const div = document.createElement('div')
+    const label = document.createElement('label')
+    label.textContent = key
+    const keyValue = document.createElement('div')
+    // keyValue.id = key
+    div.appendChild(label)
+    div.appendChild(keyValue)
+
+    if (attachment[key] === 'string') {
+      keyValue.innerHTML = createInput(key, attachment[key], 'attachment')
+      document.getElementById('create-activity--container').appendChild(div)
+    }
+
+    if (attachment[key] === 'phoneNumber') {
+      keyValue.innerHTML = createInput(key, attachment[key], 'attachment')
+      const selectorDiv = document.createElement('div')
+      selectorDiv.id = 'contacts' + key
+      keyValue.appendChild(selectorDiv)
+      document.getElementById('create-activity--container').appendChild(div)
+      inputSelect({
+        name: 'users',
+        indexone: 'users',
+        indextwo: 'displayName',
+        indexThree: 'count'
+      }, 'contacts' + key, {
+        main: key
+      })
+    }
+  })
+}
+
+function getSelectedSubscriptionData (office, template) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const subscriptionObjectStore = db.transaction('subscriptions').objectStore('subscriptions').index('officeTemplate')
+    const range = IDBKeyRange.only([office, template])
+    subscriptionObjectStore.get(range).onsuccess = function (event) {
+      const record = event.target.result
+      createAttachmentContainer(record.attachment)
+      document.querySelector('.activity--office').textContent = record.office
+      document.querySelector('.activity--template').textContent = record.template
+
+      record.schedule.forEach(function (name) {
+        showScheduleUI({
+          name: name,
+          startTime: '',
+          endTime: ''
+        }, 1, document.querySelector('.activity--schedule-container'), false)
+      })
+
+      let venueCont = 0
+      record.venue.forEach(function (venueDescriptor) {
+        venueCont++
+        const locationsearch = document.createElement('ul')
+        locationsearch.id = 'location--search' + venueCont
+        locationsearch.className = 'mdc-list'
+
+        showVenueUI({
+          venueDescriptor: venueDescriptor,
+          location: '',
+          address: '',
+          geopoint: {
+            '_latitude': '',
+            '_longitude': ''
+          }
+        }, venueCont, document.querySelector('.activity--venue-container'), false)
+
+        document.querySelector('.map-select' + venueCont).parentNode.appendChild(locationsearch)
+      });
+
+      [...document.querySelectorAll('.venue-location--name')].forEach(function (element) {
+        element.addEventListener('click', function () {
+          console.log(this)
+          inputSelect({
+            name: 'map',
+            indexone: 'location',
+            indextwo: 'address',
+            indexThree: 'count'
+          }, this.parentNode.nextSibling.id, {
+            main: this.id,
+            address: this.nextSibling.id
+          })
+        })
+      })
+    }
+  }
 }
