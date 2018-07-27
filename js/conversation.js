@@ -435,7 +435,7 @@ function makeFieldsEditable (record) {
 
     field.addEventListener('click', function () {
       if (this.dataset.active) return
-
+      console.log(field)
       this.dataset.active = true
       inputSelect({
         name: 'map',
@@ -443,8 +443,8 @@ function makeFieldsEditable (record) {
         indextwo: 'address',
         indexThree: 'count'
       }, 'location--search', {
-        main: field.children[0].id,
-        address: field.children[1].id
+        main: field.children[1].id,
+        address: field.children[2].id
       }, record)
     })
   })
@@ -676,9 +676,9 @@ function showVenueUI (venue, count, venueList, value) {
 
   venueAddress.appendChild(venueAddressInput)
 
+  venueLi.appendChild(venueDesc)
   venueLi.appendChild(venueLocation)
   venueLi.appendChild(venueAddress)
-  venueLi.appendChild(venueDesc)
   const div = document.createElement('div')
 
   div.appendChild(venueLi)
@@ -870,7 +870,7 @@ function renderShareDrawer (record) {
 function renderShareDrawerUI () {
   const cont = document.createElement('div')
   cont.id = 'share--container'
-
+  cont.className ='mdc-top-app-bar--fixed-adjust'
   const mainTextField = document.createElement('div')
   mainTextField.className = 'mdc-text-field mdc-text-field--box mdc-text-field--dense'
   mainTextField.id = 'contact-text-field'
@@ -1062,11 +1062,7 @@ function addContact (data) {
 function dataElement (target, key) {
   return document.querySelector(`[data-${target}="${key}"]`)
 }
-// else {
-//       if (target === 'contact') {
-//     return document.querySelector(`[data-${target}="${key}"]`)
-//   }
-// }
+
 
 function createActivity () {
   const detail = document.createElement('div')

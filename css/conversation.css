@@ -231,9 +231,7 @@ display: table
 .assignee-li span:nth-child(3) {
     cursor: pointer;
 }
-#share--container {
-    padding: 20px;
-}
+
 #share-btn {
     cursor: pointer;
 }
@@ -368,7 +366,7 @@ margin-left:0;
     bottom: 1rem;
     right: 1rem;
   }
-  
+  /* share--container */
   @media(min-width: 1024px) {
      .create-activity {
       bottom: 1.5rem;
@@ -383,4 +381,8 @@ margin-left:0;
   .venue-location--name > input , .venue-address--name > input {
       padding-top: 0px
       
+  }
+
+  .activity--venue-container li {
+      display: table;
   }

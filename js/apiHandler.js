@@ -524,18 +524,16 @@ function updateUserObjectStore (successUrl) {
           requestHandlerResponse(200, 'user object store modified', successUrl.db.name)
           return
         }
-        if (!userProfile[cursor.primaryKey].displayName) return
+ 
+        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
 
-        if (!userProfile[cursor.primaryKey].photoURL) return
-
-        const record = cursor.value
-        console.log(record)
-
-        record.photoURL = userProfile[cursor.primaryKey].photoURL
-        record.displayName = userProfile[cursor.primaryKey].displayName
-        record.isUpdated = USER_UPDATED
-        console.log(record)
-        usersObjectStore.put(record)
+          const record = cursor.value          
+          record.photoURL = userProfile[cursor.primaryKey].photoURL
+          record.displayName = userProfile[cursor.primaryKey].displayName
+          record.isUpdated = USER_UPDATED
+          console.log(record)
+          usersObjectStore.put(record)
+        }
         cursor.continue()
       }
     }).catch(console.log)
