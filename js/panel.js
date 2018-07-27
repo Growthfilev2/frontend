@@ -556,9 +556,11 @@ function createProfilePanel () {
   uploadBtn.appendChild(label)
 
   const fileInput = document.createElement('input')
+
   fileInput.type = 'file'
   fileInput.style.display = 'none'
   fileInput.id = 'uploadProfileImage'
+  fileInput.accept = 'accept="image/png,image/jpeg'
 
   const profileImgCont = document.createElement('div')
   profileImgCont.id = 'profile--image-container'

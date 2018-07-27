@@ -795,13 +795,15 @@ function locationUI (userRecord, target, inputFields) {
 
   document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function () {
     console.log(this)
+    console.log(inputFields.main)
     getInputText(inputFields.main).value = this.dataset.location
     getInputText(inputFields.address).value = this.dataset.address
-    this.dataset.location = this.dataset.location
-    this.dataset.address = this.dataset.address
-    this.dataset.inputlat = this.dataset.lat
-    this.dataset.inputlon = this.dataset.lon
-    this.dataset.descrip = this.dataset.desc
+
+    document.getElementById(inputFields.main).parentNode.dataset.location = this.dataset.location
+    document.getElementById(inputFields.main).parentNode.dataset.address = this.dataset.address
+    document.getElementById(inputFields.main).parentNode.dataset.inputlat = this.dataset.lat
+    document.getElementById(inputFields.main).parentNode.dataset.inputlon = this.dataset.lon
+    document.getElementById(inputFields.main).parentNode.dataset.descrip = this.dataset.desc
     document.getElementById(target).innerHTML = ''
   })
 }
@@ -871,7 +873,7 @@ function renderShareDrawerUI () {
 
   const mainTextField = document.createElement('div')
   mainTextField.className = 'mdc-text-field mdc-text-field--box mdc-text-field--dense'
-  mainTextField.id = 'contact--text-field'
+  mainTextField.id = 'contact-text-field'
 
   const mainInput = document.createElement('input')
   mainInput.className = 'mdc-text-field__input'
@@ -923,8 +925,8 @@ function fetchUsersData (record) {
       indexone: 'users',
       indextwo: 'displayName',
       indexThree: 'count'
-    }, 'contacts', {
-      main: 'contact--text-field'
+    }, 'contacts--container', {
+      main: 'contact-text-field'
     }, record)
   }
 }
@@ -1057,13 +1059,14 @@ function addContact (data) {
   requestCreator('share', reqBody)
 }
 
-function dataElement (target, key, parent) {
-  if (target === 'contact') {
-    return document.querySelector(`#contacts${parent}  [data-${target}="${key}"]`)
-  } else {
-    return document.querySelector(`[data-${target}="${key}"]`)
-  }
+function dataElement (target, key) {
+  return document.querySelector(`[data-${target}="${key}"]`)
 }
+// else {
+//       if (target === 'contact') {
+//     return document.querySelector(`[data-${target}="${key}"]`)
+//   }
+// }
 
 function createActivity () {
   const detail = document.createElement('div')

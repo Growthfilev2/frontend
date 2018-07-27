@@ -1,8 +1,8 @@
-function getInputText(selector) {
+function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect(objectStore, selector, inputFields, activityRecord) {
+function inputSelect (objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
@@ -35,7 +35,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
         updateSelector.textContent = 'Add'
 
         updateSelector.dataset.type = 'users'
-        document.getElementById('share--container').insertBefore(updateSelector, document.getElementById(selector))
+        document.getElementById('share--container').insertBefore(updateSelector, document.getElementById('contacts'))
 
         document.querySelector(`[data-type="users"]`)
           .addEventListener('click', function () {
@@ -49,14 +49,17 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
           console.log(selector)
           locationUI(cursor, selector, inputFields)
           break
+
         case 'users':
           assigneeListUI(cursor, selector)
           console.log(inputFields.main)
-          dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
 
+          dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
             getInputText(inputFields.main).value = this.dataset.contact
           })
+
           break
+
         case 'subscriptions':
           officeTemplateCombo(cursor, selector)
           dataElement('office', cursor.value.office).addEventListener('click', function () {
@@ -103,7 +106,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
   })
 }
 
-function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
+function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
   const cursor = event.target.result
   if (!cursor) {
     if (objectStore.name === 'users') return
@@ -136,10 +139,6 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
       dataElement('office', cursor.value.office).addEventListener('click', function () {
         document.querySelector('.activity--office').textContent = this.dataset.office
         document.querySelector('.activity--template').textContent = this.dataset.template
-        // console.log(cursor.value.schedule[0])
-
-        // document.getElementById('add-schedule').dataset.value = cursor.value.schedule[0]
-        // document.getElementById('add-venue').dataset.value = cursor.value.venue[0]
 
         document.getElementById(selector).innerHTML = ''
       })
@@ -149,11 +148,11 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields) {
   cursor.continue()
 }
 
-function fetchCurrentTime() {
+function fetchCurrentTime () {
   return Date.now()
 }
 
-function fetchCurrentLocation() {
+function fetchCurrentLocation () {
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
@@ -164,12 +163,12 @@ function fetchCurrentLocation() {
   })
 }
 
-function inputFile(selector) {
+function inputFile (selector) {
   return document.getElementById(selector)
 }
 let offset
 
-function requestCreator(requestType, requestBody) {
+function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -200,7 +199,7 @@ function requestCreator(requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-function onSuccessMessage(response) {
+function onSuccessMessage (response) {
   if (response.data.type !== 'updateIDB') return
   console.log(response)
 
@@ -230,7 +229,7 @@ function onSuccessMessage(response) {
           handleTimeout()
           break
         case 'profile':
-          // profileView()
+          profileView(firebase.auth().currentUser)
           handleTimeout()
           break
         case 'calendar':
@@ -260,7 +259,7 @@ function onSuccessMessage(response) {
   }
 }
 
-function onErrorMessage(error) {
+function onErrorMessage (error) {
   console.log(error)
   console.table({
     'line-number': error.lineno,
@@ -269,7 +268,7 @@ function onErrorMessage(error) {
   })
 }
 
-function handleTimeout() {
+function handleTimeout () {
   const TIME_OUT_VALUE = 600000
   clearTimeout(offset)
 
