@@ -55,7 +55,8 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           console.log(inputFields.main)
 
           dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
-            getInputText(inputFields.main).value = this.dataset.contact
+            getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
+            getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
           })
 
           break
