@@ -24,7 +24,7 @@ function conversation (id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      createComment(cursor.value, currentUser)
+      createComment(db,cursor.value, currentUser)
       cursor.continue()
     }
   }
@@ -89,7 +89,7 @@ function commentPanel (id) {
   }
 }
 
-function createComment (addendum, currentUser) {
+function createComment (db,addendum, currentUser) {
   console.log(addendum)
   if (document.getElementById(addendum.addendumId)) {
     return
@@ -104,7 +104,10 @@ function createComment (addendum, currentUser) {
 
   let user = document.createElement('p')
   user.classList.add('user-name--comment')
-  user.appendChild(document.createTextNode(addendum.user))
+  readNameFromNumber(db,addendum.user).then(function(nameOrNumber){
+    console.log(nameOrNumber)
+    user.textContent = nameOrNumber
+  }).catch(console.log)
 
   let comment = document.createElement('p')
   comment.classList.add('comment')
@@ -135,7 +138,20 @@ function createComment (addendum, currentUser) {
   const container = document.getElementById('chat-container')
   container.scrollTop = container.scrollHeight
 }
+function readNameFromNumber(db,number){
+return new Promise(function(resolve,reject){
 
+  const usersObjectStore = db.transaction('users').objectStore('users')
+  usersObjectStore.get(number).onsuccess = function(event){
+    const record = event.target.result
+    if(!record.displayName)  resolve(number);
+    resolve(record.displayName)
+  }
+  usersObjectStore.get(number).onerror = function(event){
+    reject(event)
+  }
+})
+}
 function createHeaderContent (db, id) {
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   const leftDiv = document.createElement('div')
