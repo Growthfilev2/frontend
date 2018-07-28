@@ -25,7 +25,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         if (!activityRecord) return
 
         activityRecord.assignees.forEach(function (people) {
-          document.querySelector(`[data-contact="${people}"]`).remove()
+          document.querySelector(`[data-prop-number="${people}"]`).remove()
         })
 
         if (document.querySelector('[data-type="users"]')) return
@@ -35,7 +35,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         updateSelector.textContent = 'Add'
 
         updateSelector.dataset.type = 'users'
-        document.getElementById('share--container').insertBefore(updateSelector, document.getElementById('contacts'))
+        document.getElementById('share--container').insertBefore(updateSelector, document.getElementById('contact-text-field'))
 
         document.querySelector(`[data-type="users"]`)
           .addEventListener('click', function () {
@@ -54,10 +54,10 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           assigneeListUI(cursor, selector)
           console.log(inputFields.main)
 
-          dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
-            getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
-            getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
-          })
+          // dataElement('propNumber', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
+          //   getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
+          //   getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
+          // })
 
           break
 
@@ -96,7 +96,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           `${getInputText(inputFields.main).value.toLowerCase()}\uffff`
         )
       document.getElementById(selector).innerHTML = ''
-
+      if(!boundKeyRange.lower) return
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
         fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
@@ -128,11 +128,16 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
       locationUI(cursor, selector, inputFields)
       break
     case 'users':
-      console.log(cursor)
+      
+    console.log(cursor)
+      
       assigneeListUI(cursor, selector)
-      dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
-        getInputText(inputFields.main).value = this.dataset.contact
-      })
+
+      // dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
+      //   getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
+      //   getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
+      // })
+
       break
     case 'subscriptions':
       console.log(cursor.value)

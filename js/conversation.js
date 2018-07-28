@@ -283,7 +283,7 @@ function createActivityDetailHeader (record, value) {
 function updateActivityPanel (db, id, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
-  detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
+  detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderAttachments() +renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
 
@@ -310,6 +310,8 @@ function updateActivityPanel (db, id, record) {
   document.getElementById('share-btn').addEventListener('click', function (e) {
     renderShareDrawer(record)
   })
+  console.log(record.attachment)
+  createAttachmentContainer(record.attachment,'attachment--container')
 }
 
 function activityTitle (title, value) {
@@ -554,25 +556,12 @@ function showSchedule (schedules) {
   const spanDiv = document.createElement('div')
   spanDiv.className = 'schedule--text'
 
-  const spanCont = document.createElement('span')
-  spanCont.className = 'detail--static-text detail--static-text-schedule'
-  spanCont.textContent = 'Schedule'
 
-  const startTimeSpan = document.createElement('span')
-  startTimeSpan.className = 'detail--static-text-startTime'
-  startTimeSpan.textContent = 'from'
-
-  const endTimeSpan = document.createElement('span')
-  endTimeSpan.className = 'detail--static-text-endTime'
-  endTimeSpan.textContent = 'to'
 
   const scheduleList = document.createElement('ul')
   scheduleList.className = 'mdc-list'
   scheduleList.id = 'schedule--list'
 
-  spanDiv.appendChild(spanCont)
-  spanDiv.appendChild(endTimeSpan)
-  spanDiv.appendChild(startTimeSpan)
 
   scheduleCont.appendChild(spanDiv)
 
@@ -636,14 +625,10 @@ function showVenue (venues, canEdit) {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
 
-  const span = document.createElement('span')
-  span.className = 'detail--static-text'
-  span.textContent = 'Venue'
   const venueList = document.createElement('ul')
   venueList.className = 'mdc-list'
   venueList.id = 'venue--list'
 
-  venueCont.appendChild(span)
   var count = 0
   venues.forEach((venue) => {
     if (venue.geopoint) {
@@ -656,6 +641,7 @@ function showVenue (venues, canEdit) {
   venueCont.appendChild(venueList)
   return venueCont.outerHTML
 }
+
 
 function showVenueUI (venue, count, venueList, value) {
   const venueLi = document.createElement('li')
@@ -702,6 +688,12 @@ function showVenueUI (venue, count, venueList, value) {
   venueList.appendChild(div)
 }
 
+function renderAttachments(){
+  const attachmentCont = document.createElement('div')
+  attachmentCont.id = 'attachment--container'
+  return attachmentCont.outerHTML
+}
+
 function renderAssigneeList () {
   const shareCont = document.createElement('div')
   shareCont.className = 'activity--share-container'
@@ -746,7 +738,7 @@ function assigneeListUI (userRecord, target) {
   if (target === 'assignee--list') {
     div.dataset.user = userRecord.primaryKey
   } else {
-    div.dataset.contact = userRecord.primaryKey
+    div.dataset.propNumber = userRecord.primaryKey
     div.dataset.name = userRecord.value.displayName
   }
 
@@ -777,6 +769,12 @@ function assigneeListUI (userRecord, target) {
   div.appendChild(assigneeLi)
 
   document.getElementById(target).appendChild(div)
+if(!document.querySelector(`[data-prop-number]`)) return
+  document.querySelector(`#${target} [data-prop-number="${userRecord.primaryKey}"]`).addEventListener('click',function(){
+    getInputText(this.parentNode.previousSibling.id).value = this.dataset.name || this.dataset.propNumber
+    console.log(this.dataset.propNumber) 
+    this.parentNode.previousSibling.dataset.number = this.dataset.propNumber
+  })
 }
 
 function locationUI (userRecord, target, inputFields) {
@@ -902,12 +900,6 @@ function renderShareDrawerUI () {
   const contacts = document.createElement('div')
   contacts.id = 'contacts'
 
-  const ul = document.createElement('ul')
-  ul.className = 'mdc-list'
-  ul.id = 'contacts--container'
-
-  contacts.appendChild(ul)
-
   cont.appendChild(mainTextField)
   cont.appendChild(contacts)
   return cont.outerHTML
@@ -943,7 +935,7 @@ function fetchUsersData (record) {
       indexone: 'users',
       indextwo: 'displayName',
       indexThree: 'count'
-    }, 'contacts--container', {
+    }, 'contacts', {
       main: 'contact-text-field'
     }, record)
   }
@@ -1077,7 +1069,10 @@ function addContact (data) {
   requestCreator('share', reqBody)
 }
 
-function dataElement (target, key) {
+function dataElement (target, key,id) {
+  if(target === 'propNumber') {
+    return document.querySelector(`#${id} [data-${target}="${key}"]`)
+  }
   return document.querySelector(`[data-${target}="${key}"]`)
 }
 
@@ -1166,17 +1161,6 @@ function officeTemplateCombo (cursor, target) {
 function createVenueContainer () {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
-
-  const span = document.createElement('span')
-  span.className = 'detail--static-text'
-  span.textContent = 'Venue'
-  // const venueList = document.createElement('ul')
-  // venueList.className = 'mdc-list'
-  // venueList.id = 'venue--list'
-
-  venueCont.appendChild(span)
-
-  // venueCont.appendChild(venueList)
   return venueCont.outerHTML
 }
 
@@ -1186,25 +1170,9 @@ function createScheduleContainer () {
   const spanDiv = document.createElement('div')
   spanDiv.className = 'schedule--text'
 
-  const spanCont = document.createElement('span')
-  spanCont.className = 'detail--static-text detail--static-text-schedule'
-  spanCont.textContent = 'Schedule'
-
-  const startTimeSpan = document.createElement('span')
-  startTimeSpan.className = 'detail--static-text-startTime'
-  startTimeSpan.textContent = 'from'
-
-  const endTimeSpan = document.createElement('span')
-  endTimeSpan.className = 'detail--static-text-endTime'
-  endTimeSpan.textContent = 'to'
-
   const scheduleList = document.createElement('ul')
   scheduleList.className = 'mdc-list'
   scheduleList.id = 'schedule--list'
-
-  spanDiv.appendChild(spanCont)
-  spanDiv.appendChild(endTimeSpan)
-  spanDiv.appendChild(startTimeSpan)
 
   scheduleCont.appendChild(spanDiv)
 
@@ -1224,7 +1192,7 @@ function createInput (key, type, classtype) {
   return mainTextField.outerHTML
 }
 
-function createAttachmentContainer (attachment) {
+function createAttachmentContainer (attachment,container) {
   Object.keys(attachment).forEach(function (key) {
     const div = document.createElement('div')
     const label = document.createElement('label')
@@ -1236,7 +1204,7 @@ function createAttachmentContainer (attachment) {
 
     if (attachment[key] === 'string') {
       keyValue.innerHTML = createInput(key, attachment[key], 'attachment')
-      document.getElementById('create-activity--container').appendChild(div)
+      document.getElementById(container).appendChild(div)
     }
 
     if (attachment[key] === 'phoneNumber') {
@@ -1244,7 +1212,7 @@ function createAttachmentContainer (attachment) {
       const selectorDiv = document.createElement('div')
       selectorDiv.id = 'contacts' + key
       keyValue.appendChild(selectorDiv)
-      document.getElementById('create-activity--container').appendChild(div)
+      document.getElementById(container).appendChild(div)
       inputSelect({
         name: 'users',
         indexone: 'users',
@@ -1266,7 +1234,9 @@ function getSelectedSubscriptionData (office, template) {
     const range = IDBKeyRange.only([office, template])
     subscriptionObjectStore.get(range).onsuccess = function (event) {
       const record = event.target.result
-      createAttachmentContainer(record.attachment)
+      
+      createAttachmentContainer(record.attachment,'create-activity--container');
+
       document.querySelector('.activity--office').textContent = record.office
       document.querySelector('.activity--template').textContent = record.template
 
