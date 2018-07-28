@@ -140,7 +140,7 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
       dataElement('office', cursor.value.office).addEventListener('click', function () {
         document.querySelector('.activity--office').textContent = this.dataset.office
         document.querySelector('.activity--template').textContent = this.dataset.template
-
+        
         document.getElementById(selector).innerHTML = ''
       })
       break

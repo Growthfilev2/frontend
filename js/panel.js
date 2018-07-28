@@ -26,16 +26,21 @@ function fetchDataForActivityList (db) {
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
+  const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
+  const subscriptionCount = subscriptionObjectStore.count()
   let activityCount = 0
 
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
 
     if (!cursor) {
-      const fab = document.createElement('button')
-      fab.className = 'mdc-fab create-activity'
-      fab.setAttribute('aria-label', 'Add')
-      const span = document.createElement('span')
+      
+      console.log(subscriptionCount.result)
+        if(!subscriptionCount.result) return
+        const fab = document.createElement('button')
+        fab.className = 'mdc-fab create-activity'
+        fab.setAttribute('aria-label', 'Add')
+        const span = document.createElement('span')
       span.className = 'mdc-fab_icon material-icons'
       span.textContent = 'add'
       fab.appendChild(span)
