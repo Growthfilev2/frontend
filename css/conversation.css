@@ -77,6 +77,9 @@ color:#737780;
 
 .current-user--comment {
     float: right;
+    background-color: #ddeffc !important
+
+
 }
 .other-user--comment {
      float: left

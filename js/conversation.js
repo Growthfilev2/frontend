@@ -111,7 +111,7 @@ function createComment (db,addendum, currentUser) {
 
   let comment = document.createElement('p')
   comment.classList.add('comment')
-  comment.appendChild(document.createTextNode(addendum.comment))
+  comment.textContent = addendum.comment
 
   let commentInfo = document.createElement('span')
   commentInfo.style.width = '100%'
@@ -140,11 +140,12 @@ function createComment (db,addendum, currentUser) {
 }
 function readNameFromNumber(db,number){
 return new Promise(function(resolve,reject){
-
   const usersObjectStore = db.transaction('users').objectStore('users')
   usersObjectStore.get(number).onsuccess = function(event){
     const record = event.target.result
+
     if(!record.displayName)  resolve(number);
+    
     resolve(record.displayName)
   }
   usersObjectStore.get(number).onerror = function(event){
@@ -746,6 +747,7 @@ function assigneeListUI (userRecord, target) {
     div.dataset.user = userRecord.primaryKey
   } else {
     div.dataset.contact = userRecord.primaryKey
+    div.dataset.name = userRecord.value.displayName
   }
 
   const assigneeLi = document.createElement('li')
@@ -1024,8 +1026,7 @@ function updateSelectorObjectStore (dataset, input, objectStoreName) {
   console.log(dataset)
   const dbName = firebase.auth().currentUser.uid
 
-  const inputValue = getInputText(input).value
-  console.log(inputValue)
+  const inputValue = getInputText(input)['root_'].dataset.number
   const req = indexedDB.open(dbName)
 
   return new Promise(function (resolve, reject) {
@@ -1065,6 +1066,7 @@ function errorUpdatingSelectorObjectStore (error) {
 }
 
 function addContact (data) {
+  console.log(data)
   const expression = /^\+[1-9]\d{5,14}$/
   if (!expression.test(data.value)) return
 
