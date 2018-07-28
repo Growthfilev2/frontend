@@ -25,7 +25,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         if (!activityRecord) return
 
         activityRecord.assignees.forEach(function (people) {
-          document.querySelector(`[data-contact="${people}"]`).remove()
+          document.querySelector(`[data-phone-num="${people}"]`).remove()
         })
 
         if (document.querySelector('[data-type="users"]')) return
@@ -54,10 +54,10 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           assigneeListUI(cursor, selector)
           console.log(inputFields.main)
 
-          dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
-            getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
-            getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
-          })
+          // dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
+          //   getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
+          //   getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
+          // })
 
           break
 
@@ -130,17 +130,20 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
     case 'users':
       console.log(cursor)
       assigneeListUI(cursor, selector)
-      dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
-        getInputText(inputFields.main).value = this.dataset.contact
-      })
+      // dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
+      //   getInputText(inputFields.main).value = this.dataset.contact
+      // })
       break
     case 'subscriptions':
       console.log(cursor.value)
       officeTemplateCombo(cursor, selector)
+      
       dataElement('office', cursor.value.office).addEventListener('click', function () {
+        console.log(this.dataset.office)
+        console.log(this.dataset.template)
         document.querySelector('.activity--office').textContent = this.dataset.office
         document.querySelector('.activity--template').textContent = this.dataset.template
-        
+        getSelectedSubscriptionData(this.dataset.office, this.dataset.template)
         document.getElementById(selector).innerHTML = ''
       })
       break

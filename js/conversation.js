@@ -101,6 +101,7 @@ function createComment (db,addendum, currentUser) {
 
   let textContainer = document.createElement('div')
   textContainer.classList.add('talktext')
+  
 
   let user = document.createElement('p')
   user.classList.add('user-name--comment')
@@ -452,7 +453,7 @@ function makeFieldsEditable (record) {
 
     field.addEventListener('click', function () {
       if (this.dataset.active) return
-      console.log(field)
+      console.log(field.children[1])
       this.dataset.active = true
       inputSelect({
         name: 'map',
@@ -746,7 +747,7 @@ function assigneeListUI (userRecord, target) {
   if (target === 'assignee--list') {
     div.dataset.user = userRecord.primaryKey
   } else {
-    div.dataset.contact = userRecord.primaryKey
+    div.dataset.phoneNum = userRecord.primaryKey
     div.dataset.name = userRecord.value.displayName
   }
 
@@ -775,8 +776,14 @@ function assigneeListUI (userRecord, target) {
   assigneeLi.appendChild(photoGraphic)
   assigneeLi.appendChild(assigneeListText)
   div.appendChild(assigneeLi)
-
+  console.log(target)
   document.getElementById(target).appendChild(div)
+
+  if(target === 'assignee--list') return
+  document.querySelector(`#${target} [data-phone-num="${userRecord.primaryKey}"`).addEventListener('click',function(){
+    getInputText(this.parentNode.previousSibling.id).value = this.dataset.phoneNum
+    this.parentNode.previousSibling.dataset.number = this.dataset.phoneNum
+  })
 }
 
 function locationUI (userRecord, target, inputFields) {
@@ -811,6 +818,7 @@ function locationUI (userRecord, target, inputFields) {
 
   document.getElementById(target).appendChild(div)
 
+  if(!document.getElementById(userRecord.value.location.replace(/\s/g, ''))) return
   document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function () {
     console.log(this)
     console.log(inputFields.main)
@@ -906,10 +914,10 @@ function renderShareDrawerUI () {
   ul.className = 'mdc-list'
   ul.id = 'contacts--container'
 
-  contacts.appendChild(ul)
+  // contacts.appendChild(ul)
 
   cont.appendChild(mainTextField)
-  cont.appendChild(contacts)
+  cont.appendChild(ul)
   return cont.outerHTML
 }
 
@@ -1225,6 +1233,7 @@ function createInput (key, type, classtype) {
 }
 
 function createAttachmentContainer (attachment) {
+
   Object.keys(attachment).forEach(function (key) {
     const div = document.createElement('div')
     const label = document.createElement('label')
@@ -1258,6 +1267,9 @@ function createAttachmentContainer (attachment) {
 }
 
 function getSelectedSubscriptionData (office, template) {
+  document.querySelector('.activity--schedule-container').innerHTML = ''
+  document.querySelector('.activity--venue-container').innerHTML = ''
+  // document.querySelector('.create-attachment-container').innerHTML =''
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1271,6 +1283,7 @@ function getSelectedSubscriptionData (office, template) {
       document.querySelector('.activity--template').textContent = record.template
 
       record.schedule.forEach(function (name) {
+        console.log(name)
         showScheduleUI({
           name: name,
           startTime: '',
