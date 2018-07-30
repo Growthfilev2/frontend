@@ -389,3 +389,55 @@ margin-left:0;
   .activity--venue-container li {
       display: table;
   }
+
+  .mdc-dialog__surface {
+    height: 100vh;
+    width: 100vw;
+  }
+  .mdc-dialog__body--scrollable {
+      max-height: none;
+      min-height: 80vh;
+  }
+
+  #change-number-dialog .mdc-dialog__header {
+    padding: 10px 0px 10px;
+    margin: 0 auto;
+  }
+
+  .loader {
+    border: 4px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 4px solid #3498db;
+    width: 32px;
+    height: 32px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+    display: table;
+    margin: 0 auto;
+    position: absolute;
+    z-index: 1010;
+    right: 50%;
+    top: 50%;
+  }
+  
+  /* Safari */
+  @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+#assignee--list {
+
+    position: relative;
+}
+.no-click {
+    pointer-events: none;
+}
+
+.map-select-type div {
+    margin: 0px !important;
+}

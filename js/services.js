@@ -1,3 +1,10 @@
+
+function loader(){
+const div = document.createElement('div')
+div.className ='loader'
+return div
+}
+
 function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
@@ -28,19 +35,11 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           document.querySelector(`[data-phone-num="${people}"]`).remove()
         })
 
-        if (document.querySelector('[data-type="users"]')) return
-        const updateSelector = document.createElement('button')
-        updateSelector.classList.add('mdc-button')
-        updateSelector.dataset.id = activityRecord.activityId
-        updateSelector.textContent = 'Add'
+        // if (document.querySelector('[data-type="users"]')) return
+   
 
-        updateSelector.dataset.type = 'users'
-        document.getElementById('share--container').insertBefore(updateSelector, document.getElementById('contacts'))
-
-        document.querySelector(`[data-type="users"]`)
-          .addEventListener('click', function () {
-            updateSelectorObjectStore(this.dataset, inputFields.main, objectStore.name).then(addContact).catch(errorUpdatingSelectorObjectStore)
-          })
+    
+            // updateSelectorObjectStore(this.dataset, inputFields.main, objectStore.name).then(addContact).catch(errorUpdatingSelectorObjectStore)
 
         return
       }
@@ -51,17 +50,11 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'users':
-          assigneeListUI(cursor, selector)
-          console.log(inputFields.main)
-
-          // dataElement('contact', cursor.primaryKey, inputFields.main).addEventListener('click', function () {
-          //   getInputText(inputFields.main).value = this.dataset.name || this.dataset.contact
-          //   getInputText(inputFields.main)['root_'].dataset.number = this.dataset.contact
-          // })
-
+          assigneeListUI(cursor, selector,inputFields.main)
+          
           break
-
-        case 'subscriptions':
+          
+          case 'subscriptions':
           officeTemplateCombo(cursor, selector)
           dataElement('office', cursor.value.office).addEventListener('click', function () {
             console.log(this.dataset.office)
@@ -72,14 +65,16 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
             document.getElementById(selector).innerHTML = ''
           })
           break
+        }
+        cursor.continue()
       }
-      cursor.continue()
     }
-  }
-  console.log(inputFields.main)
-  document.getElementById(inputFields.main).addEventListener('input', function () {
+    console.log(inputFields.main)
+    document.getElementById(inputFields.main).addEventListener('input', function () {
+      document.getElementById(selector).innerHTML = ''
     const dbName = firebase.auth().currentUser.uid
     const req = window.indexedDB.open(dbName)
+
     req.onsuccess = function () {
       const db = req.result
       let indexMain
@@ -90,17 +85,20 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       }
       const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
 
+     
       const boundKeyRange = IDBKeyRange
         .bound(
           getInputText(inputFields.main).value.toLowerCase(),
           `${getInputText(inputFields.main).value.toLowerCase()}\uffff`
         )
-      document.getElementById(selector).innerHTML = ''
 
-      indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
-      }
-      indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
+        
+        indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
+          fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
+        }
+        console.log(boundKeyRange)
+        if(boundKeyRange.upper === '\uffff') return
+        indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
         fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
     }
@@ -110,17 +108,23 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
 function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
   const cursor = event.target.result
   if (!cursor) {
-    if (objectStore.name === 'users') return
-    if (objectStore.name === 'subscriptions') return
-
-    const link = document.createElement('a')
-    link.textContent = 'google maps'
-    link.href = '#'
-    link.id = 'find-new-location'
-    if (!document.getElementById('find-new-location')) {
-      // document.getElementById(selector).appendChild(link)
+    if (objectStore.name === 'users') {
+      activityRecord.assignees.forEach(function (people) {
+        document.querySelector(`[data-phone-num="${people}"]`).remove()
+      })
+      return
     }
-    return
+    if (objectStore.name === 'subscriptions') return
+    if(objectStore.name === 'map') return
+   
+    // const link = document.createElement('a')
+    // link.textContent = 'google maps'
+    // link.href = '#'
+    // link.id = 'find-new-location'
+    // if (!document.getElementById('find-new-location')) {
+    //   // document.getElementById(selector).appendChild(link)
+    // }
+    // return
   }
 
   switch (objectStore.name) {
@@ -128,11 +132,9 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
       locationUI(cursor, selector, inputFields)
       break
     case 'users':
-      console.log(cursor)
-      assigneeListUI(cursor, selector)
-      // dataElement('contact', cursor.primaryKey).addEventListener('click', function () {
-      //   getInputText(inputFields.main).value = this.dataset.contact
-      // })
+    console.log(cursor.value)
+      assigneeListUI(cursor, selector,inputFields.main)
+   
       break
     case 'subscriptions':
       console.log(cursor.value)
@@ -242,21 +244,14 @@ function onSuccessMessage (response) {
           break
 
         case 'detail':
+        handleTimeout()
           fillActivityDetailPage(record.id)
-          handleTimeout()
           break
-        case 'share':
-          const activityObjectStore = db.transaction('activity').objectStore('activity')
-          activityObjectStore.get(event.target.result.id).onsuccess = function (activityEvent) {
-            console.log(activityEvent)
-            renderShareDrawer(activityEvent.target.result)
-            handleTimeout()
-          }
-          break
+
         default:
-          record.currentView = 'list'
+          record.currentView = 'profile'
           rootObjectStore.put(record)
-          listView()
+          profileView(firebase.auth().currentUser,true)
           handleTimeout()
       }
     }

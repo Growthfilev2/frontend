@@ -18,17 +18,25 @@ function listView () {
       record.view = 'list'
       rootObjectStore.put(record)
     }
-    rootTx.oncomplete = fetchDataForActivityList(db)
+    rootTx.oncomplete =  findUniqueOffice().then(function(unique){
+      console.log(unique)
+        fetchDataForActivityList(db,unique)
+      
+    }).catch(console.log)
   }
 }
 
-function fetchDataForActivityList (db) {
+function fetchDataForActivityList (db,uniqueOffice) {
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
+
+
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
   let activityCount = 0
+
+ 
 
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
@@ -49,7 +57,8 @@ function fetchDataForActivityList (db) {
       return
     }
     activityCount++
-    createActivityList(cursor.value, 'activity--list', activityCount)
+
+    createActivityList(cursor.value, 'activity--list', activityCount,uniqueOffice)
 
     cursor.continue()
   }
@@ -129,8 +138,10 @@ function creatListHeader () {
   })
 }
 
-function createActivityList (data, target, count) {
+function createActivityList (data, target, count,uniqueOffice) {
   if (changeExistingActivities(data, target, count)) return
+  
+
 
   const li = document.createElement('li')
 
@@ -146,11 +157,23 @@ function createActivityList (data, target, count) {
   customText.textContent = data.title
   leftTextContainer.appendChild(customText)
 
-  const leftTextSecondaryContainer = document.createElement('span')
-  leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
-  leftTextSecondaryContainer.textContent = data.office
+  if(uniqueOffice) {
 
-  leftTextContainer.appendChild(leftTextSecondaryContainer)
+    const leftTextSecondaryContainer = document.createElement('span')
+    leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
+    leftTextSecondaryContainer.textContent = data.office
+    leftTextContainer.appendChild(leftTextSecondaryContainer)
+  }
+  
+  
+  
+  const leftTextTemplateContainer = document.createElement('span')
+  leftTextTemplateContainer.className= 'mdc-list-item__secondary-text secondary--text-template'
+  leftTextTemplateContainer.textContent = data.template
+
+
+  leftTextContainer.appendChild(leftTextTemplateContainer)
+
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
@@ -175,6 +198,7 @@ function changeExistingActivities (data, target, count) {
 
   if (document.querySelector(activitySelector)) {
     document.querySelector(`${activitySelector} > .mdc-list-item__text  .mdc-list-item__secondary-text`).textContent = data.office
+    document.querySelector(`${activitySelector} > .mdc-list-item__text  .secondary--text-template`).textContent = data.template
     document.querySelector(`${activitySelector} > .mdc-list-item__text .mdc-primary__custom-text`).textContent = data.title
     document.querySelector(`${activitySelector} > .mdc-list-item__meta .mdc-meta__custom-text`).textContent = moment(data.timestamp).calendar()
     document.querySelector(`${activitySelector} > .mdc-list-item__meta .mdc-list-item__secondary-text 
@@ -289,7 +313,7 @@ function initMap (dbName, mapRecord) {
 }
 
 function displayMarkers (dbName, map, locationData) {
-  let bounds = new google.maps.LatLngBounds()
+  // let bounds = new google.maps.LatLngBounds()
   console.log(locationData)
   const allMarkers = []
 
@@ -303,7 +327,7 @@ function displayMarkers (dbName, map, locationData) {
     })
 
     // set bounds to extend to a marker
-    bounds.extend(marker.getPosition())
+    // bounds.extend(marker.getPosition())
 
     // set marker to map
     marker.setMap(map)
@@ -311,21 +335,6 @@ function displayMarkers (dbName, map, locationData) {
     // push marker to allMarkers array
     allMarkers.push(marker)
   }
-
-  // fit all markers to default view of map
-  map.fitBounds(bounds)
-
-  // add zoom_changed listener on map ,so that when zoom changes, markers will give the acitivtyId attached to them
-  // google.maps.event.addListener(map, 'zoom_changed', function (e) {
-  //   generateActivityFromMarker(dbName, map, allMarkers)
-  // })
-
-  // add drag_end listener on map ,so that when draggins is done , markers will give the acitivtyId attached to them
-
-  // google.maps.event.addListener(map, 'dragend', function (e) {
-  //   console.log(e)
-  //   generateActivityFromMarker(dbName, map, allMarkers)
-  // })
 
   google.maps.event.addListener(map, 'idle', function () {
     generateActivityFromMarker(dbName, map, allMarkers)
@@ -348,13 +357,16 @@ function generateActivityFromMarker (dbName, map, markers) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
+        findUniqueOffice().then(function(unique){
         const activityObjectStore = db.transaction('activity').objectStore('activity')
         activityObjectStore.get(markers[i].customInfo).onsuccess = function (event) {
           const record = event.target.result
           activityCount++
-          createActivityList(record, 'list-view--map', activityCount)
+            createActivityList(record, 'list-view--map', activityCount,unique)
+          
+          }
+        }).catch(console.log)
         }
-      }
     }
     // google.maps.event.clearListeners(map, 'idle')
   }
@@ -506,15 +518,18 @@ function calendarViewUI (target, db, data) {
 function getActivity (db, data) {
   // console.log(count)
   if (data.hasOwnProperty('activityId')) {
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
-    activityObjectStore.get(data.activityId).onsuccess = function (event) {
-      const record = event.target.result
-      createActivityList(record, `activity--row${data.date}`)
-    }
+    findUniqueOffice().then(function(unique){
+
+      const activityObjectStore = db.transaction('activity').objectStore('activity')
+      activityObjectStore.get(data.activityId).onsuccess = function (event) {
+        const record = event.target.result
+        createActivityList(record, `activity--row${data.date}`,'',unique)
+      }
+    }).catch(console.log)
   }
 }
 
-function profileView (user) {
+function profileView (user,firstTimeLogin) {
   const dbName = firebase.auth().currentUser.uid
 
   const req = indexedDB.open(dbName)
@@ -527,7 +542,7 @@ function profileView (user) {
       record.view = 'profile'
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
-        backIconHeader('close-profile--panel')
+        backIconHeader('close-profile--panel',firstTimeLogin)
         createProfilePanel()
 
         document.getElementById('close-profile--panel').addEventListener('click', listView)
@@ -1067,18 +1082,57 @@ const header = function (contentStart, contentEnd) {
   document.getElementById('header').innerHTML = header.outerHTML
 }
 
-function backIconHeader (id) {
+function backIconHeader (id,firstTimeLogin) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
-  backIcon.textContent = 'arrow_back'
+  if(firstTimeLogin) {
+  backIcon.textContent = 'arrow_forward'
   backSpan.appendChild(backIcon)
-
-  header(backSpan.outerHTML)
+  
+  header('',backSpan.outerHTML)
+  return
+  }
+backIcon.textContent = 'arrow_back'
+backSpan.appendChild(backIcon)
+header(backSpan.outerHTML)
 }
 
 function removeDom (selector) {
   const target = document.getElementById(selector)
   target.innerHTML = ''
+}
+
+function findUniqueOffice(){
+  const dbName = firebase.auth().currentUser.uid
+const req = indexedDB.open(dbName)
+let officeCount =0
+return new Promise(function(resolve,reject){
+
+  req.onsuccess = function(){
+    const db = req.result
+    const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
+    activityOfficeIndex.openCursor(null,'nextunique').onsuccess = function(event){
+      const cursor = event.target.result
+      if(!cursor) {
+        console.log(officeCount)
+        if(officeCount === 1) {
+          resolve(false)
+          return
+        }
+        
+        resolve(true)
+        return
+        
+      }
+      console.log(cursor)
+      officeCount++
+      cursor.continue()
+    }
+  }
+  req.onerror = function(event){
+    reject(event.error)
+  }
+})
 }

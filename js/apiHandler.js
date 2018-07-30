@@ -112,6 +112,7 @@ function initializeIDB () {
       })
 
       activity.createIndex('timestamp', 'timestamp')
+      activity.createIndex('office','office')
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
       })
