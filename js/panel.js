@@ -138,7 +138,7 @@ function createActivityList (data, target, count, uniqueOffice) {
 
   const li = document.createElement('li')
 
-  li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-list-divider')
+  li.classList.add('mdc-list-item', 'activity--list-item')
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
 
@@ -352,7 +352,7 @@ function generateActivityFromMarker (dbName, map, markers) {
             activityCount++
             console.log(record)
             console.log(unique)
-            createActivityList(record, 'list-view--map', activityCount, unique)
+            createActivityList(record, 'list-view--map', activityCount, '')
           }
         }).catch(console.log)
       }
