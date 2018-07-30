@@ -102,6 +102,7 @@ color:#737780;
     margin-top: 0 !important;
     margin-right: 0 !important;
     width: 96%;
+    padding: 18px 0px 0px 0px
 }
 .comment-field {
     width: 100%;
@@ -127,7 +128,7 @@ color:#737780;
 #send-chat--input {
     position: absolute;
     bottom: 1rem;
-    top: 0rem;
+    top: 1.1rem;
     right: 1rem;
     background-color: #6abbf9;
 }
@@ -298,18 +299,21 @@ margin-left:0;
 }
 
 #chat-container {
-    height: 85vh;
-    overflow: scroll
+    height: 82vh;
+    overflow: scroll;
+    background-color:#d3d3d30a;
 }
 
 .back-icon {
-    padding: 10px;
+    padding: 10px 0px 10px 0px ;
     position: absolute;
     top: 5px;
 }
 
 .comment-header-primary {
-    padding: 5px 5px 5px 50px
+    padding: 5px 5px 5px 40px;
+    font-size: 15px;
+
 }
 #calendar-view--container {
     /* overflow-y :scroll */
@@ -342,6 +346,7 @@ margin-left:0;
     bottom: -10%;
     right: -3%;
     transform: translate(-50%, -50%);
+    background-color: #6abbf9;
 }
 
 #name--change-container, #email--change-container ,#change--number-container {
@@ -356,6 +361,12 @@ margin-left:0;
 #submit-action {
     display: table;
     margin: 0 auto;
+    padding: 20px;
+
+}
+
+#submit-action button {
+    color : #6abbf9;
 }
 .change--span {
     position: fixed;
@@ -368,6 +379,8 @@ margin-left:0;
     position: fixed;
     bottom: 1rem;
     right: 1rem;
+    background-color: #6abbf9;
+
   }
   /* share--container */
   @media(min-width: 1024px) {
@@ -400,10 +413,17 @@ margin-left:0;
   }
 
   #change-number-dialog .mdc-dialog__header {
-    padding: 10px 0px 10px;
+    padding: 10px 10px 0px 10px;
     margin: 0 auto;
   }
+#change-number-dialog .mdc-dialog__surface {
+    width: 95vw;
+    height: initial;
+}
 
+#change-number-dialog .mdc-dialog__footer button {
+    color: #44a3eb
+}
   .loader {
     border: 4px solid #f3f3f3;
     border-radius: 50%;
@@ -440,4 +460,30 @@ margin-left:0;
 
 .map-select-type div {
     margin: 0px !important;
+}
+
+#action-data {
+    font-weight: 400;
+    font-size: 14px;
+    margin-top: -10px;
+    padding: 0px 10px 0px 0px
+}
+
+
+.mdc-top-app-bar {
+    cursor: pointer;
+}
+#view-type {
+    padding-left: 10px
+}
+.change--number-UI {
+    padding-right: 20px;
+    padding-left: 20px;
+    padding-top: 10px;
+    min-height: 50vh;
+    margin: 68px 20px 0px 20px;
+}
+
+.change--number-UI p {
+    margin-bottom: 0px;
 }

@@ -18,37 +18,32 @@ function listView () {
       record.view = 'list'
       rootObjectStore.put(record)
     }
-    rootTx.oncomplete =  findUniqueOffice().then(function(unique){
+    rootTx.oncomplete = findUniqueOffice().then(function (unique) {
       console.log(unique)
-        fetchDataForActivityList(db,unique)
-      
+      fetchDataForActivityList(db, unique)
     }).catch(console.log)
   }
 }
 
-function fetchDataForActivityList (db,uniqueOffice) {
+function fetchDataForActivityList (db, uniqueOffice) {
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityObjectStoreIndex = activityObjectStore.index('timestamp')
-
 
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
   let activityCount = 0
 
- 
-
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
 
     if (!cursor) {
-      
       console.log(subscriptionCount.result)
-        if(!subscriptionCount.result) return
-        const fab = document.createElement('button')
-        fab.className = 'mdc-fab create-activity'
-        fab.setAttribute('aria-label', 'Add')
-        const span = document.createElement('span')
+      if (!subscriptionCount.result) return
+      const fab = document.createElement('button')
+      fab.className = 'mdc-fab create-activity'
+      fab.setAttribute('aria-label', 'Add')
+      const span = document.createElement('span')
       span.className = 'mdc-fab_icon material-icons'
       span.textContent = 'add'
       fab.appendChild(span)
@@ -58,7 +53,7 @@ function fetchDataForActivityList (db,uniqueOffice) {
     }
     activityCount++
 
-    createActivityList(cursor.value, 'activity--list', activityCount,uniqueOffice)
+    createActivityList(cursor.value, 'activity--list', activityCount, uniqueOffice)
 
     cursor.continue()
   }
@@ -138,14 +133,12 @@ function creatListHeader () {
   })
 }
 
-function createActivityList (data, target, count,uniqueOffice) {
+function createActivityList (data, target, count, uniqueOffice) {
   if (changeExistingActivities(data, target, count)) return
-  
-
 
   const li = document.createElement('li')
 
-  li.classList.add('mdc-list-item', 'activity--list-item')
+  li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-list-divider')
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
 
@@ -157,23 +150,18 @@ function createActivityList (data, target, count,uniqueOffice) {
   customText.textContent = data.title
   leftTextContainer.appendChild(customText)
 
-  if(uniqueOffice) {
-
+  if (uniqueOffice) {
     const leftTextSecondaryContainer = document.createElement('span')
     leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
     leftTextSecondaryContainer.textContent = data.office
     leftTextContainer.appendChild(leftTextSecondaryContainer)
   }
-  
-  
-  
+
   const leftTextTemplateContainer = document.createElement('span')
-  leftTextTemplateContainer.className= 'mdc-list-item__secondary-text secondary--text-template'
+  leftTextTemplateContainer.className = 'mdc-list-item__secondary-text secondary--text-template'
   leftTextTemplateContainer.textContent = data.template
 
-
   leftTextContainer.appendChild(leftTextTemplateContainer)
-
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
@@ -195,7 +183,7 @@ function createActivityList (data, target, count,uniqueOffice) {
 
 function changeExistingActivities (data, target, count) {
   const activitySelector = `[data-id="${data.activityId}"]`
-
+  console.log(count)
   if (document.querySelector(activitySelector)) {
     document.querySelector(`${activitySelector} > .mdc-list-item__text  .mdc-list-item__secondary-text`).textContent = data.office
     document.querySelector(`${activitySelector} > .mdc-list-item__text  .secondary--text-template`).textContent = data.template
@@ -357,16 +345,17 @@ function generateActivityFromMarker (dbName, map, markers) {
       // marker.customInfo is the activityId related to a marker
       // if marker is in current bound area and activityId is not undefined then get the activityId related to that marker and get the record for that activityId
       if (bounds.contains(markers[i].getPosition()) && markers[i].customInfo) {
-        findUniqueOffice().then(function(unique){
-        const activityObjectStore = db.transaction('activity').objectStore('activity')
-        activityObjectStore.get(markers[i].customInfo).onsuccess = function (event) {
-          const record = event.target.result
-          activityCount++
-            createActivityList(record, 'list-view--map', activityCount,unique)
-          
+        findUniqueOffice().then(function (unique) {
+          const activityObjectStore = db.transaction('activity').objectStore('activity')
+          activityObjectStore.get(markers[i].customInfo).onsuccess = function (event) {
+            const record = event.target.result
+            activityCount++
+            console.log(record)
+            console.log(unique)
+            createActivityList(record, 'list-view--map', activityCount, unique)
           }
         }).catch(console.log)
-        }
+      }
     }
     // google.maps.event.clearListeners(map, 'idle')
   }
@@ -518,18 +507,17 @@ function calendarViewUI (target, db, data) {
 function getActivity (db, data) {
   // console.log(count)
   if (data.hasOwnProperty('activityId')) {
-    findUniqueOffice().then(function(unique){
-
+    findUniqueOffice().then(function (unique) {
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       activityObjectStore.get(data.activityId).onsuccess = function (event) {
         const record = event.target.result
-        createActivityList(record, `activity--row${data.date}`,'',unique)
+        createActivityList(record, `activity--row${data.date}`, '', unique)
       }
     }).catch(console.log)
   }
 }
 
-function profileView (user,firstTimeLogin) {
+function profileView (user, firstTimeLogin) {
   const dbName = firebase.auth().currentUser.uid
 
   const req = indexedDB.open(dbName)
@@ -542,7 +530,7 @@ function profileView (user,firstTimeLogin) {
       record.view = 'profile'
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
-        backIconHeader('close-profile--panel',firstTimeLogin)
+        backIconHeader('close-profile--panel', firstTimeLogin)
         createProfilePanel()
 
         document.getElementById('close-profile--panel').addEventListener('click', listView)
@@ -684,11 +672,8 @@ function createProfilePanel () {
   mainChange.id = 'phone-number--change-container'
   mainChange.className = 'mdc-layout-grid__inner'
 
-  const submitCont = document.createElement('div')
-  submitCont.id = 'submit-action'
-
   changeNumCont.appendChild(mainChange)
-  changeNumCont.appendChild(submitCont)
+  // changeNumCont.appendChild(submitCont)
 
   profileView.appendChild(profileImgCont)
   profileView.appendChild(nameChangeCont)
@@ -731,8 +716,29 @@ function handleFieldInput (key, value) {
   }
 
   if (key === 'updateEmail') {
-    reauthUser(value)
+    firebase.auth().onAuthStateChanged(function (auth) {
+      // if user is signed in then run userIsSigned fn else run userSignedOut fn
+      auth ? newSignIn(auth, value) : ''
+    })
   }
+}
+
+function newSignIn (auth, value) {
+  const login = document.createElement('div')
+  login.id = 'login-container'
+
+  document.getElementById('reauth-recaptcha').innerHTML = login.outerHTML
+
+  // document.querySelector('.app').style.display = 'none'
+
+  const ui = new firebaseui.auth.AuthUI(firebase.auth())
+
+  // DOM element to insert firebaseui login UI
+  ui.start('#login-container', firebaseUiConfig())
+
+  console.log(auth)
+  console.log(email)
+  updateEmail(auth, value)
 }
 
 function readUploadedFile (event) {
@@ -937,6 +943,7 @@ function createConfirmDialog () {
   aside.appendChild(backdrop)
   document.body.appendChild(aside)
 }
+
 function phoneNumberDialog (event) {
   createConfirmDialog()
   const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
@@ -961,25 +968,46 @@ function disableInputs () {
   document.getElementById('edit--email').disabled = true
   document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-190%, -50%)'
 }
+
 function changePhoneNumber () {
-  disableInputs()
+  // disableInputs()
+  header('', '')
+  const changeNumberDiv = document.createElement('div')
+  changeNumberDiv.className = 'mdc-card mdc-top-app-bar--fixed-adjust mdc-layout-grid__inner change--number-UI'
+
+  const oldNumberInfo = document.createElement('p')
+  oldNumberInfo.textContent = 'Please enter your old country code and phone number'
+  oldNumberInfo.className = 'mdc-layout-grid__cell--span-12'
 
   const currentcountryDiv = document.createElement('div')
   currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
   currentcountryDiv.id = 'current-country--code'
+
   const currentCountryInput = document.createElement('input')
   currentCountryInput.classList.add('mdc-text-field__input')
   currentCountryInput.maxLength = 4
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+
   currentcountryDiv.appendChild(currentCountryInput)
+  currentcountryDiv.appendChild(ripple)
 
   const currentNumberDiv = document.createElement('div')
   currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
-  currentcountryDiv.id = 'current-phone--number'
+  currentNumberDiv.id = 'current-phone--number'
 
   const currentNumberInput = document.createElement('input')
   currentNumberInput.maxLength = 14
   currentNumberInput.classList.add('mdc-text-field__input')
+  const numberRipple = document.createElement('div')
+  numberRipple.className = 'mdc-line-ripple'
+
   currentNumberDiv.appendChild(currentNumberInput)
+  currentNumberDiv.appendChild(numberRipple)
+
+  const newNumberInfo = document.createElement('p')
+  newNumberInfo.textContent = 'Please enter your new country code and phone number'
+  newNumberInfo.className = 'mdc-layout-grid__cell--span-12'
 
   const newcountryDiv = document.createElement('div')
   newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
@@ -987,7 +1015,10 @@ function changePhoneNumber () {
   const newCountryInput = document.createElement('input')
   newCountryInput.classList.add('mdc-text-field__input')
   newCountryInput.maxLength = 4
+  const newCountryInputRipple = document.createElement('div')
+  newCountryInputRipple.className = 'mdc-line-ripple'
   newcountryDiv.appendChild(newCountryInput)
+  newcountryDiv.appendChild(newCountryInputRipple)
 
   const newNumberDiv = document.createElement('div')
   newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
@@ -995,20 +1026,36 @@ function changePhoneNumber () {
   const newNumberInput = document.createElement('input')
   newNumberInput.classList.add('mdc-text-field__input')
   newNumberInput.maxLength = 14
+  const newNumberInputRipple = document.createElement('div')
+  newNumberInputRipple.className = 'mdc-line-ripple'
   newNumberDiv.appendChild(newNumberInput)
+  newNumberDiv.appendChild(newNumberInputRipple)
 
+  const actions = document.createElement('div')
+  actions.id = 'submit-action'
+  actions.className = 'mdc-layout-grid__cell--span-12'
   const submit = document.createElement('button')
-  submit.classList.add('mdc-button')
+  submit.classList.add('mdc-button', 'mdc-ripple-upgraded')
   submit.id = 'updatePhone'
   submit.textContent = 'submit'
 
   const cancel = document.createElement('button')
-  cancel.classList.add('mdc-button')
+  cancel.classList.add('mdc-button', 'mdc-ripple-upgraded')
   cancel.id = 'cancelUpdate'
   cancel.textContent = 'cancel'
+  actions.appendChild(cancel)
+  actions.appendChild(submit)
 
-  document.getElementById('phone-number--change-container').innerHTML = currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML
+  changeNumberDiv.innerHTML = oldNumberInfo.outerHTML + currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newNumberInfo.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML + actions.outerHTML
+
+  document.getElementById('app-current-panel').innerHTML = changeNumberDiv.outerHTML
+
   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
+
+  getInputText('new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
+  getInputText('new-phone--number').value = ''
+  getInputText('current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
+  getInputText('current-phone--number').value = ''
 
   document.getElementById('updatePhone').addEventListener('click', function (e) {
     console.log(e)
@@ -1022,9 +1069,7 @@ function changePhoneNumber () {
   })
 
   document.getElementById('cancelUpdate').addEventListener('click', function (event) {
-    resetInputs()
-    removeDom('phone-number--change-container')
-    removeDom('submit-action')
+    profileView(firebase.auth().currentUser, '')
   })
 }
 
@@ -1053,7 +1098,7 @@ function verifyCurrentPhoneNumber () {
 
 const header = function (contentStart, contentEnd) {
   const header = document.createElement('header')
-  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed'
+  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
 
   const row = document.createElement('div')
   row.className = 'mdc-top-app-bar__row'
@@ -1082,21 +1127,21 @@ const header = function (contentStart, contentEnd) {
   document.getElementById('header').innerHTML = header.outerHTML
 }
 
-function backIconHeader (id,firstTimeLogin) {
+function backIconHeader (id, firstTimeLogin) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
-  if(firstTimeLogin) {
-  backIcon.textContent = 'arrow_forward'
-  backSpan.appendChild(backIcon)
-  
-  header('',backSpan.outerHTML)
-  return
+  if (firstTimeLogin) {
+    backIcon.textContent = 'arrow_forward'
+    backSpan.appendChild(backIcon)
+
+    header('', backSpan.outerHTML)
+    return
   }
-backIcon.textContent = 'arrow_back'
-backSpan.appendChild(backIcon)
-header(backSpan.outerHTML)
+  backIcon.textContent = 'arrow_back'
+  backSpan.appendChild(backIcon)
+  header(backSpan.outerHTML)
 }
 
 function removeDom (selector) {
@@ -1104,35 +1149,33 @@ function removeDom (selector) {
   target.innerHTML = ''
 }
 
-function findUniqueOffice(){
+function findUniqueOffice () {
   const dbName = firebase.auth().currentUser.uid
-const req = indexedDB.open(dbName)
-let officeCount =0
-return new Promise(function(resolve,reject){
+  const req = indexedDB.open(dbName)
+  let officeCount = 0
+  return new Promise(function (resolve, reject) {
+    req.onsuccess = function () {
+      const db = req.result
+      const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
+      activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) {
+          console.log(officeCount)
+          if (officeCount === 1) {
+            resolve(false)
+            return
+          }
 
-  req.onsuccess = function(){
-    const db = req.result
-    const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
-    activityOfficeIndex.openCursor(null,'nextunique').onsuccess = function(event){
-      const cursor = event.target.result
-      if(!cursor) {
-        console.log(officeCount)
-        if(officeCount === 1) {
-          resolve(false)
+          resolve(true)
           return
         }
-        
-        resolve(true)
-        return
-        
+        console.log(cursor)
+        officeCount++
+        cursor.continue()
       }
-      console.log(cursor)
-      officeCount++
-      cursor.continue()
     }
-  }
-  req.onerror = function(event){
-    reject(event.error)
-  }
-})
+    req.onerror = function (event) {
+      reject(event.error)
+    }
+  })
 }

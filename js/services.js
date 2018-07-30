@@ -1,8 +1,8 @@
 
-function loader(){
-const div = document.createElement('div')
-div.className ='loader'
-return div
+function loader () {
+  const div = document.createElement('div')
+  div.className = 'loader'
+  return div
 }
 
 function getInputText (selector) {
@@ -36,10 +36,8 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         })
 
         // if (document.querySelector('[data-type="users"]')) return
-   
 
-    
-            // updateSelectorObjectStore(this.dataset, inputFields.main, objectStore.name).then(addContact).catch(errorUpdatingSelectorObjectStore)
+        // updateSelectorObjectStore(this.dataset, inputFields.main, objectStore.name).then(addContact).catch(errorUpdatingSelectorObjectStore)
 
         return
       }
@@ -50,11 +48,11 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'users':
-          assigneeListUI(cursor, selector,inputFields.main)
-          
+          assigneeListUI(cursor, selector, inputFields.main)
+
           break
-          
-          case 'subscriptions':
+
+        case 'subscriptions':
           officeTemplateCombo(cursor, selector)
           dataElement('office', cursor.value.office).addEventListener('click', function () {
             console.log(this.dataset.office)
@@ -65,13 +63,13 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
             document.getElementById(selector).innerHTML = ''
           })
           break
-        }
-        cursor.continue()
       }
+      cursor.continue()
     }
-    console.log(inputFields.main)
-    document.getElementById(inputFields.main).addEventListener('input', function () {
-      document.getElementById(selector).innerHTML = ''
+  }
+  console.log(inputFields.main)
+  document.getElementById(inputFields.main).addEventListener('input', function () {
+    document.getElementById(selector).innerHTML = ''
     const dbName = firebase.auth().currentUser.uid
     const req = window.indexedDB.open(dbName)
 
@@ -85,20 +83,18 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       }
       const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
 
-     
       const boundKeyRange = IDBKeyRange
         .bound(
           getInputText(inputFields.main).value.toLowerCase(),
           `${getInputText(inputFields.main).value.toLowerCase()}\uffff`
         )
 
-        
-        indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-          fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
-        }
-        console.log(boundKeyRange)
-        if(boundKeyRange.upper === '\uffff') return
-        indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
+      indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
+      }
+      console.log(boundKeyRange)
+      if (boundKeyRange.upper === '\uffff') return
+      indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
         fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
       }
     }
@@ -115,8 +111,8 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
       return
     }
     if (objectStore.name === 'subscriptions') return
-    if(objectStore.name === 'map') return
-   
+    if (objectStore.name === 'map') return
+
     // const link = document.createElement('a')
     // link.textContent = 'google maps'
     // link.href = '#'
@@ -132,14 +128,14 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
       locationUI(cursor, selector, inputFields)
       break
     case 'users':
-    console.log(cursor.value)
-      assigneeListUI(cursor, selector,inputFields.main)
-   
+      console.log(cursor.value)
+      assigneeListUI(cursor, selector, inputFields.main)
+
       break
     case 'subscriptions':
       console.log(cursor.value)
       officeTemplateCombo(cursor, selector)
-      
+
       dataElement('office', cursor.value.office).addEventListener('click', function () {
         console.log(this.dataset.office)
         console.log(this.dataset.template)
@@ -244,14 +240,14 @@ function onSuccessMessage (response) {
           break
 
         case 'detail':
-        handleTimeout()
+          handleTimeout()
           fillActivityDetailPage(record.id)
           break
 
         default:
           record.currentView = 'profile'
           rootObjectStore.put(record)
-          profileView(firebase.auth().currentUser,true)
+          profileView(firebase.auth().currentUser, true)
           handleTimeout()
       }
     }
