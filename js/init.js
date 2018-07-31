@@ -30,7 +30,7 @@ function firebaseUiConfig () {
 
         recaptchaParameters: {
           type: 'image',
-          size: 'normal',
+          size: 'compact',
           badge: 'bottomleft'
         },
         defaultCountry: 'IN'

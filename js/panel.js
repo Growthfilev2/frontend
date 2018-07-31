@@ -572,13 +572,18 @@ function createProfilePanel () {
 
   const profileImgCont = document.createElement('div')
   profileImgCont.id = 'profile--image-container'
+  profileImgCont.className = 'profile-container--main'
 
   const profileImg = document.createElement('img')
   profileImg.id = 'user-profile--image'
 
   // profileImg.src =''
 
+const overlay = document.createElement('div')
+overlay.className = 'insert-overlay'
+
   profileImgCont.appendChild(profileImg)
+  profileImgCont.appendChild(overlay)
   profileImgCont.appendChild(uploadBtn)
   profileImgCont.appendChild(fileInput)
 
@@ -639,17 +644,14 @@ function createProfilePanel () {
 
   toggleBtnEmail.textContent = 'email'
 
-  const reauthCont = document.createElement('div')
-  reauthCont.id = 'reauth-recaptcha'
-  reauthCont.className = 'reauthCont'
-
-  const otpCont = document.createElement('div')
-  otpCont.id = 'reauth-otp--container'
 
   emailCont.appendChild(emailTextField)
   emailCont.appendChild(toggleBtnEmail)
-  emailCont.appendChild(reauthCont)
-  emailCont.appendChild(otpCont)
+
+  const refreshAuth = document.createElement('div')
+  refreshAuth.id = 'ui-auth'
+  refreshAuth.className =''
+
 
   const changeNumCont = document.createElement('div')
   changeNumCont.id = 'change--number-container'
@@ -678,6 +680,7 @@ function createProfilePanel () {
   profileView.appendChild(profileImgCont)
   profileView.appendChild(nameChangeCont)
   profileView.appendChild(emailCont)
+  profileView.appendChild(refreshAuth)
   profileView.appendChild(changeNumCont)
   profileView.appendChild(changeNumberText)
   document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
@@ -716,29 +719,36 @@ function handleFieldInput (key, value) {
   }
 
   if (key === 'updateEmail') {
-    firebase.auth().onAuthStateChanged(function (auth) {
+    // firebase.auth().onAuthStateChanged(function (auth) {
       // if user is signed in then run userIsSigned fn else run userSignedOut fn
-      auth ? newSignIn(auth, value) : ''
-    })
+    newSignIn(value)
+    // })
   }
 }
 
-function newSignIn (auth, value) {
+function newSignIn (value) {
   const login = document.createElement('div')
-  login.id = 'login-container'
+  login.id = 'refresh-login'
+  login.className = 'mdc-elevation--z3'
 
-  document.getElementById('reauth-recaptcha').innerHTML = login.outerHTML
+  document.getElementById('ui-auth').innerHTML = login.outerHTML
 
   // document.querySelector('.app').style.display = 'none'
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth())
-
+  
+  
   // DOM element to insert firebaseui login UI
-  ui.start('#login-container', firebaseUiConfig())
+  ui.start('#refresh-login', firebaseUiConfig())
+ setTimeout(function(){
 
-  console.log(auth)
-  console.log(email)
-  updateEmail(auth, value)
+   document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber
+   document.querySelector('.firebaseui-id-phone-number').disabled = true
+   document.querySelector('.firebaseui-label').remove()
+
+   console.log(email)
+   updateEmail(firebase.auth().currentUser, value)
+  },500) 
 }
 
 function readUploadedFile (event) {
@@ -771,7 +781,12 @@ function processImage (image) {
 
   function snapshotHandler (snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
-      console.log('running')
+
+      if(document.querySelector('#profile--image-container .loader')) return
+
+        document.querySelector('.insert-overlay').classList.add('middle')
+        document.getElementById('profile--image-container').appendChild(loader())
+        document.querySelector('#profile--image-container .loader').classList.add('profile--loader')
       // show gola
     }
   }
@@ -792,18 +807,29 @@ function updateAuth (url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
-  }).then(showProfilePicture).catch(authUpdatedError)
+  }).then(removeLoader).catch(authUpdatedError)
+}
+
+function removeLoader(){
+  document.querySelector('.insert-overlay').classList.remove('middle')
+  const container = document.getElementById('profile--image-container')
+  container.children[0].classList.add('reset-opacity')
+
+  container.removeChild(container.lastChild)
+  showProfilePicture()
 }
 
 function showProfilePicture () {
-  // remove gola
-  // preview image on profile drawer and toolbar in list view
+
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL
 }
 
 function authUpdatedError (error) {
-  console.log(error)
+  switch (error.code) {
+    case 'auth/email-already-in-use' :
+    snacks(error.message)
+  }
 }
 
 function changeDisplayName (user) {
@@ -829,48 +855,10 @@ function changeEmailAddress (user) {
   toggleIconData('edit--email', emailField)
 }
 
-function reauthUser (email) {
-  const applicationVerifier = new firebase.auth.RecaptchaVerifier('reauth-recaptcha')
-  const provider = new firebase.auth.PhoneAuthProvider()
-  const userPhoneNumber = firebase.auth().currentUser.phoneNumber
-  provider.verifyPhoneNumber(userPhoneNumber, applicationVerifier).then(function (verificationId) {
-    generateVerificationId(verificationId, email)
-  })
-}
-
-function generateVerificationId (verificationId, email) {
-  removeDom('reauth-recaptcha')
-
-  const otpDiv = document.createElement('div')
-  otpDiv.classList.add('mdc-text-field')
-  otpDiv.id = 'reauth-otp'
-  const otpInput = document.createElement('input')
-  otpInput.classList.add('mdc-text-field__input')
-  const submitButtonOtp = document.createElement('button')
-  submitButtonOtp.textContent = 'submit'
-  submitButtonOtp.classList.add('mdc-button', 'getOtp')
-  otpDiv.appendChild(otpInput)
-  otpDiv.appendChild(submitButtonOtp)
-
-  document.getElementById('reauth-otp--container').appendChild(otpDiv)
-
-  document.querySelector('.getOtp').addEventListener('click', function () {
-    const otp = getInputText('reauth-otp').value
-    const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp)
-    generateCredential(credential, email)
-  })
-}
-
-function generateCredential (credential, email) {
-  removeDom('reauth-otp--container')
-  console.log(credential)
-  const user = firebase.auth().currentUser
-  user.reauthenticateAndRetrieveDataWithCredential(credential).then(function () {
-    updateEmail(user, email)
-  }).catch(handleReauthError)
-}
 
 function updateEmail (user, email) {
+  console.log(user)
+  console.log(email)
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
@@ -880,6 +868,8 @@ function emailUpdateSuccess () {
 }
 
 function emailVerificationSuccess () {
+  snacks('Please check your mail for verification Email')
+
   console.log('email verified')
 }
 
@@ -1178,4 +1168,30 @@ function findUniqueOffice () {
       reject(event.error)
     }
   })
+}
+
+function snacks(message) {
+ 
+  const snack =  document.createElement('div')
+  snack.className = 'mdc-snackbar'
+  snack.setAttribute('aria-live','assertive')
+  snack.setAttribute('aria-atomic','true')
+  snack.setAttribute('aria-hidden','true')
+
+  const snackbarText = document.createElement('div')
+  snackbarText.className = 'mdc-snackbar__text'
+  snackbarText.textContent = message
+
+  const snackbarAction = document.createElement('div')
+  snackbarAction.className ='mdc-snackbar__action-wrapper'
+
+  const button = document.createElement('button')
+  button.className ='mdc-snackbar__action-button'
+  button.textContent = 'Ok'
+
+  snackbarAction.appendChild(button)
+
+  snack.appendChild(snackbarText)
+  snack.appendChild(snackbarAction)
+
 }

@@ -348,6 +348,10 @@ margin-left:0;
     transform: translate(-50%, -50%);
     background-color: #6abbf9;
 }
+#email--change-container {
+    padding-bottom: 20px;
+}
+
 
 #name--change-container, #email--change-container ,#change--number-container {
     display: table;
@@ -450,6 +454,11 @@ margin-left:0;
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+
+  .profile--loader {
+      right:43%;
+      top:43%;
+  }
 #assignee--list {
 
     position: relative;
@@ -487,3 +496,30 @@ margin-left:0;
 .change--number-UI p {
     margin-bottom: 0px;
 }
+
+.middle {
+    transition: .5s ease;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    text-align: center;
+  }
+
+  .profile-container--main:hover #user-profile--image {
+    opacity: 0.3;
+  }
+  
+  .profile-container--main:hover .middle {
+    opacity: 1;
+  }
+  .profile-container--main #user-profile--image.reset-opacity {
+      opacity: 1;
+  }
+  #refresh-login {
+    width: 73vw;
+    height: 250px;
+
+  }
