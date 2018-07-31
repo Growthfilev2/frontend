@@ -194,7 +194,7 @@ function changeExistingActivities (data, target, count) {
     document.querySelector(`${activitySelector} > .mdc-list-item__meta .mdc-list-item__secondary-text 
     `).className = `mdc-list-item__secondary-text ${data.status}`
 
-    if (!count) return false
+    if (!count) return true
 
     document.getElementById(target).insertBefore(document.querySelector(activitySelector), document.getElementById(target)[count])
     return true
@@ -396,12 +396,14 @@ function createCalendarPanel () {
 
   calendarView.appendChild(beforeDiv)
   calendarView.appendChild(afterDiv)
+  if(document.getElementById('beforeToday') || document.getElementById('afterToday')) {
+    return
+  }
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
 }
 
 function fetchCalendarData () {
-  removeDom('beforeToday')
-  removeDom('afterToday')
+
 
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
@@ -437,9 +439,7 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
       calendarViewUI('afterToday', db, cursor.value)
       cursor.continue()
     } else {
-      document.querySelectorAll('.activity--row li').forEach(function (li) {
-        li.classList.add('calendar-activity--list-item')
-      })
+    
       const parent = document.getElementById('calendar-view--container')
       const lastScrollHeight = parent.scrollHeight
       insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight)
@@ -459,9 +459,7 @@ function insertDatesBeforeToday (db, calendarDateIndex, today, lastScrollHeight)
       const parent = document.getElementById('calendar-view--container')
       document.documentElement.scrollTop = parent.scrollHeight - lastScrollHeight
 
-      document.querySelectorAll('.activity--row li').forEach(function (li) {
-        li.classList.add('calendar-activity--list-item')
-      })
+    
     }
   }
 }
@@ -496,14 +494,14 @@ function calendarViewUI (target, db, data) {
 
     dateDiv.appendChild(dateCol)
     dateDiv.appendChild(activityRow)
-    document.getElementById(target).appendChild(dateDiv)
+    document.getElementById(target).innerHTML = dateDiv.outerHTML
 
     getActivity(db, data)
     return
   }
   getActivity(db, data)
 }
-
+let count = 0
 function getActivity (db, data) {
   // console.log(count)
   if (data.hasOwnProperty('activityId')) {
@@ -511,7 +509,7 @@ function getActivity (db, data) {
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       activityObjectStore.get(data.activityId).onsuccess = function (event) {
         const record = event.target.result
-        createActivityList(record, `activity--row${data.date}`, '', unique)
+        createActivityList(record, `activity--row${data.date}`,'' , unique)
       }
     }).catch(console.log)
   }
@@ -530,9 +528,9 @@ function profileView (user, firstTimeLogin) {
       record.view = 'profile'
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
-        backIconHeader('close-profile--panel', firstTimeLogin)
+        createProfileHeader()
         createProfilePanel()
-
+        disableInputs()
         document.getElementById('close-profile--panel').addEventListener('click', listView)
         showProfilePicture()
 
@@ -540,10 +538,33 @@ function profileView (user, firstTimeLogin) {
 
         changeDisplayName(user)
         changeEmailAddress(user)
-        document.getElementById('change-link').addEventListener('click', phoneNumberDialog)
       }
     }
   }
+}
+
+function createProfileHeader () {
+  const iconCont = document.createElement('div')
+  iconCont.className = 'profile--toolbar-icon'
+
+  const icon = document.createElement('i')
+  icon.className = 'material-icons'
+  icon.textContent = 'more_vert'
+
+  
+
+  iconCont.appendChild(icon)
+
+  const backSpan = document.createElement('span')
+  backSpan.id = 'close-profile--panel'
+
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons'
+  backIcon.textContent = 'arrow_back'
+  backSpan.appendChild(backIcon)
+
+  header(backSpan.outerHTML, iconCont.outerHTML)
+  handleChangeNumberMenu()
 }
 
 function createProfilePanel () {
@@ -579,8 +600,8 @@ function createProfilePanel () {
 
   // profileImg.src =''
 
-const overlay = document.createElement('div')
-overlay.className = 'insert-overlay'
+  const overlay = document.createElement('div')
+  overlay.className = 'insert-overlay'
 
   profileImgCont.appendChild(profileImg)
   profileImgCont.appendChild(overlay)
@@ -590,17 +611,7 @@ overlay.className = 'insert-overlay'
   const nameChangeCont = document.createElement('div')
   nameChangeCont.id = 'name--change-container'
 
-  const nameTextField = document.createElement('div')
-  nameTextField.className = 'mdc-text-field mdc-button--dense'
-  nameTextField.id = 'displayName'
-
-  const nameInput = document.createElement('input')
-  nameInput.type = 'text'
-  nameInput.className = 'mdc-text-field__input'
-  nameInput.disabled = true
-  nameInput.style.borderBottom = 'none'
-
-  nameTextField.appendChild(nameInput)
+ 
 
   const toggleBtnName = document.createElement('button')
   toggleBtnName.className = 'mdc-icon-button material-icons'
@@ -615,22 +626,13 @@ overlay.className = 'insert-overlay'
 
   toggleBtnName.textContent = 'edit'
 
-  nameChangeCont.appendChild(nameTextField)
+  nameChangeCont.appendChild(createInput('displayName','Name'))
   nameChangeCont.appendChild(toggleBtnName)
 
   const emailCont = document.createElement('div')
   emailCont.id = 'email--change-container'
 
-  const emailTextField = document.createElement('div')
-  emailTextField.className = 'mdc-text-field mdc-button--dense'
-  emailTextField.id = 'email'
-
-  const emailInput = document.createElement('input')
-  emailInput.className = 'mdc-text-field__input'
-  emailInput.type = 'text'
-  emailInput.style.borderBottom = 'none'
-
-  emailTextField.appendChild(emailInput)
+ 
 
   const toggleBtnEmail = document.createElement('button')
   toggleBtnEmail.className = 'mdc-icon-button material-icons'
@@ -644,31 +646,15 @@ overlay.className = 'insert-overlay'
 
   toggleBtnEmail.textContent = 'email'
 
-
-  emailCont.appendChild(emailTextField)
+  emailCont.appendChild(createInput('email','Email'))
   emailCont.appendChild(toggleBtnEmail)
 
   const refreshAuth = document.createElement('div')
   refreshAuth.id = 'ui-auth'
-  refreshAuth.className =''
-
+  refreshAuth.className = ''
 
   const changeNumCont = document.createElement('div')
   changeNumCont.id = 'change--number-container'
-
-  const changeNumberText = document.createElement('div')
-  changeNumberText.className = 'change--span'
-  const infoText = document.createElement('span')
-  infoText.className = 'info--span-number'
-
-  const info = document.createElement('span')
-  info.id = 'change-link'
-  info.textContent = 'click here '
-  // first append
-
-  infoText.textContent = 'to change your number'
-  changeNumberText.appendChild(info)
-  changeNumberText.appendChild(infoText)
 
   const mainChange = document.createElement('div')
   mainChange.id = 'phone-number--change-container'
@@ -682,7 +668,7 @@ overlay.className = 'insert-overlay'
   profileView.appendChild(emailCont)
   profileView.appendChild(refreshAuth)
   profileView.appendChild(changeNumCont)
-  profileView.appendChild(changeNumberText)
+ 
   document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 }
 
@@ -719,10 +705,17 @@ function handleFieldInput (key, value) {
   }
 
   if (key === 'updateEmail') {
-    // firebase.auth().onAuthStateChanged(function (auth) {
-      // if user is signed in then run userIsSigned fn else run userSignedOut fn
-    newSignIn(value)
-    // })
+    if (value === firebase.auth().currentUser.email) {
+      snacks('This email address already exists')
+      return
+    }
+    console.log(timeDiff(firebase.auth().currentUser.metadata.lastSignInTime))
+    if (timeDiff(firebase.auth().currentUser.metadata.lastSignInTime) <= 5) {
+      console.log('less than 5')
+      updateEmail(firebase.auth().currentUser, value)
+    } else {
+      newSignIn(value)
+    }
   }
 }
 
@@ -736,19 +729,15 @@ function newSignIn (value) {
   // document.querySelector('.app').style.display = 'none'
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth())
-  
-  
+
   // DOM element to insert firebaseui login UI
-  ui.start('#refresh-login', firebaseUiConfig())
- setTimeout(function(){
+  ui.start('#refresh-login', firebaseUiConfig(value))
+  setTimeout(function () {
+    document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber
+    document.querySelector('.firebaseui-id-phone-number').disabled = true
+    document.querySelector('.firebaseui-label').remove()
 
-   document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber
-   document.querySelector('.firebaseui-id-phone-number').disabled = true
-   document.querySelector('.firebaseui-label').remove()
-
-   console.log(email)
-   updateEmail(firebase.auth().currentUser, value)
-  },500) 
+  }, 300)
 }
 
 function readUploadedFile (event) {
@@ -781,12 +770,11 @@ function processImage (image) {
 
   function snapshotHandler (snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
+      if (document.querySelector('#profile--image-container .loader')) return
 
-      if(document.querySelector('#profile--image-container .loader')) return
-
-        document.querySelector('.insert-overlay').classList.add('middle')
-        document.getElementById('profile--image-container').appendChild(loader())
-        document.querySelector('#profile--image-container .loader').classList.add('profile--loader')
+      document.querySelector('.insert-overlay').classList.add('middle')
+      document.getElementById('profile--image-container').appendChild(loader())
+      document.querySelector('#profile--image-container .loader').classList.add('profile--loader')
       // show gola
     }
   }
@@ -810,7 +798,7 @@ function updateAuth (url) {
   }).then(removeLoader).catch(authUpdatedError)
 }
 
-function removeLoader(){
+function removeLoader () {
   document.querySelector('.insert-overlay').classList.remove('middle')
   const container = document.getElementById('profile--image-container')
   container.children[0].classList.add('reset-opacity')
@@ -820,7 +808,6 @@ function removeLoader(){
 }
 
 function showProfilePicture () {
-
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL
 }
@@ -828,53 +815,46 @@ function showProfilePicture () {
 function authUpdatedError (error) {
   switch (error.code) {
     case 'auth/email-already-in-use' :
-    snacks(error.message)
+      snacks(error.message)
   }
 }
 
 function changeDisplayName (user) {
   const displayNameField = getInputText('displayName')
 
-  if (!user.displayName) {
-    displayNameField['input_'].placeholder = 'choose a user name'
-  } else {
+  if (user.displayName) {
     displayNameField.value = user.displayName
-  }
+  } 
 
   toggleIconData('edit--name', displayNameField)
 }
 
 function changeEmailAddress (user) {
   const emailField = getInputText('email')
-  if (!user.email) {
-    emailField['input_'].placeholder = 'set an email address'
-  } else {
+  if (user.email) {
     emailField.value = user.email
-  }
-
+  } 
+  
   toggleIconData('edit--email', emailField)
 }
 
-
 function updateEmail (user, email) {
-  console.log(user)
   console.log(email)
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
 function emailUpdateSuccess () {
   const user = firebase.auth().currentUser
+  console.log(user)
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
 function emailVerificationSuccess () {
-  snacks('Please check your mail for verification Email')
-
-  console.log('email verified')
+  snacks('Verification link has been send to your email address')
 }
 
 function emailVerificationError (error) {
-  console.log(error)
+  snacks(error.message)
 }
 
 function handleReauthError (error) {
@@ -946,21 +926,19 @@ function phoneNumberDialog (event) {
 }
 
 function resetInputs () {
-  document.getElementsByClassName('change--span')[0].style.display = 'block'
   document.getElementById('edit--name').disabled = false
   document.getElementById('edit--email').disabled = false
   document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-50%, -50%)'
 }
 
 function disableInputs () {
-  document.getElementsByClassName('change--span')[0].style.display = 'none'
-  document.getElementById('edit--name').disabled = true
-  document.getElementById('edit--email').disabled = true
-  document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-190%, -50%)'
+  getInputText('displayName')['input_'].disabled = true
+  getInputText('email')['input_'].disabled = true
+
+
 }
 
 function changePhoneNumber () {
-  // disableInputs()
   header('', '')
   const changeNumberDiv = document.createElement('div')
   changeNumberDiv.className = 'mdc-card mdc-top-app-bar--fixed-adjust mdc-layout-grid__inner change--number-UI'
@@ -1122,6 +1100,7 @@ function backIconHeader (id, firstTimeLogin) {
   backSpan.id = id
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
+
   if (firstTimeLogin) {
     backIcon.textContent = 'arrow_forward'
     backSpan.appendChild(backIcon)
@@ -1131,6 +1110,7 @@ function backIconHeader (id, firstTimeLogin) {
   }
   backIcon.textContent = 'arrow_back'
   backSpan.appendChild(backIcon)
+
   header(backSpan.outerHTML)
 }
 
@@ -1170,28 +1150,88 @@ function findUniqueOffice () {
   })
 }
 
-function snacks(message) {
- 
-  const snack =  document.createElement('div')
+function snacks (message) {
+  const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
-  snack.setAttribute('aria-live','assertive')
-  snack.setAttribute('aria-atomic','true')
-  snack.setAttribute('aria-hidden','true')
+  snack.setAttribute('aria-live', 'assertive')
+  snack.setAttribute('aria-atomic', 'true')
+  snack.setAttribute('aria-hidden', 'true')
 
   const snackbarText = document.createElement('div')
   snackbarText.className = 'mdc-snackbar__text'
-  snackbarText.textContent = message
 
   const snackbarAction = document.createElement('div')
-  snackbarAction.className ='mdc-snackbar__action-wrapper'
+  snackbarAction.className = 'mdc-snackbar__action-wrapper'
 
   const button = document.createElement('button')
-  button.className ='mdc-snackbar__action-button'
-  button.textContent = 'Ok'
+  button.className = 'mdc-snackbar__action-button'
 
   snackbarAction.appendChild(button)
 
   snack.appendChild(snackbarText)
   snack.appendChild(snackbarAction)
+  document.getElementById('snackbar-container').innerHTML = snack.outerHTML
 
+  const data = {
+    message: message,
+    actionText: 'Ok',
+    timeout: 40000,
+    actionHandler: function () {
+      console.log('okay')
+    }
+  }
+
+  const snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'))
+
+  snackbar.show(data)
+}
+
+function timeDiff (lastSignInTime) {
+  const currentDate = moment().format('YYY-MM-DD HH:mm')
+  const authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm')
+
+  return moment(currentDate).diff(moment(authSignInTime), 'minutes')
+}
+
+function handleChangeNumberMenu () {
+
+  const div = document.createElement('div')
+  div.className = 'mdc-menu mdc-menu--animating-open'
+  div.id = 'change-number--menu'
+  const ul = document.createElement('ul')
+  ul.className = 'mdc-menu__items mdc-list'
+  ul.setAttribute('aria-hidden', 'true')
+  ul.setAttribute('role', 'menu')
+
+  const li = document.createElement('li')
+  li.className = 'mdc-list-item'
+  li.setAttribute('role', 'menuitem')
+  li.setAttribute('tabindex', '0')
+  li.textContent = 'change number'
+  li.id = 'change--span'
+  ul.appendChild(li)
+  div.appendChild(ul)
+  document.querySelector('.mdc-top-app-bar__section--align-end').classList.add('mdc-menu-anchor')
+  document.querySelector('.mdc-top-app-bar__section--align-end').appendChild(div)
+
+  // Instantiation
+  var menuEl = document.querySelector('#change-number--menu')
+  var menu = new mdc.menu.MDCMenu(menuEl)
+  var menuButtonEl = document.querySelector('.profile--toolbar-icon')
+
+  // Toggle menu open
+  menuButtonEl.addEventListener('click', function () {
+    menu.open = !menu.open
+  })
+
+  // Listen for selected item
+  menuEl.addEventListener('MDCMenu:selected', function (evt) {
+    phoneNumberDialog(evt)
+  })
+
+  // Set Anchor Corner to Bottom End
+  // menu.setAnchorCorner('Corner.BOTTOM_END')
+
+  // Turn off menu open animations
+  menu.quickOpen = true
 }

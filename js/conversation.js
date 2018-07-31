@@ -1379,15 +1379,25 @@ function createScheduleContainer () {
 
 function createInput (key, type, classtype) {
   const mainTextField = document.createElement('div')
-  mainTextField.className = `mdc-text-field mdc-text-field--box mdc-text-field--dense ${classtype}`
+  mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype}`
   mainTextField.id = key
   mainTextField.dataset.type = type
   const mainInput = document.createElement('input')
   mainInput.className = 'mdc-text-field__input'
   mainInput.type = 'text'
+  
+  const label = document.createElement('label')
+  label.className = 'mdc-floating-label'
+  label.textContent = type
+
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+
 
   mainTextField.appendChild(mainInput)
-  return mainTextField.outerHTML
+  mainTextField.appendChild(label)
+  mainTextField.appendChild(ripple)
+  return mainTextField
 }
 
 function createAttachmentContainer (attachment) {
@@ -1409,12 +1419,12 @@ function createAttachmentContainer (attachment) {
     div.appendChild(keyValue)
 
     if (attachment[key] === 'string') {
-      keyValue.innerHTML = createInput(key, attachment[key], 'attachment')
+      keyValue.innerHTML = createInput(key, attachment[key], 'attachment').outerHTML
       document.getElementById('create-activity--container').appendChild(div)
     }
 
     if (attachment[key] === 'phoneNumber') {
-      keyValue.innerHTML = createInput(key, attachment[key], 'attachment')
+      keyValue.innerHTML = createInput(key, attachment[key], 'attachment').outerHTML
       const selectorDiv = document.createElement('div')
       selectorDiv.id = 'contacts' + key
       keyValue.appendChild(selectorDiv)

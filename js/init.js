@@ -7,15 +7,26 @@ firebase.initializeApp({
   databaseURL: 'https://growthfilev2-0.firebaseio.com',
   projectId: 'growthfilev2-0',
   storageBucket: 'growthfilev2-0.appspot.com'
+  // apiKey: 'AIzaSyA4jnnrSPh4oVxmq9JFMwdo8LXubQlgbzw',
+  // authDomain: 'kap-sk.firebaseapp.com',
+  // databaseURL: 'https://kap-sk.firebaseio.com',
+  // projectId: 'kap-sk',
+  // storageBucket: 'kap-sk.appspot.com',
+  // messagingSenderId: '90380889927'
 
 })
 
 // firebaseUI login config object
-function firebaseUiConfig () {
+function firebaseUiConfig (value) {
   return {
     'callbacks': {
       'signInSuccess': function (user, credential, redirectUrl) {
-        // Do not redirect
+        if (value) {
+          updateEmail(user, value)
+          return
+        }
+
+        // no redirect
         return false
       },
       'signInFailure': function (error) {
@@ -30,7 +41,7 @@ function firebaseUiConfig () {
 
         recaptchaParameters: {
           type: 'image',
-          size: 'compact',
+          size: 'invisible',
           badge: 'bottomleft'
         },
         defaultCountry: 'IN'
@@ -63,15 +74,13 @@ firebase.auth().onAuthStateChanged(function (auth) {
 // when user is signed in call requestCreator function inside services.js
 function userSignedIn (auth) {
   // document.querySelector('.app').style.display = 'block'
-
+  console.log(auth)
   if (window.Worker && window.indexedDB) {
     layoutGrid()
     requestCreator('initializeIDB')
-
-    return
   }
 
-  firebase.auth().signOut().catch(signOutError)
+  // firebase.auth().signOut().catch(signOutError)
 }
 
 // When user is signed out
@@ -105,9 +114,12 @@ function layoutGrid () {
   currentPanel.id = 'app-current-panel'
   currentPanel.className = 'mdc-layout-grid__cell--span-12'
 
+  const snackbar = document.createElement('div')
+  snackbar.id = 'snackbar-container'
+
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
-
+  layoutInner.appendChild(snackbar)
   // const conversationPanelParent = document.createElement('div')
   // conversationPanelParent.className ='mdc-layout-grid__cell--span-12-mobile app-center-panel'
   // const activityParentPanel = document.createElement('div')
