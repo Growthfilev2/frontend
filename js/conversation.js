@@ -1,4 +1,4 @@
-function conversation (id) {
+function conversation(id) {
   if (!id) return
   // removeDom('chat-container')
   const currentUser = firebase.auth().currentUser
@@ -30,7 +30,7 @@ function conversation (id) {
   }
 }
 
-function commentPanel (id) {
+function commentPanel(id) {
   if (document.getElementById('chat-container')) {
     return
   }
@@ -90,13 +90,13 @@ function commentPanel (id) {
   }
 }
 
-function createComment (db, addendum, currentUser) {
+function createComment(db, addendum, currentUser) {
   console.log(addendum)
   if (document.getElementById(addendum.addendumId)) {
     return
   }
   let commentBox = document.createElement('div')
-  commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
+  commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left','mdc-theme--primary-bg')
   currentUser.phoneNumber === addendum.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
   commentBox.id = addendum.addendumId
 
@@ -140,7 +140,7 @@ function createComment (db, addendum, currentUser) {
   container.scrollTop = container.scrollHeight
 }
 
-function readNameFromNumber (db, number) {
+function readNameFromNumber(db, number) {
   return new Promise(function (resolve, reject) {
     const usersObjectStore = db.transaction('users').objectStore('users')
     usersObjectStore.get(number).onsuccess = function (event) {
@@ -156,7 +156,7 @@ function readNameFromNumber (db, number) {
   })
 }
 
-function createHeaderContent (db, id) {
+function createHeaderContent(db, id) {
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   const leftDiv = document.createElement('div')
 
@@ -199,7 +199,7 @@ function createHeaderContent (db, id) {
   }
 }
 
-function fillActivityDetailPage (id) {
+function fillActivityDetailPage(id) {
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -237,7 +237,7 @@ function fillActivityDetailPage (id) {
   }
 }
 
-function createActivityDetailHeader (record, value) {
+function createActivityDetailHeader(record, value) {
   const leftDiv = document.createElement('div')
 
   const backSpan = document.createElement('span')
@@ -253,7 +253,7 @@ function createActivityDetailHeader (record, value) {
   backIcon.className = 'material-icons'
   backIcon.textContent = 'arrow_back'
   backSpan.appendChild(backIcon)
-  
+
   const cancel = document.createElement('i')
   cancel.className = 'material-icons'
   cancel.id = 'cancel-update'
@@ -261,7 +261,7 @@ function createActivityDetailHeader (record, value) {
   cancel.textContent = 'clear'
   cancel.style.color = 'gray'
   cancel.style.display = 'none'
-  
+
 
   leftDiv.appendChild(backSpan)
   leftDiv.appendChild(cancel)
@@ -278,14 +278,29 @@ function createActivityDetailHeader (record, value) {
   toggleBtnName.className = 'mdc-icon-button material-icons'
   toggleBtnName.id = `${value}-activity`
   toggleBtnName.dataset.id = record.activityId
+
   toggleBtnName.setAttribute('aria-hidden', 'true')
   toggleBtnName.setAttribute('aria-pressed', 'false')
-  toggleBtnName.setAttribute('data-toggle-on-content', 'check')
-  toggleBtnName.setAttribute('data-toggle-on-label', 'check')
-  toggleBtnName.setAttribute('data-toggle-off-content', 'edit')
-  toggleBtnName.setAttribute('data-toggle-off-label', 'editActivity')
 
-  toggleBtnName.textContent = 'edit'
+  if (value === 'edit') {
+
+    toggleBtnName.setAttribute('data-toggle-on-content', 'check')
+    toggleBtnName.setAttribute('data-toggle-on-label', 'check')
+    toggleBtnName.setAttribute('data-toggle-off-content', 'edit')
+    toggleBtnName.setAttribute('data-toggle-off-label', 'editActivity')
+
+
+    toggleBtnName.textContent = 'edit'
+  }
+  if (value === 'create') {
+    toggleBtnName.setAttribute('data-toggle-on-content', 'check')
+    toggleBtnName.setAttribute('data-toggle-on-label', 'check')
+    toggleBtnName.setAttribute('data-toggle-off-content', 'check')
+    toggleBtnName.setAttribute('data-toggle-off-label', 'createActivity')
+
+
+    toggleBtnName.textContent = 'check'
+  }
 
   // const edit = document.createElement('button')
   // edit.className = 'mdc-button'
@@ -296,9 +311,15 @@ function createActivityDetailHeader (record, value) {
 
   rigthDiv.appendChild(toggleBtnName)
   header(leftDiv.outerHTML, rigthDiv.outerHTML)
+  if (value === 'edit') {
+    toggleActivityHeader(`${value}-activity`, '.activity-detail-page', value, record)
+  }
+  if (value === 'create') {
+    toggleActivityHeader(`${value}-activity`, '#create-activity--container', value)
+  }
 }
 
-function updateActivityPanel (db, record) {
+function updateActivityPanel(db, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
   detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
@@ -322,47 +343,68 @@ function updateActivityPanel (db, record) {
   }
 
   if (!record.canEdit) return
-  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(document.getElementById('edit-activity'))
-  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
-    detail
-  }) {
-    if(!detail.isOn){
-      createUpdateReqBody(event, 'create')
-    }
-    else {
-      makeFieldsEditable(record)
-
-    }
-    
-  
-  })
 
   document.getElementById('share-btn').addEventListener('click', function (evt) {
-    
-    const usersObjectStore = db.transaction('users').objectStore('users')
-    record.assignees.forEach(function(number){
 
-      usersObjectStore.get(number).onsuccess = function(event){
+    const usersObjectStore = db.transaction('users').objectStore('users')
+    record.assignees.forEach(function (number) {
+
+      usersObjectStore.get(number).onsuccess = function (event) {
         const record = event.target.result
-        if(!record){
+        if (!record) {
           const reqBody = {
-            'activityId':record.activityId,
-            'number':[number]
+            'activityId': record.activityId,
+            'number': [number]
           }
           requestCreator('share', reqBody)
           return
         }
-      
+
         return
       }
     })
     renderShareScreen(evt, record, '')
-    
-  
+
+
   })
 }
 
-function activityTitle (title, value) {
+function toggleActivityHeader(toggleId, containerClass, type, record) {
+  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(document.getElementById(toggleId))
+
+  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
+    detail
+  }) {
+    if (!detail.isOn) {
+      let allow = true
+      checkInValidInputs(type, containerClass)
+    } else {
+      if (type === 'create') {
+        checkInValidInputs(type, containerClass)
+      } else {
+        makeFieldsEditable(record)
+      }
+    }
+  })
+}
+
+function checkInValidInputs(type, containerClass) {
+  let allow = true
+  document.getElementById('app-current-panel').querySelectorAll("[required]").forEach(function (elemnt) {
+    console.log(elemnt.value)
+    if (elemnt.value.trim() !== '' && allow == true) {
+      allow = true
+
+      createUpdateReqBody(event, type)
+      document.querySelector(containerClass).appendChild(loader())
+      return
+    }
+    allow = false
+    return snacks('Please fill are required Inputs')
+  })
+}
+
+function activityTitle(title, value) {
   const container = document.createElement('div')
   container.className = 'activity--title-container'
 
@@ -385,10 +427,13 @@ function activityTitle (title, value) {
   if (value) {
     input.classList.add = 'border-bottom--none'
   }
-
+  console.log(value)
   input.disabled = value
   input.type = 'text'
-  input.setAttribute('value', title)
+  if(title) {
+    input.setAttribute('value', title)
+
+  }
 
   textField.appendChild(input)
   textField.appendChild(label)
@@ -398,7 +443,7 @@ function activityTitle (title, value) {
   return container.outerHTML
 }
 
-function activityDesc (desc, value) {
+function activityDesc(desc, value) {
   const container = document.createElement('div')
   container.className = 'activity--desc-container'
 
@@ -433,7 +478,7 @@ function activityDesc (desc, value) {
   return container.outerHTML
 }
 
-function office (office) {
+function office(office) {
   const officeCont = document.createElement('div')
   officeCont.className = 'activity--office-container'
   const span = document.createElement('span')
@@ -447,7 +492,7 @@ function office (office) {
   return officeCont.outerHTML
 }
 
-function template (template) {
+function template(template) {
   const templateCont = document.createElement('div')
   templateCont.className = 'activity--template-container'
   const span = document.createElement('span')
@@ -462,7 +507,7 @@ function template (template) {
   return templateCont.outerHTML
 }
 
-function makeFieldsEditable (record) {
+function makeFieldsEditable(record) {
   document.getElementById('back-detail').remove()
   document.getElementById('cancel-update').style.display = 'block'
 
@@ -487,13 +532,18 @@ function makeFieldsEditable (record) {
     if (li.classList.contains('mdc-text-field')) {
       getInputText(li.id)['input_'].disabled = false
       getInputText(li.id)['input_'].classList.remove('border-bottom--none')
+      li.addEventListener('click', function (e) {
+        e.target.parentNode.nextSibling.children[0].disabled = false
+        console.log(e.target)
+        e.target.parentNode.nextSibling.children[0].min = e.target.value
+        console.log(e.target.parentNode.nextSibling.children[0].min)
+      })
     }
   });
 
   [...endSchedules].forEach(function (li) {
     console.log(li)
     if (li.classList.contains('mdc-text-field')) {
-      getInputText(li.id)['input_'].disabled = false
       getInputText(li.id)['input_'].classList.remove('border-bottom--none')
     }
   });
@@ -524,11 +574,11 @@ function makeFieldsEditable (record) {
   // })
 }
 
-function cancelUpdate (id) {
+function cancelUpdate(id) {
   fillActivityDetailPage(id)
 }
 
-function availableStatus (record) {
+function availableStatus(record) {
   const statusCont = document.createElement('div')
   statusCont.id = 'activity--status-container'
 
@@ -588,7 +638,7 @@ function availableStatus (record) {
   return statusCont.outerHTML
 }
 
-function updateStatus (status, id) {
+function updateStatus(status, id) {
   const reqBody = {
     'activityId': id,
     'status': status
@@ -597,26 +647,15 @@ function updateStatus (status, id) {
   requestCreator('statusChange', reqBody)
 }
 
-function showSchedule (schedules) {
+function showSchedule(schedules) {
   const scheduleCont = document.createElement('div')
   scheduleCont.className = 'activity--schedule-container'
   const spanDiv = document.createElement('div')
   spanDiv.className = 'schedule--text'
 
-  // const startTimeSpan = document.createElement('span')
-  // startTimeSpan.className = 'detail--static-text-startTime'
-  // startTimeSpan.textContent = 'from'
-
-  // const endTimeSpan = document.createElement('span')
-  // endTimeSpan.className = 'detail--static-text-endTime'
-  // endTimeSpan.textContent = 'to'
-
   const scheduleList = document.createElement('div')
   scheduleList.className = ''
   scheduleList.id = 'schedule--list'
-
-  // spanDiv.appendChild(endTimeSpan)
-  // spanDiv.appendChild(startTimeSpan)
 
   scheduleCont.appendChild(spanDiv)
 
@@ -629,12 +668,12 @@ function showSchedule (schedules) {
   return scheduleCont.outerHTML
 }
 
-function showScheduleUI (schedule, count, scheduleList, value) {
+function showScheduleUI(schedule, count, scheduleList, value) {
   const scheduleLi = document.createElement('div')
   scheduleLi.classList.add('schedule--list')
 
   const scheduleName = document.createElement('span')
-  scheduleName.classList.add('schedule-name--list','detail--static-text')
+  scheduleName.classList.add('schedule-name--list', 'detail--static-text')
   scheduleName.dataset.value = schedule.name
   scheduleName.innerHTML = schedule.name
 
@@ -646,6 +685,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleStartTimeInput.type = 'datetime-local'
   scheduleStartTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
   scheduleStartTimeInput.disabled = value
+  scheduleStartTimeInput.required = true
 
   scheduleStartTimeInput.setAttribute('value', (moment(schedule.startTime).format('YYYY-MM-DDTHH:mm')))
 
@@ -654,7 +694,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   startLabel.textContent = 'From'
 
   const startRipple = document.createElement('div')
-  startRipple.className ='mdc-line-ripple'
+  startRipple.className = 'mdc-line-ripple'
 
 
   scheduleStartTime.appendChild(scheduleStartTimeInput)
@@ -670,6 +710,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleEndTimeInput.type = 'datetime-local'
   scheduleEndTimeInput.disabled = value
   scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
+  scheduleEndTimeInput.required = true;
 
   scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DDTHH:mm'))
 
@@ -678,7 +719,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   endLabel.textContent = 'To'
 
   const endRipple = document.createElement('div')
-  endRipple.className ='mdc-line-ripple'
+  endRipple.className = 'mdc-line-ripple'
 
   scheduleEndTime.appendChild(scheduleEndTimeInput)
   scheduleEndTime.appendChild(endLabel)
@@ -696,7 +737,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleList.appendChild(scheduleLi)
 }
 
-function showVenue (venues, canEdit) {
+function showVenue(venues, canEdit) {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
 
@@ -717,7 +758,7 @@ function showVenue (venues, canEdit) {
   return venueCont.outerHTML
 }
 
-function showVenueUI (venue, count, venueList, value) {
+function showVenueUI(venue, count, venueList, value) {
   const venueLi = document.createElement('li')
 
   venueLi.className = 'mdc-list-item map-select-type map-select' + count
@@ -731,6 +772,7 @@ function showVenueUI (venue, count, venueList, value) {
 
   venueDesc.id = `venue-desc${count}`
   venueDesc.dataset.descriptor = venue.venueDescriptor
+  venueDesc.className = 'detail--static-text'
   venueDesc.textContent = venue.venueDescriptor
 
   const venueLocation = document.createElement('div')
@@ -738,8 +780,15 @@ function showVenueUI (venue, count, venueList, value) {
   venueLocation.id = `venue-location${count}`
   const venueLocationInput = document.createElement('input')
   venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none', 'venue-location--input')
-  venueLocationInput.setAttribute('value', venue.location)
+  if(!venue.location) {
+    venueLocationInput.setAttribute('placeholder', 'Choose Location')
+  }
+  else {
 
+    venueLocationInput.setAttribute('value', venue.location)
+  }
+  
+  venueLocationInput.required = true
   venueLocationInput.disabled = value
   venueLocation.appendChild(venueLocationInput)
 
@@ -748,8 +797,17 @@ function showVenueUI (venue, count, venueList, value) {
   venueAddress.id = 'venue-address' + count
   const venueAddressInput = document.createElement('input')
   venueAddressInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-  venueAddressInput.setAttribute('value', venue.address)
+  if(!venue.address ){
+    venueAddressInput.setAttribute('placeholder', 'Choose Address')
+    
+  }
+  else {
+
+    venueAddressInput.setAttribute('value', venue.address)
+  }
+
   venueAddressInput.disabled = value
+  venueAddressInput.required = true
 
   venueAddress.appendChild(venueAddressInput)
 
@@ -762,7 +820,7 @@ function showVenueUI (venue, count, venueList, value) {
   venueList.appendChild(div)
 }
 
-function renderAssigneeList () {
+function renderAssigneeList() {
   const shareCont = document.createElement('div')
   shareCont.className = 'activity--share-container'
   const span = document.createElement('span')
@@ -782,7 +840,7 @@ function renderAssigneeList () {
   return shareCont.outerHTML
 }
 
-function fetchAssigneeData (db, record, target) {
+function fetchAssigneeData(db, record, target) {
   const usersStore = db
     .transaction('users')
     .objectStore('users')
@@ -799,7 +857,7 @@ function fetchAssigneeData (db, record, target) {
   })
 }
 
-function assigneeListUI (userRecord, target, inputField) {
+function assigneeListUI(userRecord, target, inputField) {
   console.log(target)
   // if(document.querySelector(`[data-phoneNum="${userRecord.primaryKey}"]`)) return
 
@@ -844,8 +902,9 @@ function assigneeListUI (userRecord, target, inputField) {
   document.getElementById(target).appendChild(assigneeLi)
 }
 
-function locationUI (userRecord, target, inputFields) {
+function locationUI(userRecord, target, inputFields) {
   if (document.querySelector(`[data-location="${userRecord.value.location}"]`)) return
+
   console.log(target)
   const div = document.createElement('div')
   div.style.position = 'relative'
@@ -876,7 +935,8 @@ function locationUI (userRecord, target, inputFields) {
 
   document.getElementById(target).appendChild(div)
 
-  if (!document.getElementById(userRecord.value.location.replace(/\s/g, ''))) return
+  // if (!document.getElementById(userRecord.value.location.replace(/\s/g, ''))) return
+
   document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function () {
     getInputText(inputFields.main).value = this.dataset.location
 
@@ -885,11 +945,10 @@ function locationUI (userRecord, target, inputFields) {
     document.getElementById(inputFields.main).dataset.inputlat = this.dataset.lat
     document.getElementById(inputFields.main).dataset.inputlon = this.dataset.lon
     document.getElementById(inputFields.main).dataset.descrip = this.dataset.desc
-    document.getElementById(target).innerHTML = ''
   })
 }
 
-function renderRemoveIcons (record, mobileNumber) {
+function renderRemoveIcons(record, mobileNumber) {
   console.log('run')
   const removeIcon = document.createElement('span')
   removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
@@ -913,13 +972,13 @@ function renderRemoveIcons (record, mobileNumber) {
   }
 }
 
-function renderShareIcon (record) {
+function renderShareIcon(record) {
   if (!record.canEdit) return
 
   const IconParent = document.createElement('button')
-  IconParent.classList.add('add--assignee-icon','mdc-fab')
+  IconParent.classList.add('add--assignee-icon', 'mdc-fab')
   const icon = document.createElement('i')
-  icon.classList.add('material-icons' ,'mdc-fab__icon')
+  icon.classList.add('material-icons', 'mdc-fab__icon')
   icon.id = 'share-btn'
   icon.textContent = 'add'
   IconParent.appendChild(icon)
@@ -929,7 +988,7 @@ function renderShareIcon (record) {
   return IconParent.outerHTML
 }
 
-function renderShareScreen (evt, record, key) {
+function renderShareScreen(evt, record, key) {
   renderShareScreenUI(record)
 
   inputSelect({
@@ -947,7 +1006,7 @@ function renderShareScreen (evt, record, key) {
   })
 }
 
-function renderLocationScreen (evt, record, primaryKey, secondarKey) {
+function renderLocationScreen(evt, record, primaryKey, secondarKey) {
   renderLocationScreenUI()
 
   inputSelect({
@@ -968,7 +1027,22 @@ function renderLocationScreen (evt, record, primaryKey, secondarKey) {
   })
 }
 
-function outlinedTextField (labelText, id) {
+function renderOfficeTemplateScreen(evt) {
+
+  renderOfficeTemplateScreenUI()
+
+  inputSelect({
+    name: 'subscriptions',
+    indexone: 'office',
+    indextwo: 'template'
+  }, 'officeTemplate--container', {
+    main: 'officeTemplate--text-field'
+  })
+
+  initializeOfficeTemplateDialog(evt,'officeTemplate--text-field')
+}
+
+function outlinedTextField(labelText, id) {
   const inputField = document.createElement('div')
   inputField.className = 'mdc-text-field text-field mdc-text-field--outlined mdc-text-field--with-leading-icon mdc-text-field--upgraded'
   inputField.id = id
@@ -1008,7 +1082,7 @@ function outlinedTextField (labelText, id) {
   return inputField.outerHTML
 }
 
-function renderShareScreenUI () {
+function renderShareScreenUI() {
   const aside = document.createElement('aside')
 
   aside.id = 'change-number-dialog'
@@ -1058,7 +1132,7 @@ function renderShareScreenUI () {
   document.body.appendChild(aside)
 }
 
-function renderLocationScreenUI () {
+function renderLocationScreenUI() {
   const aside = document.createElement('aside')
 
   aside.id = 'location-select-dialog'
@@ -1108,7 +1182,58 @@ function renderLocationScreenUI () {
   document.body.appendChild(aside)
 }
 
-function initializeDialog (evt, input, params) {
+function renderOfficeTemplateScreenUI(){
+    const aside = document.createElement('aside')
+  
+    aside.id = 'officeTemplate-select-dialog'
+    aside.className = 'mdc-dialog'
+    aside.role = 'alertdialog'
+  
+    const dialogSurface = document.createElement('div')
+    dialogSurface.className = 'mdc-dialog__surface'
+  
+    const dialogHeader = document.createElement('header')
+    dialogHeader.className = 'mdc-dialog__header'
+  
+    dialogHeader.innerHTML = outlinedTextField('Select Office & Template', 'officeTemplate--text-field')
+  
+    const section = document.createElement('section')
+    section.className = 'mdc-dialog__body--scrollable'
+  
+    const ul = document.createElement('ul')
+    ul.id = 'officeTemplate--container'
+    ul.className = 'mdc-list'
+  
+    section.appendChild(ul)
+
+    const footer = document.createElement('footer')
+    footer.className = 'mdc-dialog__footer'
+  
+    const decline = document.createElement('button')
+    decline.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
+    decline.type = 'button'
+    decline.textContent = 'Cancel'
+  
+    const accept = document.createElement('button')
+    accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
+    accept.type = 'button'
+    accept.textContent = 'Agree'
+  
+    footer.appendChild(decline)
+    footer.appendChild(accept)
+  
+    dialogSurface.appendChild(dialogHeader)
+    dialogSurface.appendChild(section)
+    dialogSurface.appendChild(footer)
+  
+    aside.appendChild(dialogSurface)
+    const backdrop = document.createElement('div')
+    backdrop.className = 'mdc-dialog__backdrop'
+    aside.appendChild(backdrop)
+    document.body.appendChild(aside)
+}
+
+function initializeDialog(evt, input, params) {
   console.log(params)
   getInputText(input).value = ''
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#change-number-dialog'))
@@ -1139,7 +1264,7 @@ function initializeDialog (evt, input, params) {
   dialog.show()
 }
 
-function initializeDialogLocation (evt, input, params) {
+function initializeDialogLocation(evt, input, params) {
   console.log(input)
   getInputText(input).value = ''
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#location-select-dialog'))
@@ -1176,7 +1301,35 @@ function initializeDialogLocation (evt, input, params) {
   dialog.show()
 }
 
-function createUpdateReqBody (event, reqType) {
+function initializeOfficeTemplateDialog(evt,input){
+  getInputText(input).value = ''
+
+  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#officeTemplate-select-dialog'))
+  dialog.listen('MDCDialog:accept', function () {
+    document.getElementById('select-officeTemplate--container').style.display ='block'  
+  document.getElementById('select-officeTemplate--container').classList.remove('start-transition')  
+  document.getElementById('select-officeTemplate--container').classList.add('default-transition')  
+
+  document.querySelector('.transition-blur').style.filter = 'blur(0px)'
+  const office = getInputText(input)['root_'].dataset.office
+  const template = getInputText(input)['root_'].dataset.template
+
+  getSelectedSubscriptionData(office, template)
+
+  document.getElementById('officeTemplate-select-dialog').remove()
+  
+  })
+
+  dialog.listen('MDCDialog:cancel', function () {
+    document.getElementById('officeTemplate-select-dialog').remove()
+    // fillActivityDetailPage(activityId)
+  })
+
+  dialog.lastFocusedTarget = evt.target
+  dialog.show()
+}
+
+function createUpdateReqBody(event, reqType) {
   const title = getInputText('activity--title-input').value
   const desc = getInputText('activity--desc-input').value
   const activityId = event.target.dataset.id
@@ -1218,7 +1371,7 @@ function createUpdateReqBody (event, reqType) {
     console.log(attachments)
   })
 
-  if (reqType === 'update') {
+  if (reqType === 'edit') {
     const body = {
       'activityId': activityId,
       'title': title,
@@ -1249,7 +1402,7 @@ function createUpdateReqBody (event, reqType) {
   }
 }
 
-function updateSelectorObjectStore (dataset, input, objectStoreName) {
+function updateSelectorObjectStore(dataset, input, objectStoreName) {
   console.log(dataset)
   const dbName = firebase.auth().currentUser.uid
 
@@ -1288,11 +1441,11 @@ function updateSelectorObjectStore (dataset, input, objectStoreName) {
   })
 }
 
-function errorUpdatingSelectorObjectStore (error) {
+function errorUpdatingSelectorObjectStore(error) {
   console.log(error)
 }
 
-function addContact (number, activityId) {
+function addContact(number, activityId) {
   const expression = /^\+[1-9]\d{5,14}$/
   if (!expression.test(number)) return
 
@@ -1303,69 +1456,66 @@ function addContact (number, activityId) {
   requestCreator('share', reqBody)
 }
 
-function dataElement (target, key) {
+function dataElement(target, key) {
   return document.querySelector(`[data-${target}="${key}"]`)
 }
 
-function createActivity () {
+function createActivity() {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
   detail.id = 'create-activity--container'
   createActivityDetailHeader({
     canEdit: true
   }, 'create')
-  detail.innerHTML = officeTemplate() + office('') + template('') +
-    activityTitle('', false) + activityDesc('', false) + createScheduleContainer() +
-    createVenueContainer()
+
+
+  const activityMain = document.createElement('div')
+  activityMain.className = 'transition-blur activity-main'
+  activityMain.innerHTML = office('') + template('') +
+  activityTitle('', true) + activityDesc('', true) + createScheduleContainer() +
+  createVenueContainer()
+
+  detail.innerHTML = officeTemplate() +activityMain.outerHTML
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
   document.getElementById('back-list').addEventListener('click', listView)
 
-  console.log(document.querySelector('#venue--list'))
-  // document.querySelector('#venue--list').children[0].appendChild(locationsearch)
-
-  inputSelect({
-    name: 'subscriptions',
-    indexone: 'office',
-    indextwo: 'template'
-  }, 'officeTemplate--container', {
-    main: 'officeTemplate--text-field'
+  
+  document.getElementById('officeTemplateSelect').addEventListener('click', function (evt) {
+    this.parentNode.style.display ='none'
+    renderOfficeTemplateScreen(evt)
+    
   })
 
-  // document.getElementById('create-activity').addEventListener('click', function (event) {
-  //   createUpdateReqBody(event, 'create')
-  // })
+
 }
 
-function officeTemplate () {
+function officeTemplate() {
+
   const cont = document.createElement('div')
   cont.id = 'select-officeTemplate--container'
+  cont.className='start-transition'
 
-  const mainTextField = document.createElement('div')
-  mainTextField.className = 'mdc-text-field mdc-text-field--box mdc-text-field--dense'
-  mainTextField.id = 'officeTemplate--text-field'
+  const label = document.createElement('label')
+  label.textContent = 'Select Office'
+  label.className = 'mdc-typography--headline6 select-office-span'
 
-  const mainInput = document.createElement('input')
-  mainInput.className = 'mdc-text-field__input'
-  mainInput.type = 'text'
+  const button = document.createElement('button')
+  button.className ='mdc-fab add--officeTemplate-icon'
+  button.id = 'officeTemplateSelect'
+  const buttonIcon = document.createElement('span')
+  buttonIcon.className ='mdc-fab__icon material-icons'
+  buttonIcon.textContent = 'add'
+  
+  button.appendChild(buttonIcon)
+  cont.appendChild(label)
+  cont.appendChild(button)
 
-  mainTextField.appendChild(mainInput)
-
-  const combination = document.createElement('div')
-  combination.id = 'combination-selector'
-
-  const ul = document.createElement('ul')
-  ul.className = 'mdc-list'
-  ul.id = 'officeTemplate--container'
-
-  combination.appendChild(ul)
-
-  cont.appendChild(mainTextField)
-  cont.appendChild(combination)
   return cont.outerHTML
 }
 
-function officeTemplateCombo (cursor, target) {
+function officeTemplateCombo(cursor, target,input) {
+  console.log(input)
   if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
 
   const li = document.createElement('li')
@@ -1386,9 +1536,18 @@ function officeTemplateCombo (cursor, target) {
 
   li.appendChild(liText)
   document.getElementById(target).appendChild(li)
+  dataElement('office', cursor.value.office).addEventListener('click', function () {
+    getInputText(input).value =''
+    getInputText(input)['root_'].dataset.office = this.dataset.office
+    getInputText(input)['root_'].dataset.template = this.dataset.template
+    getInputText(input).value = this.dataset.office
+
+    getInputText(input)['root_'].children[2].textContent  = this.dataset.template
+  
+  })
 }
 
-function createVenueContainer () {
+function createVenueContainer() {
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
 
@@ -1405,7 +1564,7 @@ function createVenueContainer () {
   return venueCont.outerHTML
 }
 
-function createScheduleContainer () {
+function createScheduleContainer() {
   const scheduleCont = document.createElement('div')
   scheduleCont.className = 'activity--schedule-container'
   const spanDiv = document.createElement('div')
@@ -1436,7 +1595,7 @@ function createScheduleContainer () {
   return scheduleCont.outerHTML
 }
 
-function createInput (key, type, classtype) {
+function createInput(key, type, classtype,value) {
   const mainTextField = document.createElement('div')
   mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype}`
   mainTextField.id = key
@@ -1444,7 +1603,10 @@ function createInput (key, type, classtype) {
   const mainInput = document.createElement('input')
   mainInput.className = 'mdc-text-field__input'
   mainInput.type = 'text'
-  
+  if(value){
+    mainInput.disabled = value
+
+  }
   const label = document.createElement('label')
   label.className = 'mdc-floating-label'
   label.textContent = type
@@ -1459,55 +1621,69 @@ function createInput (key, type, classtype) {
   return mainTextField
 }
 
-function createAttachmentContainer (attachment) {
+function createAttachmentContainer(attachment) {
+  if(document.getElementById('attachment-container')) {
+    document.getElementById('attachment-container').remove()
+  }
+
+  const attachCont = document.createElement('div')
+  attachCont.id = 'attachment-container'
+
   Object.keys(attachment).forEach(function (key) {
     const div = document.createElement('div')
+    div.className ='attachment-field'
     const label = document.createElement('label')
     label.textContent = key
     label.className = 'label--text'
 
-    const labelIcon = document.createElement('label')
-    labelIcon.className = 'material-icons label--icon'
-    labelIcon.textContent = 'contact_phone'
+    const addButton = document.createElement('label')
+    addButton.className = 'mdc-fab add--assignee-icon'
+    const span = document.createElement('span')
+    span.className ='mdc-fab__icon material-icons'
+    span.textContent = 'add'
+    addButton.appendChild(span)
+
+
+
     // labelIcon.id = 'create-activity--assignee'
 
     const keyValue = document.createElement('div')
     // keyValue.id = key
     div.appendChild(label)
-    div.appendChild(labelIcon)
+    if (attachment[key] === 'phoneNumber') {
+
+      div.appendChild(addButton)
+    }
+
     div.appendChild(keyValue)
 
     if (attachment[key] === 'string') {
       keyValue.innerHTML = createInput(key, attachment[key], 'attachment').outerHTML
-      document.getElementById('create-activity--container').appendChild(div)
+      attachCont.appendChild(div)
     }
 
     if (attachment[key] === 'phoneNumber') {
-      keyValue.innerHTML = createInput(key, attachment[key], 'attachment').outerHTML
+      keyValue.innerHTML = createInput(key, attachment[key], 'attachment',true).outerHTML
+      
       const selectorDiv = document.createElement('div')
       selectorDiv.id = 'contacts' + key
       keyValue.appendChild(selectorDiv)
-      document.getElementById('create-activity--container').appendChild(div)
-      labelIcon.onclick = function (evt) {
+      attachCont.appendChild(div)
+
+      addButton.onclick = function (evt) {
         renderShareScreen(evt, '', key)
       }
 
-      // inputSelect({
-      //   name: 'users',
-      //   indexone: 'users',
-      //   indextwo: 'displayName',
-      //   indexThree: 'count'
-      // }, 'contacts' + key, {
-      //   main: key
-      // })
     }
+    document.getElementById('create-activity--container').appendChild(attachCont)
+    getInputText(key).value =''
   })
 }
 
-function getSelectedSubscriptionData (office, template) {
+function getSelectedSubscriptionData(office, template) {
   document.querySelector('.activity--schedule-container').innerHTML = ''
   document.querySelector('.activity--venue-container').innerHTML = ''
-  // document.querySelector('.create-attachment-container').innerHTML =''
+  
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1516,10 +1692,14 @@ function getSelectedSubscriptionData (office, template) {
     const range = IDBKeyRange.only([office, template])
     subscriptionObjectStore.get(range).onsuccess = function (event) {
       const record = event.target.result
+ 
       createAttachmentContainer(record.attachment)
+
       document.querySelector('.activity--office').textContent = record.office
       document.querySelector('.activity--template').textContent = record.template
-
+      getInputText('activity--title-input')['input_'].disabled = false
+      getInputText('activity--desc-input')['input_'].disabled = false
+     
       record.schedule.forEach(function (name) {
         console.log(name)
         showScheduleUI({
@@ -1527,7 +1707,10 @@ function getSelectedSubscriptionData (office, template) {
           startTime: '',
           endTime: ''
         }, 1, document.querySelector('.activity--schedule-container'), false)
+        
       })
+     
+      
 
       let venueCont = 0
       record.venue.forEach(function (venueDescriptor) {
@@ -1549,18 +1732,10 @@ function getSelectedSubscriptionData (office, template) {
         document.querySelector('.map-select' + venueCont).parentNode.appendChild(locationsearch)
       });
 
-      [...document.querySelectorAll('.venue-location--name')].forEach(function (element) {
-        element.addEventListener('click', function () {
-          console.log(this)
-          inputSelect({
-            name: 'map',
-            indexone: 'location',
-            indextwo: 'address',
-            indexThree: 'count'
-          }, this.parentNode.nextSibling.id, {
-            main: this.id,
-            address: this.nextSibling.id
-          })
+      [...document.querySelectorAll('.map-select-type')].forEach(function (element) {
+        element.addEventListener('click', function (evt) {
+          console.log(evt)
+          renderLocationScreen(evt, record, element.children[1].id, element.children[2].id)
         })
       })
     }

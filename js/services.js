@@ -31,9 +31,9 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         if (objectStore.name === 'subscriptions') return
         if (!activityRecord) return
 
-        // activityRecord.assignees.forEach(function (people) {
-        //   document.querySelector(`[data-phone-num="${people}"]`).remove()
-        // })
+        activityRecord.assignees.forEach(function (people) {
+          document.querySelector(`[data-phone-num="${people}"]`).remove()
+        })
 
         
         return
@@ -51,15 +51,8 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'subscriptions':
-          officeTemplateCombo(cursor, selector)
-          dataElement('office', cursor.value.office).addEventListener('click', function () {
-            console.log(this.dataset.office)
-            console.log(this.dataset.template)
-            document.querySelector('.activity--office').textContent = this.dataset.office
-            document.querySelector('.activity--template').textContent = this.dataset.template
-            getSelectedSubscriptionData(this.dataset.office, this.dataset.template)
-            document.getElementById(selector).innerHTML = ''
-          })
+          officeTemplateCombo(cursor, selector,inputFields.main)
+          
           break
       }
       cursor.continue()
@@ -131,17 +124,17 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
 
       break
     case 'subscriptions':
-      console.log(cursor.value)
-      officeTemplateCombo(cursor, selector)
+      console.log(inputFields.main)
+      officeTemplateCombo(cursor, selector,inputFields.main)
 
-      dataElement('office', cursor.value.office).addEventListener('click', function () {
-        console.log(this.dataset.office)
-        console.log(this.dataset.template)
-        document.querySelector('.activity--office').textContent = this.dataset.office
-        document.querySelector('.activity--template').textContent = this.dataset.template
-        getSelectedSubscriptionData(this.dataset.office, this.dataset.template)
-        document.getElementById(selector).innerHTML = ''
-      })
+      // dataElement('office', cursor.value.office).addEventListener('click', function () {
+      //   console.log(this.dataset.office)
+      //   console.log(this.dataset.template)
+      //   document.querySelector('.activity--office').textContent = this.dataset.office
+      //   document.querySelector('.activity--template').textContent = this.dataset.template
+      //   getSelectedSubscriptionData(this.dataset.office, this.dataset.template)
+      //   document.getElementById(selector).innerHTML = ''
+      // })
       break
   }
 

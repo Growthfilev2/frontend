@@ -18,7 +18,6 @@ body {
 .panel-card {
     width: 100vw;
     min-height: 100vh;
-    /* margin-top: 50% */
 }
 
 .activity--chat-card-container {
@@ -49,9 +48,8 @@ body {
 }
 
 #chat-container .comment-box {
-    width: 50%;
+    width: 63%;
     padding: 10px;
-    webkit-border-radius: 30px;
     margin: 20px 40px 20px 20px;
     display: inline-block;
     position: relative;
@@ -94,7 +92,6 @@ body {
     float: right;
 }
 
-.mini-map--chat {}
 
 .comment--container {
     width: 80%;
@@ -319,12 +316,7 @@ body {
     top: 26%
 }
 
-::-webkit-scrollbar {
-    width: 0px;
-    /* remove scrollbar space */
-    background: transparent;
-    /* optional: just make scrollbar invisible */
-}
+
 
 .profile--icon-small {
     width: 40px;
@@ -347,10 +339,6 @@ body {
 .comment-header-primary {
     padding: 5px 5px 5px 40px;
     font-size: 15px;
-}
-
-#calendar-view--container {
-    /* overflow-y :scroll */
 }
 
 .reauth-recaptcha {
@@ -449,6 +437,7 @@ body {
 
 .activity--venue-container li {
     display: table;
+    padding-left: 0px;
 }
 
 .mdc-dialog__surface {
@@ -457,7 +446,6 @@ body {
 }
 
 .mdc-dialog__body--scrollable {
-    max-height: none;
     min-height: 80vh;
 }
 
@@ -471,7 +459,7 @@ body {
     height: initial;
 }
 
-#change-number-dialog .mdc-dialog__footer button {
+#change-number-dialog .mdc-dialog__footer button , #location-select-dialog .mdc-dialog__footer button, #officeTemplate-select-dialog .mdc-dialog__footer button {
     color: #44a3eb
 }
 
@@ -491,7 +479,6 @@ body {
     top: 50%;
 }
 
-/* Safari */
 
 @-webkit-keyframes spin {
     0% {
@@ -626,14 +613,26 @@ margin-top: 13px;
     margin-bottom: 20px;
 }
 
-.activity-detail-page {
+.activity-detail-page, #create-activity--container {
     padding-left: 20px;
     padding-right: 20px;
 
 }
+.activity-detail-page  #schedule--list .startTimeInputs {
+    width:33%;
+    margin-left: 65px;
+}
+.activity-detail-page  #schedule--list .endTimeInputs {
 
+width: 33%;
+margin-right: 0px;
+margin-left: 15px;
+}
 .activity--title-container, .activity--desc-container ,.activity--office-container ,.activity--template-container, .activity--status-container , .activity--schedule-container , .activity--venue-container ,.activity--share-container {
     padding-top: 20px;
+}
+.activity--venue-container {
+    padding-bottom: 30px;
 }
 
 .startTimeInputs {
@@ -649,4 +648,74 @@ margin-top: 13px;
 .activity--status-container {
     padding-top: 20px;
     padding-bottom: 20px;
+}
+
+#location--container div {
+    padding: 20px 0px 20px 0px;
+}
+
+.select-office-span {
+    color : #598aeb !important
+}
+.add--officeTemplate-icon {
+    width: 30px;
+    height: 30px;
+    margin-left: 10px;
+    margin-top: -3px;
+    background-color: #6abbf9;
+}
+
+.default-transition {
+    display: table;
+    margin: 0 auto;
+    padding-top: 40px;
+    padding-bottom: 30px;
+}
+
+.start-transition {
+    border-radius: 0%;
+    box-shadow: 0 0 0 99999px rgba(0,0,0,.54);
+    position: relative;
+    z-index: 9999;
+    pointer-events: auto;
+    width: 90%;
+    transition: all 0.5s ease;
+    text-align: center;
+    position: absolute;
+    top: 40%;
+    left: 4%;
+    padding-top: 40px;
+    padding-bottom: 30px;
+    background-color: white;
+}
+
+#officeTemplate--container {
+    padding-left:20px;
+}
+#officeTemplate--container li {
+    padding: 20px 0px 20px 0px
+}
+
+#officeTemplate--text-field {
+    display: table;
+    margin:  0 auto;
+}
+
+#attachment-container {
+    border-top: 1px solid lightgray;
+}
+#attachment-container .label--text {
+    color : #598aeb !important;
+}
+.attachment-field{
+    margin:20px 0px 30px 0px;
+}
+.attachment input {
+    padding-top:0px;
+}
+.attachment {
+    margin-top:0px;
+}
+.transition-blur {
+    filter: blur(5px)
 }

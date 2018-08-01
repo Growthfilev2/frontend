@@ -944,6 +944,7 @@ function phoneNumberDialog (event) {
 }
 
 function resetInputs () {
+  document.getElementById('change-number-dialog').remove()
   document.getElementById('edit--name').disabled = false
   document.getElementById('edit--email').disabled = false
   document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-50%, -50%)'
