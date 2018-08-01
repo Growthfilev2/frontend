@@ -791,8 +791,8 @@ function updateIDB (dbName) {
         'from': '1970-01-01T00:00:00.090Z',
         'upto': '2018-07-24T08:05:59.938Z'
       }
-      successResponse(dummy)
-      return
+      // successResponse(dummy)
+      // return
       http(
 
         'GET',
@@ -956,7 +956,7 @@ function updateIDB (dbName) {
           if (dummy.from === response.upto) {
             requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', dbName)
           }
-          // successResponse(dummy)
+          successResponse(response)
         })
 
         .catch(console.log)

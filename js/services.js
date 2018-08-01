@@ -31,14 +31,11 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         if (objectStore.name === 'subscriptions') return
         if (!activityRecord) return
 
-        activityRecord.assignees.forEach(function (people) {
-          document.querySelector(`[data-phone-num="${people}"]`).remove()
-        })
+        // activityRecord.assignees.forEach(function (people) {
+        //   document.querySelector(`[data-phone-num="${people}"]`).remove()
+        // })
 
-        // if (document.querySelector('[data-type="users"]')) return
-
-        // updateSelectorObjectStore(this.dataset, inputFields.main, objectStore.name).then(addContact).catch(errorUpdatingSelectorObjectStore)
-
+        
         return
       }
       switch (objectStore.name) {
@@ -48,6 +45,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'users':
+   
           assigneeListUI(cursor, selector, inputFields.main)
 
           break
@@ -264,7 +262,7 @@ function onErrorMessage (error) {
 }
 
 function handleTimeout () {
-  const TIME_OUT_VALUE = 30000
+  const TIME_OUT_VALUE = 6000000
   clearTimeout(offset)
 
   offset = setTimeout(function () {

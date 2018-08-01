@@ -177,14 +177,14 @@ function createActivityList (data, target, count, uniqueOffice) {
   metaTextActivityStatus.textContent = data.status
   metaTextContainer.appendChild(metaTextActivityStatus)
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
-
-  document.getElementById(target).innerHTML += li.outerHTML
+    document.getElementById(target).innerHTML += li.outerHTML
 }
 
 function changeExistingActivities (data, target, count) {
   const activitySelector = `[data-id="${data.activityId}"]`
-  console.log(count)
-  if (document.querySelector(activitySelector)) {
+  if (document.querySelector(`#${target} ${activitySelector}`)) {
+    console.log('yes')
+    console.log(target)
     document.querySelector(`${activitySelector} > .mdc-list-item__text  .mdc-list-item__secondary-text`).textContent = data.office
     document.querySelector(`${activitySelector} > .mdc-list-item__text  .secondary--text-template`).textContent = data.template
     document.querySelector(`${activitySelector} > .mdc-list-item__text .mdc-primary__custom-text`).textContent = data.title
@@ -199,6 +199,7 @@ function changeExistingActivities (data, target, count) {
     document.getElementById(target).insertBefore(document.querySelector(activitySelector), document.getElementById(target)[count])
     return true
   }
+
   return false
 }
 
@@ -365,6 +366,7 @@ function calendarView (dbName) {
   // open IDB
   createCalendarPanel()
   backIconHeader('close-calendar--drawer')
+  document.getElementById('close-calendar--drawer').addEventListener('click', listView)
 
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -376,7 +378,10 @@ function calendarView (dbName) {
       const record = event.target.result
       record.view = 'calendar'
       rootObjectStore.put(record)
-      rootTx.oncomplete = fetchCalendarData
+      rootTx.oncomplete = function (){
+        fetchCalendarData()
+     
+      }
     }
   }
 
@@ -391,15 +396,17 @@ function createCalendarPanel () {
   calendarView.className = 'mdc-top-app-bar--fixed-adjust'
   const beforeDiv = document.createElement('div')
   beforeDiv.id = 'beforeToday'
+  beforeDiv.style.display = 'none'
   const afterDiv = document.createElement('div')
   afterDiv.id = 'afterToday'
 
   calendarView.appendChild(beforeDiv)
   calendarView.appendChild(afterDiv)
-  if(document.getElementById('beforeToday') || document.getElementById('afterToday')) {
-    return
-  }
+  // if(document.getElementById('beforeToday') || document.getElementById('afterToday')) {
+  //   return
+  // }
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
+
 }
 
 function fetchCalendarData () {
@@ -408,13 +415,13 @@ function fetchCalendarData () {
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
-  document.getElementById('close-calendar--drawer').addEventListener('click', listView)
   request.onsuccess = function () {
     const db = request.result
     const calendarObjectStore = db.transaction('calendar', 'readonly').objectStore('calendar')
     const calendarDateIndex = calendarObjectStore.index('date')
 
     const today = moment().format('YYYY-MM-DD')
+    console.log(today)
 
     calendarDateIndex.get(today).onsuccess = function (event) {
       const record = event.target.result
@@ -422,13 +429,17 @@ function fetchCalendarData () {
         calendarViewUI('afterToday', db, {
           date: today
         })
+
       }
       insertDatesAfterToday(db, calendarDateIndex, today)
+  
     }
   }
+ 
   request.onerror = function (event) {
     console.log(event)
   }
+
 }
 
 function insertDatesAfterToday (db, calendarDateIndex, today) {
@@ -439,35 +450,42 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
       calendarViewUI('afterToday', db, cursor.value)
       cursor.continue()
     } else {
-    
-      const parent = document.getElementById('calendar-view--container')
-      const lastScrollHeight = parent.scrollHeight
-      insertDatesBeforeToday(db, calendarDateIndex, today, lastScrollHeight)
+      
+        insertDatesBeforeToday(db, calendarDateIndex, today) 
+ 
+      
     }
   }
 }
 
-function insertDatesBeforeToday (db, calendarDateIndex, today, lastScrollHeight) {
+function insertDatesBeforeToday (db, calendarDateIndex, today ) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
     if (cursor) {
-      // console.log(cursor.value)
       calendarViewUI('beforeToday', db, cursor.value)
       cursor.continue()
     } else {
-      const parent = document.getElementById('calendar-view--container')
-      document.documentElement.scrollTop = parent.scrollHeight - lastScrollHeight
+      document.getElementById('beforeToday').style.display = 'block'
+      console.log(document.getElementById('afterToday').children.length)
+      if(document.getElementById('afterToday').children.length <= 1){
+        setTimeout(function(){
 
-    
+          document.documentElement.scrollTop = document.documentElement.offsetHeight
+        },300)
+        return
+      }
+      document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
     }
   }
 }
 
 function calendarViewUI (target, db, data) {
+  
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
+    data.date === moment().format('YYYY-MM-DD') ? dateDiv.style.borderTop = '5px solid #6abbf9' : ''
     dateDiv.className = 'date-container mdc-elevation--z1'
 
     const dateCol = document.createElement('div')
@@ -494,7 +512,7 @@ function calendarViewUI (target, db, data) {
 
     dateDiv.appendChild(dateCol)
     dateDiv.appendChild(activityRow)
-    document.getElementById(target).innerHTML = dateDiv.outerHTML
+    document.getElementById(target).innerHTML += dateDiv.outerHTML
 
     getActivity(db, data)
     return
@@ -1130,7 +1148,6 @@ function findUniqueOffice () {
       activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
-          console.log(officeCount)
           if (officeCount === 1) {
             resolve(false)
             return
@@ -1139,7 +1156,6 @@ function findUniqueOffice () {
           resolve(true)
           return
         }
-        console.log(cursor)
         officeCount++
         cursor.continue()
       }
@@ -1233,5 +1249,5 @@ function handleChangeNumberMenu () {
   // menu.setAnchorCorner('Corner.BOTTOM_END')
 
   // Turn off menu open animations
-  menu.quickOpen = true
+  menu.quickOpen = false
 }

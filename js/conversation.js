@@ -173,7 +173,7 @@ function createHeaderContent (db, id) {
   activityObjectStore.get(id).onsuccess = function (event) {
     const record = event.target.result
 
-    const primarySpan = document.createElement('span')
+    const primarySpan = document.createElement('div')
     primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-theme--secondary'
     primarySpan.textContent = record.title
 
@@ -229,7 +229,7 @@ function fillActivityDetailPage (id) {
             conversation(id)
           })
 
-          updateActivityPanel(db, id, record)
+          updateActivityPanel(db, record)
           fetchAssigneeData(db, record, 'assignee--list')
         }
       }
@@ -252,9 +252,19 @@ function createActivityDetailHeader (record, value) {
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
   backIcon.textContent = 'arrow_back'
-
   backSpan.appendChild(backIcon)
+  
+  const cancel = document.createElement('i')
+  cancel.className = 'material-icons'
+  cancel.id = 'cancel-update'
+  cancel.dataset.id = record.activityId
+  cancel.textContent = 'clear'
+  cancel.style.color = 'gray'
+  cancel.style.display = 'none'
+  
+
   leftDiv.appendChild(backSpan)
+  leftDiv.appendChild(cancel)
 
   if (!record.canEdit) {
     header(leftDiv.outerHTML)
@@ -263,30 +273,35 @@ function createActivityDetailHeader (record, value) {
 
   const rigthDiv = document.createElement('div')
 
-  const cancel = document.createElement('button')
-  cancel.className = 'mdc-button'
-  cancel.id = 'cancel-update'
-  cancel.dataset.id = record.activityId
-  cancel.textContent = 'cancel'
-  cancel.style.color = 'white'
-  cancel.style.display = 'none'
-  rigthDiv.appendChild(cancel)
 
-  const edit = document.createElement('button')
-  edit.className = 'mdc-button'
-  edit.id = `${value}-activity`
-  edit.dataset.id = record.activityId
-  edit.textContent = value
-  edit.style.color = 'white'
+  const toggleBtnName = document.createElement('button')
+  toggleBtnName.className = 'mdc-icon-button material-icons'
+  toggleBtnName.id = `${value}-activity`
+  toggleBtnName.dataset.id = record.activityId
+  toggleBtnName.setAttribute('aria-hidden', 'true')
+  toggleBtnName.setAttribute('aria-pressed', 'false')
+  toggleBtnName.setAttribute('data-toggle-on-content', 'check')
+  toggleBtnName.setAttribute('data-toggle-on-label', 'check')
+  toggleBtnName.setAttribute('data-toggle-off-content', 'edit')
+  toggleBtnName.setAttribute('data-toggle-off-label', 'editActivity')
 
-  rigthDiv.appendChild(edit)
+  toggleBtnName.textContent = 'edit'
+
+  // const edit = document.createElement('button')
+  // edit.className = 'mdc-button'
+  // edit.id = `${value}-activity`
+  // edit.dataset.id = record.activityId
+  // edit.textContent = value
+  // edit.style.color = 'white'
+
+  rigthDiv.appendChild(toggleBtnName)
   header(leftDiv.outerHTML, rigthDiv.outerHTML)
 }
 
-function updateActivityPanel (db, id, record) {
+function updateActivityPanel (db, record) {
   const detail = document.createElement('div')
-  detail.className = 'mdc-top-app-bar--fixed-adjust'
-  detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record, id) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
+  detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
+  detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
 
@@ -307,11 +322,43 @@ function updateActivityPanel (db, id, record) {
   }
 
   if (!record.canEdit) return
-  document.getElementById('edit-activity').addEventListener('click', function () {
-    makeFieldsEditable(record)
+  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(document.getElementById('edit-activity'))
+  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
+    detail
+  }) {
+    if(!detail.isOn){
+      createUpdateReqBody(event, 'create')
+    }
+    else {
+      makeFieldsEditable(record)
+
+    }
+    
+  
   })
+
   document.getElementById('share-btn').addEventListener('click', function (evt) {
+    
+    const usersObjectStore = db.transaction('users').objectStore('users')
+    record.assignees.forEach(function(number){
+
+      usersObjectStore.get(number).onsuccess = function(event){
+        const record = event.target.result
+        if(!record){
+          const reqBody = {
+            'activityId':record.activityId,
+            'number':[number]
+          }
+          requestCreator('share', reqBody)
+          return
+        }
+      
+        return
+      }
+    })
     renderShareScreen(evt, record, '')
+    
+  
   })
 }
 
@@ -320,11 +367,11 @@ function activityTitle (title, value) {
   container.className = 'activity--title-container'
 
   const textField = document.createElement('div')
-  textField.className = 'mdc-text-field mdc-text-field--box	'
+  textField.className = 'mdc-text-field'
   textField.id = 'activity--title-input'
 
   const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
+  label.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
   label.textContent = 'Title'
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
@@ -356,11 +403,11 @@ function activityDesc (desc, value) {
   container.className = 'activity--desc-container'
 
   const textField = document.createElement('div')
-  textField.className = 'mdc-text-field mdc-text-field--box'
+  textField.className = 'mdc-text-field'
   textField.id = 'activity--desc-input'
 
   const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
+  label.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
   label.textContent = 'Description'
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
@@ -416,21 +463,13 @@ function template (template) {
 }
 
 function makeFieldsEditable (record) {
-  document.getElementById('edit-activity').remove()
+  document.getElementById('back-detail').remove()
   document.getElementById('cancel-update').style.display = 'block'
 
   document.getElementById('activity--status-container').style.display = 'none'
   document.querySelector('.activity--share-container').style.display = 'none'
   document.querySelector('.add--assignee-icon').style.display = 'none'
 
-  const updatebtn = document.createElement('btn')
-  updatebtn.id = 'update-activity'
-  updatebtn.className = 'mdc-button'
-  updatebtn.textContent = 'update'
-  updatebtn.dataset.id = record.activityId
-  updatebtn.style.color = 'white'
-
-  document.getElementById('action-data').appendChild(updatebtn)
 
   getInputText('activity--title-input')['input_'].disabled = false
   getInputText('activity--title-input')['input_'].classList.remove('border-bottom--none')
@@ -480,16 +519,16 @@ function makeFieldsEditable (record) {
     cancelUpdate(record.activityId)
   })
 
-  document.getElementById('update-activity').addEventListener('click', function (event) {
-    createUpdateReqBody(event, 'update')
-  })
+  // document.getElementById('update-activity').addEventListener('click', function (event) {
+  //   createUpdateReqBody(event, 'update')
+  // })
 }
 
 function cancelUpdate (id) {
   fillActivityDetailPage(id)
 }
 
-function availableStatus (record, id) {
+function availableStatus (record) {
   const statusCont = document.createElement('div')
   statusCont.id = 'activity--status-container'
 
@@ -572,8 +611,8 @@ function showSchedule (schedules) {
   // endTimeSpan.className = 'detail--static-text-endTime'
   // endTimeSpan.textContent = 'to'
 
-  const scheduleList = document.createElement('ul')
-  scheduleList.className = 'mdc-list'
+  const scheduleList = document.createElement('div')
+  scheduleList.className = ''
   scheduleList.id = 'schedule--list'
 
   // spanDiv.appendChild(endTimeSpan)
@@ -591,11 +630,11 @@ function showSchedule (schedules) {
 }
 
 function showScheduleUI (schedule, count, scheduleList, value) {
-  const scheduleLi = document.createElement('li')
-  scheduleLi.classList.add('mdc-list-item', 'schedule--list')
+  const scheduleLi = document.createElement('div')
+  scheduleLi.classList.add('schedule--list')
 
   const scheduleName = document.createElement('span')
-  scheduleName.classList.add('schedule-name--list')
+  scheduleName.classList.add('schedule-name--list','detail--static-text')
   scheduleName.dataset.value = schedule.name
   scheduleName.innerHTML = schedule.name
 
@@ -610,7 +649,18 @@ function showScheduleUI (schedule, count, scheduleList, value) {
 
   scheduleStartTimeInput.setAttribute('value', (moment(schedule.startTime).format('YYYY-MM-DDTHH:mm')))
 
+  const startLabel = document.createElement('label')
+  startLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
+  startLabel.textContent = 'From'
+
+  const startRipple = document.createElement('div')
+  startRipple.className ='mdc-line-ripple'
+
+
   scheduleStartTime.appendChild(scheduleStartTimeInput)
+  scheduleStartTime.appendChild(startLabel)
+  scheduleStartTime.appendChild(startRipple)
+
 
   const scheduleEndTime = document.createElement('div')
   scheduleEndTime.classList.add('mdc-text-field', 'endTimeInputs')
@@ -623,7 +673,16 @@ function showScheduleUI (schedule, count, scheduleList, value) {
 
   scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DDTHH:mm'))
 
+  const endLabel = document.createElement('label')
+  endLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
+  endLabel.textContent = 'To'
+
+  const endRipple = document.createElement('div')
+  endRipple.className ='mdc-line-ripple'
+
   scheduleEndTime.appendChild(scheduleEndTimeInput)
+  scheduleEndTime.appendChild(endLabel)
+  scheduleEndTime.appendChild(endRipple)
 
   const scheduleEditIconSpan = document.createElement('span')
   scheduleEditIconSpan.id = `schedule-edit--icon$`
@@ -857,10 +916,10 @@ function renderRemoveIcons (record, mobileNumber) {
 function renderShareIcon (record) {
   if (!record.canEdit) return
 
-  const IconParent = document.createElement('span')
-  IconParent.classList.add('add--assignee-icon')
+  const IconParent = document.createElement('button')
+  IconParent.classList.add('add--assignee-icon','mdc-fab')
   const icon = document.createElement('i')
-  icon.classList.add('material-icons')
+  icon.classList.add('material-icons' ,'mdc-fab__icon')
   icon.id = 'share-btn'
   icon.textContent = 'add'
   IconParent.appendChild(icon)
@@ -1273,9 +1332,9 @@ function createActivity () {
     main: 'officeTemplate--text-field'
   })
 
-  document.getElementById('create-activity').addEventListener('click', function (event) {
-    createUpdateReqBody(event, 'create')
-  })
+  // document.getElementById('create-activity').addEventListener('click', function (event) {
+  //   createUpdateReqBody(event, 'create')
+  // })
 }
 
 function officeTemplate () {

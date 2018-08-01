@@ -162,8 +162,8 @@ body {
 }
 
 .detail--static-text {
-    color: #598aeb;
-    font-size: 14px;
+    color: #598aeb !important;
+    font-size: 16px;
 }
 
 #activity--title-input,
@@ -236,11 +236,16 @@ body {
 }
 
 #venue--list li {
-    display: table
+    display: table;
+    padding-left:0px;
 }
 
 .add--assignee-icon {
     float: right;
+    width: 35px;
+    height: 35px;
+    margin-top: 10px;
+    background-color: #6abbf9;
 }
 
 .assignee-li:nth-child(1) {
@@ -260,7 +265,9 @@ body {
 }
 
 #contacts--container li {
-    padding: 0;
+    padding-left: 40px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 #contacts--container li span:nth-child(1) {
@@ -268,7 +275,7 @@ body {
 }
 
 #contacts--container li span:nth-child(2) {
-    padding: 0 90px 0 20px;
+    padding: 9px 90px 0 20px;
 }
 
 #map {
@@ -309,7 +316,7 @@ body {
 .remove {
     position: absolute;
     right: 0;
-    top: 50px
+    top: 26%
 }
 
 ::-webkit-scrollbar {
@@ -328,7 +335,7 @@ body {
 #chat-container {
     height: 82vh;
     overflow: scroll;
-    background-color: #d3d3d30a;
+    background-color: white;
 }
 
 .back-icon {
@@ -512,6 +519,12 @@ body {
 #assignee--list {
     position: relative;
 }
+#assignee--list li .mdc-list-item__text{
+margin-top: 13px;
+}
+#assignee--list  li {
+    padding-left: 0px;
+}
 
 .no-click {
     pointer-events: none;
@@ -606,4 +619,34 @@ body {
 }
 #ui-auth {
     padding-top: 20px;
+}
+
+.activity--list-item {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.activity-detail-page {
+    padding-left: 20px;
+    padding-right: 20px;
+
+}
+
+.activity--title-container, .activity--desc-container ,.activity--office-container ,.activity--template-container, .activity--status-container , .activity--schedule-container , .activity--venue-container ,.activity--share-container {
+    padding-top: 20px;
+}
+
+.startTimeInputs {
+    width: 33%;
+    margin-right: 0px;
+    margin-left: 35px;
+
+}
+
+.endTimeInputs  {
+    width: 33%;
+}
+.activity--status-container {
+    padding-top: 20px;
+    padding-bottom: 20px;
 }

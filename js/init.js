@@ -7,12 +7,7 @@ firebase.initializeApp({
   databaseURL: 'https://growthfilev2-0.firebaseio.com',
   projectId: 'growthfilev2-0',
   storageBucket: 'growthfilev2-0.appspot.com'
-  // apiKey: 'AIzaSyA4jnnrSPh4oVxmq9JFMwdo8LXubQlgbzw',
-  // authDomain: 'kap-sk.firebaseapp.com',
-  // databaseURL: 'https://kap-sk.firebaseio.com',
-  // projectId: 'kap-sk',
-  // storageBucket: 'kap-sk.appspot.com',
-  // messagingSenderId: '90380889927'
+
 
 })
 
