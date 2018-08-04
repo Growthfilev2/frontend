@@ -639,148 +639,6 @@ function updateIDB (dbName) {
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
     rootObjectStore.get(dbName).onsuccess = function (root) {
-      const dummy = {
-        'addendum': [],
-        'activities': [
-
-          {
-            'canEdit': true,
-            'status': 'CONFIRMED',
-            'schedule': [{
-              'endTime': '2018-06-28T10:04:51.699Z',
-              'startTime': '2018-06-28T09:25:32.304Z',
-              'name': 'Shift Timing'
-            }],
-            'venue': [{
-              'venueDescriptor': 'Base Location',
-              'geopoint': {
-                '_latitude': 28.5728858,
-                '_longitude': 77.2185796
-              },
-              'address': '141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049',
-              'location': 'DUMMY SQUARE'
-            },
-            {
-              'venueDescriptor': 'Residence',
-              'geopoint': {
-                '_latitude': 28.5545653,
-                '_longitude': 77.3328355
-              },
-              'address': 'Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303',
-              'location': 'Lodge Residence'
-            }
-            ],
-            'timestamp': '2018-06-28T09:25:32.304Z',
-            'template': 'employee',
-            'title': 'employee',
-            'description': 'Employee created for dummy office',
-            'office': 'dummy',
-            'assignees': [
-              '+918080808080',
-              '+918178135274',
-              '+919090909090',
-              '+919090909091'
-            ],
-            'attachment': {
-              "Name":{  
-                "value": "Shikhar",
-                "type": "string"
-            },
-            "Employee Phone Number":{   
-                "value": "+919999288920",
-                "type": "phoneNumber"
-            },
-            "Employee Code":{  
-                "value": "12345",
-                "type": "string"
-            },
-            "Department":{  
-                "value": "Tech",
-                "type": "string"
-            },
-            "First Supervisor's Phone Number":{  
-                "value": "+919999288920",
-                "type": "phoneNumber"
-            },
-            "Second Supervisor's Phone Number":{  
-                "value": "+919999288920",
-                "type": "phoneNumber"
-            },
-            "Weekly Off":{  
-                "value": "yes",
-                "type": "string"
-            },
-            "Daily Start Time":{  
-                "value": "16:22",
-                "type": "moment.HTML5_FMT.TIME"
-            },
-            "Daily End Time":{  
-                "value": "14:22",
-                "type": "moment.HTML5_FMT.TIME"
-            }
-            },
-            'activityId': 'WmZ9x7Uo8p9OJJd62MtY'
-          },
-
-        ],
-        'templates': [
-          {  
-            "name": "employee",
-            "defaultTitle": "an employee", 
-            "statusOnCreate": "CONFIRMED",
-            "venue":[  
-                "Base Location",
-                "Residence"
-            ],
-            "schedule":[  
-                "Shift Timing"
-            ],
-            "attachment":{  
-                "Name":{  
-                    "value": "",
-                    "type": "string"
-                },
-                "Employee Phone Number":{   
-                    "value": "",
-                    "type": "phoneNumber"
-                },
-                "Employee Code":{  
-                    "value": "",
-                    "type": "string"
-                },
-                "Department":{  
-                    "value": "",
-                    "type": "string"
-                },
-                "First Supervisor's Phone Number":{  
-                    "value": "",
-                    "type": "phoneNumber"
-                },
-                "Second Supervisor's Phone Number":{  
-                    "value": "",
-                    "type": "phoneNumber"
-                },
-                "Weekly Off":{  
-                    "value": "",
-                    "type": "string"
-                },
-                "Daily Start Time":{  
-                    "value": "",
-                    "type": "moment.HTML5_FMT.TIME"
-                },
-                "Daily End Time":{  
-                    "value": "",
-                    "type": "moment.HTML5_FMT.TIME"
-                }
-            },
-            "comment": "Template used to create employees and store master data available with the company."
-        }
-        ],
-        'from': '1970-01-01T00:00:00.090Z',
-        'upto': '2018-07-24T08:05:59.938Z'
-      }
-      // successResponse(dummy)
-      // return
       http(
 
         'GET',
@@ -788,9 +646,8 @@ function updateIDB (dbName) {
 
       )
         .then(function (response) {
-          console.log(response)
       
-          if (dummy.from === response.upto) {
+          if (response.from === response.upto) {
             requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', dbName)
           }
           successResponse(response)

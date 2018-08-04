@@ -5,6 +5,7 @@ body {
 #login-container {
     top: 10rem;
     position: relative;
+
 }
 
 .app {
@@ -18,6 +19,10 @@ body {
 .panel-card {
     width: 100vw;
     min-height: 100vh;
+
+}
+.activity--chat-card-container.panel-card {
+    min-height: auto;
 }
 
 .activity--chat-card-container {
@@ -117,7 +122,7 @@ body {
     width: 200px;
     height: 0;
     background-color: white;
-    width: 90%;
+    width: 85%;
     display: block;
     margin: 0 auto;
 }
@@ -325,7 +330,7 @@ body {
 }
 
 #chat-container {
-    height: 82vh;
+    height: 80vh;
     overflow: scroll;
     background-color: white;
 }
@@ -376,15 +381,10 @@ body {
     padding-bottom: 20px;
 }
 
-#name--change-container,
-#email--change-container,
+
 #change--number-container {
     display: table;
     margin: 0 auto
-}
-
-#name--change-container {
-    padding-top: 40px;
 }
 
 #phone-number--change-container {
@@ -447,6 +447,10 @@ body {
 
 .mdc-dialog__body--scrollable {
     min-height: 80vh;
+    background-color: white !important;
+}
+footer.mdc-dialog__footer {
+    background-color: white;
 }
 
 #change-number-dialog .mdc-dialog__header {
@@ -455,7 +459,7 @@ body {
 }
 
 #change-number-dialog .mdc-dialog__surface {
-    width: 95vw;
+    width: 100vw;
     height: initial;
 }
 
@@ -524,7 +528,7 @@ margin-top: 13px;
 #action-data {
     font-weight: 400;
     font-size: 14px;
-    margin-top: -10px;
+    margin-top: 0px;
     padding: 0px 10px 0px 0px
 }
 
@@ -578,7 +582,6 @@ margin-top: 13px;
 }
 
 #change-number--menu {
-    left: 25px !important;
     top: 40px !important;
 }
 
@@ -587,7 +590,6 @@ margin-top: 13px;
 }
 
 .mdc-snackbar {
-    transform: translateY(100%);
     padding: 10px 20px 10px 20px;
     font-size: 16px;
     border-radius: 5px;
@@ -612,6 +614,9 @@ margin-top: 13px;
     margin-top: 10px;
     margin-bottom: 20px;
 }
+.activity--list-item .mdc-list-item__meta {
+    min-width: 80px;
+}
 
 .activity-detail-page, #create-activity--container {
     padding-left: 20px;
@@ -619,14 +624,11 @@ margin-top: 13px;
 
 }
 .activity-detail-page  #schedule--list .startTimeInputs {
-    width:33%;
-    margin-left: 65px;
+    /* width:33%;    */
+    /* margin-left: 65px; */
 }
 .activity-detail-page  #schedule--list .endTimeInputs {
-
-width: 33%;
-margin-right: 0px;
-margin-left: 15px;
+        float: right;
 }
 .activity--title-container, .activity--desc-container ,.activity--office-container ,.activity--template-container, .activity--status-container , .activity--schedule-container , .activity--venue-container ,.activity--share-container {
     padding-top: 20px;
@@ -697,6 +699,8 @@ margin-left: 15px;
 }
 
 #officeTemplate--text-field {
+
+    margin-top: 20px;
     display: table;
     margin:  0 auto;
 }
@@ -718,4 +722,34 @@ margin-left: 15px;
 }
 .transition-blur {
     filter: blur(5px)
+}
+
+.profile-psuedo-card {
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    animation: _1hBRh 1s cubic-bezier(0.1, 0.82, 0.25, 1);
+    padding: 14px 30px 10px 30px;
+    margin: 35px 0px 20px 0px;
+}
+.profile-psuedo-card .mdc-text-field {
+    width: 80%;
+}
+.profile-psuedo-card label {
+    padding: 0;
+    margin-bottom: 14px;
+}
+
+.mdc-dialog__surface .mdc-dialog__header {
+    display: table;
+    margin: 0 auto;
+    padding-top: 0px;
+    padding-bottom: 10px;
+}
+.start-calendar-transition {
+    filter: blur(15px);
+    animation: ease;
+}
+
+#officeTemplate-select-dialog .mdc-dialog__header {
+margin-top: 20px;
 }

@@ -34,11 +34,11 @@ function firebaseUiConfig (value) {
       {
         provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
 
-        // recaptchaParameters: {
-        //   type: 'image',
-        //   size: 'invisible',
-        //   badge: 'bottomleft'
-        // },
+        recaptchaParameters: {
+          type: 'image',
+          size: 'invisible',
+          badge: 'bottomleft'
+        },
         defaultCountry: 'IN'
       }
     ]

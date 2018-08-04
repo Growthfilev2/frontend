@@ -1,6 +1,7 @@
 :root {
         --mdc-theme-primary: #f0f3f5 !important;
         --mdc-theme-secondary: #898a8dde !important;
+        --mdc-theme-background:#eeeeee !important;
 }
 .mdc-top-app-bar .material-icons {
         color:rgba(0,0,0,.54);
@@ -12,3 +13,9 @@
         background-color:  #44a3eb !important
 }
 
+@media (max-width:480px) {
+        #login-container .firebaseui-container {
+                box-shadow: inset;
+                width:90%;
+        }
+}

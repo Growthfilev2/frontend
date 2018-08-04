@@ -76,9 +76,9 @@ function commentPanel(id) {
   userCommentCont.appendChild(commentCont)
   userCommentCont.appendChild(sendButton)
   commentPanel.appendChild(chatCont)
-  commentPanel.appendChild(userCommentCont)
+  
 
-  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML
+  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + userCommentCont.outerHTML
   document.getElementById('send-chat--input').onclick = function () {
     const reqBody = {
       'activityId': id,
@@ -350,8 +350,8 @@ function updateActivityPanel(db, record) {
     record.assignees.forEach(function (number) {
 
       usersObjectStore.get(number).onsuccess = function (event) {
-        const record = event.target.result
-        if (!record) {
+        const result = event.target.result
+        if (!result) {
           const reqBody = {
             'activityId': record.activityId,
             'number': [number]
@@ -364,8 +364,6 @@ function updateActivityPanel(db, record) {
       }
     })
     renderShareScreen(evt, record, '')
-
-
   })
 }
 
@@ -858,7 +856,6 @@ function fetchAssigneeData(db, record, target) {
 }
 
 function assigneeListUI(userRecord, target, inputField) {
-  console.log(target)
   // if(document.querySelector(`[data-phoneNum="${userRecord.primaryKey}"]`)) return
 
   const assigneeLi = document.createElement('li')
@@ -989,7 +986,7 @@ function renderShareIcon(record) {
 }
 
 function renderShareScreen(evt, record, key) {
-  renderShareScreenUI(record)
+  renderShareScreenUI()
 
   inputSelect({
     name: 'users',
@@ -1306,11 +1303,6 @@ function initializeOfficeTemplateDialog(evt,input){
 
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#officeTemplate-select-dialog'))
   dialog.listen('MDCDialog:accept', function () {
-    document.getElementById('select-officeTemplate--container').style.display ='block'  
-  document.getElementById('select-officeTemplate--container').classList.remove('start-transition')  
-  document.getElementById('select-officeTemplate--container').classList.add('default-transition')  
-
-  document.querySelector('.transition-blur').style.filter = 'blur(0px)'
   const office = getInputText(input)['root_'].dataset.office
   const template = getInputText(input)['root_'].dataset.template
 
@@ -1322,6 +1314,7 @@ function initializeOfficeTemplateDialog(evt,input){
 
   dialog.listen('MDCDialog:cancel', function () {
     document.getElementById('officeTemplate-select-dialog').remove()
+    listView()
     // fillActivityDetailPage(activityId)
   })
 
@@ -1460,7 +1453,7 @@ function dataElement(target, key) {
   return document.querySelector(`[data-${target}="${key}"]`)
 }
 
-function createActivity() {
+function createActivity(evt) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust'
   detail.id = 'create-activity--container'
@@ -1470,24 +1463,18 @@ function createActivity() {
 
 
   const activityMain = document.createElement('div')
-  activityMain.className = 'transition-blur activity-main'
+  activityMain.className = 'activity-main'
   activityMain.innerHTML = office('') + template('') +
   activityTitle('', true) + activityDesc('', true) + createScheduleContainer() +
   createVenueContainer()
 
-  detail.innerHTML = officeTemplate() +activityMain.outerHTML
+  detail.innerHTML = activityMain.outerHTML
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
   document.getElementById('back-list').addEventListener('click', listView)
 
+  renderOfficeTemplateScreen(evt)
   
-  document.getElementById('officeTemplateSelect').addEventListener('click', function (evt) {
-    this.parentNode.style.display ='none'
-    renderOfficeTemplateScreen(evt)
-    
-  })
-
-
 }
 
 function officeTemplate() {

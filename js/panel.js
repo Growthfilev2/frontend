@@ -270,6 +270,7 @@ function createMapPanel () {
 
   const mapList = document.createElement('div')
   mapList.id = 'list-view--map'
+  mapList.className ='mdc-theme--background'
   const map = document.createElement('div')
   map.id = 'map'
   mapParent.appendChild(map)
@@ -393,7 +394,7 @@ function calendarView (dbName) {
 function createCalendarPanel () {
   const calendarView = document.createElement('div')
   calendarView.id = 'calendar-view--container'
-  calendarView.className = 'mdc-top-app-bar--fixed-adjust'
+  calendarView.className = 'mdc-top-app-bar--fixed-adjust start-calendar-transition'
   const beforeDiv = document.createElement('div')
   beforeDiv.id = 'beforeToday'
   beforeDiv.style.display = 'none'
@@ -405,7 +406,7 @@ function createCalendarPanel () {
   // if(document.getElementById('beforeToday') || document.getElementById('afterToday')) {
   //   return
   // }
-  document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
+  document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML + loader().outerHTML
 
 }
 
@@ -467,15 +468,19 @@ function insertDatesBeforeToday (db, calendarDateIndex, today ) {
       cursor.continue()
     } else {
       document.getElementById('beforeToday').style.display = 'block'
-      console.log(document.getElementById('afterToday').children.length)
       if(document.getElementById('afterToday').children.length <= 1){
         setTimeout(function(){
 
           document.documentElement.scrollTop = document.documentElement.offsetHeight
         },300)
-        return
+        
       }
-      document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
+      else {
+        document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
+
+      }
+      document.getElementById('calendar-view--container').classList.remove("start-calendar-transition")
+      document.querySelector('.loader').remove()
     }
   }
 }
@@ -588,7 +593,7 @@ function createProfileHeader () {
 function createProfilePanel () {
   const profileView = document.createElement('div')
   profileView.id = 'profile-view--container'
-  profileView.className = 'mdc-top-app-bar--fixed-adjust'
+  profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background'
 
   const uploadBtn = document.createElement('button')
   uploadBtn.className = 'mdc-fab'
@@ -628,7 +633,7 @@ function createProfilePanel () {
 
   const nameChangeCont = document.createElement('div')
   nameChangeCont.id = 'name--change-container'
-
+  nameChangeCont.className ='profile-psuedo-card'
  
 
   const toggleBtnName = document.createElement('button')
@@ -649,8 +654,7 @@ function createProfilePanel () {
 
   const emailCont = document.createElement('div')
   emailCont.id = 'email--change-container'
-
- 
+  emailCont.className ='profile-psuedo-card'
 
   const toggleBtnEmail = document.createElement('button')
   toggleBtnEmail.className = 'mdc-icon-button material-icons'

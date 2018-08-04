@@ -30,12 +30,9 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         if (objectStore.name === 'map') return
         if (objectStore.name === 'subscriptions') return
         if (!activityRecord) return
-
         activityRecord.assignees.forEach(function (people) {
           document.querySelector(`[data-phone-num="${people}"]`).remove()
         })
-
-        
         return
       }
       switch (objectStore.name) {
@@ -81,23 +78,26 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         )
 
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields,activityRecord)
       }
       console.log(boundKeyRange)
       if (boundKeyRange.upper === '\uffff') return
       indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields)
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields,activityRecord)
       }
     }
   })
 }
 
-function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields) {
+function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields,activityRecord) {
   const cursor = event.target.result
   if (!cursor) {
     if (objectStore.name === 'users') {
       activityRecord.assignees.forEach(function (people) {
-        document.querySelector(`[data-phone-num="${people}"]`).remove()
+        if(document.querySelector(`[data-phone-num="${people}"]`)) {
+
+          document.querySelector(`[data-phone-num="${people}"]`).remove()
+        }
       })
       return
     }
