@@ -9,6 +9,7 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
+
 function inputSelect (objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
@@ -18,9 +19,11 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
   req.onsuccess = function () {
     const db = req.result
 
-    if (objectStore.name === 'subscriptions') {
+    if (objectStore.name === 'subscriptions' || objectStore.name === 'map') {
+      
       primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
-    } else {
+    } 
+    else {
       primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
     }
 
@@ -55,7 +58,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       cursor.continue()
     }
   }
-  console.log(inputFields.main)
+
   document.getElementById(inputFields.main).addEventListener('input', function () {
     document.getElementById(selector).innerHTML = ''
     const dbName = firebase.auth().currentUser.uid
@@ -98,20 +101,12 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields,ac
 
           document.querySelector(`[data-phone-num="${people}"]`).remove()
         }
+        
       })
       return
     }
     if (objectStore.name === 'subscriptions') return
     if (objectStore.name === 'map') return
-
-    // const link = document.createElement('a')
-    // link.textContent = 'google maps'
-    // link.href = '#'
-    // link.id = 'find-new-location'
-    // if (!document.getElementById('find-new-location')) {
-    //   // document.getElementById(selector).appendChild(link)
-    // }
-    // return
   }
 
   switch (objectStore.name) {
@@ -127,14 +122,6 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields,ac
       console.log(inputFields.main)
       officeTemplateCombo(cursor, selector,inputFields.main)
 
-      // dataElement('office', cursor.value.office).addEventListener('click', function () {
-      //   console.log(this.dataset.office)
-      //   console.log(this.dataset.template)
-      //   document.querySelector('.activity--office').textContent = this.dataset.office
-      //   document.querySelector('.activity--template').textContent = this.dataset.template
-      //   getSelectedSubscriptionData(this.dataset.office, this.dataset.template)
-      //   document.getElementById(selector).innerHTML = ''
-      // })
       break
   }
 
@@ -188,17 +175,14 @@ function requestCreator (requestType, requestBody) {
 
   // handle the response from apiHandler when operation is completed
 
-  apiHandler.onmessage = onSuccessMessage
+  apiHandler.onmessage = loadViewFromRoot
   apiHandler.onerror = onErrorMessage
 }
 
-function onSuccessMessage (response) {
+function loadViewFromRoot (response) {
   if (response.data.type !== 'updateIDB') return
-  console.log(response)
 
   const req = window.indexedDB.open(response.data.dbName)
-
-  console.log(req)
 
   req.onsuccess = function () {
     const db = req.result

@@ -12,7 +12,7 @@ firebase.initializeApp({
 })
 
 // firebaseUI login config object
-function firebaseUiConfig (value) {
+function firebaseUiConfig(value) {
   return {
     'callbacks': {
       'signInSuccess': function (user, credential, redirectUrl) {
@@ -66,25 +66,42 @@ firebase.auth().onAuthStateChanged(function (auth) {
   auth ? userSignedIn(auth) : userSignedOut()
 })
 
-// when user is signed in call requestCreator function inside services.js
-function userSignedIn (auth) {
-  // document.querySelector('.app').style.display = 'block'
-  console.log(auth)
+function userSignedIn(auth) {
+  let dbExists = true;
+
   if (window.Worker && window.indexedDB) {
     layoutGrid()
-    requestCreator('initializeIDB')
-  }
 
-  // firebase.auth().signOut().catch(signOutError)
+    const req = indexedDB.open(auth.uid)
+    req.onupgradeneeded = function (event) {
+      event.target.transaction.abort();
+      dbExists = false;
+    }
+    loadFirstView(dbExists,auth)
+    return
+  }
+  firebase.auth().signOut().catch(signOutError)
+}
+
+function loadFirstView(dbExists,auth) {
+  requestCreator('initializeIDB')
+  if (dbExists) {
+    const response = {
+      data: {
+        dbName: auth.uid
+      }
+    }
+    loadViewFromRoot(response)
+  } else {
+    profileView(auth, true)
+  }
 }
 
 // When user is signed out
-function userSignedOut () {
+function userSignedOut() {
   const login = document.createElement('div')
   login.id = 'login-container'
   document.body.innerHTML = login.outerHTML
-
-  // document.querySelector('.app').style.display = 'none'
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth())
 
@@ -92,11 +109,12 @@ function userSignedOut () {
   ui.start('#login-container', firebaseUiConfig())
 }
 
-function signOutError (error) {
+function signOutError(error) {
   // handler error with snackbar
+  snacks(error)
 }
 
-function layoutGrid () {
+function layoutGrid() {
   const layout = document.createElement('div')
   layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
 
@@ -115,10 +133,6 @@ function layoutGrid () {
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
-  // const conversationPanelParent = document.createElement('div')
-  // conversationPanelParent.className ='mdc-layout-grid__cell--span-12-mobile app-center-panel'
-  // const activityParentPanel = document.createElement('div')
-  // activityParentPanel.className ='mdc-layout-grid__cell--span-12-mobile app-right-panel'
 
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
