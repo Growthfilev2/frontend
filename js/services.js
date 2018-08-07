@@ -9,7 +9,6 @@ function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-
 function inputSelect (objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
@@ -20,10 +19,8 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
     const db = req.result
 
     if (objectStore.name === 'subscriptions' || objectStore.name === 'map') {
-      
       primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
-    } 
-    else {
+    } else {
       primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
     }
 
@@ -45,14 +42,14 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'users':
-   
+
           assigneeListUI(cursor, selector, inputFields.main)
 
           break
 
         case 'subscriptions':
-          officeTemplateCombo(cursor, selector,inputFields.main)
-          
+          officeTemplateCombo(cursor, selector, inputFields.main)
+
           break
       }
       cursor.continue()
@@ -81,27 +78,25 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         )
 
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields,activityRecord)
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord)
       }
       console.log(boundKeyRange)
       if (boundKeyRange.upper === '\uffff') return
       indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields,activityRecord)
+        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord)
       }
     }
   })
 }
 
-function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields,activityRecord) {
+function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, activityRecord) {
   const cursor = event.target.result
   if (!cursor) {
     if (objectStore.name === 'users') {
       activityRecord.assignees.forEach(function (people) {
-        if(document.querySelector(`[data-phone-num="${people}"]`)) {
-
+        if (document.querySelector(`[data-phone-num="${people}"]`)) {
           document.querySelector(`[data-phone-num="${people}"]`).remove()
         }
-        
       })
       return
     }
@@ -120,7 +115,7 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields,ac
       break
     case 'subscriptions':
       console.log(inputFields.main)
-      officeTemplateCombo(cursor, selector,inputFields.main)
+      officeTemplateCombo(cursor, selector, inputFields.main)
 
       break
   }
@@ -180,8 +175,10 @@ function requestCreator (requestType, requestBody) {
 }
 
 function loadViewFromRoot (response) {
-  if (response.data.type !== 'updateIDB') return
+  console.log(response)
 
+  if (response.data.type === 'notification') return
+  console.log('run')
   const req = window.indexedDB.open(response.data.dbName)
 
   req.onsuccess = function () {

@@ -374,7 +374,6 @@ body {
     bottom: -10%;
     right: -3%;
     transform: translate(-50%, -50%);
-    background-color: #6abbf9;
 }
 
 #email--change-container {
@@ -412,7 +411,6 @@ body {
     position: fixed;
     bottom: 1rem;
     right: 1rem;
-    background-color: #6abbf9;
 }
 
 /* share--container */
@@ -587,12 +585,6 @@ margin-top: 13px;
 
 #change-number--menu ul {
     padding: 0px;
-}
-
-.mdc-snackbar {
-    padding: 10px 20px 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
 }
 
 #refresh-login .firebaseui-card-content {

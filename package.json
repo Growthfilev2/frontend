@@ -3,7 +3,21 @@
   "version": "1.0.0",
   "description": "Growthfile frontend application",
   "main": "index.html",
-  "dependencies": {},
+  "dependencies": {
+    "@material/button": "^0.38.0",
+    "@material/dialog": "^0.38.0",
+    "@material/elevation": "^0.38.0",
+    "@material/fab": "^0.38.0",
+    "@material/floating-label": "^0.38.0",
+    "@material/grid-list": "^0.38.0",
+    "@material/icon-button": "^0.38.0",
+    "@material/layout-grid": "^0.34.0",
+    "@material/line-ripple": "^0.38.0",
+    "@material/ripple": "^0.38.0",
+    "@material/theme": "^0.38.0",
+    "install": "^0.12.1",
+    "npm": "^6.3.0"
+  },
   "devDependencies": {
     "standard": "^11.0.1"
   },

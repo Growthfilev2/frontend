@@ -8,11 +8,10 @@ firebase.initializeApp({
   projectId: 'growthfilev2-0',
   storageBucket: 'growthfilev2-0.appspot.com'
 
-
 })
 
 // firebaseUI login config object
-function firebaseUiConfig(value) {
+function firebaseUiConfig (value) {
   return {
     'callbacks': {
       'signInSuccess': function (user, credential, redirectUrl) {
@@ -66,24 +65,23 @@ firebase.auth().onAuthStateChanged(function (auth) {
   auth ? userSignedIn(auth) : userSignedOut()
 })
 
-function userSignedIn(auth) {
-  let dbExists = true;
+function userSignedIn (auth) {
+  let dbExists = true
 
   if (window.Worker && window.indexedDB) {
     layoutGrid()
-
     const req = indexedDB.open(auth.uid)
     req.onupgradeneeded = function (event) {
-      event.target.transaction.abort();
-      dbExists = false;
+      event.target.transaction.abort()
+      dbExists = false
     }
-    loadFirstView(dbExists,auth)
+    loadFirstView(dbExists, auth)
     return
   }
   firebase.auth().signOut().catch(signOutError)
 }
 
-function loadFirstView(dbExists,auth) {
+function loadFirstView (dbExists, auth) {
   requestCreator('initializeIDB')
   if (dbExists) {
     const response = {
@@ -98,7 +96,7 @@ function loadFirstView(dbExists,auth) {
 }
 
 // When user is signed out
-function userSignedOut() {
+function userSignedOut () {
   const login = document.createElement('div')
   login.id = 'login-container'
   document.body.innerHTML = login.outerHTML
@@ -109,12 +107,12 @@ function userSignedOut() {
   ui.start('#login-container', firebaseUiConfig())
 }
 
-function signOutError(error) {
+function signOutError (error) {
   // handler error with snackbar
   snacks(error)
 }
 
-function layoutGrid() {
+function layoutGrid () {
   const layout = document.createElement('div')
   layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
 

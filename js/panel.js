@@ -177,7 +177,7 @@ function createActivityList (data, target, count, uniqueOffice) {
   metaTextActivityStatus.textContent = data.status
   metaTextContainer.appendChild(metaTextActivityStatus)
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
-    document.getElementById(target).innerHTML += li.outerHTML
+  document.getElementById(target).innerHTML += li.outerHTML
 }
 
 function changeExistingActivities (data, target, count) {
@@ -270,7 +270,7 @@ function createMapPanel () {
 
   const mapList = document.createElement('div')
   mapList.id = 'list-view--map'
-  mapList.className ='mdc-theme--background'
+  mapList.className = 'mdc-theme--background'
   const map = document.createElement('div')
   map.id = 'map'
   mapParent.appendChild(map)
@@ -379,9 +379,8 @@ function calendarView (dbName) {
       const record = event.target.result
       record.view = 'calendar'
       rootObjectStore.put(record)
-      rootTx.oncomplete = function (){
+      rootTx.oncomplete = function () {
         fetchCalendarData()
-     
       }
     }
   }
@@ -407,12 +406,9 @@ function createCalendarPanel () {
   //   return
   // }
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML + loader().outerHTML
-
 }
 
 function fetchCalendarData () {
-
-
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
@@ -430,17 +426,14 @@ function fetchCalendarData () {
         calendarViewUI('afterToday', db, {
           date: today
         })
-
       }
       insertDatesAfterToday(db, calendarDateIndex, today)
-  
     }
   }
- 
+
   request.onerror = function (event) {
     console.log(event)
   }
-
 }
 
 function insertDatesAfterToday (db, calendarDateIndex, today) {
@@ -451,15 +444,12 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
       calendarViewUI('afterToday', db, cursor.value)
       cursor.continue()
     } else {
-      
-        insertDatesBeforeToday(db, calendarDateIndex, today) 
- 
-      
+      insertDatesBeforeToday(db, calendarDateIndex, today)
     }
   }
 }
 
-function insertDatesBeforeToday (db, calendarDateIndex, today ) {
+function insertDatesBeforeToday (db, calendarDateIndex, today) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
@@ -468,25 +458,20 @@ function insertDatesBeforeToday (db, calendarDateIndex, today ) {
       cursor.continue()
     } else {
       document.getElementById('beforeToday').style.display = 'block'
-      if(document.getElementById('afterToday').children.length <= 1){
-        setTimeout(function(){
-
+      if (document.getElementById('afterToday').children.length <= 1) {
+        setTimeout(function () {
           document.documentElement.scrollTop = document.documentElement.offsetHeight
-        },300)
-        
-      }
-      else {
+        }, 300)
+      } else {
         document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
-
       }
-      document.getElementById('calendar-view--container').classList.remove("start-calendar-transition")
+      document.getElementById('calendar-view--container').classList.remove('start-calendar-transition')
       document.querySelector('.loader').remove()
     }
   }
 }
 
 function calendarViewUI (target, db, data) {
-  
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -532,7 +517,7 @@ function getActivity (db, data) {
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       activityObjectStore.get(data.activityId).onsuccess = function (event) {
         const record = event.target.result
-        createActivityList(record, `activity--row${data.date}`,'' , unique)
+        createActivityList(record, `activity--row${data.date}`, '', unique)
       }
     }).catch(console.log)
   }
@@ -573,8 +558,6 @@ function createProfileHeader () {
   const icon = document.createElement('i')
   icon.className = 'material-icons'
   icon.textContent = 'more_vert'
-
-  
 
   iconCont.appendChild(icon)
 
@@ -633,8 +616,7 @@ function createProfilePanel () {
 
   const nameChangeCont = document.createElement('div')
   nameChangeCont.id = 'name--change-container'
-  nameChangeCont.className ='profile-psuedo-card'
- 
+  nameChangeCont.className = 'profile-psuedo-card'
 
   const toggleBtnName = document.createElement('button')
   toggleBtnName.className = 'mdc-icon-button material-icons'
@@ -649,12 +631,12 @@ function createProfilePanel () {
 
   toggleBtnName.textContent = 'edit'
 
-  nameChangeCont.appendChild(createInput('displayName','Name'))
+  nameChangeCont.appendChild(createInput('displayName', 'Name'))
   nameChangeCont.appendChild(toggleBtnName)
 
   const emailCont = document.createElement('div')
   emailCont.id = 'email--change-container'
-  emailCont.className ='profile-psuedo-card'
+  emailCont.className = 'profile-psuedo-card'
 
   const toggleBtnEmail = document.createElement('button')
   toggleBtnEmail.className = 'mdc-icon-button material-icons'
@@ -668,7 +650,7 @@ function createProfilePanel () {
 
   toggleBtnEmail.textContent = 'email'
 
-  emailCont.appendChild(createInput('email','Email'))
+  emailCont.appendChild(createInput('email', 'Email'))
   emailCont.appendChild(toggleBtnEmail)
 
   const refreshAuth = document.createElement('div')
@@ -690,7 +672,7 @@ function createProfilePanel () {
   profileView.appendChild(emailCont)
   profileView.appendChild(refreshAuth)
   profileView.appendChild(changeNumCont)
- 
+
   document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 }
 
@@ -758,7 +740,6 @@ function newSignIn (value) {
     document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber
     document.querySelector('.firebaseui-id-phone-number').disabled = true
     document.querySelector('.firebaseui-label').remove()
-
   }, 300)
 }
 
@@ -846,7 +827,7 @@ function changeDisplayName (user) {
 
   if (user.displayName) {
     displayNameField.value = user.displayName
-  } 
+  }
 
   toggleIconData('edit--name', displayNameField)
 }
@@ -855,8 +836,8 @@ function changeEmailAddress (user) {
   const emailField = getInputText('email')
   if (user.email) {
     emailField.value = user.email
-  } 
-  
+  }
+
   toggleIconData('edit--email', emailField)
 }
 
@@ -957,8 +938,6 @@ function resetInputs () {
 function disableInputs () {
   getInputText('displayName')['input_'].disabled = true
   getInputText('email')['input_'].disabled = true
-
-
 }
 
 function changePhoneNumber () {
@@ -1215,7 +1194,6 @@ function timeDiff (lastSignInTime) {
 }
 
 function handleChangeNumberMenu () {
-
   const div = document.createElement('div')
   div.className = 'mdc-menu mdc-menu--animating-open'
   div.id = 'change-number--menu'

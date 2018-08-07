@@ -1,21 +1,37 @@
 :root {
-        --mdc-theme-primary: #f0f3f5 !important;
-        --mdc-theme-secondary: #898a8dde !important;
-        --mdc-theme-background:#eeeeee !important;
-}
-.mdc-top-app-bar .material-icons {
-        color:rgba(0,0,0,.54);
-}
-#chat-container.mdc-card {
-        display: inherit !important;
-}
-.mdc-line-ripple {
-        background-color:  #44a3eb !important
-}
+  --mdc-theme-primary: #0399f4 !important;
+  --mdc-theme-secondary: #ff9800 !important;
+  --mdc-theme-background:#ffffff !important;
+  --mdc-theme-on-primary: #ffffff !important;
+  --mdc-theme-on-secondary:#ffffff !important; }
 
-@media (max-width:480px) {
-        #login-container .firebaseui-container {
-                box-shadow: inset;
-                width:90%;
-        }
-}
+.mdc-top-app-bar .material-icons {
+  color: rgba(0, 0, 0, 0.54); }
+
+#chat-container.mdc-card {
+  display: inherit !important; }
+
+.mdc-line-ripple {
+  background-color: #44a3eb !important; }
+
+@media (max-width: 480px) {
+  #login-container .firebaseui-container {
+    box-shadow: inset;
+    width: 90%; } }
+/** Labels **/
+.mdc-floating-label.mdc-floating-label--float-above {
+  color: #0399f4 !important; }
+
+/** background **/
+.mdc-theme--background {
+  background-color: #eeeeee; }
+
+/** snackbar **/
+.mdc-snackbar {
+  padding: 5px 10px 5px 10px; }
+
+/** menu **/
+:not(.mdc-list--non-interactive) > :not(.mdc-list-item--disabled).mdc-list-item::before, :not(.mdc-list--non-interactive) > :not(.mdc-list-item--disabled).mdc-list-item::after {
+  background-color: #ffffff !important; }
+
+/*# sourceMappingURL=theme.css.map */
