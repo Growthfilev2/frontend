@@ -98,14 +98,13 @@ function initializeIDB () {
     var auth = firebase.auth().currentUser
     console.log(auth)
 
-    const request = indexedDB.open(auth.uid, 2)
+    const request = indexedDB.open(auth.uid)
 
     request.onerror = function (event) {
       reject(event.error)
     }
 
     request.onupgradeneeded = function () {
-      console.log(request)
       const db = request.result
 
       const activity = db.createObjectStore('activity', {
@@ -169,12 +168,15 @@ function initializeIDB () {
       // add defaultFromTime value here in order to load it only once
       root.put({
         uid: auth.uid,
-        fromTime: 0
+        fromTime: 0,
+        view: 'profile'
       })
+      requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
     }
 
     request.onsuccess = function () {
-      console.log('request success')
+      requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+
       resolve(
         auth.uid
       )
@@ -523,7 +525,7 @@ function updateUserObjectStore (successUrl) {
         const cursor = event.target.result
 
         if (!cursor) {
-          requestHandlerResponse(200, 'user object store modified', successUrl.db.name)
+          requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
 
@@ -646,9 +648,9 @@ function updateIDB (dbName) {
 
       )
         .then(function (response) {
-      
           if (response.from === response.upto) {
-            requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', dbName)
+            // requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', dbName)
+            return
           }
           successResponse(response)
         })

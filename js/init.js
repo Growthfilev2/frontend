@@ -66,33 +66,13 @@ firebase.auth().onAuthStateChanged(function (auth) {
 })
 
 function userSignedIn (auth) {
-  let dbExists = true
-
   if (window.Worker && window.indexedDB) {
     layoutGrid()
-    const req = indexedDB.open(auth.uid)
-    req.onupgradeneeded = function (event) {
-      event.target.transaction.abort()
-      dbExists = false
-    }
-    loadFirstView(dbExists, auth)
+    requestCreator('initializeIDB')
+
     return
   }
   firebase.auth().signOut().catch(signOutError)
-}
-
-function loadFirstView (dbExists, auth) {
-  requestCreator('initializeIDB')
-  if (dbExists) {
-    const response = {
-      data: {
-        dbName: auth.uid
-      }
-    }
-    loadViewFromRoot(response)
-  } else {
-    profileView(auth, true)
-  }
 }
 
 // When user is signed out

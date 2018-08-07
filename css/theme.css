@@ -8,9 +8,6 @@
 .mdc-top-app-bar .material-icons {
   color: rgba(0, 0, 0, 0.54); }
 
-#chat-container.mdc-card {
-  display: inherit !important; }
-
 .mdc-line-ripple {
   background-color: #44a3eb !important; }
 
@@ -33,5 +30,9 @@
 /** menu **/
 :not(.mdc-list--non-interactive) > :not(.mdc-list-item--disabled).mdc-list-item::before, :not(.mdc-list--non-interactive) > :not(.mdc-list-item--disabled).mdc-list-item::after {
   background-color: #ffffff !important; }
+
+/** progress bar **/
+.mdc-linear-progress--indeterminate {
+  color: #ff9800 !important; }
 
 /*# sourceMappingURL=theme.css.map */

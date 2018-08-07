@@ -331,8 +331,9 @@ body {
 
 #chat-container {
     height: 80vh;
-    overflow: scroll;
+    overflow: auto;
     background-color: white;
+    display: inherit;
 }
 
 .back-icon {

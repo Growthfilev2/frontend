@@ -1,15 +1,43 @@
-
-function loader () {
+function loader() {
   const div = document.createElement('div')
   div.className = 'loader'
   return div
 }
 
-function getInputText (selector) {
+function progressBar() {
+  const div = document.createElement('div')
+  div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate'
+  div.role = 'progressbar'
+  const bufferDots = document.createElement('div')
+  bufferDots.className = 'mdc-linear-progress__buffering-dots'
+  const buffer = document.createElement('div')
+  buffer.className = 'mdc-linear-progress__buffer'
+  const primary = document.createElement('div')
+  primary.className = 'mdc-linear-progress__bar mdc-linear-progress__primary-bar'
+
+  const primaryInner = document.createElement('span')
+  primaryInner.className = 'mdc-linear-progress__bar-inner'
+
+  primary.appendChild(primaryInner)
+  const secondary = document.createElement('div')
+  secondary.className = 'mdc-linear-progress__bar mdc-linear-progress__secondary-bar'
+
+  const secondaryInner = document.createElement('span')
+  secondaryInner.className = 'mdc-linear-progress__bar-inner'
+
+  secondary.appendChild(secondaryInner)
+  div.appendChild(bufferDots)
+  div.appendChild(buffer)
+  div.appendChild(primary)
+  div.appendChild(secondary)
+  return div
+}
+
+function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect (objectStore, selector, inputFields, activityRecord) {
+function inputSelect(objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
@@ -89,7 +117,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
   })
 }
 
-function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, activityRecord) {
+function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord) {
   const cursor = event.target.result
   if (!cursor) {
     if (objectStore.name === 'users') {
@@ -123,11 +151,11 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
   cursor.continue()
 }
 
-function fetchCurrentTime () {
+function fetchCurrentTime() {
   return Date.now()
 }
 
-function fetchCurrentLocation () {
+function fetchCurrentLocation() {
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
@@ -138,12 +166,12 @@ function fetchCurrentLocation () {
   })
 }
 
-function inputFile (selector) {
+function inputFile(selector) {
   return document.getElementById(selector)
 }
 let offset
 
-function requestCreator (requestType, requestBody) {
+function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -174,16 +202,18 @@ function requestCreator (requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-function loadViewFromRoot (response) {
+function loadViewFromRoot(response) {
   console.log(response)
 
   if (response.data.type === 'notification') return
-  console.log('run')
+
+  console.log(response.data.dbName)
   const req = window.indexedDB.open(response.data.dbName)
 
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+
     rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
       const record = event.target.result
       const currentView = record.view
@@ -226,7 +256,7 @@ function loadViewFromRoot (response) {
   }
 }
 
-function onErrorMessage (error) {
+function onErrorMessage(error) {
   console.log(error)
   console.table({
     'line-number': error.lineno,
@@ -235,7 +265,7 @@ function onErrorMessage (error) {
   })
 }
 
-function handleTimeout () {
+function handleTimeout() {
   const TIME_OUT_VALUE = 6000000
   clearTimeout(offset)
 
