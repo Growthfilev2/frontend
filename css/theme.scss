@@ -7,6 +7,7 @@
     --mdc-theme-on-secondary:#ffffff !important;
     
 }
+
 $mdc-theme-primary: #0399f4 !important;
 $mdc-theme-secondary: #ff9800 !important;
 $mdc-theme-background:#ffffff !important;
@@ -59,11 +60,3 @@ $mdc-theme-on-secondary:#ffffff !important;
     background-color: $mdc-theme-on-primary;
 }
 
-/** progress bar **/
-@mixin mdc-linear-progress-bar-color($color) {
-    color :$color
-}
-
-.mdc-linear-progress--indeterminate {
-    color :$mdc-theme-secondary
-}

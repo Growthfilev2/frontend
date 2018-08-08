@@ -60,6 +60,13 @@ moment.locale('en', {
   ]
 })
 
+// initialize smooth scrolling
+window.scrollBy({
+  top: 100,
+  left: 0,
+  behavior: 'smooth'
+})
+
 firebase.auth().onAuthStateChanged(function (auth) {
   // if user is signed in then run userIsSigned fn else run userSignedOut fn
   auth ? userSignedIn(auth) : userSignedOut()

@@ -100,7 +100,9 @@ function createComment (db, addendum, currentUser) {
   }
 
   let commentBox = document.createElement('div')
+
   commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left', 'mdc-theme--primary-bg')
+
   currentUser.phoneNumber === addendum.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
   commentBox.id = addendum.addendumId
 
