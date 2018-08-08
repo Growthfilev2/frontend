@@ -33,7 +33,6 @@ function fetchDataForActivityList(db, uniqueOffice) {
 
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
-  let activityCount = 0
 
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
@@ -53,9 +52,10 @@ function fetchDataForActivityList(db, uniqueOffice) {
       document.querySelector('.create-activity').addEventListener('click', createActivity)
       return
     }
-    activityCount++
 
-    activityDom += createActivityList(cursor.value, uniqueOffice)
+    createActivityList(db, cursor.value, uniqueOffice).then(function (li) {
+      activityDom += li
+    })
 
     cursor.continue()
   }
@@ -135,23 +135,44 @@ function creatListHeader() {
   })
 }
 
-function createActivityList(data, uniqueOffice) {
-  return activityListUI(data, uniqueOffice)
+function createActivityList(db, data, uniqueOffice) {
+  return new Promise(function (resolve) {
+    const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
+
+    activityCount.get(data.activityId).onsuccess = function (event) {
+      const record = event.target.result
+      if (!record) {
+
+        resolve(activityListUI(data, uniqueOffice, 0))
+      } else {
+
+        resolve(activityListUI(data, uniqueOffice, record.count))
+      }
+    }
+  })
 }
 
-function activityListUI(data, uniqueOffice) {
+function activityListUI(data, uniqueOffice, count) {
   const li = document.createElement('li')
 
-  li.classList.add('mdc-list-item', 'activity--list-item')
+  if (count !== 0) {
+
+    li.classList.add('mdc-list-item', 'activity--list-item', 'count-active')
+  } else {
+    li.classList.add('mdc-list-item', 'activity--list-item')
+  }
+
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const customText = document.createElement('span')
+
   customText.className = 'mdc-primary__custom-text'
 
   customText.textContent = data.title
+
   leftTextContainer.appendChild(customText)
 
   if (uniqueOffice) {
@@ -179,7 +200,20 @@ function activityListUI(data, uniqueOffice) {
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', `${data.status}`)
   metaTextActivityStatus.textContent = data.status
+
+  const countDiv = document.createElement('div');
+
+  const countSpan = document.createElement(
+    'span'
+  )
+  countSpan.textContent = count
+  countSpan.className = 'count mdc-meta__custom-text'
+  countDiv.appendChild(countSpan)
+
+
+  metaTextContainer.appendChild(countDiv)
   metaTextContainer.appendChild(metaTextActivityStatus)
+
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
   // document.getElementById(target).innerHTML += li.outerHTML
   return li.outerHTML
@@ -352,7 +386,9 @@ function generateActivityFromMarker(dbName, map, markers) {
           const activityObjectStore = db.transaction('activity').objectStore('activity')
           activityObjectStore.get(markers[i].customInfo).onsuccess = function (event) {
             const record = event.target.result
-            mapActivityDom += createActivityList(record, unique)
+            createActivityList(db, record, unique).then(function (li) {
+              mapActivityDom += li
+            })
           }
         }).catch(console.log)
       }
@@ -362,7 +398,6 @@ function generateActivityFromMarker(dbName, map, markers) {
     }, 300)
   }
 }
-
 
 function calendarView(dbName) {
   // open IDB
@@ -382,7 +417,6 @@ function calendarView(dbName) {
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
         fetchCalendarData()
-
       }
     }
   }
@@ -409,12 +443,9 @@ function createCalendarPanel() {
   calendarView.appendChild(beforeDiv)
   calendarView.appendChild(afterDiv)
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
-
 }
 
 function fetchCalendarData() {
-
-
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
@@ -440,7 +471,6 @@ function fetchCalendarData() {
   request.onerror = function (event) {
     console.log(event)
   }
-
 }
 
 function insertDatesAfterToday(db, calendarDateIndex, today) {
@@ -467,23 +497,19 @@ function insertDatesBeforeToday(db, calendarDateIndex, today) {
       document.getElementById('beforeToday').style.display = 'block'
       if (document.getElementById('afterToday').children.length <= 1) {
         setTimeout(function () {
-
           document.documentElement.scrollTop = document.documentElement.offsetHeight
         }, 300)
-
       } else {
         document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
-
       }
-      document.getElementById('beforeToday').classList.remove("start-calendar-transition")
-      document.getElementById('afterToday').classList.remove("start-calendar-transition")
+      document.getElementById('beforeToday').classList.remove('start-calendar-transition')
+      document.getElementById('afterToday').classList.remove('start-calendar-transition')
       document.querySelector('.mdc-linear-progress').classList.add('mdc-linear-progress--closed')
     }
   }
 }
 
 function calendarViewUI(target, db, data) {
-
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -529,7 +555,9 @@ function getActivity(db, data) {
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       activityObjectStore.get(data.activityId).onsuccess = function (event) {
         const record = event.target.result
-        document.getElementById(`activity--row${data.date}`).innerHTML += createActivityList(record, unique)
+        createActivityList(db, record, unique).then(function (li) {
+          document.getElementById(`activity--row${data.date}`).innerHTML += li
+        })
       }
     }).catch(console.log)
   }

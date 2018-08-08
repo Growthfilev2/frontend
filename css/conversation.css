@@ -520,6 +520,10 @@ margin-top: 13px;
     pointer-events: none;
 }
 
+.map-select-type {
+    float: right;
+
+}
 .map-select-type div {
     margin: 0px !important;
 }
