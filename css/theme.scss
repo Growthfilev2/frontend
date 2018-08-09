@@ -25,6 +25,17 @@ $mdc-theme-on-secondary:#ffffff !important;
         width: 90%;
     }
 }
+@media (max-width:320px) {
+    .comment-field {
+        padding: 15px !important;
+    }
+    #send-chat--input {
+        top: 1rem !important;
+        width: 35px !important;
+        height: 35px !important;
+        
+    }
+}
 
 /** Labels **/
 
@@ -33,7 +44,10 @@ $mdc-theme-on-secondary:#ffffff !important;
 }
 
 .mdc-floating-label.mdc-floating-label--float-above {
-    @include mdc-floating-label-ink-color($mdc-theme-primary);
+    @include mdc-floating-label-ink-color($mdc-theme-secondary);
+}
+.detail--static-text {
+    color:$mdc-theme-secondary;
 }
 
 /** background **/
@@ -103,4 +117,12 @@ $mdc-theme-on-secondary:#ffffff !important;
     margin-left: 56px;
     margin-top: 5px;
     margin-bottom: 2px;
+}
+
+/** top app bar **/
+.mdc-top-app-bar{
+    color:$mdc-theme-on-primary;
+    .material-icons {
+        color: $mdc-theme-on-primary;
+    }
 }

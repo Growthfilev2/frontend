@@ -15,9 +15,20 @@
   #login-container .firebaseui-container {
     box-shadow: inset;
     width: 90%; } }
+@media (max-width: 320px) {
+  .comment-field {
+    padding: 15px !important; }
+
+  #send-chat--input {
+    top: 1rem !important;
+    width: 35px !important;
+    height: 35px !important; } }
 /** Labels **/
 .mdc-floating-label.mdc-floating-label--float-above {
-  color: #0399f4 !important; }
+  color: #ff9800 !important; }
+
+.detail--static-text {
+  color: #ff9800 !important; }
 
 /** background **/
 .mdc-theme--background {
@@ -67,5 +78,11 @@
   margin-left: 56px;
   margin-top: 5px;
   margin-bottom: 2px; }
+
+/** top app bar **/
+.mdc-top-app-bar {
+  color: #ffffff !important; }
+  .mdc-top-app-bar .material-icons {
+    color: #ffffff !important; }
 
 /*# sourceMappingURL=theme.css.map */
