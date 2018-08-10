@@ -251,7 +251,7 @@ body {
 }
 
 .assignee-li:nth-child(1) {
-    margin-top: 30px;
+    /* margin-top: 30px; */
 }
 
 .assignee-li span:nth-child(3) {
@@ -260,6 +260,7 @@ body {
 
 #share-btn {
     cursor: pointer;
+    margin-top:-5px;
 }
 
 .contact--text-field {
@@ -319,7 +320,7 @@ body {
 .remove {
     position: absolute;
     right: 0;
-    top: 26%
+    top: 50%
 }
 
 
@@ -790,4 +791,9 @@ input[type="datetime-local"]{
     float: right;
     width: 35px;
     height:35px;
+}
+
+.activity--share-container {
+    display: table;
+    width:100%
 }

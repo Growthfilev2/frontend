@@ -1,6 +1,7 @@
-function listView() {
+function listView () {
   listPanel()
   creatListHeader()
+  document.body.style.backgroundColor = 'white'
 
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
@@ -25,7 +26,7 @@ function listView() {
   }
 }
 
-function fetchDataForActivityList(db, uniqueOffice) {
+function fetchDataForActivityList (db, uniqueOffice) {
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
@@ -61,7 +62,7 @@ function fetchDataForActivityList(db, uniqueOffice) {
   }
 }
 
-function listPanel() {
+function listPanel () {
   if (document.getElementById('activity-list-main')) return
 
   const listCard = document.createElement('div')
@@ -76,7 +77,7 @@ function listPanel() {
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 }
 
-function creatListHeader() {
+function creatListHeader () {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -135,31 +136,28 @@ function creatListHeader() {
   })
 }
 
-function createActivityList(db, data, uniqueOffice) {
+function createActivityList (db, data, uniqueOffice) {
   return new Promise(function (resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
 
     activityCount.get(data.activityId).onsuccess = function (event) {
       const record = event.target.result
       if (!record) {
-
         resolve(activityListUI(data, uniqueOffice, 0))
       } else {
-
         resolve(activityListUI(data, uniqueOffice, record.count))
       }
     }
   })
 }
 
-function activityListUI(data, uniqueOffice, count) {
+function activityListUI (data, uniqueOffice, count) {
   const li = document.createElement('li')
 
   if (count !== 0) {
-
-    li.classList.add('mdc-list-item', 'activity--list-item', 'count-active')
+    li.classList.add('mdc-list-item', 'activity--list-item', 'count-active', 'mdc-elevation--z1')
   } else {
-    li.classList.add('mdc-list-item', 'activity--list-item')
+    li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1')
   }
 
   li.dataset.id = data.activityId
@@ -201,7 +199,7 @@ function activityListUI(data, uniqueOffice, count) {
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', `${data.status}`)
   metaTextActivityStatus.textContent = data.status
 
-  const countDiv = document.createElement('div');
+  const countDiv = document.createElement('div')
 
   const countSpan = document.createElement(
     'span'
@@ -209,7 +207,6 @@ function activityListUI(data, uniqueOffice, count) {
   countSpan.textContent = count
   countSpan.className = 'count mdc-meta__custom-text'
   countDiv.appendChild(countSpan)
-
 
   metaTextContainer.appendChild(countDiv)
   metaTextContainer.appendChild(metaTextActivityStatus)
@@ -219,7 +216,7 @@ function activityListUI(data, uniqueOffice, count) {
   return li.outerHTML
 }
 
-function changeExistingActivities(data, target, count) {
+function changeExistingActivities (data, target, count) {
   const activitySelector = `[data-id="${data.activityId}"]`
   if (document.querySelector(`#${target} ${activitySelector}`)) {
     console.log('yes')
@@ -242,7 +239,7 @@ function changeExistingActivities(data, target, count) {
   return false
 }
 
-function mapView(dbName) {
+function mapView (dbName) {
   console.log(dbName)
   // initialize mdc instance for map drawer
   const req = window.indexedDB.open(dbName)
@@ -261,7 +258,7 @@ function mapView(dbName) {
   }
 }
 
-function fetchMapData() {
+function fetchMapData () {
   createMapPanel()
   backIconHeader('close-map--drawer')
 
@@ -302,7 +299,7 @@ function fetchMapData() {
   }
 }
 
-function createMapPanel() {
+function createMapPanel () {
   const mapParent = document.createElement('div')
   mapParent.id = 'map-view--container'
   mapParent.className = 'mdc-top-app-bar--fixed-adjust'
@@ -318,7 +315,7 @@ function createMapPanel() {
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
 }
 
-function initMap(dbName, mapRecord) {
+function initMap (dbName, mapRecord) {
   console.log('amp')
   // user current geolocation  is set as map center
   const centerGeopoints = mapRecord[mapRecord.length - 1]
@@ -341,7 +338,7 @@ function initMap(dbName, mapRecord) {
   displayMarkers(dbName, map, mapRecord)
 }
 
-function displayMarkers(dbName, map, locationData) {
+function displayMarkers (dbName, map, locationData) {
   // let bounds = new google.maps.LatLngBounds()
   console.log(locationData)
   const allMarkers = []
@@ -370,7 +367,7 @@ function displayMarkers(dbName, map, locationData) {
   })
 }
 
-function generateActivityFromMarker(dbName, map, markers) {
+function generateActivityFromMarker (dbName, map, markers) {
   // removeDom('list-view--map')
 
   let bounds = map.getBounds()
@@ -399,7 +396,7 @@ function generateActivityFromMarker(dbName, map, markers) {
   }
 }
 
-function calendarView(dbName) {
+function calendarView (dbName) {
   // open IDB
   createCalendarPanel()
   backIconHeader('close-calendar--drawer')
@@ -426,7 +423,7 @@ function calendarView(dbName) {
   }
 }
 
-function createCalendarPanel() {
+function createCalendarPanel () {
   const calendarView = document.createElement('div')
   calendarView.id = 'calendar-view--container'
   calendarView.className = 'mdc-top-app-bar--fixed-adjust'
@@ -445,7 +442,7 @@ function createCalendarPanel() {
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
 }
 
-function fetchCalendarData() {
+function fetchCalendarData () {
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
@@ -473,7 +470,7 @@ function fetchCalendarData() {
   }
 }
 
-function insertDatesAfterToday(db, calendarDateIndex, today) {
+function insertDatesAfterToday (db, calendarDateIndex, today) {
   const lowerKeyRange = IDBKeyRange.lowerBound(today)
   calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
@@ -486,7 +483,7 @@ function insertDatesAfterToday(db, calendarDateIndex, today) {
   }
 }
 
-function insertDatesBeforeToday(db, calendarDateIndex, today) {
+function insertDatesBeforeToday (db, calendarDateIndex, today) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
@@ -495,21 +492,22 @@ function insertDatesBeforeToday(db, calendarDateIndex, today) {
       cursor.continue()
     } else {
       document.getElementById('beforeToday').style.display = 'block'
-      if (document.getElementById('afterToday').children.length <= 1) {
-        setTimeout(function () {
+
+      setTimeout(function () {
+        if (document.getElementById('afterToday').children.length <= 1) {
           document.documentElement.scrollTop = document.documentElement.offsetHeight
-        }, 300)
-      } else {
-        document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
-      }
-      document.getElementById('beforeToday').classList.remove('start-calendar-transition')
-      document.getElementById('afterToday').classList.remove('start-calendar-transition')
-      document.querySelector('.mdc-linear-progress').classList.add('mdc-linear-progress--closed')
+        } else {
+          document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
+        }
+        document.getElementById('beforeToday').classList.remove('start-calendar-transition')
+        document.getElementById('afterToday').classList.remove('start-calendar-transition')
+        document.querySelector('.mdc-linear-progress').classList.add('mdc-linear-progress--closed')
+      }, 800)
     }
   }
 }
 
-function calendarViewUI(target, db, data) {
+function calendarViewUI (target, db, data) {
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -537,7 +535,7 @@ function calendarViewUI(target, db, data) {
 
     const activityRow = document.createElement('div')
     activityRow.id = `activity--row${data.date}`
-
+    activityRow.className = 'activity-row--date'
     dateDiv.appendChild(dateCol)
     dateDiv.appendChild(activityRow)
     document.getElementById(target).innerHTML += dateDiv.outerHTML
@@ -548,7 +546,7 @@ function calendarViewUI(target, db, data) {
   getActivity(db, data)
 }
 
-function getActivity(db, data) {
+function getActivity (db, data) {
   // console.log(count)
   if (data.hasOwnProperty('activityId')) {
     findUniqueOffice().then(function (unique) {
@@ -563,7 +561,8 @@ function getActivity(db, data) {
   }
 }
 
-function profileView(user, firstTimeLogin) {
+function profileView (user, firstTimeLogin) {
+  document.body.style.backgroundColor = '#eeeeee'
   const dbName = firebase.auth().currentUser.uid
 
   const req = indexedDB.open(dbName)
@@ -591,7 +590,7 @@ function profileView(user, firstTimeLogin) {
   }
 }
 
-function createProfileHeader() {
+function createProfileHeader () {
   const iconCont = document.createElement('div')
   iconCont.className = 'profile--toolbar-icon'
 
@@ -613,7 +612,7 @@ function createProfileHeader() {
   handleChangeNumberMenu()
 }
 
-function createProfilePanel() {
+function createProfilePanel () {
   const profileView = document.createElement('div')
   profileView.id = 'profile-view--container'
   profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background'
@@ -716,7 +715,7 @@ function createProfilePanel() {
   document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 }
 
-function toggleIconData(icon, inputField) {
+function toggleIconData (icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
@@ -737,7 +736,7 @@ function toggleIconData(icon, inputField) {
   })
 }
 
-function handleFieldInput(key, value) {
+function handleFieldInput (key, value) {
   const user = firebase.auth().currentUser
   console.log(typeof value)
   if (key === 'displayName') {
@@ -763,7 +762,7 @@ function handleFieldInput(key, value) {
   }
 }
 
-function newSignIn(value) {
+function newSignIn (value) {
   const login = document.createElement('div')
   login.id = 'refresh-login'
   login.className = 'mdc-elevation--z3'
@@ -783,7 +782,7 @@ function newSignIn(value) {
   }, 300)
 }
 
-function readUploadedFile(event) {
+function readUploadedFile (event) {
   console.log(event)
   const file = event.target.files[0]
 
@@ -795,7 +794,7 @@ function readUploadedFile(event) {
   }
 }
 
-function processImage(image) {
+function processImage (image) {
   const metadata = {
     contentType: 'image/jpeg'
   }
@@ -811,7 +810,7 @@ function processImage(image) {
     storageSuccessHandler
   )
 
-  function snapshotHandler(snapshot) {
+  function snapshotHandler (snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
       if (document.querySelector('#profile--image-container .loader')) return
 
@@ -822,26 +821,26 @@ function processImage(image) {
     }
   }
 
-  function storageErrorHandler(error) {
+  function storageErrorHandler (error) {
     if (error.code === 'storage/unknown') {
       console.log(error)
     }
     console.log(error)
   }
 
-  function storageSuccessHandler() {
+  function storageSuccessHandler () {
     uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
   }
 }
 
-function updateAuth(url) {
+function updateAuth (url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
   }).then(removeLoader).catch(authUpdatedError)
 }
 
-function removeLoader() {
+function removeLoader () {
   document.querySelector('.insert-overlay').classList.remove('middle')
   const container = document.getElementById('profile--image-container')
   container.children[0].classList.add('reset-opacity')
@@ -850,19 +849,19 @@ function removeLoader() {
   showProfilePicture()
 }
 
-function showProfilePicture() {
+function showProfilePicture () {
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL
 }
 
-function authUpdatedError(error) {
+function authUpdatedError (error) {
   switch (error.code) {
     case 'auth/email-already-in-use':
       snacks(error.message)
   }
 }
 
-function changeDisplayName(user) {
+function changeDisplayName (user) {
   const displayNameField = getInputText('displayName')
 
   if (user.displayName) {
@@ -872,7 +871,7 @@ function changeDisplayName(user) {
   toggleIconData('edit--name', displayNameField)
 }
 
-function changeEmailAddress(user) {
+function changeEmailAddress (user) {
   const emailField = getInputText('email')
   if (user.email) {
     emailField.value = user.email
@@ -881,106 +880,69 @@ function changeEmailAddress(user) {
   toggleIconData('edit--email', emailField)
 }
 
-function updateEmail(user, email) {
+function updateEmail (user, email) {
   console.log(email)
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
-function emailUpdateSuccess() {
+function emailUpdateSuccess () {
   const user = firebase.auth().currentUser
   console.log(user)
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
-function emailVerificationSuccess() {
+function emailVerificationSuccess () {
   snacks('Verification link has been send to your email address')
 }
 
-function emailVerificationError(error) {
+function emailVerificationError (error) {
   snacks(error.message)
 }
 
-function handleReauthError(error) {
+function handleReauthError (error) {
   console.log(error)
 }
 
-function createConfirmDialog() {
-  const aside = document.createElement('aside')
+function createConfirmView () {
+  const backSpan = document.createElement('span')
+  backSpan.id = 'back-profile'
 
-  aside.id = 'change-number-dialog'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
-  aside.setAttribute('aria-labelledby', 'change-number-dialog-label')
-  aside.setAttribute('ariadescribedby', 'change-number-dialog-description')
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons'
+  backIcon.textContent = 'arrow_back'
+  backSpan.appendChild(backIcon)
 
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
+  const nextSpan = document.createElement('span')
+  nextSpan.id = 'change-number-view'
+  nextSpan.className = 'mdc-typography--headline6'
+  const nextIcon = document.createElement('i')
+  nextIcon.className = 'material-icons change--number-check'
+  nextIcon.textContent = 'check'
+  nextSpan.textContent = 'NEXT'
 
-  const dialogHeader = document.createElement('header')
-  dialogHeader.className = 'mdc-dialog__header'
-  const heading = document.createElement('h2')
-  heading.id = 'change-number-dialog-label'
-  heading.className = 'mdc-dialog__header__title'
-  heading.textContent = 'Are you sure you want to change your number'
+  nextSpan.appendChild(nextIcon)
 
-  dialogHeader.appendChild(heading)
+  header(backSpan.outerHTML, nextSpan.outerHTML)
 
-  const section = document.createElement('section')
-  section.textContent = 'lorem ipsum'
-  section.className = 'mdc-dialog__body'
-  section.id = 'change-number-dialog-description'
+  const div = document.createElement('div')
+  div.className = 'verfication--image-layout mdc-top-app-bar--fixed-adjust'
+  div.id = 'confirm--number-change'
 
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
-
-  const decline = document.createElement('button')
-  decline.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
-  decline.type = 'button'
-  decline.textContent = 'Cancel'
-
-  const accept = document.createElement('button')
-  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
-  accept.type = 'button'
-  accept.textContent = 'Agree'
-
-  footer.appendChild(decline)
-  footer.appendChild(accept)
-
-  dialogSurface.appendChild(dialogHeader)
-  dialogSurface.appendChild(section)
-  dialogSurface.appendChild(footer)
-
-  aside.appendChild(dialogSurface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
+  const img = document.createElement('img')
+  img.src = './img/change_number.png'
+  img.className = 'change-number--info'
+  div.appendChild(img)
+  document.getElementById('app-current-panel').innerHTML = div.outerHTML
+  document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
+  document.getElementById('back-profile').addEventListener('click', profileView)
 }
 
-function phoneNumberDialog(event) {
-  createConfirmDialog()
-  const mdcDialog = new mdc.dialog.MDCDialog(document.getElementById('change-number-dialog'))
-
-  mdcDialog.listen('MDCDialog:accept', changePhoneNumber)
-  mdcDialog.listen('MDCDialog:cancel', resetInputs)
-
-  mdcDialog.lastFocusedTarget = event.target
-  mdcDialog.show()
-}
-
-function resetInputs() {
-  document.getElementById('change-number-dialog').remove()
-  document.getElementById('edit--name').disabled = false
-  document.getElementById('edit--email').disabled = false
-  document.querySelector('#profile--image-container .mdc-fab').style.transform = 'translate(-50%, -50%)'
-}
-
-function disableInputs() {
+function disableInputs () {
   getInputText('displayName')['input_'].disabled = true
   getInputText('email')['input_'].disabled = true
 }
 
-function changePhoneNumber() {
+function changePhoneNumber () {
   header('', '')
   const changeNumberDiv = document.createElement('div')
   changeNumberDiv.className = 'mdc-card mdc-top-app-bar--fixed-adjust mdc-layout-grid__inner change--number-UI'
@@ -994,8 +956,9 @@ function changePhoneNumber() {
   currentcountryDiv.id = 'current-country--code'
 
   const currentCountryInput = document.createElement('input')
-  currentCountryInput.classList.add('mdc-text-field__input')
+  currentCountryInput.classList.add('mdc-text-field__input', 'phoneNumber')
   currentCountryInput.maxLength = 4
+
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
@@ -1008,7 +971,7 @@ function changePhoneNumber() {
 
   const currentNumberInput = document.createElement('input')
   currentNumberInput.maxLength = 14
-  currentNumberInput.classList.add('mdc-text-field__input')
+  currentNumberInput.classList.add('mdc-text-field__input', 'phoneNumber')
   const numberRipple = document.createElement('div')
   numberRipple.className = 'mdc-line-ripple'
 
@@ -1023,7 +986,7 @@ function changePhoneNumber() {
   newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
   newcountryDiv.id = 'new-country--code'
   const newCountryInput = document.createElement('input')
-  newCountryInput.classList.add('mdc-text-field__input')
+  newCountryInput.classList.add('mdc-text-field__input', 'phoneNumber')
   newCountryInput.maxLength = 4
   const newCountryInputRipple = document.createElement('div')
   newCountryInputRipple.className = 'mdc-line-ripple'
@@ -1034,7 +997,7 @@ function changePhoneNumber() {
   newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
   newNumberDiv.id = 'new-phone--number'
   const newNumberInput = document.createElement('input')
-  newNumberInput.classList.add('mdc-text-field__input')
+  newNumberInput.classList.add('mdc-text-field__input', 'phoneNumber')
   newNumberInput.maxLength = 14
   const newNumberInputRipple = document.createElement('div')
   newNumberInputRipple.className = 'mdc-line-ripple'
@@ -1067,14 +1030,21 @@ function changePhoneNumber() {
   getInputText('current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
   getInputText('current-phone--number').value = ''
 
-  document.getElementById('updatePhone').addEventListener('click', function (e) {
-    console.log(e)
+  const allInputFields = document.querySelectorAll('.phoneNumber');
 
-    if (verifyCurrentPhoneNumber() && verifyNewPhoneNumber()) {
+  [...allInputFields].forEach(function (input) {
+    console.log(input)
+    input.addEventListener('input', handleIllegalNumberInput)
+  })
+
+  document.getElementById('updatePhone').addEventListener('click', function (e) {
+    if (verifyCurrentPhoneNumber() && verifyPhoneNumber()) {
       const reqBody = {
         'phoneNumber': newPhoneNumber()
       }
       requestCreator('updateUserNumber', reqBody)
+    } else {
+      snacks('Please enter correct phone number')
     }
   })
 
@@ -1083,18 +1053,25 @@ function changePhoneNumber() {
   })
 }
 
-function newPhoneNumber() {
+function newPhoneNumber () {
   const newCountryCode = getInputText('new-country--code').value
   const newNumber = getInputText('new-phone--number').value
   return newCountryCode.concat(newNumber)
 }
 
-function verifyNewPhoneNumber() {
+function verifyPhoneNumber () {
   const expression = /^\+[1-9]\d{5,14}$/
   return expression.test(newPhoneNumber())
 }
 
-function verifyCurrentPhoneNumber() {
+function handleIllegalNumberInput (value) {
+  const exp = /^\+[1-9]\d{1,3}$/
+  if (!exp.test(evt.target.value)) {
+    evt.target.value = evt.target.value.replace(/[^+0-9]/g, '')
+  }
+}
+
+function verifyCurrentPhoneNumber () {
   const currentCountryCode = getInputText('current-country--code').value
   const currentNumber = getInputText('current-phone--number').value
   const numberInAuth = firebase.auth().currentUser.phoneNumber
@@ -1137,7 +1114,7 @@ const header = function (contentStart, contentEnd) {
   document.getElementById('header').innerHTML = header.outerHTML
 }
 
-function backIconHeader(id, firstTimeLogin) {
+function backIconHeader (id, firstTimeLogin) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
@@ -1156,12 +1133,12 @@ function backIconHeader(id, firstTimeLogin) {
   header(backSpan.outerHTML)
 }
 
-function removeDom(selector) {
+function removeDom (selector) {
   const target = document.getElementById(selector)
   target.innerHTML = ''
 }
 
-function findUniqueOffice() {
+function findUniqueOffice () {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
@@ -1190,7 +1167,7 @@ function findUniqueOffice() {
   })
 }
 
-function snacks(message) {
+function snacks (message) {
   const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
   snack.setAttribute('aria-live', 'assertive')
@@ -1226,14 +1203,14 @@ function snacks(message) {
   snackbar.show(data)
 }
 
-function timeDiff(lastSignInTime) {
+function timeDiff (lastSignInTime) {
   const currentDate = moment().format('YYY-MM-DD HH:mm')
   const authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm')
 
   return moment(currentDate).diff(moment(authSignInTime), 'minutes')
 }
 
-function handleChangeNumberMenu() {
+function handleChangeNumberMenu () {
   const div = document.createElement('div')
   div.className = 'mdc-menu mdc-menu--animating-open'
   div.id = 'change-number--menu'
@@ -1265,7 +1242,7 @@ function handleChangeNumberMenu() {
 
   // Listen for selected item
   menuEl.addEventListener('MDCMenu:selected', function (evt) {
-    phoneNumberDialog(evt)
+    createConfirmView(evt)
   })
 
   // Set Anchor Corner to Bottom End

@@ -23,13 +23,14 @@ function conversation (id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
-        console.log(commentDom)
         document.getElementById('chat-container').innerHTML = commentDom
         document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight
         return
       }
 
-      commentDom += createComment(db, cursor.value, currentUser)
+      createComment(db, cursor.value, currentUser).then(function (comment) {
+        commentDom += comment
+      })
       cursor.continue()
     }
   }
@@ -95,51 +96,54 @@ function commentPanel (id) {
 }
 
 function createComment (db, addendum, currentUser) {
-  if (document.getElementById(addendum.addendumId)) {
-    return document.getElementById(addendum.addendumId).outerHTML
-  }
+  return new Promise(function (resolve) {
+    if (document.getElementById(addendum.addendumId)) {
+      return document.getElementById(addendum.addendumId).outerHTML
+    }
 
-  let commentBox = document.createElement('div')
+    let commentBox = document.createElement('div')
 
-  commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left', 'mdc-theme--primary-bg')
+    commentBox.classList.add('comment-box', 'talk-bubble', 'tri-right', 'round', 'btm-left')
 
-  currentUser.phoneNumber === addendum.user ? commentBox.classList.add('current-user--comment') : commentBox.classList.add('other-user--comment')
-  commentBox.id = addendum.addendumId
+    currentUser.phoneNumber === addendum.user ? commentBox.classList.add('current-user--comment', 'mdc-theme--primary-bg') : commentBox.classList.add('other-user--comment', 'mdc-theme--secondary-bg')
+    commentBox.id = addendum.addendumId
 
-  let textContainer = document.createElement('div')
-  textContainer.classList.add('talktext')
+    let textContainer = document.createElement('div')
+    textContainer.classList.add('talktext')
 
-  let user = document.createElement('p')
-  user.classList.add('user-name--comment')
-  readNameFromNumber(db, addendum.user).then(function (nameOrNumber) {
-    user.textContent = nameOrNumber
-  }).catch(console.log)
+    let user = document.createElement('p')
+    user.classList.add('user-name--comment')
+    readNameFromNumber(db, addendum.user).then(function (nameOrNumber) {
+      console.log(nameOrNumber)
+      user.textContent = nameOrNumber
 
-  let comment = document.createElement('p')
-  comment.classList.add('comment')
-  comment.textContent = addendum.comment
+      let comment = document.createElement('p')
+      comment.classList.add('comment')
+      comment.textContent = addendum.comment
 
-  let commentInfo = document.createElement('span')
-  commentInfo.style.width = '100%'
-  const datespan = document.createElement('span')
-  datespan.textContent = moment(addendum.timestamp).calendar()
-  datespan.classList.add('comment-date')
+      let commentInfo = document.createElement('span')
+      commentInfo.style.width = '100%'
+      const datespan = document.createElement('span')
+      datespan.textContent = moment(addendum.timestamp).calendar()
+      datespan.classList.add('comment-date')
 
-  let mapIcon = document.createElement('i')
-  mapIcon.classList.add('user-map--span', 'material-icons')
-  mapIcon.appendChild(document.createTextNode('location_on'))
-  mapIcon.onclick = function (iconEvent) {
-    window.open(`https://www.google.co.in/maps/@${addendum.location['_latitude']},${addendum.location['_longitude']}`)
-  }
+      let mapIcon = document.createElement('i')
+      mapIcon.classList.add('user-map--span', 'material-icons')
+      mapIcon.appendChild(document.createTextNode('location_on'))
+      mapIcon.onclick = function (iconEvent) {
+        window.open(`https://www.google.co.in/maps/@${addendum.location['_latitude']},${addendum.location['_longitude']}`)
+      }
 
-  commentInfo.appendChild(datespan)
-  commentInfo.appendChild(mapIcon)
-  textContainer.appendChild(user)
-  textContainer.appendChild(comment)
-  textContainer.appendChild(commentInfo)
+      commentInfo.appendChild(datespan)
+      commentInfo.appendChild(mapIcon)
+      textContainer.appendChild(user)
+      textContainer.appendChild(comment)
+      textContainer.appendChild(commentInfo)
 
-  commentBox.appendChild(textContainer)
-  return commentBox.outerHTML
+      commentBox.appendChild(textContainer)
+      resolve(commentBox.outerHTML)
+    }).catch(console.log)
+  })
 }
 
 function readNameFromNumber (db, number) {
@@ -176,7 +180,7 @@ function createHeaderContent (db, id) {
     const record = event.target.result
 
     const primarySpan = document.createElement('div')
-    primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-theme--secondary'
+    primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2'
     primarySpan.textContent = record.title
 
     const secondarySpan = document.createElement('span')
@@ -322,10 +326,10 @@ function createActivityDetailHeader (record, value) {
 function updateActivityPanel (db, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-  detail.innerHTML = activityTitle(record.title, true) + activityDesc(record.description, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont() + renderShareIcon(record) + renderAssigneeList(db, record, 'assignee--list')
+  detail.innerHTML = activityTitle(record.title, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont() + renderAssigneeList(db, record, 'assignee--list')
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
-  createAttachmentContainer(record.attachment , 'update--attachment-cont',record.canEdit,true)
+  createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
 
   if (document.getElementById('select-pending')) {
     document.getElementById('select-pending').addEventListener('click', function () {
@@ -342,7 +346,6 @@ function updateActivityPanel (db, record) {
       updateStatus('CANCELLED', record.activityId)
     })
   }
-
 
   if (!record.canEdit) return
 
@@ -383,11 +386,11 @@ function toggleActivityHeader (toggleId, containerClass, type, record) {
   })
 }
 
-function checkInValidInputs (type, containerClass) {
+function checkInValidInputs (type) {
   let allow = true
   document.getElementById('app-current-panel').querySelectorAll('[required]').forEach(function (elemnt) {
     console.log(elemnt.value)
-    if (elemnt.value.trim() !== '' && allow == true) {
+    if (elemnt.value.trim() !== '' && allow === true && checkTime()) {
       allow = true
 
       createUpdateReqBody(event, type)
@@ -396,6 +399,18 @@ function checkInValidInputs (type, containerClass) {
     allow = false
     return snacks('Please fill are required Inputs')
   })
+}
+
+function checkTime () {
+  let allow = true;
+  [...document.querySelectorAll('input[type=datetime-local]')].forEach(function (input) {
+    if (input.value === 'Invalid date') {
+      allow = false
+    } else {
+      allow = true
+    }
+  })
+  return allow
 }
 
 function activityTitle (title, value) {
@@ -436,47 +451,12 @@ function activityTitle (title, value) {
   return container.outerHTML
 }
 
-function activityDesc (desc, value) {
-  const container = document.createElement('div')
-  container.className = 'activity--desc-container'
-
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field'
-  textField.id = 'activity--desc-input'
-
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  label.textContent = 'Description'
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  const input = document.createElement('input')
-  input.required = true
-  input.minLength = 1
-  input.maxLength = 120
-
-  input.className = 'mdc-text-field__input'
-  if (value) {
-    input.classList.add = 'border-bottom--none'
-  }
-  input.disabled = value
-  input.type = 'text'
-  input.setAttribute('value', desc)
-
-  textField.appendChild(input)
-  textField.appendChild(label)
-  textField.appendChild(ripple)
-  container.appendChild(textField)
-
-  return container.outerHTML
-}
-
 function office (office) {
   const officeCont = document.createElement('div')
   officeCont.className = 'activity--office-container'
   const span = document.createElement('span')
   span.textContent = 'Office'
-  span.className = 'detail--static-text'
+  span.className = 'detail--static-text mdc-typography--subtitle2'
   const p = document.createElement('p')
   p.className = 'activity--office'
   p.textContent = office
@@ -490,7 +470,7 @@ function template (template) {
   templateCont.className = 'activity--template-container'
   const span = document.createElement('span')
   span.textContent = 'Template'
-  span.className = 'detail--static-text'
+  span.className = 'detail--static-text mdc-typography--subtitle2'
 
   const p = document.createElement('p')
   p.className = 'activity--template'
@@ -510,8 +490,6 @@ function makeFieldsEditable (record) {
 
   getInputText('activity--title-input')['input_'].disabled = false
   getInputText('activity--title-input')['input_'].classList.remove('border-bottom--none')
-  getInputText('activity--desc-input')['input_'].disabled = false
-  getInputText('activity--desc-input')['input_'].classList.remove('border-bottom--none')
 
   const startSchedule = document.querySelectorAll('.startTimeInputs')
   const endSchedules = document.querySelectorAll('.endTimeInputs')
@@ -546,15 +524,14 @@ function makeFieldsEditable (record) {
   });
 
   [...venueFields].forEach(function (field) {
- 
     field.addEventListener('click', function (evt) {
-      renderLocationScreen(evt, record, field.nextSibling.id, evt.target.nextSibling.nextSibling.id)
+      console.log(evt)
+      renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
     })
   });
 
   [...attachments].forEach(function (field) {
     if (field.dataset.type === 'string') {
-
       field.children[0].disabled = false
     }
   });
@@ -563,14 +540,9 @@ function makeFieldsEditable (record) {
     label.style.display = 'block'
   })
 
-
   document.getElementById('cancel-update').addEventListener('click', function () {
     cancelUpdate(record.activityId)
   })
-
-  // document.getElementById('update-activity').addEventListener('click', function (event) {
-  //   createUpdateReqBody(event, 'update')
-  // })
 }
 
 function cancelUpdate (id) {
@@ -672,9 +644,11 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleLi.classList.add('schedule--list')
 
   const scheduleName = document.createElement('span')
-  scheduleName.classList.add('schedule-name--list', 'detail--static-text')
+  scheduleName.classList.add('schedule-name--list', 'detail--static-text', 'mdc-typography--subtitle2')
   scheduleName.dataset.value = schedule.name
   scheduleName.innerHTML = schedule.name
+
+  const br = document.createElement('br')
 
   const scheduleStartTime = document.createElement('div')
   scheduleStartTime.classList.add('mdc-text-field', 'startTimeInputs')
@@ -690,7 +664,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
 
   const startLabel = document.createElement('label')
   startLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  startLabel.textContent = 'From'
+  startLabel.textContent = 'Start Time'
 
   const startRipple = document.createElement('div')
   startRipple.className = 'mdc-line-ripple'
@@ -713,7 +687,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
 
   const endLabel = document.createElement('label')
   endLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  endLabel.textContent = 'To'
+  endLabel.textContent = 'End Time'
 
   const endRipple = document.createElement('div')
   endRipple.className = 'mdc-line-ripple'
@@ -727,6 +701,7 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleEditIconSpan.classList.add('activity--edit-icon')
 
   scheduleLi.appendChild(scheduleName)
+  scheduleLi.appendChild(br)
   scheduleLi.appendChild(scheduleStartTime)
   scheduleLi.appendChild(scheduleEndTime)
   scheduleLi.appendChild(scheduleEditIconSpan)
@@ -765,16 +740,22 @@ function showVenueUI (venue, count, venueList, value) {
   venueLi.dataset.inputlon = venue.geopoint['_longitude']
   venueLi.dataset.descrip = venue.venueDescriptor
 
-  const venueDesc = document.createElement('div')
+  const venueDesc = document.createElement('label')
 
   venueDesc.id = `venue-desc${count}`
   venueDesc.dataset.descriptor = venue.venueDescriptor
-  venueDesc.className = 'detail--static-text'
+  venueDesc.className = 'detail--static-text mdc-typography--subtitle2 venue--name-label'
   venueDesc.textContent = venue.venueDescriptor
 
-  const addLocationLabel = document.createElement('label')
-  addLocationLabel.className = 'material-icons map-select-type-action'
-  addLocationLabel.textContent = 'add_location'
+  const addLocationFab = document.createElement('button')
+  addLocationFab.className = 'mdc-fab mdc-fab-location'
+
+  const addLocationIcon = document.createElement('i')
+  addLocationIcon.className = 'material-icons mdc-fab__icon map-select-type-action'
+
+  addLocationIcon.textContent = 'add_location'
+
+  addLocationFab.appendChild(addLocationIcon)
 
   const venueLocation = document.createElement('div')
   venueLocation.classList.add('mdc-text-field', 'venue-location--name')
@@ -808,7 +789,7 @@ function showVenueUI (venue, count, venueList, value) {
   venueAddress.appendChild(venueAddressInput)
 
   venueLi.appendChild(venueDesc)
-  venueLi.appendChild(addLocationLabel)
+  venueLi.appendChild(addLocationFab)
   venueLi.appendChild(venueLocation)
   venueLi.appendChild(venueAddress)
   const div = document.createElement('div')
@@ -817,18 +798,18 @@ function showVenueUI (venue, count, venueList, value) {
   venueList.appendChild(div)
 }
 
-function updateAttachmentCont() {
+function updateAttachmentCont () {
   const div = document.createElement('div')
   div.id = 'update--attachment-cont'
   div.className = 'attachment--cont-update'
   return div.outerHTML
 }
 
-function renderAssigneeList () {
+function renderAssigneeList (db, record) {
   const shareCont = document.createElement('div')
   shareCont.className = 'activity--share-container'
   const span = document.createElement('span')
-  span.className = 'detail--static-text'
+  span.className = 'detail--static-text mdc-typography--subtitle2'
   span.textContent = 'Assignees'
 
   const shareIcon = document.createElement('div')
@@ -836,7 +817,7 @@ function renderAssigneeList () {
   const assigneeList = document.createElement('ul')
   assigneeList.id = 'assignee--list'
   assigneeList.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
-
+  shareCont.appendChild(renderShareIcon(record))
   shareCont.appendChild(span)
   shareCont.appendChild(shareIcon)
   shareCont.appendChild(assigneeList)
@@ -987,7 +968,7 @@ function renderShareIcon (record) {
 
   // document.getElementById('share--icon-container').innerHTML = IconParent.outerHTML
 
-  return IconParent.outerHTML
+  return IconParent
 }
 
 function renderShareScreen (evt, record, key) {
@@ -1237,7 +1218,9 @@ function renderOfficeTemplateScreenUI () {
 function initializeDialog (evt, input, params) {
   console.log(params)
   getInputText(input).value = ''
+
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#change-number-dialog'))
+
   dialog.listen('MDCDialog:accept', function () {
     const number = getInputText(input).value
     console.log(number)
@@ -1288,10 +1271,7 @@ function initializeDialogLocation (evt, input, params) {
       getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlon = lon
 
       document.getElementById('location-select-dialog').remove()
-
-      return
     }
-
   })
 
   dialog.listen('MDCDialog:cancel', function () {
@@ -1328,19 +1308,19 @@ function initializeOfficeTemplateDialog (evt, input) {
 }
 
 function createUpdateReqBody (event, reqType) {
-  const title = getInputText('activity--title-input').value
-  const desc = getInputText('activity--desc-input').value
+  const title = titleCase(getInputText('activity--title-input').value)
   const activityId = event.target.dataset.id
   const schedule = []
   const venue = []
 
   const allSchedule = document.querySelectorAll('.schedule--list');
   [...allSchedule].forEach(function (li) {
+    console.log(li)
     const scheduleBody = {}
     scheduleBody.name = li.children[0].dataset.value
-    scheduleBody.startTime = moment(getInputText(li.children[1].id).value).valueOf()
+    scheduleBody.startTime = moment(getInputText(li.children[2].id).value).valueOf()
     console.log(scheduleBody.startTime)
-    scheduleBody.endTime = moment(getInputText(li.children[2].id).value).valueOf()
+    scheduleBody.endTime = moment(getInputText(li.children[3].id).value).valueOf()
     schedule.push(scheduleBody)
   })
 
@@ -1373,7 +1353,6 @@ function createUpdateReqBody (event, reqType) {
     const body = {
       'activityId': activityId,
       'title': title,
-      'description': desc,
       'schedule': schedule,
       'venue': venue
     }
@@ -1389,12 +1368,12 @@ function createUpdateReqBody (event, reqType) {
       'office': document.querySelector('.activity--office').textContent,
       'template': document.querySelector('.activity--template').textContent,
       'title': title,
-      'description': desc,
       'schedule': schedule,
       'venue': venue,
       // 'share': getInputText('contact--text-field').value,
       'attachment': attachments
     }
+
     console.log(body)
     requestCreator('create', body)
   }
@@ -1469,7 +1448,7 @@ function createActivity (evt) {
   const activityMain = document.createElement('div')
   activityMain.className = 'activity-main'
   activityMain.innerHTML = office('') + template('') +
-  activityTitle('', true) + activityDesc('', true) + createScheduleContainer() +
+  activityTitle('', true) + createScheduleContainer() +
   createVenueContainer()
 
   detail.innerHTML = activityMain.outerHTML
@@ -1509,7 +1488,7 @@ function officeTemplateCombo (cursor, target, input) {
 
   const li = document.createElement('li')
   li.dataset.office = cursor.value.office
-  li.dataset.template = cursor.value.name
+  li.dataset.template = cursor.value.template
 
   li.classList.add('mdc-list-item', 'combo-li')
 
@@ -1519,7 +1498,7 @@ function officeTemplateCombo (cursor, target, input) {
 
   const liTextSecondary = document.createElement('span')
   liTextSecondary.classList.add('mdc-list-item__secondary-text')
-  liTextSecondary.textContent = cursor.value.name
+  liTextSecondary.textContent = cursor.value.template
 
   liText.appendChild(liTextSecondary)
 
@@ -1540,7 +1519,7 @@ function createVenueContainer () {
   venueCont.className = 'activity--venue-container'
 
   const span = document.createElement('span')
-  span.className = 'detail--static-text'
+  span.className = 'detail--static-text mdc-typography--subtitle2'
   span.textContent = 'Venue'
   // const venueList = document.createElement('ul')
   // venueList.className = 'mdc-list'
@@ -1607,7 +1586,6 @@ function createInput (key, type, classtype, value) {
   return mainTextField
 }
 
-
 function getSelectedSubscriptionData (office, template) {
   document.querySelector('.activity--schedule-container').innerHTML = ''
   document.querySelector('.activity--venue-container').innerHTML = ''
@@ -1622,12 +1600,10 @@ function getSelectedSubscriptionData (office, template) {
     subscriptionObjectStore.get(range).onsuccess = function (event) {
       const record = event.target.result
       console.log(record)
-      createAttachmentContainer(record.attachment,'create-activity--container',true,false)
 
       document.querySelector('.activity--office').textContent = record.office
-      document.querySelector('.activity--template').textContent = record.name
+      document.querySelector('.activity--template').textContent = record.template
       getInputText('activity--title-input')['input_'].disabled = false
-      getInputText('activity--desc-input')['input_'].disabled = false
 
       record.schedule.forEach(function (name) {
         console.log(name)
@@ -1660,14 +1636,16 @@ function getSelectedSubscriptionData (office, template) {
       [...document.querySelectorAll('.map-select-type-action')].forEach(function (element) {
         element.addEventListener('click', function (evt) {
           console.log(evt)
-          renderLocationScreen(evt, record, element.nextSibling.id, evt.target.nextSibling.nextSibling.id)
+          renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
         })
       })
+      if (!record.attachment) return
+      createAttachmentContainer(record.attachment, 'create-activity--container', true, false)
     }
   }
 }
 
-function createAttachmentContainer (attachment,target,canEdit,value) {
+function createAttachmentContainer (attachment, target, canEdit, value) {
   if (document.getElementById('attachment-container')) {
     document.getElementById('attachment-container').remove()
   }
@@ -1701,21 +1679,20 @@ function createAttachmentContainer (attachment,target,canEdit,value) {
 
     div.appendChild(keyValue)
 
-    if(target === 'update--attachment-cont') {
+    if (target === 'update--attachment-cont') {
       addButton.style.display = 'none'
     }
- 
 
     if (attachment[key].type === 'string') {
-      keyValue.innerHTML = createInput(key, attachment[key].type, 'attachment',value).outerHTML
+      keyValue.innerHTML = createInput(key, attachment[key].type, 'attachment', value).outerHTML
       attachCont.appendChild(div)
     }
 
     if (attachment[key].type === 'phoneNumber') {
-      keyValue.innerHTML = createInput(key, attachment[key].type, 'attachment', true,value).outerHTML
+      keyValue.innerHTML = createInput(key, attachment[key].type, 'attachment', true, value).outerHTML
 
       attachCont.appendChild(div)
-      
+
       addButton.onclick = function (evt) {
         renderShareScreen(evt, '', key.replace(/\s/g, ''))
       }
@@ -1726,7 +1703,6 @@ function createAttachmentContainer (attachment,target,canEdit,value) {
   })
 }
 
-
 function reinitCount (db, id) {
   const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
   activityCount.get(id).onsuccess = function (event) {
@@ -1734,4 +1710,12 @@ function reinitCount (db, id) {
     record.count = 0
     activityCount.put(record)
   }
+}
+
+function titleCase (str) {
+  str = str.toLowerCase().split(' ')
+  for (var i = 0; i < str.length; i++) {
+    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1)
+  }
+  return str.join(' ')
 }
