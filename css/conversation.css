@@ -514,6 +514,7 @@ footer.mdc-dialog__footer {
 
 #assignee--list {
     position: relative;
+    margin-top: 10px;
 }
 #assignee--list li .mdc-list-item__text{
 margin-top: 13px;
@@ -769,6 +770,7 @@ margin-top: 20px;
     width: 77%;
     float: right;
     padding-right: 10px;
+    margin-left: -34px;
 }
 .activity-row--date .activity--list-item {
     padding-bottom: 25px;

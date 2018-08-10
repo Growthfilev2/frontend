@@ -1,10 +1,10 @@
-function loader() {
+function loader () {
   const div = document.createElement('div')
   div.className = 'loader'
   return div
 }
 
-function progressBar() {
+function progressBar () {
   const div = document.createElement('div')
   div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate'
   div.role = 'progressbar'
@@ -33,11 +33,11 @@ function progressBar() {
   return div
 }
 
-function getInputText(selector) {
+function getInputText (selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect(objectStore, selector, inputFields, activityRecord) {
+function inputSelect (objectStore, selector, inputFields, activityRecord) {
   // getInputText(inputFields.location).value = ''
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
@@ -58,6 +58,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
         if (objectStore.name === 'map') return
         if (objectStore.name === 'subscriptions') return
         if (!activityRecord) return
+
         activityRecord.assignees.forEach(function (people) {
           document.querySelector(`[data-phone-num="${people}"]`).remove()
         })
@@ -117,19 +118,19 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
   })
 }
 
-function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord) {
+function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, activityRecord) {
   const cursor = event.target.result
   if (!cursor) {
-    if (objectStore.name === 'users') {
-      activityRecord.assignees.forEach(function (people) {
-        if (document.querySelector(`[data-phone-num="${people}"]`)) {
-          document.querySelector(`[data-phone-num="${people}"]`).remove()
-        }
-      })
-      return
-    }
     if (objectStore.name === 'subscriptions') return
     if (objectStore.name === 'map') return
+
+    if (!activityRecord) return
+
+    activityRecord.assignees.forEach(function (people) {
+      if (document.querySelector(`[data-phone-num="${people}"]`)) {
+        document.querySelector(`[data-phone-num="${people}"]`).remove()
+      }
+    })
   }
 
   switch (objectStore.name) {
@@ -150,12 +151,11 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, ac
 
   cursor.continue()
 }
-
-function fetchCurrentTime() {
+function fetchCurrentTime () {
   return Date.now()
 }
 
-function fetchCurrentLocation() {
+function fetchCurrentLocation () {
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
@@ -166,12 +166,12 @@ function fetchCurrentLocation() {
   })
 }
 
-function inputFile(selector) {
+function inputFile (selector) {
   return document.getElementById(selector)
 }
 let offset
 
-function requestCreator(requestType, requestBody) {
+function requestCreator (requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -202,7 +202,7 @@ function requestCreator(requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-function loadViewFromRoot(response) {
+function loadViewFromRoot (response) {
   console.log(response)
 
   if (response.data.type === 'notification') return
@@ -256,7 +256,7 @@ function loadViewFromRoot(response) {
   }
 }
 
-function onErrorMessage(error) {
+function onErrorMessage (error) {
   console.log(error)
   console.table({
     'line-number': error.lineno,
@@ -265,7 +265,7 @@ function onErrorMessage(error) {
   })
 }
 
-function handleTimeout() {
+function handleTimeout () {
   const TIME_OUT_VALUE = 6000000
   clearTimeout(offset)
 

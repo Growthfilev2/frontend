@@ -326,7 +326,7 @@ function createActivityDetailHeader (record, value) {
 function updateActivityPanel (db, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-  detail.innerHTML = activityTitle(record.title, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont() + renderAssigneeList(db, record, 'assignee--list')
+  detail.innerHTML = activityTitle(record.title, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont() + renderAssigneeList(record, 'assignee--list')
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
   createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
@@ -348,8 +348,15 @@ function updateActivityPanel (db, record) {
   }
 
   if (!record.canEdit) return
+  initShareButton(true, record, db)
+}
 
+function initShareButton (addFirst, record, db) {
   document.getElementById('share-btn').addEventListener('click', function (evt) {
+    if (!addFirst) {
+      renderShareScreen(evt, '', '')
+      return
+    }
     const usersObjectStore = db.transaction('users').objectStore('users')
     record.assignees.forEach(function (number) {
       usersObjectStore.get(number).onsuccess = function (event) {
@@ -361,9 +368,9 @@ function updateActivityPanel (db, record) {
           }
           requestCreator('share', reqBody)
         }
+        renderShareScreen(evt, record, '')
       }
     })
-    renderShareScreen(evt, record, '')
   })
 }
 
@@ -374,35 +381,43 @@ function toggleActivityHeader (toggleId, containerClass, type, record) {
     detail
   }) {
     if (!detail.isOn) {
-      let allow = true
       checkInValidInputs(type, containerClass)
+      console.log("no")
     } else {
       if (type === 'create') {
+        console.log("yes")
         checkInValidInputs(type, containerClass)
       } else {
+        console.log("running")
         makeFieldsEditable(record)
       }
     }
   })
 }
 
-function checkInValidInputs (type) {
+function checkInValidInputs(type) {
   let allow = true
   document.getElementById('app-current-panel').querySelectorAll('[required]').forEach(function (elemnt) {
     console.log(elemnt.value)
-    if (elemnt.value.trim() !== '' && allow === true && checkTime()) {
+    if (elemnt.value.trim() !== '' && allow === true) {
       allow = true
 
-      createUpdateReqBody(event, type)
-      return
+      // createUpdateReqBody(event, type)
+      // return
+    } else {
+
+      allow = false
     }
-    allow = false
-    return snacks('Please fill are required Inputs')
+    // return snacks('Please fill are required Inputs')
   })
+  if (!allow) {
+    snacks('Please fill are required Inputs')
+    return
+  }
+  createUpdateReqBody(event, type)
 }
 
-function checkTime () {
-  let allow = true;
+function checkTime (allow) {
   [...document.querySelectorAll('input[type=datetime-local]')].forEach(function (input) {
     if (input.value === 'Invalid date') {
       allow = false
@@ -805,7 +820,7 @@ function updateAttachmentCont () {
   return div.outerHTML
 }
 
-function renderAssigneeList (db, record) {
+function renderAssigneeList (record) {
   const shareCont = document.createElement('div')
   shareCont.className = 'activity--share-container'
   const span = document.createElement('span')
@@ -942,6 +957,10 @@ function renderRemoveIcons (record, mobileNumber) {
   const activityId = record.activityId
 
   removeIcon.onclick = function (e) {
+    if (record.remove === 'hidden') {
+      document.querySelector(`[data-assignee="${mobileNumber}"]`).remove()
+      return
+    }
     const phoneNumber = e.target.parentNode.dataset.assignee
     const reqBody = {
       'activityId': activityId,
@@ -1098,7 +1117,7 @@ function renderShareScreenUI () {
   const accept = document.createElement('button')
   accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
   accept.type = 'button'
-  accept.textContent = 'Agree'
+  accept.textContent = 'Select'
 
   footer.appendChild(decline)
   footer.appendChild(accept)
@@ -1148,7 +1167,7 @@ function renderLocationScreenUI () {
   const accept = document.createElement('button')
   accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
   accept.type = 'button'
-  accept.textContent = 'Agree'
+  accept.textContent = 'Select'
 
   footer.appendChild(decline)
   footer.appendChild(accept)
@@ -1199,7 +1218,7 @@ function renderOfficeTemplateScreenUI () {
   const accept = document.createElement('button')
   accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
   accept.type = 'button'
-  accept.textContent = 'Agree'
+  accept.textContent = 'Select'
 
   footer.appendChild(decline)
   footer.appendChild(accept)
@@ -1220,21 +1239,24 @@ function initializeDialog (evt, input, params) {
   getInputText(input).value = ''
 
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#change-number-dialog'))
-
   dialog.listen('MDCDialog:accept', function () {
-    const number = getInputText(input).value
-    console.log(number)
+    const number = []
+    number.push(getInputText(input).value)
+
     if (params.actionInput) {
       console.log(getInputText(params.actionInput))
-      getInputText(params.actionInput).value = number
+      getInputText(params.actionInput).value = number[0]
       document.getElementById('change-number-dialog').remove()
 
       return
     }
+
     addContact(number, params.id);
     [...document.querySelectorAll('.remove')].forEach(function (icon) {
       icon.classList.add('no-click')
     })
+    document.getElementById('change-number-dialog').remove()
+
   })
 
   dialog.listen('MDCDialog:cancel', function () {
@@ -1312,6 +1334,7 @@ function createUpdateReqBody (event, reqType) {
   const activityId = event.target.dataset.id
   const schedule = []
   const venue = []
+  const share = []
 
   const allSchedule = document.querySelectorAll('.schedule--list');
   [...allSchedule].forEach(function (li) {
@@ -1364,18 +1387,25 @@ function createUpdateReqBody (event, reqType) {
   }
 
   if (reqType === 'create') {
+    const allShare = document.querySelectorAll('.assignee-li');
+
+    [...allShare].forEach(function (li) {
+      share.push(li.dataset.assignee)
+    })
+
     const body = {
       'office': document.querySelector('.activity--office').textContent,
       'template': document.querySelector('.activity--template').textContent,
+      'share': share,
       'title': title,
       'schedule': schedule,
       'venue': venue,
-      // 'share': getInputText('contact--text-field').value,
       'attachment': attachments
     }
 
     console.log(body)
-    requestCreator('create', body)
+    // requestCreator('create', body)
+    return
   }
 }
 
@@ -1423,12 +1453,27 @@ function errorUpdatingSelectorObjectStore (error) {
 }
 
 function addContact (number, activityId) {
+  if (!activityId) {
+    console.log(number)
+    const assigneeObject = {
+      assignees: number,
+      canEdit: true,
+      remove:'hidden'
+    }
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const db = req.result
+      fetchAssigneeData(db, assigneeObject, 'assignee--list')
+    }
+    return
+  }
+
   const expression = /^\+[1-9]\d{5,14}$/
   if (!expression.test(number)) return
 
   const reqBody = {
     'activityId': activityId,
-    'share': [number]
+    'share': number
   }
   requestCreator('share', reqBody)
 }
@@ -1449,13 +1494,14 @@ function createActivity (evt) {
   activityMain.className = 'activity-main'
   activityMain.innerHTML = office('') + template('') +
   activityTitle('', true) + createScheduleContainer() +
-  createVenueContainer()
+  createVenueContainer() + renderAssigneeList({canEdit: true})
 
   detail.innerHTML = activityMain.outerHTML
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
   document.getElementById('back-list').addEventListener('click', listView)
 
+  initShareButton(false)
   renderOfficeTemplateScreen(evt)
 }
 
