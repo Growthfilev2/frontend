@@ -193,7 +193,6 @@ body {
 }
 
 .current-status {
-    padding: 0 20px 10px 20px;
     text-align: center;
     margin-top: 20px;
 }
@@ -247,7 +246,6 @@ body {
     width: 35px;
     height: 35px;
     margin-top: 10px;
-    background-color: #6abbf9;
 }
 
 .assignee-li:nth-child(1) {
@@ -261,7 +259,9 @@ body {
 #share-btn {
     cursor: pointer;
     margin-top:-5px;
-    margin-right: 10px;
+}
+#share-btn .mdc-fab__icon {
+    font-size: 20px;
 }
 
 .contact--text-field {
@@ -430,10 +430,10 @@ body {
     }
 }
 
-.venue-location--name,
-.venue-address--name {
+.mdc-text-field.venue-location--name,
+.mdc-text-field.venue-address--name {
     width: 100%;
-    height: 30px;
+    height: 30px !important;
 }
 
 .venue-location--name>input,
@@ -530,6 +530,7 @@ margin-top: 13px;
 
 .map-select-type {
     float: right;
+    padding-right: 0px;
 
 }
 .map-select-type div {
@@ -637,8 +638,8 @@ margin-top: 13px;
 .activity-detail-page  #schedule--list .endTimeInputs {
         float: right;
 }
-.activity--Title-container, .activity--Desc-container ,.activity--Office-container ,.activity--Template-container, .activity--Status-container , .activity--Schedule-container , .activity--Venue-container ,.activity--Share-container {
-    padding-top: 20px;
+.activity--share-container {
+    padding-top: 25px !important;
 }
 .activity--venue-container {
     padding-bottom: 30px;
@@ -815,4 +816,22 @@ input[type="datetime-local"]{
 .venue--list {
     height: auto;
     padding-left: 0px;
+}
+
+.activity--detail--section {
+    margin: 10px 0px 10px 0px;
+    padding:10px 0px 10px 0px ;
+
+}
+.activity--update--text{
+    margin-top:5px;
+    margin-bottom: 0px;
+}
+.activity--detail--section.activity--detail--section-status {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 25px;
+    margin-bottom: 20px;
+}
+.activity--detail--section .venue--list .detail--static-text {
+    margin-bottom: -25px;
 }

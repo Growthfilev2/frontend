@@ -1,4 +1,5 @@
 // Initialize the firebase application
+registerServiceWorker()
 
 firebase.initializeApp({
 
@@ -122,4 +123,13 @@ function layoutGrid () {
 
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
+}
+
+function registerServiceWorker(){
+  if(!navigator.serviceWorker) return
+  navigator.serviceWorker.register('./syncWorker.js',{
+    scope : './'
+  })
+  .then(console.log)
+  .catch(console.log)
 }
