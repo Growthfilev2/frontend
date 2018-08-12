@@ -151,8 +151,33 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
 
   cursor.continue()
 }
+
 function fetchCurrentTime () {
-  
+  return new Promise(function(resolve){
+    firebase
+    .auth()
+    .currentUser
+    .getIdToken()
+    .then(function (idToken) {
+      fetch('https://us-central1-growthfilev2-0.cloudfunctions.net/api/now',{
+        method : 'GET',
+        headers : {
+          'X-Requested-With':'XMLHttpRequest',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        }
+      })
+      .then(function(response){
+        return response.json()
+      })
+      .catch(console.log)  
+      .then(function(jsonTimestamp){
+        const deviceTime = Date.now()
+        const correctedTime = deviceTime + (jsonTimestamp.timestamp - deviceTime)
+        resolve(correctedTime) 
+      })
+    })
+  }).catch(console.log)
 }
 
 function fetchCurrentLocation () {
@@ -186,13 +211,17 @@ function requestCreator (requestType, requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
     fetchCurrentLocation().then(function (geopoints) {
-      requestBody['timestamp'] = fetchCurrentTime()
-      requestBody['geopoint'] = geopoints
-      requestGenerator.body = requestBody
-      // post the requestGenerator object to the apiHandler to perform IDB and api
-      // operations
-
-      apiHandler.postMessage(requestGenerator)
+      fetchCurrentTime().then(function(time){
+        console.log(time)
+        requestBody['timestamp'] = time 
+        requestBody['geopoint'] = geopoints
+        requestGenerator.body = requestBody
+        // post the requestGenerator object to the apiHandler to perform IDB and api
+        // operations
+        
+        apiHandler.postMessage(requestGenerator)
+      })
+     
     })
   }
 
