@@ -1,16 +1,15 @@
 function conversation (id) {
   if (!id) return
   // removeDom('chat-container')
-  commentPanel(id)
+  
   let commentDom = ''
-
+  
   const currentUser = firebase.auth().currentUser
-
+  
   const req = window.indexedDB.open(currentUser.uid)
-
+  
   req.onsuccess = function () {
     const db = req.result
-    createHeaderContent(db, id)
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
     rootObjectStore.get(currentUser.uid).onsuccess = function (event) {
@@ -19,15 +18,18 @@ function conversation (id) {
       record.view = 'conversation'
       rootObjectStore.put(record)
     }
+    commentPanel(id)
+    createHeaderContent(db, id)
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
+        console.log(commentDom)
         document.getElementById('chat-container').innerHTML = commentDom
         document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight
         return
       }
-
+      console.log(cursor.value)
       createComment(db, cursor.value, currentUser).then(function (comment) {
         commentDom += comment
       })
@@ -37,68 +39,69 @@ function conversation (id) {
 }
 
 function commentPanel (id) {
-  if (document.getElementById('chat-container')) {
+  if(document.querySelector('.activity--chat-card-container')){
     return
   }
-
-  const commentPanel = document.createElement('div')
-  commentPanel.className = 'activity--chat-card-container  mdc-top-app-bar--fixed-adjust panel-card'
-
-  const chatCont = document.createElement('div')
-  chatCont.id = 'chat-container'
-  chatCont.className = 'mdc-card reverser-parent'
-  const userCommentCont = document.createElement('div')
-  userCommentCont.className = 'user-comment--container'
-
-  const commentCont = document.createElement('div')
-  commentCont.className = 'comment--container'
-
-  const inputField = document.createElement('div')
-  inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
-  inputField.id = 'write--comment'
-
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
-  input.type = 'text'
-  input.style.position = 'absolute'
-
-  inputField.innerHTML = input.outerHTML
-  commentCont.innerHTML = inputField.outerHTML
-
-  const sendButton = document.createElement('div')
-  sendButton.className = 'send--container'
-  sendButton.id = 'send-message'
-
-  const btn = document.createElement('button')
-  btn.classList.add('mdc-fab', 'mdc-fab--mini')
-  btn.id = 'send-chat--input'
-
-  const btnIcon = document.createElement('span')
-  btnIcon.classList.add('mdc-fac__icon', 'material-icons')
-  btnIcon.textContent = 'send'
-  btn.innerHTML = btnIcon.outerHTML
-  sendButton.innerHTML = btn.outerHTML
-
-  userCommentCont.appendChild(commentCont)
-  userCommentCont.appendChild(sendButton)
-  commentPanel.appendChild(chatCont)
-
-  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + userCommentCont.outerHTML
-  document.getElementById('send-chat--input').onclick = function () {
-    const reqBody = {
-      'activityId': id,
-      'comment': getInputText('write--comment').value
+    const commentPanel = document.createElement('div')
+    commentPanel.className = 'activity--chat-card-container  mdc-top-app-bar--fixed-adjust panel-card'
+    
+    const chatCont = document.createElement('div')
+    chatCont.id = 'chat-container'
+    chatCont.className = 'mdc-card reverser-parent'
+    const userCommentCont = document.createElement('div')
+    userCommentCont.className = 'user-comment--container'
+    
+    const commentCont = document.createElement('div')
+    commentCont.className = 'comment--container'
+    
+    const inputField = document.createElement('div')
+    inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
+    inputField.id = 'write--comment'
+    
+    const input = document.createElement('input')
+    input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
+    input.type = 'text'
+    input.style.position = 'absolute'
+    
+    inputField.innerHTML = input.outerHTML
+    commentCont.innerHTML = inputField.outerHTML
+    
+    const sendButton = document.createElement('div')
+    sendButton.className = 'send--container'
+    sendButton.id = 'send-message'
+    
+    const btn = document.createElement('button')
+    btn.classList.add('mdc-fab', 'mdc-fab--mini')
+    btn.id = 'send-chat--input'
+    
+    const btnIcon = document.createElement('span')
+    btnIcon.classList.add('mdc-fac__icon', 'material-icons')
+    btnIcon.textContent = 'send'
+    btn.innerHTML = btnIcon.outerHTML
+    sendButton.innerHTML = btn.outerHTML
+    
+    userCommentCont.appendChild(commentCont)
+    userCommentCont.appendChild(sendButton)
+    commentPanel.appendChild(chatCont)
+    
+    document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + userCommentCont.outerHTML
+    document.getElementById('send-chat--input').onclick = function () {
+      const reqBody = {
+        'activityId': id,
+        'comment': getInputText('write--comment').value
+      }
+      
+      requestCreator('comment', reqBody)
+      getInputText('write--comment').value = ''
     }
-
-    requestCreator('comment', reqBody)
-    getInputText('write--comment').value = ''
-  }
+  
 }
-
+  
 function createComment (db, addendum, currentUser) {
+  console.log(addendum)
   return new Promise(function (resolve) {
     if (document.getElementById(addendum.addendumId)) {
-      return document.getElementById(addendum.addendumId).outerHTML
+    resolve(document.getElementById(addendum.addendumId).outerHTML)
     }
 
     let commentBox = document.createElement('div')
@@ -203,12 +206,25 @@ function createHeaderContent (db, id) {
     })
 
     document.querySelector('.comment-header-primary').addEventListener('click', function () {
+      // createActivityDetailHeader(record, 'edit')
+      //  document.getElementById('back-detail').addEventListener('click', function () {
+      //       conversation(id)
+      //     })
+
       fillActivityDetailPage(id)
+    })
+    document.querySelector('.header-status').parentNode.parentNode.addEventListener('click',function(){
+    //   createActivityDetailHeader(record, 'edit')
+    //  document.getElementById('back-detail').addEventListener('click', function () {
+    //       conversation(id)
+    //   })
+      fillActivityDetailPage(id)      
     })
   }
 }
 
 function fillActivityDetailPage (id) {
+  console.log("activity detail rendered")
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -238,7 +254,7 @@ function fillActivityDetailPage (id) {
             conversation(id)
           })
 
-          updateActivityPanel(db, record)
+          displayActivityDetail(db,record)
           fetchAssigneeData(db, record, 'assignee--list')
         }
       }
@@ -306,12 +322,6 @@ function createActivityDetailHeader (record, value) {
     toggleBtnName.textContent = 'check'
   }
 
-  // const edit = document.createElement('button')
-  // edit.className = 'mdc-button'
-  // edit.id = `${value}-activity`
-  // edit.dataset.id = record.activityId
-  // edit.textContent = value
-  // edit.style.color = 'white'
 
   rigthDiv.appendChild(toggleBtnName)
   header(leftDiv.outerHTML, rigthDiv.outerHTML)
@@ -323,14 +333,24 @@ function createActivityDetailHeader (record, value) {
   }
 }
 
-function updateActivityPanel (db, record) {
+function displayActivityDetail(db,record){
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-  detail.innerHTML = activityTitle(record.title, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont() + renderAssigneeList(record, 'assignee--list')
+  detail.innerHTML = sectionDiv('Activity Name',record.title) +
+  sectionDiv('Office',record.office) +
+  sectionDiv('Template',record.template) +
+  availableStatus(record) + displaySchedule(record.schedule) + displayVenue(record.venue) + updateAttachmentCont() + renderAssigneeList(record, 'assignee--list')
+  document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
 
-  document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+  //init display Venue
+
+  [...document.querySelectorAll('.venue--list')].forEach(function(li){
+    li.addEventListener('click',expandVenueList)
+  })
+
+
+
   createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
-
   if (document.getElementById('select-pending')) {
     document.getElementById('select-pending').addEventListener('click', function () {
       updateStatus('PENDING', record.activityId)
@@ -347,8 +367,24 @@ function updateActivityPanel (db, record) {
     })
   }
 
+
   if (!record.canEdit) return
-  initShareButton(true, record, db)
+  initShareButton(true, record, db)  
+}
+
+
+function expandVenueList(){
+ this.getElementsByClassName('venue--address')[0].style.whiteSpace = 'normal'
+}
+
+function updateActivityPanel (db, record) {
+  const detail = document.createElement('div')
+  detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
+  detail.innerHTML = activityTitle(record.title, true) + office(record.office) + template(record.template) + availableStatus(record) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont() + renderAssigneeList(record, 'assignee--list')
+
+  document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+  createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
+
 }
 
 function initShareButton (addFirst, record, db) {
@@ -388,7 +424,7 @@ function toggleActivityHeader (toggleId, containerClass, type, record) {
         console.log("yes")
         checkInValidInputs(type, containerClass)
       } else {
-        console.log("running")
+        console.log(record)
         makeFieldsEditable(record)
       }
     }
@@ -439,6 +475,8 @@ function activityTitle (title, value) {
   const label = document.createElement('label')
   label.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
   label.textContent = 'Title'
+
+
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
@@ -466,39 +504,79 @@ function activityTitle (title, value) {
   return container.outerHTML
 }
 
-function office (office) {
-  const officeCont = document.createElement('div')
-  officeCont.className = 'activity--office-container'
+function sectionDiv(key,content)  {
+
+  const cont = document.createElement('div')
+  cont.className = `activity--${key}-container`
+
   const span = document.createElement('span')
-  span.textContent = 'Office'
+  span.textContent = key
+
   span.className = 'detail--static-text mdc-typography--subtitle2'
   const p = document.createElement('p')
-  p.className = 'activity--office'
-  p.textContent = office
-  officeCont.appendChild(span)
-  officeCont.appendChild(p)
-  return officeCont.outerHTML
+  p.className = `activity--${key}`
+  p.textContent = content
+  cont.appendChild(span)
+  cont.appendChild(p)
+  return cont.outerHTML
 }
 
-function template (template) {
-  const templateCont = document.createElement('div')
-  templateCont.className = 'activity--template-container'
-  const span = document.createElement('span')
-  span.textContent = 'Template'
-  span.className = 'detail--static-text mdc-typography--subtitle2'
+function displaySchedule(schedules){
 
-  const p = document.createElement('p')
-  p.className = 'activity--template'
-  p.textContent = template
-  templateCont.appendChild(span)
-  templateCont.appendChild(p)
-  return templateCont.outerHTML
+  const table = document.createElement('table')
+  table.className = 'schedule--show-table'
+  const trMain = document.createElement('tr')
+  trMain.className = 'row-main'
+  const th0 = document.createElement('th')
+  const th1 = document.createElement('th')
+  th1.className = 'detail--static-text schedule-label'
+  const th2 = document.createElement('th')
+  th2.className = 'detail--static-text schedule-label'
+
+  th0.textContent = ''
+  th1.textContent = 'Start Time'
+  th2.textContent = 'End Time'
+  trMain.appendChild(th0)
+  trMain.appendChild(th1)
+  trMain.appendChild(th2)
+  
+  table.appendChild(trMain)
+  schedules.forEach(function(schedule){
+    
+    const tr  = document.createElement('tr')
+    const td0 = document.createElement('td')
+    const td1 = document.createElement('td')
+    td1.className = 'schedule--time'
+    const td2 = document.createElement('td')
+    td2.className = 'schedule--time'
+    td0.textContent = schedule.name
+    td1.textContent = moment(schedule.startTime).calendar()
+    td2.textContent = moment(schedule.endTime).calendar()
+
+
+    tr.appendChild(td0)
+    tr.appendChild(td1)
+    tr.appendChild(td2)
+    table.appendChild(tr)
+})
+return table.outerHTML
 }
+
 
 function makeFieldsEditable (record) {
+
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db = req.result
+    updateActivityPanel(db,record)
+  
+  
+  
   document.getElementById('back-detail').remove()
   document.getElementById('cancel-update').style.display = 'block'
-
+  
+  document.querySelector('.activity--office-container').style.display = 'none'
+  document.querySelector('.activity--template-container').style.display = 'none'
   document.getElementById('activity--status-container').style.display = 'none'
   document.querySelector('.activity--share-container').style.display = 'none'
   document.querySelector('.add--assignee-icon').style.display = 'none'
@@ -558,6 +636,7 @@ function makeFieldsEditable (record) {
   document.getElementById('cancel-update').addEventListener('click', function () {
     cancelUpdate(record.activityId)
   })
+}
 }
 
 function cancelUpdate (id) {
@@ -629,6 +708,8 @@ function updateStatus (status, id) {
     'activityId': id,
     'status': status
   }
+  console.log(status)
+  console.log(id)
 
   requestCreator('statusChange', reqBody)
 }
@@ -675,7 +756,13 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleStartTimeInput.disabled = value
   scheduleStartTimeInput.required = true
 
-  scheduleStartTimeInput.setAttribute('value', (moment(schedule.startTime).format('YYYY-MM-DDTHH:mm')))
+  if(schedule.startTime) {
+
+    scheduleStartTimeInput.setAttribute('value',moment(schedule.startTime).format('YYYY-MM-DDTHH:mm'))
+  }
+  else {
+    scheduleStartTimeInput.setAttribute('value','')
+  }
 
   const startLabel = document.createElement('label')
   startLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
@@ -698,7 +785,14 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
   scheduleEndTimeInput.required = true
 
-  scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DDTHH:mm'))
+  if(schedule.endTime){
+
+    scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DDTHH:mm'))
+  }
+  else {
+    scheduleEndTimeInput.setAttribute('value', '')
+    
+  }
 
   const endLabel = document.createElement('label')
   endLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
@@ -722,6 +816,40 @@ function showScheduleUI (schedule, count, scheduleList, value) {
   scheduleLi.appendChild(scheduleEditIconSpan)
 
   scheduleList.appendChild(scheduleLi)
+}
+
+function displayVenue(venues){
+  const venueCont = document.createElement('div')
+  venueCont.className = 'activity--venue-container'
+  const venueList = document.createElement('ul')
+  venueList.className = 'mdc-list'
+
+  venues.forEach(function(venue){
+    const venueLi = document.createElement('li')
+    venueLi.className ='mdc-list-item venue--list mdc-ripple-upgraded'
+    const span = document.createElement('span')
+    span.className  ='mdc-list-item__text'
+
+    const descSpan = document.createElement('span')
+    descSpan.className = 'mdc-list-item__primary-text detail--static-text'
+    descSpan.textContent = venue.venueDescriptor
+
+    const primarySpan = document.createElement('span')
+    primarySpan.className = 'mdc-list-item__primary-text'
+    primarySpan.textContent = venue.location
+   
+    const secondarySpan = document.createElement('span')
+    secondarySpan.className ='mdc-list-item__secondary-text venue--address'
+    secondarySpan.textContent = venue.address
+
+    span.appendChild(descSpan)
+    span.appendChild(primarySpan)
+    span.appendChild(secondarySpan)
+
+    venueLi.appendChild(span)
+    venueList.appendChild(venueLi)
+  })
+  return venueList.outerHTML
 }
 
 function showVenue (venues, canEdit) {
@@ -1261,7 +1389,6 @@ function initializeDialog (evt, input, params) {
 
   dialog.listen('MDCDialog:cancel', function () {
     document.getElementById('change-number-dialog').remove()
-    // fillActivityDetailPage(activityId)
   })
 
   dialog.lastFocusedTarget = evt.target
@@ -1298,7 +1425,6 @@ function initializeDialogLocation (evt, input, params) {
 
   dialog.listen('MDCDialog:cancel', function () {
     document.getElementById('location-select-dialog').remove()
-    // fillActivityDetailPage(activityId)
   })
 
   dialog.lastFocusedTarget = evt.target
@@ -1322,7 +1448,6 @@ function initializeOfficeTemplateDialog (evt, input) {
   dialog.listen('MDCDialog:cancel', function () {
     document.getElementById('officeTemplate-select-dialog').remove()
     listView()
-    // fillActivityDetailPage(activityId)
   })
 
   dialog.lastFocusedTarget = evt.target
@@ -1404,7 +1529,7 @@ function createUpdateReqBody (event, reqType) {
     }
 
     console.log(body)
-    // requestCreator('create', body)
+    requestCreator('create', body)
     return
   }
 }

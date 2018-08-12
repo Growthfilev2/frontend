@@ -261,6 +261,7 @@ body {
 #share-btn {
     cursor: pointer;
     margin-top:-5px;
+    margin-right: 10px;
 }
 
 .contact--text-field {
@@ -636,7 +637,7 @@ margin-top: 13px;
 .activity-detail-page  #schedule--list .endTimeInputs {
         float: right;
 }
-.activity--title-container, .activity--desc-container ,.activity--office-container ,.activity--template-container, .activity--status-container , .activity--schedule-container , .activity--venue-container ,.activity--share-container {
+.activity--Title-container, .activity--Desc-container ,.activity--Office-container ,.activity--Template-container, .activity--Status-container , .activity--Schedule-container , .activity--Venue-container ,.activity--Share-container {
     padding-top: 20px;
 }
 .activity--venue-container {
@@ -798,4 +799,20 @@ input[type="datetime-local"]{
 .activity--share-container {
     display: table;
     width:100%
+}
+.schedule--show-table {
+    width:100%;
+    text-align: left;
+    margin-top: 15px;
+}
+.schedule--show-table .row-main , .schedule--time {
+    text-align: center
+}
+.schedule-label {
+    font-weight: normal;
+}
+
+.venue--list {
+    height: auto;
+    padding-left: 0px;
 }

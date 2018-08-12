@@ -53,7 +53,7 @@ self.onmessage = function (event) {
       // requestHandlerResponse(404, 'firebase auth not completed', null)
       return void (0)
     }
-
+    
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
   })
 }
@@ -214,8 +214,7 @@ function statusChange (body) {
       'PATCH',
       `${apiUrl}activities/change-status`,
       JSON.stringify(body)
-    )
-      .then(function () {
+    ).then(function () {
         requestHandlerResponse('notification', 200, 'status changed successfully', firebase.auth().currentUser.uid)
 
         resolve(
@@ -294,6 +293,7 @@ function Null () {
       reject(null)
       return
     }
+    console.log("ASdasdasdasd")
     resolve(user.uid)
   })
 }
@@ -452,6 +452,7 @@ function updateCalendar (db, activity) {
 // present inside activity object store.
 
 function putAttachment (db, activity) {
+
   const attachmentObjectStore = db.transaction('attachment', 'readwrite').objectStore('attachment')
 
   attachmentObjectStore.put({
@@ -669,7 +670,7 @@ function updateIDB (dbName) {
       )
         .then(function (response) {
           if (response.from === response.upto) {
-
+            return
           } else {
             successResponse(response)
           }

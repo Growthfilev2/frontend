@@ -152,7 +152,7 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
   cursor.continue()
 }
 function fetchCurrentTime () {
-  return Date.now()
+  
 }
 
 function fetchCurrentLocation () {
@@ -265,11 +265,15 @@ function onErrorMessage (error) {
   })
 }
 
-function handleTimeout () {
-  const TIME_OUT_VALUE = 6000000
-  clearTimeout(offset)
 
-  offset = setTimeout(function () {
+function handleTimeout () {
+  console.log('load now')
+  const TIME_OUT_VALUE = 10000
+  const offset = setTimeout(function () {
     requestCreator('Null')
-  }, TIME_OUT_VALUE)
+  }, TIME_OUT_VALUE)  
+        if(offset){
+          clearTimeout(offset)
+        }
 }
+

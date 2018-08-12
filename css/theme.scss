@@ -126,3 +126,10 @@ $mdc-theme-on-secondary:#ffffff !important;
         color: $mdc-theme-on-primary;
     }
 }
+
+
+// animation
+
+.venue--address {
+    animation: expandList 300ms $mdc-animation-deceleration-curve-timing-function;
+}

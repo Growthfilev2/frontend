@@ -392,7 +392,7 @@ function generateActivityFromMarker (dbName, map, markers) {
     }
     setTimeout(function () {
       document.getElementById('list-view--map').innerHTML = mapActivityDom
-    }, 300)
+    }, 100)
   }
 }
 

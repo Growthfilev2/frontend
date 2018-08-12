@@ -76,10 +76,11 @@ function userSignedIn (auth) {
   if (window.Worker && window.indexedDB) {
     layoutGrid()
     requestCreator('initializeIDB')
-
     return
   }
+
   firebase.auth().signOut().catch(signOutError)
+
 }
 
 // When user is signed out
