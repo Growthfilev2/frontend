@@ -58,6 +58,8 @@ self.onmessage = function (event) {
   })
 }
 
+
+
 // Performs XMLHTTPRequest for the API's.
 
 function http (method, url, data) {
@@ -89,6 +91,19 @@ function http (method, url, data) {
   })
 }
 
+function fetchServerTime(){
+    return new Promise(function(resolve){
+
+        http(
+            'GET',
+            `${apiUrl}now`,
+        ).then(function (response) {
+            resolve(response.timestamp)
+            
+        }).catch(console.log)
+    })
+}
+    
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
@@ -106,7 +121,7 @@ function initializeIDB () {
 
     request.onupgradeneeded = function () {
       const db = request.result
-
+      console.log('yes')
       const activity = db.createObjectStore('activity', {
         keyPath: 'activityId'
       })
@@ -161,32 +176,52 @@ function initializeIDB () {
       map.createIndex('timestamp', 'timestamp')
       map.createIndex('count', 'count')
 
-      const attachment = db.createObjectStore('attachment', {
+      const children = db.createObjectStore('children', {
         keyPath: 'activityId'
       })
 
-      attachment.createIndex('template', 'name')
-      attachment.createIndex('office', 'office')
+      children.createIndex('template', 'template')
+      children.createIndex('office', 'office')
 
       const root = db.createObjectStore('root', {
         keyPath: 'uid'
       })
 
       // add defaultFromTime value here in order to load it only once
-      root.put({
-        uid: auth.uid,
-        fromTime: 0,
-        view: 'profile'
-      })
-      requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
+      fetchServerTime().then(function(timestamp){
+        const newReq = indexedDB.open(auth.uid)
+        newReq.onsuccess = function(){
+          const db = newReq.result
+          const rootTx = db.transaction('root','readwrite')
+          const root = rootTx.objectStore('root')
+          root.put({
+            uid: auth.uid,
+            fromTime: 0,
+            view: 'profile',
+            serverTime : timestamp
+          })
+          rootTx.oncomplete = function(){
+            requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
+          }
+        }
+        })
     }
 
     request.onsuccess = function () {
-      requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-
-      resolve(
-        auth.uid
-      )
+      fetchServerTime().then(function(timestamp){
+        const rootTx = request.result.transaction('root','readwrite')
+        const rootObjectStore = rootTx.objectStore('root')
+        rootObjectStore.onsuccess = function(event){
+          const record = event.target.result
+          record.serverTime = timestamp
+          rootObjectStore.put(record)
+        }
+        rootTx.oncomplete = function(){
+          requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+            resolve(auth.uid)
+          }
+        })
+      
     }
   })
 }
@@ -453,9 +488,9 @@ function updateCalendar (db, activity) {
 
 function putAttachment (db, activity) {
 
-  const attachmentObjectStore = db.transaction('attachment', 'readwrite').objectStore('attachment')
+  const chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children')
 
-  attachmentObjectStore.put({
+  chidlrenObjectStore.put({
     activityId: activity.activityId,
     status: activity.status,
     template: activity.template,
@@ -657,25 +692,20 @@ function updateIDB (dbName) {
 
   req.onsuccess = function () {
     const db = req.result
-    console.log(db)
-
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
-    rootObjectStore.get(dbName).onsuccess = function (root) {
+     rootObjectStore.get(dbName).onsuccess = function (root) {
       http(
-
         'GET',
         `${apiUrl}read?from=${root.target.result.fromTime}`
-
       )
         .then(function (response) {
           if (response.from === response.upto) {
+            requestHandlerResponse('refrshView', 200, '', user.uid)
             return
-          } else {
-            successResponse(response)
-          }
+          } 
+          successResponse(response)
         })
-
         .catch(console.log)
     }
   }

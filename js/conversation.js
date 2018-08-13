@@ -17,7 +17,9 @@ function conversation (id) {
       record.id = id
       record.view = 'conversation'
       rootObjectStore.put(record)
+      
     }
+
     commentPanel(id)
     createHeaderContent(db, id)
 
@@ -25,7 +27,8 @@ function conversation (id) {
       const cursor = event.target.result
       if (!cursor) {
         document.getElementById('chat-container').innerHTML = commentDom
-        document.getElementById('chat-container').scrollTop = document.getElementById('chat-container').scrollHeight
+        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
+        
         return
       }
       console.log(cursor.value)
@@ -35,7 +38,9 @@ function conversation (id) {
       cursor.continue()
     }
   }
+  sendCurrentViewNameToAndroid('conversation')
 }
+
 
 function commentPanel (id) {
   if(document.querySelector('.activity--chat-card-container')){
@@ -129,15 +134,17 @@ function createComment (db, addendum, currentUser) {
       datespan.textContent = moment(addendum.timestamp).calendar()
       datespan.classList.add('comment-date')
 
+      const link = document.createElement('a')
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
-      mapIcon.onclick = function (iconEvent) {
-        window.open(`https://www.google.co.in/maps/@${addendum.location['_latitude']},${addendum.location['_longitude']}`)
-      }
+      link.href= `https://maps.google.com/?q=${addendum.location['_latitude']},${addendum.location['_longitude']}`
+      mapIcon.dataset.latitude = addendum.location['_latitude']
+      mapIcon.dataset.longitude= addendum.location['_longitude']
+      link.appendChild(mapIcon)
 
       commentInfo.appendChild(datespan)
-      commentInfo.appendChild(mapIcon)
+      commentInfo.appendChild(link)
       textContainer.appendChild(user)
       textContainer.appendChild(comment)
       textContainer.appendChild(commentInfo)
@@ -205,19 +212,11 @@ function createHeaderContent (db, id) {
     })
 
     document.querySelector('.comment-header-primary').addEventListener('click', function () {
-      // createActivityDetailHeader(record, 'edit')
-      //  document.getElementById('back-detail').addEventListener('click', function () {
-      //       conversation(id)
-      //     })
-
       fillActivityDetailPage(id)
     })
+
     document.querySelector('.header-status').parentNode.parentNode.addEventListener('click',function(){
-    //   createActivityDetailHeader(record, 'edit')
-    //  document.getElementById('back-detail').addEventListener('click', function () {
-    //       conversation(id)
-    //   })
-      fillActivityDetailPage(id)      
+    fillActivityDetailPage(id)      
     })
   }
 }
@@ -259,6 +258,7 @@ function fillActivityDetailPage (id) {
       }
     }
   }
+  sendCurrentViewNameToAndroid('detail')
 }
 
 function createActivityDetailHeader (record, value) {
@@ -968,6 +968,7 @@ function renderAssigneeList (record) {
   const assigneeList = document.createElement('ul')
   assigneeList.id = 'assignee--list'
   assigneeList.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
+
   shareCont.appendChild(renderShareIcon(record))
   shareCont.appendChild(span)
   shareCont.appendChild(shareIcon)
@@ -1141,6 +1142,74 @@ function renderShareScreen (evt, record, key) {
   initializeDialog(evt, 'contact-text-field', {
     actionInput: key,
     id: record.activityId
+  })
+}
+function renderTemplateNameSelector(evt,record,key){
+  renderTemplateNameSelectorUI()
+
+  inputSelect({
+    name :'children',
+    indexone:'template',
+    indextwo:'office',
+    indexThree:'count'
+  },'template-name-container',{
+    main:'template-name-field'
+  },record)
+
+  initializeDialogTemplateName(evt,'template-name-container',{
+    actionInput:key,
+    id:''
+  })
+}
+
+function initializeDialogTemplateName(evt,input,params){
+  getInputText(input).value = ''
+
+  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#children-name'))
+  dialog.listen('MDCDialog:accept', function () {
+    const name = getInputText(input)['root_'].dataset.name
+    console.log(name) 
+    getInputText(params.actionInput).value = name
+    document.getElementById('children-name').remove()
+  })
+
+  dialog.listen('MDCDialog:cancel', function () {
+    document.getElementById('children-name').remove()
+  })
+
+  dialog.lastFocusedTarget = evt.target
+  dialog.show()
+}
+
+function childrenNames (cursor, target, input) {
+  console.log(input)
+  if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
+
+  const li = document.createElement('li')
+  li.dataset.name = cursor.value.attachment.name
+  // li.dataset.template = cursor.value.template
+
+  li.classList.add('mdc-list-item', 'combo-li')
+
+  const liText = document.createElement('span')
+  liText.classList.add('mdc-list-item__text')
+  liText.textContent = cursor.value.attachment.name
+
+  // const liTextSecondary = document.createElement('span')
+  // liTextSecondary.classList.add('mdc-list-item__secondary-text')
+  // liTextSecondary.textContent = cursor.value.template
+
+  liText.appendChild(liTextSecondary)
+
+  li.appendChild(liText)
+  document.getElementById(target).appendChild(li)
+  dataElement('name',cursor.value.attachment.name).addEventListener('click', function () {
+    getInputText(input).value = ''
+    getInputText(input)['root_'].dataset.name = this.dataset.name
+    // getInputText(input)['root_'].dataset.template = this.dataset.template
+    getInputText(input).value = this.dataset.name
+
+    // getInputText(input)['root_'].children[2].textContent = this.dataset.template
   })
 }
 
@@ -1370,6 +1439,57 @@ function renderOfficeTemplateScreenUI () {
   document.body.appendChild(aside)
 }
 
+function renderTemplateNameSelectorUI(){
+  const aside = document.createElement('aside')
+
+  aside.id = 'children-name'
+  aside.className = 'mdc-dialog'
+  aside.role = 'alertdialog'
+
+  const dialogSurface = document.createElement('div')
+  dialogSurface.className = 'mdc-dialog__surface'
+
+  const dialogHeader = document.createElement('header')
+  dialogHeader.className = 'mdc-dialog__header'
+
+  dialogHeader.innerHTML = outlinedTextField('Select Name', 'template-name-field')
+
+  const section = document.createElement('section')
+  section.className = 'mdc-dialog__body--scrollable'
+
+  const ul = document.createElement('ul')
+  ul.id = 'template-name--container'
+  ul.className = 'mdc-list'
+
+  section.appendChild(ul)
+
+  const footer = document.createElement('footer')
+  footer.className = 'mdc-dialog__footer'
+
+  const decline = document.createElement('button')
+  decline.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
+  decline.type = 'button'
+  decline.textContent = 'Cancel'
+
+  const accept = document.createElement('button')
+  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
+  accept.type = 'button'
+  accept.textContent = 'Select'
+
+  footer.appendChild(decline)
+  footer.appendChild(accept)
+
+  dialogSurface.appendChild(dialogHeader)
+  dialogSurface.appendChild(section)
+  dialogSurface.appendChild(footer)
+
+  aside.appendChild(dialogSurface)
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mdc-dialog__backdrop'
+  aside.appendChild(backdrop)
+  document.body.appendChild(aside)
+}
+
 function initializeDialog (evt, input, params) {
   console.log(params)
   getInputText(input).value = ''
@@ -1501,7 +1621,6 @@ function createUpdateReqBody (event, reqType) {
     attachments[field.id] = {
       value: getInputText(field.id).value,
       type: field.dataset.type
-
     }
     console.log(attachments)
   })
@@ -1516,7 +1635,7 @@ function createUpdateReqBody (event, reqType) {
 
     console.log(body)
 
-    // requestCreator('update', body)
+    requestCreator('update', body)
     return
   }
 
@@ -1538,7 +1657,7 @@ function createUpdateReqBody (event, reqType) {
     }
 
     console.log(body)
-    // requestCreator('create', body)
+    requestCreator('create', body)
     return
   }
 }
@@ -1634,9 +1753,10 @@ function createActivity (evt) {
 
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML
   document.getElementById('back-list').addEventListener('click', listView)
-
+  
   initShareButton()
   renderOfficeTemplateScreen(evt)
+  sendCurrentViewNameToAndroid('create')
 }
 
 function officeTemplate () {
@@ -1749,7 +1869,17 @@ function createInput (key, type, classtype, value) {
   mainTextField.dataset.type = type
   const mainInput = document.createElement('input')
   mainInput.className = 'mdc-text-field__input'
-  mainInput.type = 'text'
+  
+  if(type === 'moment.HTML5_FMT.TIME'){
+    mainInput.type = 'time'
+  }
+  if(type === 'weekday'){
+    mainInput.type = 'week'
+  }
+  else {
+    mainInput.type = 'text'
+  }
+  
   if (value) {
     mainInput.disabled = value
   }
@@ -1857,12 +1987,12 @@ function getSelectedSubscriptionData (office, template) {
         })
       })
       if (!record.attachment) return
-      createAttachmentContainer(record.attachment, 'create-activity--container', true, false)
+      createAttachmentContainer(record.attachment, 'create-activity--container', true, false,office,template)
     }
   }
 }
 
-function createAttachmentContainer (attachment, target, canEdit, value) {
+function createAttachmentContainer (attachment, target, canEdit, value,office,template) {
   if (document.getElementById('attachment-container')) {
     document.getElementById('attachment-container').remove()
   }
@@ -1885,6 +2015,14 @@ function createAttachmentContainer (attachment, target, canEdit, value) {
     span.textContent = 'person_add'
     addButton.appendChild(span)
 
+    const addButtonName = document.createElement('label')
+    addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
+    const span = document.createElement('span')
+    span.className = 'mdc-fab__icon material-icons'
+    span.textContent = 'add'
+    addButtonName.appendChild(span)
+ 
+
     // labelIcon.id = 'create-activity--assignee'
 
     const keyValue = document.createElement('div')
@@ -1892,6 +2030,9 @@ function createAttachmentContainer (attachment, target, canEdit, value) {
     div.appendChild(label)
     if (attachment[key].type === 'phoneNumber' && canEdit) {
       div.appendChild(addButton)
+    }
+    if(key === 'Name') {
+      div.appendChild(addButtonName);
     }
 
     div.appendChild(keyValue)
@@ -1914,6 +2055,38 @@ function createAttachmentContainer (attachment, target, canEdit, value) {
         renderShareScreen(evt, '', key.replace(/\s/g, ''))
       }
     }
+
+    if(key === 'Name') {
+      const req= indexedDB.open(firebase.auth().currentUser.uid)
+      req.onsuccess = function(){
+        const db = req.result
+        const childrenObjectStore = db.transaction('children','readonly').objectStore('children')
+        
+        childrenObjectStore.openCursor().onsuccess = function(event){
+          const cursor = event.target.result
+          if(!cursor) return
+          keyValue.innerHTML = createInput(key,attachment[key].type,'attachment',true,value).outerHTML
+          attachCont.appendChild(div)
+          addButtonName.onclick = function(evt){
+           renderTemplateNameSelector(evt,'',key)
+          }
+
+          cusror.continue()
+        }
+        
+      }
+    }
+
+    if(attachment[key].type == 'moment.HTML5_FMT.TIME') {
+      keyValue.innerHTML = createInput(key,attachment[key].type,'attachment',true,value).outerHTML
+      attachCont.appendChild(div)
+    }
+
+    if(attachment[key].type === 'weekday'){
+      keyValue.innerHTML = createInput(key,attachment[key].type,'attachment',true,value).outerHTML
+      attachCont.appendChild(div)
+    }
+
     console.log(target)
     document.getElementById(target).appendChild(attachCont)
     // getInputText(key.replace(/\s/g, '')).value = ''

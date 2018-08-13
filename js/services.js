@@ -46,7 +46,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
   req.onsuccess = function () {
     const db = req.result
 
-    if (objectStore.name === 'subscriptions' || objectStore.name === 'map') {
+    if (objectStore.name === 'subscriptions' || objectStore.name === 'map' || objectStore.name === 'children') {
       primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
     } else {
       primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
@@ -80,6 +80,9 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           officeTemplateCombo(cursor, selector, inputFields.main)
 
           break
+        case 'children':
+        childrenNames(cursor,selector,inputFields.main)
+        break;
       }
       cursor.continue()
     }
@@ -147,37 +150,18 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
       officeTemplateCombo(cursor, selector, inputFields.main)
 
       break
+      case 'children':
+      if(cursor.value.template === template  && cursor.value.office === office && status != 'CANCELLED') {
+        childrenNames(cursor,selector,inputFields.main)
+      }
+      break;
   }
 
   cursor.continue()
 }
 
-function fetchCurrentTime () {
-  return new Promise(function(resolve){
-    firebase
-    .auth()
-    .currentUser
-    .getIdToken()
-    .then(function (idToken) {
-      fetch('https://us-central1-growthfilev2-0.cloudfunctions.net/api/now',{
-        method : 'GET',
-        headers : {
-          'X-Requested-With':'XMLHttpRequest',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        }
-      })
-      .then(function(response){
-        return response.json()
-      })
-      .catch(console.log)  
-      .then(function(jsonTimestamp){
-        const deviceTime = Date.now()
-        const correctedTime = deviceTime + (jsonTimestamp.timestamp - deviceTime)
-        resolve(correctedTime) 
-      })
-    })
-  }).catch(console.log)
+function fetchCurrentTime (serverTime) {
+    return Date.now() +(serverTime - Date.now())
 }
 
 function fetchCurrentLocation () {
@@ -189,6 +173,10 @@ function fetchCurrentLocation () {
       })
     })
   })
+}
+
+function sendCurrentViewNameToAndroid(viewName){
+  Fetchview.startConversation(viewName)
 }
 
 function inputFile (selector) {
@@ -211,17 +199,22 @@ function requestCreator (requestType, requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
     fetchCurrentLocation().then(function (geopoints) {
-      fetchCurrentTime().then(function(time){
-        console.log(time)
-        requestBody['timestamp'] = time 
+      const dbName = firebase.auth().currentUser.uid
+        const req = indexedDB.open(dbName)
+        req.onsuccess = function(){
+          const db = req.result;
+          const rootObjectStore = db.transaction('root').objectStore('root')
+          rootObjectStore.get(dbName).onsuccess = function(event){
+              
+        requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
         requestBody['geopoint'] = geopoints
         requestGenerator.body = requestBody
         // post the requestGenerator object to the apiHandler to perform IDB and api
         // operations
         
-        apiHandler.postMessage(requestGenerator)
-      })
-     
+        apiHandler.postMessage(requestGenerator)     
+      } 
+    }
     })
   }
 

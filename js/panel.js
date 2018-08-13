@@ -24,6 +24,7 @@ function listView () {
       fetchDataForActivityList(db, unique)
     }).catch(console.log)
   }
+  sendCurrentViewNameToAndroid('listView')
 }
 
 function fetchDataForActivityList (db, uniqueOffice) {
@@ -162,7 +163,7 @@ function activityListUI (data, uniqueOffice, count) {
 
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
-
+  mdc.ripple.MDCRipple.attachTo(li);
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const customText = document.createElement('span')
@@ -256,6 +257,7 @@ function mapView (dbName) {
       rootTx.oncomplete = fetchMapData
     }
   }
+  sendCurrentViewNameToAndroid('map')
 }
 
 function fetchMapData () {
@@ -417,7 +419,7 @@ function calendarView (dbName) {
       }
     }
   }
-
+  sendCurrentViewNameToAndroid('calendar')
   req.onerror = function (event) {
     console.log(event.target.result)
   }
@@ -588,6 +590,7 @@ function profileView (user, firstTimeLogin) {
       }
     }
   }
+  sendCurrentViewNameToAndroid('profile')
 }
 
 function createProfileHeader () {
