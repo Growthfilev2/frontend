@@ -5,21 +5,21 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
 // Backend API Url
-const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
 
 /** reinitialize the firebase app */
 
 firebase.initializeApp({
-
-  apiKey: 'AIzaSyBgbeCmkuveYZwqKp43KNvlEgwumxRroVY',
-  authDomain: 'growthfilev2-0.firebaseapp.com',
-  databaseURL: 'https://growthfilev2-0.firebaseio.com',
-  projectId: 'growthfilev2-0',
-  storageBucket: 'growthfilev2-0.appspot.com'
+  apiKey: "AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo",
+  authDomain: "growthfile-207204.firebaseapp.com",
+  databaseURL: "https://growthfile-207204.firebaseio.com",
+  projectId: "growthfile-207204",
+  storageBucket: "growthfile-207204.appspot.com",
+  messagingSenderId: "701025551237"
 })
 
 // get Device time
-function getTime () {
+function getTime() {
   return Date.now()
 }
 
@@ -37,7 +37,7 @@ const requestFunctionCaller = {
   Null: Null
 }
 
-function requestHandlerResponse (type, code, message, dbName) {
+function requestHandlerResponse(type, code, message, dbName) {
   self.postMessage({
     type: type,
     code: code,
@@ -51,9 +51,9 @@ self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
       // requestHandlerResponse(404, 'firebase auth not completed', null)
-      return void (0)
+      return void(0)
     }
-    
+
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
   })
 }
@@ -62,7 +62,7 @@ self.onmessage = function (event) {
 
 // Performs XMLHTTPRequest for the API's.
 
-function http (method, url, data) {
+function http(method, url, data) {
   return new Promise(function (resolve, reject) {
     firebase
       .auth()
@@ -91,24 +91,25 @@ function http (method, url, data) {
   })
 }
 
-function fetchServerTime(){
-    return new Promise(function(resolve){
+function fetchServerTime() {
+  return new Promise(function (resolve) {
 
-        http(
-            'GET',
-            `${apiUrl}now`,
-        ).then(function (response) {
-            resolve(response.timestamp)
-            
-        }).catch(console.log)
-    })
+    http(
+      'GET',
+      `${apiUrl}now`,
+    ).then(function (response) {
+      resolve(response.timestamp)
+
+    }).catch(console.log)
+  })
 }
-    
+
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
-function initializeIDB () {
+function initializeIDB() {
   // onAuthStateChanged is added because app is reinitialized
+  let hasFirstView = true
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
     console.log(auth)
@@ -121,7 +122,7 @@ function initializeIDB () {
 
     request.onupgradeneeded = function () {
       const db = request.result
-      console.log('yes')
+      hasFirstView = false
       const activity = db.createObjectStore('activity', {
         keyPath: 'activityId'
       })
@@ -187,46 +188,61 @@ function initializeIDB () {
         keyPath: 'uid'
       })
 
-      // add defaultFromTime value here in order to load it only once
-      fetchServerTime().then(function(timestamp){
-        const newReq = indexedDB.open(auth.uid)
-        newReq.onsuccess = function(){
-          const db = newReq.result
-          const rootTx = db.transaction('root','readwrite')
-          const root = rootTx.objectStore('root')
-          root.put({
-            uid: auth.uid,
-            fromTime: 0,
-            view: 'profile',
-            serverTime : timestamp
-          })
-          rootTx.oncomplete = function(){
-            requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
-          }
-        }
-        })
+      root.put({
+        uid: auth.uid,
+        fromTime: 0,
+        view: 'profile',
+      })
+      requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
     }
 
     request.onsuccess = function () {
-      fetchServerTime().then(function(timestamp){
-        const rootTx = request.result.transaction('root','readwrite')
+      if(!hasFirstView) {
+        fetchServerTime().then(function (timestamp) {
+          const rootTx = request.result.transaction('root', 'readwrite')
+          const rootObjectStore = rootTx.objectStore('root')
+          rootObjectStore.get(auth.uid).onsuccess = function (event) {
+            const record = event.target.result
+            record.serverTime = timestamp
+            rootObjectStore.put(record)
+          }
+          rootTx.oncomplete = function () {
+            requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+            resolve(auth.uid)
+          }
+        })
+        return
+      }
+
+     const rootTxView =  request.result.transaction('root', 'readwrite')
+      const rootObjectStore = rootTxView.objectStore('root')
+      rootObjectStore.get(auth.uid).onsuccess = function (event) {
+        const record = event.target.result
+        record.view = 'list'
+        rootObjectStore.put(record)
+      }
+      rootTxView.oncomplete = function(){
+        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+      }
+
+      fetchServerTime().then(function (timestamp) {
+        const rootTx = request.result.transaction('root', 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
-        rootObjectStore.onsuccess = function(event){
+        rootObjectStore.get(auth.uid).onsuccess = function (event) {
           const record = event.target.result
           record.serverTime = timestamp
           rootObjectStore.put(record)
         }
-        rootTx.oncomplete = function(){
+        rootTx.oncomplete = function () {
           requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-            resolve(auth.uid)
-          }
-        })
-      
+          resolve(auth.uid)
+        }
+      })
     }
   })
 }
 
-function comment (body) {
+function comment(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -242,7 +258,7 @@ function comment (body) {
   })
 }
 
-function statusChange (body) {
+function statusChange(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -250,24 +266,24 @@ function statusChange (body) {
       `${apiUrl}activities/change-status`,
       JSON.stringify(body)
     ).then(function () {
-        requestHandlerResponse('notification', 200, 'status changed successfully', firebase.auth().currentUser.uid)
+      requestHandlerResponse('notification', 200, 'status changed successfully', firebase.auth().currentUser.uid)
 
-        resolve(
-          firebase.auth().currentUser.uid
-        )
-      }).catch(function (error) {
-        reject(error)
-      })
+      resolve(
+        firebase.auth().currentUser.uid
+      )
+    }).catch(function (error) {
+      reject(error)
+    })
   })
 }
 
-function removeAssignee (body) {
+function removeAssignee(body) {
   return new Promise(function (resolve, reject) {
     http(
-      'PATCH',
-      `${apiUrl}activities/remove`,
-      JSON.stringify(body)
-    )
+        'PATCH',
+        `${apiUrl}activities/remove`,
+        JSON.stringify(body)
+      )
       .then(function () {
         requestHandlerResponse('notification', 200, 'assignee removed successfully', firebase.auth().currentUser.uid)
 
@@ -281,15 +297,15 @@ function removeAssignee (body) {
   })
 }
 
-function share (body) {
+function share(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
-      'PATCH',
-      `${apiUrl}activities/share`,
-      JSON.stringify(body)
+        'PATCH',
+        `${apiUrl}activities/share`,
+        JSON.stringify(body)
 
-    )
+      )
       .then(function (success) {
         requestHandlerResponse('notification', 200, 'assignne added successfully', firebase.auth().currentUser.uid)
         resolve(
@@ -302,14 +318,14 @@ function share (body) {
   })
 }
 
-function updateUserNumber (body) {
+function updateUserNumber(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
-      'PATCH',
-      `${apiUrl}services/users/update`,
-      JSON.stringify(body)
-    )
+        'PATCH',
+        `${apiUrl}services/users/update`,
+        JSON.stringify(body)
+      )
       .then(function (success) {
         requestHandlerResponse('notification', 200, 'number updated successfully', firebase.auth().currentUser.uid)
 
@@ -321,7 +337,7 @@ function updateUserNumber (body) {
   })
 }
 
-function Null () {
+function Null() {
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
@@ -333,14 +349,14 @@ function Null () {
   })
 }
 
-function update (body) {
+function update(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
-      'PATCH',
-      `${apiUrl}activities/update`,
-      JSON.stringify(body)
-    )
+        'PATCH',
+        `${apiUrl}activities/update`,
+        JSON.stringify(body)
+      )
       .then(function (success) {
         requestHandlerResponse('notification', 200, 'activity update  successfully', firebase.auth().currentUser.uid)
 
@@ -352,14 +368,14 @@ function update (body) {
   })
 }
 
-function create (body) {
+function create(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
-      'POST',
-      `${apiUrl}activities/create`,
-      JSON.stringify(body)
-    )
+        'POST',
+        `${apiUrl}activities/create`,
+        JSON.stringify(body)
+      )
       .then(function (success) {
         requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
         resolve(firebase.auth().currentUser.uid)
@@ -370,7 +386,7 @@ function create (body) {
   })
 }
 
-function updateMap (db, activity) {
+function updateMap(db, activity) {
   const mapTx = db.transaction(['map'], 'readwrite')
   const mapObjectStore = mapTx.objectStore('map')
   const mapActivityIdIndex = mapObjectStore.index('activityId')
@@ -405,15 +421,15 @@ function updateMap (db, activity) {
   mapTx.onerror = errorDeletingRecord
 }
 
-function errorDeletingRecord (event) {
+function errorDeletingRecord(event) {
   console.log(event.target.error)
 }
 
-function transactionError (event) {
+function transactionError(event) {
   console.log(event.target.error)
 }
 
-function updateCalendar (db, activity) {
+function updateCalendar(db, activity) {
   const calendarTx = db.transaction(['calendar'], 'readwrite')
   const calendarObjectStore = calendarTx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
@@ -486,7 +502,7 @@ function updateCalendar (db, activity) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment (db, activity) {
+function putAttachment(db, activity) {
 
   const chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children')
 
@@ -501,7 +517,7 @@ function putAttachment (db, activity) {
 
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
-function putAssignessInStore (db, assigneeArray) {
+function putAssignessInStore(db, assigneeArray) {
   assigneeArray.forEach(function (assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
@@ -519,7 +535,7 @@ function putAssignessInStore (db, assigneeArray) {
   })
 }
 
-function readNonUpdatedAssignee (db) {
+function readNonUpdatedAssignee(db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
   const isUpdatedIndex = usersObjectStore.index('isUpdated')
   const NON_UPDATED_USERS = 0
@@ -551,11 +567,11 @@ function readNonUpdatedAssignee (db) {
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
-function updateUserObjectStore (successUrl) {
+function updateUserObjectStore(successUrl) {
   http(
-    'GET',
-    successUrl.url
-  )
+      'GET',
+      successUrl.url
+    )
     .then(function (userProfile) {
       console.log(userProfile)
 
@@ -585,7 +601,7 @@ function updateUserObjectStore (successUrl) {
     }).catch(console.log)
 }
 
-function updateSubscription (db, subscription) {
+function updateSubscription(db, subscription) {
   console.log(subscription)
   const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
@@ -616,7 +632,7 @@ function updateSubscription (db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse (read) {
+function successResponse(read) {
   console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
@@ -682,11 +698,128 @@ function successResponse (read) {
   }
 }
 
-function notUpdateUserObjectStore (errorUrl) {
+function notUpdateUserObjectStore(errorUrl) {
   console.log(errorUrl)
 }
 
-function updateIDB (dbName) {
+const dummy = {
+  "addendum": [],
+  "activities": [{
+    "canEdit": true,
+    "status": "CONFIRMED",
+    "schedule": [{
+      "endTime": "2018-06-28T10:04:51.699Z",
+      "startTime": "2018-06-28T09:25:32.304Z",
+      "name": "Shift Timing"
+    }],
+    "venue": [{
+        "venueDescriptor": "Base Location",
+        "geopoint": {
+          "_latitude": 28.5728858,
+          "_longitude": 77.2185796
+        },
+        "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
+        "location": "DUMMY SQUARE"
+      },
+      {
+        "location": "Lodge Residence",
+        "venueDescriptor": "Residence",
+        "geopoint": {
+          "_latitude": 28.5545653,
+          "_longitude": 77.3328355
+        },
+        "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
+      }
+    ],
+    "timestamp": "2018-06-28T09:25:32.304Z",
+    "template": "employee",
+    "activityName": "employee",
+    "office": "dummy",
+    "assignees": [
+      "+918080808080",
+      "+918178135274",
+      "+919090909090",
+      "+919090909091"
+    ],
+    "attachment": {
+      "Name": {
+        "value": "shikhar",
+        "type": "string"
+      },
+      "Employee Contact": {
+        "value": "+919999288920",
+        "type": "phoneNumber"
+      },
+      "Employee Code": {
+        "value": "123456",
+        "type": "string"
+      },
+      "Department": {
+        "value": "Tech",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "+919899758344",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "+919718392646",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "Monday",
+        "type": "weekday"
+      },
+    },
+    "activityId": "H4jbVD6KeQeHmkxlkvo9"
+  }],
+  "templates": [{
+    "schedule": [
+      "Shift Timing"
+    ],
+    "venue": [
+      "Base Location",
+      "Residence"
+    ],
+    "template": "employee",
+    "office": "dummy",
+    "attachment": {
+      "Name": {
+        "value": "",
+        "type": "string"
+      },
+      "Employee Contact": {
+        "value": "",
+        "type": "phoneNumber"
+      },
+      "Employee Code": {
+        "value": "",
+        "type": "string"
+      },
+      "Department": {
+        "value": "",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "",
+        "type": "weekday"
+      },
+    },
+  }],
+  "from": "1970-01-01T00:00:00.090Z",
+  "upto": "2018-07-24T08:05:59.938Z"
+}
+
+
+function updateIDB(dbName) {
   console.log(dbName)
   const req = indexedDB.open(dbName)
 
@@ -694,16 +827,15 @@ function updateIDB (dbName) {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
-     rootObjectStore.get(dbName).onsuccess = function (root) {
+    rootObjectStore.get(dbName).onsuccess = function (root) {
       http(
-        'GET',
-        `${apiUrl}read?from=${root.target.result.fromTime}`
-      )
+          'GET',
+          `${apiUrl}read?from=${root.target.result.fromTime}`
+        )
         .then(function (response) {
           if (response.from === response.upto) {
-            requestHandlerResponse('refrshView', 200, '', user.uid)
             return
-          } 
+          }
           successResponse(response)
         })
         .catch(console.log)

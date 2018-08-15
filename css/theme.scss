@@ -133,3 +133,13 @@ $mdc-theme-on-secondary:#ffffff !important;
 .venue--address {
     animation: expandList 300ms $mdc-animation-deceleration-curve-timing-function;
 }
+
+@mixin mdc-fab-icon-size($width,$height){
+    width:$width;
+    height: $height;
+
+}
+
+.mdc-fab-icon {
+    @include mdc-fab-icon-size('30px','30px')
+}

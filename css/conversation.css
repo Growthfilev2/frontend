@@ -250,13 +250,9 @@ body {
 
 .add--assignee-icon {
     float: right;
-    width: 35px;
-    height: 35px;
+    width: 30px;
+    height: 30px;
     margin-top: 10px;
-}
-
-.assignee-li:nth-child(1) {
-    /* margin-top: 30px; */
 }
 
 .assignee-li span:nth-child(3) {
@@ -446,6 +442,9 @@ body {
     padding-top: 0px
 }
 
+.activity--venue-container {
+    min-height: 200px;
+}
 .activity--venue-container li {
     display: table;
     padding-left: 0px;
@@ -636,13 +635,7 @@ margin-top: 13px;
     padding-right: 20px;
 
 }
-.activity-detail-page  #schedule--list .startTimeInputs {
-    width:45%;   
 
-}
-.activity-detail-page  #schedule--list .endTimeInputs {
-        float: right;
-}
 .activity--share-container {
     padding-top: 25px !important;
 }
@@ -650,9 +643,6 @@ margin-top: 13px;
     padding-bottom: 30px;
 }
 
-.endTimeInputs  {
-    width: 45%;
-}
 .activity--status-container {
     padding-top: 20px;
     padding-bottom: 20px;
@@ -712,13 +702,12 @@ margin-top: 13px;
 }
 
 #attachment-container {
-    border-top: 1px solid lightgray;
 }
 #attachment-container .label--text {
     color : #598aeb !important;
 }
 .attachment-field{
-    margin:20px 0px 30px 0px;
+    margin:20px 0px 15px 0px;
 }
 .attachment input {
     padding-top:0px;
@@ -798,8 +787,8 @@ input[type="datetime-local"]{
 
 .mdc-fab-location {
     float: right;
-    width: 35px;
-    height:35px;
+    width: 30px;
+    height:30px;
 }
 
 .activity--share-container {
@@ -839,4 +828,25 @@ input[type="datetime-local"]{
 }
 .activity--detail--section .venue--list .detail--static-text {
     margin-bottom: -25px;
+}
+.attachment-field .attachment.attachment--text-field {
+    height:40px;
+    margin-top:0px;
+
+}
+.attachment-selector-label {
+    margin-top:0px;
+}
+
+.mdc-fab .mdc-fab__icon {
+    font-size: 18px;
+}
+
+.attachment--cont-update {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.schedule--show-table tr {
+    height: 30px;
 }

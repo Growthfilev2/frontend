@@ -57,6 +57,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       if (!cursor) {
         if (objectStore.name === 'map') return
         if (objectStore.name === 'subscriptions') return
+        if(objectStore.name === 'children') return
         if (!activityRecord) return
 
         activityRecord.assignees.forEach(function (people) {
@@ -81,7 +82,9 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
 
           break
         case 'children':
+        if(cursor.value.template === activityRecord.template  && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
         childrenNames(cursor,selector,inputFields.main)
+        }
         break;
       }
       cursor.continue()
@@ -126,7 +129,7 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
   if (!cursor) {
     if (objectStore.name === 'subscriptions') return
     if (objectStore.name === 'map') return
-
+    if(objectStore.name === 'children') return
     if (!activityRecord) return
 
     activityRecord.assignees.forEach(function (people) {
@@ -151,7 +154,7 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
 
       break
       case 'children':
-      if(cursor.value.template === template  && cursor.value.office === office && status != 'CANCELLED') {
+      if(cursor.value.template === activityRecord.template  && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
         childrenNames(cursor,selector,inputFields.main)
       }
       break;
@@ -176,7 +179,7 @@ function fetchCurrentLocation () {
 }
 
 function sendCurrentViewNameToAndroid(viewName){
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile (selector) {
@@ -255,23 +258,31 @@ function loadViewFromRoot (response) {
           handleTimeout()
           break
         case 'profile':
-          profileView(firebase.auth().currentUser)
-          handleTimeout()
-          break
+        handleTimeout()
+        profileView(firebase.auth().currentUser)
+        break
+
         case 'calendar':
           calendarView(response.data.dbName)
           handleTimeout()
           break
 
+
         case 'detail':
           handleTimeout()
           fillActivityDetailPage(record.id)
           break
-
+        case 'edit-activity':
+        handleTimeout()
+        break;
+        case 'create' :
+        handleTimeout()
+        break;  
+  
         default:
-          record.currentView = 'profile'
+          record.currentView = 'list'
           rootObjectStore.put(record)
-          profileView(firebase.auth().currentUser, true)
+          listView()
           handleTimeout()
       }
     }
