@@ -2126,8 +2126,14 @@ function createUpdateReqBody(event, reqType) {
     venueBody.venueDescriptor = li.dataset.descrip
     venueBody.location = li.dataset.location === 'undefined' ? '' : li.dataset.location
     venueBody.address = li.dataset.address || ''
-    geopoint.latitude = parseInt(li.dataset.inputlat) || ''
-    geopoint.longitude = parseInt(li.dataset.inputlon) || ''
+    if(!parseInt(li.dataset.inputlat) || !parseInt(li.dataset.inputlon)) {
+      geopoint =  ''
+    }
+    else {
+      geopoint.latitude = parseInt(li.dataset.inputlat)
+      geopoint.longitude = parseInt(li.dataset.inputlon)
+    }
+
     venueBody['geopoint'] = geopoint
     venue.push(venueBody)
   })
