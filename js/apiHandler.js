@@ -207,7 +207,7 @@ function initializeIDB() {
             rootObjectStore.put(record)
           }
           rootTx.oncomplete = function () {
-            requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+            requestHandlerResponse('notification', 200, 'IDB created', request.result.name)
             resolve(auth.uid)
           }
         })
@@ -234,7 +234,7 @@ function initializeIDB() {
           rootObjectStore.put(record)
         }
         rootTx.oncomplete = function () {
-          requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+          requestHandlerResponse('notification', 200, 'server time added', request.result.name)
           resolve(auth.uid)
         }
       })
@@ -833,10 +833,10 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          if (response.from === response.upto) {
-            return
-          }
-          successResponse(response)
+          // if (response.from === response.upto) {
+          //   return
+          // }
+          successResponse(dummy)
         })
         .catch(console.log)
     }

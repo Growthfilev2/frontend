@@ -559,10 +559,9 @@ function displaySchedule(schedules) {
     const td2 = document.createElement('td')
     td2.className = 'schedule--time'
     td0.textContent = schedule.name
-    td1.textContent = moment(schedule.startTime).calendar()
-    td2.textContent = moment(schedule.endTime).calendar()
-
-
+    td1.textContent = schedule.startTime ? moment(schedule.startTime).calendar() : ''
+    td2.textContent = schedule.endTime ?  moment(schedule.endTime).calendar() :''
+ 
     tr.appendChild(td0)
     tr.appendChild(td1)
     tr.appendChild(td2)
@@ -2095,7 +2094,19 @@ function createUpdateReqBody(event, reqType) {
     const startTime = `${li.querySelector('.startDate').children[0].value} ${li.querySelector('.startTime').children[0].value}`
     const endTime = `${li.querySelector('.endDate').children[0].value} ${li.querySelector('.endTime').children[0].value}`
 
-    if(moment(endTime).valueOf() < moment(startTime).valueOf()) {
+    console.log(startTime)
+    console.log(endTime.length)
+
+    if(startTime && endTime.length == 1) {
+      snacks('Add a valid End Time')
+      allow = false
+    }
+    if(endTime && startTime.length == 1) {
+      snacks('Add a valid Start Time')
+      allow = false
+    }
+
+    if(startTime && endTime && moment(endTime).valueOf() < moment(startTime).valueOf()) {
       snacks('End time cannot be before Start time')
       allow = false
     }
