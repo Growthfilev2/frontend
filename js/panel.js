@@ -288,7 +288,6 @@ function createMapPanel() {
 
   const mapList = document.createElement('div')
   mapList.id = 'list-view--map'
-  mapList.className = 'mdc-theme--background'
   const map = document.createElement('div')
   map.id = 'map'
   mapParent.appendChild(map)

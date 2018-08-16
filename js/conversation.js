@@ -2097,11 +2097,17 @@ function createUpdateReqBody(event, reqType) {
     console.log(startTime)
     console.log(endTime.length)
 
-    if(startTime && endTime.length == 1) {
+    if(startTime == " " && endTime == " ") {
+      
+      allow = true
+    }
+
+    if(startTime !== " " && endTime == " ") {
       snacks('Add a valid End Time')
       allow = false
     }
-    if(endTime && startTime.length == 1) {
+
+    if(endTime !== " " && startTime == " ") {
       snacks('Add a valid Start Time')
       allow = false
     }
@@ -2181,7 +2187,7 @@ function createUpdateReqBody(event, reqType) {
     }
 
     console.log(body)
-    requestCreator('create', body)
+    // requestCreator('create', body)
     return
   }
 }
