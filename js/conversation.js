@@ -2,7 +2,6 @@ function conversation(id) {
   if (!id) return
   // removeDom('chat-container')
 
-  let commentDom = ''
 
   const currentUser = firebase.auth().currentUser
 
@@ -10,19 +9,38 @@ function conversation(id) {
 
   req.onsuccess = function () {
     const db = req.result
-    const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+
+    const rootTx = db.transaction('root', 'readwrite')
+    const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(currentUser.uid).onsuccess = function (event) {
       const record = event.target.result
       record.id = id
       record.view = 'conversation'
       rootObjectStore.put(record)
-
+      rootTx.oncomplete = function () {
+        fetchAddendumForComment(id,currentUser)
+      }
     }
-    
+  }
+}
 
+function fetchAddendumForComment(id,user) {
+  const req = window.indexedDB.open(user.uid)
+
+  req.onsuccess = function () {
+    const db = req.result
+
+    const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
+    
+  const rootTx = db.transaction('root', 'readwrite')
+  const rootObjectStore = rootTx.objectStore('root')
+  rootObjectStore.get(user.uid).onsuccess = function(event){
+    createHeaderContent(db, id,event.target.result.hasMultipleOffice)
+
+  }
     commentPanel(id)
-    createHeaderContent(db, id)
+    sendCurrentViewNameToAndroid('conversation')
+   let commentDom = ''
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
@@ -33,14 +51,13 @@ function conversation(id) {
         return
       }
       console.log(cursor.value)
-      createComment(db, cursor.value, currentUser).then(function (comment) {
-        
+      createComment(db, cursor.value, user).then(function (comment) {
+
         commentDom += comment
       })
       cursor.continue()
     }
   }
-  sendCurrentViewNameToAndroid('conversation')
 }
 
 
@@ -159,11 +176,11 @@ function createComment(db, addendum, currentUser) {
 
 function readNameFromNumber(db, number) {
   return new Promise(function (resolve, reject) {
-    if(number === firebase.auth().currentUser.phoneNumber) resolve(firebase.auth().currentUser.displayName)
+    if (number === firebase.auth().currentUser.phoneNumber) resolve(firebase.auth().currentUser.displayName)
     const usersObjectStore = db.transaction('users').objectStore('users')
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
-      if(!record) return
+      if (!record) return
       if (!record.displayName) resolve(number)
 
       resolve(record.displayName)
@@ -174,9 +191,8 @@ function readNameFromNumber(db, number) {
   })
 }
 
-function createHeaderContent(db, id) {
+function createHeaderContent(db, id,unique) {
 
-  
 
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   const leftDiv = document.createElement('div')
@@ -198,13 +214,21 @@ function createHeaderContent(db, id) {
     primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2'
     primarySpan.textContent = record.activityName
 
-    const secondarySpan = document.createElement('span')
-    secondarySpan.className = 'mdc-list-item__secondary-text'
-    secondarySpan.textContent = record.office
 
+      const secondarySpan = document.createElement('span')
+      secondarySpan.className = 'mdc-list-item__secondary-text'
+      secondarySpan.textContent = record.office
+    
 
+    const secondarySpanTemplate = document.createElement('span')
+    secondarySpanTemplate.className = 'mdc-list-item__secondary-text'
+    secondarySpanTemplate.textContent = record.template
 
-    primarySpan.appendChild(secondarySpan)
+    if(unique) {
+      primarySpan.appendChild(secondarySpan)
+    }
+    primarySpan.appendChild(secondarySpanTemplate)
+
     leftDiv.appendChild(backSpan)
     leftDiv.appendChild(primarySpan)
 
@@ -287,6 +311,10 @@ function createActivityDetailHeader(record, value) {
   backIcon.textContent = 'arrow_back'
   backSpan.appendChild(backIcon)
 
+  const activityName = document.createElement('p')
+  activityName.className = 'display-activity-name'
+  activityName.textContent = record.activityName
+
   const cancel = document.createElement('i')
   cancel.className = 'material-icons'
   cancel.id = 'cancel-update'
@@ -296,6 +324,7 @@ function createActivityDetailHeader(record, value) {
   cancel.style.display = 'none'
 
   leftDiv.appendChild(backSpan)
+  leftDiv.appendChild(activityName)
   leftDiv.appendChild(cancel)
 
   if (!record.canEdit) {
@@ -344,8 +373,7 @@ function createActivityDetailHeader(record, value) {
 function displayActivityDetail(db, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-  detail.innerHTML = sectionDiv('Activity Name', record.activityName) +
-    sectionDiv('Office', record.office) +
+  detail.innerHTML = sectionDiv('Office', record.office) +
     sectionDiv('Template', record.template) +
     availableStatus(record) + displaySchedule(record.schedule) + displayVenue(record.venue) + displayAttachmentCont(record.attachment) + renderAssigneeList(record, 'assignee--list')
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
@@ -383,15 +411,16 @@ function expandVenueList() {
 
 function updateActivityPanel(db, record) {
 
-  const rootTx = db.transaction('root','readwrite')
+  const rootTx = db.transaction('root', 'readwrite')
   const rootObjectStore = rootTx.objectStore('root')
-  rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+  rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
     const record = event.target.result
     record.view = 'edit-activity'
     rootObjectStore.put(record)
   }
-  rootTx.oncomplete = function(){
+  rootTx.oncomplete = function () {
     document.getElementById('back-detail').remove()
+    document.querySelector('.display-activity-name').remove()
     document.getElementById('cancel-update').style.display = 'block'
     document.getElementById('cancel-update').addEventListener('click', function () {
       cancelUpdate(record.activityId)
@@ -400,13 +429,13 @@ function updateActivityPanel(db, record) {
     const detail = document.createElement('div')
     detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
     detail.innerHTML = activityTitle(record.activityName) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont()
-    
+
     document.getElementById('app-current-panel').innerHTML = detail.outerHTML
     createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
-    }
+  }
 }
-  
-  function initShareButton(record, db) {  
+
+function initShareButton(record, db) {
   document.getElementById('share-btn').addEventListener('click', function (evt) {
     if (!db) {
       renderShareScreen(evt, '', '')
@@ -488,7 +517,7 @@ function activityTitle(title) {
   const textField = document.createElement('div')
   textField.className = 'mdc-text-field'
   textField.id = 'activity--title-input'
-  
+
   const label = document.createElement('label')
   label.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
   label.textContent = 'Activity Name'
@@ -566,8 +595,8 @@ function displaySchedule(schedules) {
     td2.className = 'schedule--time'
     td0.textContent = schedule.name
     td1.textContent = schedule.startTime ? moment(schedule.startTime).calendar() : ''
-    td2.textContent = schedule.endTime ?  moment(schedule.endTime).calendar() :''
- 
+    td2.textContent = schedule.endTime ? moment(schedule.endTime).calendar() : ''
+
     tr.appendChild(td0)
     tr.appendChild(td1)
     tr.appendChild(td2)
@@ -576,13 +605,13 @@ function displaySchedule(schedules) {
   return table.outerHTML
 }
 
-function displayAttachmentCont(attachment){
+function displayAttachmentCont(attachment) {
   const div = document.createElement('div')
   div.id = 'update--attachment-cont'
   div.className = 'attachment--cont-update'
-  Object.keys(attachment).forEach(function(key){
+  Object.keys(attachment).forEach(function (key) {
 
-  div.innerHTML += sectionDiv(key,attachment[key].value)
+    div.innerHTML += sectionDiv(key, attachment[key].value)
   })
   return div.outerHTML
 }
@@ -594,68 +623,7 @@ function makeFieldsEditable(record) {
     const db = req.result
     updateActivityPanel(db, record)
 
-   
-    // getInputText('activity--title-input')['input_'].disabled = false
-    // getInputText('activity--title-input')['input_'].classList.remove('border-bottom--none')
 
-    // const startSchedule = document.querySelectorAll('.startTimeInputs')
-    // const endSchedule = document.querySelectorAll('.endTimeInputs')
-
-    // const attachments = document.querySelectorAll('.attachment')
-    // const venueFields = document.querySelectorAll('.map-select-type-action');
-
-    // [...startSchedule].forEach(function (li) {
-
-    //   li.addEventListener('input', function () {
-
-
-    //     if (!li.classList.contains('mdc-text-field')) return
-
-    //     if (getInputText(li.id).value < getInputText(li.nextElementSibling.id).value) {
-    //       document.getElementById('edit-activity').disabled = false
-    //       return
-    //     }
-    //     snacks('Schedules End Time cannot be less than the start time')
-    //     document.getElementById('edit-activity').disabled = true
-
-    //   });
-    // });
-
-    // [...endSchedule].forEach(function (li) {
-
-    //   li.addEventListener('input', function () {
-
-
-    //     if (!li.classList.contains('mdc-text-field')) return
-
-    //     if (getInputText(li.id).value > getInputText(li.previousElementSibling.id).value) {
-    //       document.getElementById('edit-activity').disabled = false
-    //       return
-    //     }
-
-    //     snacks('Schedules End Time cannot be less than the start time')
-
-    //     document.getElementById('edit-activity').disabled = true
-
-    //   });
-    // });
-
-    // [...venueFields].forEach(function (field) {
-    //   field.addEventListener('click', function (evt) {
-    //     console.log(evt)
-    //     renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
-    //   })
-    // });
-
-    // [...attachments].forEach(function (field) {
-    //   if (field.dataset.type === 'string') {
-    //     field.children[0].disabled = false
-    //   }
-    // });
-
-    // [...document.querySelectorAll('.attachment-selector-label')].forEach(function (label) {
-    //   label.style.display = 'block'
-    // })
 
   }
 }
@@ -771,7 +739,7 @@ function showScheduleUI(schedule, scheduleList) {
   startTimeInputs.className = 'startTimeInputs'
 
   const scheduleStartDate = document.createElement('div')
-  scheduleStartDate.classList.add('mdc-text-field','startDate')
+  scheduleStartDate.classList.add('mdc-text-field', 'startDate')
 
   const scheduleStartDateInput = document.createElement('input')
   scheduleStartDateInput.type = 'date'
@@ -779,7 +747,7 @@ function showScheduleUI(schedule, scheduleList) {
 
 
   const scheduleStarrTime = document.createElement('div')
-  scheduleStarrTime.classList.add('mdc-text-field','startTime')
+  scheduleStarrTime.classList.add('mdc-text-field', 'startTime')
 
   const scheduleStarrTimeInput = document.createElement('input')
   scheduleStarrTimeInput.type = 'time'
@@ -788,7 +756,7 @@ function showScheduleUI(schedule, scheduleList) {
   if (schedule.startTime) {
     scheduleStartDateInput.setAttribute('value', moment(schedule.startTime).format('YYYY-MM-DD'))
     scheduleStarrTimeInput.setAttribute('value', moment(schedule.startTime).format('HH:MM'))
-  } 
+  }
 
   const startDateLabel = document.createElement('label')
   startDateLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
@@ -797,7 +765,7 @@ function showScheduleUI(schedule, scheduleList) {
   const startTimeLabel = document.createElement('label')
   startTimeLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
   startTimeLabel.textContent = 'Start Time'
-  
+
   const startRipple = document.createElement('div')
   startRipple.className = 'mdc-line-ripple'
 
@@ -817,14 +785,14 @@ function showScheduleUI(schedule, scheduleList) {
   endTimeInputs.className = 'endTimeInputs'
 
   const scheduleEndDate = document.createElement('div')
-  scheduleEndDate.classList.add('mdc-text-field','endDate')
+  scheduleEndDate.classList.add('mdc-text-field', 'endDate')
 
   const scheduleEndDateInput = document.createElement('input')
   scheduleEndDateInput.type = 'date'
   scheduleEndDateInput.classList.add('mdc-text-field__input', 'border-bottom--none')
 
   const scheduleEndTime = document.createElement('div')
-  scheduleEndTime.classList.add('mdc-text-field','endTime')
+  scheduleEndTime.classList.add('mdc-text-field', 'endTime')
 
   const scheduleEndTimeInput = document.createElement('input')
   scheduleEndTimeInput.type = 'time'
@@ -833,7 +801,7 @@ function showScheduleUI(schedule, scheduleList) {
   if (schedule.endTime) {
     scheduleEndDateInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DD'))
     scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('HH:mm'))
-  } 
+  }
 
   const endDateLabel = document.createElement('label')
   endDateLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
@@ -1818,22 +1786,20 @@ function createScheduleContainer() {
 function createInput(key, type, classtype, value) {
   const mainTextField = document.createElement('div')
   mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype} attachment--text-field`
-  
+
   mainTextField.dataset.key = key
   mainTextField.dataset.type = type
   mainTextField.id = key.replace(/\s/g, '')
   const mainInput = document.createElement('input')
   mainInput.className = 'mdc-text-field__input'
-  
-  if(type === 'string' && key !== "Name"){
-     mainTextField.classList.add('attachment--string-input-active')
+
+  if (type === 'string' && key !== "Name") {
+    mainTextField.classList.add('attachment--string-input-active')
   }
 
   if (type === 'moment.HTML5_FMT.TIME') {
     mainInput.type = 'time'
-  }
-
-  else {
+  } else {
     mainInput.type = 'text'
   }
 
@@ -1841,8 +1807,7 @@ function createInput(key, type, classtype, value) {
     mainInput.disabled = value
     mainInput.style.borderBottom = 'none'
     mainInput.placeholder = 'select ' + key
-  }
-  else {
+  } else {
     mainInput.placeholder = key
   }
 
@@ -1876,7 +1841,7 @@ function getSelectedSubscriptionData(office, template) {
           name: name,
           startTime: '',
           endTime: ''
-        },document.querySelector('.activity--schedule-container'))
+        }, document.querySelector('.activity--schedule-container'))
       });
 
       // [...document.querySelectorAll('.startTimeInputs')].forEach(function (li) {
@@ -1946,8 +1911,8 @@ function getSelectedSubscriptionData(office, template) {
       })
       if (!record.attachment) return
       createAttachmentContainer(record.attachment, 'create-activity--container', true, false, office, template)
-  
-  
+
+
     }
   }
 }
@@ -2001,7 +1966,10 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
 
       div.appendChild(createInput(key, attachment[key].type, 'attachment', true))
       addButtonName.onclick = function (evt) {
-        renderTemplateNameSelector(evt, {template:template,office:office}, key)
+        renderTemplateNameSelector(evt, {
+          template: template,
+          office: office
+        }, key)
       }
     }
 
@@ -2013,8 +1981,8 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
 
     if (attachment[key].type === 'weekday') {
       div.appendChild(label)
-      
-      div.appendChild(createSelectMenu(key,attachment[key].type, 'attachment'))
+
+      div.appendChild(createSelectMenu(key, attachment[key].type, 'attachment'))
     }
 
     attachCont.appendChild(div)
@@ -2023,14 +1991,14 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   })
   document.getElementById(target).appendChild(attachCont);
 
-  [...document.querySelectorAll('.attachment--string-input-active')].forEach(function(field){
+  [...document.querySelectorAll('.attachment--string-input-active')].forEach(function (field) {
     getInputText(field.id).value = ''
   })
 
   const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
   select.listen('change', () => {
-  select['root_'].dataset.value = select.value
-});
+    select['root_'].dataset.value = select.value
+  });
 }
 
 function reinitCount(db, id) {
@@ -2050,7 +2018,7 @@ function titleCase(str) {
   return str.join(' ')
 }
 
-function createSelectMenu(key,type,className){
+function createSelectMenu(key, type, className) {
   const div = document.createElement('div')
   div.className = `mdc-select  ${className}`
   div.id = type
@@ -2058,15 +2026,15 @@ function createSelectMenu(key,type,className){
   div.dataset.key = key
   const select = document.createElement('select')
   select.className = 'mdc-select__native-control'
-  
-  const weekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-  
-  for(var i=0; i <weekdays.length;i++){
-    
+
+  const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+  for (var i = 0; i < weekdays.length; i++) {
+
     const option = document.createElement('option')
     option.value = weekdays[i]
     option.textContent = weekdays[i]
-    if(i ===1) {
+    if (i === 1) {
       div.dataset.value = weekdays[i]
       option.selected = true
     }
@@ -2103,28 +2071,28 @@ function createUpdateReqBody(event, reqType) {
     console.log(startTime)
     console.log(endTime.length)
 
-    if(startTime == " " && endTime == " ") {
-      
+    if (startTime == " " && endTime == " ") {
+
       allow = true
     }
 
-    if(startTime !== " " && endTime == " ") {
+    if (startTime !== " " && endTime == " ") {
       snacks('Add a valid End Time')
       allow = false
     }
 
-    if(endTime !== " " && startTime == " ") {
+    if (endTime !== " " && startTime == " ") {
       snacks('Add a valid Start Time')
       allow = false
     }
 
-    if(startTime && endTime && moment(endTime).valueOf() < moment(startTime).valueOf()) {
+    if (startTime && endTime && moment(endTime).valueOf() < moment(startTime).valueOf()) {
       snacks('End time cannot be before Start time')
       allow = false
     }
-    
+
     scheduleBody.startTime = moment(startTime).valueOf() || ''
-    scheduleBody.endTime = moment(endTime).valueOf()  || ''
+    scheduleBody.endTime = moment(endTime).valueOf() || ''
     schedule.push(scheduleBody)
 
   })
@@ -2138,10 +2106,9 @@ function createUpdateReqBody(event, reqType) {
     venueBody.venueDescriptor = li.dataset.descrip
     venueBody.location = li.dataset.location === 'undefined' ? '' : li.dataset.location
     venueBody.address = li.dataset.address || ''
-    if(!parseInt(li.dataset.inputlat) || !parseInt(li.dataset.inputlon)) {
-      geopoint =  ''
-    }
-    else {
+    if (!parseInt(li.dataset.inputlat) || !parseInt(li.dataset.inputlon)) {
+      geopoint = ''
+    } else {
       geopoint.latitude = parseInt(li.dataset.inputlat)
       geopoint.longitude = parseInt(li.dataset.inputlon)
     }
@@ -2153,7 +2120,7 @@ function createUpdateReqBody(event, reqType) {
   const attachments = {}
   const allAttachments = document.querySelectorAll('.attachment');
   [...allAttachments].forEach(function (field) {
-    
+
     attachments[field.dataset.key] = {
       value: field.id === 'weekday' ? field.dataset.value : getInputText(field.id).value,
       type: field.dataset.type
@@ -2162,7 +2129,7 @@ function createUpdateReqBody(event, reqType) {
     console.log(attachments)
   })
 
-  if(!allow) return
+  if (!allow) return
 
   if (reqType === 'edit') {
     const body = {
@@ -2197,4 +2164,3 @@ function createUpdateReqBody(event, reqType) {
     return
   }
 }
-

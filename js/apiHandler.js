@@ -878,10 +878,10 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          // if (response.from === response.upto) {
-          //   return
-          // }
-          successResponse(dummy)
+          if (response.from === response.upto) {
+            return
+          }
+          successResponse(response)
         })
         .catch(console.log)
     }

@@ -5,7 +5,6 @@ body {
 #login-container {
     top: 10rem;
     position: relative;
-
 }
 
 .app {
@@ -19,8 +18,8 @@ body {
 .panel-card {
     width: 100vw;
     min-height: 100vh;
-
 }
+
 .activity--chat-card-container.panel-card {
     min-height: auto;
 }
@@ -57,20 +56,19 @@ body {
 #chat-container .comment-box {
     width: 63%;
     padding: 10px;
-    margin:5px 10px 5px 20px;
+    margin: 5px 10px 5px 20px;
     display: inline-block;
     position: relative;
     border-radius: 12px;
 }
+
 #chat-container .comment-box:nth-child(1) {
     margin-top: 20px;
 }
 
-
 .comment-box .talktext .user-name--comment {
     font-size: 12px;
     font-weight: 500;
-
 }
 
 .comment-box .talktext .comment {
@@ -79,7 +77,6 @@ body {
     font-size: 14px;
     line-height: 17px;
     text-align: left;
-
 }
 
 .comment-box .talktext span {
@@ -90,8 +87,9 @@ body {
 
 .current-user--comment {
     float: right;
-    background-color:hsl(206, 92%, 70%) !important;
+    background-color: hsl(206, 92%, 70%) !important;
 }
+
 .current-user--comment .user-map--span {
     color: black !important;
 }
@@ -107,7 +105,7 @@ body {
 }
 
 .other-user--comment .user-map--span {
-    color:white !important;
+    color: white !important;
 }
 
 .comment--container {
@@ -245,7 +243,7 @@ body {
 
 #venue--list li {
     display: table;
-    padding-left:0px;
+    padding-left: 0px;
 }
 
 .add--assignee-icon {
@@ -261,8 +259,9 @@ body {
 
 #share-btn {
     cursor: pointer;
-    margin-top:-5px;
+    margin-top: -5px;
 }
+
 #share-btn .mdc-fab__icon {
     font-size: 20px;
 }
@@ -320,14 +319,11 @@ body {
     margin-top: 10px;
 }
 
-
 .remove {
     position: absolute;
     right: 0;
     top: 50%
 }
-
-
 
 .profile--icon-small {
     width: 40px;
@@ -350,6 +346,7 @@ body {
     padding: 5px 5px 5px 40px;
     font-size: 15px;
 }
+
 .comment-header-primary .mdc-list-item__secondary-text {
     margin-top: -5px;
     color: white;
@@ -391,7 +388,6 @@ body {
 #email--change-container {
     padding-bottom: 20px;
 }
-
 
 #change--number-container {
     display: table;
@@ -448,6 +444,7 @@ body {
 .activity--venue-container {
     min-height: 200px;
 }
+
 .activity--venue-container li {
     display: table;
     padding-left: 0px;
@@ -462,6 +459,7 @@ body {
     min-height: 80vh;
     background-color: white !important;
 }
+
 footer.mdc-dialog__footer {
     background-color: white;
 }
@@ -476,7 +474,9 @@ footer.mdc-dialog__footer {
     height: initial;
 }
 
-#change-number-dialog .mdc-dialog__footer button , #location-select-dialog .mdc-dialog__footer button, #officeTemplate-select-dialog .mdc-dialog__footer button {
+#change-number-dialog .mdc-dialog__footer button,
+#location-select-dialog .mdc-dialog__footer button,
+#officeTemplate-select-dialog .mdc-dialog__footer button {
     color: #44a3eb
 }
 
@@ -495,7 +495,6 @@ footer.mdc-dialog__footer {
     right: 50%;
     top: 50%;
 }
-
 
 @-webkit-keyframes spin {
     0% {
@@ -524,11 +523,16 @@ footer.mdc-dialog__footer {
     position: relative;
     margin-top: 10px;
 }
-#assignee--list li .mdc-list-item__text{
-margin-top: 13px;
+
+#assignee--list li .mdc-list-item__text {
+    margin-top: 13px;
 }
-#assignee--list  li {
+
+#assignee--list li {
     padding-left: 0px;
+}
+#assignee--list img {
+    object-fit: cover;
 }
 
 .no-click {
@@ -538,8 +542,8 @@ margin-top: 13px;
 .map-select-type {
     float: right;
     padding-right: 0px;
-
 }
+
 .map-select-type div {
     margin: 0px !important;
 }
@@ -595,9 +599,9 @@ margin-top: 13px;
 }
 
 #refresh-login {
-    width:85vw !important;
-    display:table !important;
-    margin:  0 auto !important;
+    width: 85vw !important;
+    display: table !important;
+    margin: 0 auto !important;
 }
 
 #change-number--menu {
@@ -611,7 +615,8 @@ margin-top: 13px;
 #refresh-login .firebaseui-card-content {
     padding: 0px 10px !important;
 }
-#refresh-login  .firebaseui-card-header h1 {
+
+#refresh-login .firebaseui-card-header h1 {
     font-size: 16px !important;
     text-align: center !important;
 }
@@ -619,28 +624,31 @@ margin-top: 13px;
 #refresh-login .firebaseui-card-footer {
     display: none !important;
 }
+
 #ui-auth {
     padding-top: 20px;
 }
 
 .activity--list-item {
     padding-top: 10px;
+    padding-bottom: 10px;
 }
+
 .activity--list-item .mdc-list-item__meta {
     min-width: 80px;
     text-align: right;
 }
 
-
-.activity-detail-page, #create-activity--container {
+.activity-detail-page,
+#create-activity--container {
     padding-left: 20px;
     padding-right: 20px;
-
 }
 
 .activity--share-container {
     padding-top: 25px !important;
 }
+
 .activity--venue-container {
     padding-bottom: 30px;
 }
@@ -655,8 +663,9 @@ margin-top: 13px;
 }
 
 .select-office-span {
-    color : #598aeb !important
+    color: #598aeb !important
 }
+
 .add--officeTemplate-icon {
     width: 30px;
     height: 30px;
@@ -674,7 +683,7 @@ margin-top: 13px;
 
 .start-transition {
     border-radius: 0%;
-    box-shadow: 0 0 0 99999px rgba(0,0,0,.54);
+    box-shadow: 0 0 0 99999px rgba(0, 0, 0, .54);
     position: relative;
     z-index: 9999;
     pointer-events: auto;
@@ -690,33 +699,37 @@ margin-top: 13px;
 }
 
 #officeTemplate--container {
-    padding-left:20px;
+    padding-left: 20px;
 }
+
 #officeTemplate--container li {
     padding: 20px 0px 20px 0px
 }
 
 #officeTemplate--text-field {
-
     margin-top: 20px;
     display: table;
-    margin:  0 auto;
+    margin: 0 auto;
 }
 
-#attachment-container {
-}
+#attachment-container {}
+
 #attachment-container .label--text {
-    color : #598aeb !important;
+    color: #598aeb !important;
 }
-.attachment-field{
-    margin:20px 0px 15px 0px;
+
+.attachment-field {
+    margin: 20px 0px 15px 0px;
 }
+
 .attachment input {
-    padding-top:0px;
+    padding-top: 0px;
 }
+
 .attachment {
-    margin-top:0px;
+    margin-top: 0px;
 }
+
 .transition-blur {
     filter: blur(5px)
 }
@@ -728,9 +741,11 @@ margin-top: 13px;
     padding: 14px 30px 10px 30px;
     margin: 35px 0px 20px 0px;
 }
+
 .profile-psuedo-card .mdc-text-field {
     width: 80%;
 }
+
 .profile-psuedo-card label {
     padding: 0;
     margin-bottom: 14px;
@@ -742,15 +757,15 @@ margin-top: 13px;
     padding-top: 0px;
     padding-bottom: 10px;
 }
+
 .start-calendar-transition {
     filter: blur(15px);
     animation: ease;
 }
 
 #officeTemplate-select-dialog .mdc-dialog__header {
-margin-top: 20px;
+    margin-top: 20px;
 }
-
 
 .change--number-check {
     font-size: 32px !important;
@@ -758,11 +773,10 @@ margin-top: 20px;
     right: 73px;
 }
 
-
 .change-number--info {
-    width:100vw;
-
+    width: 100vw;
 }
+
 .activity-row--date {
     margin: 0 auto;
     width: 77%;
@@ -770,19 +784,21 @@ margin-top: 20px;
     padding-right: 10px;
     margin-left: -34px;
 }
+
 .activity-row--date .activity--list-item {
     padding-bottom: 25px;
-    margin-top:5px;
-    margin-bottom:5px
+    margin-top: 5px;
+    margin-bottom: 5px
 }
 
 .activity-row--date .mdc-list-item__meta {
-    margin-top:14px;
+    margin-top: 14px;
 }
 
-input[type="datetime-local"]{
+input[type="datetime-local"] {
     font-size: 11px;
 }
+
 .venue--name-label {
     float: left;
 }
@@ -790,21 +806,25 @@ input[type="datetime-local"]{
 .mdc-fab-location {
     float: right;
     width: 30px;
-    height:30px;
+    height: 30px;
 }
 
 .activity--share-container {
     display: table;
-    width:100%
+    width: 100%
 }
+
 .schedule--show-table {
-    width:100%;
+    width: 100%;
     text-align: left;
     margin-top: 15px;
 }
-.schedule--show-table .row-main , .schedule--time {
+
+.schedule--show-table .row-main,
+.schedule--time {
     text-align: center
 }
+
 .schedule-label {
     font-weight: normal;
 }
@@ -816,28 +836,31 @@ input[type="datetime-local"]{
 
 .activity--detail--section {
     margin: 10px 0px 10px 0px;
-    padding:10px 0px 10px 0px ;
-
+    padding: 10px 0px 10px 0px;
 }
-.activity--update--text{
-    margin-top:5px;
+
+.activity--update--text {
+    margin-top: 5px;
     margin-bottom: 0px;
 }
+
 .activity--detail--section.activity--detail--section-status {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     margin-top: 25px;
     margin-bottom: 20px;
 }
+
 .activity--detail--section .venue--list .detail--static-text {
     margin-bottom: -25px;
 }
-.attachment-field .attachment.attachment--text-field {
-    height:40px;
-    margin-top:0px;
 
+.attachment-field .attachment.attachment--text-field {
+    height: 40px;
+    margin-top: 0px;
 }
+
 .attachment-selector-label {
-    margin-top:0px;
+    margin-top: 0px;
 }
 
 .mdc-fab .mdc-fab__icon {
@@ -849,6 +872,12 @@ input[type="datetime-local"]{
     margin-top: 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
+
 .schedule--show-table tr {
     height: 30px;
+}
+
+.display-activity-name {
+    padding-left: 36px;
+    margin-top: 11px;
 }
