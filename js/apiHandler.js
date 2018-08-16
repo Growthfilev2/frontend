@@ -678,6 +678,8 @@ function successResponse(read) {
 
       putAttachment(db, activity)
     })
+    
+    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
 
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
@@ -700,6 +702,49 @@ function successResponse(read) {
 
 function notUpdateUserObjectStore(errorUrl) {
   console.log(errorUrl)
+}
+
+function getUniqueOfficeCount() {
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  let officeCount = 0
+  return new Promise(function(resolve,reject){
+
+    req.onsuccess = function () {
+      const db = req.result
+      const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
+      activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) {
+          resolve({dbName:dbName, count:officeCount})   
+          return
+        }
+        officeCount++
+        cursor.continue()
+      }
+    }
+    req.onerror = function(event){
+      reject(event.error)
+    }
+  })
+}
+
+function setUniqueOffice(data){
+  const req = indexedDB.open(data.dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+    rootObjectStore.get(data.dbName).onsuccess = function(event){
+      const record = event.target.result
+      if(data.count === 1) {
+        record.hasMultipleOffice = 0
+        rootObjectStore.put(record)
+        return
+      }
+      record.hasMultipleOffice = 1
+      rootObjectStore.put(record)
+    }
+  }
 }
 
 const dummy = {

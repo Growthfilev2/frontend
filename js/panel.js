@@ -14,15 +14,17 @@ function listView() {
     const db = req.result
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
+    let hasMultipleOffice = ''
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.view = 'list'
+      hasMultipleOffice = record.hasMultipleOffice
       rootObjectStore.put(record)
+      rootTx.oncomplete =  fetchDataForActivityList(db,hasMultipleOffice)
     }
-    rootTx.oncomplete = findUniqueOffice().then(function (unique) {
-      console.log(unique)
-      fetchDataForActivityList(db, unique)
-    }).catch(console.log)
+ 
+     
+   
   }
   sendCurrentViewNameToAndroid('listView')
 }
@@ -35,7 +37,6 @@ function fetchDataForActivityList(db, uniqueOffice) {
 
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
-  const activityRecordsCount = activityObjectStore.count()
 
   activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
@@ -214,7 +215,6 @@ function activityListUI(data, uniqueOffice, count) {
   metaTextContainer.appendChild(metaTextActivityStatus)
 
   li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
-  // document.getElementById(target).innerHTML += li.outerHTML
   return li.outerHTML
 }
 
@@ -286,8 +286,9 @@ function createMapPanel() {
   mapParent.id = 'map-view--container'
   mapParent.className = 'mdc-top-app-bar--fixed-adjust'
 
-  const mapList = document.createElement('div')
+  const mapList = document.createElement('ul')
   mapList.id = 'list-view--map'
+  mapList.className ='mdc-list mdc-list--two-line mdc-list--avatar-list'
   const map = document.createElement('div')
   map.id = 'map'
   mapParent.appendChild(map)
@@ -361,20 +362,25 @@ function displayMapActivity(dbName, markerActivityId) {
   req.onsuccess = function () {
     const db = req.result
     let mapActivityDom = ''
+    let unique = ''
+    const rootObjectStore = db.transaction('root').objectStore('root')
+    rootObjectStore.get(dbName).onsuccess = function(event){
+      unique = event.target.result.hasMultipleOffice
+    }
     const setMarker = [...new Set(markerActivityId)]
     console.log(setMarker)
-    findUniqueOffice().then(function (unique) {
       setMarker.forEach(function (id) {
         console.log(id)
         const activityObjectStore = db.transaction('activity').objectStore('activity')
+        
         activityObjectStore.get(id).onsuccess = function (event) {
           const record = event.target.result
-          createActivityList(db, record, unique).then(function (li) {
-            mapActivityDom += li
-          })
+          
+            createActivityList(db, record, unique).then(function (li) {
+              mapActivityDom += li
+            })
         }
       })
-    }).catch(console.log)
     setTimeout(function () {
       document.getElementById('list-view--map').innerHTML = mapActivityDom
     }, 50)
@@ -435,24 +441,28 @@ function fetchCalendarData() {
     const db = request.result
     const calendarObjectStore = db.transaction('calendar', 'readonly').objectStore('calendar')
     const calendarDateIndex = calendarObjectStore.index('date')
-
     const today = moment().format('YYYY-MM-DD')
     console.log(today)
+    const rootObjectStore = db.transaction('root').objectStore('root')
+    let unique = ''
+    rootObjectStore.get(dbName).onsuccess = function (event) {
+      unique = event.target.result.hasMultipleOffice
+    }
 
     calendarDateIndex.get(today).onsuccess = function (event) {
       const record = event.target.result
       if (!record) {
-        findUniqueOffice().then(function (unique) {
+        
           const req = indexedDB.open(firebase.auth().currentUser.uid)
           req.onsuccess = function () {
             const db = req.result
             calendarViewUI('afterToday', db, {
               date: today
-            })
+            },unique)
           }
-        }).catch(console.log)
+     
       }
-      insertDatesAfterToday(today)
+      insertDatesAfterToday(db,calendarDateIndex,today)
     }
   }
 
@@ -461,13 +471,12 @@ function fetchCalendarData() {
   }
 }
 
-function insertDatesAfterToday(today) {
-  findUniqueOffice().then(function (unique) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result
-      const calendarObjectStore = db.transaction('calendar', 'readonly').objectStore('calendar')
-      const calendarDateIndex = calendarObjectStore.index('date')
+function insertDatesAfterToday(db,calendarDateIndex,today) {
+  const rootObjectStore = db.transaction('root').objectStore('root')
+  let unique= ''
+  rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+    unique = event.target.result.hasMultipleOffice
+  }
       const lowerKeyRange = IDBKeyRange.lowerBound(today)
       calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
         const cursor = event.target.result
@@ -479,9 +488,7 @@ function insertDatesAfterToday(today) {
         }
       }
     }
-  }).catch(console.log)
-}
-
+ 
 function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
 
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
@@ -511,6 +518,7 @@ function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
 
 
 function calendarViewUI(target, db, data, unique) {
+  console.log(unique)
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
     dateDiv.id = data.date
@@ -1143,34 +1151,7 @@ function removeDom(selector) {
   target.innerHTML = ''
 }
 
-function findUniqueOffice() {
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  let officeCount = 0
-  return new Promise(function (resolve, reject) {
-    req.onsuccess = function () {
-      const db = req.result
-      const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
-      activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) {
-          if (officeCount === 1) {
-            resolve(false)
-            return
-          }
 
-          resolve(true)
-          return
-        }
-        officeCount++
-        cursor.continue()
-      }
-    }
-    req.onerror = function (event) {
-      reject(event.error)
-    }
-  })
-}
 
 function snacks(message) {
   const snack = document.createElement('div')

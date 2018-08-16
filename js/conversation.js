@@ -19,6 +19,7 @@ function conversation(id) {
       rootObjectStore.put(record)
 
     }
+    
 
     commentPanel(id)
     createHeaderContent(db, id)
@@ -174,6 +175,9 @@ function readNameFromNumber(db, number) {
 }
 
 function createHeaderContent(db, id) {
+
+  
+
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   const leftDiv = document.createElement('div')
 
@@ -192,11 +196,13 @@ function createHeaderContent(db, id) {
 
     const primarySpan = document.createElement('div')
     primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2'
-    primarySpan.textContent = record.title
+    primarySpan.textContent = record.activityName
 
     const secondarySpan = document.createElement('span')
     secondarySpan.className = 'mdc-list-item__secondary-text'
     secondarySpan.textContent = record.office
+
+
 
     primarySpan.appendChild(secondarySpan)
     leftDiv.appendChild(backSpan)
