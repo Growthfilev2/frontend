@@ -205,11 +205,12 @@ function initializeIDB() {
             const record = event.target.result
             record.serverTime = timestamp
             rootObjectStore.put(record)
+            rootTx.oncomplete = function () {
+              requestHandlerResponse('notification', 200, 'IDB created', request.result.name)
+              resolve(auth.uid)
+            }
           }
-          rootTx.oncomplete = function () {
-            requestHandlerResponse('notification', 200, 'IDB created', request.result.name)
-            resolve(auth.uid)
-          }
+       
         })
         return
       }
@@ -220,10 +221,11 @@ function initializeIDB() {
         const record = event.target.result
         record.view = 'list'
         rootObjectStore.put(record)
+        rootTxView.oncomplete = function(){
+          requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+        }
       }
-      rootTxView.oncomplete = function(){
-        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-      }
+      
 
       fetchServerTime().then(function (timestamp) {
         const rootTx = request.result.transaction('root', 'readwrite')
@@ -232,11 +234,12 @@ function initializeIDB() {
           const record = event.target.result
           record.serverTime = timestamp
           rootObjectStore.put(record)
+          rootTx.oncomplete = function () {
+            requestHandlerResponse('notification', 200, 'server time added', request.result.name)
+            resolve(auth.uid)
+          }
         }
-        rootTx.oncomplete = function () {
-          requestHandlerResponse('notification', 200, 'server time added', request.result.name)
-          resolve(auth.uid)
-        }
+        
       })
     }
   })
