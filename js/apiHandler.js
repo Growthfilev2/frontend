@@ -197,7 +197,7 @@ function initializeIDB() {
     }
 
     request.onsuccess = function () {
-      if(!hasFirstView) {
+      if (!hasFirstView) {
         fetchServerTime().then(function (timestamp) {
           const rootTx = request.result.transaction('root', 'readwrite')
           const rootObjectStore = rootTx.objectStore('root')
@@ -205,42 +205,33 @@ function initializeIDB() {
             const record = event.target.result
             record.serverTime = timestamp
             rootObjectStore.put(record)
-            rootTx.oncomplete = function () {
-              requestHandlerResponse('notification', 200, 'IDB created', request.result.name)
-              resolve(auth.uid)
-            }
           }
-       
+          return resolve(auth.uid)
         })
-        return
-      }
+    }
 
-     const rootTxView =  request.result.transaction('root', 'readwrite')
+      const rootTxView = request.result.transaction('root', 'readwrite')
       const rootObjectStore = rootTxView.objectStore('root')
       rootObjectStore.get(auth.uid).onsuccess = function (event) {
         const record = event.target.result
         record.view = 'list'
         rootObjectStore.put(record)
-        rootTxView.oncomplete = function(){
-          requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-        }
-      }
-      
+        // rootTxView.oncomplete = function(){
+        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
 
-      fetchServerTime().then(function (timestamp) {
-        const rootTx = request.result.transaction('root', 'readwrite')
-        const rootObjectStore = rootTx.objectStore('root')
-        rootObjectStore.get(auth.uid).onsuccess = function (event) {
-          const record = event.target.result
-          record.serverTime = timestamp
-          rootObjectStore.put(record)
-          rootTx.oncomplete = function () {
+        fetchServerTime().then(function (timestamp) {
+          const rootTx = request.result.transaction('root', 'readwrite')
+          const rootObjectStore = rootTx.objectStore('root')
+          rootObjectStore.get(auth.uid).onsuccess = function (event) {
+            const record = event.target.result
+            record.serverTime = timestamp
+            rootObjectStore.put(record)
             requestHandlerResponse('notification', 200, 'server time added', request.result.name)
-            resolve(auth.uid)
           }
-        }
-        
-      })
+
+          resolve(auth.uid)
+        })
+      }
     }
   })
 }
@@ -560,8 +551,8 @@ function readNonUpdatedAssignee(db) {
         })
         return
       }
-
-      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+      console.log(cursor.value.mobile)
+      const assigneeFormat = `%2B${cursor.value.mobile}?q=`
       assigneeString += `${assigneeFormat.replace('+', '')}`
       cursor.continue()
     }
@@ -681,7 +672,7 @@ function successResponse(read) {
 
       putAttachment(db, activity)
     })
-    
+
     getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
 
     read.templates.forEach(function (subscription) {
@@ -711,7 +702,7 @@ function getUniqueOfficeCount() {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
 
     req.onsuccess = function () {
       const db = req.result
@@ -719,27 +710,30 @@ function getUniqueOfficeCount() {
       activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
-          resolve({dbName:dbName, count:officeCount})   
+          resolve({
+            dbName: dbName,
+            count: officeCount
+          })
           return
         }
         officeCount++
         cursor.continue()
       }
     }
-    req.onerror = function(event){
+    req.onerror = function (event) {
       reject(event.error)
     }
   })
 }
 
-function setUniqueOffice(data){
+function setUniqueOffice(data) {
   const req = indexedDB.open(data.dbName)
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-    rootObjectStore.get(data.dbName).onsuccess = function(event){
+    rootObjectStore.get(data.dbName).onsuccess = function (event) {
       const record = event.target.result
-      if(data.count === 1) {
+      if (data.count === 1) {
         record.hasMultipleOffice = 0
         rootObjectStore.put(record)
         return
