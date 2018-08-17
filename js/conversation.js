@@ -1981,6 +1981,8 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
       photoField.className = 'mdc-text-field'
       const fileInput = document.createElement("input")
       fileInput.type = 'file'
+      fileInput.accept = "image/*"
+      fileInput.capture = 'camera'
       fileInput.addEventListener('change',readCameraFile)
       photoField.appendChild(fileInput)
 
