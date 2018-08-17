@@ -1,5 +1,5 @@
 // Initialize the firebase application
-// registerServiceWorker()
+registerServiceWorker()
 
 firebase.initializeApp({
   apiKey: "AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo",

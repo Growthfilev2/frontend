@@ -164,7 +164,7 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
 }
 
 function fetchCurrentTime (serverTime) {
-    return Date.now() +(serverTime - Date.now())
+    return Date.now() + serverTime
 }
 
 function fetchCurrentLocation () {

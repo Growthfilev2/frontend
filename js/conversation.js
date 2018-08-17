@@ -1173,13 +1173,13 @@ function renderTemplateNameSelector(evt, record, key) {
 
 function initializeDialogTemplateName(evt, input, params) {
   getInputText(input).value = ''
-
+  console.log(params)
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#children-name'))
   dialog.listen('MDCDialog:accept', function () {
     const name = getInputText(input)['root_'].dataset.name
-    getInputText(params.actionInput).value = name
-    getInputText(params.actionInput)['root_'].style.height = '40px'
-    getInputText(params.actionInput)['root_'].style.marginTop = '0px'
+    getInputText(params.actionInput.replace(/\s/g, '')).value = name
+    getInputText(params.actionInput.replace(/\s/g, ''))['root_'].style.height = '40px'
+    getInputText(params.actionInput.replace(/\s/g, ''))['root_'].style.marginTop = '0px'
 
     document.getElementById('children-name').remove()
   })
@@ -1194,22 +1194,21 @@ function initializeDialogTemplateName(evt, input, params) {
 
 function childrenNames(cursor, target, input) {
   console.log(cursor)
-  if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
 
   const li = document.createElement('li')
-  li.dataset.name = cursor.value.template
+  li.dataset.name = cursor.value.attachment.Name.value
   li.classList.add('mdc-list-item', 'combo-li')
 
   const liText = document.createElement('span')
   liText.classList.add('mdc-list-item__text')
-  liText.textContent = cursor.value.template
+  liText.textContent = cursor.value.attachment.Name.value
 
   console.log(target)
   li.appendChild(liText)
 
   document.getElementById(target).appendChild(li)
 
-  dataElement('name', cursor.value.template).addEventListener('click', function () {
+  dataElement('name', cursor.value.attachment.Name.value).addEventListener('click', function () {
     getInputText(input).value = ''
     getInputText(input)['root_'].dataset.name = this.dataset.name
     // getInputText(input)['root_'].dataset.template = this.dataset.template
@@ -1918,6 +1917,15 @@ function getSelectedSubscriptionData(office, template) {
 }
 
 function createAttachmentContainer(attachment, target, canEdit, value, office, template) {
+
+  const availTypes = {
+    'phoneNumber': '',
+    'weekday':'',
+    'moment.HTML5_FMT.TIME' :'' ,
+    'string':'',
+    'photoURL': ''
+  }
+
   if (document.getElementById('attachment-container')) {
     document.getElementById('attachment-container').remove()
   }
@@ -1954,25 +1962,6 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
       }
     }
 
-    if (key === 'Name') {
-      const addButtonName = document.createElement('label')
-      addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-      const spanName = document.createElement('span')
-      spanName.className = 'mdc-fab__icon material-icons'
-      spanName.textContent = 'add'
-      addButtonName.appendChild(spanName)
-      div.appendChild(addButtonName);
-      div.appendChild(label)
-
-      div.appendChild(createInput(key, attachment[key].type, 'attachment', true))
-      addButtonName.onclick = function (evt) {
-        renderTemplateNameSelector(evt, {
-          template: template,
-          office: office
-        }, key)
-      }
-    }
-
     if (attachment[key].type == 'moment.HTML5_FMT.TIME') {
       div.appendChild(label)
 
@@ -1985,10 +1974,42 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
       div.appendChild(createSelectMenu(key, attachment[key].type, 'attachment'))
     }
 
+    if(attachment[key].type === 'photoURL'){
+      div.appendChild(label)
+
+      const photoField = document.createElement("div")
+      photoField.className = 'mdc-text-field'
+      const fileInput = document.createElement("input")
+      fileInput.type = 'file'
+      fileInput.addEventListener('change',readCameraFile)
+      photoField.appendChild(fileInput)
+
+      div.appendChild(photoField)
+    }
+    
+    if (!availTypes.hasOwnProperty(attachment[key].type)) {
+      const addButtonName = document.createElement('label')
+      addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
+      const spanName = document.createElement('span')
+      spanName.className = 'mdc-fab__icon material-icons'
+      spanName.textContent = 'add'
+      addButtonName.appendChild(spanName)
+      div.appendChild(addButtonName);
+      div.appendChild(label)
+
+      div.appendChild(createInput(key, attachment[key].type, 'attachment', true))
+      addButtonName.onclick = function (evt) {
+        console.log(attachment[key].type)
+        renderTemplateNameSelector(evt, {
+          template: attachment[key].type,
+          office: office
+        }, key)
+      }
+    }
     attachCont.appendChild(div)
 
-
   })
+
   document.getElementById(target).appendChild(attachCont);
 
   [...document.querySelectorAll('.attachment--string-input-active')].forEach(function (field) {
@@ -1999,6 +2020,17 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   select.listen('change', () => {
     select['root_'].dataset.value = select.value
   });
+}
+
+function readCameraFile(){
+  console.log(this)
+  if(!this.files[0]) return
+  const fileReader = new FileReader();
+  fileReader.addEventListener('load',function(e){
+    console.log(e.target.result)
+  })
+  fileReader.readAsDataURL(this.files[0])
+  
 }
 
 function reinitCount(db, id) {

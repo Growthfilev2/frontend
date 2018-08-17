@@ -93,7 +93,6 @@ function http(method, url, data) {
 
 function fetchServerTime() {
   return new Promise(function (resolve) {
-
     http(
       'GET',
       `${apiUrl}now`,
@@ -203,12 +202,15 @@ function initializeIDB() {
           const rootObjectStore = rootTx.objectStore('root')
           rootObjectStore.get(auth.uid).onsuccess = function (event) {
             const record = event.target.result
-            record.serverTime = timestamp
+            record.serverTime = timestamp - Date.now()
             rootObjectStore.put(record)
           }
-          return resolve(auth.uid)
+           resolve(auth.uid)
         })
+        return;
     }
+    
+    requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
 
       const rootTxView = request.result.transaction('root', 'readwrite')
       const rootObjectStore = rootTxView.objectStore('root')
@@ -216,21 +218,21 @@ function initializeIDB() {
         const record = event.target.result
         record.view = 'list'
         rootObjectStore.put(record)
-        // rootTxView.oncomplete = function(){
-        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-
+          
         fetchServerTime().then(function (timestamp) {
+
           const rootTx = request.result.transaction('root', 'readwrite')
           const rootObjectStore = rootTx.objectStore('root')
           rootObjectStore.get(auth.uid).onsuccess = function (event) {
             const record = event.target.result
-            record.serverTime = timestamp
+            record.serverTime = timestamp - Date.now()
             rootObjectStore.put(record)
             requestHandlerResponse('notification', 200, 'server time added', request.result.name)
           }
 
           resolve(auth.uid)
         })
+
       }
     }
   })
@@ -509,6 +511,7 @@ function putAttachment(db, activity) {
   })
 }
 
+
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
 function putAssignessInStore(db, assigneeArray) {
@@ -686,7 +689,7 @@ function successResponse(read) {
       rootObjectStore.put(record)
     }
 
-    readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
+    // readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
 
@@ -746,7 +749,8 @@ function setUniqueOffice(data) {
 
 const dummy = {
   "addendum": [],
-  "activities": [{
+  "activities": [
+    {
     "canEdit": true,
     "status": "CONFIRMED",
     "schedule": [{
@@ -786,7 +790,7 @@ const dummy = {
     "attachment": {
       "Name": {
         "value": "shikhar",
-        "type": "string"
+        "type": "branch"
       },
       "Employee Contact": {
         "value": "+919999288920",
@@ -812,9 +816,88 @@ const dummy = {
         "value": "Monday",
         "type": "weekday"
       },
+      "Picture" :{
+        "value":"",
+        "type":"photoURL"
+      }
     },
     "activityId": "H4jbVD6KeQeHmkxlkvo9"
-  }],
+  },
+  {
+    "canEdit": true,
+    "status": "CONFIRMED",
+    "schedule": [{
+      "endTime": "2018-06-28T10:04:51.699Z",
+      "startTime": "2018-06-28T09:25:32.304Z",
+      "name": "Shift Timing"
+    }],
+    "venue": [{
+        "venueDescriptor": "Base Location",
+        "geopoint": {
+          "_latitude": 28.5728858,
+          "_longitude": 77.2185796
+        },
+        "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
+        "location": "DUMMY SQUARE"
+      },
+      {
+        "location": "Lodge Residence",
+        "venueDescriptor": "Residence",
+        "geopoint": {
+          "_latitude": 28.5545653,
+          "_longitude": 77.3328355
+        },
+        "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
+      }
+    ],
+    "timestamp": "2018-06-28T09:25:32.304Z",
+    "template": "branch",
+    "activityName": "employee",
+    "office": "dummy",
+    "assignees": [
+      "+918080808080",
+      "+918178135274",
+      "+919090909090",
+      "+919090909091"
+    ],
+    "attachment": {
+      "Name": {
+        "value": "shikhar",
+        "type": "branch"
+      },
+      "Employee Contact": {
+        "value": "+919999288920",
+        "type": "phoneNumber"
+      },
+      "Employee Code": {
+        "value": "123456",
+        "type": "string"
+      },
+      "Department": {
+        "value": "Tech",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "+919899758344",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "+919718392646",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "Monday",
+        "type": "weekday"
+      },
+      "Picture" :{
+        "value":"",
+        "type":"photoURL"
+      }
+    },
+    "activityId": "H4jbVD6KeQeHmkxlkvkl"
+  }
+
+],
   "templates": [{
     "schedule": [
       "Shift Timing"
@@ -826,18 +909,22 @@ const dummy = {
     "template": "employee",
     "office": "dummy",
     "attachment": {
-      "Name": {
+      
+      "Base Location": {
         "value": "",
-        "type": "string"
+        "type": "branch"
       },
+
       "Employee Contact": {
         "value": "",
         "type": "phoneNumber"
       },
+      
       "Employee Code": {
         "value": "",
         "type": "string"
       },
+      
       "Department": {
         "value": "",
         "type": "string"
@@ -854,12 +941,15 @@ const dummy = {
         "value": "",
         "type": "weekday"
       },
+      "Picture":{
+        "value":"",
+        "type":"photoURL"
+      }
     },
   }],
   "from": "1970-01-01T00:00:00.090Z",
   "upto": "2018-07-24T08:05:59.938Z"
 }
-
 
 function updateIDB(dbName) {
   console.log(dbName)
@@ -875,10 +965,10 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          if (response.from === response.upto) {
-            return
-          }
-          successResponse(response)
+          // if (response.from === response.upto) {
+          //   return
+          // }
+          successResponse(dummy)
         })
         .catch(console.log)
     }
