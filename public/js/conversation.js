@@ -1177,7 +1177,13 @@ function initializeDialogTemplateName(evt, input, params) {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#children-name'))
   dialog.listen('MDCDialog:accept', function () {
     const name = getInputText(input)['root_'].dataset.name
-    getInputText(params.actionInput.replace(/\s/g, '')).value = name
+
+    if(!name) {
+      getInputText(params.actionInput.replace(/\s/g, '')).value = ''
+    }
+    else {
+      getInputText(params.actionInput.replace(/\s/g, '')).value = name
+    }
     getInputText(params.actionInput.replace(/\s/g, ''))['root_'].style.height = '40px'
     getInputText(params.actionInput.replace(/\s/g, ''))['root_'].style.marginTop = '0px'
 
@@ -1429,7 +1435,7 @@ function renderOfficeTemplateScreenUI() {
   accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
   accept.type = 'button'
   accept.textContent = 'Select'
-
+  accept.id = 'accept-office-template-selector'
   footer.appendChild(decline)
   footer.appendChild(accept)
 
@@ -1503,10 +1509,15 @@ function initializeDialog(evt, input, params) {
   dialog.listen('MDCDialog:accept', function () {
     const number = []
     number.push(getInputText(input).value)
-
     if (params.actionInput) {
-      console.log(getInputText(params.actionInput))
-      getInputText(params.actionInput).value = number[0]
+      
+      if(!getInputText(input).value) {
+        getInputText(params.actionInput).value = ''
+      }
+      else {
+
+        getInputText(params.actionInput).value = number[0]
+      }
       getInputText(params.actionInput)['root_'].style.height = '40px'
       getInputText(params.actionInput)['root_'].style.marginTop = '0px'
 
@@ -1538,23 +1549,23 @@ function initializeDialogLocation(evt, input, params) {
   getInputText(input).value = ''
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#location-select-dialog'))
   dialog.listen('MDCDialog:accept', function () {
+    
+    
+
     const location = getInputText(input)['root_'].dataset.location
     const address = getInputText(input)['root_'].dataset.address
     const lat = getInputText(input)['root_'].dataset.inputlat
     const lon = getInputText(input)['root_'].dataset.inputlon
 
     if (params.actionInput) {
-      console.log(params.actionInput.primary)
-      console.log(params.actionInput.secondary)
+      getInputText(params.actionInput.primary).value = location || ''
+      getInputText(params.actionInput.secondary).value = address || ''
 
-      getInputText(params.actionInput.primary).value = location
-      getInputText(params.actionInput.secondary).value = address
+      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.location = location || ''
+      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.address = address || ''
 
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.location = location
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.address = address
-
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlat = lat
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlon = lon
+      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlat = lat || ''
+      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlon = lon || ''
 
       document.getElementById('location-select-dialog').remove()
     }
@@ -1570,16 +1581,20 @@ function initializeDialogLocation(evt, input, params) {
 
 function initializeOfficeTemplateDialog(evt, input) {
   getInputText(input).value = ''
-
+  let allow = true
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#officeTemplate-select-dialog'))
+  dialog['footerBtnRipples_'][1]['root_'].disabled = true
+    console.log(dialog)
   dialog.listen('MDCDialog:accept', function () {
+    
     const office = getInputText(input)['root_'].dataset.office
     const template = getInputText(input)['root_'].dataset.template
-    console.log(office)
-    console.log(template)
-    getSelectedSubscriptionData(office, template)
-
-    document.getElementById('officeTemplate-select-dialog').remove()
+    
+    if(office && template){
+    
+      getSelectedSubscriptionData(office, template)
+      document.getElementById('officeTemplate-select-dialog').remove()
+    }
   })
 
   dialog.listen('MDCDialog:cancel', function () {
@@ -1752,6 +1767,7 @@ function officeTemplateCombo(cursor, target, input) {
   li.appendChild(liText)
   document.getElementById(target).appendChild(li)
   dataElement('office', cursor.value.office).addEventListener('click', function () {
+    document.getElementById('accept-office-template-selector').disabled = false;
     getInputText(input).value = ''
     getInputText(input)['root_'].dataset.office = this.dataset.office
     getInputText(input)['root_'].dataset.template = this.dataset.template
@@ -1923,7 +1939,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     'weekday':'',
     'moment.HTML5_FMT.TIME' :'' ,
     'string':'',
-    'photoURL': ''
+    'base64': ''
   }
 
   if (document.getElementById('attachment-container')) {
@@ -1974,19 +1990,22 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
       div.appendChild(createSelectMenu(key, attachment[key].type, 'attachment'))
     }
 
-    if(attachment[key].type === 'photoURL'){
+    if(attachment[key].type === 'base64'){
+      const addCamera = document.createElement('label')
+      addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
+      addCamera.id = 'start_camera'
+      const span = document.createElement('span')
+      span.className = 'mdc-fab__icon material-icons'
+      span.textContent = 'add_a_photo'
+      addCamera.appendChild(span)
+      div.appendChild(addCamera)
+
       div.appendChild(label)
 
-      const photoField = document.createElement("div")
-      photoField.className = 'mdc-text-field'
-      const fileInput = document.createElement("input")
-      fileInput.type = 'file'
-      fileInput.accept = "image/*"
-      fileInput.capture = 'camera'
-      fileInput.addEventListener('change',readCameraFile)
-      photoField.appendChild(fileInput)
-
-      div.appendChild(photoField)
+      const imagePreview = document.createElement('div')
+      imagePreview.className = 'image-preview--attachment'
+      imagePreview.appendChild(createInput(key, attachment[key].type, 'attachment', true))
+      div.appendChild(imagePreview)
     }
     
     if (!availTypes.hasOwnProperty(attachment[key].type)) {
@@ -2022,17 +2041,20 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   select.listen('change', () => {
     select['root_'].dataset.value = select.value
   });
+
+  document.getElementById('start_camera').addEventListener('click', readCameraFile)
 }
 
-function readCameraFile(){
-  console.log(this)
-  if(!this.files[0]) return
-  const fileReader = new FileReader();
-  fileReader.addEventListener('load',function(e){
-    console.log(e.target.result)
-  })
-  fileReader.readAsDataURL(this.files[0])
-  
+function setFilePath(str){
+  const img = document.createElement('img')
+  img.src = `data:image/jpeg;base64,${str}`
+  img.className = 'profile-container--main'
+  document.querySelector('.image-preview--attachment').children[0].remove()
+  document.querySelector('.image-preview--attachment').appendChild(img)
+}
+
+function readCameraFile(){ 
+  FetchCameraForAttachment.startCamera()
 }
 
 function reinitCount(db, id) {
@@ -2058,6 +2080,7 @@ function createSelectMenu(key, type, className) {
   div.id = type
   div.dataset.type = type
   div.dataset.key = key
+  div.dataset.value = ''
   const select = document.createElement('select')
   select.className = 'mdc-select__native-control'
 
@@ -2068,10 +2091,7 @@ function createSelectMenu(key, type, className) {
     const option = document.createElement('option')
     option.value = weekdays[i]
     option.textContent = weekdays[i]
-    if (i === 1) {
-      div.dataset.value = weekdays[i]
-      option.selected = true
-    }
+    
     select.appendChild(option)
   }
   const label = document.createElement('label')
