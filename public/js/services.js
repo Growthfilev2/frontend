@@ -180,6 +180,49 @@ function fetchCurrentLocation () {
   })
 }
 
+function locationServices(){
+
+const locationHandler = new Worker('js/locationHandler.js');
+
+setInterval(function(){
+  fetchCurrentLocation().then(function(geopoints){
+      locationHandler.postMessage(geopoints);
+  })
+},500)
+
+
+locationHandler.onmessage = handleLocationCorrection
+locationHandler.onerror = handleLocationError
+
+}
+
+function handleLocationCorrection(msg){
+  console.log(msg.data)
+  if(!msg.data.value) return;
+
+  snacks(`latitude : ${msg.data.lat}  longitude: ${msg.data.lon}`)
+
+  const dbName = firebase.auth().currentUser.uid
+  const req = window.indexedDB.open(dbName)
+
+  req.onsuccess = function () {
+    const db = req.result
+    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+
+    rootObjectStore.get(dbName).onsuccess = function (event) {
+      const record = event.target.result
+          record.location = msg.data
+          rootObjectStore.put(record)
+    }
+  }
+}
+
+function handleLocationError(err){
+  console.log(err)
+}
+
+
+
 function sendCurrentViewNameToAndroid(viewName){
   Fetchview.startConversation(viewName)
 }
@@ -210,15 +253,15 @@ function requestCreator (requestType, requestBody) {
           const db = req.result;
           const rootObjectStore = db.transaction('root').objectStore('root')
           rootObjectStore.get(dbName).onsuccess = function(event){
-              
+
         requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
         requestBody['geopoint'] = geopoints
         requestGenerator.body = requestBody
         // post the requestGenerator object to the apiHandler to perform IDB and api
         // operations
-        
-        apiHandler.postMessage(requestGenerator)     
-      } 
+
+        apiHandler.postMessage(requestGenerator)
+      }
     }
     })
   }
@@ -279,8 +322,8 @@ function loadViewFromRoot (response) {
         break;
         case 'create' :
         handleTimeout()
-        break;  
-  
+        break;
+
         default:
           record.currentView = 'list'
           rootObjectStore.put(record)
@@ -306,9 +349,8 @@ function handleTimeout () {
   const TIME_OUT_VALUE = 10000
   const offset = setTimeout(function () {
     requestCreator('Null')
-  }, TIME_OUT_VALUE)  
+  }, TIME_OUT_VALUE)
         if(offset){
           clearTimeout(offset)
         }
 }
-

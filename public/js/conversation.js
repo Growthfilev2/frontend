@@ -31,7 +31,7 @@ function fetchAddendumForComment(id,user) {
     const db = req.result
 
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
-    
+
   const rootTx = db.transaction('root', 'readwrite')
   const rootObjectStore = rootTx.objectStore('root')
   rootObjectStore.get(user.uid).onsuccess = function(event){
@@ -218,7 +218,7 @@ function createHeaderContent(db, id,unique) {
       const secondarySpan = document.createElement('span')
       secondarySpan.className = 'mdc-list-item__secondary-text'
       secondarySpan.textContent = record.office
-    
+
 
     const secondarySpanTemplate = document.createElement('span')
     secondarySpanTemplate.className = 'mdc-list-item__secondary-text'
@@ -406,7 +406,7 @@ function displayActivityDetail(db, record) {
 
 
 function expandVenueList() {
-  this.getElementsByClassName('venue--address')[0].style.whiteSpace = 'normal'
+
 }
 
 function updateActivityPanel(db, record) {
@@ -430,7 +430,15 @@ function updateActivityPanel(db, record) {
     detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
     detail.innerHTML = activityTitle(record.activityName) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont()
 
-    document.getElementById('app-current-panel').innerHTML = detail.outerHTML
+    document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
+
+    [...document.querySelectorAll('.map-select-type')].forEach(function (element) {
+      element.addEventListener('click', function (evt) {
+        console.log(evt)
+        renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
+      })
+    })
+
     createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
   }
 }
@@ -565,6 +573,8 @@ function sectionDiv(key, content) {
 }
 
 function displaySchedule(schedules) {
+
+  if(!schedules.length) return document.createElement('span').outerHTML
 
   const table = document.createElement('table')
   table.className = 'schedule--show-table activity--detail--section'
@@ -835,12 +845,15 @@ function showScheduleUI(schedule, scheduleList) {
 }
 
 function displayVenue(venues) {
+  if(!venues.length) return  document.createElement('span').outerHTML
+
   const venueCont = document.createElement('div')
   venueCont.className = 'activity--venue-container'
   const venueList = document.createElement('ul')
   venueList.className = 'mdc-list activity--detail--section'
 
   venues.forEach(function (venue) {
+
     const venueLi = document.createElement('li')
     venueLi.className = 'mdc-list-item venue--list mdc-ripple-upgraded'
     const span = document.createElement('span')
@@ -854,13 +867,18 @@ function displayVenue(venues) {
     primarySpan.className = 'mdc-list-item__primary-text'
     primarySpan.textContent = venue.location
 
+    const link = document.createElement('a')
+    link.href = `https://maps.google.com/?q=${venue.geopoint['_latitude']},${venue.geopoint['_longitude']}`
+    link.className = 'address-link-geo'
     const secondarySpan = document.createElement('span')
     secondarySpan.className = 'mdc-list-item__secondary-text venue--address'
     secondarySpan.textContent = venue.address
 
+    link.appendChild(secondarySpan)
+
     span.appendChild(descSpan)
     span.appendChild(primarySpan)
-    span.appendChild(secondarySpan)
+    span.appendChild(link)
 
     venueLi.appendChild(span)
     venueList.appendChild(venueLi)
@@ -1510,7 +1528,7 @@ function initializeDialog(evt, input, params) {
     const number = []
     number.push(getInputText(input).value)
     if (params.actionInput) {
-      
+
       if(!getInputText(input).value) {
         getInputText(params.actionInput).value = ''
       }
@@ -1549,8 +1567,8 @@ function initializeDialogLocation(evt, input, params) {
   getInputText(input).value = ''
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#location-select-dialog'))
   dialog.listen('MDCDialog:accept', function () {
-    
-    
+
+
 
     const location = getInputText(input)['root_'].dataset.location
     const address = getInputText(input)['root_'].dataset.address
@@ -1586,12 +1604,12 @@ function initializeOfficeTemplateDialog(evt, input) {
   dialog['footerBtnRipples_'][1]['root_'].disabled = true
     console.log(dialog)
   dialog.listen('MDCDialog:accept', function () {
-    
+
     const office = getInputText(input)['root_'].dataset.office
     const template = getInputText(input)['root_'].dataset.template
-    
+
     if(office && template){
-    
+
       getSelectedSubscriptionData(office, template)
       document.getElementById('officeTemplate-select-dialog').remove()
     }
@@ -2007,7 +2025,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
       imagePreview.appendChild(createInput(key, attachment[key].type, 'attachment', true))
       div.appendChild(imagePreview)
     }
-    
+
     if (!availTypes.hasOwnProperty(attachment[key].type)) {
       const addButtonName = document.createElement('label')
       addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
@@ -2053,11 +2071,12 @@ function setFilePath(str){
   document.querySelector('.image-preview--attachment').appendChild(img)
 }
 
-function readCameraFile(){ 
+function readCameraFile(){
   FetchCameraForAttachment.startCamera()
 }
 
 function reinitCount(db, id) {
+
   const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
   activityCount.get(id).onsuccess = function (event) {
     const record = event.target.result
@@ -2091,7 +2110,7 @@ function createSelectMenu(key, type, className) {
     const option = document.createElement('option')
     option.value = weekdays[i]
     option.textContent = weekdays[i]
-    
+
     select.appendChild(option)
   }
   const label = document.createElement('label')

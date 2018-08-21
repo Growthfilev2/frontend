@@ -881,3 +881,13 @@ input[type="datetime-local"] {
     padding-left: 36px;
     margin-top: 11px;
 }
+
+.startTimeInputs .startDate , .startTimeInputs .startTime {
+    width:50%;
+}
+.endTimeInputs .endDate , .endTimeInputs .endTime {
+    width:50%;
+}
+.address-link-geo{
+    text-decoration: none;
+}

@@ -22,9 +22,9 @@ function listView() {
       rootObjectStore.put(record)
       rootTx.oncomplete =  fetchDataForActivityList(db,hasMultipleOffice)
     }
- 
-     
-   
+
+
+
   }
   sendCurrentViewNameToAndroid('listView')
 }
@@ -237,11 +237,12 @@ function mapView(dbName) {
       rootTx.oncomplete = fetchMapData
     }
   }
-  sendCurrentViewNameToAndroid('map')
+
 }
 
 function fetchMapData() {
   createMapPanel()
+  sendCurrentViewNameToAndroid('map')
   backIconHeader('close-map--drawer')
 
   const dbName = firebase.auth().currentUser.uid
@@ -328,7 +329,7 @@ function displayMarkers(dbName, map, locationData) {
     // create marker
     const marker = new google.maps.Marker({
       position: new google.maps.LatLng(locationData[i].geopoint['_latitude'], locationData[i].geopoint['_longitude']),
-      icon: i === locationData.length - 1 ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' : '',
+      icon: i === locationData.length - 1 ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' : '',
       title: locationData[i].location,
       customInfo: locationData[i].activityId
     })
@@ -341,6 +342,7 @@ function displayMarkers(dbName, map, locationData) {
     setTimeout(function () {
       generateActivityFromMarker(dbName, map, allMarkers)
     }, 300)
+
   })
 
 }
@@ -372,10 +374,10 @@ function displayMapActivity(dbName, markerActivityId) {
       setMarker.forEach(function (id) {
         console.log(id)
         const activityObjectStore = db.transaction('activity').objectStore('activity')
-        
+
         activityObjectStore.get(id).onsuccess = function (event) {
           const record = event.target.result
-          
+
             createActivityList(db, record, unique).then(function (li) {
               mapActivityDom += li
             })
@@ -452,7 +454,7 @@ function fetchCalendarData() {
     calendarDateIndex.get(today).onsuccess = function (event) {
       const record = event.target.result
       if (!record) {
-        
+
           const req = indexedDB.open(firebase.auth().currentUser.uid)
           req.onsuccess = function () {
             const db = req.result
@@ -460,7 +462,7 @@ function fetchCalendarData() {
               date: today
             },unique)
           }
-     
+
       }
       insertDatesAfterToday(db,calendarDateIndex,today)
     }
@@ -488,7 +490,7 @@ function insertDatesAfterToday(db,calendarDateIndex,today) {
         }
       }
     }
- 
+
 function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
 
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
@@ -562,7 +564,7 @@ function getActivity(db, data, unique) {
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   activityObjectStore.get(data.activityId).onsuccess = function (event) {
     const record = event.target.result
-    
+
     createActivityList(db, record, unique).then(function (li) {
       if (document.getElementById(`activity--row${data.date}`).querySelector(`[data-id="${data.activityId}"]`)) return
       document.getElementById(`activity--row${data.date}`).innerHTML += li
