@@ -2143,9 +2143,7 @@ function createUpdateReqBody(event, reqType) {
     const endTime = `${li.querySelector('.endDate').children[0].value} ${li.querySelector('.endTime').children[0].value}`
 
     console.log(startTime)
-    console.log(endTime.length
-
-
+  
     if (startTime == " " && endTime == " ") {
 
       allow = true

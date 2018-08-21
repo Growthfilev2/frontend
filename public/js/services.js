@@ -198,7 +198,11 @@ locationHandler.onerror = handleLocationError
 
 function handleLocationCorrection(msg){
   console.log(msg.data)
-  if(!msg.data.value) return;
+  if(!msg.data.value) {
+
+    snacks(`value : ${msg.data.value} ,  count : ${msg.data.count}`)
+    return;
+  };
 
   snacks(`latitude : ${msg.data.stream.lat}  longitude: ${msg.data.stream.lon} , ${msg.data.count}`)
 

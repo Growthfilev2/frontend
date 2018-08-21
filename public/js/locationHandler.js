@@ -22,7 +22,7 @@ self.onmessage = function(event) {
     const subtractedLat = Math.abs(array[iterator].latitude.toFixed(10) - array[iterator - 1].latitude.toFixed(10))
     const subtractedLon = Math.abs(array[iterator].longitude.toFixed(10) - array[iterator - 1].longitude.toFixed(10))
 
-    if(parseFloat(subtractedLat.toFixed(6)) > 0 && parseFloat(subtractedLat.toFixed(6)) <= .0009 && parseFloat(subtractedLon.toFixed(6)) > 0 && parseFloat(subtractedLon.toFixed(6)) <= .0009 ){
+    if(parseFloat(subtractedLat.toFixed(4)) > 0 && parseFloat(subtractedLat.toFixed(4)) <= .0009 && parseFloat(subtractedLon.toFixed(4)) > 0 && parseFloat(subtractedLon.toFixed(4)) <= .0009 ){
       geoObjects.lat = subtractedLat
       geoObjects.lon = subtractedLon
       // twoGeopointsDiff.push(geoObjects)
@@ -32,7 +32,7 @@ self.onmessage = function(event) {
       geoObjects.lat = subtractedLat
       geoObjects.lon = subtractedLon
       // twoGeopointsDiff.push(geoObjects)
-      self.postMessage({stream:geoObjects,value:false});
+      self.postMessage({value:false});
     }
   }
 
