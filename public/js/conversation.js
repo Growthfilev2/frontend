@@ -1830,7 +1830,7 @@ function createInput(key, type, classtype, value) {
     mainTextField.classList.add('attachment--string-input-active')
   }
 
-  if (type === 'moment.HTML5_FMT.TIME') {
+  if (type === 'HH:MM') {
     mainInput.type = 'time'
   } else {
     mainInput.type = 'text'
@@ -1955,7 +1955,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   const availTypes = {
     'phoneNumber': '',
     'weekday':'',
-    'moment.HTML5_FMT.TIME' :'' ,
+    'HH:MM' :'' ,
     'string':'',
     'base64': ''
   }
@@ -1996,7 +1996,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
       }
     }
 
-    if (attachment[key].type == 'moment.HTML5_FMT.TIME') {
+    if (attachment[key].type == 'HH:MM') {
       div.appendChild(label)
 
       div.appendChild(createInput(key, attachment[key].type, 'attachment', true))
@@ -2134,6 +2134,7 @@ function createUpdateReqBody(event, reqType) {
   const share = []
 
   const allSchedule = document.querySelectorAll('.schedule--list');
+
   [...allSchedule].forEach(function (li) {
     console.log(li.querySelector('.startDate'))
     const scheduleBody = {}
@@ -2142,7 +2143,8 @@ function createUpdateReqBody(event, reqType) {
     const endTime = `${li.querySelector('.endDate').children[0].value} ${li.querySelector('.endTime').children[0].value}`
 
     console.log(startTime)
-    console.log(endTime.length)
+    console.log(endTime.length
+
 
     if (startTime == " " && endTime == " ") {
 
