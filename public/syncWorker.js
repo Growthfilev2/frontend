@@ -1,53 +1,100 @@
-const VERSION = 'V1';
-const CACHE_FILES = [
+(function () {
 
-    'css/theme.css',
-    'css/conversation.css',
-    'css/material-components-web.css',
-    'js/init.js',
-    'js/conversation.js',
-    'js/panel.js',
-    'js/services.js',
-    'js/apiHandler.js',
-    'js/material-components-web.js',
-    'external/firebase-app.js',
-    'external/firebasejs/5.2.0/firebase-auth.js',
-    'external/firebasejs/5.2.0/firebase-storage.js',
-    '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js',
-    '//fonts.googleapis.com/css?family=Roboto:300,400,500',
-    '//fonts.googleapis.com/icon?family=Material+Icons'
-]
+    const CACHE_NAME = 'V1';
+    const urlsToCache = [
+
+        'css/theme.css',
+        'css/conversation.css',
+        'css/material-components-web.css',
+        'js/init.js',
+        'js/conversation.js',
+        'js/panel.js',
+        'js/services.js',
+        'js/apiHandler.js',
+        'js/material-components-web.js',
+        'external/firebase-app.js',
+        'external/firebasejs/5.2.0/firebase-auth.js',
+        'external/firebasejs/5.2.0/firebase-storage.js',
+        '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js',
+        '//fonts.googleapis.com/css?family=Roboto:300,400,500',
+        '//fonts.googleapis.com/icon?family=Material+Icons',
+        'index.html',
+        '.'
+
+    ]
 
 
-self.addEventListener('install', function (event) {
-    event.waitUntil(
-        caches.open(VERSION)
+    self.addEventListener('install', function (event) {
+        console.log("sw open")
+        event.waitUntil(
+            caches.open(CACHE_NAME)
             .then(function (cache) {
                 console.log('Opened cache');
-                return cache.addAll(CACHE_FILES);
+                cache.addAll(urlsToCache)
             })
-    );
-});
+        );
+    });
 
-self.addEventListener('activate', function (event) {
-    event.waitUntil(
-        caches.keys().then(function(keys){
-            return Promise.all(keys.map(function(key, i){
-                if(key !== VERSION){
-                    return caches.delete(keys[i]);
+    self.addEventListener('fetch', function (event) {
+        console.log('fetch started')
+        event.respondWith(
+            caches.match(event.request)
+            .then(function (response) {
+                // Cache hit - return response
+
+                if (response) {
+                    console.log(response)
+                    return response;
                 }
-            }))
-        })
-    )
-});
 
-self.addEventListener('fetch', function (event) {
-    event.respondWith(
-        caches.match(event.request).then(function(res){ 
-               return res || fetch(event.request)
-            
-        }).catch(console.log)
-    )
-});
+                // IMPORTANT: Clone the request. A request is a stream and
+                // can only be consumed once. Since we are consuming this
+                // once by cache and once by the browser for fetch, we need
+                // to clone the response.
+                var fetchRequest = event.request.clone();
+
+                return fetch(fetchRequest).then(
+                    function (response) {
+                        // Check if we received a valid response
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            console.log(response)
+                            return response;
+                        }
+
+                        // IMPORTANT: Clone the response. A response is a stream
+                        // and because we want the browser to consume the response
+                        // as well as the cache consuming the response, we need
+                        // to clone it so we have two streams.
+                        var responseToCache = response.clone();
+
+                        caches.open(CACHE_NAME)
+                            .then(function (cache) {
+                                cache.put(event.request, responseToCache);
+                            });
+
+                        return response;
+                    }
+                );
+            })
+        );
+    });
+    // self.addEventListener('activate', function (event) {
+    //     const deleteOldCache = ['V2']
+    //     event.waitUntil(
+    //         caches.keys().then(function (cacheNames) {
+    //             return Promise.all(
+    //                 cacheNames.map(function (cacheName) {
+    //                     console.log(cacheName)
+    //                     console.log(cacheNames)
+    //                     if(deleteOldCache.indexOf(cacheName) === -1)  {
+
+    //                         return caches.delete(cacheName);
+    //                     }
+    //                 })
+    //             );
+    //         })
+    //     );
+    // });
 
 
+})();

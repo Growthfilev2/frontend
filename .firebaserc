@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "growthfile-207204"
+    "default": "growthfile-207204",
+    "staging": "growthfile-207204"
   }
 }

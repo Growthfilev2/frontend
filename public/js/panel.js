@@ -1180,7 +1180,7 @@ function snacks(message) {
   const data = {
     message: message,
     actionText: 'Ok',
-    timeout: 40000,
+    timeout: 3000,
     actionHandler: function () {
       console.log('okay')
     }

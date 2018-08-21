@@ -26,7 +26,7 @@ self.onmessage = function(event) {
       geoObjects.lat = subtractedLat
       geoObjects.lon = subtractedLon
       // twoGeopointsDiff.push(geoObjects)
-      self.postMessage({stream:geoObjects,value:true});
+      self.postMessage({stream:geoObjects,value:true,count:iterator});
     }
     else {
       geoObjects.lat = subtractedLat

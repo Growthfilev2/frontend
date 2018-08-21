@@ -200,7 +200,7 @@ function handleLocationCorrection(msg){
   console.log(msg.data)
   if(!msg.data.value) return;
 
-  snacks(`latitude : ${msg.data.lat}  longitude: ${msg.data.lon}`)
+  snacks(`latitude : ${msg.data.stream.lat}  longitude: ${msg.data.stream.lon} , ${msg.data.count}`)
 
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
