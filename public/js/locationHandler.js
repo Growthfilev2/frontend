@@ -1,22 +1,24 @@
 const array = []
 const twoGeopointsDiff = []
-let iterator = '';
+let iterator = -1;
 self.onmessage = function(event) {
 
   array.push(event.data)
-
+  iterator++
   let geoObjects = {}
 
 
-  if (iterator == '') {
+  if (iterator == 0) {
 
-    geoObjects.latitude = array[0].latitude - 0
-    geoObjects.longitude = array[0].longitude - 0
-    twoGeopointsDiff.push(geoObjects);
-    iterator++
-  } else {
-    iterator = 0
-    iterator++
+    // geoObjects.latitude = array[0].latitude - 0
+    // geoObjects.longitude = array[0].longitude - 0
+    // twoGeopointsDiff.push(geoObjects);
+    // iterator++
+    return
+  } 
+
+  console.log(iterator)
+    
     // console.log(array)
     // console.log(iterator)
     const subtractedLat = Math.abs(array[iterator].latitude.toFixed(10) - array[iterator - 1].latitude.toFixed(10))
@@ -28,12 +30,6 @@ self.onmessage = function(event) {
       // twoGeopointsDiff.push(geoObjects)
       self.postMessage({stream:geoObjects,value:true,count:iterator});
     }
-    else {
-      geoObjects.lat = subtractedLat
-      geoObjects.lon = subtractedLon
-      // twoGeopointsDiff.push(geoObjects)
-      self.postMessage({value:false});
-    }
   }
 
-}
+

@@ -1,10 +1,10 @@
-function loader () {
+function loader() {
   const div = document.createElement('div')
   div.className = 'loader'
   return div
 }
 
-function progressBar () {
+function progressBar() {
   const div = document.createElement('div')
   div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate'
   div.role = 'progressbar'
@@ -33,16 +33,23 @@ function progressBar () {
   return div
 }
 
-function getInputText (selector) {
+function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
 }
 
-function inputSelect (objectStore, selector, inputFields, activityRecord) {
-  // getInputText(inputFields.location).value = ''
+
+function inputSelect(objectStore, selector, inputFields, activityRecord) {
+  let dataCount = 0
+  let input = ''
+  let autocomplete = ''
+  if(inputFields.main === 'location-text-field') {
+    let input = document.getElementById('location-text-field').querySelector('.mdc-text-field__input');
+    autocomplete =  new google.maps.places.Autocomplete(input);
+  }
+        
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
   let primaryObjectStore = ''
-
   req.onsuccess = function () {
     const db = req.result
 
@@ -57,7 +64,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       if (!cursor) {
         if (objectStore.name === 'map') return
         if (objectStore.name === 'subscriptions') return
-        if(objectStore.name === 'children') return
+        if (objectStore.name === 'children') return
         if (!activityRecord) return
 
         activityRecord.assignees.forEach(function (people) {
@@ -65,6 +72,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
         })
         return
       }
+
       switch (objectStore.name) {
         case 'map':
           console.log(selector)
@@ -72,28 +80,52 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'users':
-
           assigneeListUI(cursor, selector, inputFields.main)
-
           break
 
         case 'subscriptions':
           officeTemplateCombo(cursor, selector, inputFields.main)
-
           break
+
         case 'children':
-        if(cursor.value.template === activityRecord.template  && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
-          if(!cursor.value.attachment.hasOwnProperty('Name')) return
-          childrenNames(cursor,selector,inputFields.main)
+        console.log(activityRecord.template);
+ 
+        if (cursor.value.template === activityRecord.template && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
+            // if(!cursor.value.attachment.hasOwnProperty('Name')) return
+            console.log(cursor.value)
+            dataCount++
+            childrenNames(cursor, selector, inputFields.main)
         }
-        break;
+
+        if(dataCount == 0) {
+          document.getElementById('children-name').querySelector('.mdc-dialog__footer__button--accept').disabled = true
+        }
+          break;
       }
       cursor.continue()
     }
   }
-
+  // console.log(isMapPinPresent)
+  
   document.getElementById(inputFields.main).addEventListener('input', function () {
+
+    if(inputFields.main === 'location-text-field') {
+        if(getInputText('location-text-field').value == '') {
+          document.getElementById('location--container').style.marginTop = '0px'
+          return
+        }
+        else {
+
+          document.getElementById('location--container').style.marginTop = '150px'
+          document.getElementById('location--container')
+          initializeAutocomplete(autocomplete)
+          return;
+        }
+    }
+    
+
     document.getElementById(selector).innerHTML = ''
+
     const dbName = firebase.auth().currentUser.uid
     const req = window.indexedDB.open(dbName)
 
@@ -116,6 +148,7 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
       indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
         fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord)
       }
+
       console.log(boundKeyRange)
       if (boundKeyRange.upper === '\uffff') return
       indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
@@ -125,12 +158,14 @@ function inputSelect (objectStore, selector, inputFields, activityRecord) {
   })
 }
 
-function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, activityRecord) {
+function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord) {
+
   const cursor = event.target.result
+
   if (!cursor) {
     if (objectStore.name === 'subscriptions') return
-    if (objectStore.name === 'map') return
-    if(objectStore.name === 'children') return
+
+    if (objectStore.name === 'children') return
     if (!activityRecord) return
 
     activityRecord.assignees.forEach(function (people) {
@@ -140,10 +175,9 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
     })
   }
 
+
   switch (objectStore.name) {
-    case 'map':
-      locationUI(cursor, selector, inputFields)
-      break
+  
     case 'users':
       console.log(cursor.value)
       assigneeListUI(cursor, selector, inputFields.main)
@@ -154,10 +188,10 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
       officeTemplateCombo(cursor, selector, inputFields.main)
 
       break
-      case 'children':
-      if(cursor.value.template === activityRecord.template  && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
-        if(!cursor.value.attachment.hasOwnProperty('Name')) return
-        childrenNames(cursor,selector,inputFields.main)
+    case 'children':
+      if (cursor.value.template === activityRecord.template && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
+        if (!cursor.value.attachment.hasOwnProperty('Name')) return
+        childrenNames(cursor, selector, inputFields.main)
       }
       break;
   }
@@ -165,11 +199,47 @@ function fetchRecordsForBothIndexs (objectStore, event, selector, inputFields, a
   cursor.continue()
 }
 
-function fetchCurrentTime (serverTime) {
-    return Date.now() + serverTime
+
+function initializeAutocomplete(autocomplete) {
+
+
+  autocomplete.addListener('place_changed', function () {
+    let place = autocomplete.getPlace();
+
+    if (!place.geometry) {
+      snacks("Please select a valid location")
+      return
+    }
+     document.getElementById('location--container').style.marginTop = '0px'
+
+    var address = '';
+    if (place.address_components) {
+      address = [
+        (place.address_components[0] && place.address_components[0].short_name || ''),
+        (place.address_components[1] && place.address_components[1].short_name || ''),
+        (place.address_components[2] && place.address_components[2].short_name || '')
+      ].join(' ');
+    }
+
+    document.getElementById('location-text-field').dataset.location = place.name
+    document.getElementById('location-text-field').dataset.address = address
+    document.getElementById('location-text-field').dataset.inputlat = place.geometry.location.lat()
+    document.getElementById('location-text-field').dataset.inputlon = place.geometry.location.lng()
+
+    console.log(address)
+    console.log(place)
+  })
 }
 
-function fetchCurrentLocation () {
+
+
+
+
+function fetchCurrentTime(serverTime) {
+  return Date.now() + serverTime
+}
+
+function fetchCurrentLocation() {
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
@@ -180,27 +250,31 @@ function fetchCurrentLocation () {
   })
 }
 
-function locationServices(){
 
-const locationHandler = new Worker('js/locationHandler.js');
 
-setInterval(function(){
-  fetchCurrentLocation().then(function(geopoints){
+
+function locationServices() {
+
+  const locationHandler = new Worker('js/locationHandler.js');
+
+  setInterval(function () {
+    fetchCurrentLocation().then(function (geopoints) {
       locationHandler.postMessage(geopoints);
-  })
-},500)
+    })
+  }, 500)
 
 
-locationHandler.onmessage = handleLocationCorrection
-locationHandler.onerror = handleLocationError
+  locationHandler.onmessage = handleLocationCorrection
+  locationHandler.onerror = handleLocationError
 
 }
 
-function handleLocationCorrection(msg){
-  console.log(msg.data)
-  if(!msg.data.value) {
 
-    snacks(`value : ${msg.data.value} ,  count : ${msg.data.count}`)
+function handleLocationCorrection(msg) {
+  // console.log(msg.data)
+  if (!msg.data.value) {
+
+    //   snacks(`value : ${msg.data.value} ,  count : ${msg.data.count}`)
     return;
   };
 
@@ -215,28 +289,28 @@ function handleLocationCorrection(msg){
 
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
-          record.location = msg.data
-          rootObjectStore.put(record)
+      record.location = msg.data
+      rootObjectStore.put(record)
     }
   }
 }
 
-function handleLocationError(err){
+function handleLocationError(err) {
   console.log(err)
 }
 
 
 
-function sendCurrentViewNameToAndroid(viewName){
+function sendCurrentViewNameToAndroid(viewName) {
   Fetchview.startConversation(viewName)
 }
 
-function inputFile (selector) {
+function inputFile(selector) {
   return document.getElementById(selector)
 }
 let offset
 
-function requestCreator (requestType, requestBody) {
+function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -252,21 +326,21 @@ function requestCreator (requestType, requestBody) {
   } else {
     fetchCurrentLocation().then(function (geopoints) {
       const dbName = firebase.auth().currentUser.uid
-        const req = indexedDB.open(dbName)
-        req.onsuccess = function(){
-          const db = req.result;
-          const rootObjectStore = db.transaction('root').objectStore('root')
-          rootObjectStore.get(dbName).onsuccess = function(event){
+      const req = indexedDB.open(dbName)
+      req.onsuccess = function () {
+        const db = req.result;
+        const rootObjectStore = db.transaction('root').objectStore('root')
+        rootObjectStore.get(dbName).onsuccess = function (event) {
 
-        requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
-        requestBody['geopoint'] = geopoints
-        requestGenerator.body = requestBody
-        // post the requestGenerator object to the apiHandler to perform IDB and api
-        // operations
+          requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
+          requestBody['geopoint'] = geopoints
+          requestGenerator.body = requestBody
+          // post the requestGenerator object to the apiHandler to perform IDB and api
+          // operations
 
-        apiHandler.postMessage(requestGenerator)
+          apiHandler.postMessage(requestGenerator)
+        }
       }
-    }
     })
   }
 
@@ -276,7 +350,7 @@ function requestCreator (requestType, requestBody) {
   apiHandler.onerror = onErrorMessage
 }
 
-function loadViewFromRoot (response) {
+function loadViewFromRoot(response) {
   console.log(response)
 
   if (response.data.type === 'notification') return
@@ -307,9 +381,9 @@ function loadViewFromRoot (response) {
           handleTimeout()
           break
         case 'profile':
-        handleTimeout()
-        profileView(firebase.auth().currentUser)
-        break
+          handleTimeout()
+          profileView(firebase.auth().currentUser)
+          break
 
         case 'calendar':
           calendarView(response.data.dbName)
@@ -322,11 +396,11 @@ function loadViewFromRoot (response) {
           fillActivityDetailPage(record.id)
           break
         case 'edit-activity':
-        handleTimeout()
-        break;
-        case 'create' :
-        handleTimeout()
-        break;
+          handleTimeout()
+          break;
+        case 'create':
+          handleTimeout()
+          break;
 
         default:
           record.currentView = 'list'
@@ -338,7 +412,7 @@ function loadViewFromRoot (response) {
   }
 }
 
-function onErrorMessage (error) {
+function onErrorMessage(error) {
   console.log(error)
   console.table({
     'line-number': error.lineno,
@@ -348,13 +422,13 @@ function onErrorMessage (error) {
 }
 
 
-function handleTimeout () {
+function handleTimeout() {
   console.log('load now')
   const TIME_OUT_VALUE = 10000
   const offset = setTimeout(function () {
     requestCreator('Null')
   }, TIME_OUT_VALUE)
-        if(offset){
-          clearTimeout(offset)
-        }
+  if (offset) {
+    clearTimeout(offset)
+  }
 }

@@ -442,7 +442,7 @@ body {
 }
 
 .activity--venue-container {
-    min-height: 200px;
+    min-height: 80px;
 }
 
 .activity--venue-container li {
@@ -890,4 +890,15 @@ input[type="datetime-local"] {
 }
 .address-link-geo{
     text-decoration: none;
+}
+#map-selector {
+    height: 50vh;
+}
+
+
+.topToBottom {
+    -webkit-transition-property: margin; /* Safari */
+    -webkit-transition-duration: 0.5s; /* Safari */
+    transition-property: margin;
+    transition-duration: 0.5s;
 }

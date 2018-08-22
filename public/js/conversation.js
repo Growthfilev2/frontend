@@ -39,7 +39,7 @@ function fetchAddendumForComment(id,user) {
 
   }
     commentPanel(id)
-    sendCurrentViewNameToAndroid('conversation')
+    // sendCurrentViewNameToAndroid('conversation')
    let commentDom = ''
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
@@ -180,10 +180,12 @@ function readNameFromNumber(db, number) {
     const usersObjectStore = db.transaction('users').objectStore('users')
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
-      if (!record) return
-      if (!record.displayName) resolve(number)
-
-      resolve(record.displayName)
+      if (!record) return resolve(number)
+      if (!record.displayName) {
+        resolve(number)
+        return
+      }
+      return resolve(record.displayName)
     }
     usersObjectStore.get(number).onerror = function (event) {
       reject(event)
@@ -1387,7 +1389,7 @@ function renderLocationScreenUI() {
 
   const ul = document.createElement('ul')
   ul.id = 'location--container'
-  ul.className = 'mdc-list'
+  ul.className = 'mdc-list topToBottom'
 
   section.appendChild(ul)
   const footer = document.createElement('footer')
@@ -1584,12 +1586,14 @@ function initializeDialogLocation(evt, input, params) {
 
       getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlat = lat || ''
       getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlon = lon || ''
-
+      document.querySelector('.pac-container').remove()
       document.getElementById('location-select-dialog').remove()
     }
   })
 
   dialog.listen('MDCDialog:cancel', function () {
+    document.querySelector('.pac-container').remove()
+
     document.getElementById('location-select-dialog').remove()
   })
 
@@ -1784,7 +1788,7 @@ function officeTemplateCombo(cursor, target, input) {
 
   li.appendChild(liText)
   document.getElementById(target).appendChild(li)
-  dataElement('office', cursor.value.office).addEventListener('click', function () {
+  document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`).addEventListener('click', function () {
     document.getElementById('accept-office-template-selector').disabled = false;
     getInputText(input).value = ''
     getInputText(input)['root_'].dataset.office = this.dataset.office
@@ -1972,7 +1976,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     label.className = 'label--text'
     label.textContent = key
 
-    if (attachment[key].type === 'string' && key !== "Name") {
+    if (attachment[key].type === 'string') {
       div.appendChild(label)
 
       div.appendChild(createInput(key, attachment[key].type, 'attachment'))
@@ -1999,7 +2003,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     if (attachment[key].type == 'HH:MM') {
       div.appendChild(label)
 
-      div.appendChild(createInput(key, attachment[key].type, 'attachment', true))
+      div.appendChild(createInput(key, attachment[key].type, 'attachment', false))
     }
 
     if (attachment[key].type === 'weekday') {
@@ -2011,7 +2015,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     if(attachment[key].type === 'base64'){
       const addCamera = document.createElement('label')
       addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
-      addCamera.id = 'start_camera'
+      addCamera.id = 'start-camera'
       const span = document.createElement('span')
       span.className = 'mdc-fab__icon material-icons'
       span.textContent = 'add_a_photo'
@@ -2060,8 +2064,13 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     select['root_'].dataset.value = select.value
   });
 
-  document.getElementById('start_camera').addEventListener('click', readCameraFile)
+  if(document.getElementById('start-camera')) {
+    document.getElementById('start-camera').addEventListener('click', readCameraFile)
+  }
 }
+
+
+
 
 function setFilePath(str){
   const img = document.createElement('img')
@@ -2103,7 +2112,7 @@ function createSelectMenu(key, type, className) {
   const select = document.createElement('select')
   select.className = 'mdc-select__native-control'
 
-  const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
   for (var i = 0; i < weekdays.length; i++) {
 
@@ -2233,7 +2242,7 @@ function createUpdateReqBody(event, reqType) {
     }
 
     console.log(body)
-    // requestCreator('create', body)
+    requestCreator('create', body)
     return
   }
 }

@@ -1,6 +1,7 @@
 (function () {
 
     const CACHE_NAME = 'V1';
+
     const urlsToCache = [
 
         'css/theme.css',
@@ -19,9 +20,11 @@
         '//fonts.googleapis.com/css?family=Roboto:300,400,500',
         '//fonts.googleapis.com/icon?family=Material+Icons',
         'index.html',
-        '.'
+        '.',
+        'https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c&libraries=places'
 
     ]
+  
 
 
     self.addEventListener('install', function (event) {
@@ -32,7 +35,7 @@
                 console.log('Opened cache');
                 cache.addAll(urlsToCache)
             })
-        );
+        )
     });
 
     self.addEventListener('fetch', function (event) {
@@ -78,23 +81,25 @@
             })
         );
     });
-    // self.addEventListener('activate', function (event) {
-    //     const deleteOldCache = ['V2']
-    //     event.waitUntil(
-    //         caches.keys().then(function (cacheNames) {
-    //             return Promise.all(
-    //                 cacheNames.map(function (cacheName) {
-    //                     console.log(cacheName)
-    //                     console.log(cacheNames)
-    //                     if(deleteOldCache.indexOf(cacheName) === -1)  {
 
-    //                         return caches.delete(cacheName);
-    //                     }
-    //                 })
-    //             );
-    //         })
-    //     );
-    // });
+
+    self.addEventListener('activate', function (event) {
+        // const deleteOldCache = ['V2']
+        // event.waitUntil(
+        //     caches.keys().then(function (cacheNames) {
+        //         return Promise.all(
+        //             cacheNames.map(function (cacheName) {
+        //                 console.log(cacheName)
+        //                 console.log(cacheNames)
+        //                 if(deleteOldCache.indexOf(cacheName) === -1)  {
+
+        //                     return caches.delete(cacheName);
+        //                 }
+        //             })
+        //         );
+        //     })
+        // );
+    });
 
 
 })();

@@ -13,7 +13,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
     <script src="js/material-components-web.js" async></script>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c"
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c&libraries=places"
         async></script>
     <!-- application files-->
 
@@ -49,7 +49,7 @@
 
     <script>
         function init(){
-            navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
+            // navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
                     // Registration was successful
                     firebase.initializeApp({
                         apiKey: "AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo",
@@ -176,13 +176,13 @@
                         // if user is signed in then run userIsSigned fn else run userSignedOut fn
                         auth ? userSignedIn(auth) : userSignedOut()
                     })
-                    locationServices()
-
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                }, function (err) {
-                    // registration failed :(
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+                    // locationServices()
+ 
+                //     console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                // }, function (err) {
+                //     // registration failed :(
+                //     console.log('ServiceWorker registration failed: ', err);
+                // }); 
         }
     </script>
 </body>
