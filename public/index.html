@@ -49,7 +49,7 @@
 
     <script>
         function init(){
-            // navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
+            navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
                     // Registration was successful
                     firebase.initializeApp({
                         apiKey: "AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo",
@@ -178,11 +178,11 @@
                     })
                     // locationServices()
  
-                //     console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                // }, function (err) {
-                //     // registration failed :(
-                //     console.log('ServiceWorker registration failed: ', err);
-                // }); 
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function (err) {
+                    // registration failed :(
+                    console.log('ServiceWorker registration failed: ', err);
+                }); 
         }
     </script>
 </body>

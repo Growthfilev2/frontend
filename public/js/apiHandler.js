@@ -79,7 +79,12 @@ function http(method, url, data) {
 
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
-            if (xhr.status > 226) return reject(xhr)
+            if (xhr.status > 226) {
+              const errorObject = JSON.parse(xhr.response);
+              requestHandlerResponse('error',errorObject.code,errorObject.message)
+              return reject(xhr);
+              // return reject(xhr)
+            }
             console.log(xhr)
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
@@ -373,7 +378,7 @@ function create(body) {
         JSON.stringify(body)
       )
       .then(function (success) {
-        requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
+        requestHandlerResponse('create-success', 200, 'activity created successfully', firebase.auth().currentUser.uid)
         resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {

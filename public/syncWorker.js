@@ -21,12 +21,9 @@
         '//fonts.googleapis.com/icon?family=Material+Icons',
         'index.html',
         '.',
-        'https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c&libraries=places'
 
     ]
   
-
-
     self.addEventListener('install', function (event) {
         console.log("sw open")
         event.waitUntil(

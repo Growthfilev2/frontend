@@ -2240,7 +2240,7 @@ function createUpdateReqBody(event, reqType) {
       'venue': venue,
       'attachment': attachments
     }
-
+    
     console.log(body)
     requestCreator('create', body)
     return

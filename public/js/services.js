@@ -354,6 +354,10 @@ function loadViewFromRoot(response) {
   console.log(response)
 
   if (response.data.type === 'notification') return
+  if(response.data.type === 'error') {
+    snacks(response.data.msg)
+    return;
+  }
 
   console.log(response.data.dbName)
   const req = window.indexedDB.open(response.data.dbName)
@@ -364,7 +368,10 @@ function loadViewFromRoot(response) {
 
     rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
       const record = event.target.result
-      const currentView = record.view
+      let currentView = record.view
+      if(response.data.type === 'create-success') {
+        currentView = 'list'
+      }
 
       switch (currentView) {
         case 'list':
@@ -376,6 +383,7 @@ function loadViewFromRoot(response) {
           conversation(event.target.result.id)
           handleTimeout()
           break
+
         case 'map':
           mapView(response.data.dbName)
           handleTimeout()
