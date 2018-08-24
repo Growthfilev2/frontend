@@ -1,6 +1,6 @@
 (function () {
 
-    const CACHE_NAME = 'V1';
+    const CACHE_NAME = 'V1-test';
 
     const urlsToCache = [
 
@@ -20,8 +20,7 @@
         '//fonts.googleapis.com/css?family=Roboto:300,400,500',
         '//fonts.googleapis.com/icon?family=Material+Icons',
         'index.html',
-        '.',
-
+    
     ]
   
     self.addEventListener('install', function (event) {
@@ -82,20 +81,19 @@
 
     self.addEventListener('activate', function (event) {
         // const deleteOldCache = ['V2']
-        // event.waitUntil(
-        //     caches.keys().then(function (cacheNames) {
-        //         return Promise.all(
-        //             cacheNames.map(function (cacheName) {
-        //                 console.log(cacheName)
-        //                 console.log(cacheNames)
-        //                 if(deleteOldCache.indexOf(cacheName) === -1)  {
+        event.waitUntil(
+            caches.keys().then(function (cacheNames) {
 
-        //                     return caches.delete(cacheName);
-        //                 }
-        //             })
-        //         );
-        //     })
-        // );
+                return Promise.all(
+                    cacheNames.map(function (cacheName) {
+                        console.log(cacheName)
+                        if(CACHE_NAME !== cacheName && cacheName.startsWith('V')) {
+                              return caches.delete(cacheName);
+                          }
+                    })
+                );
+            })
+        );
     });
 
 

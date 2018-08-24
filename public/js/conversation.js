@@ -39,8 +39,9 @@ function fetchAddendumForComment(id,user) {
 
   }
     commentPanel(id)
-    // sendCurrentViewNameToAndroid('conversation')
+    sendCurrentViewNameToAndroid('conversation')
    let commentDom = ''
+
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
@@ -59,7 +60,6 @@ function fetchAddendumForComment(id,user) {
     }
   }
 }
-
 
 function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
@@ -1969,13 +1969,15 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   }
   const attachCont = document.createElement('div')
   attachCont.id = 'attachment-container'
+ 
   Object.keys(attachment).forEach(function (key) {
+
     const div = document.createElement('div')
     div.className = 'attachment-field'
     const label = document.createElement('div')
     label.className = 'label--text'
     label.textContent = key
-
+    
     if (attachment[key].type === 'string') {
       div.appendChild(label)
 

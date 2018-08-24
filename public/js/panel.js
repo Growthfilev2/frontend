@@ -747,6 +747,8 @@ function toggleIconData(icon, inputField) {
       inputField['input_'].style.borderBottom = '1px solid rgba(0,0,0,.42)'
       inputField['input_'].disabled = false
       inputField['lineRipple_'].activate()
+      openAndroidKeyboard.startKeyboard();
+      inputField['input_'].focus();
     }
   })
 }
@@ -758,7 +760,7 @@ function handleFieldInput(key, value) {
     user.updateProfile({
       [key]: value
     }).then(function () {
-      console.log(user)
+      snacks('you changed your display Name');
     }).catch(authUpdatedError)
   }
 
@@ -944,7 +946,7 @@ function createConfirmView() {
   div.id = 'confirm--number-change'
 
   const img = document.createElement('img')
-  img.src = './img/change_number.png'
+  img.src = ''
   img.className = 'change-number--info'
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
