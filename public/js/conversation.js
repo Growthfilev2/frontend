@@ -1,3 +1,5 @@
+"use strict";
+
 function conversation(id) {
   if (!id) return
   // removeDom('chat-container')
@@ -381,9 +383,11 @@ function displayActivityDetail(db, record) {
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
 
 
-  [...document.querySelectorAll('.venue--list')].forEach(function (li) {
-    li.addEventListener('click', expandVenueList)
-  })
+  const venueLi = document.querySelectorAll('.venue--list');
+    
+  for (let index = 0; index < venueLi.length; index++) {
+    venueLi[index].addEventListener('click', expandVenueList)    
+  }
 
   if (document.getElementById('select-pending')) {
     document.getElementById('select-pending').addEventListener('click', function () {
@@ -434,12 +438,15 @@ function updateActivityPanel(db, record) {
 
     document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
 
-    [...document.querySelectorAll('.map-select-type')].forEach(function (element) {
+    const mapSelectType = document.querySelectorAll('.map-select-type')
+    for (let index = 0; index < mapSelectType.length; index++) {
+      const element = mapSelectType[index];
       element.addEventListener('click', function (evt) {
         console.log(evt)
         renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
       })
-    })
+      
+    }
 
     createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
   }
@@ -472,11 +479,12 @@ function initShareButton(record, db) {
 }
 
 function toggleActivityHeader(toggleId, containerClass, type, record) {
-  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(document.getElementById(toggleId))
 
+  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(document.getElementById(toggleId))
   toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
     detail
-  }) {
+  })
+   {
     if (!detail.isOn) {
       checkInValidInputs(type, containerClass)
       console.log("no")
@@ -509,16 +517,6 @@ function checkInValidInputs(type) {
   createUpdateReqBody(event, type)
 }
 
-function checkTime(allow) {
-  [...document.querySelectorAll('input[type=datetime-local]')].forEach(function (input) {
-    if (input.value === 'Invalid date') {
-      allow = false
-    } else {
-      allow = true
-    }
-  })
-  return allow
-}
 
 function activityTitle(title) {
   const container = document.createElement('div')
@@ -1548,9 +1546,13 @@ function initializeDialog(evt, input, params) {
     }
 
     addContact(number, params.id);
-    [...document.querySelectorAll('.remove')].forEach(function (icon) {
+    const removeClass = document.querySelectorAll('.remove')
+    for (let index = 0; index < removeClass.length; index++) {
+      const icon = removeClass[index];
       icon.classList.add('no-click')
-    })
+      
+    }
+  
     document.getElementById('change-number-dialog').remove()
 
   })
@@ -1840,11 +1842,13 @@ function createInput(key, type, classtype, value) {
     mainInput.type = 'text'
   }
 
+
   if (value) {
     mainInput.disabled = value
     mainInput.style.borderBottom = 'none'
     mainInput.placeholder = 'select ' + key
   } else {
+      
     mainInput.placeholder = key
   }
 
@@ -1881,45 +1885,6 @@ function getSelectedSubscriptionData(office, template) {
         }, document.querySelector('.activity--schedule-container'))
       });
 
-      // [...document.querySelectorAll('.startTimeInputs')].forEach(function (li) {
-
-      //   li.addEventListener('input', function () {
-
-
-      //     if (!li.classList.contains('mdc-text-field')) return
-
-      //     if (getInputText(li.id).value < getInputText(li.nextElementSibling.id).value) {
-      //       document.getElementById('create-activity').disabled = false
-      //       console.log()
-      //       if(getInputText(li.id).value === NaN) {
-
-      //       }
-      //       return
-      //     }
-      //     snacks('Schedules End Time cannot be less than the start time')
-      //     document.getElementById('create-activity').disabled = true
-      //   });
-      // });
-
-
-      // [...document.querySelectorAll('.endTimeInputs')].forEach(function (li) {
-
-      //   li.addEventListener('input', function () {
-
-
-      //     if (!li.classList.contains('mdc-text-field')) return
-
-      //     if (getInputText(li.id).value > getInputText(li.previousElementSibling.id).value) {
-      //       document.getElementById('create-activity').disabled = false
-      //       return
-      //     }
-
-      //     snacks('Schedules End Time cannot be less than the start time')
-
-      //     document.getElementById('create-activity').disabled = true
-
-      //   });
-      // });
 
       let venueCont = 0
       record.venue.forEach(function (venueDescriptor) {
@@ -1940,12 +1905,16 @@ function getSelectedSubscriptionData(office, template) {
         document.querySelector('.map-select' + venueCont).parentNode.appendChild(locationsearch)
       });
 
-      [...document.querySelectorAll('.map-select-type-action')].forEach(function (element) {
+      const mapSelectAction = document.querySelectorAll('.map-select-type-action')
+      for (let index = 0; index < mapSelectAction.length; index++) {
+        const element = mapSelectAction[index];
         element.addEventListener('click', function (evt) {
           console.log(evt)
           renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
         })
-      })
+        
+      }
+
       if (!record.attachment) return
       createAttachmentContainer(record.attachment, 'create-activity--container', true, false, office, template)
 
@@ -2057,9 +2026,13 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
 
   document.getElementById(target).appendChild(attachCont);
 
-  [...document.querySelectorAll('.attachment--string-input-active')].forEach(function (field) {
+  const activeAttachmentInput = document.querySelectorAll('.attachment--string-input-active');
+  for (let index = 0; index < activeAttachmentInput.length; index++) {
+    const field =activeAttachmentInput[index];
     getInputText(field.id).value = ''
-  })
+    
+  }
+
 
   const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
   select.listen('change', () => {
@@ -2145,8 +2118,8 @@ function createUpdateReqBody(event, reqType) {
   const share = []
 
   const allSchedule = document.querySelectorAll('.schedule--list');
-
-  [...allSchedule].forEach(function (li) {
+  for (let index = 0; index < allSchedule.length; index++) {
+    const element = allSchedule[index];
     console.log(li.querySelector('.startDate'))
     const scheduleBody = {}
     scheduleBody.name = li.children[0].dataset.value
@@ -2179,14 +2152,17 @@ function createUpdateReqBody(event, reqType) {
     scheduleBody.endTime = moment(endTime).valueOf() || ''
     schedule.push(scheduleBody)
 
-  })
-
+    
+  }
 
   const allVenues = document.querySelectorAll('.map-select-type');
-  [...allVenues].forEach(function (li) {
+
+  for (let index = 0; index < allVenues.length; index++) {
+    const li = allVenues[index];
+    
     geopoint = {}
     const venueBody = {}
-
+  
     venueBody.venueDescriptor = li.dataset.descrip
     venueBody.location = li.dataset.location === 'undefined' ? '' : li.dataset.location
     venueBody.address = li.dataset.address || ''
@@ -2196,22 +2172,21 @@ function createUpdateReqBody(event, reqType) {
       geopoint.latitude = parseInt(li.dataset.inputlat)
       geopoint.longitude = parseInt(li.dataset.inputlon)
     }
-
+  
     venueBody['geopoint'] = geopoint
     venue.push(venueBody)
-  })
+  }
 
   const attachments = {}
   const allAttachments = document.querySelectorAll('.attachment');
-  [...allAttachments].forEach(function (field) {
+  for (let index = 0; index < allAttachments.length; index++) {
+      const field = allAttachments[index]
+      attachments[field.dataset.key] = {
+        value: field.id === 'weekday' ? field.dataset.value : getInputText(field.id).value,
+        type: field.dataset.type
+      }
 
-    attachments[field.dataset.key] = {
-      value: field.id === 'weekday' ? field.dataset.value : getInputText(field.id).value,
-      type: field.dataset.type
-    }
-
-    console.log(attachments)
-  })
+  }
 
   if (!allow) return
 
@@ -2228,10 +2203,10 @@ function createUpdateReqBody(event, reqType) {
 
   if (reqType === 'create') {
     const allShare = document.querySelectorAll('.assignee-li');
-
-    [...allShare].forEach(function (li) {
-      share.push(li.dataset.assignee)
-    })
+    for (let index = 0; index < allShare.length; index++) {
+      share.push(allShare[index].dataset.assignee)
+      
+    }
 
     const body = {
       'office': document.querySelector('.activity--Office').textContent,

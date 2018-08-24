@@ -1,3 +1,5 @@
+"use strict";
+
 function loader() {
   const div = document.createElement('div')
   div.className = 'loader'
@@ -298,8 +300,6 @@ function handleLocationCorrection(msg) {
 function handleLocationError(err) {
   console.log(err)
 }
-
-
 
 function sendCurrentViewNameToAndroid(viewName) {
   Fetchview.startConversation(viewName)

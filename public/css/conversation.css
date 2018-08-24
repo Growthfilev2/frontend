@@ -326,9 +326,12 @@ body {
 }
 
 .profile--icon-small {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+    display: block;
+    margin: 0 auto;
+    object-fit: cover;
 }
 
 #chat-container {
@@ -596,6 +599,12 @@ footer.mdc-dialog__footer {
 
 .profile-container--main #user-profile--image.reset-opacity {
     opacity: 1;
+}
+
+
+.profile-container--main-small {
+    width: 40px;
+    height: 40px;
 }
 
 #refresh-login {

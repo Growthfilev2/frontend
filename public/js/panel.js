@@ -1,4 +1,7 @@
+"use strict";
+
 function listView() {
+  
   listPanel()
   creatListHeader()
   document.body.style.backgroundColor = 'white'
@@ -86,9 +89,10 @@ function creatListHeader() {
 
   const profileIconDiv = document.createElement('div')
   profileIconDiv.id = 'profile-panel--icon'
-
+  profileIconDiv.className = 'profile-container--main-small'
   const profileImg = document.createElement('img')
   profileImg.className = 'profile--icon-small'
+
   profileImg.src = firebase.auth().currentUser.photoURL
 
   profileIconDiv.innerHTML = profileImg.outerHTML
@@ -369,7 +373,10 @@ function displayMapActivity(dbName, markerActivityId) {
     rootObjectStore.get(dbName).onsuccess = function(event){
       unique = event.target.result.hasMultipleOffice
     }
-    const setMarker = [...new Set(markerActivityId)]
+
+
+    const setMarker = removeDuplicate(markerActivityId);
+
     console.log(setMarker)
       setMarker.forEach(function (id) {
         console.log(id)
@@ -682,7 +689,7 @@ function createProfilePanel() {
 
   toggleBtnName.textContent = 'edit'
 
-  nameChangeCont.appendChild(createInput('displayName', 'Name'))
+  nameChangeCont.appendChild(createInput('displayName', 'name'))
   nameChangeCont.appendChild(toggleBtnName)
 
   const emailCont = document.createElement('div')
@@ -946,7 +953,7 @@ function createConfirmView() {
   div.id = 'confirm--number-change'
 
   const img = document.createElement('img')
-  img.src = ''
+  img.src = '../img/change_number.jpg'
   img.className = 'change-number--info'
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
@@ -1048,12 +1055,10 @@ function changePhoneNumber() {
   getInputText('current-phone--number').value = ''
 
   const allInputFields = document.querySelectorAll('.phoneNumber');
-
-  [...allInputFields].forEach(function (input) {
-    console.log(input)
-    input.addEventListener('input', handleIllegalNumberInput)
-  })
-
+  
+  for(let i=0;i < allInputFields.length;i++){
+      input.addEventListener('input', handleIllegalNumberInput)
+  }
   document.getElementById('updatePhone').addEventListener('click', function (e) {
     if (verifyCurrentPhoneNumber() && verifyPhoneNumber()) {
       const reqBody = {
@@ -1240,4 +1245,21 @@ function handleChangeNumberMenu() {
 
   // Turn off menu open animations
   menu.quickOpen = false
+}
+
+
+function removeDuplicate(array){
+  let temp = {};
+  let result = [];
+  let length = array.length;
+  let j = 0;
+
+  for(let i=0 ; i <length;i++ ){
+    let item = array[i];
+    if(temp[item] !== 1){
+      temp[item] = 1;
+      result[j++] = item
+    }
+  }
+  return result
 }
