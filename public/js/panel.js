@@ -1,7 +1,6 @@
-// "use strict";
 
 function listView() {
-  
+
   listPanel()
   creatListHeader()
   document.body.style.backgroundColor = 'white'
@@ -37,11 +36,11 @@ function fetchDataForActivityList(db, uniqueOffice) {
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityTimestampIndex = activityObjectStore.index('timestamp')
-  
+
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
   const activityVisibleIndex = activityObjectStore.index('visibleSort')
-  const activityListRange = IDBKeyRange.bound([1],['2018-'+'\uffff'])
+  const activityListRange = IDBKeyRange.bound([0],['2018-'+'\uffff'])
 
 
   activityVisibleIndex.openCursor(activityListRange,'prev').onsuccess = function(event){
@@ -264,7 +263,7 @@ function fetchMapData() {
     document.getElementById('close-map--drawer').addEventListener('click', listView)
 
     const mapRecords = []
-    const activityListRange = IDBKeyRange.bound([1],['2018-'+'\uffff'])
+    const activityListRange = IDBKeyRange.bound([0],['2018-'+'\uffff'])
     mapVisibleSortIndex.openCursor(activityListRange, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
 
@@ -575,7 +574,7 @@ function getActivity(db, data, unique) {
 
   const activityShowIndex = db.transaction('activity').objectStore('activity').index('showActivity')
 
-  const bound = IDBKeyRange.only([1,data.activityId])
+  const bound = IDBKeyRange.only([0,data.activityId])
 
   activityShowIndex.get(bound).onsuccess = function (event) {
     const record = event.target.result
@@ -698,7 +697,7 @@ function createProfilePanel() {
 
   toggleBtnName.textContent = 'edit'
 
-  nameChangeCont.appendChild(createInput('displayName', 'name'))
+  nameChangeCont.appendChild(createInput('displayName', 'Name'))
   nameChangeCont.appendChild(toggleBtnName)
 
   const emailCont = document.createElement('div')
@@ -1064,7 +1063,7 @@ function changePhoneNumber() {
   getInputText('current-phone--number').value = ''
 
   const allInputFields = document.querySelectorAll('.phoneNumber');
-  
+
   for(let i=0;i < allInputFields.length;i++){
       input.addEventListener('input', handleIllegalNumberInput)
   }

@@ -19,9 +19,9 @@
         '//fonts.googleapis.com/css?family=Roboto:300,400,500',
         '//fonts.googleapis.com/icon?family=Material+Icons',
         'index.html',
-    
+
     ]
-  
+
     self.addEventListener('install', function (event) {
         console.log("sw open")
         event.waitUntil(

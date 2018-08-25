@@ -380,9 +380,9 @@ function displayActivityDetail(db, record) {
 
 
   const venueLi = document.querySelectorAll('.venue--list');
-    
+
   for (let index = 0; index < venueLi.length; index++) {
-    venueLi[index].addEventListener('click', expandVenueList)    
+    venueLi[index].addEventListener('click', expandVenueList)
   }
 
   if (document.getElementById('select-pending')) {
@@ -441,7 +441,7 @@ function updateActivityPanel(db, record) {
         console.log(evt)
         renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
       })
-      
+
     }
 
     createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
@@ -1546,9 +1546,9 @@ function initializeDialog(evt, input, params) {
     for (let index = 0; index < removeClass.length; index++) {
       const icon = removeClass[index];
       icon.classList.add('no-click')
-      
+
     }
-  
+
     document.getElementById('change-number-dialog').remove()
 
   })
@@ -1844,7 +1844,7 @@ function createInput(key, type, classtype, value) {
     mainInput.style.borderBottom = 'none'
     mainInput.placeholder = 'select ' + key
   } else {
-      
+
     mainInput.placeholder = key
   }
 
@@ -1908,7 +1908,7 @@ function getSelectedSubscriptionData(office, template) {
           console.log(evt)
           renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
         })
-        
+
       }
 
       if (!record.attachment) return
@@ -1934,7 +1934,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   }
   const attachCont = document.createElement('div')
   attachCont.id = 'attachment-container'
- 
+
   Object.keys(attachment).forEach(function (key) {
 
     const div = document.createElement('div')
@@ -1942,7 +1942,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     const label = document.createElement('div')
     label.className = 'label--text'
     label.textContent = key
-    
+
     if (attachment[key].type === 'string') {
       div.appendChild(label)
 
@@ -2026,7 +2026,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
   for (let index = 0; index < activeAttachmentInput.length; index++) {
     const field =activeAttachmentInput[index];
     getInputText(field.id).value = ''
-    
+
   }
 
 
@@ -2123,7 +2123,7 @@ function createUpdateReqBody(event, reqType) {
     const endTime = `${li.querySelector('.endDate').children[0].value} ${li.querySelector('.endTime').children[0].value}`
 
     console.log(startTime)
-  
+
     if (startTime == " " && endTime == " ") {
 
       allow = true
@@ -2148,17 +2148,17 @@ function createUpdateReqBody(event, reqType) {
     scheduleBody.endTime = moment(endTime).valueOf() || ''
     schedule.push(scheduleBody)
 
-    
+
   }
 
   const allVenues = document.querySelectorAll('.map-select-type');
 
   for (let index = 0; index < allVenues.length; index++) {
     const li = allVenues[index];
-    
+
     geopoint = {}
     const venueBody = {}
-  
+
     venueBody.venueDescriptor = li.dataset.descrip
     venueBody.location = li.dataset.location === 'undefined' ? '' : li.dataset.location
     venueBody.address = li.dataset.address || ''
@@ -2168,7 +2168,7 @@ function createUpdateReqBody(event, reqType) {
       geopoint.latitude = parseInt(li.dataset.inputlat)
       geopoint.longitude = parseInt(li.dataset.inputlon)
     }
-  
+
     venueBody['geopoint'] = geopoint
     venue.push(venueBody)
   }
@@ -2201,7 +2201,7 @@ function createUpdateReqBody(event, reqType) {
     const allShare = document.querySelectorAll('.assignee-li');
     for (let index = 0; index < allShare.length; index++) {
       share.push(allShare[index].dataset.assignee)
-      
+
     }
 
     const body = {
@@ -2213,7 +2213,7 @@ function createUpdateReqBody(event, reqType) {
       'venue': venue,
       'attachment': attachments
     }
-    
+
     console.log(body)
     requestCreator('create', body)
     return
