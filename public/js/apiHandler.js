@@ -1,3 +1,6 @@
+
+// "use strict";
+
 /* eslint-env worker */
 // import firebase app script because there is no native support of firebase inside web workers
 
@@ -100,7 +103,7 @@ function fetchServerTime() {
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now`,
+      `${apiUrl}now`
     ).then(function (response) {
       resolve(response.timestamp)
 
@@ -133,7 +136,11 @@ function initializeIDB() {
 
       activity.createIndex('timestamp', 'timestamp')
       activity.createIndex('office', 'office')
+      
+      activity.createIndex('hidden','hidden')
 
+      activity.createIndex('visibleSort',['hidden','timestamp'])
+      activity.createIndex('showActivity',['hidden','activityId'])
       const users = db.createObjectStore('users', {
         keyPath: 'mobile'
       })
@@ -180,6 +187,7 @@ function initializeIDB() {
       map.createIndex('office', 'office')
       map.createIndex('timestamp', 'timestamp')
       map.createIndex('count', 'count')
+      map.createIndex('mapSort',['hidden','timestamp'])
 
       const children = db.createObjectStore('children', {
         keyPath: 'activityId'
@@ -415,7 +423,8 @@ function updateMap(db, activity) {
         venueDescriptor: newVenue.venueDescriptor,
         office: activity.office,
         count: 0,
-        timestamp: activity.timestamp
+        timestamp: activity.timestamp,
+        hidden:activity.hidden
       })
     })
   }
@@ -752,209 +761,286 @@ function setUniqueOffice(data) {
   }
 }
 
-// const dummy = {
-//   "addendum": [],
-//   "activities": [
-//     {
-//     "canEdit": true,
-//     "status": "CONFIRMED",
-//     "schedule": [{
-//       "endTime": "2018-06-28T10:04:51.699Z",
-//       "startTime": "2018-06-28T09:25:32.304Z",
-//       "name": "Shift Timing"
-//     }],
-//     "venue": [{
-//         "venueDescriptor": "Base Location",
-//         "geopoint": {
-//           "_latitude": 28.5728858,
-//           "_longitude": 77.2185796
-//         },
-//         "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
-//         "location": "DUMMY SQUARE"
-//       },
-//       {
-//         "location": "Lodge Residence",
-//         "venueDescriptor": "Residence",
-//         "geopoint": {
-//           "_latitude": 28.5545653,
-//           "_longitude": 77.3328355
-//         },
-//         "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
-//       }
-//     ],
-//     "timestamp": "2018-06-28T09:25:32.304Z",
-//     "template": "employee",
-//     "activityName": "employee",
-//     "office": "dummy",
-//     "assignees": [
-//       "+918080808080",
-//       "+918178135274",
-//       "+919090909090",
-//       "+919090909091"
-//     ],
-//     "attachment": {
-//       "Name": {
-//         "value": "shikhar",
-//         "type": "branch"
-//       },
-//       "Employee Contact": {
-//         "value": "+919999288920",
-//         "type": "phoneNumber"
-//       },
-//       "Employee Code": {
-//         "value": "123456",
-//         "type": "string"
-//       },
-//       "Department": {
-//         "value": "Tech",
-//         "type": "string"
-//       },
-//       "First Supervisor": {
-//         "value": "+919899758344",
-//         "type": "phoneNumber"
-//       },
-//       "Second Supervisor": {
-//         "value": "+919718392646",
-//         "type": "phoneNumber"
-//       },
-//       "Weekly Off": {
-//         "value": "Monday",
-//         "type": "weekday"
-//       },
-//       "Picture" :{
-//         "value":"",
-//         "type":"base64"
-//       }
-//     },
-//     "activityId": "H4jbVD6KeQeHmkxlkvo9"
-//   },
-//   {
-//     "canEdit": true,
-//     "status": "CONFIRMED",
-//     "schedule": [{
-//       "endTime": "2018-06-28T10:04:51.699Z",
-//       "startTime": "2018-06-28T09:25:32.304Z",
-//       "name": "Shift Timing"
-//     }],
-//     "venue": [{
-//         "venueDescriptor": "Base Location",
-//         "geopoint": {
-//           "_latitude": 28.5728858,
-//           "_longitude": 77.2185796
-//         },
-//         "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
-//         "location": "DUMMY SQUARE"
-//       },
-//       {
-//         "location": "Lodge Residence",
-//         "venueDescriptor": "Residence",
-//         "geopoint": {
-//           "_latitude": 28.5545653,
-//           "_longitude": 77.3328355
-//         },
-//         "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
-//       }
-//     ],
-//     "timestamp": "2018-06-28T09:25:32.304Z",
-//     "template": "branch",
-//     "activityName": "employee",
-//     "office": "dummy",
-//     "assignees": [
-//       "+918080808080",
-//       "+918178135274",
-//       "+919090909090",
-//       "+919090909091"
-//     ],
-//     "attachment": {
-//       "Name": {
-//         "value": "shikhar",
-//         "type": "branch"
-//       },
-//       "Employee Contact": {
-//         "value": "+919999288920",
-//         "type": "phoneNumber"
-//       },
-//       "Employee Code": {
-//         "value": "123456",
-//         "type": "string"
-//       },
-//       "Department": {
-//         "value": "Tech",
-//         "type": "string"
-//       },
-//       "First Supervisor": {
-//         "value": "+919899758344",
-//         "type": "phoneNumber"
-//       },
-//       "Second Supervisor": {
-//         "value": "+919718392646",
-//         "type": "phoneNumber"
-//       },
-//       "Weekly Off": {
-//         "value": "Monday",
-//         "type": "weekday"
-//       },
-//       "Picture" :{
-//         "value":"",
-//         "type":"base64"
-//       }
-//     },
-//     "activityId": "H4jbVD6KeQeHmkxlkvkl"
-//   }
-//
-// ],
-//   "templates": [{
-//     "schedule": [
-//       "Shift Timing"
-//     ],
-//     "venue": [
-//       "Base Location",
-//       "Residence"
-//     ],
-//     "template": "employee",
-//     "office": "dummy",
-//     "attachment": {
-//
-//       "Base Location": {
-//         "value": "",
-//         "type": "branch"
-//       },
-//
-//       "Employee Contact": {
-//         "value": "",
-//         "type": "phoneNumber"
-//       },
-//
-//       "Employee Code": {
-//         "value": "",
-//         "type": "string"
-//       },
-//
-//       "Department": {
-//         "value": "",
-//         "type": "string"
-//       },
-//       "First Supervisor": {
-//         "value": "",
-//         "type": "phoneNumber"
-//       },
-//       "Second Supervisor": {
-//         "value": "",
-//         "type": "phoneNumber"
-//       },
-//       "Weekly Off": {
-//         "value": "",
-//         "type": "weekday"
-//       },
-//       "Picture":{
-//         "value":"",
-//         "type":"base64"
-//       }
-//     },
-//   }],
-//   "from": "1970-01-01T00:00:00.090Z",
-//   "upto": "2018-07-24T08:05:59.938Z"
-// }
+const dummy = {
+  "addendum": [],
+  "activities": [
+    {
+    "canEdit": true,
+    "hidden":1,
+    "status": "CONFIRMED",
+    "schedule": [{
+      "endTime": "2018-06-28T10:04:51.699Z",
+      "startTime": "2018-06-28T09:25:32.304Z",
+      "name": "Shift Timing"
+    }],
+    "venue": [{
+        "venueDescriptor": "Base Location",
+        "geopoint": {
+          "_latitude": 28.5728858,
+          "_longitude": 77.2185796
+        },
+        "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
+        "location": "DUMMY SQUARE"
+      },
+      {
+        "location": "Lodge Residence",
+        "venueDescriptor": "Residence",
+        "geopoint": {
+          "_latitude": 28.5545653,
+          "_longitude": 77.3328355
+        },
+        "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
+      }
+    ],
+    "timestamp": "2018-06-28T09:25:32.304Z",
+    "template": "employee",
+    "activityName": "employee",
+    "office": "dummy",
+    "assignees": [
+      "+918080808080",
+      "+918178135274",
+      "+919090909090",
+      "+919090909091"
+    ],
+    "attachment": {
+      "Name": {
+        "value": "shikhar",
+        "type": "branch"
+      },
+      "Employee Contact": {
+        "value": "+919999288920",
+        "type": "phoneNumber"
+      },
+      "Employee Code": {
+        "value": "123456",
+        "type": "string"
+      },
+      "Department": {
+        "value": "Tech",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "+919899758344",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "+919718392646",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "Monday",
+        "type": "weekday"
+      },
+      "Picture" :{
+        "value":"",
+        "type":"base64"
+      }
+    },
+    "activityId": "H4jbVD6KeQeHmkxlkvo9"
+  },
+
+  {
+    "canEdit": true,
+    "hidden":1,
+    "status": "CONFIRMED",
+    "schedule": [{
+      "endTime": "2018-06-28T10:04:51.699Z",
+      "startTime": "2018-06-28T09:25:32.304Z",
+      "name": "Shift Timing"
+    }],
+    "venue": [{
+        "venueDescriptor": "Base Location",
+        "geopoint": {
+          "_latitude": 28.5728858,
+          "_longitude": 77.2185796
+        },
+        "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
+        "location": "DUMMY SQUARE"
+      },
+      {
+        "location": "Lodge Residence",
+        "venueDescriptor": "Residence",
+        "geopoint": {
+          "_latitude": 28.5545653,
+          "_longitude": 77.3328355
+        },
+        "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
+      }
+    ],
+    "timestamp": "2018-12-28T09:25:32.304Z",
+    "template": "employee",
+    "activityName": "employee",
+    "office": "dummy",
+    "assignees": [
+      "+918080808080",
+      "+918178135274",
+      "+919090909090",
+      "+919090909091"
+    ],
+    "attachment": {
+      "Name": {
+        "value": "shikhar",
+        "type": "branch"
+      },
+      "Employee Contact": {
+        "value": "+919999288920",
+        "type": "phoneNumber"
+      },
+      "Employee Code": {
+        "value": "123456",
+        "type": "string"
+      },
+      "Department": {
+        "value": "Tech",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "+919899758344",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "+919718392646",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "Monday",
+        "type": "weekday"
+      },
+      "Picture" :{
+        "value":"",
+        "type":"base64"
+      }
+    },
+    "activityId": "H4jbVD6KeQeHmkx55555"
+  },
+  {
+    "canEdit": true,
+    "status": "CONFIRMED",
+    "hidden":0,
+    "schedule": [{
+      "endTime": "2018-06-28T10:04:51.699Z",
+      "startTime": "2018-06-28T09:25:32.304Z",
+      "name": "Shift Timing"
+    }],
+    "venue": [{
+        "venueDescriptor": "Base Location",
+        "geopoint": {
+          "_latitude": 28.5728858,
+          "_longitude": 77.2185796
+        },
+        "address": "141 B, Second Floor Shahpurjat, Shahpur Jat, Siri Fort, New Delhi, Delhi 110049",
+        "location": "DUMMY SQUARE"
+      },
+      {
+        "location": "Lodge Residence",
+        "venueDescriptor": "Residence",
+        "geopoint": {
+          "_latitude": 28.5545653,
+          "_longitude": 77.3328355
+        },
+        "address": "Sector 44, A Block, C Block, Sector 44, Noida, Uttar Pradesh 201303"
+      }
+    ],
+    "timestamp": "2018-05-28T09:25:32.304Z",
+    "template": "branch",
+    "activityName": "employee",
+    "office": "dummy",
+    "assignees": [
+      "+918080808080",
+      "+918178135274",
+      "+919090909090",
+      "+919090909091"
+    ],
+    "attachment": {
+      "Name": {
+        "value": "shikhar",
+        "type": "branch"
+      },
+      "Employee Contact": {
+        "value": "+919999288920",
+        "type": "phoneNumber"
+      },
+      "Employee Code": {
+        "value": "123456",
+        "type": "string"
+      },
+      "Department": {
+        "value": "Tech",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "+919899758344",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "+919718392646",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "Monday",
+        "type": "weekday"
+      },
+      "Picture" :{
+        "value":"",
+        "type":"base64"
+      }
+    },
+    "activityId": "H4jbVD6KeQeHmkxlkvkl"
+  }
+
+],
+  "templates": [{
+    "schedule": [
+      "Shift Timing"
+    ],
+    "venue": [
+      "Base Location",
+      "Residence"
+    ],
+    "template": "employee",
+    "office": "dummy",
+    "attachment": {
+
+      "Base Location": {
+        "value": "",
+        "type": "branch"
+      },
+
+      "Employee Contact": {
+        "value": "",
+        "type": "phoneNumber"
+      },
+
+      "Employee Code": {
+        "value": "",
+        "type": "string"
+      },
+
+      "Department": {
+        "value": "",
+        "type": "string"
+      },
+      "First Supervisor": {
+        "value": "",
+        "type": "phoneNumber"
+      },
+      "Second Supervisor": {
+        "value": "",
+        "type": "phoneNumber"
+      },
+      "Weekly Off": {
+        "value": "",
+        "type": "weekday"
+      },
+      "Picture":{
+        "value":"",
+        "type":"base64"
+      }
+    },
+  }],
+  "from": "1970-01-01T00:00:00.090Z",
+  "upto": "2018-07-24T08:05:59.938Z"
+}
 
 function updateIDB(dbName) {
   console.log(dbName)
@@ -970,10 +1056,10 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          if (response.from === response.upto) {
-            return
-          }
-          successResponse(response)
+          // if (response.from === response.upto) {
+          //   return
+          // }
+          successResponse(dummy)
         })
         .catch(console.log)
     }

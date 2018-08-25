@@ -17,8 +17,7 @@
         async></script>
     <!-- application files-->
 
-    <script src="js/init.js" defer></script>
-    <script src="js/services.js" defer></script>
+    <script src="js/services.js" defer ></script>
     <script src="js/conversation.js" defer></script>
     <script src="js/panel.js" defer></script>
 
@@ -46,25 +45,24 @@
             });
         } else {
             // function 
-            console.log("please upgrade android version")
+            console.log("please upgrade android")
         }
     </script>
 
     <script>
         function init() {
+            // navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
 
-            navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
-
-                registration.addEventListener('updatefound', function () {
-                    // If updatefound is fired, it means that there's
-                    // a new service worker being installed.
-                    var installingWorker = registration.installing;
-                    console.log('A new service worker is being installed:',
-                        installingWorker);
+                // registration.addEventListener('updatefound', function () {
+                //     // If updatefound is fired, it means that there's
+                //     // a new service worker being installed.
+                //     var installingWorker = registration.installing;
+                //     console.log('A new service worker is being installed:',
+                //         installingWorker);
 
                     // You can listen for changes to the installing service worker's
                     // state via installingWorker.onstatechange
-                });
+                // });
 
                 // Registration was successful
                 firebase.initializeApp({
@@ -127,11 +125,11 @@
                 })
 
                 // initialize smooth scrolling
-                window.scrollBy({
-                    top: 100,
-                    left: 0,
-                    behavior: 'smooth'
-                })
+                // window.scrollBy({
+                //     top: 100,
+                //     left: 0,
+                //     behavior: 'smooth'
+                // })
 
                 function userSignedIn(auth) {
                     if (window.Worker && window.indexedDB) {
@@ -192,11 +190,11 @@
                 })
                 // locationServices()
 
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function (err) {
-                // registration failed :(
-                console.log('ServiceWorker registration failed: ', err);
-            });
+            //     console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            // }, function (err) {
+            //     // registration failed :(
+            //     console.log('ServiceWorker registration failed: ', err);
+            // });
         }
     </script>
 </body>

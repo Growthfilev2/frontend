@@ -1,4 +1,4 @@
-"use strict";
+// "use strict";
 
 function conversation(id) {
   if (!id) return

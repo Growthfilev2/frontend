@@ -1,4 +1,4 @@
-"use strict";
+// "use strict";
 
 function listView() {
   
@@ -36,13 +36,17 @@ function fetchDataForActivityList(db, uniqueOffice) {
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
-  const activityObjectStoreIndex = activityObjectStore.index('timestamp')
-
+  const activityTimestampIndex = activityObjectStore.index('timestamp')
+  
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
+  const activityVisibleIndex = activityObjectStore.index('visibleSort')
+  const activityListRange = IDBKeyRange.bound([1],['2018-'+'\uffff'])
 
-  activityObjectStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
-    let cursor = event.target.result
+
+  activityVisibleIndex.openCursor(activityListRange,'prev').onsuccess = function(event){
+
+  let cursor = event.target.result
 
     if (!cursor) {
       document.getElementById('activity--list').innerHTML = activityDom
@@ -255,13 +259,13 @@ function fetchMapData() {
   req.onsuccess = function () {
     const db = req.result
     const mapObjectStore = db.transaction('map').objectStore('map')
-    const mapTimestampIndex = mapObjectStore.index('timestamp')
+    const mapVisibleSortIndex = mapObjectStore.index('mapSort')
 
     document.getElementById('close-map--drawer').addEventListener('click', listView)
 
     const mapRecords = []
-
-    mapTimestampIndex.openCursor(null, 'prev').onsuccess = function (event) {
+    const activityListRange = IDBKeyRange.bound([1],['2018-'+'\uffff'])
+    mapVisibleSortIndex.openCursor(activityListRange, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
 
       if (!cursor) {
@@ -279,7 +283,7 @@ function fetchMapData() {
         })
         return
       }
-
+      console.log(cursor.value)
       mapRecords.push(cursor.value)
       cursor.continue()
     }
@@ -568,10 +572,15 @@ function calendarViewUI(target, db, data, unique) {
 
 function getActivity(db, data, unique) {
   if (!data.hasOwnProperty('activityId')) return
-  const activityObjectStore = db.transaction('activity').objectStore('activity')
-  activityObjectStore.get(data.activityId).onsuccess = function (event) {
-    const record = event.target.result
 
+  const activityShowIndex = db.transaction('activity').objectStore('activity').index('showActivity')
+
+  const bound = IDBKeyRange.only([1,data.activityId])
+
+  activityShowIndex.get(bound).onsuccess = function (event) {
+    const record = event.target.result
+    console.log(record)
+    if(!record) return;
     createActivityList(db, record, unique).then(function (li) {
       if (document.getElementById(`activity--row${data.date}`).querySelector(`[data-id="${data.activityId}"]`)) return
       document.getElementById(`activity--row${data.date}`).innerHTML += li

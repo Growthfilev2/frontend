@@ -7,7 +7,6 @@
         'css/theme.css',
         'css/conversation.css',
         'css/material-components-web.css',
-        'js/init.js',
         'js/conversation.js',
         'js/panel.js',
         'js/services.js',

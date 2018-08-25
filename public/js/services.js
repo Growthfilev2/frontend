@@ -1,4 +1,3 @@
-"use strict";
 
 function loader() {
   const div = document.createElement('div')
@@ -302,7 +301,7 @@ function handleLocationError(err) {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -310,7 +309,9 @@ function inputFile(selector) {
 }
 let offset
 
+
 function requestCreator(requestType, requestBody) {
+
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
@@ -422,6 +423,7 @@ function loadViewFromRoot(response) {
 
 function onErrorMessage(error) {
   console.log(error)
+  console.log(error.message)
   console.table({
     'line-number': error.lineno,
     'error': error.message,
