@@ -47,7 +47,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
     let input = document.getElementById('location-text-field').querySelector('.mdc-text-field__input');
     autocomplete =  new google.maps.places.Autocomplete(input);
   }
-        
+
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
   let primaryObjectStore = ''
@@ -92,7 +92,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
 
         case 'children':
         console.log(activityRecord.template);
- 
+
         if (cursor.value.template === activityRecord.template && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
             // if(!cursor.value.attachment.hasOwnProperty('Name')) return
             console.log(cursor.value)
@@ -109,7 +109,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
     }
   }
   // console.log(isMapPinPresent)
-  
+
   document.getElementById(inputFields.main).addEventListener('input', function () {
 
     if(inputFields.main === 'location-text-field') {
@@ -125,7 +125,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
           return;
         }
     }
-    
+
 
     document.getElementById(selector).innerHTML = ''
 
@@ -180,7 +180,7 @@ function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, ac
 
 
   switch (objectStore.name) {
-  
+
     case 'users':
       console.log(cursor.value)
       assigneeListUI(cursor, selector, inputFields.main)
@@ -303,7 +303,7 @@ function handleLocationError(err) {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
