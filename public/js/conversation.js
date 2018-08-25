@@ -1,10 +1,6 @@
-// "use strict";
 
 function conversation(id) {
   if (!id) return
-  // removeDom('chat-container')
-
-
   const currentUser = firebase.auth().currentUser
 
   const req = window.indexedDB.open(currentUser.uid)

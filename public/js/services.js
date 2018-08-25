@@ -85,7 +85,9 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'subscriptions':
-          officeTemplateCombo(cursor, selector, inputFields.main)
+          if(cursor.value.template !== 'subscription') {
+             officeTemplateCombo(cursor, selector, inputFields.main)
+          }
           break
 
         case 'children':
