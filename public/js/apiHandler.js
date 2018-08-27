@@ -136,7 +136,7 @@ function initializeIDB() {
 
       activity.createIndex('timestamp', 'timestamp')
       activity.createIndex('office', 'office')
-      
+
       activity.createIndex('hidden','hidden')
 
       activity.createIndex('visibleSort',['hidden','timestamp'])
@@ -223,7 +223,8 @@ function initializeIDB() {
         return;
     }
 
-    requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+
+      requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
 
       const rootTxView = request.result.transaction('root', 'readwrite')
       const rootObjectStore = rootTxView.objectStore('root')
@@ -248,6 +249,7 @@ function initializeIDB() {
 
       }
     }
+  
   })
 }
 
@@ -424,7 +426,8 @@ function updateMap(db, activity) {
         office: activity.office,
         count: 0,
         timestamp: activity.timestamp,
-        hidden:activity.hidden
+        hidden: activity.hidden,
+        template: activity.template
       })
     })
   }
@@ -469,6 +472,7 @@ function updateCalendar(db, activity) {
         activityId: activity.activityId,
         scheduleName: schedule.name,
         timestamp: activity.timestamp,
+        template : activity.template,
         date: {
           start: startTime,
           end: endTime

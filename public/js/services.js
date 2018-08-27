@@ -85,6 +85,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
           break
 
         case 'subscriptions':
+        console.log(cursor.value)
           if(cursor.value.template !== 'subscription') {
              officeTemplateCombo(cursor, selector, inputFields.main)
           }

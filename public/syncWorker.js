@@ -1,16 +1,13 @@
 (function () {
 
-    const CACHE_NAME = 'V1-test';
-
+    const CACHE_NAME = 'V1-testing-7';
     const urlsToCache = [
-
         'css/theme.css',
         'css/conversation.css',
         'css/material-components-web.css',
         'js/conversation.js',
         'js/panel.js',
         'js/services.js',
-        'js/apiHandler.js',
         'js/material-components-web.js',
         'external/firebase-app.js',
         'external/firebasejs/5.2.0/firebase-auth.js',
@@ -18,12 +15,18 @@
         '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js',
         '//fonts.googleapis.com/css?family=Roboto:300,400,500',
         '//fonts.googleapis.com/icon?family=Material+Icons',
-        'index.html',
-
+        'index.html'
     ]
+
+    self.addEventListener('message', function(event) {
+      if(event.data) {
+        urlsToCache.push(event.data)
+      }
+    });
 
     self.addEventListener('install', function (event) {
         console.log("sw open")
+      
         event.waitUntil(
             caches.open(CACHE_NAME)
             .then(function (cache) {
@@ -94,6 +97,5 @@
             })
         );
     });
-
 
 })();

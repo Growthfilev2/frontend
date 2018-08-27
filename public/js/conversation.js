@@ -40,7 +40,6 @@ function fetchAddendumForComment(id,user) {
     sendCurrentViewNameToAndroid('conversation')
    let commentDom = ''
 
-
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
@@ -551,7 +550,7 @@ function activityTitle(title) {
   return container.outerHTML
 }
 
-function sectionDiv(key, content) {
+function sectionDiv(key, content,type) {
 
   const cont = document.createElement('div')
   cont.className = `activity--${key.replace(' ','')}-container activity--detail--section`
@@ -560,11 +559,22 @@ function sectionDiv(key, content) {
   span.textContent = key
 
   span.className = 'detail--static-text mdc-typography--subtitle2'
-  const p = document.createElement('p')
-  p.className = `activity--${key.replace(' ','')} activity--update--text`
-  p.textContent = content
   cont.appendChild(span)
-  cont.appendChild(p)
+
+
+  if(type === 'base64') {
+    const img = document.createElement('p')
+    img.className = `activity--${key.replace(' ','')} activity--update--text`
+    img.src = content
+    cont.appendChild(img)
+  }
+  else {
+    const p = document.createElement('p')
+    p.className = `activity--${key.replace(' ','')} activity--update--text`
+    p.textContent = content
+    cont.appendChild(p)
+  }
+
   return cont.outerHTML
 }
 
@@ -617,7 +627,7 @@ function displayAttachmentCont(attachment) {
   div.className = 'attachment--cont-update'
   Object.keys(attachment).forEach(function (key) {
 
-    div.innerHTML += sectionDiv(key, attachment[key].value)
+    div.innerHTML += sectionDiv(key, attachment[key].value,attachment[key].type)
   })
   return div.outerHTML
 }
@@ -628,9 +638,6 @@ function makeFieldsEditable(record) {
   req.onsuccess = function () {
     const db = req.result
     updateActivityPanel(db, record)
-
-
-
   }
 }
 
@@ -1980,6 +1987,7 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
     }
 
     if(attachment[key].type === 'base64'){
+
       const addCamera = document.createElement('label')
       addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
       addCamera.id = 'start-camera'
@@ -2024,16 +2032,17 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
 
   const activeAttachmentInput = document.querySelectorAll('.attachment--string-input-active');
   for (let index = 0; index < activeAttachmentInput.length; index++) {
-    const field =activeAttachmentInput[index];
+    const field = activeAttachmentInput[index];
     getInputText(field.id).value = ''
-
   }
 
+  if(document.querySelector('.mdc-select')) {
 
   const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
   select.listen('change', () => {
     select['root_'].dataset.value = select.value
   });
+}
 
   if(document.getElementById('start-camera')) {
     document.getElementById('start-camera').addEventListener('click', readCameraFile)
@@ -2044,10 +2053,12 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
 
 
 function setFilePath(str){
+  const imageFieldInput= document.querySelector('.image-preview--attachment').children[0]
   const img = document.createElement('img')
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main'
-  document.querySelector('.image-preview--attachment').children[0].remove()
+  getInputText(imageFieldInput.id).value = `data:image/jpeg;base64,${str}`
+  imageFieldInput.style.opacity = '0'
   document.querySelector('.image-preview--attachment').appendChild(img)
 }
 
@@ -2116,11 +2127,11 @@ function createUpdateReqBody(event, reqType) {
   const allSchedule = document.querySelectorAll('.schedule--list');
   for (let index = 0; index < allSchedule.length; index++) {
     const element = allSchedule[index];
-    console.log(li.querySelector('.startDate'))
+
     const scheduleBody = {}
-    scheduleBody.name = li.children[0].dataset.value
-    const startTime = `${li.querySelector('.startDate').children[0].value} ${li.querySelector('.startTime').children[0].value}`
-    const endTime = `${li.querySelector('.endDate').children[0].value} ${li.querySelector('.endTime').children[0].value}`
+    scheduleBody.name = element.children[0].dataset.value
+    const startTime = `${element.querySelector('.startDate').children[0].value} ${element.querySelector('.startTime').children[0].value}`
+    const endTime = `${element.querySelector('.endDate').children[0].value} ${element.querySelector('.endTime').children[0].value}`
 
     console.log(startTime)
 

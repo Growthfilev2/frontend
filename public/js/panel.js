@@ -1,8 +1,8 @@
 
 function listView() {
 
-  listPanel()
   creatListHeader()
+  listPanel()
   document.body.style.backgroundColor = 'white'
 
   const dbName = firebase.auth().currentUser.uid
@@ -40,7 +40,7 @@ function fetchDataForActivityList(db, uniqueOffice) {
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
   const activityVisibleIndex = activityObjectStore.index('visibleSort')
-  const activityListRange = IDBKeyRange.bound([1],['2018-'+'\uffff'])
+  const activityListRange = IDBKeyRange.bound([0],['2018-'+'\uffff'])
 
 
   activityVisibleIndex.openCursor(activityListRange,'prev').onsuccess = function(event){
@@ -63,9 +63,12 @@ function fetchDataForActivityList(db, uniqueOffice) {
       return
     }
 
+    if(cursor.value.template !== 'subscription') {
+
     createActivityList(db, cursor.value, uniqueOffice).then(function (li) {
       activityDom += li
     })
+  }
 
     cursor.continue()
   }
@@ -96,7 +99,7 @@ function creatListHeader() {
   const profileImg = document.createElement('img')
   profileImg.className = 'profile--icon-small'
 
-  profileImg.src = firebase.auth().currentUser.photoURL
+  profileImg.src = firebase.auth().currentUser.photoURL || '../img/empty-user.jpg'
 
   profileIconDiv.innerHTML = profileImg.outerHTML
 
@@ -263,7 +266,7 @@ function fetchMapData() {
     document.getElementById('close-map--drawer').addEventListener('click', listView)
 
     const mapRecords = []
-    const activityListRange = IDBKeyRange.bound([1],['2018-'+'\uffff'])
+    const activityListRange = IDBKeyRange.bound([0],['2018-'+'\uffff'])
     mapVisibleSortIndex.openCursor(activityListRange, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
 
@@ -282,9 +285,13 @@ function fetchMapData() {
         })
         return
       }
+
+      if(cursor.value.template !== 'subscription') {
+
       console.log(cursor.value)
       mapRecords.push(cursor.value)
       cursor.continue()
+    }
     }
   }
 }
@@ -474,6 +481,7 @@ function fetchCalendarData() {
           }
 
       }
+
       insertDatesAfterToday(db,calendarDateIndex,today)
     }
   }
@@ -492,7 +500,7 @@ function insertDatesAfterToday(db,calendarDateIndex,today) {
       const lowerKeyRange = IDBKeyRange.lowerBound(today)
       calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
         const cursor = event.target.result
-        if (cursor) {
+        if (cursor && cursor.value.template !== 'subscription') {
           calendarViewUI('afterToday', db, cursor.value, unique)
           cursor.continue()
         } else {
@@ -506,12 +514,13 @@ function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
-    if (cursor) {
+    if (cursor && cursor.value.template !== 'subscription') {
 
       calendarViewUI('beforeToday', db, cursor.value, unique)
       cursor.continue()
 
-    } else {
+    }
+     else {
       document.getElementById('beforeToday').style.display = 'block'
 
       setTimeout(function () {
@@ -574,7 +583,7 @@ function getActivity(db, data, unique) {
 
   const activityShowIndex = db.transaction('activity').objectStore('activity').index('showActivity')
 
-  const bound = IDBKeyRange.only(1,data.activityId])
+  const bound = IDBKeyRange.only([0,data.activityId])
 
   activityShowIndex.get(bound).onsuccess = function (event) {
     const record = event.target.result
@@ -883,7 +892,7 @@ function removeLoader() {
 
 function showProfilePicture() {
   const user = firebase.auth().currentUser
-  document.getElementById('user-profile--image').src = user.photoURL
+  document.getElementById('user-profile--image').src = user.photoURL || '../img/empty-user.jpg'
 }
 
 function authUpdatedError(error) {
@@ -961,7 +970,7 @@ function createConfirmView() {
   div.id = 'confirm--number-change'
 
   const img = document.createElement('img')
-  img.src = '../img/change_number.jpg'
+  img.src = '../img/change_number.png'
   img.className = 'change-number--info'
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
