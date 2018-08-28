@@ -605,7 +605,7 @@ function profileView (user, firstTimeLogin) {
       record.view = 'profile'
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
-        createProfileHeader()
+        createProfileHeader(firstTimeLogin)
         createProfilePanel()
         disableInputs()
         document.getElementById('close-profile--panel').addEventListener('click', function(){
@@ -623,7 +623,7 @@ function profileView (user, firstTimeLogin) {
   sendCurrentViewNameToAndroid('profile')
 }
 
-function createProfileHeader () {
+function createProfileHeader (firstTimeLogin) {
   const iconCont = document.createElement('div')
   iconCont.className = 'profile--toolbar-icon'
 
@@ -635,14 +635,21 @@ function createProfileHeader () {
 
   const backSpan = document.createElement('span')
   backSpan.id = 'close-profile--panel'
-
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
-  backIcon.textContent = 'arrow_back'
 
+  if (firstTimeLogin) {
+    backIcon.textContent = 'arrow_forward'
+    backSpan.appendChild(backIcon)
+    header('', backSpan.outerHTML)
+  }
+  else {
+  backIcon.textContent = 'arrow_back'
   backSpan.appendChild(backIcon)
   header(backSpan.outerHTML, iconCont.outerHTML)
   handleChangeNumberMenu()
+}
+
 }
 
 function createProfilePanel () {
@@ -1151,19 +1158,12 @@ const header = function (contentStart, contentEnd) {
   document.getElementById('header').innerHTML = header.outerHTML
 }
 
-function backIconHeader (id, firstTimeLogin) {
+function backIconHeader (id) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
 
-  if (firstTimeLogin) {
-    backIcon.textContent = 'arrow_forward'
-    backSpan.appendChild(backIcon)
-
-    header('', backSpan.outerHTML)
-    return
-  }
   backIcon.textContent = 'arrow_back'
   backSpan.appendChild(backIcon)
 

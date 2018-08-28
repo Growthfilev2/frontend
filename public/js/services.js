@@ -426,7 +426,7 @@ function loadViewFromRoot(response) {
         case 'profile':
           handleTimeout()
           if(response.data.type === 'updateIDB') return
-          profileView(firebase.auth().currentUser)
+          profileView(firebase.auth().currentUser,true)
           break
 
         case 'calendar':
