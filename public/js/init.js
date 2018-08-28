@@ -1,0 +1,79 @@
+
+firebase.initializeApp({
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
+})
+
+
+function firebaseUiConfig(value) {
+  return {
+    'callbacks': {
+      'signInSuccess': function(user, credential, redirectUrl) {
+        if (value) {
+          updateEmail(user, value)
+          return
+        }
+
+        // no redirect
+        return false
+      },
+      'signInFailure': function(error) {
+        return handleUIError(error)
+      }
+    },
+    'signInFlow': 'popup',
+    'signInOptions': [
+
+      {
+        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+
+        recaptchaParameters: {
+          type: 'image',
+          size: 'invisible',
+          badge: 'bottomleft'
+        },
+        defaultCountry: 'IN'
+      }
+    ]
+  }
+}
+
+
+function userSignedOut() {
+  const login = document.createElement('div')
+  login.id = 'login-container'
+  document.body.appendChild(login)
+
+  const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
+
+  // DOM element to insert firebaseui login UI
+  ui.start('#login-container', firebaseUiConfig())
+}
+
+function layoutGrid() {
+  const layout = document.createElement('div')
+  layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
+  layout.id = "main-layout-app"
+  const layoutInner = document.createElement('div')
+  layoutInner.className = 'mdc-layout-grid__inner cell-space'
+
+  const headerDiv = document.createElement('div')
+  headerDiv.id = 'header'
+  const currentPanel = document.createElement('div')
+  currentPanel.id = 'app-current-panel'
+  currentPanel.className = 'mdc-layout-grid__cell--span-12'
+
+  const snackbar = document.createElement('div')
+  snackbar.id = 'snackbar-container'
+
+  layoutInner.appendChild(headerDiv)
+  layoutInner.appendChild(currentPanel)
+  layoutInner.appendChild(snackbar)
+
+  layout.appendChild(layoutInner)
+  document.body.innerHTML = layout.outerHTML
+}

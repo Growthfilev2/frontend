@@ -65,7 +65,12 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
       if (!cursor) {
         if (objectStore.name === 'map') return
         if (objectStore.name === 'subscriptions') return
-        if (objectStore.name === 'children') return
+        if (objectStore.name === 'children') {
+          if(dataCount == 0) {
+            document.getElementById('children-name').querySelector('.mdc-dialog__footer__button--accept').disabled = true
+          }
+          return;
+        }
         if (!activityRecord) return
 
         activityRecord.assignees.forEach(function (people) {
@@ -101,9 +106,7 @@ function inputSelect(objectStore, selector, inputFields, activityRecord) {
             childrenNames(cursor, selector, inputFields.main)
         }
 
-        if(dataCount == 0) {
-          document.getElementById('children-name').querySelector('.mdc-dialog__footer__button--accept').disabled = true
-        }
+
           break;
       }
       cursor.continue()
@@ -328,6 +331,13 @@ function requestCreator(requestType, requestBody) {
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
+    if(requestBody.hasOwnProperty('viewType')) {
+      requestGenerator.body = requestBody
+      apiHandler.postMessage(requestGenerator)
+    }
+    else {
+
+
     fetchCurrentLocation().then(function (geopoints) {
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
@@ -347,6 +357,7 @@ function requestCreator(requestType, requestBody) {
       }
     })
   }
+}
 
   // handle the response from apiHandler when operation is completed
 
@@ -360,6 +371,26 @@ function loadViewFromRoot(response) {
   if (response.data.type === 'notification') return
   if(response.data.type === 'error') {
     snacks(response.data.msg)
+    return;
+  }
+
+  if(response.data.type === 'loggedOut') {
+    document.getElementById("main-layout-app").style.display = 'none'
+    userSignedOut()
+    return;
+  }
+
+  if(response.data.type === 'setLocalStorage'){
+    document.getElementById("main-layout-app").style.display = 'block'
+
+    localStorage.setItem('dbexist',response.data.dbName);
+
+    return;
+  }
+
+  if(response.data.type === 'loggedIn'){
+
+    document.getElementById("main-layout-app").style.display = 'block'
     return;
   }
 
@@ -379,7 +410,7 @@ function loadViewFromRoot(response) {
 
       switch (currentView) {
         case 'list':
-          listView()
+          listView(response.data.dbName)
           handleTimeout()
           break
 

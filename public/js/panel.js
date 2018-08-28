@@ -1,11 +1,13 @@
 
-function listView() {
-
+function listView (dbName) {
   creatListHeader()
   listPanel()
   document.body.style.backgroundColor = 'white'
+  console.log(dbName)
+  if(!dbName) {
 
-  const dbName = firebase.auth().currentUser.uid
+   dbName = firebase.auth().currentUser.uid
+ }
   const req = window.indexedDB.open(dbName)
 
   req.onerror = function (event) {
@@ -22,30 +24,32 @@ function listView() {
       record.view = 'list'
       hasMultipleOffice = record.hasMultipleOffice
       rootObjectStore.put(record)
-      rootTx.oncomplete =  fetchDataForActivityList(db,hasMultipleOffice)
+      rootTx.oncomplete = function(){
+        fetchDataForActivityList(db, hasMultipleOffice)
+        setTimeout(function(){
+
+        if(firebase.auth().currentUser.photoURL) {
+          document.querySelector('.profile--icon-small').src = firebase.auth().currentUser.photoURL
+        }
+      },300)
+      }
+
     }
-
-
-
   }
   sendCurrentViewNameToAndroid('listView')
 }
 
-function fetchDataForActivityList(db, uniqueOffice) {
+function fetchDataForActivityList (db, uniqueOffice) {
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
-  const activityTimestampIndex = activityObjectStore.index('timestamp')
 
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
-  const activityVisibleIndex = activityObjectStore.index('visibleSort')
-  const activityListRange = IDBKeyRange.bound([0],['2018-'+'\uffff'])
+  const activityVisibleIndex = activityObjectStore.index('timestamp')
 
-
-  activityVisibleIndex.openCursor(activityListRange,'prev').onsuccess = function(event){
-
-  let cursor = event.target.result
+  activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
+    let cursor = event.target.result
 
     if (!cursor) {
       document.getElementById('activity--list').innerHTML = activityDom
@@ -62,19 +66,18 @@ function fetchDataForActivityList(db, uniqueOffice) {
       document.querySelector('.create-activity').addEventListener('click', createActivity)
       return
     }
-
-    if(cursor.value.template !== 'subscription') {
-
-    createActivityList(db, cursor.value, uniqueOffice).then(function (li) {
-      activityDom += li
-    })
-  }
+    if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      console.log(cursor.value)
+      createActivityList(db, cursor.value, uniqueOffice).then(function (li) {
+        activityDom += li
+      })
+    }
 
     cursor.continue()
   }
 }
 
-function listPanel() {
+function listPanel () {
   if (document.getElementById('activity-list-main')) return
 
   const listCard = document.createElement('div')
@@ -89,7 +92,7 @@ function listPanel() {
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 }
 
-function creatListHeader() {
+function creatListHeader () {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -99,7 +102,7 @@ function creatListHeader() {
   const profileImg = document.createElement('img')
   profileImg.className = 'profile--icon-small'
 
-  profileImg.src = firebase.auth().currentUser.photoURL || '../img/empty-user.jpg'
+  profileImg.src = './img/empty-user.jpg'
 
   profileIconDiv.innerHTML = profileImg.outerHTML
 
@@ -149,7 +152,7 @@ function creatListHeader() {
   })
 }
 
-function createActivityList(db, data, uniqueOffice) {
+function createActivityList (db, data, uniqueOffice) {
   return new Promise(function (resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
 
@@ -164,7 +167,7 @@ function createActivityList(db, data, uniqueOffice) {
   })
 }
 
-function activityListUI(data, uniqueOffice, count) {
+function activityListUI (data, uniqueOffice, count) {
   const li = document.createElement('li')
 
   if (count !== 0) {
@@ -175,7 +178,7 @@ function activityListUI(data, uniqueOffice, count) {
 
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
-  mdc.ripple.MDCRipple.attachTo(li);
+  mdc.ripple.MDCRipple.attachTo(li)
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const customText = document.createElement('span')
@@ -230,7 +233,7 @@ function activityListUI(data, uniqueOffice, count) {
 
 
 
-function mapView(dbName) {
+function mapView (dbName) {
   console.log(dbName)
   // initialize mdc instance for map drawer
   const req = window.indexedDB.open(dbName)
@@ -247,10 +250,9 @@ function mapView(dbName) {
       rootTx.oncomplete = fetchMapData
     }
   }
-
 }
 
-function fetchMapData() {
+function fetchMapData () {
   createMapPanel()
   sendCurrentViewNameToAndroid('map')
   backIconHeader('close-map--drawer')
@@ -261,13 +263,14 @@ function fetchMapData() {
   req.onsuccess = function () {
     const db = req.result
     const mapObjectStore = db.transaction('map').objectStore('map')
-    const mapVisibleSortIndex = mapObjectStore.index('mapSort')
+    const mapVisibleSortIndex = mapObjectStore.index('timestamp')
 
-    document.getElementById('close-map--drawer').addEventListener('click', listView)
+    document.getElementById('close-map--drawer').addEventListener('click', function(){
+      listView(dbName)
+    })
 
     const mapRecords = []
-    const activityListRange = IDBKeyRange.bound([0],['2018-'+'\uffff'])
-    mapVisibleSortIndex.openCursor(activityListRange, 'prev').onsuccess = function (event) {
+    mapVisibleSortIndex.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
 
       if (!cursor) {
@@ -286,24 +289,23 @@ function fetchMapData() {
         return
       }
 
-      if(cursor.value.template !== 'subscription') {
-
-      console.log(cursor.value)
-      mapRecords.push(cursor.value)
-      cursor.continue()
-    }
+      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        console.log(cursor.value)
+        mapRecords.push(cursor.value)
+        cursor.continue()
+      }
     }
   }
 }
 
-function createMapPanel() {
+function createMapPanel () {
   const mapParent = document.createElement('div')
   mapParent.id = 'map-view--container'
   mapParent.className = 'mdc-top-app-bar--fixed-adjust'
 
   const mapList = document.createElement('ul')
   mapList.id = 'list-view--map'
-  mapList.className ='mdc-list mdc-list--two-line mdc-list--avatar-list'
+  mapList.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
   const map = document.createElement('div')
   map.id = 'map'
   mapParent.appendChild(map)
@@ -312,7 +314,7 @@ function createMapPanel() {
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
 }
 
-function initMap(dbName, mapRecord) {
+function initMap (dbName, mapRecord) {
   const centerGeopoints = mapRecord[mapRecord.length - 1]
   const map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
@@ -335,7 +337,7 @@ function initMap(dbName, mapRecord) {
   // },200)
 }
 
-function displayMarkers(dbName, map, locationData) {
+function displayMarkers (dbName, map, locationData) {
   let bounds = new google.maps.LatLngBounds()
   const allMarkers = []
 
@@ -356,12 +358,10 @@ function displayMarkers(dbName, map, locationData) {
     setTimeout(function () {
       generateActivityFromMarker(dbName, map, allMarkers)
     }, 300)
-
   })
-
 }
 
-function generateActivityFromMarker(dbName, map, markers) {
+function generateActivityFromMarker (dbName, map, markers) {
   const markerActivityId = []
   let bounds = map.getBounds()
   // open IndexedDB
@@ -373,44 +373,45 @@ function generateActivityFromMarker(dbName, map, markers) {
   displayMapActivity(dbName, markerActivityId)
 }
 
-function displayMapActivity(dbName, markerActivityId) {
+function displayMapActivity (dbName, markerActivityId) {
   let req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
     let mapActivityDom = ''
     let unique = ''
     const rootObjectStore = db.transaction('root').objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function(event){
+    rootObjectStore.get(dbName).onsuccess = function (event) {
       unique = event.target.result.hasMultipleOffice
     }
 
-
-    const setMarker = removeDuplicate(markerActivityId);
+    const setMarker = removeDuplicate(markerActivityId)
 
     console.log(setMarker)
-      setMarker.forEach(function (id) {
-        console.log(id)
-        const activityObjectStore = db.transaction('activity').objectStore('activity')
+    setMarker.forEach(function (id) {
+      console.log(id)
+      const activityObjectStore = db.transaction('activity').objectStore('activity')
 
-        activityObjectStore.get(id).onsuccess = function (event) {
-          const record = event.target.result
+      activityObjectStore.get(id).onsuccess = function (event) {
+        const record = event.target.result
 
-            createActivityList(db, record, unique).then(function (li) {
-              mapActivityDom += li
-            })
-        }
-      })
+        createActivityList(db, record, unique).then(function (li) {
+          mapActivityDom += li
+        })
+      }
+    })
     setTimeout(function () {
       document.getElementById('list-view--map').innerHTML = mapActivityDom
     }, 50)
   }
 }
 
-function calendarView(dbName) {
+function calendarView (dbName) {
   // open IDB
   createCalendarPanel()
   backIconHeader('close-calendar--drawer')
-  document.getElementById('close-calendar--drawer').addEventListener('click', listView)
+  document.getElementById('close-calendar--drawer').addEventListener('click', function(){
+    listView(dbName);
+  })
 
   const req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -433,7 +434,7 @@ function calendarView(dbName) {
   }
 }
 
-function createCalendarPanel() {
+function createCalendarPanel () {
   const calendarView = document.createElement('div')
   calendarView.id = 'calendar-view--container'
   calendarView.className = 'mdc-top-app-bar--fixed-adjust'
@@ -452,7 +453,7 @@ function createCalendarPanel() {
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
 }
 
-function fetchCalendarData() {
+function fetchCalendarData () {
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
@@ -471,18 +472,16 @@ function fetchCalendarData() {
     calendarDateIndex.get(today).onsuccess = function (event) {
       const record = event.target.result
       if (!record) {
-
-          const req = indexedDB.open(firebase.auth().currentUser.uid)
-          req.onsuccess = function () {
-            const db = req.result
-            calendarViewUI('afterToday', db, {
-              date: today
-            },unique)
-          }
-
+        const req = indexedDB.open(firebase.auth().currentUser.uid)
+        req.onsuccess = function () {
+          const db = req.result
+          calendarViewUI('afterToday', db, {
+            date: today
+          }, unique)
+        }
       }
 
-      insertDatesAfterToday(db,calendarDateIndex,today)
+      insertDatesAfterToday(db, calendarDateIndex, today)
     }
   }
 
@@ -491,36 +490,32 @@ function fetchCalendarData() {
   }
 }
 
-function insertDatesAfterToday(db,calendarDateIndex,today) {
+function insertDatesAfterToday (db, calendarDateIndex, today) {
   const rootObjectStore = db.transaction('root').objectStore('root')
-  let unique= ''
+  let unique = ''
   rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
     unique = event.target.result.hasMultipleOffice
   }
-      const lowerKeyRange = IDBKeyRange.lowerBound(today)
-      calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (cursor && cursor.value.template !== 'subscription') {
-          calendarViewUI('afterToday', db, cursor.value, unique)
-          cursor.continue()
-        } else {
-          insertDatesBeforeToday(db, calendarDateIndex, today, unique)
-        }
-      }
+  const lowerKeyRange = IDBKeyRange.lowerBound(today)
+  calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
+    const cursor = event.target.result
+    if (cursor && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      calendarViewUI('afterToday', db, cursor.value, unique)
+      cursor.continue()
+    } else {
+      insertDatesBeforeToday(db, calendarDateIndex, today, unique)
     }
+  }
+}
 
-function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
-
+function insertDatesBeforeToday (db, calendarDateIndex, today, unique) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
-    if (cursor && cursor.value.template !== 'subscription') {
-
+    if (cursor && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
       calendarViewUI('beforeToday', db, cursor.value, unique)
       cursor.continue()
-
-    }
-     else {
+    } else {
       document.getElementById('beforeToday').style.display = 'block'
 
       setTimeout(function () {
@@ -537,8 +532,7 @@ function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
   }
 }
 
-
-function calendarViewUI(target, db, data, unique) {
+function calendarViewUI (target, db, data, unique) {
   console.log(unique)
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
@@ -578,25 +572,26 @@ function calendarViewUI(target, db, data, unique) {
   getActivity(db, data, unique)
 }
 
-function getActivity(db, data, unique) {
+function getActivity (db, data, unique) {
   if (!data.hasOwnProperty('activityId')) return
 
-  const activityShowIndex = db.transaction('activity').objectStore('activity').index('showActivity')
+  const activityShowIndex = db.transaction('activity').objectStore('activity')
 
-  const bound = IDBKeyRange.only([0,data.activityId])
-
-  activityShowIndex.get(bound).onsuccess = function (event) {
+  activityShowIndex.get(data.activityId).onsuccess = function (event) {
     const record = event.target.result
     console.log(record)
-    if(!record) return;
+    if (!record) return
+
+
     createActivityList(db, record, unique).then(function (li) {
       if (document.getElementById(`activity--row${data.date}`).querySelector(`[data-id="${data.activityId}"]`)) return
       document.getElementById(`activity--row${data.date}`).innerHTML += li
     })
+
   }
 }
 
-function profileView(user, firstTimeLogin) {
+function profileView (user, firstTimeLogin) {
   document.body.style.backgroundColor = '#eeeeee'
   const dbName = firebase.auth().currentUser.uid
 
@@ -613,7 +608,9 @@ function profileView(user, firstTimeLogin) {
         createProfileHeader()
         createProfilePanel()
         disableInputs()
-        document.getElementById('close-profile--panel').addEventListener('click', listView)
+        document.getElementById('close-profile--panel').addEventListener('click', function(){
+          listView(dbName)
+        })
         showProfilePicture()
 
         inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
@@ -626,7 +623,7 @@ function profileView(user, firstTimeLogin) {
   sendCurrentViewNameToAndroid('profile')
 }
 
-function createProfileHeader() {
+function createProfileHeader () {
   const iconCont = document.createElement('div')
   iconCont.className = 'profile--toolbar-icon'
 
@@ -642,13 +639,13 @@ function createProfileHeader() {
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
   backIcon.textContent = 'arrow_back'
-  backSpan.appendChild(backIcon)
 
+  backSpan.appendChild(backIcon)
   header(backSpan.outerHTML, iconCont.outerHTML)
   handleChangeNumberMenu()
 }
 
-function createProfilePanel() {
+function createProfilePanel () {
   const profileView = document.createElement('div')
   profileView.id = 'profile-view--container'
   profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background'
@@ -751,7 +748,7 @@ function createProfilePanel() {
   document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 }
 
-function toggleIconData(icon, inputField) {
+function toggleIconData (icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
@@ -765,26 +762,25 @@ function toggleIconData(icon, inputField) {
       const text = inputField.value
       handleFieldInput(key, text)
       inputField['lineRipple_'].deactivate()
-
     } else {
       console.log(inputField)
       inputField['input_'].style.borderBottom = '1px solid rgba(0,0,0,.42)'
       inputField['input_'].disabled = false
       inputField['lineRipple_'].activate()
-      openAndroidKeyboard.startKeyboard();
-      inputField['input_'].focus();
+      openAndroidKeyboard.startKeyboard()
+      inputField['input_'].focus()
     }
   })
 }
 
-function handleFieldInput(key, value) {
+function handleFieldInput (key, value) {
   const user = firebase.auth().currentUser
   console.log(typeof value)
   if (key === 'displayName') {
     user.updateProfile({
       [key]: value
     }).then(function () {
-      snacks('you changed your display Name');
+      snacks('you changed your display Name')
     }).catch(authUpdatedError)
   }
 
@@ -803,7 +799,7 @@ function handleFieldInput(key, value) {
   }
 }
 
-function newSignIn(value) {
+function newSignIn (value) {
   const login = document.createElement('div')
   login.id = 'refresh-login'
   login.className = 'mdc-elevation--z3'
@@ -823,7 +819,7 @@ function newSignIn(value) {
   }, 300)
 }
 
-function readUploadedFile(event) {
+function readUploadedFile (event) {
   console.log(event)
   const file = event.target.files[0]
 
@@ -835,7 +831,7 @@ function readUploadedFile(event) {
   }
 }
 
-function processImage(image) {
+function processImage (image) {
   const metadata = {
     contentType: 'image/jpeg'
   }
@@ -851,7 +847,7 @@ function processImage(image) {
     storageSuccessHandler
   )
 
-  function snapshotHandler(snapshot) {
+  function snapshotHandler (snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
       if (document.querySelector('#profile--image-container .loader')) return
 
@@ -862,26 +858,26 @@ function processImage(image) {
     }
   }
 
-  function storageErrorHandler(error) {
+  function storageErrorHandler (error) {
     if (error.code === 'storage/unknown') {
       console.log(error)
     }
     console.log(error)
   }
 
-  function storageSuccessHandler() {
+  function storageSuccessHandler () {
     uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
   }
 }
 
-function updateAuth(url) {
+function updateAuth (url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
   }).then(removeLoader).catch(authUpdatedError)
 }
 
-function removeLoader() {
+function removeLoader () {
   document.querySelector('.insert-overlay').classList.remove('middle')
   const container = document.getElementById('profile--image-container')
   container.children[0].classList.add('reset-opacity')
@@ -890,19 +886,19 @@ function removeLoader() {
   showProfilePicture()
 }
 
-function showProfilePicture() {
+function showProfilePicture () {
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL || '../img/empty-user.jpg'
 }
 
-function authUpdatedError(error) {
+function authUpdatedError (error) {
   switch (error.code) {
     case 'auth/email-already-in-use':
       snacks(error.message)
   }
 }
 
-function changeDisplayName(user) {
+function changeDisplayName (user) {
   const displayNameField = getInputText('displayName')
 
   if (user.displayName) {
@@ -912,7 +908,7 @@ function changeDisplayName(user) {
   toggleIconData('edit--name', displayNameField)
 }
 
-function changeEmailAddress(user) {
+function changeEmailAddress (user) {
   const emailField = getInputText('email')
   if (user.email) {
     emailField.value = user.email
@@ -921,30 +917,30 @@ function changeEmailAddress(user) {
   toggleIconData('edit--email', emailField)
 }
 
-function updateEmail(user, email) {
+function updateEmail (user, email) {
   console.log(email)
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
-function emailUpdateSuccess() {
+function emailUpdateSuccess () {
   const user = firebase.auth().currentUser
   console.log(user)
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
-function emailVerificationSuccess() {
+function emailVerificationSuccess () {
   snacks('Verification link has been send to your email address')
 }
 
-function emailVerificationError(error) {
+function emailVerificationError (error) {
   snacks(error.message)
 }
 
-function handleReauthError(error) {
+function handleReauthError (error) {
   console.log(error)
 }
 
-function createConfirmView() {
+function createConfirmView () {
   const backSpan = document.createElement('span')
   backSpan.id = 'back-profile'
 
@@ -978,12 +974,12 @@ function createConfirmView() {
   document.getElementById('back-profile').addEventListener('click', profileView)
 }
 
-function disableInputs() {
+function disableInputs () {
   getInputText('displayName')['input_'].disabled = true
   getInputText('email')['input_'].disabled = true
 }
 
-function changePhoneNumber() {
+function changePhoneNumber () {
   header('', '')
   const changeNumberDiv = document.createElement('div')
   changeNumberDiv.className = 'mdc-card mdc-top-app-bar--fixed-adjust mdc-layout-grid__inner change--number-UI'
@@ -1071,10 +1067,10 @@ function changePhoneNumber() {
   getInputText('current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
   getInputText('current-phone--number').value = ''
 
-  const allInputFields = document.querySelectorAll('.phoneNumber');
+  const allInputFields = document.querySelectorAll('.phoneNumber')
 
-  for(let i=0;i < allInputFields.length;i++){
-      input.addEventListener('input', handleIllegalNumberInput)
+  for (let i = 0; i < allInputFields.length; i++) {
+    input.addEventListener('input', handleIllegalNumberInput)
   }
   document.getElementById('updatePhone').addEventListener('click', function (e) {
     if (verifyCurrentPhoneNumber() && verifyPhoneNumber()) {
@@ -1092,25 +1088,25 @@ function changePhoneNumber() {
   })
 }
 
-function newPhoneNumber() {
+function newPhoneNumber () {
   const newCountryCode = getInputText('new-country--code').value
   const newNumber = getInputText('new-phone--number').value
   return newCountryCode.concat(newNumber)
 }
 
-function verifyPhoneNumber() {
+function verifyPhoneNumber () {
   const expression = /^\+[1-9]\d{5,14}$/
   return expression.test(newPhoneNumber())
 }
 
-function handleIllegalNumberInput(value) {
+function handleIllegalNumberInput (value) {
   const exp = /^\+[1-9]\d{1,3}$/
   if (!exp.test(evt.target.value)) {
     evt.target.value = evt.target.value.replace(/[^+0-9]/g, '')
   }
 }
 
-function verifyCurrentPhoneNumber() {
+function verifyCurrentPhoneNumber () {
   const currentCountryCode = getInputText('current-country--code').value
   const currentNumber = getInputText('current-phone--number').value
   const numberInAuth = firebase.auth().currentUser.phoneNumber
@@ -1153,7 +1149,7 @@ const header = function (contentStart, contentEnd) {
   document.getElementById('header').innerHTML = header.outerHTML
 }
 
-function backIconHeader(id, firstTimeLogin) {
+function backIconHeader (id, firstTimeLogin) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
@@ -1172,14 +1168,12 @@ function backIconHeader(id, firstTimeLogin) {
   header(backSpan.outerHTML)
 }
 
-function removeDom(selector) {
+function removeDom (selector) {
   const target = document.getElementById(selector)
   target.innerHTML = ''
 }
 
-
-
-function snacks(message) {
+function snacks (message) {
   const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
   snack.setAttribute('aria-live', 'assertive')
@@ -1215,14 +1209,14 @@ function snacks(message) {
   snackbar.show(data)
 }
 
-function timeDiff(lastSignInTime) {
+function timeDiff (lastSignInTime) {
   const currentDate = moment().format('YYY-MM-DD HH:mm')
   const authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm')
 
   return moment(currentDate).diff(moment(authSignInTime), 'minutes')
 }
 
-function handleChangeNumberMenu() {
+function handleChangeNumberMenu () {
   const div = document.createElement('div')
   div.className = 'mdc-menu mdc-menu--animating-open'
   div.id = 'change-number--menu'
@@ -1264,17 +1258,16 @@ function handleChangeNumberMenu() {
   menu.quickOpen = false
 }
 
+function removeDuplicate (array) {
+  let temp = {}
+  let result = []
+  let length = array.length
+  let j = 0
 
-function removeDuplicate(array){
-  let temp = {};
-  let result = [];
-  let length = array.length;
-  let j = 0;
-
-  for(let i=0 ; i <length;i++ ){
-    let item = array[i];
-    if(temp[item] !== 1){
-      temp[item] = 1;
+  for (let i = 0; i < length; i++) {
+    let item = array[i]
+    if (temp[item] !== 1) {
+      temp[item] = 1
       result[j++] = item
     }
   }

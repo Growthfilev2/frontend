@@ -7,7 +7,17 @@
 
   <script src="external/firebase-app.js" defer></script>
   <script src="external/firebase-auth.js" defer></script>
+  <script src="js/services.js" defer></script>
+  <script src="js/init.js" defer></script>
+  <script src="js/panel.js" defer></script>
+  <link rel="stylesheet" href="css/material-components-web.css" async>
+
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" async>
+
   <script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js" defer></script>
+
   <script src="external/firebase-storage.js" defer></script>
   <!-- initialization script-->
 
@@ -16,18 +26,10 @@
   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c&libraries=places" async></script>
   <!-- application files-->
 
-  <script src="js/services.js" defer></script>
+  <link href="css/theme.css" rel="stylesheet" type="text/css" async>
+  <link href="css/conversation.css" rel="stylesheet" type="text/css" async>
   <script src="js/conversation.js" defer></script>
-  <script src="js/panel.js" defer></script>
 
-  <link rel="stylesheet" href="css/material-components-web.css" async defer>
-
-  <link href="css/theme.css" rel="stylesheet" type="text/css" async defer>
-  <link href="css/conversation.css" rel="stylesheet" type="text/css" async defer>
-
-  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" async>
 
 </head>
 
@@ -38,174 +40,80 @@
 
   </div>
   <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        init()
-      });
-    } else {
-      // function
-      console.log("please upgrade android")
-    }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    // snacks('webview started')
+    init()
+  })
+} else {
+  console.log("please upgrade android")
+}
   </script>
 
   <script>
-    function init() {
-      navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
+  function init() {
+  //
+  //   navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
+  //   //
+  //     registration.addEventListener('updatefound', function() {
+  //       // If updatefound is fired, it means that there's
+  //       // a new service worker being installed.
+  //       var installingWorker = registration.installing;
+  //       console.log('A new service worker is being installed:',
+  //         installingWorker);
 
-        registration.addEventListener('updatefound', function() {
-          // If updatefound is fired, it means that there's
-          // a new service worker being installed.
-          var installingWorker = registration.installing;
-          console.log('A new service worker is being installed:',
-            installingWorker);
+
+
+        // You can listen for changes to the installing service worker's
+        // state via installingWorker.onstatechange
+      // });
 
 
 
-          // You can listen for changes to the installing service worker's
-          // state via installingWorker.onstatechange
-        });
+      moment.locale('en', {
+        calendar: {
+          lastDay: '[yesterday]',
+          sameDay: 'LT',
+          nextDay: '[Tomorrow at] LT',
+          lastWeek: 'dddd',
+          nextWeek: 'dddd [at] LT',
+          sameElse: 'L'
+        },
 
-        // Registration was successful
-        firebase.initializeApp({
-          apiKey: "AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo",
-          authDomain: "growthfile-207204.firebaseapp.com",
-          databaseURL: "https://growthfile-207204.firebaseio.com",
-          projectId: "growthfile-207204",
-          storageBucket: "growthfile-207204.appspot.com",
-          messagingSenderId: "701025551237"
-        })
+        months: [
+          'January', 'February', 'March', 'April', 'May', 'June', 'July',
+          'August', 'September', 'October', 'November', 'December'
+        ]
+      })
 
-        // firebaseUI login config object
-        function firebaseUiConfig(value) {
-          return {
-            'callbacks': {
-              'signInSuccess': function(user, credential, redirectUrl) {
-                if (value) {
-                  updateEmail(user, value)
-                  return
-                }
+      // initialize smooth scrolling
+      window.scrollBy({
+          top: 100,
+          left: 0,
+          behavior: 'smooth'
+      })
 
-                // no redirect
-                return false
-              },
-              'signInFailure': function(error) {
-                return handleUIError(error)
-              }
-            },
-            'signInFlow': 'popup',
-            'signInOptions': [
-
-              {
-                provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-
-                recaptchaParameters: {
-                  type: 'image',
-                  size: 'invisible',
-                  badge: 'bottomleft'
-                },
-                defaultCountry: 'IN'
-              }
-            ]
+        if (window.Worker && window.indexedDB) {
+          layoutGrid()
+          if(localStorage.getItem('dbexist')) {
+            requestCreator('initializeIDB',{'viewType':'listView'})
+            listView(localStorage.getItem('dbexist'))
+          }
+          else {
+            requestCreator('initializeIDB',{'viewType':'profile'})
           }
         }
 
-        moment.locale('en', {
-          calendar: {
-            lastDay: '[yesterday]',
-            sameDay: 'LT',
-            nextDay: '[Tomorrow at] LT',
-            lastWeek: 'dddd',
-            nextWeek: 'dddd [at] LT',
-            sameElse: 'L'
-          },
-
-          months: [
-            'January', 'February', 'March', 'April', 'May', 'June', 'July',
-            'August', 'September', 'October', 'November', 'December'
-          ]
-        })
-
-        // initialize smooth scrolling
-        // window.scrollBy({
-        //     top: 100,
-        //     left: 0,
-        //     behavior: 'smooth'
-        // })
-
-        function userSignedIn(auth) {
-          if (window.Worker && window.indexedDB) {
-            layoutGrid()
-            sendMessageToSync(auth.photoURL)
-            requestCreator('initializeIDB')
-            return;
-          }
-
+        else {
           firebase.auth().signOut().catch(signOutError)
         }
 
-        // When user is signed out
-        function userSignedOut() {
-          const login = document.createElement('div')
-          login.id = 'login-container'
-          document.body.innerHTML = login.outerHTML
-
-          const ui = new firebaseui.auth.AuthUI(firebase.auth())
-
-          // DOM element to insert firebaseui login UI
-          ui.start('#login-container', firebaseUiConfig())
-        }
-
-        function sendMessageToSync(message) {
-          return new Promise(function(resolve, reject) {
-            const messageChannel = new MessageChannel();
-            messageChannel.port1.onmessage = function(event) {
-              resolve(`direct message from the ServiceWorker: ${event.data}`);
-            };
-            navigator.serviceWorker.controller.postMessage(message, [messageChannel.port2])
-          })
-        }
-
-        function signOutError(error) {
-          // handler error with snackbar
-          snacks(error)
-        }
-
-        function layoutGrid() {
-          const layout = document.createElement('div')
-          layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
-
-          const layoutInner = document.createElement('div')
-          layoutInner.className = 'mdc-layout-grid__inner cell-space'
-
-          const headerDiv = document.createElement('div')
-          headerDiv.id = 'header'
-          const currentPanel = document.createElement('div')
-          currentPanel.id = 'app-current-panel'
-          currentPanel.className = 'mdc-layout-grid__cell--span-12'
-
-          const snackbar = document.createElement('div')
-          snackbar.id = 'snackbar-container'
-
-          layoutInner.appendChild(headerDiv)
-          layoutInner.appendChild(currentPanel)
-          layoutInner.appendChild(snackbar)
-
-          layout.appendChild(layoutInner)
-          document.body.innerHTML = layout.outerHTML
-        }
-
-        firebase.auth().onAuthStateChanged(function(auth) {
-          // if user is signed in then run userIsSigned fn else run userSignedOut fn
-          auth ? userSignedIn(auth) : userSignedOut()
-        })
-        // locationServices()
-        //
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      }, function(err) {
-        // registration failed :(
-        console.log('ServiceWorker registration failed: ', err);
-      });
-    }
+    //   console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    // }, function(err) {
+    //   // registration failed :(
+    //   console.log('ServiceWorker registration failed: ', err);
+    // });
+  }
   </script>
 </body>
 

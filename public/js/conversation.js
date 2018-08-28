@@ -561,9 +561,10 @@ function sectionDiv(key, content,type) {
   span.className = 'detail--static-text mdc-typography--subtitle2'
   cont.appendChild(span)
 
+  console.log(type)
 
   if(type === 'base64') {
-    const img = document.createElement('p')
+    const img = document.createElement('img')
     img.className = `activity--${key.replace(' ','')} activity--update--text`
     img.src = content
     cont.appendChild(img)
@@ -1196,6 +1197,8 @@ function initializeDialogTemplateName(evt, input, params) {
   getInputText(input).value = ''
   console.log(params)
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#children-name'))
+
+
   dialog.listen('MDCDialog:accept', function () {
     const name = getInputText(input)['root_'].dataset.name
 
@@ -1507,7 +1510,7 @@ function renderTemplateNameSelectorUI() {
   accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
   accept.type = 'button'
   accept.textContent = 'Select'
-
+  accept.disabled =false
   footer.appendChild(decline)
   footer.appendChild(accept)
 
@@ -1608,9 +1611,9 @@ function initializeDialogLocation(evt, input, params) {
 
 function initializeOfficeTemplateDialog(evt, input) {
   getInputText(input).value = ''
-  let allow = true
+
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#officeTemplate-select-dialog'))
-  dialog['footerBtnRipples_'][1]['root_'].disabled = true
+
     console.log(dialog)
   dialog.listen('MDCDialog:accept', function () {
 
