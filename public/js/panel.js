@@ -971,7 +971,9 @@ function createConfirmView () {
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
   document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
-  document.getElementById('back-profile').addEventListener('click', profileView)
+  document.getElementById('back-profile').addEventListener('click', function(){
+    profileView(firebase.auth().currentUser)
+  })
 }
 
 function disableInputs () {
