@@ -425,6 +425,7 @@ function loadViewFromRoot(response) {
           break
         case 'profile':
           handleTimeout()
+          if(response.data.type === 'updateIDB') return
           profileView(firebase.auth().currentUser)
           break
 
