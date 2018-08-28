@@ -239,7 +239,7 @@ function createHeaderContent(db, id,unique) {
 
     document.getElementById('back-conv').addEventListener('click', function () {
       reinitCount(db, id)
-      listView()
+      listView(db.name)
     })
 
     document.querySelector('.comment-header-primary').addEventListener('click', function () {
@@ -1629,7 +1629,7 @@ function initializeOfficeTemplateDialog(evt, input) {
 
   dialog.listen('MDCDialog:cancel', function () {
     document.getElementById('officeTemplate-select-dialog').remove()
-    listView()
+    listView(firebase.auth().currentUser.uid)
   })
 
   dialog.lastFocusedTarget = evt.target
@@ -1742,7 +1742,9 @@ function createActivity(evt) {
 
       document.getElementById('app-current-panel').innerHTML = detail.outerHTML
       getInputText('activity--title-input').value = ''
-      document.getElementById('back-list').addEventListener('click', listView)
+      document.getElementById('back-list').addEventListener('click', function(){
+        listView(dbName)
+      })
 
       initShareButton()
       renderOfficeTemplateScreen(evt)
@@ -1853,10 +1855,18 @@ function createInput(key, type, classtype, value) {
     mainInput.disabled = value
     mainInput.style.borderBottom = 'none'
     mainInput.placeholder = 'select ' + key
-  } else {
-
+  }
+  else {
     mainInput.placeholder = key
   }
+
+  if(type && key === 'displayName') {
+    mainInput.placeholder = 'Your Name'
+  }
+  if(type && key === 'email') {
+    mainInput.placeholder = 'Your Email'
+  }
+
 
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
