@@ -63,11 +63,12 @@ self.onmessage = function (event) {
     requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
   }
-  if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
+  else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
     requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-
+  }
+  else {
+    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
   }
   })
 }
