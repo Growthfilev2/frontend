@@ -1,6 +1,6 @@
 (function () {
 
-    const CACHE_NAME = 'V10';
+    const CACHE_NAME = 'V11';
     const urlsToCache = [
       'external/firebase-app.js',
       'external/firebasejs/5.2.0/firebase-auth.js',
@@ -19,11 +19,7 @@
         'index.html'
     ]
 
-
-
     self.addEventListener('install', function (event) {
-        console.log("sw open")
-
         event.waitUntil(
             caches.open(CACHE_NAME)
             .then(function (cache) {
