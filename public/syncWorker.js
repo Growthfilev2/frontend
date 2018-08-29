@@ -1,6 +1,6 @@
 (function () {
 
-    const CACHE_NAME = 'V11';
+    const CACHE_NAME = 'V13';
     const urlsToCache = [
       'external/firebase-app.js',
       'external/firebasejs/5.2.0/firebase-auth.js',

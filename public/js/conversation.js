@@ -1129,7 +1129,7 @@ function renderRemoveIcons(record, mobileNumber) {
     const phoneNumber = e.target.parentNode.dataset.assignee
     const reqBody = {
       'activityId': activityId,
-      'remove': [phoneNumber]
+      'remove': phoneNumber
     }
     console.log(reqBody)
     requestCreator('removeAssignee', reqBody)

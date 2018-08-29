@@ -433,8 +433,7 @@ function loadViewFromRoot(response) {
           calendarView(response.data.dbName)
           handleTimeout()
           break
-
-
+          
         case 'detail':
           handleTimeout()
           fillActivityDetailPage(record.id)
