@@ -492,7 +492,9 @@ function updateCalendar (db, activity) {
           activityId: record.activityId,
           scheduleName: record.scheduleName,
           timestamp: record.timestamp,
-          date: moment(currentDate).format('YYYY-MM-DD')
+          date: moment(currentDate).format('YYYY-MM-DD'),
+          template: record.template,
+          hidden: record.hidden
         })
       }
       cursor.continue()
