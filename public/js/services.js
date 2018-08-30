@@ -389,7 +389,7 @@ function loadViewFromRoot(response) {
   }
 
   if(response.data.type === 'loggedIn'){
-
+    console.log(firebase.auth().currentUser.photoURL)
     document.getElementById("main-layout-app").style.display = 'block'
     document.querySelector('.profile--icon-small').src = firebase.auth().currentUser.photoURL
     return;
