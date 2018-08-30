@@ -430,7 +430,7 @@ function updateActivityPanel(db, record) {
 
     const detail = document.createElement('div')
     detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-    detail.innerHTML = activityTitle(record.activityName) + showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont()
+    detail.innerHTML =  showSchedule(record.schedule) + showVenue(record.venue) + updateAttachmentCont()
 
     document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
 
@@ -1733,8 +1733,7 @@ function createActivity(evt) {
 
       const activityMain = document.createElement('div')
       activityMain.className = 'activity-main'
-      activityMain.innerHTML = sectionDiv('Office') + sectionDiv('Template') +
-      activityTitle('') + createScheduleContainer() +
+      activityMain.innerHTML = sectionDiv('Office') + sectionDiv('Template') + createScheduleContainer() +
       createVenueContainer() + renderAssigneeList({
         canEdit: true
       })
@@ -1742,7 +1741,7 @@ function createActivity(evt) {
       detail.innerHTML = activityMain.outerHTML
 
       document.getElementById('app-current-panel').innerHTML = detail.outerHTML
-      getInputText('activity--title-input').value = ''
+
       document.getElementById('back-list').addEventListener('click', function(){
         listView(dbName)
       })
@@ -2131,7 +2130,7 @@ function createSelectMenu(key, type, className) {
 }
 
 function createUpdateReqBody(event, reqType) {
-  const title = titleCase(getInputText('activity--title-input').value)
+
   let allow = true
   const activityId = event.target.dataset.id
   const schedule = []
@@ -2214,7 +2213,6 @@ function createUpdateReqBody(event, reqType) {
   if (reqType === 'edit') {
     const body = {
       'activityId': activityId,
-      'activityName': title,
       'schedule': schedule,
       'venue': venue
     }
@@ -2233,7 +2231,6 @@ function createUpdateReqBody(event, reqType) {
       'office': document.querySelector('.activity--Office').textContent,
       'template': document.querySelector('.activity--Template').textContent,
       'share': share,
-      'activityName': title,
       'schedule': schedule,
       'venue': venue,
       'attachment': attachments
