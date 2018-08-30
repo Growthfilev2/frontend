@@ -1,4 +1,5 @@
 
+
 function conversation(id) {
   if (!id) return
   const currentUser = firebase.auth().currentUser
@@ -30,15 +31,15 @@ function fetchAddendumForComment(id,user) {
 
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
 
-  const rootTx = db.transaction('root', 'readwrite')
-  const rootObjectStore = rootTx.objectStore('root')
-  rootObjectStore.get(user.uid).onsuccess = function(event){
-    createHeaderContent(db, id,event.target.result.hasMultipleOffice)
+    const rootTx = db.transaction('root', 'readwrite')
+    const rootObjectStore = rootTx.objectStore('root')
+    rootObjectStore.get(user.uid).onsuccess = function(event){
+      createHeaderContent(db, id,event.target.result.hasMultipleOffice)
 
-  }
+    }
     commentPanel(id)
     sendCurrentViewNameToAndroid('conversation')
-   let commentDom = ''
+    let commentDom = ''
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
@@ -214,9 +215,9 @@ function createHeaderContent(db, id,unique) {
     primarySpan.textContent = record.activityName
 
 
-      const secondarySpan = document.createElement('span')
-      secondarySpan.className = 'mdc-list-item__secondary-text'
-      secondarySpan.textContent = record.office
+    const secondarySpan = document.createElement('span')
+    secondarySpan.className = 'mdc-list-item__secondary-text'
+    secondarySpan.textContent = record.office
 
 
     const secondarySpanTemplate = document.createElement('span')
@@ -373,8 +374,8 @@ function displayActivityDetail(db, record) {
   const detail = document.createElement('div')
   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
   detail.innerHTML = sectionDiv('Office', record.office) +
-    sectionDiv('Template', record.template) +
-    availableStatus(record) + displaySchedule(record.schedule) + displayVenue(record.venue) + displayAttachmentCont(record.attachment) + renderAssigneeList(record, 'assignee--list')
+  sectionDiv('Template', record.template) +
+  availableStatus(record) + displaySchedule(record.schedule) + displayVenue(record.venue) + displayAttachmentCont(record.attachment) + renderAssigneeList(record, 'assignee--list')
   document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
 
 
@@ -479,7 +480,7 @@ function toggleActivityHeader(toggleId, containerClass, type, record) {
   toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
     detail
   })
-   {
+  {
     if (!detail.isOn) {
       checkInValidInputs(type, containerClass)
       console.log("no")
@@ -1007,8 +1008,8 @@ function renderAssigneeList(record) {
 
 function fetchAssigneeData(db, record, target) {
   const usersStore = db
-    .transaction('users')
-    .objectStore('users')
+  .transaction('users')
+  .objectStore('users')
   record.assignees.forEach((mobileNumber) => {
     console.log(record)
     usersStore.openCursor(mobileNumber).onsuccess = function (e) {
@@ -1614,7 +1615,7 @@ function initializeOfficeTemplateDialog(evt, input) {
 
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#officeTemplate-select-dialog'))
 
-    console.log(dialog)
+  console.log(dialog)
   dialog.listen('MDCDialog:accept', function () {
 
     const office = getInputText(input)['root_'].dataset.office
@@ -1733,10 +1734,10 @@ function createActivity(evt) {
       const activityMain = document.createElement('div')
       activityMain.className = 'activity-main'
       activityMain.innerHTML = sectionDiv('Office') + sectionDiv('Template') +
-        activityTitle('') + createScheduleContainer() +
-        createVenueContainer() + renderAssigneeList({
-          canEdit: true
-        })
+      activityTitle('') + createScheduleContainer() +
+      createVenueContainer() + renderAssigneeList({
+        canEdit: true
+      })
 
       detail.innerHTML = activityMain.outerHTML
 
@@ -2051,11 +2052,11 @@ function createAttachmentContainer(attachment, target, canEdit, value, office, t
 
   if(document.querySelector('.mdc-select')) {
 
-  const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-  select.listen('change', () => {
-    select['root_'].dataset.value = select.value
-  });
-}
+    const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+    select.listen('change', () => {
+      select['root_'].dataset.value = select.value
+    });
+  }
 
   if(document.getElementById('start-camera')) {
     document.getElementById('start-camera').addEventListener('click', readCameraFile)
@@ -2200,11 +2201,11 @@ function createUpdateReqBody(event, reqType) {
   const attachments = {}
   const allAttachments = document.querySelectorAll('.attachment');
   for (let index = 0; index < allAttachments.length; index++) {
-      const field = allAttachments[index]
-      attachments[field.dataset.key] = {
-        value: field.id === 'weekday' ? field.dataset.value : getInputText(field.id).value,
-        type: field.dataset.type
-      }
+    const field = allAttachments[index]
+    attachments[field.dataset.key] = {
+      value: field.id === 'weekday' ? field.dataset.value : getInputText(field.id).value,
+      type: field.dataset.type
+    }
 
   }
 
