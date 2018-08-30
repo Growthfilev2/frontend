@@ -53,16 +53,16 @@ if ('serviceWorker' in navigator) {
   <script>
   function init() {
 
-    navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
-      registration.addEventListener('updatefound', function() {
-         // If updatefound is fired, it means that there's
-         // a new service worker being installed.
-        var installingWorker = registration.installing;
-        console.log('A new service worker is being installed:',
-          installingWorker);
-        // You can listen for changes to the installing service worker's
-        // state via installingWorker.onstatechange
-      });
+    // navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
+    //   registration.addEventListener('updatefound', function() {
+    //      // If updatefound is fired, it means that there's
+    //      // a new service worker being installed.
+    //     var installingWorker = registration.installing;
+    //     console.log('A new service worker is being installed:',
+    //       installingWorker);
+    //     // You can listen for changes to the installing service worker's
+    //     // state via installingWorker.onstatechange
+    //   });
 
 
 
@@ -104,11 +104,11 @@ if ('serviceWorker' in navigator) {
           firebase.auth().signOut().catch(signOutError)
         }
 
-      console.log('ServiceWorker registration successful with scope: ', registration.scope);
-    }, function(err) {
-    //   // registration failed :(
-      console.log('ServiceWorker registration failed: ', err);
-    });
+    //   console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    // }, function(err) {
+    // //   // registration failed :(
+    //   console.log('ServiceWorker registration failed: ', err);
+    // });
   }
   </script>
 </body>
