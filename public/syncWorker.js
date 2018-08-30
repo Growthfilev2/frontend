@@ -16,7 +16,9 @@
         '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js',
         '//fonts.googleapis.com/css?family=Roboto:300,400,500',
         '//fonts.googleapis.com/icon?family=Material+Icons',
-        'index.html'
+        'index.html',
+        'img/change_number.png',
+        'empty-user.png'
     ]
 
     self.addEventListener('install', function (event) {
