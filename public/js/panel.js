@@ -26,12 +26,6 @@ function listView (dbName) {
       rootObjectStore.put(record)
       rootTx.oncomplete = function(){
         fetchDataForActivityList(db, hasMultipleOffice)
-        setTimeout(function(){
-
-        if(firebase.auth().currentUser.photoURL) {
-          document.querySelector('.profile--icon-small').src = firebase.auth().currentUser.photoURL
-        }
-      },300)
       }
 
     }

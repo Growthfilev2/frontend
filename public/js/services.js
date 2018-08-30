@@ -391,6 +391,7 @@ function loadViewFromRoot(response) {
   if(response.data.type === 'loggedIn'){
 
     document.getElementById("main-layout-app").style.display = 'block'
+    document.querySelector('.profile--icon-small').src = firebase.auth().currentUser.photoURL
     return;
   }
 
