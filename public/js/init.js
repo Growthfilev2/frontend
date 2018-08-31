@@ -77,3 +77,48 @@ function layoutGrid() {
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
 }
+
+
+moment.locale('en', {
+  calendar: {
+    lastDay: '[yesterday]',
+    sameDay: 'LT',
+    nextDay: '[Tomorrow at] LT',
+    lastWeek: 'dddd',
+    nextWeek: 'dddd [at] LT',
+    sameElse: 'L'
+  },
+
+  months: [
+    'January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'
+  ]
+})
+
+// initialize smooth scrolling
+window.scrollBy({
+    top: 100,
+    left: 0,
+    behavior: 'smooth'
+})
+
+function startApp(){
+  if (window.Worker && window.indexedDB) {
+
+    layoutGrid()
+    if(localStorage.getItem('dbexist')) {
+      console.log("start")
+
+      requestCreator('initializeIDB',{'viewType':'listView'})
+      listView(localStorage.getItem('dbexist'))
+    }
+    else {
+      requestCreator('initializeIDB',{'viewType':'profile'})
+    }
+  }
+
+  else {
+    console.log("cannot run in this mode")
+    firebase.auth().signOut().catch(signOutError)
+  }
+  }

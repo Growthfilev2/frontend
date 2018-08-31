@@ -7,8 +7,8 @@
 
   <script src="external/firebase-app.js" defer></script>
   <script src="external/firebase-auth.js" defer></script>
-  <script src="js/services.js" defer></script>
   <script src="js/init.js" defer></script>
+  <script src="js/services.js" defer></script>
   <script src="js/panel.js" defer></script>
   <link rel="stylesheet" href="css/material-components-web.css" async>
 
@@ -40,75 +40,37 @@
 
   </div>
   <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    // snacks('webview started')
-    init()
-  })
-} else {
-  console.log("please upgrade android")
-}
+window.addEventListener('load', function() {
+  if ('serviceWorker' in navigator) {
+    console.log('webview started')
+    initSW()
+  } else {
+    console.log("direct run")
+    startApp()
+  }
+})
   </script>
 
   <script>
-  function init() {
+  function initSW() {
 
-    // navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
-    //   registration.addEventListener('updatefound', function() {
-    //      // If updatefound is fired, it means that there's
-    //      // a new service worker being installed.
-    //     var installingWorker = registration.installing;
-    //     console.log('A new service worker is being installed:',
-    //       installingWorker);
-    //     // You can listen for changes to the installing service worker's
-    //     // state via installingWorker.onstatechange
-    //   });
+    navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
+      registration.addEventListener('updatefound', function() {
+         // If updatefound is fired, it means that there's
+         // a new service worker being installed.
+        var installingWorker = registration.installing;
+        console.log('A new service worker is being installed:',
+          installingWorker);
+        // You can listen for changes to the installing service worker's
+        // state via installingWorker.onstatechange
+      });
 
-
-
-      moment.locale('en', {
-        calendar: {
-          lastDay: '[yesterday]',
-          sameDay: 'LT',
-          nextDay: '[Tomorrow at] LT',
-          lastWeek: 'dddd',
-          nextWeek: 'dddd [at] LT',
-          sameElse: 'L'
-        },
-
-        months: [
-          'January', 'February', 'March', 'April', 'May', 'June', 'July',
-          'August', 'September', 'October', 'November', 'December'
-        ]
-      })
-
-      // initialize smooth scrolling
-      window.scrollBy({
-          top: 100,
-          left: 0,
-          behavior: 'smooth'
-      })
-
-        if (window.Worker && window.indexedDB) {
-          layoutGrid()
-          if(localStorage.getItem('dbexist')) {
-            requestCreator('initializeIDB',{'viewType':'listView'})
-            listView(localStorage.getItem('dbexist'))
-          }
-          else {
-            requestCreator('initializeIDB',{'viewType':'profile'})
-          }
-        }
-
-        else {
-          firebase.auth().signOut().catch(signOutError)
-        }
-
-    //   console.log('ServiceWorker registration successful with scope: ', registration.scope);
-    // }, function(err) {
-    // //   // registration failed :(
-    //   console.log('ServiceWorker registration failed: ', err);
-    // });
+      startApp()
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+    //   // registration failed :(
+      console.log('ServiceWorker registration failed: ', err);
+    });
   }
   </script>
 </body>
