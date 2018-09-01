@@ -587,19 +587,7 @@ function getActivity (db, data, unique) {
 
 function profileView (user, firstTimeLogin) {
   document.body.style.backgroundColor = '#eeeeee'
-  const dbName = user.uid
-  createProfileHeader(firstTimeLogin)
-  createProfilePanel()
-  disableInputs()
-  document.getElementById('close-profile--panel').addEventListener('click', function(){
-    listView(dbName)
-  })
-  showProfilePicture()
-
-  inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
-
-  changeDisplayName(user)
-  changeEmailAddress(user)
+  const dbName = firebase.auth().currentUser.uid
 
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -610,6 +598,20 @@ function profileView (user, firstTimeLogin) {
       const record = event.target.result
       record.view = 'profile'
       rootObjectStore.put(record)
+      rootTx.oncomplete = function () {
+        createProfileHeader(firstTimeLogin)
+        createProfilePanel()
+        disableInputs()
+        document.getElementById('close-profile--panel').addEventListener('click', function(){
+          listView(dbName)
+        })
+        showProfilePicture()
+
+        inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
+
+        changeDisplayName(user)
+        changeEmailAddress(user)
+      }
     }
   }
   sendCurrentViewNameToAndroid('profile')

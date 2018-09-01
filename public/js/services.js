@@ -331,7 +331,7 @@ function requestCreator(requestType, requestBody) {
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
-    if(requestBody.hasOwnProperty('viewType')) {
+    if(requestBody.hasOwnProperty('firstTime')) {
       requestGenerator.body = requestBody
       apiHandler.postMessage(requestGenerator)
     }
@@ -384,7 +384,7 @@ function loadViewFromRoot(response) {
     document.getElementById("main-layout-app").style.display = 'block'
 
     localStorage.setItem('dbexist',response.data.dbName);
-  
+
     return;
   }
 
@@ -392,15 +392,8 @@ function loadViewFromRoot(response) {
 
     document.getElementById("main-layout-app").style.display = 'block'
     document.querySelector('.profile--icon-small').src = firebase.auth().currentUser.photoURL
-    listView(response.data.dbName)
     return;
   }
-
-  if(response.data.type === 'openProfile') {
-    profileView(firebase.auth().currentUser,response.data.attr.firstTime)
-    return;
-  }
-
 
   console.log(response.data.dbName)
   const req = window.indexedDB.open(response.data.dbName)
@@ -412,7 +405,6 @@ function loadViewFromRoot(response) {
     rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
       const record = event.target.result
       let currentView = record.view
-      console.log(currentView)
       if(response.data.type === 'create-success') {
         currentView = 'list'
       }
@@ -435,7 +427,7 @@ function loadViewFromRoot(response) {
         case 'profile':
           handleTimeout()
           if(response.data.type === 'updateIDB') return
-          profileView(firebase.auth().currentUser,response.data.attr.firstTime)
+          profileView(firebase.auth().currentUser,true)
           break
 
         case 'calendar':
@@ -457,7 +449,7 @@ function loadViewFromRoot(response) {
         default:
           record.currentView = 'list'
           rootObjectStore.put(record)
-          listView()
+          listView(response.data.dbName)
           handleTimeout()
       }
     }
