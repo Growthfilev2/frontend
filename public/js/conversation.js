@@ -454,23 +454,23 @@ function initShareButton(record, db) {
       renderShareScreen(evt, '', '')
       return
     }
-    const usersObjectStore = db.transaction('users').objectStore('users')
-    record.assignees.forEach(function (number) {
-      usersObjectStore.get(number).onsuccess = function (event) {
-        const result = event.target.result
-        if (!result) {
-          const reqBody = {
-            'activityId': record.activityId,
-            'number': [number]
-          }
-          requestCreator('share', reqBody)
-        }
-
-        // renderLocationScreen(evt,'','')
-
-      }
-    })
     renderShareScreen(evt, record, '')
+    // const usersObjectStore = db.transaction('users').objectStore('users')
+    // record.assignees.forEach(function (number) {
+    //   usersObjectStore.get(number).onsuccess = function (event) {
+    //     const result = event.target.result
+    //     if (!result) {
+    //       const reqBody = {
+    //         'activityId': record.activityId,
+    //         'number': [number]
+    //       }
+    //       requestCreator('share', reqBody)
+    //     }
+    //
+    //     // renderLocationScreen(evt,'','')
+    //
+    //   }
+    // })
   })
 }
 
@@ -710,12 +710,11 @@ function availableStatus(record) {
 function updateStatus(status, id) {
   const reqBody = {
     'activityId': id,
-    'status': status
+    'status': status,
   }
-  console.log(status)
-  console.log(id)
 
   requestCreator('statusChange', reqBody)
+
 }
 
 function showSchedule(schedules) {
@@ -1545,22 +1544,22 @@ function initializeDialog(evt, input, params) {
       }
       getInputText(params.actionInput)['root_'].style.height = '40px'
       getInputText(params.actionInput)['root_'].style.marginTop = '0px'
-
-
       document.getElementById('change-number-dialog').remove()
 
       return
     }
 
     addContact(number, params.id);
-    const removeClass = document.querySelectorAll('.remove')
-    for (let index = 0; index < removeClass.length; index++) {
-      const icon = removeClass[index];
-      icon.classList.add('no-click')
 
-    }
+    // const removeClass = document.querySelectorAll('.remove')
+    // for (let index = 0; index < removeClass.length; index++) {
+    //   const icon = removeClass[index];
+    //   icon.classList.add('no-click')
+    //
+    // }
 
     document.getElementById('change-number-dialog').remove()
+    return;
 
   })
 
@@ -1698,12 +1697,13 @@ function addContact(number, activityId) {
 
   const expression = /^\+[1-9]\d{5,14}$/
   if (!expression.test(number)) return
-
+  console.log(number)
   const reqBody = {
     'activityId': activityId,
     'share': number
   }
   requestCreator('share', reqBody)
+
 }
 
 function dataElement(target, key) {
@@ -2214,7 +2214,8 @@ function createUpdateReqBody(event, reqType) {
     const body = {
       'activityId': activityId,
       'schedule': schedule,
-      'venue': venue
+      'venue': venue,
+      'attachment': attachments
     }
     requestCreator('update', body)
     return

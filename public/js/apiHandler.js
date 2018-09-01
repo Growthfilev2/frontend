@@ -1,4 +1,3 @@
-
 // "use strict";
 
 /* eslint-env worker */
@@ -22,7 +21,7 @@ firebase.initializeApp({
 })
 
 // get Device time
-function getTime () {
+function getTime() {
   return Date.now()
 }
 
@@ -40,7 +39,7 @@ const requestFunctionCaller = {
   Null: Null
 }
 
-function requestHandlerResponse (type, code, message, dbName) {
+function requestHandlerResponse(type, code, message, dbName) {
   self.postMessage({
     type: type,
     code: code,
@@ -50,44 +49,48 @@ function requestHandlerResponse (type, code, message, dbName) {
 }
 
 // when worker receives the request body from the main thread
-self.onmessage = function (event) {
-  firebase.auth().onAuthStateChanged(function (auth) {
+self.onmessage = function(event) {
+  firebase.auth().onAuthStateChanged(function(auth) {
     console.log(auth)
     if (!auth) {
       requestHandlerResponse('loggedOut', '200', 'user logged out')
-      return void (0)
+      return void(0)
     }
 
-    if(event.data.body.firstTime) {
-    requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-    // requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
+
+
+    if (event.data.body.hasOwnProperty('firstTime') && event.data.body.firstTime) {
+      requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
+      // requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
+      requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+      return
+    }
+    if(event.data.body.hasOwnProperty('firstTime') && event.data.body.firstTime)
+     {
+      requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
+      requestHandlerResponse('loggedIn', '200', 'user logged in', firebase.auth().currentUser.uid)
+      requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+      return
+    }
+
+    // else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
+    //   requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
+    //   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+    // }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-    return
-  }
-  else {
-    requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-    requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-    return
-  }
-  // else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
-  //   requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-  //   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-  // }
-  requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
 
   })
 }
 
 // Performs XMLHTTPRequest for the API's.
 
-function http (method, url, data) {
-  return new Promise(function (resolve, reject) {
+function http(method, url, data,originalRecord) {
+  return new Promise(function(resolve, reject) {
     firebase
       .auth()
       .currentUser
       .getIdToken()
-      .then(function (idToken) {
+      .then(function(idToken) {
         const xhr = new XMLHttpRequest()
 
         xhr.open(method, url, true)
@@ -96,11 +99,15 @@ function http (method, url, data) {
         xhr.setRequestHeader('Content-Type', 'application/json')
         xhr.setRequestHeader('Authorization', `Bearer ${idToken}`)
 
-        xhr.onreadystatechange = function () {
+        xhr.onreadystatechange = function() {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
               requestHandlerResponse('error', errorObject.code, errorObject.message)
+              if(originalRecord){
+                console.log(originalRecord)
+                resetInstantDB(originalRecord)
+              }
               return reject(xhr)
               // return reject(xhr)
             }
@@ -115,12 +122,12 @@ function http (method, url, data) {
   })
 }
 
-function fetchServerTime () {
-  return new Promise(function (resolve) {
+function fetchServerTime() {
+  return new Promise(function(resolve) {
     http(
       'GET',
       `${apiUrl}now`
-    ).then(function (response) {
+    ).then(function(response) {
       resolve(response.timestamp)
     }).catch(console.log)
   })
@@ -129,20 +136,36 @@ function fetchServerTime () {
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
-function initializeIDB () {
+function fetchRecord (dbName,id) {
+  return new Promise(function(resolve){
+
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function(event){
+    const db = req.result
+    const objStore = db.transaction('activity').objectStore('activity')
+    objStore.get(id).onsuccess = function(event){
+
+      resolve(event.target.result)
+    }
+  }
+})
+}
+
+
+function initializeIDB() {
   // onAuthStateChanged is added because app is reinitialized
   let hasFirstView = true
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     var auth = firebase.auth().currentUser
     console.log(auth)
 
     const request = indexedDB.open(auth.uid)
 
-    request.onerror = function (event) {
+    request.onerror = function(event) {
       reject(event.error)
     }
 
-    request.onupgradeneeded = function () {
+    request.onupgradeneeded = function() {
       const db = request.result
       hasFirstView = false
       const activity = db.createObjectStore('activity', {
@@ -220,13 +243,13 @@ function initializeIDB () {
       // requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
     }
 
-    request.onsuccess = function () {
+    request.onsuccess = function() {
       if (!hasFirstView) {
-      requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-        fetchServerTime().then(function (timestamp) {
+        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+        fetchServerTime().then(function(timestamp) {
           const rootTx = request.result.transaction('root', 'readwrite')
           const rootObjectStore = rootTx.objectStore('root')
-          rootObjectStore.get(auth.uid).onsuccess = function (event) {
+          rootObjectStore.get(auth.uid).onsuccess = function(event) {
             const record = event.target.result
             record.serverTime = timestamp - Date.now()
             rootObjectStore.put(record)
@@ -237,15 +260,15 @@ function initializeIDB () {
         requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
         const rootTxView = request.result.transaction('root', 'readwrite')
         const rootObjectStore = rootTxView.objectStore('root')
-        rootObjectStore.get(auth.uid).onsuccess = function (event) {
+        rootObjectStore.get(auth.uid).onsuccess = function(event) {
           const record = event.target.result
           record.view = 'list'
           rootObjectStore.put(record)
 
-          fetchServerTime().then(function (timestamp) {
+          fetchServerTime().then(function(timestamp) {
             const rootTx = request.result.transaction('root', 'readwrite')
             const rootObjectStore = rootTx.objectStore('root')
-            rootObjectStore.get(auth.uid).onsuccess = function (event) {
+            rootObjectStore.get(auth.uid).onsuccess = function(event) {
               const record = event.target.result
               record.serverTime = timestamp - Date.now()
               rootObjectStore.put(record)
@@ -260,101 +283,118 @@ function initializeIDB () {
   })
 }
 
-function comment (body) {
+function comment(body) {
   console.log(body)
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     http(
       'POST',
       `${apiUrl}activities/comment`,
       JSON.stringify(body)
-    ).then(function () {
+    ).then(function() {
       requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
       resolve(firebase.auth().currentUser.uid)
-    }).catch(function (error) {
+    }).catch(function(error) {
       reject(error)
     })
   })
 }
 
-function statusChange (body) {
+function statusChange(body) {
   console.log(body)
-  return new Promise(function (resolve, reject) {
+  const dbName = firebase.auth().currentUser.uid
+
+  return new Promise(function(resolve, reject) {
+    fetchRecord(dbName,body.activityId).then(function(originalRecord){
+      instantUpdateDB(dbName, body, 'status')
     http(
       'PATCH',
       `${apiUrl}activities/change-status`,
-      JSON.stringify(body)
-    ).then(function () {
-      requestHandlerResponse('notification', 200, 'status changed successfully', firebase.auth().currentUser.uid)
+      JSON.stringify(body),
+      originalRecord
+    ).then(function() {
+      requestHandlerResponse('notification', 200, 'status changed successfully', dbName)
 
       resolve(
         firebase.auth().currentUser.uid
       )
-    }).catch(function (error) {
+    }).catch(function(error) {
       reject(error)
     })
   })
+})
+
 }
 
-function removeAssignee (body) {
-  return new Promise(function (resolve, reject) {
+function removeAssignee(body) {
+  const dbName =  firebase.auth().currentUser.uid
+
+  return new Promise(function(resolve, reject) {
+      fetchRecord(dbName,body.activityId).then(function(originalRecord){
+        instantUpdateDB(dbName, body, 'remove')
     http(
         'PATCH',
         `${apiUrl}activities/remove`,
         JSON.stringify(body)
       )
-      .then(function () {
-        requestHandlerResponse('notification', 200, 'assignee removed successfully', firebase.auth().currentUser.uid)
+      .then(function() {
+        requestHandlerResponse('notification', 200, 'assignee removed successfully',dbName)
 
         resolve(
           firebase.auth().currentUser.uid
         )
       })
-      .catch(function (error) {
+      .catch(function(error) {
         reject(error)
       })
   })
+})
 }
 
-function share (body) {
-  console.log(body)
-  return new Promise(function (resolve, reject) {
+function share(body) {
+  const dbName = firebase.auth().currentUser.uid
+
+
+  return new Promise(function(resolve, reject) {
+      fetchRecord(dbName,body.activityId).then(function(originalRecord){
+        instantUpdateDB(dbName, body, 'share')
     http(
         'PATCH',
         `${apiUrl}activities/share`,
         JSON.stringify(body))
-      .then(function (success) {
-        requestHandlerResponse('notification', 200, 'assignne added successfully', firebase.auth().currentUser.uid)
+      .then(function(success) {
+        requestHandlerResponse('notification', 200, 'assignne added successfully',dbName)
         resolve(
           firebase.auth().currentUser.uid
         )
       })
-      .catch(function (error) {
+      .catch(function(error) {
         reject(error)
       })
   })
+})
 }
 
-function updateUserNumber (body) {
+function updateUserNumber(body) {
   console.log(body)
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     http(
         'PATCH',
         `${apiUrl}services/users/update`,
         JSON.stringify(body)
       )
-      .then(function (success) {
+      .then(function(success) {
         requestHandlerResponse('notification', 200, 'number updated successfully', firebase.auth().currentUser.uid)
 
         resolve(firebase.auth().currentUser.uid)
       })
-      .catch(function (error) {
+      .catch(function(error) {
         reject(error)
       })
   })
 }
 
-function Null () {
-  return new Promise(function (resolve, reject) {
+function Null() {
+  return new Promise(function(resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
       reject(null)
@@ -365,49 +405,114 @@ function Null () {
   })
 }
 
-function update (body) {
+function update(body) {
+  const dbName = firebase.auth().currentUser.uid
   console.log(body)
-  return new Promise(function (resolve, reject) {
+
+  return new Promise(function(resolve, reject) {
+      fetchRecord(dbName,body.activityId).then(function(originalRecord){
+        instantUpdateDB(dbName, body, 'update')
     http(
         'PATCH',
         `${apiUrl}activities/update`,
         JSON.stringify(body)
       )
-      .then(function (success) {
-        requestHandlerResponse('notification', 200, 'activity update  successfully', firebase.auth().currentUser.uid)
+      .then(function(success) {
+        requestHandlerResponse('notification', 200, 'activity update  successfully', dbName)
 
         resolve(firebase.auth().currentUser.uid)
       })
-      .catch(function (error) {
+      .catch(function(error) {
         reject(error)
       })
   })
+})
 }
 
-function create (body) {
+function create(body) {
   console.log(body)
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     http(
         'POST',
         `${apiUrl}activities/create`,
         JSON.stringify(body)
       )
-      .then(function (success) {
+      .then(function(success) {
         requestHandlerResponse('create-success', 200, 'activity created successfully', firebase.auth().currentUser.uid)
         resolve(firebase.auth().currentUser.uid)
       })
-      .catch(function (error) {
+      .catch(function(error) {
         reject(error)
       })
   })
 }
 
-function updateMap (db, activity) {
+
+function instantUpdateDB(dbName, data, type) {
+  console.log(data)
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function(event) {
+    const db = req.result
+    const objStoreTx = db.transaction(['activity'], 'readwrite')
+    const objStore = objStoreTx.objectStore('activity')
+    objStore.get(data.activityId).onsuccess = function(event) {
+      const record = event.target.result
+      if (type === 'remove') {
+        const index = record.assignees.indexOf(data.remove)
+        record.assignees.splice(index, 1)
+        objStore.put(record)
+      }
+      if (type === 'share') {
+        record.assignees.push(data.share[0])
+        objStore.put(record)
+      }
+      if(type === 'update') {
+        Object.keys(data).forEach(function(key){
+          record[key] = data[key]
+        })
+        objStore.put(record)
+      }
+      else {
+
+        record[type] = data[type]
+        objStore.put(record)
+      }
+    }
+    objStoreTx.oncomplete = function() {
+      requestHandlerResponse('updateIDB', 200, 'IDB instantly updated', dbName)
+    }
+  }
+}
+
+function resetInstantDB(resetBody){
+const dbName = firebase.auth().currentUser.uid
+const req = indexedDB.open(dbName)
+req.onsuccess = function(){
+  const db = req.result
+  const objStore = db.transaction('activity','readwrite').objectStore('activity')
+  // const objStore = objStoreTx.objectStore('activity')
+  //
+  console.log(resetBody)
+  objStore.get(resetBody.activityId).onsuccess = function(event){
+      let record = event.target.result
+      console.log(record)
+      record = resetBody
+      console.log(record)
+      objStore.put(record)
+      requestHandlerResponse('updateIDB',200,'activity updated to default state',dbName)
+  }
+
+  // objStoreTx.oncomplete = function(){
+  // }
+}
+}
+
+function updateMap(db, activity) {
   const mapTx = db.transaction(['map'], 'readwrite')
   const mapObjectStore = mapTx.objectStore('map')
   const mapActivityIdIndex = mapObjectStore.index('activityId')
 
-  mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+  mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function(event) {
     const cursor = event.target.result
     if (cursor) {
       let deleteRecordReq = cursor.delete()
@@ -416,11 +521,11 @@ function updateMap (db, activity) {
     }
   }
 
-  mapTx.oncomplete = function () {
+  mapTx.oncomplete = function() {
     const mapTx = db.transaction(['map'], 'readwrite')
     const mapObjectStore = mapTx.objectStore('map')
 
-    activity.venue.forEach(function (newVenue) {
+    activity.venue.forEach(function(newVenue) {
       mapObjectStore.add({
 
         location: newVenue.location.toLowerCase(),
@@ -439,20 +544,20 @@ function updateMap (db, activity) {
   mapTx.onerror = errorDeletingRecord
 }
 
-function errorDeletingRecord (event) {
+function errorDeletingRecord(event) {
   console.log(event.target.error)
 }
 
-function transactionError (event) {
+function transactionError(event) {
   console.log(event.target.error)
 }
 
-function updateCalendar (db, activity) {
+function updateCalendar(db, activity) {
   const calendarTx = db.transaction(['calendar'], 'readwrite')
   const calendarObjectStore = calendarTx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
 
-  calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+  calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
     // console.log(activity.activityId)
     const cursor = event.target.result
     if (cursor) {
@@ -462,13 +567,13 @@ function updateCalendar (db, activity) {
     }
   }
 
-  calendarTx.oncomplete = function () {
+  calendarTx.oncomplete = function() {
     const calendarTx = db.transaction(['calendar'], 'readwrite')
     const calendarObjectStore = calendarTx.objectStore('calendar')
     const calendarActivityIndex = calendarObjectStore.index('activityId')
     const calendarIsUpdatedIndex = calendarObjectStore.index('isUpdated')
 
-    activity.schedule.forEach(function (schedule) {
+    activity.schedule.forEach(function(schedule) {
       const startTime = moment(schedule.startTime).toDate()
       const endTime = moment(schedule.endTime).toDate()
 
@@ -486,7 +591,7 @@ function updateCalendar (db, activity) {
       })
     })
 
-    calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+    calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
       const cursor = event.target.result
 
       if (!cursor) return
@@ -507,7 +612,7 @@ function updateCalendar (db, activity) {
       cursor.continue()
     }
 
-    calendarIsUpdatedIndex.openCursor(0).onsuccess = function (event) {
+    calendarIsUpdatedIndex.openCursor(0).onsuccess = function(event) {
       const cursor = event.target.result
 
       if (cursor) {
@@ -524,7 +629,7 @@ function updateCalendar (db, activity) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment (db, activity) {
+function putAttachment(db, activity) {
   const chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children')
 
   chidlrenObjectStore.put({
@@ -538,11 +643,11 @@ function putAttachment (db, activity) {
 
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
-function putAssignessInStore (db, assigneeArray) {
-  assigneeArray.forEach(function (assignee) {
+function putAssignessInStore(db, assigneeArray) {
+  assigneeArray.forEach(function(assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
-    usersObjectStore.openCursor(assignee).onsuccess = function (event) {
+    usersObjectStore.openCursor(assignee).onsuccess = function(event) {
       const cursor = event.target.result
       if (cursor) return
 
@@ -556,7 +661,7 @@ function putAssignessInStore (db, assigneeArray) {
   })
 }
 
-function readNonUpdatedAssignee (db) {
+function readNonUpdatedAssignee(db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
   const isUpdatedIndex = usersObjectStore.index('isUpdated')
   const NON_UPDATED_USERS = 0
@@ -565,8 +670,8 @@ function readNonUpdatedAssignee (db) {
   const defaultReadUserString = `${apiUrl}services/users/read?q=`
   let fullReadUserString = ''
 
-  return new Promise(function (resolve) {
-    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+  return new Promise(function(resolve) {
+    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function(event) {
       const cursor = event.target.result
 
       if (!cursor) {
@@ -588,12 +693,12 @@ function readNonUpdatedAssignee (db) {
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
-function updateUserObjectStore (successUrl) {
+function updateUserObjectStore(successUrl) {
   http(
       'GET',
       successUrl.url
     )
-    .then(function (userProfile) {
+    .then(function(userProfile) {
       console.log(userProfile)
 
       const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
@@ -601,7 +706,7 @@ function updateUserObjectStore (successUrl) {
       const USER_NOT_UPDATED = 0
       const USER_UPDATED = 1
 
-      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
+      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function(event) {
         const cursor = event.target.result
 
         if (!cursor) {
@@ -622,7 +727,7 @@ function updateUserObjectStore (successUrl) {
     }).catch(console.log)
 }
 
-function updateSubscription (db, subscription) {
+function updateSubscription(db, subscription) {
   console.log(subscription)
   const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
@@ -630,13 +735,13 @@ function updateSubscription (db, subscription) {
 
   const templateIndex = subscriptionObjectStore.index('template')
 
-  templateIndex.get(subscription.template).onsuccess = function (templateEvent) {
+  templateIndex.get(subscription.template).onsuccess = function(templateEvent) {
     if (!templateEvent.target.result) {
       subscriptionObjectStore.add(subscription)
       return
     }
 
-    subscriptionObjectStore.openCursor().onsuccess = function (event) {
+    subscriptionObjectStore.openCursor().onsuccess = function(event) {
       const cursor = event.target.result
       if (subscription.office !== cursor.value.office) return
       subscriptionObjectStore.delete(cursor.primaryKey)
@@ -653,14 +758,14 @@ function updateSubscription (db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse (read) {
+function successResponse(read) {
   console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
 
-  request.onsuccess = function () {
+  request.onsuccess = function() {
     const db = request.result
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
@@ -668,13 +773,13 @@ function successResponse (read) {
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
 
     let counter = {}
-    read.addendum.forEach(function (addendum) {
+    read.addendum.forEach(function(addendum) {
       let key = addendum.activityId
       counter[key] = (counter[key] || 0) + 1
       addendumObjectStore.add(addendum)
     })
 
-    Object.keys(counter).forEach(function (count) {
+    Object.keys(counter).forEach(function(count) {
       console.log(counter)
       activityCount.put({
         activityId: count,
@@ -682,7 +787,7 @@ function successResponse (read) {
       })
     })
 
-    read.activities.forEach(function (activity) {
+    read.activities.forEach(function(activity) {
       console.log(activity)
       // put activity in activity object store
       activityObjectStore.put(activity)
@@ -702,11 +807,11 @@ function successResponse (read) {
 
     getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
 
-    read.templates.forEach(function (subscription) {
+    read.templates.forEach(function(subscription) {
       updateSubscription(db, subscription)
     })
 
-    rootObjectStore.get(user.uid).onsuccess = function (event) {
+    rootObjectStore.get(user.uid).onsuccess = function(event) {
       const record = event.target.result
       record.fromTime = Date.parse(read.upto)
 
@@ -721,19 +826,19 @@ function successResponse (read) {
   }
 }
 
-function notUpdateUserObjectStore (errorUrl) {
+function notUpdateUserObjectStore(errorUrl) {
   console.log(errorUrl)
 }
 
-function getUniqueOfficeCount () {
+function getUniqueOfficeCount() {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
-  return new Promise(function (resolve, reject) {
-    req.onsuccess = function () {
+  return new Promise(function(resolve, reject) {
+    req.onsuccess = function() {
       const db = req.result
       const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
-      activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
+      activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function(event) {
         const cursor = event.target.result
         if (!cursor) {
           resolve({
@@ -746,18 +851,18 @@ function getUniqueOfficeCount () {
         cursor.continue()
       }
     }
-    req.onerror = function (event) {
+    req.onerror = function(event) {
       reject(event.error)
     }
   })
 }
 
-function setUniqueOffice (data) {
+function setUniqueOffice(data) {
   const req = indexedDB.open(data.dbName)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-    rootObjectStore.get(data.dbName).onsuccess = function (event) {
+    rootObjectStore.get(data.dbName).onsuccess = function(event) {
       const record = event.target.result
       if (data.count === 1) {
         record.hasMultipleOffice = 0
@@ -770,20 +875,20 @@ function setUniqueOffice (data) {
   }
 }
 
-function updateIDB (dbName) {
+function updateIDB(dbName) {
   console.log(dbName)
   const req = indexedDB.open(dbName)
 
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
-    rootObjectStore.get(dbName).onsuccess = function (root) {
+    rootObjectStore.get(dbName).onsuccess = function(root) {
       http(
           'GET',
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
-        .then(function (response) {
+        .then(function(response) {
           if (response.from === response.upto) {
             return
           }

@@ -440,6 +440,7 @@ function loadViewFromRoot(response) {
           fillActivityDetailPage(record.id)
           break
         case 'edit-activity':
+          fillActivityDetailPage(record.id)
           handleTimeout()
           break;
         case 'create':
