@@ -1,4 +1,3 @@
-
 // "use strict";
 
 /* eslint-env worker */
@@ -22,7 +21,7 @@ firebase.initializeApp({
 })
 
 // get Device time
-function getTime () {
+function getTime() {
   return Date.now()
 }
 
@@ -40,12 +39,13 @@ const requestFunctionCaller = {
   Null: Null
 }
 
-function requestHandlerResponse (type, code, message, dbName) {
+function requestHandlerResponse(type, code, message, dbName, data) {
   self.postMessage({
     type: type,
     code: code,
     msg: message,
-    dbName: dbName
+    dbName: dbName,
+    attr: data || ''
   })
 }
 
@@ -55,27 +55,26 @@ self.onmessage = function (event) {
     console.log(auth)
     if (!auth) {
       requestHandlerResponse('loggedOut', '200', 'user logged out')
-      return void (0)
+      return void(0)
     }
 
-    if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'listView') {
-    requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-    requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
+    requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
+
+    if (event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'listView') {
+      requestHandlerResponse('loggedIn', '200', 'user logged in', firebase.auth().currentUser.uid)
+    } 
+    if (event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile') {
+      console.log("start with profile")
+      requestHandlerResponse('openProfile',200,'first time login',firebase.auth().currentUser.uid,{view:'profile',firstTime:true})
+    } 
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-  }
-  else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
-    requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-  }
-  else {
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-  }
+    return;
   })
 }
 
 // Performs XMLHTTPRequest for the API's.
 
-function http (method, url, data) {
+function http(method, url, data) {
   return new Promise(function (resolve, reject) {
     firebase
       .auth()
@@ -109,7 +108,7 @@ function http (method, url, data) {
   })
 }
 
-function fetchServerTime () {
+function fetchServerTime() {
   return new Promise(function (resolve) {
     http(
       'GET',
@@ -123,7 +122,7 @@ function fetchServerTime () {
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
-function initializeIDB () {
+function initializeIDB() {
   // onAuthStateChanged is added because app is reinitialized
   let hasFirstView = true
   return new Promise(function (resolve, reject) {
@@ -211,7 +210,6 @@ function initializeIDB () {
         fromTime: 0,
         view: 'profile'
       })
-      requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
     }
 
     request.onsuccess = function () {
@@ -227,7 +225,6 @@ function initializeIDB () {
           resolve(auth.uid)
         })
       } else {
-        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
         const rootTxView = request.result.transaction('root', 'readwrite')
         const rootObjectStore = rootTxView.objectStore('root')
         rootObjectStore.get(auth.uid).onsuccess = function (event) {
@@ -253,7 +250,7 @@ function initializeIDB () {
   })
 }
 
-function comment (body) {
+function comment(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -269,7 +266,7 @@ function comment (body) {
   })
 }
 
-function statusChange (body) {
+function statusChange(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -288,7 +285,7 @@ function statusChange (body) {
   })
 }
 
-function removeAssignee (body) {
+function removeAssignee(body) {
   return new Promise(function (resolve, reject) {
     http(
         'PATCH',
@@ -308,7 +305,7 @@ function removeAssignee (body) {
   })
 }
 
-function share (body) {
+function share(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -327,7 +324,7 @@ function share (body) {
   })
 }
 
-function updateUserNumber (body) {
+function updateUserNumber(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -346,7 +343,7 @@ function updateUserNumber (body) {
   })
 }
 
-function Null () {
+function Null() {
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
@@ -358,7 +355,7 @@ function Null () {
   })
 }
 
-function update (body) {
+function update(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -377,7 +374,7 @@ function update (body) {
   })
 }
 
-function create (body) {
+function create(body) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     http(
@@ -395,7 +392,7 @@ function create (body) {
   })
 }
 
-function updateMap (db, activity) {
+function updateMap(db, activity) {
   const mapTx = db.transaction(['map'], 'readwrite')
   const mapObjectStore = mapTx.objectStore('map')
   const mapActivityIdIndex = mapObjectStore.index('activityId')
@@ -432,15 +429,15 @@ function updateMap (db, activity) {
   mapTx.onerror = errorDeletingRecord
 }
 
-function errorDeletingRecord (event) {
+function errorDeletingRecord(event) {
   console.log(event.target.error)
 }
 
-function transactionError (event) {
+function transactionError(event) {
   console.log(event.target.error)
 }
 
-function updateCalendar (db, activity) {
+function updateCalendar(db, activity) {
   const calendarTx = db.transaction(['calendar'], 'readwrite')
   const calendarObjectStore = calendarTx.objectStore('calendar')
   const calendarActivityIndex = calendarObjectStore.index('activityId')
@@ -517,7 +514,7 @@ function updateCalendar (db, activity) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment (db, activity) {
+function putAttachment(db, activity) {
   const chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children')
 
   chidlrenObjectStore.put({
@@ -531,7 +528,7 @@ function putAttachment (db, activity) {
 
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
-function putAssignessInStore (db, assigneeArray) {
+function putAssignessInStore(db, assigneeArray) {
   assigneeArray.forEach(function (assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
 
@@ -549,7 +546,7 @@ function putAssignessInStore (db, assigneeArray) {
   })
 }
 
-function readNonUpdatedAssignee (db) {
+function readNonUpdatedAssignee(db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
   const isUpdatedIndex = usersObjectStore.index('isUpdated')
   const NON_UPDATED_USERS = 0
@@ -581,7 +578,7 @@ function readNonUpdatedAssignee (db) {
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
-function updateUserObjectStore (successUrl) {
+function updateUserObjectStore(successUrl) {
   http(
       'GET',
       successUrl.url
@@ -615,7 +612,7 @@ function updateUserObjectStore (successUrl) {
     }).catch(console.log)
 }
 
-function updateSubscription (db, subscription) {
+function updateSubscription(db, subscription) {
   console.log(subscription)
   const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
@@ -646,7 +643,7 @@ function updateSubscription (db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse (read) {
+function successResponse(read) {
   console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
@@ -714,11 +711,11 @@ function successResponse (read) {
   }
 }
 
-function notUpdateUserObjectStore (errorUrl) {
+function notUpdateUserObjectStore(errorUrl) {
   console.log(errorUrl)
 }
 
-function getUniqueOfficeCount () {
+function getUniqueOfficeCount() {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
@@ -745,7 +742,7 @@ function getUniqueOfficeCount () {
   })
 }
 
-function setUniqueOffice (data) {
+function setUniqueOffice(data) {
   const req = indexedDB.open(data.dbName)
   req.onsuccess = function () {
     const db = req.result
@@ -763,7 +760,7 @@ function setUniqueOffice (data) {
   }
 }
 
-function updateIDB (dbName) {
+function updateIDB(dbName) {
   console.log(dbName)
   const req = indexedDB.open(dbName)
 
