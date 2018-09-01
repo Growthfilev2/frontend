@@ -109,11 +109,13 @@ function startApp(){
     if(localStorage.getItem('dbexist')) {
       console.log("start")
 
-      requestCreator('initializeIDB',{'viewType':'listView'})
+      requestCreator('initializeIDB',{firstTime:false})
       listView(localStorage.getItem('dbexist'))
     }
     else {
-      requestCreator('initializeIDB',{'viewType':'profile'})
+      requestCreator('initializeIDB',{firstTime:true})
+
+    //   requestCreator('initializeIDB',{'viewType':'profile'})
     }
   }
 

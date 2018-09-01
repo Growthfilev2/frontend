@@ -58,18 +58,24 @@ self.onmessage = function (event) {
       return void (0)
     }
 
-    if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'listView') {
+    if(event.data.body.firstTime) {
+    requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
+    // requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
+    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+    return
+  }
+  else {
     requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
     requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+    return
   }
-  else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
-    requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-  }
-  else {
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-  }
+  // else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
+  //   requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
+  //   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+  // }
+  requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+
   })
 }
 
@@ -209,13 +215,14 @@ function initializeIDB () {
       root.put({
         uid: auth.uid,
         fromTime: 0,
-        view: 'profile'
+        view: 'list'
       })
-      requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
+      // requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
     }
 
     request.onsuccess = function () {
       if (!hasFirstView) {
+      requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
         fetchServerTime().then(function (timestamp) {
           const rootTx = request.result.transaction('root', 'readwrite')
           const rootObjectStore = rootTx.objectStore('root')

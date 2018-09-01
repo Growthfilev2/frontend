@@ -331,7 +331,7 @@ function requestCreator(requestType, requestBody) {
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
-    if(requestBody.hasOwnProperty('viewType')) {
+    if(requestBody.hasOwnProperty('firstTime')) {
       requestGenerator.body = requestBody
       apiHandler.postMessage(requestGenerator)
     }
@@ -449,7 +449,7 @@ function loadViewFromRoot(response) {
         default:
           record.currentView = 'list'
           rootObjectStore.put(record)
-          listView()
+          listView(response.data.dbName)
           handleTimeout()
       }
     }
