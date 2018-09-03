@@ -1,5 +1,6 @@
 
 function listView (dbName) {
+  history.pushState(['listView',dbName],null,null)
   creatListHeader()
   listPanel()
   document.body.style.backgroundColor = 'white'
@@ -140,7 +141,7 @@ function creatListHeader () {
           calendarView(user.uid)
           break
         case 'profile-panel--icon':
-          profileView(user)
+          profileView()
       }
     })
   })
@@ -585,10 +586,12 @@ function getActivity (db, data, unique) {
   }
 }
 
-function profileView (user, firstTimeLogin) {
-  document.body.style.backgroundColor = '#eeeeee'
-  const dbName = firebase.auth().currentUser.uid
+function profileView (firstTimeLogin) {
+  history.pushState(['profileView',firstTimeLogin],null,null)
 
+  document.body.style.backgroundColor = '#eeeeee'
+  const user = firebase.auth().currentUser
+  const dbName = user.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
@@ -603,7 +606,8 @@ function profileView (user, firstTimeLogin) {
         createProfilePanel()
         disableInputs()
         document.getElementById('close-profile--panel').addEventListener('click', function(){
-          listView(dbName)
+          // listView(dbName)
+          handleViewFromHistory()
         })
         showProfilePicture()
 
@@ -973,7 +977,7 @@ function createConfirmView () {
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
   document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
   document.getElementById('back-profile').addEventListener('click', function(){
-    profileView(firebase.auth().currentUser)
+    profileView()
   })
 }
 
@@ -1087,7 +1091,7 @@ function changePhoneNumber () {
   })
 
   document.getElementById('cancelUpdate').addEventListener('click', function (event) {
-    profileView(firebase.auth().currentUser, '')
+    profileView()
   })
 }
 

@@ -124,3 +124,23 @@ function startApp(){
     firebase.auth().signOut().catch(signOutError)
   }
   }
+
+
+  function handleViewFromHistory(backFromAndroid){
+    if(backFromAndroid && history.state[0] === 'listView'){
+      return true
+    }
+    window.history.go(-1)
+    window.onpopstate = function(event){
+      console.log(event.state)
+      const views = {
+        listView : listView,
+        profileView : profileView,
+        fillActivityDetailPage : fillActivityDetailPage,
+        conversation:conversation
+      }
+
+      views[event.state[0]](event.state[1])
+
+    }
+  }

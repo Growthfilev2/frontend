@@ -1,6 +1,14 @@
 
 
 function conversation(id) {
+  if(history.state[0] === 'conversation') {
+
+    history.replaceState(['conversation',id],null,null)
+  }
+  else {
+    history.pushState(['conversation',id],null,null)
+  }
+
   if (!id) return
   const currentUser = firebase.auth().currentUser
 
@@ -240,7 +248,8 @@ function createHeaderContent(db, id,unique) {
 
     document.getElementById('back-conv').addEventListener('click', function () {
       reinitCount(db, id)
-      listView(db.name)
+      // listView(db.name)
+      handleViewFromHistory()
     })
 
     document.querySelector('.comment-header-primary').addEventListener('click', function () {
@@ -255,6 +264,7 @@ function createHeaderContent(db, id,unique) {
 
 
 function fillActivityDetailPage(id) {
+  history.pushState(['fillActivityDetailPage',id],null,null)
 
   const dbName = firebase.auth().currentUser.uid
   const req = window.indexedDB.open(dbName)
@@ -282,7 +292,8 @@ function fillActivityDetailPage(id) {
           console.log(record)
           createActivityDetailHeader(record, 'edit')
           document.getElementById('back-detail').addEventListener('click', function () {
-            conversation(id)
+            // conversation(id)
+            handleViewFromHistory()
           })
 
           displayActivityDetail(db, record)
@@ -1743,7 +1754,8 @@ function createActivity(evt) {
       document.getElementById('app-current-panel').innerHTML = detail.outerHTML
 
       document.getElementById('back-list').addEventListener('click', function(){
-        listView(dbName)
+        // listView(dbName)
+        handleViewFromHistory()
       })
 
       initShareButton()
