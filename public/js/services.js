@@ -388,21 +388,33 @@ function loadViewFromRoot(response) {
     return;
   }
 
-  if(response.data.type === 'loggedIn'){
-    console.log(firebase.auth().currentUser.photoURL)
-    document.getElementById("main-layout-app").style.display = 'block'
-    document.querySelector('.profile--icon-small').src = firebase.auth().currentUser.photoURL
-    return;
-  }
 
   console.log(response.data.dbName)
-  const req = window.indexedDB.open(response.data.dbName)
+  const req = window.indexedDB.open(firebase.auth().currentUser.uid)
 
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
 
-    rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
+
+      if(response.data.type === 'updateAssigneeList') {
+        console.log("only update assingee list")
+        const activityObjectStore = db.transaction('activity').objectStore('activity')
+        //here dbName is activityId
+        activityObjectStore.get(response.data.dbName.id).onsuccess = function(event){
+          const record = event.target.result
+          // createAssigneeList(db,record.assignees,{
+          //   canEdit: record.canEdit,
+          //   showLabel: true,
+          //   activityId: record.activityId
+          // })
+          readNameAndImageFromNumber([response.data.dbName.number],db)
+        }
+
+      }
+      else {
+        console.log("phrs se")
+      rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
       const record = event.target.result
       let currentView = record.view
       if(response.data.type === 'create-success') {
@@ -439,8 +451,9 @@ function loadViewFromRoot(response) {
           handleTimeout()
           fillActivityDetailPage(record.id)
           break
-        case 'edit-activity':
-          fillActivityDetailPage(record.id)
+        case 'updateCreateActivity':
+          // updateCreateActivity(record.id)
+          // fillActivityDetailPage(record.id)
           handleTimeout()
           break;
         case 'create':
@@ -455,6 +468,7 @@ function loadViewFromRoot(response) {
       }
     }
   }
+}
 }
 
 function onErrorMessage(error) {

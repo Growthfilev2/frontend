@@ -1,12 +1,13 @@
 :root {
-  --mdc-theme-primary: #0399f4 !important;
-  --mdc-theme-secondary: #ff9800 !important;
+  --mdc-theme-primary: #eeeeee !important;
+  --mdc-theme-secondary: #0399f4 !important;
   --mdc-theme-background: #ffffff !important;
-  --mdc-theme-on-primary: #ffffff !important;
+  --mdc-theme-on-primary: #black !important;
   --mdc-theme-on-secondary: #ffffff !important; }
 
 .mdc-top-app-bar .material-icons {
-  color: rgba(0, 0, 0, 0.54); }
+  color: rgba(0, 0, 0, 0.54);
+ }
 
 .mdc-line-ripple {
   background-color: #44a3eb !important; }
@@ -45,7 +46,7 @@
 
 /** list **/
 .mdc-list-item__meta {
-  margin-top: -22px; }
+  margin-top: 0px; }
   .mdc-list-item__meta .mdc-list-item__secondary-text {
     margin-left: 11px; }
 
@@ -81,8 +82,8 @@
 
 /** top app bar **/
 .mdc-top-app-bar {
-  color: #ffffff !important; }
+  color: black !important; }
   .mdc-top-app-bar .material-icons {
-    color: #ffffff !important; }
+    color: #0399f4 !important; }
 
 /*# sourceMappingURL=theme.css.map */

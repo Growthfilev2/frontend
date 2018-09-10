@@ -70,6 +70,9 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
+  const drawerLayout = document.createElement('div')
+  drawerLayout.id = 'hamburger--drawer-parent'
+  // layoutInner.appendChild(drawerLayout)
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
@@ -127,20 +130,28 @@ function startApp(){
 
 
   function handleViewFromHistory(backFromAndroid){
-    if(backFromAndroid && history.state[0] === 'listView'){
-      return true
+
+    console.log(window.history.state[0])
+    if(backFromAndroid && window.history.state[0] === 'listView'){
+      UserCanExitApp()
+      return;
     }
     window.history.go(-1)
-    window.onpopstate = function(event){
-      console.log(event.state)
-      const views = {
-        listView : listView,
-        profileView : profileView,
-        fillActivityDetailPage : fillActivityDetailPage,
-        conversation:conversation
+      window.onpopstate = function(event){
+        console.log(event.state)
+        const views = {
+          listView : listView,
+          profileView : profileView,
+          updateCreateActivity: updateCreateActivity,
+          conversation:conversation
+        }
+
+        views[event.state[0]](event.state[1])
+
       }
 
-      views[event.state[0]](event.state[1])
+  }
 
-    }
+  function UserCanExitApp(){
+    FetchHistory.stateView(true)
   }

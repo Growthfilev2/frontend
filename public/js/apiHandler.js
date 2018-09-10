@@ -59,24 +59,12 @@ self.onmessage = function(event) {
 
 
 
-    if (event.data.body.hasOwnProperty('firstTime') && event.data.body.firstTime) {
+    if (event.data.body.hasOwnProperty('firstTime')) {
       requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
       // requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
       requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
       return
     }
-    if(event.data.body.hasOwnProperty('firstTime') && event.data.body.firstTime)
-     {
-      requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
-      requestHandlerResponse('loggedIn', '200', 'user logged in', firebase.auth().currentUser.uid)
-      requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-      return
-    }
-
-    // else if(event.data.body.hasOwnProperty('viewType') && event.data.body.viewType === 'profile'){
-    //   requestHandlerResponse('setLocalStorage', '200', 'user logged in',firebase.auth().currentUser.uid)
-    //   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-    // }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
 
   })
@@ -154,7 +142,7 @@ function fetchRecord (dbName,id) {
 
 function initializeIDB() {
   // onAuthStateChanged is added because app is reinitialized
-  let hasFirstView = true
+  // let hasFirstView = true
   return new Promise(function(resolve, reject) {
     var auth = firebase.auth().currentUser
     console.log(auth)
@@ -244,26 +232,14 @@ function initializeIDB() {
     }
 
     request.onsuccess = function() {
-      if (!hasFirstView) {
-        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-        fetchServerTime().then(function(timestamp) {
-          const rootTx = request.result.transaction('root', 'readwrite')
-          const rootObjectStore = rootTx.objectStore('root')
-          rootObjectStore.get(auth.uid).onsuccess = function(event) {
-            const record = event.target.result
-            record.serverTime = timestamp - Date.now()
-            rootObjectStore.put(record)
-          }
-          resolve(auth.uid)
-        })
-      } else {
-        requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
-        const rootTxView = request.result.transaction('root', 'readwrite')
-        const rootObjectStore = rootTxView.objectStore('root')
-        rootObjectStore.get(auth.uid).onsuccess = function(event) {
-          const record = event.target.result
-          record.view = 'list'
-          rootObjectStore.put(record)
+      resolve(auth.uid)
+        // requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+        // const rootTxView = request.result.transaction('root', 'readwrite')
+        // const rootObjectStore = rootTxView.objectStore('root')
+        // rootObjectStore.get(auth.uid).onsuccess = function(event) {
+        //   const record = event.target.result
+        //   record.view = 'list'
+        //   rootObjectStore.put(record)
 
           fetchServerTime().then(function(timestamp) {
             const rootTx = request.result.transaction('root', 'readwrite')
@@ -272,13 +248,45 @@ function initializeIDB() {
               const record = event.target.result
               record.serverTime = timestamp - Date.now()
               rootObjectStore.put(record)
-              requestHandlerResponse('notification', 200, 'server time added', request.result.name)
+              // requestHandlerResponse('notification', 200, 'server time added', request.result.name)
             }
-
-            resolve(auth.uid)
           })
-        }
-      }
+
+      // if (!hasFirstView) {
+      //   requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+      //   fetchServerTime().then(function(timestamp) {
+      //     const rootTx = request.result.transaction('root', 'readwrite')
+      //     const rootObjectStore = rootTx.objectStore('root')
+      //     rootObjectStore.get(auth.uid).onsuccess = function(event) {
+      //       const record = event.target.result
+      //       record.serverTime = timestamp - Date.now()
+      //       rootObjectStore.put(record)
+      //     }
+      //     resolve(auth.uid)
+      //   })
+      // } else {
+      //   requestHandlerResponse('IDBExists', 200, 'IDB found', request.result.name)
+      //   const rootTxView = request.result.transaction('root', 'readwrite')
+      //   const rootObjectStore = rootTxView.objectStore('root')
+      //   rootObjectStore.get(auth.uid).onsuccess = function(event) {
+      //     const record = event.target.result
+      //     record.view = 'list'
+      //     rootObjectStore.put(record)
+
+      //     fetchServerTime().then(function(timestamp) {
+      //       const rootTx = request.result.transaction('root', 'readwrite')
+      //       const rootObjectStore = rootTx.objectStore('root')
+      //       rootObjectStore.get(auth.uid).onsuccess = function(event) {
+      //         const record = event.target.result
+      //         record.serverTime = timestamp - Date.now()
+      //         rootObjectStore.put(record)
+      //         requestHandlerResponse('notification', 200, 'server time added', request.result.name)
+      //       }
+
+      //       resolve(auth.uid)
+      //     })
+      //   }
+      // }
     }
   })
 }
@@ -479,7 +487,12 @@ function instantUpdateDB(dbName, data, type) {
       }
     }
     objStoreTx.oncomplete = function() {
-      requestHandlerResponse('updateIDB', 200, 'IDB instantly updated', dbName)
+      if(type === 'share') {
+        requestHandlerResponse('updateAssigneeList',200,'user added in store',{id:data.activityId,number:data.share[0]})
+      }
+      else {
+        requestHandlerResponse('updateIDB', 200, 'IDB instantly updated', dbName)
+      }
     }
   }
 }
@@ -728,7 +741,6 @@ function updateUserObjectStore(successUrl) {
 }
 
 function updateSubscription(db, subscription) {
-  console.log(subscription)
   const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
     .objectStore('subscriptions')
@@ -792,6 +804,7 @@ function successResponse(read) {
       // put activity in activity object store
       activityObjectStore.put(activity)
 
+
       updateMap(db, activity)
 
       updateCalendar(db, activity)
@@ -804,7 +817,6 @@ function successResponse(read) {
 
       putAttachment(db, activity)
     })
-
     getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
 
     read.templates.forEach(function(subscription) {
@@ -889,9 +901,9 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function(response) {
-          if (response.from === response.upto) {
-            return
-          }
+          // if (response.from === response.upto) {
+          //   return
+          // }
           successResponse(response)
         })
         .catch(console.log)
