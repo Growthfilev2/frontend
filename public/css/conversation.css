@@ -25,8 +25,8 @@ body {
 }
 
 .activity--chat-card-container {
-    background-color: #f5f5f5;
-    height: 80vh;
+    background-color: white;
+    height: 82vh;
     overflow-y: auto;
 }
 
@@ -87,7 +87,7 @@ body {
 
 .current-user--comment {
     float: right;
-    background-color: hsl(206, 92%, 70%) !important;
+    /* background-color: hsl(206, 92%, 70%) !important; */
 }
 
 .current-user--comment .user-map--span {
@@ -96,7 +96,7 @@ body {
 
 .other-user--comment {
     float: left;
-    color: white;
+    /* color: white; */
 }
 
 .user-map--span {
@@ -105,7 +105,7 @@ body {
 }
 
 .other-user--comment .user-map--span {
-    color: white !important;
+    color: black !important;
 }
 
 .comment--container {
@@ -113,13 +113,13 @@ body {
     float: left;
 }
 
+
 .input--text-padding {
-    margin: 0 auto;
     display: block !important;
     margin-top: 0 !important;
     margin-right: 0 !important;
     width: 96%;
-    padding: 18px 0px 0px 0px
+    padding: 10px 0px 0px 0px;
 }
 
 .comment-field {
@@ -129,7 +129,6 @@ body {
     border-radius: 25px;
     border: 1px solid #4c000000;
     padding: 20px;
-    width: 200px;
     height: 0;
     background-color: white;
     width: 85%;
@@ -139,16 +138,15 @@ body {
 
 .send--container {
     position: relative;
-    width: 20%;
-    float: right;
+
 }
 
 #send-chat--input {
     position: absolute;
     bottom: 1rem;
-    top: 1.1rem;
+    top: 0.6rem;
     right: 1rem;
-    background-color: #6abbf9;
+    background-color: #0399f4;
 }
 
 .activity-office {
@@ -181,7 +179,7 @@ body {
 
 .PENDING,
 .status-pending {
-    color: red;
+      color: darkgray;
     cursor: pointer;
 }
 
@@ -193,14 +191,10 @@ body {
 
 .CONFIRMED,
 .status-confirmed {
-    color: green;
+    color: darkgray;
     cursor: pointer;
 }
 
-.current-status {
-    text-align: center;
-    margin-top: 20px;
-}
 
 #available-status {
     padding: 0;
@@ -224,27 +218,7 @@ body {
     float: right;
 }
 
-#schedule--list li .mdc-text-field:nth-child(2),
-#schedule--list li .mdc-text-field:nth-child(3) {
-    width: 30%
-}
 
-#schedule--list li {
-    padding: 0;
-}
-
-#schedule--list li .schedule-edit--icon {
-    width: 10%;
-}
-
-#schedule--list li div {
-    margin-top: 0 !important;
-}
-
-#venue--list li {
-    display: table;
-    padding-left: 0px;
-}
 
 .add--assignee-icon {
     float: right;
@@ -255,6 +229,12 @@ body {
 
 .assignee-li span:nth-child(3) {
     cursor: pointer;
+}
+.assignee-li {
+  height: 100%;
+}
+.assignee-li .mdc-list-item__graphic {
+  border-radius: 50%;
 }
 
 #share-btn {
@@ -301,7 +281,7 @@ body {
     cursor: pointer;
 }
 
-.drawer--icons div {
+.drawer--icons span {
     padding: 0px 10px 0px 10px;
     float: right;
 }
@@ -340,19 +320,20 @@ body {
 }
 
 .back-icon {
-    padding: 10px 0px 10px 0px;
+    /* padding: 10px 0px 10px 0px;
     position: absolute;
-    top: 5px;
+    top: 5px; */
 }
 
 .comment-header-primary {
-    padding: 5px 5px 5px 40px;
-    font-size: 15px;
+    padding-left:10px;
+    /* font-size: 15px; */
+    margin-top: -5px;
 }
 
 .comment-header-primary .mdc-list-item__secondary-text {
     margin-top: -5px;
-    color: white;
+    color: black;
 }
 
 .reauth-recaptcha {
@@ -418,10 +399,13 @@ body {
     padding: 10px 0px 10px 0px;
 }
 
-.create-activity {
+.create-activity , .selector-send {
     position: fixed;
     bottom: 1rem;
     right: 1rem;
+}
+.create-activity .mdc-fab_icon {
+    font-size: 35px;
 }
 
 /* share--container */
@@ -555,7 +539,7 @@ footer.mdc-dialog__footer {
     font-weight: 400;
     font-size: 14px;
     margin-top: 0px;
-    padding: 0px 10px 0px 0px
+    padding: 5px 0px 0px 0px
 }
 
 .mdc-top-app-bar {
@@ -563,7 +547,8 @@ footer.mdc-dialog__footer {
 }
 
 #view-type {
-    padding-left: 10px
+    padding-left: 5px;
+    padding-top:5px;
 }
 
 .change--number-UI {
@@ -642,9 +627,11 @@ footer.mdc-dialog__footer {
     padding-top: 10px;
     padding-bottom: 10px;
 }
-
+.activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text {
+    padding-top: 4px;
+}
 .activity--list-item .mdc-list-item__meta {
-    min-width: 80px;
+
     text-align: right;
 }
 
@@ -720,15 +707,17 @@ footer.mdc-dialog__footer {
     display: table;
     margin: 0 auto;
 }
-
-#attachment-container {}
+#attachment-container {
+  padding-left: 15px;
+    padding-right: 15px;
+}
 
 #attachment-container .label--text {
-    color: #598aeb !important;
+    color: #ff9800 !important;
 }
 
 .attachment-field {
-    margin: 20px 0px 15px 0px;
+    padding: 10px 0px 10px 0px;
 }
 
 .attachment input {
@@ -825,17 +814,17 @@ input[type="datetime-local"] {
 
 .schedule--show-table {
     width: 100%;
-    text-align: left;
-    margin-top: 15px;
+
 }
 
 .schedule--show-table .row-main,
 .schedule--time {
-    text-align: center
+    text-align: left
 }
 
 .schedule-label {
     font-weight: normal;
+    text-align: left;
 }
 
 .venue--list {
@@ -843,10 +832,10 @@ input[type="datetime-local"] {
     padding-left: 0px;
 }
 
-.activity--detail--section {
+/* .activity--detail--section {
     margin: 10px 0px 10px 0px;
     padding: 10px 0px 10px 0px;
-}
+} */
 
 .activity--update--text {
     margin-top: 5px;
@@ -887,7 +876,7 @@ input[type="datetime-local"] {
 }
 
 .display-activity-name {
-    padding-left: 36px;
+    padding-left: 38px;
     margin-top: 11px;
 }
 
@@ -910,4 +899,192 @@ input[type="datetime-local"] {
     -webkit-transition-duration: 0.5s; /* Safari */
     transition-property: margin;
     transition-duration: 0.5s;
+}
+
+.bigBlackBold {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.header--icon-creator {
+    width:35px;
+    height: 35px;
+    border-radius: 50%;
+
+}
+
+.back-icon--large {
+    font-size: 30px;
+
+}
+#back-detail {
+    position: absolute;
+    padding-left: 5px;
+}
+
+#back-list {
+    position: absolute;
+    padding-left: 5px;
+    top: 16px;
+}
+.user-comment--container {
+    padding-left:20px;
+}
+
+.secondary-color-light {
+    background-color: #67c9ff75;
+}
+
+.input--type-time {
+  padding-top:0px;
+  width: 90%;
+}
+.data--value-list {
+  padding-left: 20px;
+}
+
+#schedule--list {
+  padding-left:15px;
+}
+
+.attachment-field .mdc-text-field {
+margin-top: 0px !important;
+height: 30px !important;
+}
+
+#assignees--list .mdc-list-item:nth-child(1) {
+  height: 45px;
+}
+#assignees--list .mdc-list-item:nth-child(1) .mdc-list-item__text {
+  height: 100%;
+
+}
+#assignees--list .mdc-list-item:nth-child(1) .mdc-list-item__meta {
+  margin-top: 0px;
+}
+#assignees--list .add--assignee-icon {
+  margin-top: 7px;
+}
+
+.attachment-field.base64 {
+  display: inline-flex;
+margin-bottom: 0px;
+padding-bottom: 0px;
+}
+
+.attachment-field.base64.editable--true  {
+  display: block;
+  padding-bottom: 10px;
+
+}
+
+.attachment-field.base64 img {
+  width: 60px;
+height: 60px;
+margin-left: 20px;
+margin-top: -15px;
+border-radius: 50%
+}
+.attachment-field.base64.editable--true img {
+  margin-bottom:-20px;
+
+}
+.custom--list-margin {
+  margin-top:-20px;
+}
+
+#data-list--container .mdc-list-item {
+  height: 100%;
+}
+
+.search-icon-input {
+    font-size:32px;
+    color: black;
+}
+
+.field-input {
+    width: 100%;
+    margin-top:5px !important;
+    margin-bottom:0px;
+}
+
+#action-data .mdc-text-field__input {
+    height:100%;
+    width: 100%;
+    border-bottom: none;
+}
+.pac-container {
+    margin-left: -21px
+}
+#search--bar--selector {
+    padding-top: 0px;
+    padding-left: 5px;
+    border-bottom: none;
+}
+
+.search-field-transform {
+    padding: 0px;
+    width: 85%;
+    background-color: white;
+    padding-bottom: 0px;
+}
+
+#dialog--component .dialog--header-back {
+    font-size: 32px;
+    /* color: rgba(0,0,0,0.54) !important; */
+}
+.search--cont {
+    width: 100%
+}
+
+#dialog--component .mdc-fab span {
+  font-size: 30px;
+}
+
+.send--activity-fab {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+}
+#send-activity.send--activity-fab span {
+  font-size: 30px;
+
+}
+@media(min-width: 1024px) {
+   .send--activity-fab {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+}
+
+.subheader--group-small {
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.data--value-list-small {
+  padding-left: 5px;
+}
+
+.mdc-menu--status {
+  margin-top: 46px;
+left: 53vw !important;
+
+}
+.mdc-menu--status ul {
+  padding-left: 0px;
+}
+
+.status--cont {
+  padding-left: 17px;
+padding-right: 0px;
+}
+
+.current-status {
+  color: #0399f4;
+  display: inline-flex;
+}
+.status--icon{
+  margin-top: -9px;
+  font-size: 30px;
 }

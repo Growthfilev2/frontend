@@ -1,13 +1,21 @@
+function listView(dbName) {
 
-function listView (dbName) {
+  if (history.state) {
+    console.log("replacing listview state")
+
+    history.replaceState(['listView', dbName], null, null)
+  } else {
+    console.log("pushing listview state")
+    history.pushState(['listView', dbName], null, null)
+  }
+
   creatListHeader()
   listPanel()
   document.body.style.backgroundColor = 'white'
-  console.log(dbName)
-  if(!dbName) {
+  if (!dbName) {
 
-   dbName = firebase.auth().currentUser.uid
- }
+    dbName = firebase.auth().currentUser.uid
+  }
   const req = window.indexedDB.open(dbName)
 
   req.onerror = function (event) {
@@ -24,44 +32,34 @@ function listView (dbName) {
       record.view = 'list'
       hasMultipleOffice = record.hasMultipleOffice
       rootObjectStore.put(record)
-      rootTx.oncomplete = function(){
-        fetchDataForActivityList(db, hasMultipleOffice)
-      }
+      rootTx.oncomplete = function () {
+
+      fetchDataForActivityList(db, hasMultipleOffice)
 
     }
   }
   sendCurrentViewNameToAndroid('listView')
 }
+}
 
-function fetchDataForActivityList (db, uniqueOffice) {
+function fetchDataForActivityList(db, uniqueOffice) {
+  console.log("fetch for list")
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
 
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
-  const activityVisibleIndex = activityObjectStore.index('timestamp')
 
+  const activityVisibleIndex = activityObjectStore.index('timestamp')
   activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
-
     if (!cursor) {
-      document.getElementById('activity--list').innerHTML = activityDom
-      console.log(subscriptionCount.result)
-      if (!subscriptionCount.result) return
-      const fab = document.createElement('button')
-      fab.className = 'mdc-fab create-activity'
-      fab.setAttribute('aria-label', 'Add')
-      const span = document.createElement('span')
-      span.className = 'mdc-fab_icon material-icons'
-      span.textContent = 'add'
-      fab.appendChild(span)
-      document.getElementById('activity--list').appendChild(fab)
-      document.querySelector('.create-activity').addEventListener('click', createActivity)
-      return
+        appendActivityListToDom(subscriptionCount,activityDom)
+        return
     }
+
     if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      console.log(cursor.value)
       createActivityList(db, cursor.value, uniqueOffice).then(function (li) {
         activityDom += li
       })
@@ -71,7 +69,29 @@ function fetchDataForActivityList (db, uniqueOffice) {
   }
 }
 
-function listPanel () {
+function appendActivityListToDom(subscriptionCount,activityDom){
+  document.getElementById('activity--list').innerHTML = activityDom
+  subscriptionCount.onsuccess = function(){
+   if(!subscriptionCount.result) {
+     const fab = document.createElement('button')
+     fab.className = 'mdc-fab create-activity'
+     fab.setAttribute('aria-label', 'Add')
+     const span = document.createElement('span')
+     span.className = 'mdc-fab_icon material-icons'
+     span.textContent = 'add'
+     fab.appendChild(span)
+     document.getElementById('activity--list').appendChild(fab)
+     document.querySelector('.create-activity').addEventListener('click', function(evt){
+       selectorUI(evt,{
+         record:'',
+         store:'subscriptions',
+       })
+     })
+   }
+ }
+}
+
+function listPanel() {
   if (document.getElementById('activity-list-main')) return
 
   const listCard = document.createElement('div')
@@ -86,102 +106,154 @@ function listPanel () {
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 }
 
-function creatListHeader () {
+function creatListHeader() {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
-  const profileIconDiv = document.createElement('div')
-  profileIconDiv.id = 'profile-panel--icon'
-  profileIconDiv.className = 'profile-container--main-small'
-  const profileImg = document.createElement('img')
-  profileImg.className = 'profile--icon-small'
+  const menuIcon = document.createElement('span')
+  menuIcon.id = 'menu--panel'
+  const icon = document.createElement('i')
+  icon.className = 'material-icons'
+  icon.textContent = 'menu'
 
-  profileImg.src = './img/empty-user.jpg'
+  menuIcon.appendChild(icon)
 
-  profileIconDiv.innerHTML = profileImg.outerHTML
+  const hamburger = document.createElement('div')
+  hamburger.className = 'mdc-menu-surface--anchor hamburger--surface'
+  hamburger.id = 'hamburger-menu'
 
-  const mapIconCont = document.createElement('div')
-  mapIconCont.id = 'map-panel--icon'
 
-  const mapSpan = document.createElement('span')
-  const locationIcon = document.createElement('i')
-  locationIcon.className = 'material-icons'
-  locationIcon.textContent = 'location_on'
+  parentIconDiv.appendChild(menuIcon)
+  parentIconDiv.appendChild(hamburger)
 
-  mapSpan.innerHTML = locationIcon.outerHTML
-  mapIconCont.innerHTML = mapSpan.outerHTML
+  const searchIcon = document.createElement('span')
+  searchIcon.id = 'search--panel'
+  const sicon = document.createElement('i')
+  sicon.className = 'material-icons'
+  sicon.textContent = 'search'
+  searchIcon.appendChild(sicon);
 
-  const calendarIconCont = document.createElement('div')
-  calendarIconCont.id = 'calendar-panel--icon'
 
-  const calendarSpan = document.createElement('span')
-  const calendarIcon = document.createElement('i')
-  calendarIcon.className = 'material-icons'
-  calendarIcon.textContent = 'today'
+  header(parentIconDiv.outerHTML, searchIcon.outerHTML,'list')
 
-  calendarSpan.innerHTML = calendarIcon.outerHTML
-  calendarIconCont.innerHTML = calendarSpan.outerHTML
-
-  parentIconDiv.appendChild(mapIconCont)
-  parentIconDiv.appendChild(calendarIconCont)
-
-  header(profileIconDiv.outerHTML, parentIconDiv.outerHTML)
-  const drawerIcons = ['map-panel--icon', 'calendar-panel--icon', 'profile-panel--icon']
-  drawerIcons.forEach(function (selector) {
-    console.log(document.getElementById('map-panel--icon'))
-    document.getElementById(selector).addEventListener('click', function () {
-      const user = firebase.auth().currentUser
-      switch (selector) {
-        case 'map-panel--icon':
-          mapView(user.uid)
-          break
-
-        case 'calendar-panel--icon':
-          calendarView(user.uid)
-          break
-        case 'profile-panel--icon':
-          profileView(user)
-      }
-    })
-  })
 }
 
-function createActivityList (db, data, uniqueOffice) {
+function hamburgerDrawer(){
+
+  const filter = ['one','two','three','four','five','six','seven']
+
+  const aside = document.createElement('aside')
+  aside.className = 'mdc-drawer mdc-drawer--modal'
+
+  const drawerHeader = document.createElement('div')
+  drawerHeader.className = 'mdc-drawer__header'
+
+  const drawerContent = document.createElement('div')
+  drawerContent.className = 'mdc-drawer__content'
+
+  const nav = document.createElement('nav')
+  nav.className = 'mdc-list'
+
+  filter.forEach(function(type){
+    const tab = document.createElement('a')
+    tab.className = 'mdc-list-item mdc-list-item--activated'
+    tab.href = '#'
+    tab.setAttribute('aria-selected','true')
+    const tabIcon = document.createElement('i')
+    tabIcon.className = 'material-icons mdc-list-item__graphic'
+    tabIcon.setAttribute('aria-hidden','true')
+    tabIcon.textContent = 'inbox'
+    tab.textContent = type
+
+    tab.appendChild(tabIcon)
+    nav.appendChild(tab)
+  })
+
+  drawerContent.appendChild(nav)
+  aside.appendChild(drawerHeader)
+  aside.appendChild(drawerContent)
+
+
+  document.getElementById('hamburger--drawer-parent').innerHTML = aside.outerHTML
+
+  console.log(mdc.drawer.MDCDrawer)
+
+
+}
+
+function createActivityList(db, data, uniqueOffice) {
+
   return new Promise(function (resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
+    const metaData = {
+      src: '',
+      lastComment : {
+        user: '',
+        comment: ''
+      }
+    }
 
     activityCount.get(data.activityId).onsuccess = function (event) {
       const record = event.target.result
-      if (!record) {
-        resolve(activityListUI(data, uniqueOffice, 0))
-      } else {
-        resolve(activityListUI(data, uniqueOffice, record.count))
+
+      const userObjStore = db.transaction('users').objectStore('users')
+      userObjStore.get(data.creator).onsuccess = function (userstore) {
+        const addendumObjStore = db.transaction('addendum').objectStore('addendum').index('activityId')
+
+        addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function (addendumstore) {
+          const addendumCursor = addendumstore.target.result;
+          if (addendumCursor) {
+            metaData.src = userstore.target.result.photoURL
+             readNameFromNumber(db,addendumCursor.value.user).then(function(nameOrNum){
+              // console.log(nameOrNum)
+              if(addendumCursor.value.isComment === 1) {
+                metaData.lastComment.user = nameOrNum
+              }
+
+              metaData.lastComment.comment = addendumCursor.value.comment
+
+              if (!record) {
+                resolve(activityListUI(data, uniqueOffice, 0, metaData))
+              } else {
+                resolve(activityListUI(data, uniqueOffice, record.count, metaData))
+              }
+            })
+          }
+        }
       }
     }
   })
 }
 
-function activityListUI (data, uniqueOffice, count) {
+function activityListUI(data, uniqueOffice, count, metaData) {
+
   const li = document.createElement('li')
-
-  if (count !== 0) {
-    li.classList.add('mdc-list-item', 'activity--list-item', 'count-active', 'mdc-elevation--z1')
-  } else {
-    li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1')
-  }
-
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id)')
-  mdc.ripple.MDCRipple.attachTo(li)
+  // mdc.ripple.MDCRipple.attachTo(li)
+  const creator = document.createElement('img')
+  creator.className = 'mdc-list-item__graphic material-icons'
+  creator.src = metaData.src || 'img/empty-user.jpg'
+
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
-  const customText = document.createElement('span')
+  const activityNameText = document.createElement('span')
 
-  customText.className = 'mdc-primary__custom-text'
+  activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
 
-  customText.textContent = data.activityName
+  activityNameText.textContent = data.activityName
+  const lastComment = document.createElement('span')
+  lastComment.className = 'mdc-list-item__secondary-text'
+  if(metaData.lastComment.user){
 
-  leftTextContainer.appendChild(customText)
+    lastComment.textContent = `${metaData.lastComment.user} : ${metaData.lastComment.comment}`
+  }
+  else {
+    lastComment.textContent = `${metaData.lastComment.comment}`
+
+  }
+  leftTextContainer.appendChild(activityNameText)
+  leftTextContainer.appendChild(lastComment)
 
   if (uniqueOffice) {
     const leftTextSecondaryContainer = document.createElement('span')
@@ -190,44 +262,70 @@ function activityListUI (data, uniqueOffice, count) {
     leftTextContainer.appendChild(leftTextSecondaryContainer)
   }
 
-  const leftTextTemplateContainer = document.createElement('span')
-  leftTextTemplateContainer.className = 'mdc-list-item__secondary-text secondary--text-template'
-  leftTextTemplateContainer.textContent = data.template
-
-  leftTextContainer.appendChild(leftTextTemplateContainer)
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
+  if (count !== 0) {
 
-  const timeCustomText = document.createElement('span')
-  timeCustomText.className = 'mdc-meta__custom-text'
-  timeCustomText.textContent = moment(data.timestamp).calendar()
+    const countDiv = document.createElement('div')
 
-  metaTextContainer.appendChild(timeCustomText)
+    const countSpan = document.createElement(
+      'span'
+    )
+    countSpan.textContent = count
+    countSpan.className = 'count mdc-meta__custom-text'
+    countDiv.appendChild(countSpan)
+    li.classList.add('mdc-list-item', 'activity--list-item', 'count-active', 'mdc-elevation--z1')
+    metaTextContainer.appendChild(countDiv)
+  } else {
+
+    const timeCustomText = document.createElement('div')
+    timeCustomText.className = 'mdc-meta__custom-text'
+    timeCustomText.style.width = '80px';
+    timeCustomText.textContent = moment(data.timestamp).calendar()
+    li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1')
+    metaTextContainer.appendChild(timeCustomText)
+  }
+
 
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', `${data.status}`)
-  metaTextActivityStatus.textContent = data.status
+  const statusIcon = document.createElement('i')
+  statusIcon.className = 'material-icons'
 
-  const countDiv = document.createElement('div')
+  const pendingIcon = document.createElement('i')
+  pendingIcon.classList.add('status-pending', 'material-icons')
+  pendingIcon.appendChild(document.createTextNode('maximize'))
 
-  const countSpan = document.createElement(
-    'span'
-  )
-  countSpan.textContent = count
-  countSpan.className = 'count mdc-meta__custom-text'
-  countDiv.appendChild(countSpan)
+  const cancelIcon = document.createElement('i')
+  cancelIcon.classList.add('status-cancel', 'material-icons')
+  cancelIcon.appendChild(document.createTextNode('clear'))
 
-  metaTextContainer.appendChild(countDiv)
+  const confirmedIcon = document.createElement('i')
+  confirmedIcon.classList.add('status-confirmed', 'material-icons')
+  confirmedIcon.appendChild(document.createTextNode('check'))
+
+  if(data.status === 'CONFIRMED') {
+    metaTextActivityStatus.appendChild(confirmedIcon)
+  }
+  if(data.status === 'CANCELLED') {
+    metaTextActivityStatus.appendChild(cancelIcon)
+  }
+
+  if(data.status === 'PENDING') {
+    metaTextActivityStatus.appendChild(pendingIcon)
+  }
+
+  // metaTextActivityStatus.textContent = data.status
+
   metaTextContainer.appendChild(metaTextActivityStatus)
 
-  li.innerHTML += leftTextContainer.outerHTML + metaTextContainer.outerHTML
+  li.innerHTML += creator.outerHTML + leftTextContainer.outerHTML + metaTextContainer.outerHTML
   return li.outerHTML
 }
 
 
-
-function mapView (dbName) {
+function mapView(dbName) {
   console.log(dbName)
   // initialize mdc instance for map drawer
   const req = window.indexedDB.open(dbName)
@@ -246,7 +344,7 @@ function mapView (dbName) {
   }
 }
 
-function fetchMapData () {
+function fetchMapData() {
   createMapPanel()
   sendCurrentViewNameToAndroid('map')
   backIconHeader('close-map--drawer')
@@ -259,7 +357,7 @@ function fetchMapData () {
     const mapObjectStore = db.transaction('map').objectStore('map')
     const mapVisibleSortIndex = mapObjectStore.index('timestamp')
 
-    document.getElementById('close-map--drawer').addEventListener('click', function(){
+    document.getElementById('close-map--drawer').addEventListener('click', function () {
       listView(dbName)
     })
 
@@ -292,7 +390,7 @@ function fetchMapData () {
   }
 }
 
-function createMapPanel () {
+function createMapPanel() {
   const mapParent = document.createElement('div')
   mapParent.id = 'map-view--container'
   mapParent.className = 'mdc-top-app-bar--fixed-adjust'
@@ -308,7 +406,7 @@ function createMapPanel () {
   document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
 }
 
-function initMap (dbName, mapRecord) {
+function initMap(dbName, mapRecord) {
   const centerGeopoints = mapRecord[mapRecord.length - 1]
   const map = new google.maps.Map(document.getElementById('map'), {
     zoom: 10,
@@ -331,7 +429,7 @@ function initMap (dbName, mapRecord) {
   // },200)
 }
 
-function displayMarkers (dbName, map, locationData) {
+function displayMarkers(dbName, map, locationData) {
   let bounds = new google.maps.LatLngBounds()
   const allMarkers = []
 
@@ -355,7 +453,7 @@ function displayMarkers (dbName, map, locationData) {
   })
 }
 
-function generateActivityFromMarker (dbName, map, markers) {
+function generateActivityFromMarker(dbName, map, markers) {
   const markerActivityId = []
   let bounds = map.getBounds()
   // open IndexedDB
@@ -367,7 +465,7 @@ function generateActivityFromMarker (dbName, map, markers) {
   displayMapActivity(dbName, markerActivityId)
 }
 
-function displayMapActivity (dbName, markerActivityId) {
+function displayMapActivity(dbName, markerActivityId) {
   let req = window.indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
@@ -399,11 +497,11 @@ function displayMapActivity (dbName, markerActivityId) {
   }
 }
 
-function calendarView (dbName) {
+function calendarView(dbName) {
   // open IDB
   createCalendarPanel()
   backIconHeader('close-calendar--drawer')
-  document.getElementById('close-calendar--drawer').addEventListener('click', function(){
+  document.getElementById('close-calendar--drawer').addEventListener('click', function () {
     listView(dbName);
   })
 
@@ -428,7 +526,7 @@ function calendarView (dbName) {
   }
 }
 
-function createCalendarPanel () {
+function createCalendarPanel() {
   const calendarView = document.createElement('div')
   calendarView.id = 'calendar-view--container'
   calendarView.className = 'mdc-top-app-bar--fixed-adjust'
@@ -447,7 +545,7 @@ function createCalendarPanel () {
   document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
 }
 
-function fetchCalendarData () {
+function fetchCalendarData() {
   const dbName = firebase.auth().currentUser.uid
   const request = window.indexedDB.open(dbName)
 
@@ -484,7 +582,7 @@ function fetchCalendarData () {
   }
 }
 
-function insertDatesAfterToday (db, calendarDateIndex, today) {
+function insertDatesAfterToday(db, calendarDateIndex, today) {
   const rootObjectStore = db.transaction('root').objectStore('root')
   let unique = ''
   rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
@@ -502,7 +600,7 @@ function insertDatesAfterToday (db, calendarDateIndex, today) {
   }
 }
 
-function insertDatesBeforeToday (db, calendarDateIndex, today, unique) {
+function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
   const upperKeyRange = IDBKeyRange.upperBound(today, true)
   calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
     const cursor = event.target.result
@@ -526,7 +624,7 @@ function insertDatesBeforeToday (db, calendarDateIndex, today, unique) {
   }
 }
 
-function calendarViewUI (target, db, data, unique) {
+function calendarViewUI(target, db, data, unique) {
   console.log(unique)
   if (!document.getElementById(data.date)) {
     const dateDiv = document.createElement('div')
@@ -566,7 +664,7 @@ function calendarViewUI (target, db, data, unique) {
   getActivity(db, data, unique)
 }
 
-function getActivity (db, data, unique) {
+function getActivity(db, data, unique) {
   if (!data.hasOwnProperty('activityId')) return
 
   const activityShowIndex = db.transaction('activity').objectStore('activity')
@@ -585,10 +683,12 @@ function getActivity (db, data, unique) {
   }
 }
 
-function profileView (user, firstTimeLogin) {
-  document.body.style.backgroundColor = '#eeeeee'
-  const dbName = firebase.auth().currentUser.uid
+function profileView(firstTimeLogin) {
+  history.pushState(['profileView', firstTimeLogin], null, null)
 
+  document.body.style.backgroundColor = '#eeeeee'
+  const user = firebase.auth().currentUser
+  const dbName = user.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
@@ -602,8 +702,9 @@ function profileView (user, firstTimeLogin) {
         createProfileHeader(firstTimeLogin)
         createProfilePanel()
         disableInputs()
-        document.getElementById('close-profile--panel').addEventListener('click', function(){
-          listView(dbName)
+        document.getElementById('close-profile--panel').addEventListener('click', function () {
+          // listView(dbName)
+          handleViewFromHistory()
         })
         showProfilePicture()
 
@@ -617,7 +718,7 @@ function profileView (user, firstTimeLogin) {
   sendCurrentViewNameToAndroid('profile')
 }
 
-function createProfileHeader (firstTimeLogin) {
+function createProfileHeader(firstTimeLogin) {
   const iconCont = document.createElement('div')
   iconCont.className = 'profile--toolbar-icon'
 
@@ -636,17 +737,16 @@ function createProfileHeader (firstTimeLogin) {
     backIcon.textContent = 'arrow_forward'
     backSpan.appendChild(backIcon)
     header('', backSpan.outerHTML)
+  } else {
+    backIcon.textContent = 'arrow_back'
+    backSpan.appendChild(backIcon)
+    header(backSpan.outerHTML, iconCont.outerHTML)
+    handleChangeNumberMenu()
   }
-  else {
-  backIcon.textContent = 'arrow_back'
-  backSpan.appendChild(backIcon)
-  header(backSpan.outerHTML, iconCont.outerHTML)
-  handleChangeNumberMenu()
-}
 
 }
 
-function createProfilePanel () {
+function createProfilePanel() {
   const profileView = document.createElement('div')
   profileView.id = 'profile-view--container'
   profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background'
@@ -668,8 +768,7 @@ function createProfilePanel () {
   fileInput.type = 'file'
   fileInput.style.display = 'none'
   fileInput.id = 'uploadProfileImage'
-  fileInput.accept = 'accept="image/png,image/jpeg'
-
+  fileInput.accept = 'accept="image/png,image/jpeg;capture=camera'
   const profileImgCont = document.createElement('div')
   profileImgCont.id = 'profile--image-container'
   profileImgCont.className = 'profile-container--main'
@@ -749,7 +848,7 @@ function createProfilePanel () {
   document.getElementById('app-current-panel').innerHTML = profileView.outerHTML
 }
 
-function toggleIconData (icon, inputField) {
+function toggleIconData(icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
@@ -774,7 +873,7 @@ function toggleIconData (icon, inputField) {
   })
 }
 
-function handleFieldInput (key, value) {
+function handleFieldInput(key, value) {
   const user = firebase.auth().currentUser
   console.log(typeof value)
   if (key === 'displayName') {
@@ -800,7 +899,7 @@ function handleFieldInput (key, value) {
   }
 }
 
-function newSignIn (value) {
+function newSignIn(value) {
   const login = document.createElement('div')
   login.id = 'refresh-login'
   login.className = 'mdc-elevation--z3'
@@ -820,7 +919,7 @@ function newSignIn (value) {
   }, 300)
 }
 
-function readUploadedFile (event) {
+function readUploadedFile(event) {
   console.log(event)
   const file = event.target.files[0]
 
@@ -832,7 +931,7 @@ function readUploadedFile (event) {
   }
 }
 
-function processImage (image) {
+function processImage(image) {
   const metadata = {
     contentType: 'image/jpeg'
   }
@@ -848,7 +947,7 @@ function processImage (image) {
     storageSuccessHandler
   )
 
-  function snapshotHandler (snapshot) {
+  function snapshotHandler(snapshot) {
     if (firebase.storage.TaskState.RUNNING) {
       if (document.querySelector('#profile--image-container .loader')) return
 
@@ -859,26 +958,26 @@ function processImage (image) {
     }
   }
 
-  function storageErrorHandler (error) {
+  function storageErrorHandler(error) {
     if (error.code === 'storage/unknown') {
       console.log(error)
     }
     console.log(error)
   }
 
-  function storageSuccessHandler () {
+  function storageSuccessHandler() {
     uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
   }
 }
 
-function updateAuth (url) {
+function updateAuth(url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
   }).then(removeLoader).catch(authUpdatedError)
 }
 
-function removeLoader () {
+function removeLoader() {
   document.querySelector('.insert-overlay').classList.remove('middle')
   const container = document.getElementById('profile--image-container')
   container.children[0].classList.add('reset-opacity')
@@ -887,19 +986,19 @@ function removeLoader () {
   showProfilePicture()
 }
 
-function showProfilePicture () {
+function showProfilePicture() {
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = user.photoURL || '../img/empty-user.jpg'
 }
 
-function authUpdatedError (error) {
+function authUpdatedError(error) {
   switch (error.code) {
     case 'auth/email-already-in-use':
       snacks(error.message)
   }
 }
 
-function changeDisplayName (user) {
+function changeDisplayName(user) {
   const displayNameField = getInputText('displayName')
 
   if (user.displayName) {
@@ -909,7 +1008,7 @@ function changeDisplayName (user) {
   toggleIconData('edit--name', displayNameField)
 }
 
-function changeEmailAddress (user) {
+function changeEmailAddress(user) {
   const emailField = getInputText('email')
   if (user.email) {
     emailField.value = user.email
@@ -918,30 +1017,30 @@ function changeEmailAddress (user) {
   toggleIconData('edit--email', emailField)
 }
 
-function updateEmail (user, email) {
+function updateEmail(user, email) {
   console.log(email)
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError)
 }
 
-function emailUpdateSuccess () {
+function emailUpdateSuccess() {
   const user = firebase.auth().currentUser
   console.log(user)
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError)
 }
 
-function emailVerificationSuccess () {
+function emailVerificationSuccess() {
   snacks('Verification link has been send to your email address')
 }
 
-function emailVerificationError (error) {
+function emailVerificationError(error) {
   snacks(error.message)
 }
 
-function handleReauthError (error) {
+function handleReauthError(error) {
   console.log(error)
 }
 
-function createConfirmView () {
+function createConfirmView() {
   const backSpan = document.createElement('span')
   backSpan.id = 'back-profile'
 
@@ -972,17 +1071,17 @@ function createConfirmView () {
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
   document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
-  document.getElementById('back-profile').addEventListener('click', function(){
-    profileView(firebase.auth().currentUser)
+  document.getElementById('back-profile').addEventListener('click', function () {
+    profileView()
   })
 }
 
-function disableInputs () {
+function disableInputs() {
   getInputText('displayName')['input_'].disabled = true
   getInputText('email')['input_'].disabled = true
 }
 
-function changePhoneNumber () {
+function changePhoneNumber() {
   header('', '')
   const changeNumberDiv = document.createElement('div')
   changeNumberDiv.className = 'mdc-card mdc-top-app-bar--fixed-adjust mdc-layout-grid__inner change--number-UI'
@@ -1087,29 +1186,29 @@ function changePhoneNumber () {
   })
 
   document.getElementById('cancelUpdate').addEventListener('click', function (event) {
-    profileView(firebase.auth().currentUser, '')
+    profileView()
   })
 }
 
-function newPhoneNumber () {
+function newPhoneNumber() {
   const newCountryCode = getInputText('new-country--code').value
   const newNumber = getInputText('new-phone--number').value
   return newCountryCode.concat(newNumber)
 }
 
-function verifyPhoneNumber () {
+function verifyPhoneNumber() {
   const expression = /^\+[1-9]\d{5,14}$/
   return expression.test(newPhoneNumber())
 }
 
-function handleIllegalNumberInput (value) {
+function handleIllegalNumberInput(value) {
   const exp = /^\+[1-9]\d{1,3}$/
   if (!exp.test(evt.target.value)) {
     evt.target.value = evt.target.value.replace(/[^+0-9]/g, '')
   }
 }
 
-function verifyCurrentPhoneNumber () {
+function verifyCurrentPhoneNumber() {
   const currentCountryCode = getInputText('current-country--code').value
   const currentNumber = getInputText('current-phone--number').value
   const numberInAuth = firebase.auth().currentUser.phoneNumber
@@ -1121,10 +1220,13 @@ function verifyCurrentPhoneNumber () {
   return false
 }
 
-const header = function (contentStart, contentEnd) {
+const header = function (contentStart, contentEnd,headerType) {
+
   const header = document.createElement('header')
   header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
-
+  if(headerType === 'list'){
+    header.classList.add('header-list--gray')
+  }
   const row = document.createElement('div')
   row.className = 'mdc-top-app-bar__row'
 
@@ -1149,10 +1251,15 @@ const header = function (contentStart, contentEnd) {
   row.appendChild(sectionStart)
   row.appendChild(sectionEnd)
   header.innerHTML = row.outerHTML
-  document.getElementById('header').innerHTML = header.outerHTML
+  if(headerType === 'selector') {
+    return header
+  }
+  else {
+    document.getElementById('header').innerHTML = header.outerHTML
+  }
 }
 
-function backIconHeader (id) {
+function backIconHeader(id) {
   const backSpan = document.createElement('span')
   backSpan.id = id
   const backIcon = document.createElement('i')
@@ -1164,12 +1271,12 @@ function backIconHeader (id) {
   header(backSpan.outerHTML)
 }
 
-function removeDom (selector) {
+function removeDom(selector) {
   const target = document.getElementById(selector)
   target.innerHTML = ''
 }
 
-function snacks (message) {
+function snacks(message) {
   const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
   snack.setAttribute('aria-live', 'assertive')
@@ -1205,14 +1312,14 @@ function snacks (message) {
   snackbar.show(data)
 }
 
-function timeDiff (lastSignInTime) {
+function timeDiff(lastSignInTime) {
   const currentDate = moment().format('YYY-MM-DD HH:mm')
   const authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm')
 
   return moment(currentDate).diff(moment(authSignInTime), 'minutes')
 }
 
-function handleChangeNumberMenu () {
+function handleChangeNumberMenu() {
   const div = document.createElement('div')
   div.className = 'mdc-menu mdc-menu--animating-open'
   div.id = 'change-number--menu'
@@ -1254,7 +1361,7 @@ function handleChangeNumberMenu () {
   menu.quickOpen = false
 }
 
-function removeDuplicate (array) {
+function removeDuplicate(array) {
   let temp = {}
   let result = []
   let length = array.length
