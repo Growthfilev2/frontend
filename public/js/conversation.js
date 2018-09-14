@@ -1482,9 +1482,9 @@ function insertInputsIntoActivity(record, activityStore) {
     console.log(convertIdToKey(allStringTypes[i].id))
   }
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
-
+  console.log()
   for(let i=0;i<imagesInAttachments.length;i++){
-    record.attachment[convertIdToKey(imagesInAttachments[i].id)].value = imagesInAttachments[i].querySelector(img).src
+    record.attachment[convertIdToKey(imagesInAttachments[i].id)].value = imagesInAttachments[i].querySelector('img').src
   }
 
   console.log(record.attachment)
