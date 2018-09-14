@@ -1,0 +1,50 @@
+[debug] [2018-08-29T02:08:45.122Z] ----------------------------------------------------------------------
+[debug] [2018-08-29T02:08:45.125Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\xanadu\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy
+[debug] [2018-08-29T02:08:45.125Z] CLI Version:   3.17.4
+[debug] [2018-08-29T02:08:45.125Z] Platform:      win32
+[debug] [2018-08-29T02:08:45.125Z] Node Version:  v8.9.4
+[debug] [2018-08-29T02:08:45.125Z] Time:          Wed Aug 29 2018 07:38:45 GMT+0530 (India Standard Time)
+[debug] [2018-08-29T02:08:45.125Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-08-29T02:08:45.137Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-08-29T02:08:45.138Z] > authorizing via signed-in user
+[debug] [2018-08-29T02:08:45.140Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-08-29T02:08:45.140Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ { refresh_token: '1/SNeaCBPtnzsgtqPS8hm9IJznGdr2XJiHMd7cUmx1i-PD6bSDIHgQp6CnUUv7LFdo',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  grant_type: 'refresh_token',
+  scope: 'email https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloudplatformprojects.readonly https://www.googleapis.com/auth/firebase openid' } 
+ Wed Aug 29 2018 07:38:45 GMT+0530 (India Standard Time)
+[debug] [2018-08-29T02:08:45.502Z] <<< HTTP RESPONSE 200
+[debug] [2018-08-29T02:08:45.562Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/growthfile-207204  
+  
+ Wed Aug 29 2018 07:38:45 GMT+0530 (India Standard Time)
+[debug] [2018-08-29T02:08:46.743Z] <<< HTTP RESPONSE 200
+[debug] [2018-08-29T02:08:46.743Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/growthfile-207204/tokens  
+  
+ Wed Aug 29 2018 07:38:46 GMT+0530 (India Standard Time)
+[debug] [2018-08-29T02:08:47.844Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'growthfile-207204'...
+[info] 
+[info] i  deploying hosting
+[info] i  hosting: preparing public directory for upload...
+[debug] [2018-08-29T02:08:50.053Z] >>> HTTP REQUEST PUT https://deploy.firebase.com/v1/hosting/growthfile-207204/uploads/-LL2RAqrNDLC5yIJ3s2r?fileCount=34&message=  
+  
+ Wed Aug 29 2018 07:38:50 GMT+0530 (India Standard Time)
+[debug] [2018-08-29T02:08:53.126Z] <<< HTTP RESPONSE 403
+[debug] [2018-08-29T02:08:53.126Z] <<< HTTP RESPONSE BODY undefined
+[debug] [2018-08-29T02:08:53.127Z] TypeError: Cannot read property 'error' of undefined
+    at module.exports (C:\Users\xanadu\AppData\Roaming\npm\node_modules\firebase-tools\lib\responseToError.js:10:13)
+    at Request._callback (C:\Users\xanadu\AppData\Roaming\npm\node_modules\firebase-tools\lib\api.js:45:25)
+    at Request.self.callback (C:\Users\xanadu\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\request\request.js:186:22)
+    at emitTwo (events.js:126:13)
+    at Request.emit (events.js:214:7)
+    at Request.<anonymous> (C:\Users\xanadu\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\request\request.js:1163:10)
+    at emitOne (events.js:116:13)
+    at Request.emit (events.js:211:7)
+    at IncomingMessage.<anonymous> (C:\Users\xanadu\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\request\request.js:1085:12)
+    at Object.onceWrapper (events.js:313:30)
+[error] 
+[error] Error: An unexpected error has occurred.

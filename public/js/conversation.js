@@ -1443,7 +1443,7 @@ function setFilePath(str) {
   const img = document.createElement('img')
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
-  document.querySelector('.image-preview--attachment').appendChild(img)
+  document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
 }
 
 function readCameraFile() {
