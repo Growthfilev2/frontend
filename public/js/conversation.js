@@ -1761,3 +1761,40 @@ function createSelectMenu(key,value,canEdit) {
   div.appendChild(ripple)
   return div
 }
+
+function createSimpleMenu(status) {
+  const div = document.createElement("div")
+  div.className = 'mdc-menu mdc-menu--status'
+  div.setAttribute('tabindex', '-1')
+
+  const ul = document.createElement('ul')
+  ul.className = 'mdc-menu__items'
+  ul.setAttribute('role', 'menu')
+  ul.setAttribute('aria-hidden', 'true')
+  const statuses = []
+  if(status === 'CONFIRMED') {
+      statuses.push('Pending','Cancelled')
+  }
+  if(status === 'PENDING') {
+    statuses.push('confirmed','Cancelled')
+  }
+  if(status === 'CANCELLED') {
+    statuses.push('Confirmed','Pending')
+  }
+
+  statuses.forEach(function(status) {
+    const li = document.createElement('li')
+    li.className = 'mdc-list-item'
+    li.setAttribute('role', 'menuitem')
+    li.setAttribute('tabindex', '0')
+    const span = document.createElement('span')
+    span.className = 'mdc-list-item__text'
+    span.textContent = status
+    li.appendChild(span)
+    ul.appendChild(li)
+  })
+  div.appendChild(ul)
+
+  return div
+
+}

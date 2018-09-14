@@ -5,16 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <script src="external/firebase-app.js" defer></script>
-  <!-- <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js" defer></script>
-  <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js" defer></script> -->
-
-
-  <script src="external/firebase-auth.js" defer></script>
+  <script src='https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js' defer></script>
+  <script src='https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js' defer></script>
   <script src="js/init.js" defer></script>
   <script src="js/services.js" defer></script>
   <script src="js/panel.js" defer></script>
-  <link rel="stylesheet" href="css/material-components-web.css" async>
+  <link rel="stylesheet" href='external/material-css.css' async>
 
   <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
@@ -22,13 +18,11 @@
 
   <script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js" defer></script>
 
-  <script src="external/firebase-storage.js" defer></script>
-  <!-- initialization script-->
+  <script src='https://www.gstatic.com/firebasejs/5.2.0/firebase-storage.js' defer></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
-  <script src="external/material-components-web.js" async></script>
+  <script src='external/material-js.js' async></script>
   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c&libraries=places" async></script>
-  <!-- application files-->
 
   <link href="css/theme.css" rel="stylesheet" type="text/css" async>
   <link href="css/conversation.css" rel="stylesheet" type="text/css" async>
@@ -57,7 +51,7 @@ window.addEventListener('load', function() {
 
   <script>
   function initSW() {
-    //
+    // //
     // navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
     //   registration.addEventListener('updatefound', function() {
     //      // If updatefound is fired, it means that there's

@@ -2,10 +2,11 @@
 
     const CACHE_NAME = 'V40';
     const urlsToCache = [
-      'external/firebase-app.js',
-      'external/firebasejs/5.2.0/firebase-auth.js',
-      'external/firebasejs/5.2.0/firebase-storage.js',
-      'external/material-components-web.js',
+        'https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js',
+        'https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js',
+        'https://www.gstatic.com/firebasejs/5.2.0/firebase-storage.js',
+        'external/material-css.css',
+        'external/material-js.js',
         'js/init.js',
         'js/panel.js',
         'css/theme.css',
