@@ -1185,7 +1185,7 @@ function createAttachmentContainer(data) {
     }
 
     if (data.attachment[key].type === 'phoneNumber') {
-
+      div.classList.add('selector--margin')
       const addButton = document.createElement('label')
       addButton.className = 'mdc-fab add--assignee-icon attachment-selector-label'
       const span = document.createElement('span')
@@ -1230,7 +1230,7 @@ function createAttachmentContainer(data) {
     }
 
     if (data.attachment[key].type === 'base64') {
-
+      div.classList.add('selector--margin')
       const addCamera = document.createElement('label')
       addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
       addCamera.id = 'start-camera'
@@ -1274,6 +1274,7 @@ function createAttachmentContainer(data) {
           if (hasValue) {
             console.log(hasValue)
             div.appendChild(addButtonName);
+            div.classList.add('selector--margin')
             addButtonName.onclick = function(evt) {
               valueField.dataset.primary = ''
               selectorUI(evt, {
@@ -1796,5 +1797,4 @@ function createSimpleMenu(status) {
   div.appendChild(ul)
 
   return div
-
 }
