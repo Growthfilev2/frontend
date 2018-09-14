@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-    // Fetchview.startConversation(viewName)
+    Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -211,34 +211,6 @@ function loadViewFromRoot(response) {
           conversation(event.target.result.id)
           handleTimeout()
           break
-
-        case 'map':
-          mapView(response.data.dbName)
-          handleTimeout()
-          break
-        case 'profile':
-          handleTimeout()
-          if(response.data.type === 'updateIDB') return
-          profileView(firebase.auth().currentUser,true)
-          break
-
-        case 'calendar':
-          calendarView(response.data.dbName)
-          handleTimeout()
-          break
-
-        case 'detail':
-          handleTimeout()
-          fillActivityDetailPage(record.id)
-          break
-        case 'updateCreateActivity':
-          // updateCreateActivity(record.id)
-          // fillActivityDetailPage(record.id)
-          handleTimeout()
-          break;
-        case 'create':
-          handleTimeout()
-          break;
 
         default:
           record.currentView = 'list'

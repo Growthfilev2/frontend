@@ -387,7 +387,6 @@ function selectorUI(evt, data) {
 }
 
 function removeDialog(evt) {
-  console.log(evt)
   if (document.getElementById('dialog--component')) {
     if (evt && evt.target.dataset.type === 'back-list') {
       resetSelectorUI()
@@ -880,6 +879,7 @@ function updateCreateActivity(record) {
     const attachmentSection = document.getElementById('attachment--list')
     // canEdit, office, template
     attachmentSection.appendChild(createAttachmentContainer(record))
+
     if (document.querySelector('.mdc-select')) {
       const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
       console.log(select)
@@ -1293,13 +1293,12 @@ function createAttachmentContainer(data) {
             }
           }
         })
-
       }
     }
+
     attachCont.appendChild(div)
-
   })
-
+  console.log(attachCont)
   return attachCont
 }
 

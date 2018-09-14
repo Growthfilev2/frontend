@@ -973,14 +973,12 @@ input[type="datetime-local"] {
   .attachment-field.base64 {
     display: inline-flex;
     margin-bottom: 0px;
-    padding-bottom: 0px;
   }
 
   .attachment-field.base64.editable--true  {
     display: block;
-    padding-bottom: 20px;
     margin-bottom: 10px;
-
+    margin-top:10px;
   }
 
   .attachment-field.base64 img {
@@ -1163,5 +1161,5 @@ input[type="datetime-local"] {
 }
 
 .selector--margin {
-  margin-top:15px;
+  margin-top:10px;
 }
