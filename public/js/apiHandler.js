@@ -712,12 +712,13 @@ function updateUserObjectStore(successUrl) {
           return
         }
 
-        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
+        if (userProfile[cursor.value.mobile].displayName || userProfile[cursor.value.mobile].photoURL) {
           const record = cursor.value
-          record.photoURL = userProfile[cursor.primaryKey].photoURL
-          record.displayName = userProfile[cursor.primaryKey].displayName
+          record.photoURL = userProfile[cursor.value.mobile].photoURL
+          record.displayName = userProfile[cursor.value.mobile].displayName
           record.isUpdated = USER_UPDATED
           console.log(record)
+          console.log(cursor.value)
           usersObjectStore.put(record)
         }
         cursor.continue()
