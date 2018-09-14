@@ -956,8 +956,7 @@ input[type="datetime-local"] {
   }
 
   #assignees--list .mdc-list-item:nth-child(1) {
-    height: 45px;
-    margin-top:10px;
+    height: 40px;
   }
   #assignees--list .mdc-list-item:nth-child(1) .mdc-list-item__text {
     height: 100%;
@@ -973,6 +972,7 @@ input[type="datetime-local"] {
   .attachment-field.base64 {
     display: inline-flex;
     margin-bottom: 0px;
+    padding-top: 10px;
   }
 
   .attachment-field.base64.editable--true  {
@@ -982,8 +982,8 @@ input[type="datetime-local"] {
   }
 
   .attachment-field.base64 img {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     margin-left: 20px;
     margin-top: -15px;
     border-radius: 50%
@@ -1162,4 +1162,7 @@ input[type="datetime-local"] {
 
 .selector--margin {
   margin-top:10px;
+}
+.image-preview--attachment {
+  display: inline;
 }

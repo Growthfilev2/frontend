@@ -623,9 +623,11 @@ function createTempRecord(office, template, data) {
       const selectedCombo = event.target.result
       const bareBonesVenue = {}
       const bareBonesVenueArray = []
-      const bareBonesSchedule = {}
+
       const bareBonesScheduleArray = []
       selectedCombo.venue.forEach(function(venue) {
+        const bareBonesVenue = {}
+
         bareBonesVenue.venueDescriptor = venue
         bareBonesVenue.location = ''
         bareBonesVenue.address = ''
@@ -636,13 +638,14 @@ function createTempRecord(office, template, data) {
         bareBonesVenueArray.push(bareBonesVenue)
       })
 
+      console.log(selectedCombo)
       selectedCombo.schedule.forEach(function(schedule) {
+        const bareBonesSchedule = {}
         bareBonesSchedule.name = schedule
         bareBonesSchedule.startTime = ''
         bareBonesSchedule.endTime = ''
         bareBonesScheduleArray.push(bareBonesSchedule)
       })
-
 
       const bareBonesRecord = {
         office: selectedCombo.office,
@@ -1090,7 +1093,7 @@ function createScheduleTable(data) {
 
   table.appendChild(trMain)
   data.schedules.forEach(function(schedule) {
-
+    console.log(schedule)
     const tr = document.createElement('tr')
     const td0 = document.createElement('td')
     td0.className = 'detail--static-text'
@@ -1157,10 +1160,7 @@ function createAttachmentContainer(data) {
     'string': '',
     'base64': ''
   }
-  //
-  // if (document.getElementById('attachment-container')) {
-  //   document.getElementById('attachment-container').remove()
-  // }
+
   const attachCont = document.createElement('div')
   attachCont.id = 'attachment-container'
 
@@ -1234,7 +1234,6 @@ function createAttachmentContainer(data) {
       addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
       addCamera.id = 'start-camera'
 
-
       const span = document.createElement('span')
       span.className = 'mdc-fab__icon material-icons'
       span.textContent = 'add_a_photo'
@@ -1253,7 +1252,10 @@ function createAttachmentContainer(data) {
         }
       }
       else {
-        div.appendChild(imagePreview);
+
+        const viewImage = document.createElement('img')
+        viewImage.src = `${data.attachment[key].value}`
+        div.appendChild(viewImage);
       }
     }
 
@@ -1438,12 +1440,10 @@ function checkRadioInput(inherit, value) {
 }
 
 function setFilePath(str) {
-  const imageFieldInput = document.querySelector('.image-preview--attachment').children[0]
   const img = document.createElement('img')
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
   document.querySelector('.image-preview--attachment').appendChild(img)
-
 }
 
 function readCameraFile() {
@@ -1482,9 +1482,14 @@ function insertInputsIntoActivity(record, activityStore) {
     console.log(convertIdToKey(allStringTypes[i].id))
   }
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
-  console.log()
   for(let i=0;i<imagesInAttachments.length;i++){
-    record.attachment[convertIdToKey(imagesInAttachments[i].id)].value = imagesInAttachments[i].querySelector('img').src
+    if(!imagesInAttachments[i].querySelector('img')) {
+      record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = ''
+
+    }else {
+
+      record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].querySelector('img').src
+    }
   }
 
   console.log(record.attachment)
@@ -1530,9 +1535,6 @@ function insertInputsIntoActivity(record, activityStore) {
         }
   }
 
-
-
-
   const requiredObject = {
     venue: record.venue,
     schedule: record.schedule,
@@ -1549,7 +1551,6 @@ function insertInputsIntoActivity(record, activityStore) {
   requiredObject.office = record.office
   requiredObject.template = record.template
   requiredObject.share = record.assignees
-  console.log(requiredObject)
 
   requestCreator('create',requiredObject)
 }

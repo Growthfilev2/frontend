@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-    // Fetchview.startConversation(viewName)
+    Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -211,7 +211,12 @@ function loadViewFromRoot(response) {
           conversation(event.target.result.id)
           handleTimeout()
           break
-
+        case 'profile':
+        handleTimeout()
+        break;
+        case 'updateCreateActivity':
+        handleTimeout()
+        break;
         default:
           record.currentView = 'list'
           rootObjectStore.put(record)
