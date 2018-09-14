@@ -741,7 +741,7 @@ function createProfilePanel() {
 
   toggleBtnName.textContent = 'edit'
 
-  nameChangeCont.appendChild(createInput('displayName', 'Name'))
+  nameChangeCont.appendChild(createInputForProfile('displayName', 'Name'))
   nameChangeCont.appendChild(toggleBtnName)
 
   const emailCont = document.createElement('div')
@@ -760,7 +760,7 @@ function createProfilePanel() {
 
   toggleBtnEmail.textContent = 'email'
 
-  emailCont.appendChild(createInput('email', 'Email'))
+  emailCont.appendChild(createInputForProfile('email', 'Email'))
   emailCont.appendChild(toggleBtnEmail)
 
   const refreshAuth = document.createElement('div')
@@ -1259,4 +1259,31 @@ function handleChangeNumberMenu() {
 
   // Turn off menu open animations
   menu.quickOpen = false
+}
+
+
+function createInputForProfile(key, type, classtype) {
+  const mainTextField = document.createElement('div')
+  mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype} attachment--text-field`
+
+  mainTextField.dataset.key = key
+  mainTextField.dataset.type = type
+  mainTextField.id = key.replace(/\s/g, '')
+  const mainInput = document.createElement('input')
+  mainInput.className = 'mdc-text-field__input'
+
+  if (type && key === 'displayName') {
+    mainInput.placeholder = 'Your Name'
+  }
+  if (type && key === 'email') {
+    mainInput.placeholder = 'Your Email'
+  }
+
+
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+
+  mainTextField.appendChild(mainInput)
+  mainTextField.appendChild(ripple)
+  return mainTextField
 }

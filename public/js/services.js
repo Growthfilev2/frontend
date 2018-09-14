@@ -248,3 +248,7 @@ function handleTimeout() {
     clearTimeout(offset)
   }
 }
+
+function getInputText(selector) {
+  return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
+}
