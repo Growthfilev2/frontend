@@ -1230,7 +1230,6 @@ function createAttachmentContainer(data) {
     }
 
     if (data.attachment[key].type === 'base64') {
-      div.classList.add('selector--margin')
       const addCamera = document.createElement('label')
       addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
       addCamera.id = 'start-camera'
@@ -1245,13 +1244,16 @@ function createAttachmentContainer(data) {
       const imagePreview = document.createElement('div')
       imagePreview.className = 'image-preview--attachment'
       imagePreview.dataset.photoKey = key
-      div.appendChild(imagePreview)
       if (data.canEdit) {
 
         div.appendChild(addCamera)
+        div.appendChild(imagePreview);
         addCamera.onclick = function(){
           readCameraFile()
         }
+      }
+      else {
+        div.appendChild(imagePreview);
       }
     }
 

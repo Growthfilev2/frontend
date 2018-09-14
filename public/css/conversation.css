@@ -1158,10 +1158,6 @@ input[type="datetime-local"] {
   border-bottom: none;
 }
 
-.base64 {
-  padding-top:20px;
-}
-
 #attachment-container .mdc-text-field {
   max-width: 50%;
 }
