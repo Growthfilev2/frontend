@@ -1,12 +1,7 @@
-function conversation(id) {
-  if (history.state) {
+function conversation(id,pushState) {
 
-    if (history.state[0] === 'conversation') {
-
-      history.replaceState(['conversation', id], null, null)
-    } else {
-      history.pushState(['conversation', id], null, null)
-    }
+  if(pushState) {
+    history.pushState(['conversation', id], null, null)
   }
 
   if (!id) return
@@ -254,6 +249,16 @@ function createHeaderContent(db, id, unique) {
   }
 }
 
+function reinitCount(db, id) {
+
+  const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
+  activityCount.get(id).onsuccess = function(event) {
+    const record = event.target.result
+    record.count = 0
+    activityCount.put(record)
+  }
+}
+
 function createFunctionalHeader(leftDiv, record) {
   const rightDiv = document.createElement('div')
   rightDiv.className = 'status--cont'
@@ -319,172 +324,6 @@ function getImageFromNumber(db, number) {
     }
   })
 }
-
-function fillActivityDetailPage(id) {
-  if (history.state) {
-
-    if (history.state[0] === 'fillActivityDetailPage') {
-      history.replaceState(['fillActivityDetailPage', id], null, null)
-    } else {
-      history.pushState(['fillActivityDetailPage', id], null, null)
-    }
-  }
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = window.indexedDB.open(dbName)
-  req.onsuccess = function() {
-    const db = req.result
-    const rootTx = db.transaction(['root'], 'readwrite')
-
-    const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function(event) {
-      const record = event.target.result
-      record.id = id
-      record.view = 'detail'
-      rootObjectStore.put(record)
-    }
-
-    rootTx.oncomplete = function() {
-      const req = window.indexedDB.open(dbName)
-
-      req.onsuccess = function() {
-        const db = req.result
-        const activityObjectStore = db.transaction('activity').objectStore('activity')
-
-        activityObjectStore.get(id).onsuccess = function(event) {
-          const record = event.target.result
-          console.log(record)
-          createActivityDetailHeader(record, 'edit')
-          document.getElementById('back-detail').addEventListener('click', function() {
-            // conversation(id)
-            handleViewFromHistory()
-          })
-
-
-          updateActivityPanel(db, record)
-          // displayActivityDetail(db, record)
-          fetchAssigneeData(db, record, 'assignee--list')
-        }
-      }
-    }
-  }
-  sendCurrentViewNameToAndroid('detail')
-}
-
-function createActivityDetailHeader(record, value) {
-  const leftDiv = document.createElement('div')
-
-  const backSpan = document.createElement('span')
-  backSpan.className = 'back-icon'
-  // if (value === 'edit') {
-  //   backSpan.id = 'back-detail'
-  // }
-  // if (value === 'create') {
-  backSpan.id = 'back-list'
-  // }
-
-  const backIcon = document.createElement('i')
-  backIcon.className = 'material-icons'
-  backIcon.textContent = 'arrow_back'
-  backSpan.appendChild(backIcon)
-
-  const activityName = document.createElement('span')
-  activityName.className = 'display-activity-name'
-  activityName.textContent = record.activityName
-
-  // const cancel = document.createElement('i')
-  // cancel.className = 'material-icons'
-  // cancel.id = 'cancel-update'
-  // cancel.dataset.id = record.activityId
-  // cancel.textContent = 'clear'
-  // cancel.style.color = 'gray'
-  // cancel.style.display = 'none'
-
-  leftDiv.appendChild(backSpan)
-  leftDiv.appendChild(activityName)
-  // leftDiv.appendChild(cancel)
-
-  if (!record.canEdit) {
-    //no mdc fab
-    // header(leftDiv.outerHTML)
-    return
-  }
-
-  // const rigthDiv = document.createElement('div')
-  //
-  // const toggleBtnName = document.createElement('button')
-  // toggleBtnName.className = 'mdc-icon-button material-icons'
-  // toggleBtnName.id = `${value}-activity`
-  // toggleBtnName.dataset.id = record.activityId
-  //
-  // toggleBtnName.setAttribute('aria-hidden', 'true')
-  // toggleBtnName.setAttribute('aria-pressed', 'false')
-  //
-  // if (value === 'edit') {
-  //   toggleBtnName.setAttribute('data-toggle-on-content', 'check')
-  //   toggleBtnName.setAttribute('data-toggle-on-label', 'check')
-  //   toggleBtnName.setAttribute('data-toggle-off-content', 'edit')
-  //   toggleBtnName.setAttribute('data-toggle-off-label', 'editActivity')
-  //
-  //   toggleBtnName.textContent = 'edit'
-  // }
-  // if (value === 'create') {
-  //   toggleBtnName.setAttribute('data-toggle-on-content', 'check')
-  //   toggleBtnName.setAttribute('data-toggle-on-label', 'check')
-  //   toggleBtnName.setAttribute('data-toggle-off-content', 'check')
-  //   toggleBtnName.setAttribute('data-toggle-off-label', 'createActivity')
-  //
-  //   toggleBtnName.textContent = 'check'
-  // }
-  //
-  //
-  // rigthDiv.appendChild(toggleBtnName)
-  header(leftDiv.outerHTML)
-  // if (value === 'edit') {
-  //   toggleActivityHeader(`${value}-activity`, '.activity-detail-page', value, record)
-  // }
-  // if (value === 'create') {
-  //   toggleActivityHeader(`${value}-activity`, '#create-activity--container', value)
-  // }
-}
-//
-// function displayActivityDetail(db, record) {
-//   const detail = document.createElement('div')
-//   detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-//   detail.innerHTML = sectionDiv('Office', record.office) +
-//   sectionDiv('Template', record.template) +
-//   availableStatus(record) + displaySchedule(record.schedule) + displayVenue(record.venue) + displayAttachmentCont(record.attachment) + renderAssigneeList(record, 'assignee--list')
-//   document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
-//
-//
-//   const venueLi = document.querySelectorAll('.venue--list');
-//
-//   for (let index = 0; index < venueLi.length; index++) {
-//     venueLi[index].addEventListener('click', expandVenueList)
-//   }
-//
-//   if (document.getElementById('select-pending')) {
-//     document.getElementById('select-pending').addEventListener('click', function () {
-//       updateStatus('PENDING', record.activityId)
-//     })
-//   }
-//   if (document.getElementById('select-confirmed')) {
-//     document.getElementById('select-confirmed').addEventListener('click', function () {
-//       updateStatus('CONFIRMED', record.activityId)
-//     })
-//   }
-//   if (document.getElementById('select-cancel')) {
-//     document.getElementById('select-cancel').addEventListener('click', function () {
-//       updateStatus('CANCELLED', record.activityId)
-//     })
-//   }
-//
-//
-//   if (!record.canEdit) return
-//   initShareButton(record, db)
-// }
-//
-//
 
 function selectorUI(evt, data) {
   console.log(data)
@@ -571,7 +410,7 @@ function initializeSelectorWithData(evt, data) {
     const db = req.result
     if (data.store === 'map') {
       const objectStore = db.transaction(data.store).objectStore(data.store)
-      selectorStore = objectStore.index(objectStore.indexNames[3])
+      selectorStore = objectStore.index('location')
       fillMapInSelector(selectorStore, activityRecord, dialog, data)
     }
     if (data.store === 'subscriptions') {
@@ -865,7 +704,8 @@ function updateDomFromIDB(activityRecord, attr, data) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function(event) {
-    let updatedActivity = activityRecord;
+
+      let updatedActivity = activityRecord;
 
     const db = req.result
     const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
@@ -889,7 +729,12 @@ function updateDomFromIDB(activityRecord, attr, data) {
       return
     }
 
+
+
     updatedActivity.attachment[attr.key].value = data.primary
+
+
+
     if (!activityRecord.hasOwnProperty('create')) {
       activityStore.put(updatedActivity)
     }
@@ -904,11 +749,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
 }
 
 function updateVenue(updatedActivity, attr, data) {
-  console.log(attr)
-  console.log(data)
-  //venue
-  // console.log(updatedActivity)
-  // console.log(attr)
+
   updatedActivity.venue.forEach(function(field) {
     if (field.venueDescriptor === attr.key) {
       field.location = data.primary
@@ -941,7 +782,7 @@ function updateCreateContainer(record) {
 
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
-  activityName.className = 'data--value-list'
+
   activityName.style.paddingLeft = '10px'
   activityName.style.fontSize = '19px'
 
@@ -996,6 +837,7 @@ function updateCreateContainer(record) {
 }
 
 function updateCreateActivity(record) {
+  console.log(history.state[0])
 
   history.pushState(['updateCreateActivity', record.activityId], null, null)
 
@@ -1138,19 +980,19 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
   listItem.id = convertKeyToId(venue.venueDescriptor)
 
-  const textSpan = document.createElement('span')
-  textSpan.className = 'mdc-list-item__text'
+  const textSpan = document.createElement('a')
+  textSpan.className = 'mdc-list-item__text link--span'
 
   const primarySpan = document.createElement('span')
   primarySpan.className = 'mdc-list-item__primary-text'
 
   const selectorIcon = document.createElement('span')
-  selectorIcon.className = 'mdc-list-item__meta material-icons'
+  selectorIcon.className = 'mdc-list-item__meta'
   const addLocation = document.createElement('label')
   addLocation.className = 'mdc-fab add--assignee-icon attachment-selector-label'
   const locationBtnSpan = document.createElement('span')
   locationBtnSpan.className = 'mdc-fab__icon material-icons'
-  locationBtnSpan.textContent = 'location_add'
+  locationBtnSpan.textContent = 'add_location'
   addLocation.appendChild(locationBtnSpan)
 
   if (showVenueDesc) {
@@ -1166,6 +1008,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     primarySpan.appendChild(listItemLabel)
     primarySpan.appendChild(dataValue)
     textSpan.appendChild(primarySpan)
+    textSpan.href = `https://maps.google.com/?q=${venue.geopoint['_latitude']},${venue.geopoint['_longitude']}`
 
     if (record.canEdit) {
       selectorIcon.setAttribute('aria-hidden', 'true')
@@ -1194,11 +1037,14 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     metaInput.appendChild(createRadioInput())
     listItem.onclick = function() {
-
+      console.log(venue)
       checkRadioInput(this, {
         location: venue.location,
         address: venue.address,
-        geopoint: venue['geopoint'],
+        geopoint: {
+          '_latitude':venue.latitude,
+          '_longitude':venue.longitude
+        },
         venueDesc: venue.venueDescriptor
       })
     }
@@ -1270,12 +1116,11 @@ function createScheduleTable(data) {
     tdEndTime.className = `schedule--time`
     tdEndTime.dataset.end = `${schedule.name}-endTime`
 
-    td1.appendChild(createTimeInput(schedule.startTime ? moment(schedule.startTime).calendar() : '', data.canEdit, {
+    td1.appendChild(createTimeInput(schedule.startTime ? moment(schedule.startTime).format('YYYY-MM-DD') : '', data.canEdit, {
       type: 'date',
       simple: true
     }))
-
-    td2.appendChild(createTimeInput(schedule.endTime ? moment(schedule.endTime).calendar() : '', data.canEdit, {
+    td2.appendChild(createTimeInput(schedule.endTime ? moment(schedule.endTime).format('YYYY-MM-DD') : '', data.canEdit, {
       type: 'date',
       simple: true
     }))
@@ -1380,7 +1225,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
-      div.appendChild(createSelectMenu(key))
+      div.appendChild(createSelectMenu(key,data.attachment[key].value,data.canEdit))
 
     }
 
@@ -1397,13 +1242,16 @@ function createAttachmentContainer(data) {
       addCamera.appendChild(span)
       div.appendChild(label)
 
-      const imagePreview = document.createElement('img')
+      const imagePreview = document.createElement('div')
       imagePreview.className = 'image-preview--attachment'
-      imagePreview.src = data.attachment[key].value
+      imagePreview.dataset.photoKey = key
       div.appendChild(imagePreview)
       if (data.canEdit) {
 
         div.appendChild(addCamera)
+        addCamera.onclick = function(){
+          readCameraFile()
+        }
       }
     }
 
@@ -1442,19 +1290,13 @@ function createAttachmentContainer(data) {
             }
           }
         })
-        // renderTemplateNameSelector(evt, {
-        //   template: data.attachment[key].type,
-        //   office: data.office
-        // }, key)
+
       }
     }
     attachCont.appendChild(div)
 
   })
 
-  if (document.getElementById('start-camera')) {
-    document.getElementById('start-camera').addEventListener('click', readCameraFile)
-  }
   return attachCont
 }
 
@@ -1517,14 +1359,6 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (!userRecord) return assigneeLi
   assigneeLi.dataset.value = userRecord.mobile
-  // if (target === 'assignee--list') {
-  //   assigneeLi.dataset.assignee = userRecord.primaryKey
-  // } else {
-  //   assigneeLi.dataset.name = userRecord.value.displayName
-  //   assigneeLi.dataset.phoneNum = userRecord.primaryKey
-  // }
-
-
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
 
@@ -1593,14 +1427,25 @@ function createRadioInput() {
 }
 
 function checkRadioInput(inherit, value) {
-  console.log(inherit)
   const parent = inherit
-
   const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
   radio['root_'].classList.add('radio-selected')
   radio.checked = true
   radio.value = JSON.stringify(value)
   console.log(radio.value)
+}
+
+function setFilePath(str) {
+  const imageFieldInput = document.querySelector('.image-preview--attachment').children[0]
+  const img = document.createElement('img')
+  img.src = `data:image/jpeg;base64,${str}`
+  img.className = 'profile-container--main attachment-picture'
+  document.querySelector('.image-preview--attachment').appendChild(img)
+
+}
+
+function readCameraFile() {
+  FetchCameraForAttachment.startCamera()
 }
 
 function sendActivity(record) {
@@ -1623,9 +1468,8 @@ function sendActivity(record) {
   }
 }
 
-
 function concatDateWithTime(date, time) {
-  const dateConcat = moment(date + " " + time)
+  const dateConcat = moment(date  + " " + time)
   return moment(dateConcat).valueOf()
 }
 
@@ -1635,56 +1479,78 @@ function insertInputsIntoActivity(record, activityStore) {
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = allStringTypes[i].querySelector('.mdc-text-field__input').value
     console.log(convertIdToKey(allStringTypes[i].id))
   }
+  const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
+
+  for(let i=0;i<imagesInAttachments.length;i++){
+    record.attachment[convertIdToKey(imagesInAttachments[i].id)].value = imagesInAttachments[i].querySelector(img).src
+  }
 
   console.log(record.attachment)
 
+  let sd;
+  let st;
+  let ed;
+  let et
+  let allow = true;
   for (var i = 0; i < record.schedule.length; i++) {
 
-    const sd = document.querySelector(`[data-start="${record.schedule[i].name}-startDate"] input`)
-    const st = document.querySelector(`[data-start="${record.schedule[i].name}-startTime"] input`)
-    const ed = document.querySelector(`[data-end="${record.schedule[i].name}-endDate"] input`)
-    const et = document.querySelector(`[data-end="${record.schedule[i].name}-endTime"] input`)
-    record.schedule[i].startTime = concatDateWithTime(sd.value, st.value)
-    record.schedule[i].endTime = concatDateWithTime(ed.value, et.value)
-  }
+     sd = document.querySelector(`[data-start="${record.schedule[i].name}-startDate"] input`)
+     st = document.querySelector(`[data-start="${record.schedule[i].name}-startTime"] input`)
+     ed = document.querySelector(`[data-end="${record.schedule[i].name}-endDate"] input`)
+     et = document.querySelector(`[data-end="${record.schedule[i].name}-endTime"] input`)
 
+     if (sd.value !== "" && ed.value == "") {
+       snacks('Add a valid End Date')
+       allow = false
+     }
+
+     if (ed.value !== "" && sd.value == "") {
+       snacks('Add a valid Start Date')
+       allow = false
+
+     }
+
+     if (sd.value && ed.value && moment(ed.value).valueOf() < moment(sd.value).valueOf()) {
+       snacks('End Date cannot be before Start Date')
+       allow = false
+     }
+
+     if(allow){
+       record.schedule[i].startTime = concatDateWithTime(sd.value, st.value) || ''
+       record.schedule[i].endTime = concatDateWithTime(ed.value, et.value)  || ''
+     }
+  }
 
   for (var i = 0; i < record.venue.length; i++) {
         record.venue[i].geopoint = {
           latitude : record.venue[i].geopoint['_latitude'],
           longitude : record.venue[i].geopoint['_longitude']
-
         }
   }
+
+
+
 
   const requiredObject = {
     venue: record.venue,
     schedule: record.schedule,
     attachment: record.attachment
   }
+
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
     requestCreator('update',requiredObject)
-    for (var i = 0; i < record.venue.length; i++) {
-          record.venue[i].geopoint = {
-            '_latitude' : record.venue[i].geopoint['latitude'],
-            '_longitude' : record.venue[i].geopoint['longitude']
-
-          }
-    }
-    activityStore.put(record)
-
-    console.log(requiredObject)
 
     return
   }
+
   requiredObject.office = record.office
   requiredObject.template = record.template
   requiredObject.share = record.assignees
-  requestCreator('create',requiredObject)
   console.log(requiredObject)
-}
 
+  requestCreator('create',requiredObject)
+}
 
 function initSearchForSelectors(type, record, attr) {
   searchBarUI()
@@ -1712,6 +1578,7 @@ function searchBarUI() {
   if (!document.getElementById('search--bar--field')) {
 
     actionCont.appendChild(createSimpleInput('', true, true))
+
   } else {
     document.getElementById('search--bar--field').style.display = 'block'
   }
@@ -1737,7 +1604,6 @@ function resetSelectorUI() {
   document.getElementById('data-list--container').style.display = 'block'
 
 }
-
 
 function initializeAutocompleteGoogle(autocomplete, record, attr) {
 
@@ -1783,186 +1649,6 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     console.log(place)
   })
 }
-// function updateActivityPanel(db, record) {
-
-//   history.pushState(['updateActivityPanel'],null,null)
-//
-//   const rootTx = db.transaction('root', 'readwrite')
-//   const rootObjectStore = rootTx.objectStore('root')
-//   rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-//     const record = event.target.result
-//     record.view = 'edit-activity'
-//     rootObjectStore.put(record)
-//   }
-//   rootTx.oncomplete = function () {
-//     // document.getElementById('back-detail').remove()
-//     // document.querySelector('.display-activity-name').remove()
-//     // document.getElementById('cancel-update').style.display = 'block'
-//     // document.getElementById('cancel-update').addEventListener('click', function () {
-//     //   cancelUpdate(record.activityId)
-//     // })
-//
-//     const detail = document.createElement('div')
-//     detail.className = 'mdc-top-app-bar--fixed-adjust activity-detail-page'
-//     detail.innerHTML = sectionDiv('Office' , {office:record.office,activityTimestamp:record.timestamp}) +showVenue(record.venue)+showSchedule(record.schedule) + updateAttachmentCont()
-//
-//     document.getElementById('app-current-panel').innerHTML = detail.outerHTML;
-//
-//     const mapSelectType = document.querySelectorAll('.map-select-type')
-//     for (let index = 0; index < mapSelectType.length; index++) {
-//       const element = mapSelectType[index];
-//       element.addEventListener('click', function (evt) {
-//         console.log(evt)
-//         renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
-//       })
-//
-//     }
-//
-//     createAttachmentContainer(record.attachment, 'update--attachment-cont', record.canEdit, true)
-//   }
-//
-// }
-
-function initShareButton(record, db) {
-  document.getElementById('share-btn').addEventListener('click', function(evt) {
-    if (!db) {
-      renderShareScreen(evt, '', '')
-      return
-    }
-    renderShareScreen(evt, record, '')
-    // const usersObjectStore = db.transaction('users').objectStore('users')
-    // record.assignees.forEach(function (number) {
-    //   usersObjectStore.get(number).onsuccess = function (event) {
-    //     const result = event.target.result
-    //     if (!result) {
-    //       const reqBody = {
-    //         'activityId': record.activityId,
-    //         'number': [number]
-    //       }
-    //       requestCreator('share', reqBody)
-    //     }
-    //
-    //     // renderLocationScreen(evt,'','')
-    //
-    //   }
-    // })
-  })
-}
-
-function toggleActivityHeader(toggleId, containerClass, type, record) {
-
-  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(document.getElementById(toggleId))
-  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function({
-    detail
-  }) {
-    if (!detail.isOn) {
-      checkInValidInputs(type, containerClass)
-      console.log("no")
-    } else {
-      if (type === 'create') {
-        checkInValidInputs(type, containerClass)
-      } else {
-        console.log(record)
-        makeFieldsEditable(record)
-      }
-    }
-  })
-}
-
-function checkInValidInputs(type) {
-  let allow = true
-  document.getElementById('app-current-panel').querySelectorAll('[required]').forEach(function(elemnt) {
-    console.log(elemnt.value)
-    if (elemnt.value.trim() !== '' && allow === true) {
-      allow = true
-    } else {
-
-      allow = false
-    }
-  })
-  if (!allow) {
-    snacks('Please fill are required Inputs')
-    return
-  }
-  createUpdateReqBody(event, type)
-}
-
-
-function activityTitle(title) {
-  const container = document.createElement('div')
-  container.className = 'activity--title-container activity--detail--section'
-
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field'
-  textField.id = 'activity--title-input'
-
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  label.textContent = 'Activity Name'
-
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  const input = document.createElement('input')
-  input.required = true
-  input.minLength = 1
-  input.maxLength = 120
-
-  input.className = 'mdc-text-field__input'
-
-  input.type = 'text'
-  if (title) {
-    input.setAttribute('value', title)
-  }
-
-  textField.appendChild(input)
-  textField.appendChild(label)
-  textField.appendChild(ripple)
-
-  container.appendChild(textField)
-  mdc.textField.MDCTextField.attachTo(textField)
-  return container.outerHTML
-}
-
-function sectionDiv(key, content, type) {
-
-  const cont = document.createElement('div')
-  cont.className = `activity--${key.replace(' ','')}-container activity--detail--section`
-
-  const label = document.createElement('label')
-  label.textContent = key
-
-  label.className = 'detail--static-text mdc-typography--subtitle2'
-  cont.appendChild(label)
-
-  console.log(type)
-
-  const span = document.createElement('span')
-  span.className = `activity--${key.replace(' ','')} activity--update--text`
-  span.textContent = content
-
-  if (type === 'base64') {
-    const img = document.createElement('img')
-    img.className = `activity--${key.replace(' ','')} activity--update--text`
-    img.src = content
-    cont.appendChild(img)
-  }
-
-  if (type === 'Office') {
-    const timestampField = document.createElement('span')
-    timestampField.textContent = content.activityTimestamp
-    span.appendChild(timestampField)
-    cont.appendChild(span)
-  } else {
-    // const span = document.createElement('span')
-    // span.className = `activity--${key.replace(' ','')} activity--update--text`
-    // span.textContent = content
-    cont.appendChild(span)
-  }
-
-  return cont.outerHTML
-}
 
 function createSimpleInput(value, canEdit, withIcon, key) {
 
@@ -1981,8 +1667,6 @@ function createSimpleInput(value, canEdit, withIcon, key) {
     textField.className = 'mdc-text-field data--value-list-small'
   }
 
-  // const icon = document.createElement('i')
-
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input'
   input.style.paddingTop = '0px'
@@ -1993,16 +1677,11 @@ function createSimpleInput(value, canEdit, withIcon, key) {
 
   input.value = value
   if (withIcon) {
-    // icon.className = 'material-icons mdc-text-field__icon search-icon-input'
-    // icon.textContent = 'arrow_back'
-    // icon.id = 'search--close'
+
     textField.id = 'search--bar--field'
     input.id = 'search--bar-selector'
     textField.classList.add('field-input')
-    // icon.onclick = function(){
-    //   resetSelectorUI()
-    // }
-    // textField.appendChild(icon)
+
   }
   textField.appendChild(input)
   textField.appendChild(ripple)
@@ -2013,6 +1692,7 @@ function createSimpleInput(value, canEdit, withIcon, key) {
 function createTimeInput(value, canEdit, attr) {
   if (!canEdit) {
     const simeplText = document.createElement('span')
+    simeplText.className = 'data--value-list'
     attr.type === 'date' ? simeplText.textContent = moment(value).calendar() : simeplText.textContent = value
 
     return simeplText
@@ -2029,7 +1709,7 @@ function createTimeInput(value, canEdit, attr) {
   attr.type === 'date' ? input.value = moment(value).format('YYYY-MM-DD') : input.value = value
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
-    input.style.width = '100%'
+    input.style.width = '90%'
   }
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
@@ -2044,1246 +1724,13 @@ function createTimeInput(value, canEdit, attr) {
   return textField
 }
 
-function displayAttachmentCont(attachment) {
-  const div = document.createElement('div')
-  div.id = 'update--attachment-cont'
-  div.className = 'attachment--cont-update'
-  Object.keys(attachment).forEach(function(key) {
-
-    div.innerHTML += sectionDiv(key, attachment[key].value, attachment[key].type)
-  })
-  return div.outerHTML
-}
-
-function createSimpleMenu(status) {
-  const div = document.createElement("div")
-  div.className = 'mdc-menu mdc-menu--status'
-  div.setAttribute('tabindex', '-1')
-
-  const ul = document.createElement('ul')
-  ul.className = 'mdc-menu__items'
-  ul.setAttribute('role', 'menu')
-  ul.setAttribute('aria-hidden', 'true')
-  const statuses = []
-  if(status === 'CONFIRMED') {
-      statuses.push('Pending','Cancelled')
-  }
-  if(status === 'PENDING') {
-    statuses.push('confirmed','Cancelled')
-  }
-  if(status === 'CANCELLED') {
-    statuses.push('Confirmed','Pending')
-  }
-
-  statuses.forEach(function(status) {
-    const li = document.createElement('li')
-    li.className = 'mdc-list-item'
-    li.setAttribute('role', 'menuitem')
-    li.setAttribute('tabindex', '0')
+function createSelectMenu(key,value,canEdit) {
+  if(!canEdit) {
     const span = document.createElement('span')
-    span.className = 'mdc-list-item__text'
-    span.textContent = status
-    li.appendChild(span)
-    ul.appendChild(li)
-  })
-  div.appendChild(ul)
-
-  return div
-
-}
-
-function makeFieldsEditable(record) {
-
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function() {
-    const db = req.result
-    updateActivityPanel(db, record)
+    span.className = 'data--value-list'
+    span.textContent = value
+    return span
   }
-}
-
-function cancelUpdate(id) {
-  fillActivityDetailPage(id)
-}
-
-function availableStatus(record) {
-  const statusCont = document.createElement('div')
-  statusCont.id = 'activity--status-container'
-  statusCont.className = 'activity--detail--section activity--detail--section-status'
-  const currentStatus = document.createElement('div')
-  currentStatus.className = 'current-status'
-  currentStatus.textContent = record.status
-  statusCont.appendChild(currentStatus)
-  currentStatus.classList.add(record.status)
-
-  if (!record.canEdit) return statusCont.outerHTML
-
-  const avalStatus = document.createElement('div')
-  avalStatus.id = 'available-status'
-
-  const pendingIcon = document.createElement('i')
-  pendingIcon.classList.add('status-pending', 'material-icons')
-  pendingIcon.appendChild(document.createTextNode('priority_high'))
-  pendingIcon.id = 'select-pending'
-
-  const cancelIcon = document.createElement('i')
-  cancelIcon.classList.add('status-cancel', 'material-icons')
-  cancelIcon.appendChild(document.createTextNode('clear'))
-  cancelIcon.id = 'select-cancel'
-
-  const confirmedIcon = document.createElement('i')
-  confirmedIcon.classList.add('status-confirmed', 'material-icons')
-  confirmedIcon.appendChild(document.createTextNode('check'))
-
-  confirmedIcon.id = 'select-confirmed'
-
-  if (record.status === 'PENDING') {
-    avalStatus.appendChild(
-      cancelIcon
-    )
-    avalStatus.appendChild(
-      confirmedIcon
-    )
-  }
-  if (record.status === 'CANCELLED') {
-    avalStatus.appendChild(
-      pendingIcon
-    )
-    avalStatus.appendChild(
-      confirmedIcon
-    )
-  }
-  if (record.status === 'CONFIRMED') {
-    avalStatus.appendChild(
-      cancelIcon
-    )
-    avalStatus.appendChild(
-      pendingIcon
-    )
-  }
-  statusCont.appendChild(avalStatus)
-
-  return statusCont.outerHTML
-}
-
-function updateStatus(status, id) {
-  const reqBody = {
-    'activityId': id,
-    'status': status,
-  }
-
-  requestCreator('statusChange', reqBody)
-
-}
-
-function showSchedule(schedules) {
-  const scheduleCont = document.createElement('div')
-  scheduleCont.className = 'activity--schedule-container activity--detail--section'
-  const spanDiv = document.createElement('div')
-  spanDiv.className = 'schedule--text'
-
-  const scheduleList = document.createElement('div')
-  scheduleList.id = 'schedule--list'
-  console.log(scheduleList)
-  scheduleCont.appendChild(spanDiv)
-
-  schedules.forEach((schedule) => {
-    showScheduleUI(schedule, scheduleList)
-  })
-
-  scheduleCont.appendChild(scheduleList)
-  return scheduleCont.outerHTML
-}
-
-function showScheduleUI(schedule, scheduleList) {
-  console.log(scheduleList)
-
-  const scheduleLi = document.createElement('div')
-  scheduleLi.classList.add('schedule--list')
-
-  const scheduleName = document.createElement('span')
-  scheduleName.classList.add('schedule-name--list', 'detail--static-text', 'mdc-typography--subtitle2')
-  scheduleName.dataset.value = schedule.name
-  scheduleName.innerHTML = schedule.name
-
-  const br = document.createElement('br')
-
-  const startTimeInputs = document.createElement('div')
-  startTimeInputs.className = 'startTimeInputs'
-
-  const scheduleStartDate = document.createElement('div')
-  scheduleStartDate.classList.add('mdc-text-field', 'startDate')
-
-  const scheduleStartDateInput = document.createElement('input')
-  scheduleStartDateInput.type = 'date'
-  scheduleStartDateInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-
-  const scheduleStarrTime = document.createElement('div')
-  scheduleStarrTime.classList.add('mdc-text-field', 'startTime')
-
-  const scheduleStarrTimeInput = document.createElement('input')
-  scheduleStarrTimeInput.type = 'time'
-  scheduleStarrTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-
-  if (schedule.startTime) {
-    scheduleStartDateInput.setAttribute('value', moment(schedule.startTime).format('YYYY-MM-DD'))
-    scheduleStarrTimeInput.setAttribute('value', moment(schedule.startTime).format('HH:MM'))
-  }
-
-  const startDateLabel = document.createElement('label')
-  startDateLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  startDateLabel.textContent = 'Start Date'
-
-  const startTimeLabel = document.createElement('label')
-  startTimeLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  startTimeLabel.textContent = 'Start Time'
-
-  const startRipple = document.createElement('div')
-  startRipple.className = 'mdc-line-ripple'
-
-  scheduleStartDate.appendChild(scheduleStartDateInput)
-  scheduleStartDate.appendChild(startDateLabel)
-  scheduleStartDate.appendChild(startRipple)
-
-  scheduleStarrTime.appendChild(scheduleStarrTimeInput)
-  scheduleStarrTime.appendChild(startTimeLabel)
-  scheduleStarrTime.appendChild(startRipple)
-
-
-  startTimeInputs.appendChild(scheduleStartDate)
-  startTimeInputs.appendChild(scheduleStarrTime)
-
-  const endTimeInputs = document.createElement('div')
-  endTimeInputs.className = 'endTimeInputs'
-
-  const scheduleEndDate = document.createElement('div')
-  scheduleEndDate.classList.add('mdc-text-field', 'endDate')
-
-  const scheduleEndDateInput = document.createElement('input')
-  scheduleEndDateInput.type = 'date'
-  scheduleEndDateInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-
-  const scheduleEndTime = document.createElement('div')
-  scheduleEndTime.classList.add('mdc-text-field', 'endTime')
-
-  const scheduleEndTimeInput = document.createElement('input')
-  scheduleEndTimeInput.type = 'time'
-  scheduleEndTimeInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-
-  if (schedule.endTime) {
-    scheduleEndDateInput.setAttribute('value', moment(schedule.endTime).format('YYYY-MM-DD'))
-    scheduleEndTimeInput.setAttribute('value', moment(schedule.endTime).format('HH:mm'))
-  }
-
-  const endDateLabel = document.createElement('label')
-  endDateLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  endDateLabel.textContent = 'End Date'
-
-  const endTimeLabel = document.createElement('label')
-  endTimeLabel.className = 'mdc-floating-label mdc-floating-label--float-above detail--static-text'
-  endTimeLabel.textContent = 'End Time'
-
-  const endRipple = document.createElement('div')
-  endRipple.className = 'mdc-line-ripple'
-
-  scheduleEndDate.appendChild(scheduleEndDateInput)
-  scheduleEndDate.appendChild(endDateLabel)
-  scheduleEndDate.appendChild(endRipple)
-
-  scheduleEndTime.appendChild(scheduleEndTimeInput)
-  scheduleEndTime.appendChild(endTimeLabel)
-  scheduleEndTime.appendChild(endRipple)
-
-  endTimeInputs.appendChild(scheduleEndDate)
-  endTimeInputs.appendChild(scheduleEndTime)
-
-
-  scheduleLi.appendChild(scheduleName)
-  scheduleLi.appendChild(br)
-  scheduleLi.appendChild(startTimeInputs)
-  scheduleLi.appendChild(endTimeInputs)
-  console.log(scheduleList)
-  scheduleList.appendChild(scheduleLi)
-}
-
-function displayVenue(venues) {
-  if (!venues.length) return document.createElement('span').outerHTML
-
-  const venueCont = document.createElement('div')
-  venueCont.className = 'activity--venue-container'
-  const venueList = document.createElement('ul')
-  venueList.className = 'mdc-list activity--detail--section'
-
-  venues.forEach(function(venue) {
-
-    const venueLi = document.createElement('li')
-    venueLi.className = 'mdc-list-item venue--list mdc-ripple-upgraded'
-    const span = document.createElement('span')
-    span.className = 'mdc-list-item__text'
-
-    const descSpan = document.createElement('span')
-    descSpan.className = 'mdc-list-item__primary-text detail--static-text'
-    descSpan.textContent = venue.venueDescriptor
-
-    const primarySpan = document.createElement('span')
-    primarySpan.className = 'mdc-list-item__primary-text'
-    primarySpan.textContent = venue.location
-
-    const link = document.createElement('a')
-    link.href = `https://maps.google.com/?q=${venue.geopoint['_latitude']},${venue.geopoint['_longitude']}`
-    link.className = 'address-link-geo'
-    const secondarySpan = document.createElement('span')
-    secondarySpan.className = 'mdc-list-item__secondary-text venue--address'
-    secondarySpan.textContent = venue.address
-
-    link.appendChild(secondarySpan)
-
-    span.appendChild(descSpan)
-    span.appendChild(primarySpan)
-    span.appendChild(link)
-
-    venueLi.appendChild(span)
-    venueList.appendChild(venueLi)
-  })
-  return venueList.outerHTML
-}
-
-function showVenue(venues, canEdit) {
-  const venueCont = document.createElement('div')
-  venueCont.className = 'activity--venue-container activity--detail--section'
-
-  const venueList = document.createElement('ul')
-  venueList.className = 'mdc-list'
-  venueList.id = 'venue--list'
-
-  var count = 0
-  venues.forEach((venue) => {
-    if (venue.geopoint) {
-      count++
-
-      showVenueUI(venue, count, venueList)
-    }
-  })
-
-  venueCont.appendChild(venueList)
-  return venueCont.outerHTML
-}
-
-function showVenueUI(venue, count, venueList) {
-
-  const venueLi = document.createElement('li')
-  venueLi.className = 'mdc-list-item map-select-type map-select' + count
-  venueLi.dataset.location = venue.location
-  venueLi.dataset.address = venue.address
-  venueLi.dataset.inputlat = venue.geopoint['_latitude']
-  venueLi.dataset.inputlon = venue.geopoint['_longitude']
-  venueLi.dataset.descrip = venue.venueDescriptor
-
-  const venueDesc = document.createElement('span')
-
-  venueDesc.id = `venue-desc${count}`
-  venueDesc.dataset.descriptor = venue.venueDescriptor
-  venueDesc.className = 'detail--static-text venue--name-label mdc-list-item__text'
-  venueDesc.textContent = `${venue.venueDescriptor} : ${venue.location} `
-
-  const addLocationFab = document.createElement('button')
-  addLocationFab.className = 'mdc-fab mdc-fab-location material-icons'
-
-  const addLocationIcon = document.createElement('i')
-  addLocationIcon.className = 'material-icons mdc-fab__icon map-select-type-action'
-
-  addLocationIcon.textContent = 'add_location'
-
-  addLocationFab.appendChild(addLocationIcon)
-
-  const venueLocation = document.createElement('div')
-  venueLocation.classList.add('mdc-text-field', 'venue-location--name')
-  venueLocation.id = `venue-location${count}`
-  const venueLocationInput = document.createElement('input')
-  venueLocationInput.classList.add('mdc-text-field__input', 'border-bottom--none', 'venue-location--input')
-  if (!venue.location) {
-    venueLocationInput.setAttribute('placeholder', 'Choose Location')
-  } else {
-    venueLocationInput.setAttribute('value', venue.location)
-  }
-
-  venueLocationInput.disabled = true
-  venueLocation.appendChild(venueLocationInput)
-
-  const venueAddress = document.createElement('div')
-  venueAddress.classList.add('mdc-text-field', 'venue-address--name')
-  venueAddress.id = 'venue-address' + count
-  const venueAddressInput = document.createElement('input')
-  venueAddressInput.classList.add('mdc-text-field__input', 'border-bottom--none')
-  if (!venue.address) {
-    venueAddressInput.setAttribute('placeholder', 'Choose Address')
-  } else {
-    venueAddressInput.setAttribute('value', venue.address)
-  }
-
-  venueAddressInput.disabled = true
-
-  venueAddress.appendChild(venueAddressInput)
-
-  venueLi.appendChild(venueDesc)
-  venueLi.appendChild(addLocationFab)
-  venueLi.appendChild(venueLocation)
-  venueLi.appendChild(venueAddress)
-  const div = document.createElement('div')
-
-  div.appendChild(venueLi)
-  venueList.appendChild(div)
-}
-
-function updateAttachmentCont() {
-  const div = document.createElement('div')
-  div.id = 'update--attachment-cont'
-  div.className = 'attachment--cont-update activity--detail--section'
-  return div.outerHTML
-}
-
-
-function fetchAssigneeData(db, record, target) {
-  const usersStore = db
-    .transaction('users')
-    .objectStore('users')
-  record.assignees.forEach((mobileNumber) => {
-    console.log(record)
-    usersStore.openCursor(mobileNumber).onsuccess = function(e) {
-      const cursor = e.target.result
-      console.log(cursor)
-      assigneeListUI(cursor, target)
-
-    }
-  })
-}
-
-function assigneeListUI(userRecord, target, inputField) {
-  // if(document.querySelector(`[data-phoneNum="${userRecord.primaryKey}"]`)) return
-
-  const assigneeLi = document.createElement('li')
-  if (target === 'assignee--list') {
-    assigneeLi.dataset.assignee = userRecord.primaryKey
-  } else {
-    assigneeLi.dataset.name = userRecord.value.displayName
-    assigneeLi.dataset.phoneNum = userRecord.primaryKey
-  }
-
-  assigneeLi.classList.add('mdc-list-item', 'assignee-li')
-
-  const photoGraphic = document.createElement('img')
-  photoGraphic.classList.add('mdc-list-item__graphic')
-
-  if (!userRecord.value.photoURL) {
-    photoGraphic.src = './img/empty-user.jpg'
-  } else {
-    photoGraphic.src = userRecord.value.photoURL
-  }
-
-  const assigneeListText = document.createElement('span')
-  assigneeListText.classList.add('mdc-list-item__text')
-  assigneeListText.textContent = userRecord.value.displayName
-
-  const assigneeListTextSecondary = document.createElement('span')
-  assigneeListTextSecondary.classList.add('mdc-list-item__secondary-text')
-  assigneeListTextSecondary.textContent = userRecord.value.mobile
-  assigneeListText.appendChild(assigneeListTextSecondary)
-
-  assigneeLi.appendChild(photoGraphic)
-  assigneeLi.appendChild(assigneeListText)
-  if (target !== 'assignee--list') {
-    assigneeLi.onclick = function(e) {
-      getInputText(inputField)['root_'].classList.add('mdc-text-field--focused')
-      getInputText(inputField)['label_']['root_'].textContent = this.dataset.name || 'Contact'
-      getInputText(inputField).value = this.dataset.phoneNum
-    }
-  }
-  console.log(target)
-  document.getElementById(target).appendChild(assigneeLi)
-}
-
-function locationUI(userRecord, target, inputFields) {
-  if (document.querySelector(`[data-location="${userRecord.value.location}"]`)) return
-
-  console.log(target)
-  const div = document.createElement('div')
-  div.style.position = 'relative'
-
-  div.dataset.location = userRecord.value.location
-  div.dataset.address = userRecord.value.address
-  div.dataset.desc = userRecord.value.venueDescriptor
-  div.dataset.lat = userRecord.value.geopoint['_latitude']
-  div.dataset.lon = userRecord.value.geopoint['_longitude']
-
-  div.id = userRecord.value.location.replace(/\s/g, '')
-
-  const Li = document.createElement('li')
-
-  Li.classList.add('mdc-list-item', 'location-li')
-
-  const locationListText = document.createElement('span')
-  locationListText.classList.add('mdc-list-item__text')
-  locationListText.textContent = userRecord.value.location
-
-  const locationListTextSecondary = document.createElement('span')
-  locationListTextSecondary.classList.add('mdc-list-item__secondary-text')
-  locationListTextSecondary.textContent = userRecord.value.address
-  locationListText.appendChild(locationListTextSecondary)
-
-  Li.appendChild(locationListText)
-  div.appendChild(Li)
-
-  document.getElementById(target).appendChild(div)
-
-  if (!document.getElementById(userRecord.value.location.replace(/\s/g, ''))) return
-
-  document.getElementById(userRecord.value.location.replace(/\s/g, '')).addEventListener('click', function() {
-    getInputText(inputFields.main).value = this.dataset.location
-
-    document.getElementById(inputFields.main).dataset.location = this.dataset.location
-    document.getElementById(inputFields.main).dataset.address = this.dataset.address
-    document.getElementById(inputFields.main).dataset.inputlat = this.dataset.lat
-    document.getElementById(inputFields.main).dataset.inputlon = this.dataset.lon
-    document.getElementById(inputFields.main).dataset.descrip = this.dataset.desc
-  })
-}
-
-function renderRemoveIcons(record, mobileNumber) {
-  console.log('run')
-  const removeIcon = document.createElement('span')
-  removeIcon.classList.add('mdc-list-item__meta', 'material-icons')
-  removeIcon.textContent = 'cancel'
-
-  removeIcon.classList.add('remove')
-  const activityId = record.activityId
-
-  removeIcon.onclick = function(e) {
-    if (record.remove === 'hidden') {
-      document.querySelector(`[data-assignee="${mobileNumber}"]`).remove()
-      return
-    }
-    const phoneNumber = e.target.parentNode.dataset.assignee
-    const reqBody = {
-      'activityId': activityId,
-      'remove': phoneNumber
-    }
-    console.log(reqBody)
-    requestCreator('removeAssignee', reqBody)
-  }
-  if (mobileNumber !== firebase.auth().currentUser.phoneNumber) {
-    document.querySelector(`[data-assignee="${mobileNumber}"]`).appendChild(removeIcon)
-  }
-}
-
-function renderShareIcon(record) {
-  if (!record.canEdit) {
-    return document.createElement('span')
-  }
-
-  const IconParent = document.createElement('button')
-  IconParent.classList.add('add--assignee-icon', 'mdc-fab')
-  IconParent.id = 'share-btn'
-  const icon = document.createElement('i')
-  icon.classList.add('material-icons', 'mdc-fab__icon')
-  icon.textContent = 'person_add'
-  IconParent.appendChild(icon)
-
-  // document.getElementById('share--icon-container').innerHTML = IconParent.outerHTML
-
-  return IconParent
-}
-
-function renderShareScreen(evt, record, key) {
-  renderShareScreenUI()
-
-  inputSelect({
-    name: 'users',
-    indexone: 'users',
-    indextwo: 'displayName',
-    indexThree: 'count'
-  }, 'contacts--container', {
-    main: 'contact-text-field'
-  }, record)
-
-  initializeDialog(evt, 'contact-text-field', {
-    actionInput: key,
-    id: record.activityId
-  })
-}
-
-
-function initializeDialogTemplateName(evt, input, params) {
-  getInputText(input).value = ''
-  console.log(params)
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#children-name'))
-
-
-  dialog.listen('MDCDialog:accept', function() {
-    const name = getInputText(input)['root_'].dataset.name
-
-    if (!name) {
-      getInputText(params.actionInput.replace(/\s/g, '')).value = ''
-    } else {
-      getInputText(params.actionInput.replace(/\s/g, '')).value = name
-    }
-    getInputText(params.actionInput.replace(/\s/g, ''))['root_'].style.height = '40px'
-    getInputText(params.actionInput.replace(/\s/g, ''))['root_'].style.marginTop = '0px'
-
-    document.getElementById('children-name').remove()
-  })
-
-  dialog.listen('MDCDialog:cancel', function() {
-    document.getElementById('children-name').remove()
-  })
-
-  dialog.lastFocusedTarget = evt.target
-  dialog.show()
-}
-
-function childrenNames(cursor, target, input) {
-  console.log(cursor)
-
-  const li = document.createElement('li')
-  li.dataset.name = cursor.value.attachment.Name.value
-  li.classList.add('mdc-list-item', 'combo-li')
-
-  const liText = document.createElement('span')
-  liText.classList.add('mdc-list-item__text')
-  liText.textContent = cursor.value.attachment.Name.value
-
-  console.log(target)
-  li.appendChild(liText)
-
-  document.getElementById(target).appendChild(li)
-
-  dataElement('name', cursor.value.attachment.Name.value).addEventListener('click', function() {
-    getInputText(input).value = ''
-    getInputText(input)['root_'].dataset.name = this.dataset.name
-    // getInputText(input)['root_'].dataset.template = this.dataset.template
-    getInputText(input).value = this.dataset.name
-
-    // getInputText(input)['root_'].children[2].textContent = this.dataset.template
-  })
-}
-
-function renderLocationScreen(evt, record, primaryKey, secondarKey) {
-  renderLocationScreenUI()
-
-  inputSelect({
-    name: 'map',
-    indexone: 'location',
-    indextwo: 'address',
-    indexThree: 'count'
-  }, 'location--container', {
-    main: 'location-text-field'
-  }, record)
-
-  initializeDialogLocation(evt, 'location-text-field', {
-    actionInput: {
-      primary: primaryKey,
-      secondary: secondarKey
-    },
-    id: record.activityId
-  })
-}
-
-function renderOfficeTemplateScreen(evt) {
-  renderOfficeTemplateScreenUI()
-
-  inputSelect({
-    name: 'subscriptions',
-    indexone: 'office',
-    indextwo: 'template'
-  }, 'officeTemplate--container', {
-    main: 'officeTemplate--text-field'
-  })
-
-  initializeOfficeTemplateDialog(evt, 'officeTemplate--text-field')
-}
-
-function outlinedTextField(labelText, id) {
-  const inputField = document.createElement('div')
-  inputField.className = 'mdc-text-field text-field mdc-text-field--outlined mdc-text-field--with-leading-icon mdc-text-field--upgraded'
-  inputField.id = id
-  const icon = document.createElement('i')
-  icon.className = 'material-icons mdc-text-field__icon'
-  icon.textContent = 'account_circle'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input'
-  input.type = 'text'
-  // input.id= id
-
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
-  // label.for  = id
-  label.textContent = labelText
-  label.id = 'label--description'
-
-  const notched = document.createElement('div')
-  notched.className = 'mdc-notched-outline'
-
-  const svg = document.createElement('svg')
-
-  const path = document.createElement('path')
-  path.className = 'mdc-notched-outline__path'
-
-  svg.appendChild(path)
-  notched.appendChild(svg)
-
-  const notchedIdle = document.createElement('div')
-  notchedIdle.className = 'mdc-notched-outline__idle'
-
-  inputField.appendChild(icon)
-  inputField.appendChild(input)
-  inputField.appendChild(label)
-  inputField.appendChild(notched)
-  inputField.appendChild(notchedIdle)
-  return inputField.outerHTML
-}
-
-
-function renderLocationScreenUI() {
-  const aside = document.createElement('aside')
-
-  aside.id = 'location-select-dialog'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
-
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-
-  const dialogHeader = document.createElement('header')
-  dialogHeader.className = 'mdc-dialog__header'
-
-  dialogHeader.innerHTML = outlinedTextField('Select Location', 'location-text-field')
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__body--scrollable'
-
-  const ul = document.createElement('ul')
-  ul.id = 'location--container'
-  ul.className = 'mdc-list topToBottom'
-
-  section.appendChild(ul)
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
-
-  const decline = document.createElement('button')
-  decline.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
-  decline.type = 'button'
-  decline.textContent = 'Cancel'
-
-  const accept = document.createElement('button')
-  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
-  accept.type = 'button'
-  accept.textContent = 'Select'
-
-  footer.appendChild(decline)
-  footer.appendChild(accept)
-
-  dialogSurface.appendChild(dialogHeader)
-  dialogSurface.appendChild(section)
-  dialogSurface.appendChild(footer)
-
-  aside.appendChild(dialogSurface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
-}
-
-function renderOfficeTemplateScreenUI() {
-  const aside = document.createElement('aside')
-
-  aside.id = 'officeTemplate-select-dialog'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
-
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-
-  const dialogHeader = document.createElement('header')
-  dialogHeader.className = 'mdc-dialog__header'
-
-  dialogHeader.innerHTML = outlinedTextField('Select Office & Template', 'officeTemplate--text-field')
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__body--scrollable'
-
-  const ul = document.createElement('ul')
-  ul.id = 'officeTemplate--container'
-  ul.className = 'mdc-list'
-
-  section.appendChild(ul)
-
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
-
-  const decline = document.createElement('button')
-  decline.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
-  decline.type = 'button'
-  decline.textContent = 'Cancel'
-
-  const accept = document.createElement('button')
-  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept'
-  accept.type = 'button'
-  accept.textContent = 'Select'
-  accept.id = 'accept-office-template-selector'
-  footer.appendChild(decline)
-  footer.appendChild(accept)
-
-  dialogSurface.appendChild(dialogHeader)
-  dialogSurface.appendChild(section)
-  dialogSurface.appendChild(footer)
-
-  aside.appendChild(dialogSurface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
-}
-
-function initializeDialog(evt, input, params) {
-  console.log(params)
-  getInputText(input).value = ''
-
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#change-number-dialog'))
-  dialog.listen('MDCDialog:accept', function() {
-    const number = []
-    number.push(getInputText(input).value)
-    if (params.actionInput) {
-
-      if (!getInputText(input).value) {
-        getInputText(params.actionInput).value = ''
-      } else {
-
-        getInputText(params.actionInput).value = number[0]
-      }
-      getInputText(params.actionInput)['root_'].style.height = '40px'
-      getInputText(params.actionInput)['root_'].style.marginTop = '0px'
-      document.getElementById('change-number-dialog').remove()
-
-      return
-    }
-
-    addContact(number, params.id);
-
-    // const removeClass = document.querySelectorAll('.remove')
-    // for (let index = 0; index < removeClass.length; index++) {
-    //   const icon = removeClass[index];
-    //   icon.classList.add('no-click')
-    //
-    // }
-
-    document.getElementById('change-number-dialog').remove()
-    return;
-
-  })
-
-  dialog.listen('MDCDialog:cancel', function() {
-    document.getElementById('change-number-dialog').remove()
-  })
-
-  dialog.lastFocusedTarget = evt.target
-  dialog.show()
-}
-
-function initializeDialogLocation(evt, input, params) {
-  console.log(params)
-  console.log(input)
-  getInputText(input).value = ''
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#location-select-dialog'))
-  dialog.listen('MDCDialog:accept', function() {
-
-
-
-    const location = getInputText(input)['root_'].dataset.location
-    const address = getInputText(input)['root_'].dataset.address
-    const lat = getInputText(input)['root_'].dataset.inputlat
-    const lon = getInputText(input)['root_'].dataset.inputlon
-
-    if (params.actionInput) {
-      getInputText(params.actionInput.primary).value = location || ''
-      getInputText(params.actionInput.secondary).value = address || ''
-
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.location = location || ''
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.address = address || ''
-
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlat = lat || ''
-      getInputText(params.actionInput.primary)['root_'].parentNode.dataset.inputlon = lon || ''
-      document.querySelector('.pac-container').remove()
-      document.getElementById('location-select-dialog').remove()
-    }
-  })
-
-  dialog.listen('MDCDialog:cancel', function() {
-    document.querySelector('.pac-container').remove()
-
-    document.getElementById('location-select-dialog').remove()
-  })
-
-  dialog.lastFocusedTarget = evt.target
-  dialog.show()
-}
-
-function initializeOfficeTemplateDialog(evt, input) {
-  getInputText(input).value = ''
-
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#officeTemplate-select-dialog'))
-
-  console.log(dialog)
-  dialog.listen('MDCDialog:accept', function() {
-
-    const office = getInputText(input)['root_'].dataset.office
-    const template = getInputText(input)['root_'].dataset.template
-
-    if (office && template) {
-
-      getSelectedSubscriptionData(office, template)
-      document.getElementById('officeTemplate-select-dialog').remove()
-    }
-  })
-
-  dialog.listen('MDCDialog:cancel', function() {
-    document.getElementById('officeTemplate-select-dialog').remove()
-    listView(firebase.auth().currentUser.uid)
-  })
-
-  dialog.lastFocusedTarget = evt.target
-  dialog.show()
-}
-
-function updateSelectorObjectStore(dataset, input, objectStoreName) {
-  console.log(dataset)
-  const dbName = firebase.auth().currentUser.uid
-
-  const inputValue = getInputText(input)['root_'].dataset.number
-  const req = indexedDB.open(dbName)
-
-  return new Promise(function(resolve, reject) {
-    req.onsuccess = function() {
-      const db = req.result
-      const storeTx = db.transaction([objectStoreName], 'readwrite')
-
-      const objectStore = storeTx.objectStore(objectStoreName)
-
-      objectStore.get(inputValue).onsuccess = function(event) {
-        const record = event.target.result
-        if (!record) {
-          resolve({
-            value: inputValue,
-            activityId: dataset.id
-          })
-          return
-        }
-        record.count = record.count + 1
-        objectStore.put(record)
-      }
-      storeTx.oncomplete = function() {
-        resolve({
-          value: inputValue,
-          activityId: dataset.id
-        })
-      }
-      storeTx.onerror = function(event) {
-        reject(event.error)
-      }
-    }
-  })
-}
-
-function errorUpdatingSelectorObjectStore(error) {
-  console.log(error)
-}
-
-function addContact(number, activityId) {
-  if (!activityId) {
-    console.log(number)
-    const assigneeObject = {
-      assignees: number,
-      canEdit: true,
-      remove: 'hidden'
-    }
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function() {
-      const db = req.result
-      fetchAssigneeData(db, assigneeObject, 'assignee--list')
-    }
-    return
-  }
-
-  const expression = /^\+[1-9]\d{5,14}$/
-  if (!expression.test(number)) return
-  console.log(number)
-  const reqBody = {
-    'activityId': activityId,
-    'share': number
-  }
-  requestCreator('share', reqBody)
-
-}
-
-function dataElement(target, key) {
-  return document.querySelector(`[data-${target}="${key}"]`)
-}
-
-function createActivity(evt) {
-
-  history.pushState(['createActivity'], null, null)
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function() {
-    const db = req.result;
-    const rootTx = db.transaction('root', 'readwrite')
-    const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function(event) {
-      const record = event.target.result
-      record.view = 'create'
-      rootObjectStore.put(record)
-    }
-
-    rootTx.oncomplete = function() {
-      const detail = document.createElement('div')
-      detail.className = 'mdc-top-app-bar--fixed-adjust'
-      detail.id = 'create-activity--container'
-      createActivityDetailHeader({
-        canEdit: true
-      }, 'create')
-
-      const activityMain = document.createElement('div')
-      activityMain.className = 'activity-main'
-      activityMain.innerHTML = sectionDiv('Office') + sectionDiv('Template') + createScheduleContainer() +
-        createVenueContainer() + renderAssigneeList({
-          canEdit: true
-        })
-
-      detail.innerHTML = activityMain.outerHTML
-
-      document.getElementById('app-current-panel').innerHTML = detail.outerHTML
-
-      document.getElementById('back-list').addEventListener('click', function() {
-        // listView(dbName)
-        handleViewFromHistory()
-      })
-
-      initShareButton()
-      renderOfficeTemplateScreen(evt)
-      sendCurrentViewNameToAndroid('create')
-    }
-  }
-}
-
-function officeTemplate() {
-  const cont = document.createElement('div')
-  cont.id = 'select-officeTemplate--container'
-  cont.className = 'start-transition'
-
-  const label = document.createElement('label')
-  label.textContent = 'Select Office'
-  label.className = 'mdc-typography--headline6 select-office-span'
-
-  const button = document.createElement('button')
-  button.className = 'mdc-fab add--officeTemplate-icon'
-  button.id = 'officeTemplateSelect'
-  const buttonIcon = document.createElement('span')
-  buttonIcon.className = 'mdc-fab__icon material-icons'
-  buttonIcon.textContent = 'add'
-
-  button.appendChild(buttonIcon)
-  cont.appendChild(label)
-  cont.appendChild(button)
-
-  return cont.outerHTML
-}
-
-function officeTemplateCombo(cursor, target, input) {
-  console.log(input)
-  if (document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`)) return
-
-  const li = document.createElement('li')
-  li.dataset.office = cursor.value.office
-  li.dataset.template = cursor.value.template
-
-  li.classList.add('mdc-list-item', 'combo-li')
-
-  const liText = document.createElement('span')
-  liText.classList.add('mdc-list-item__text')
-  liText.textContent = cursor.value.office
-
-  const liTextSecondary = document.createElement('span')
-  liTextSecondary.classList.add('mdc-list-item__secondary-text')
-  liTextSecondary.textContent = cursor.value.template
-
-  liText.appendChild(liTextSecondary)
-
-  li.appendChild(liText)
-  document.getElementById(target).appendChild(li)
-  document.querySelector(`[data-office="${cursor.value.office}"][data-template="${cursor.value.template}"]`).addEventListener('click', function() {
-    document.getElementById('accept-office-template-selector').disabled = false;
-    getInputText(input).value = ''
-    getInputText(input)['root_'].dataset.office = this.dataset.office
-    getInputText(input)['root_'].dataset.template = this.dataset.template
-    getInputText(input).value = this.dataset.office
-
-    getInputText(input)['root_'].children[2].textContent = this.dataset.template
-  })
-}
-
-function createVenueContainer() {
-  const venueCont = document.createElement('div')
-  venueCont.className = 'activity--venue-container activity--detail--section'
-  return venueCont.outerHTML
-}
-
-function createScheduleContainer() {
-  const scheduleCont = document.createElement('div')
-  scheduleCont.className = 'activity--schedule-container activity--detail--section'
-  const spanDiv = document.createElement('div')
-  spanDiv.className = 'schedule--text'
-
-  const scheduleList = document.createElement('ul')
-  scheduleList.className = 'mdc-list'
-  scheduleList.id = 'schedule--list'
-
-  scheduleCont.appendChild(spanDiv)
-
-  return scheduleCont.outerHTML
-}
-
-function createInput(key, type, classtype, value) {
-  const mainTextField = document.createElement('div')
-  mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype} attachment--text-field`
-
-  mainTextField.dataset.key = key
-  mainTextField.dataset.type = type
-  mainTextField.id = key.replace(/\s/g, '')
-  const mainInput = document.createElement('input')
-  mainInput.className = 'mdc-text-field__input'
-
-  if (type === 'string' && key !== "Name") {
-    mainTextField.classList.add('attachment--string-input-active')
-  }
-
-  if (type === 'HH:MM') {
-    mainInput.type = 'time'
-  } else {
-    mainInput.type = 'text'
-  }
-
-
-  if (value) {
-    mainInput.disabled = value
-    mainInput.style.borderBottom = 'none'
-    mainInput.placeholder = 'select ' + key
-  } else {
-    mainInput.placeholder = key
-  }
-
-  if (type && key === 'displayName') {
-    mainInput.placeholder = 'Your Name'
-  }
-  if (type && key === 'email') {
-    mainInput.placeholder = 'Your Email'
-  }
-
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  mainTextField.appendChild(mainInput)
-  mainTextField.appendChild(ripple)
-  return mainTextField
-}
-
-function getSelectedSubscriptionData(office, template) {
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-
-  req.onsuccess = function() {
-    const db = req.result
-    const subscriptionObjectStore = db.transaction('subscriptions').objectStore('subscriptions').index('officeTemplate')
-    const range = IDBKeyRange.only([office, template])
-    subscriptionObjectStore.get(range).onsuccess = function(event) {
-      const record = event.target.result
-      console.log(record)
-
-      document.querySelector('.activity--Office').textContent = record.office
-      document.querySelector('.activity--Template').textContent = record.template
-
-      record.schedule.forEach(function(name) {
-        console.log(name)
-        showScheduleUI({
-          name: name,
-          startTime: '',
-          endTime: ''
-        }, document.querySelector('.activity--schedule-container'))
-      });
-
-
-      let venueCont = 0
-      record.venue.forEach(function(venueDescriptor) {
-        venueCont++
-        const locationsearch = document.createElement('ul')
-        locationsearch.id = 'location--search' + venueCont
-        locationsearch.className = 'mdc-list'
-
-        showVenueUI({
-          venueDescriptor: venueDescriptor,
-          address: '',
-          geopoint: {
-            '_latitude': '',
-            '_longitude': ''
-          }
-        }, venueCont, document.querySelector('.activity--venue-container'), false)
-
-        document.querySelector('.map-select' + venueCont).parentNode.appendChild(locationsearch)
-      });
-
-      const mapSelectAction = document.querySelectorAll('.map-select-type-action')
-      for (let index = 0; index < mapSelectAction.length; index++) {
-        const element = mapSelectAction[index];
-        element.addEventListener('click', function(evt) {
-          console.log(evt)
-          renderLocationScreen(evt, record, evt.target.parentElement.nextSibling.id, evt.target.parentElement.nextSibling.nextSibling.id)
-        })
-      }
-      if (!record.attachment) return
-      createAttachmentContainer(record.attachment, 'create-activity--container', true, false, office, template)
-    }
-  }
-}
-
-
-
-
-function setFilePath(str) {
-  const imageFieldInput = document.querySelector('.image-preview--attachment').children[0]
-  const img = document.createElement('img')
-  img.src = `data:image/jpeg;base64,${str}`
-  img.className = 'profile-container--main'
-  getInputText(imageFieldInput.id).value = `data:image/jpeg;base64,${str}`
-  imageFieldInput.style.opacity = '0'
-  document.querySelector('.image-preview--attachment').appendChild(img)
-}
-
-function readCameraFile() {
-  FetchCameraForAttachment.startCamera()
-}
-
-function reinitCount(db, id) {
-
-  const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-  activityCount.get(id).onsuccess = function(event) {
-    const record = event.target.result
-    record.count = 0
-    activityCount.put(record)
-  }
-}
-
-
-
-function createSelectMenu(key) {
   const div = document.createElement('div')
   div.className = 'mdc-select data--value-list'
   div.style.height = '32%;'
@@ -3313,118 +1760,4 @@ function createSelectMenu(key) {
   div.appendChild(select)
   div.appendChild(ripple)
   return div
-}
-
-function createUpdateReqBody(event, reqType) {
-
-  let allow = true
-  const activityId = event.target.dataset.id
-  const schedule = []
-  const venue = []
-  const share = []
-
-  const allSchedule = document.querySelectorAll('.schedule--list');
-  for (let index = 0; index < allSchedule.length; index++) {
-    const element = allSchedule[index];
-
-    const scheduleBody = {}
-    scheduleBody.name = element.children[0].dataset.value
-    const startTime = `${element.querySelector('.startDate').children[0].value} ${element.querySelector('.startTime').children[0].value}`
-    const endTime = `${element.querySelector('.endDate').children[0].value} ${element.querySelector('.endTime').children[0].value}`
-
-    console.log(startTime)
-
-    if (startTime == " " && endTime == " ") {
-
-      allow = true
-    }
-
-    if (startTime !== " " && endTime == " ") {
-      snacks('Add a valid End Time')
-      allow = false
-    }
-
-    if (endTime !== " " && startTime == " ") {
-      snacks('Add a valid Start Time')
-      allow = false
-    }
-
-    if (startTime && endTime && moment(endTime).valueOf() < moment(startTime).valueOf()) {
-      snacks('End time cannot be before Start time')
-      allow = false
-    }
-
-    scheduleBody.startTime = moment(startTime).valueOf() || ''
-    scheduleBody.endTime = moment(endTime).valueOf() || ''
-    schedule.push(scheduleBody)
-
-
-  }
-
-  const allVenues = document.querySelectorAll('.map-select-type');
-
-  for (let index = 0; index < allVenues.length; index++) {
-    const li = allVenues[index];
-
-    geopoint = {}
-    const venueBody = {}
-
-    venueBody.venueDescriptor = li.dataset.descrip
-    venueBody.location = li.dataset.location === 'undefined' ? '' : li.dataset.location
-    venueBody.address = li.dataset.address || ''
-    if (!parseInt(li.dataset.inputlat) || !parseInt(li.dataset.inputlon)) {
-      geopoint = ''
-    } else {
-      geopoint.latitude = parseInt(li.dataset.inputlat)
-      geopoint.longitude = parseInt(li.dataset.inputlon)
-    }
-
-    venueBody['geopoint'] = geopoint
-    venue.push(venueBody)
-  }
-
-  const attachments = {}
-  const allAttachments = document.querySelectorAll('.attachment');
-  for (let index = 0; index < allAttachments.length; index++) {
-    const field = allAttachments[index]
-    attachments[field.dataset.key] = {
-      value: field.id === 'weekday' ? field.dataset.value : getInputText(field.id).value,
-      type: field.dataset.type
-    }
-
-  }
-
-  if (!allow) return
-
-  if (reqType === 'edit') {
-    const body = {
-      'activityId': activityId,
-      'schedule': schedule,
-      'venue': venue,
-      'attachment': attachments
-    }
-    requestCreator('update', body)
-    return
-  }
-
-  if (reqType === 'create') {
-    const allShare = document.querySelectorAll('.assignee-li');
-    for (let index = 0; index < allShare.length; index++) {
-      share.push(allShare[index].dataset.assignee)
-
-    }
-
-    const body = {
-      'office': document.querySelector('.activity--Office').textContent,
-      'template': document.querySelector('.activity--Template').textContent,
-      'share': share,
-      'schedule': schedule,
-      'venue': venue,
-      'attachment': attachments
-    }
-
-    console.log(body)
-    requestCreator('create', body)
-    return
-  }
 }

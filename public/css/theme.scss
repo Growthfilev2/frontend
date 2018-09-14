@@ -1,0 +1,146 @@
+:root {
+    --mdc-theme-primary: #0399f4 !important;
+    --mdc-theme-secondary: #ff9800 !important;
+    --mdc-theme-background: #ffffff !important;
+    --mdc-theme-on-primary: #ffffff !important;
+    --mdc-theme-on-secondary: #ffffff !important;
+}
+
+$mdc-theme-primary: #0399f4 !important;
+$mdc-theme-secondary: #ff9800 !important;
+$mdc-theme-background:#ffffff !important;
+$mdc-theme-on-primary: #ffffff !important;
+$mdc-theme-on-secondary:#ffffff !important;
+.mdc-top-app-bar .material-icons {
+    color: rgba(0, 0, 0, .54);
+}
+
+.mdc-line-ripple {
+    background-color: #44a3eb !important
+}
+
+@media (max-width:480px) {
+    #login-container .firebaseui-container {
+        box-shadow: inset;
+        width: 90%;
+    }
+}
+@media (max-width:320px) {
+    .comment-field {
+        padding: 15px !important;
+    }
+    #send-chat--input {
+        top: 1rem !important;
+        width: 35px !important;
+        height: 35px !important;
+        
+    }
+}
+
+/** Labels **/
+
+@mixin mdc-floating-label-ink-color($color) {
+    color: $color;
+}
+
+.mdc-floating-label.mdc-floating-label--float-above {
+    @include mdc-floating-label-ink-color($mdc-theme-secondary);
+}
+.detail--static-text {
+    color:$mdc-theme-secondary;
+}
+
+/** background **/
+
+.mdc-theme--background {
+    background-color: #eeeeee
+}
+
+/** snackbar **/
+
+.mdc-snackbar {
+    padding: 5px 10px 5px 10px;
+}
+
+/** menu **/
+
+:not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::before,
+:not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::after {
+    background-color: $mdc-theme-on-primary;
+}
+
+/** list **/
+
+.mdc-list-item__meta {
+   
+    .mdc-list-item__secondary-text {
+        margin-left:11px;
+    }    
+}
+
+.count-active {
+    .count  {
+        display: inline-block;
+    }
+    .mdc-primary__custom-text {
+        font-weight: 500
+    }
+    .mdc-list-item__meta {
+        margin-top: 0px;
+        .mdc-meta__custom-text,
+        .mdc-list-item__secondary-text {
+            float: right;
+        }
+
+       
+    }
+
+}
+
+/** count **/
+
+.count {
+    display: none;
+    background-color: $mdc-theme-secondary;
+    border-radius: 12px;
+    padding: 0px 5px 0px 5px;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    height: 19px;
+    line-height: 20px;
+    min-width: 9px;
+    vertical-align: top;
+    margin-right: 0;
+    vertical-align: top;
+    margin-left: 56px;
+
+}
+
+/** top app bar **/
+.mdc-top-app-bar{
+    background-color: $mdc-theme-secondary
+    color:$mdc-theme-on-secondary;
+    .material-icons {
+        color: $mdc-theme-on-primary;
+    }
+}
+
+
+// animation
+
+.venue--address {
+    animation: expandList 300ms $mdc-animation-deceleration-curve-timing-function;
+}
+
+@mixin mdc-fab-icon-size($width,$height){
+    width:$width;
+    height: $height;
+
+}
+
+.mdc-fab-icon {
+    @include mdc-fab-icon-size('30px','30px')
+}
+

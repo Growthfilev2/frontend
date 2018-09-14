@@ -1,10 +1,11 @@
 (function () {
 
-    const CACHE_NAME = 'V32';
+    const CACHE_NAME = 'V40';
     const urlsToCache = [
       'external/firebase-app.js',
       'external/firebasejs/5.2.0/firebase-auth.js',
       'external/firebasejs/5.2.0/firebase-storage.js',
+      'external/material-components-web.js',
         'js/init.js',
         'js/panel.js',
         'css/theme.css',
@@ -12,7 +13,6 @@
         'css/material-components-web.css',
         'js/conversation.js',
         'js/services.js',
-        'js/material-components-web.js',
         '//cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js',
         '//fonts.googleapis.com/css?family=Roboto:300,400,500',
         '//fonts.googleapis.com/icon?family=Material+Icons',

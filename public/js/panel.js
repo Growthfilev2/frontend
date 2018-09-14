@@ -1,15 +1,8 @@
 function listView(dbName) {
 
-  if (history.state) {
-    console.log("replacing listview state")
 
-    history.replaceState(['listView', dbName], null, null)
-  } else {
-    console.log("pushing listview state")
-    history.pushState(['listView', dbName], null, null)
-  }
+  history.pushState(['listView', dbName], null, null)
 
-  creatListHeader()
   listPanel()
   document.body.style.backgroundColor = 'white'
   if (!dbName) {
@@ -27,14 +20,19 @@ function listView(dbName) {
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     let hasMultipleOffice = ''
+    let allOffices = ''
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.view = 'list'
-      hasMultipleOffice = record.hasMultipleOffice
+      hasMultipleOffice = record.offices.hasMultipleOffice
+      allOffices = record.offices.allOffices
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
-
-      fetchDataForActivityList(db, hasMultipleOffice)
+        if(!document.querySelector('.mdc-drawer--temporary')){
+          initMenu(db,{multipleOffice:hasMultipleOffice,offices:allOffices})
+        }
+      creatListHeader()
+      fetchDataForActivityList(db, {multipleOffice:hasMultipleOffice,offices:allOffices})
 
     }
   }
@@ -42,25 +40,26 @@ function listView(dbName) {
 }
 }
 
-function fetchDataForActivityList(db, uniqueOffice) {
+function fetchDataForActivityList(db, officeRecord) {
   console.log("fetch for list")
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
 
-  const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
-  const subscriptionCount = subscriptionObjectStore.count()
-
   const activityVisibleIndex = activityObjectStore.index('timestamp')
+
   activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
     if (!cursor) {
-        appendActivityListToDom(subscriptionCount,activityDom)
-        return
+      setTimeout(function(){
+        appendActivityListToDom(activityDom)
+        createActivityIcon(db)
+      },500)
+      return
     }
 
     if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value, uniqueOffice).then(function (li) {
+      createActivityList(db, cursor.value, officeRecord).then(function (li) {
         activityDom += li
       })
     }
@@ -69,119 +68,7 @@ function fetchDataForActivityList(db, uniqueOffice) {
   }
 }
 
-function appendActivityListToDom(subscriptionCount,activityDom){
-  document.getElementById('activity--list').innerHTML = activityDom
-  subscriptionCount.onsuccess = function(){
-   if(!subscriptionCount.result) {
-     const fab = document.createElement('button')
-     fab.className = 'mdc-fab create-activity'
-     fab.setAttribute('aria-label', 'Add')
-     const span = document.createElement('span')
-     span.className = 'mdc-fab_icon material-icons'
-     span.textContent = 'add'
-     fab.appendChild(span)
-     document.getElementById('activity--list').appendChild(fab)
-     document.querySelector('.create-activity').addEventListener('click', function(evt){
-       selectorUI(evt,{
-         record:'',
-         store:'subscriptions',
-       })
-     })
-   }
- }
-}
-
-function listPanel() {
-  if (document.getElementById('activity-list-main')) return
-
-  const listCard = document.createElement('div')
-  listCard.className = 'mdc-card panel-card mdc-top-app-bar--fixed-adjust'
-  listCard.id = 'activity-list-main'
-  const listUl = document.createElement('ul')
-  listUl.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
-  listUl.id = 'activity--list'
-
-  listCard.appendChild(listUl)
-
-  document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
-}
-
-function creatListHeader() {
-  const parentIconDiv = document.createElement('div')
-  parentIconDiv.className = 'drawer--icons'
-
-  const menuIcon = document.createElement('span')
-  menuIcon.id = 'menu--panel'
-  const icon = document.createElement('i')
-  icon.className = 'material-icons'
-  icon.textContent = 'menu'
-
-  menuIcon.appendChild(icon)
-
-  const hamburger = document.createElement('div')
-  hamburger.className = 'mdc-menu-surface--anchor hamburger--surface'
-  hamburger.id = 'hamburger-menu'
-
-
-  parentIconDiv.appendChild(menuIcon)
-  parentIconDiv.appendChild(hamburger)
-
-  const searchIcon = document.createElement('span')
-  searchIcon.id = 'search--panel'
-  const sicon = document.createElement('i')
-  sicon.className = 'material-icons'
-  sicon.textContent = 'search'
-  searchIcon.appendChild(sicon);
-
-
-  header(parentIconDiv.outerHTML, searchIcon.outerHTML,'list')
-
-}
-
-function hamburgerDrawer(){
-
-  const filter = ['one','two','three','four','five','six','seven']
-
-  const aside = document.createElement('aside')
-  aside.className = 'mdc-drawer mdc-drawer--modal'
-
-  const drawerHeader = document.createElement('div')
-  drawerHeader.className = 'mdc-drawer__header'
-
-  const drawerContent = document.createElement('div')
-  drawerContent.className = 'mdc-drawer__content'
-
-  const nav = document.createElement('nav')
-  nav.className = 'mdc-list'
-
-  filter.forEach(function(type){
-    const tab = document.createElement('a')
-    tab.className = 'mdc-list-item mdc-list-item--activated'
-    tab.href = '#'
-    tab.setAttribute('aria-selected','true')
-    const tabIcon = document.createElement('i')
-    tabIcon.className = 'material-icons mdc-list-item__graphic'
-    tabIcon.setAttribute('aria-hidden','true')
-    tabIcon.textContent = 'inbox'
-    tab.textContent = type
-
-    tab.appendChild(tabIcon)
-    nav.appendChild(tab)
-  })
-
-  drawerContent.appendChild(nav)
-  aside.appendChild(drawerHeader)
-  aside.appendChild(drawerContent)
-
-
-  document.getElementById('hamburger--drawer-parent').innerHTML = aside.outerHTML
-
-  console.log(mdc.drawer.MDCDrawer)
-
-
-}
-
-function createActivityList(db, data, uniqueOffice) {
+function createActivityList(db, data, officeRecord) {
 
   return new Promise(function (resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
@@ -213,9 +100,9 @@ function createActivityList(db, data, uniqueOffice) {
               metaData.lastComment.comment = addendumCursor.value.comment
 
               if (!record) {
-                resolve(activityListUI(data, uniqueOffice, 0, metaData))
+                resolve(activityListUI(data, officeRecord, 0, metaData))
               } else {
-                resolve(activityListUI(data, uniqueOffice, record.count, metaData))
+                resolve(activityListUI(data, officeRecord, record.count, metaData))
               }
             })
           }
@@ -225,11 +112,11 @@ function createActivityList(db, data, uniqueOffice) {
   })
 }
 
-function activityListUI(data, uniqueOffice, count, metaData) {
+function activityListUI(data, officeRecord, count, metaData) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
-  li.setAttribute('onclick', 'conversation(this.dataset.id)')
+  li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
   // mdc.ripple.MDCRipple.attachTo(li)
   const creator = document.createElement('img')
   creator.className = 'mdc-list-item__graphic material-icons'
@@ -255,7 +142,7 @@ function activityListUI(data, uniqueOffice, count, metaData) {
   leftTextContainer.appendChild(activityNameText)
   leftTextContainer.appendChild(lastComment)
 
-  if (uniqueOffice) {
+  if (officeRecord.multipleOffice) {
     const leftTextSecondaryContainer = document.createElement('span')
     leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
     leftTextSecondaryContainer.textContent = data.office
@@ -324,367 +211,422 @@ function activityListUI(data, uniqueOffice, count, metaData) {
   return li.outerHTML
 }
 
+function appendActivityListToDom(activityDom){
+  document.getElementById('activity--list').innerHTML = activityDom
+}
 
-function mapView(dbName) {
-  console.log(dbName)
-  // initialize mdc instance for map drawer
-  const req = window.indexedDB.open(dbName)
-
-  req.onsuccess = function () {
-    const db = req.result
-    const rootTx = db.transaction(['root'], 'readwrite')
-    const rootObjectStore = rootTx.objectStore('root')
-
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      const record = event.target.result
-      record.view = 'map'
-      rootObjectStore.put(record)
-      rootTx.oncomplete = fetchMapData
+function createActivityIcon(db){
+  const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
+  const subscriptionCount = subscriptionObjectStore.count()
+  subscriptionCount.onsuccess = function(){
+    if(subscriptionCount.result) {
+      const fab = document.createElement('button')
+      fab.className = 'mdc-fab create-activity'
+      fab.setAttribute('aria-label', 'Add')
+      const span = document.createElement('span')
+      span.className = 'mdc-fab_icon material-icons'
+      span.textContent = 'add'
+      fab.appendChild(span)
+      document.getElementById('activity--list').appendChild(fab)
+      document.querySelector('.create-activity').addEventListener('click', function(evt){
+        selectorUI(evt,{
+          record:'',
+          store:'subscriptions',
+        })
+      })
     }
   }
 }
 
-function fetchMapData() {
-  createMapPanel()
-  sendCurrentViewNameToAndroid('map')
-  backIconHeader('close-map--drawer')
+function listPanel() {
+  if (document.getElementById('activity-list-main')) return
 
+  const listCard = document.createElement('div')
+  listCard.className = 'mdc-card panel-card mdc-top-app-bar--fixed-adjust'
+  listCard.id = 'activity-list-main'
+  const listUl = document.createElement('ul')
+  listUl.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
+  listUl.id = 'activity--list'
+
+  listCard.appendChild(listUl)
+
+  document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
+}
+
+function creatListHeader() {
+  const parentIconDiv = document.createElement('div')
+  parentIconDiv.className = 'drawer--icons'
+
+  const menuIcon = document.createElement('span')
+  menuIcon.id = 'menu--panel'
+  const icon = document.createElement('i')
+  icon.className = 'material-icons'
+  icon.textContent = 'menu'
+
+  const menuSpan = document.createElement('span')
+  menuSpan.className = 'current--selcted-filter'
+  menuSpan.textContent = 'Recent'
+
+  menuIcon.appendChild(icon)
+  menuIcon.appendChild(menuSpan)
+
+  parentIconDiv.appendChild(menuIcon)
+
+  const searchIcon = document.createElement('span')
+  searchIcon.id = 'search--panel'
+  const sicon = document.createElement('i')
+  sicon.className = 'material-icons'
+  sicon.textContent = 'search'
+  searchIcon.appendChild(sicon);
+
+
+  header(parentIconDiv.outerHTML, searchIcon.outerHTML,'list')
+  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+  // console.log(drawer)
+  document.getElementById('menu--panel').addEventListener('click',function(){
+
+  drawer.open = true
+  })
+
+}
+
+function initMenu(db,officeRecord){
+  console.log(officeRecord)
+    const filters = [{type:'Incoming',icon:'call_made'},{type:'Outgoing',icon:'call_received'},
+    {type:'Urgent',icon:'star_rate'},{type:'Recent',icon:'watch_later'},{type:'Nearby',icon:'near_me'},
+    {type:'Confirmed',icon:'check'},{type:'Pending',icon:'maximize'},{type:'Cancelled',icon:'clear'}]
+
+
+    const aside = document.createElement('aside')
+    aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
+
+    const nav = document.createElement('nav')
+    nav.className = 'mdc-drawer__drawer'
+
+    const header = document.createElement('header')
+    header.className = 'mdc-drawer__header drawer--header'
+
+    const headerContent = document.createElement('div')
+    headerContent.className = 'mdc-drawer__header-content'
+
+    const ImageDiv = document.createElement('div')
+    ImageDiv.className = 'drawer--header-div'
+    ImageDiv.onclick = function(){
+      profileView()
+
+    }
+    const headerIcon = document.createElement('img')
+    headerIcon.className = 'drawer-header-icon'
+    setTimeout(function(){
+
+      headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
+    },2000)
+
+
+    const headerDetails = document.createElement('div')
+    headerDetails.className = 'header--details'
+
+    const name = document.createElement('div')
+    name.className = 'mdc-typography--subtitle'
+    setTimeout(function(){
+      name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
+
+    },2000)
+
+    const officeName = document.createElement('div')
+    officeName.textContent = officeRecord.offices[0]
+    officeName.className = 'mdc-typography--caption'
+
+    const changeOfficeIon = document.createElement('i')
+
+
+    headerDetails.appendChild(name)
+    headerDetails.appendChild(officeName)
+
+    if(officeRecord.hasMultipleOffice){
+      changeOfficeIon.className = 'material-icons'
+      changeOfficeIon.textContent = 'arrow_drop_down'
+      headerDetails.appendChild(changeOfficeIon)
+      changeOfficeIon.onclick = function(){
+        createOfficeSelectionUI(officeRecord.offices)
+      }
+
+    }
+
+    ImageDiv.appendChild(headerIcon)
+    headerContent.appendChild(ImageDiv)
+    headerContent.appendChild(headerDetails)
+    header.appendChild(headerContent)
+
+
+    const navContent = document.createElement('nav')
+
+    navContent.className  = 'mdc-drawer__content mdc-list'
+
+    if(officeRecord.hasMultipleOffice){
+      const all = document.createElement('a')
+      all.className = 'mdc-list-item mdc-list-item--activated'
+      all.href = '#'
+
+      const i = document.createElement('i')
+      i.className = 'material-icons mdc-list-item__graphic drawer--icons'
+      i.setAttribute('aria-hidden', 'true')
+      i.textContent = 'all_inbox'
+      const textSpan = document.createElement('span')
+      textSpan.textContent = 'All offices'
+
+      a.appendChild(i)
+      a.appendChild(textSpan)
+      navContent.appendChild(a)
+    }
+
+    filters.forEach(function(filter){
+
+    const a = document.createElement('a')
+    a.className = 'mdc-list-item mdc-list-item--activated'
+    a.href = '#'
+
+    const i = document.createElement('i')
+    i.className = 'material-icons mdc-list-item__graphic drawer--icons'
+    i.setAttribute('aria-hidden', 'true')
+    i.textContent = filter.icon
+    const textSpan = document.createElement('span')
+    textSpan.textContent = filter.type
+
+    a.appendChild(i)
+    a.appendChild(textSpan)
+    a.onclick = function() {
+      if(filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled'){
+
+      filterActivities(filter.type,db,officeRecord)
+      }
+      if(filter.type === 'Incoming' || filter.type === 'Outgoing'){
+        sortByCreator(filter.type,db,officeRecord)
+      }
+
+      if(filter.type === 'Urgent') {
+        sortByDates(filter.type,db,officeRecord)
+      }
+
+      if(filter.type === 'Nearby') {
+        sortByLocation(filter.type,officeRecord)
+      }
+
+      if(filter.type === 'Recent') {
+        listView(firebase.auth().currentUser.uid)
+      }
+
+      let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+      drawer.open = false
+      document.querySelector('.current--selcted-filter').textContent = filter.type
+
+    }
+
+    navContent.appendChild(a)
+  })
+  nav.appendChild(header)
+    nav.appendChild(navContent)
+    aside.appendChild(nav)
+    document.body.appendChild(aside)
+}
+
+function createOfficeSelectionUI(allOffices){
+  document.getElementById('mdc-drawer__content mdc-list').innerHTML = ''
+  const dbName = firebase.auth().currentUser.uid
+  allOffices.forEach(function(office){
+    const a = document.createElement('a')
+    a.className = 'mdc-list-item mdc-list-item--activated'
+    a.href = '#'
+
+    const textSpan = document.createElement('span')
+    textSpan.textContent = office
+    a.appendChild(textSpan)
+    a.onclick = function(){
+      listView(dbName)
+    }
+    document.getElementById('mdc-drawer__content mdc-list').appendChild(a)
+  })
+
+}
+
+function filterActivities(type,db,hasMultipleOffice){
+  const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
+
+  let activityDom = ''
+  activityStore.openCursor(null,'prev').onsuccess = function(event){
+    const cursor = event.target.result
+    if(!cursor) {
+      appendActivityListToDom(activityDom)
+      createActivityIcon(db)
+      return
+    }
+    if(cursor.value.status === type.toUpperCase() && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      createActivityList(db,cursor.value,hasMultipleOffice).then(function(li){
+
+         activityDom += li
+      })
+    }
+    cursor.continue()
+  }
+}
+
+function sortByCreator(type,db,hasMultipleOffice) {
+  const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
+
+  let activityDom = ''
+  const me = firebase.auth().currentUser.phoneNumber
+  activityStore.openCursor(null,'prev').onsuccess = function(event){
+    const cursor = event.target.result
+    if(!cursor) {
+      appendActivityListToDom(activityDom)
+      createActivityIcon(db)
+      return
+    }
+    if(type === 'Incoming') {
+      if(cursor.value.creator !== me  && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        createActivityList(db,cursor.value,hasMultipleOffice).then(function(li){
+
+          activityDom += li
+        })
+      }
+    }
+    if(type === 'Outgoing') {
+      if(cursor.value.creator === me  && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        createActivityList(db,cursor.value,hasMultipleOffice).then(function(li){
+
+          activityDom += li
+        })
+      }
+    }
+
+    cursor.continue()
+  }
+}
+
+function sortByDates(type,db,hasMultipleOffice){
+  const activityDom = ''
+  const today = moment().format('YYYY-MM-DD')
+  const sortingOrder = {
+    HIGH:[],
+    LOW:[]
+  }
+  const calendar = db.transaction('calendar').objectStore('calendar').index('range')
+  calendar.openCursor().onsuccess = function(event){
+    const cursor = event.target.result
+    if(!cursor) {
+      sortingOrder['HIGH'].sort(function(a,b){
+        return moment(b.start).valueOf() - moment(a.start).valueOf()
+      })
+      sortingOrder['LOW'].sort(function(a,b){
+        return moment(b.end).valueOf() - moment(a.end).valueOf()
+      })
+
+      generateActivitiesByDate(sortingOrder,hasMultipleOffice)
+      return
+    }
+    if(today >= cursor.value.start && today <= cursor.value.end) {
+      sortingOrder['HIGH'].push(cursor.value)
+    }
+    else {
+      sortingOrder['LOW'].push(cursor.value)
+    }
+    cursor.continue()
+  }
+
+}
+
+function generateActivitiesByDate(sortingOrder,hasMultipleOffice){
+  const dbName = firebase.auth().currentUser.uid
+  const req= indexedDB.open(dbName)
+  let activityDom = ''
+  req.onsuccess = function(){
+    const db = req.result
+    const activityObjectStore = db.transaction('activity').objectStore('activity')
+    sortingOrder['HIGH'].forEach(function(record){
+      activityObjectStore.get(record.activityId).onsuccess = function(event){
+        const activity = event.target.result
+        createActivityList(db,activity,hasMultipleOffice).then(function(li){
+
+          activityDom += li
+        })
+      }
+    })
+    sortingOrder['LOW'].forEach(function(record){
+      activityObjectStore.get(record.activityId).onsuccess = function(event){
+        const activity = event.target.result
+        createActivityList(db,activity,hasMultipleOffice).then(function(li){
+          activityDom += li
+        })
+      }
+    })
+
+    setTimeout(function(){
+    appendActivityListToDom(activityDom)
+    createActivityIcon(db)
+  },1000)
+
+
+  }
+}
+
+function sortByLocation(type,hasMultipleOffice) {
+
+  const dbName = firebase.auth().currentUser.uid
+
+  const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
+
+  nearestLocationHandler.onmessage = function(message){
+    sortActivitiesByLocation(hasMultipleOffice)
+  }
+  nearestLocationHandler.onerror = locationSortError
+
+
+  fetchCurrentLocation().then(function(coords){
+    nearestLocationHandler.postMessage({geopoint:{lat:coords.latitude,lng:coords.longitude},dbName : dbName })
+  })
+
+}
+
+function sortActivitiesByLocation(hasMultipleOffice){
+  let activityDom = ''
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
+  req.onsuccess = function(){
+  const db = req.result
+  const mapObjectStore = db.transaction('map').objectStore('map').index('distance')
 
-  req.onsuccess = function () {
-    const db = req.result
-    const mapObjectStore = db.transaction('map').objectStore('map')
-    const mapVisibleSortIndex = mapObjectStore.index('timestamp')
-
-    document.getElementById('close-map--drawer').addEventListener('click', function () {
-      listView(dbName)
-    })
-
-    const mapRecords = []
-    mapVisibleSortIndex.openCursor(null, 'prev').onsuccess = function (event) {
+  mapObjectStore.openCursor().onsuccess = function(event){
       const cursor = event.target.result
-
-      if (!cursor) {
-        fetchCurrentLocation().then(function (geopoints) {
-          console.log('s')
-          mapRecords.push({
-            location: 'your location',
-
-            geopoint: {
-              '_latitude': geopoints.latitude,
-              '_longitude': geopoints.longitude
-            }
-          })
-          initMap(dbName, mapRecords)
-        })
+      if(!cursor) {
+        appendActivityListToDom(activityDom)
+        createActivityIcon(db)
         return
       }
-
-      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        console.log(cursor.value)
-        mapRecords.push(cursor.value)
-        cursor.continue()
-      }
-    }
-  }
-}
-
-function createMapPanel() {
-  const mapParent = document.createElement('div')
-  mapParent.id = 'map-view--container'
-  mapParent.className = 'mdc-top-app-bar--fixed-adjust'
-
-  const mapList = document.createElement('ul')
-  mapList.id = 'list-view--map'
-  mapList.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
-  const map = document.createElement('div')
-  map.id = 'map'
-  mapParent.appendChild(map)
-
-  mapParent.appendChild(mapList)
-  document.getElementById('app-current-panel').innerHTML = mapParent.outerHTML
-}
-
-function initMap(dbName, mapRecord) {
-  const centerGeopoints = mapRecord[mapRecord.length - 1]
-  const map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 10,
-    center: new google.maps.LatLng(
-      centerGeopoints.geopoint['_latitude'],
-      centerGeopoints.geopoint['_longitude']
-    ),
-
-    streetViewControl: false,
-    mapTypeControl: false,
-    rotateControl: false,
-    fullscreenControl: false,
-
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  })
-
-  // setTimeout(function(){
-
-  displayMarkers(dbName, map, mapRecord)
-  // },200)
-}
-
-function displayMarkers(dbName, map, locationData) {
-  let bounds = new google.maps.LatLngBounds()
-  const allMarkers = []
-
-  for (let i = 0; i < locationData.length; i++) {
-    // create marker
-    const marker = new google.maps.Marker({
-      position: new google.maps.LatLng(locationData[i].geopoint['_latitude'], locationData[i].geopoint['_longitude']),
-      icon: i === locationData.length - 1 ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' : '',
-      title: locationData[i].location,
-      customInfo: locationData[i].activityId
-    })
-
-    marker.setMap(map)
-    allMarkers.push(marker)
-  }
-
-  google.maps.event.addListener(map, 'idle', function () {
-    setTimeout(function () {
-      generateActivityFromMarker(dbName, map, allMarkers)
-    }, 300)
-  })
-}
-
-function generateActivityFromMarker(dbName, map, markers) {
-  const markerActivityId = []
-  let bounds = map.getBounds()
-  // open IndexedDB
-  for (let i = 0; i < markers.length; i++) {
-    if (map.getBounds().contains(markers[i].getPosition()) && markers[i].customInfo) {
-      markerActivityId.push(markers[i].customInfo)
-    }
-  }
-  displayMapActivity(dbName, markerActivityId)
-}
-
-function displayMapActivity(dbName, markerActivityId) {
-  let req = window.indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    let mapActivityDom = ''
-    let unique = ''
-    const rootObjectStore = db.transaction('root').objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      unique = event.target.result.hasMultipleOffice
-    }
-
-    const setMarker = removeDuplicate(markerActivityId)
-
-    console.log(setMarker)
-    setMarker.forEach(function (id) {
-      console.log(id)
-      const activityObjectStore = db.transaction('activity').objectStore('activity')
-
-      activityObjectStore.get(id).onsuccess = function (event) {
-        const record = event.target.result
-
-        createActivityList(db, record, unique).then(function (li) {
-          mapActivityDom += li
-        })
-      }
-    })
-    setTimeout(function () {
-      document.getElementById('list-view--map').innerHTML = mapActivityDom
-    }, 50)
-  }
-}
-
-function calendarView(dbName) {
-  // open IDB
-  createCalendarPanel()
-  backIconHeader('close-calendar--drawer')
-  document.getElementById('close-calendar--drawer').addEventListener('click', function () {
-    listView(dbName);
-  })
-
-  const req = window.indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const rootTx = db.transaction(['root'], 'readwrite')
-
-    const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      const record = event.target.result
-      record.view = 'calendar'
-      rootObjectStore.put(record)
-      rootTx.oncomplete = function () {
-        fetchCalendarData()
-      }
-    }
-  }
-  sendCurrentViewNameToAndroid('calendar')
-  req.onerror = function (event) {
-    console.log(event.target.result)
-  }
-}
-
-function createCalendarPanel() {
-  const calendarView = document.createElement('div')
-  calendarView.id = 'calendar-view--container'
-  calendarView.className = 'mdc-top-app-bar--fixed-adjust'
-  const beforeDiv = document.createElement('div')
-  beforeDiv.id = 'beforeToday'
-  beforeDiv.style.display = 'none'
-  beforeDiv.className = 'start-calendar-transition'
-  const afterDiv = document.createElement('div')
-  afterDiv.id = 'afterToday'
-  afterDiv.className = 'start-calendar-transition'
-
-  calendarView.appendChild(progressBar())
-
-  calendarView.appendChild(beforeDiv)
-  calendarView.appendChild(afterDiv)
-  document.getElementById('app-current-panel').innerHTML = calendarView.outerHTML
-}
-
-function fetchCalendarData() {
-  const dbName = firebase.auth().currentUser.uid
-  const request = window.indexedDB.open(dbName)
-
-  request.onsuccess = function () {
-    const db = request.result
-    const calendarObjectStore = db.transaction('calendar', 'readonly').objectStore('calendar')
-    const calendarDateIndex = calendarObjectStore.index('date')
-    const today = moment().format('YYYY-MM-DD')
-    console.log(today)
-    const rootObjectStore = db.transaction('root').objectStore('root')
-    let unique = ''
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      unique = event.target.result.hasMultipleOffice
-    }
-
-    calendarDateIndex.get(today).onsuccess = function (event) {
-      const record = event.target.result
-      if (!record) {
-        const req = indexedDB.open(firebase.auth().currentUser.uid)
-        req.onsuccess = function () {
-          const db = req.result
-          calendarViewUI('afterToday', db, {
-            date: today
-          }, unique)
+      if(cursor.value.hasOwnProperty('distance')){
+        const activityStore = db.transaction('activity').objectStore('activity')
+        activityStore.get(cursor.value.activityId).onsuccess = function(event){
+          const record = event.target.result
+          createActivityList(db,record,hasMultipleOffice).then(function(li){
+            activityDom += li
+          })
         }
       }
-
-      insertDatesAfterToday(db, calendarDateIndex, today)
-    }
-  }
-
-  request.onerror = function (event) {
-    console.log(event)
-  }
-}
-
-function insertDatesAfterToday(db, calendarDateIndex, today) {
-  const rootObjectStore = db.transaction('root').objectStore('root')
-  let unique = ''
-  rootObjectStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-    unique = event.target.result.hasMultipleOffice
-  }
-  const lowerKeyRange = IDBKeyRange.lowerBound(today)
-  calendarDateIndex.openCursor(lowerKeyRange).onsuccess = function (event) {
-    const cursor = event.target.result
-    if (cursor && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      calendarViewUI('afterToday', db, cursor.value, unique)
       cursor.continue()
-    } else {
-      insertDatesBeforeToday(db, calendarDateIndex, today, unique)
-    }
   }
+
 }
 
-function insertDatesBeforeToday(db, calendarDateIndex, today, unique) {
-  const upperKeyRange = IDBKeyRange.upperBound(today, true)
-  calendarDateIndex.openCursor(upperKeyRange).onsuccess = function (event) {
-    const cursor = event.target.result
-    if (cursor && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      calendarViewUI('beforeToday', db, cursor.value, unique)
-      cursor.continue()
-    } else {
-      document.getElementById('beforeToday').style.display = 'block'
-
-      setTimeout(function () {
-        if (document.getElementById('afterToday').children.length <= 1) {
-          document.documentElement.scrollTop = document.documentElement.offsetHeight
-        } else {
-          document.documentElement.scrollTop = document.getElementById('beforeToday').offsetHeight
-        }
-        document.getElementById('beforeToday').classList.remove('start-calendar-transition')
-        document.getElementById('afterToday').classList.remove('start-calendar-transition')
-        document.querySelector('.mdc-linear-progress').classList.add('mdc-linear-progress--closed')
-      }, 800)
-    }
-  }
+}
+function locationSortError(error){
+  console.log(error)
 }
 
-function calendarViewUI(target, db, data, unique) {
-  console.log(unique)
-  if (!document.getElementById(data.date)) {
-    const dateDiv = document.createElement('div')
-    dateDiv.id = data.date
-    data.date === moment().format('YYYY-MM-DD') ? dateDiv.style.borderTop = '5px solid #6abbf9' : ''
-    dateDiv.className = 'date-container mdc-elevation--z1'
+function profileView() {
 
-    const dateCol = document.createElement('div')
-    dateCol.className = 'date-col'
+  history.replaceState(['profileView'], null, null)
 
-    const borderCol = document.createElement('div')
-    borderCol.className = 'border--circle-date'
-
-    const dateSpan = document.createElement('span')
-    dateSpan.textContent = moment(data.date).format('DD')
-    dateSpan.className = 'mdc-typography--headline5'
-
-    const monthSpan = document.createElement('span')
-    monthSpan.className = 'month-row mdc-list-item__secondary-text mdc-typography--subtitle2'
-    monthSpan.textContent = moment(data.date).format('MMMM')
-
-    borderCol.appendChild(dateSpan)
-    borderCol.appendChild(monthSpan)
-
-    dateCol.appendChild(borderCol)
-
-    const activityRow = document.createElement('div')
-    activityRow.id = `activity--row${data.date}`
-    activityRow.className = 'activity-row--date'
-    dateDiv.appendChild(dateCol)
-    dateDiv.appendChild(activityRow)
-    document.getElementById(target).innerHTML += dateDiv.outerHTML
-
-    getActivity(db, data, unique)
-    return
-  }
-  getActivity(db, data, unique)
-}
-
-function getActivity(db, data, unique) {
-  if (!data.hasOwnProperty('activityId')) return
-
-  const activityShowIndex = db.transaction('activity').objectStore('activity')
-
-  activityShowIndex.get(data.activityId).onsuccess = function (event) {
-    const record = event.target.result
-    console.log(record)
-    if (!record) return
-
-
-    createActivityList(db, record, unique).then(function (li) {
-      if (document.getElementById(`activity--row${data.date}`).querySelector(`[data-id="${data.activityId}"]`)) return
-      document.getElementById(`activity--row${data.date}`).innerHTML += li
-    })
-
-  }
-}
-
-function profileView(firstTimeLogin) {
-  history.pushState(['profileView', firstTimeLogin], null, null)
+  const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary '))
+  drawer.open = false;
 
   document.body.style.backgroundColor = '#eeeeee'
   const user = firebase.auth().currentUser
@@ -699,7 +641,7 @@ function profileView(firstTimeLogin) {
       record.view = 'profile'
       rootObjectStore.put(record)
       rootTx.oncomplete = function () {
-        createProfileHeader(firstTimeLogin)
+        createProfileHeader()
         createProfilePanel()
         disableInputs()
         document.getElementById('close-profile--panel').addEventListener('click', function () {
@@ -718,7 +660,7 @@ function profileView(firstTimeLogin) {
   sendCurrentViewNameToAndroid('profile')
 }
 
-function createProfileHeader(firstTimeLogin) {
+function createProfileHeader() {
   const iconCont = document.createElement('div')
   iconCont.className = 'profile--toolbar-icon'
 
@@ -733,16 +675,12 @@ function createProfileHeader(firstTimeLogin) {
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons'
 
-  if (firstTimeLogin) {
-    backIcon.textContent = 'arrow_forward'
-    backSpan.appendChild(backIcon)
-    header('', backSpan.outerHTML)
-  } else {
+
     backIcon.textContent = 'arrow_back'
     backSpan.appendChild(backIcon)
     header(backSpan.outerHTML, iconCont.outerHTML)
+
     handleChangeNumberMenu()
-  }
 
 }
 
@@ -880,7 +818,7 @@ function handleFieldInput(key, value) {
     user.updateProfile({
       [key]: value
     }).then(function () {
-      snacks('you changed your display Name')
+      successDialog()
     }).catch(authUpdatedError)
   }
 
@@ -889,7 +827,6 @@ function handleFieldInput(key, value) {
       snacks('This email address already exists')
       return
     }
-    console.log(timeDiff(firebase.auth().currentUser.metadata.lastSignInTime))
     if (timeDiff(firebase.auth().currentUser.metadata.lastSignInTime) <= 5) {
       console.log('less than 5')
       updateEmail(firebase.auth().currentUser, value)
@@ -897,6 +834,13 @@ function handleFieldInput(key, value) {
       newSignIn(value)
     }
   }
+}
+
+function timeDiff(lastSignInTime) {
+  const currentDate = moment().format('YYY-MM-DD HH:mm')
+  const authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm')
+
+  return moment(currentDate).diff(moment(authSignInTime), 'minutes')
 }
 
 function newSignIn(value) {
@@ -1029,6 +973,7 @@ function emailUpdateSuccess() {
 }
 
 function emailVerificationSuccess() {
+  successDialog()
   snacks('Verification link has been send to your email address')
 }
 
@@ -1164,6 +1109,10 @@ function changePhoneNumber() {
 
   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
+  document.getElementById('cancelUpdate').addEventListener('click', function (event) {
+    profileView()
+  })
+
   getInputText('new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
   getInputText('new-phone--number').value = ''
   getInputText('current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
@@ -1185,9 +1134,7 @@ function changePhoneNumber() {
     }
   })
 
-  document.getElementById('cancelUpdate').addEventListener('click', function (event) {
-    profileView()
-  })
+
 }
 
 function newPhoneNumber() {
@@ -1220,7 +1167,7 @@ function verifyCurrentPhoneNumber() {
   return false
 }
 
-const header = function (contentStart, contentEnd,headerType) {
+ function header (contentStart, contentEnd,headerType) {
 
   const header = document.createElement('header')
   header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
@@ -1271,55 +1218,8 @@ function backIconHeader(id) {
   header(backSpan.outerHTML)
 }
 
-function removeDom(selector) {
-  const target = document.getElementById(selector)
-  target.innerHTML = ''
-}
-
-function snacks(message) {
-  const snack = document.createElement('div')
-  snack.className = 'mdc-snackbar'
-  snack.setAttribute('aria-live', 'assertive')
-  snack.setAttribute('aria-atomic', 'true')
-  snack.setAttribute('aria-hidden', 'true')
-
-  const snackbarText = document.createElement('div')
-  snackbarText.className = 'mdc-snackbar__text'
-
-  const snackbarAction = document.createElement('div')
-  snackbarAction.className = 'mdc-snackbar__action-wrapper'
-
-  const button = document.createElement('button')
-  button.className = 'mdc-snackbar__action-button'
-
-  snackbarAction.appendChild(button)
-
-  snack.appendChild(snackbarText)
-  snack.appendChild(snackbarAction)
-  document.getElementById('snackbar-container').innerHTML = snack.outerHTML
-
-  const data = {
-    message: message,
-    actionText: 'Ok',
-    timeout: 3000,
-    actionHandler: function () {
-      console.log('okay')
-    }
-  }
-
-  const snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'))
-
-  snackbar.show(data)
-}
-
-function timeDiff(lastSignInTime) {
-  const currentDate = moment().format('YYY-MM-DD HH:mm')
-  const authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm')
-
-  return moment(currentDate).diff(moment(authSignInTime), 'minutes')
-}
-
 function handleChangeNumberMenu() {
+
   const div = document.createElement('div')
   div.className = 'mdc-menu mdc-menu--animating-open'
   div.id = 'change-number--menu'
@@ -1359,20 +1259,4 @@ function handleChangeNumberMenu() {
 
   // Turn off menu open animations
   menu.quickOpen = false
-}
-
-function removeDuplicate(array) {
-  let temp = {}
-  let result = []
-  let length = array.length
-  let j = 0
-
-  for (let i = 0; i < length; i++) {
-    let item = array[i]
-    if (temp[item] !== 1) {
-      temp[item] = 1
-      result[j++] = item
-    }
-  }
-  return result
 }

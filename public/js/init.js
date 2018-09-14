@@ -1,4 +1,3 @@
-
 firebase.initializeApp({
   apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
   authDomain: 'growthfile-207204.firebaseapp.com',
@@ -10,6 +9,7 @@ firebase.initializeApp({
 
 
 function firebaseUiConfig(value) {
+
   return {
     'callbacks': {
       'signInSuccess': function(user, credential, redirectUrl) {
@@ -42,7 +42,6 @@ function firebaseUiConfig(value) {
   }
 }
 
-
 function userSignedOut() {
   const login = document.createElement('div')
   login.id = 'login-container'
@@ -70,17 +69,16 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-  const drawerLayout = document.createElement('div')
-  drawerLayout.id = 'hamburger--drawer-parent'
-  // layoutInner.appendChild(drawerLayout)
+  const scrim = document.createElement('div')
+  scrim.className = 'mdc-drawer-scrim'
   layoutInner.appendChild(headerDiv)
+  layoutInner.appendChild(scrim)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
 
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
 }
-
 
 moment.locale('en', {
   calendar: {
@@ -100,55 +98,51 @@ moment.locale('en', {
 
 // initialize smooth scrolling
 window.scrollBy({
-    top: 100,
-    left: 0,
-    behavior: 'smooth'
+  top: 100,
+  left: 0,
+  behavior: 'smooth'
 })
 
-function startApp(){
+function startApp() {
   if (window.Worker && window.indexedDB) {
 
     layoutGrid()
-    if(localStorage.getItem('dbexist')) {
-      console.log("start")
-      requestCreator('initializeIDB',{firstTime:false})
+    if (localStorage.getItem('dbexist')) {
+      requestCreator('initializeIDB', {
+        firstTime: false
+      })
       listView(localStorage.getItem('dbexist'))
+    } else {
+      requestCreator('initializeIDB', {
+        firstTime: true
+      })
     }
-    else {
-      requestCreator('initializeIDB',{firstTime:true})
-    }
-  }
-
-  else {
+  } else {
     console.log("cannot run in this mode")
     firebase.auth().signOut().catch(signOutError)
   }
+}
+
+
+function handleViewFromHistory(backFromAndroid) {
+
+  if (backFromAndroid && history.state[0] === 'listView') {
+    UserCanExitApp()
+    return;
   }
-
-
-  function handleViewFromHistory(backFromAndroid){
-
-    console.log(window.history.state[0])
-    if(backFromAndroid && window.history.state[0] === 'listView'){
-      UserCanExitApp()
-      return;
+  window.history.go(-1)
+  window.onpopstate = function(event) {
+    const views = {
+      listView: listView,
+      conversation: conversation,
+      updateCreateActivity: updateCreateActivity,
     }
-    window.history.go(-1)
-      window.onpopstate = function(event){
-        console.log(event.state)
-        const views = {
-          listView : listView,
-          profileView : profileView,
-          updateCreateActivity: updateCreateActivity,
-          conversation:conversation
-        }
 
-        views[event.state[0]](event.state[1])
-
-      }
+    views[event.state[0]](event.state[1])
 
   }
+}
 
-  function UserCanExitApp(){
-    FetchHistory.stateView(true)
-  }
+function UserCanExitApp() {
+  FetchHistory.stateView(true)
+}

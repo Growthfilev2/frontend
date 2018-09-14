@@ -1,3 +1,4 @@
+let offset
 
 function loader() {
   const div = document.createElement('div')
@@ -5,242 +6,75 @@ function loader() {
   return div
 }
 
-function progressBar() {
+function successDialog(){
+
+  const aside = document.createElement('aside')
+  aside.className = 'mdc-dialog mdc-dialog--open success--dialog'
+  aside.id = 'success--dialog'
+
+  const surface = document.createElement('div')
+  surface.className  = 'mdc-dialog__surface round--surface'
+
+  const section = document.createElement('section')
+  section.className = 'mdc-dialog__body'
+
   const div = document.createElement('div')
-  div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate'
-  div.role = 'progressbar'
-  const bufferDots = document.createElement('div')
-  bufferDots.className = 'mdc-linear-progress__buffering-dots'
-  const buffer = document.createElement('div')
-  buffer.className = 'mdc-linear-progress__buffer'
-  const primary = document.createElement('div')
-  primary.className = 'mdc-linear-progress__bar mdc-linear-progress__primary-bar'
+  div.className = 'success--container'
 
-  const primaryInner = document.createElement('span')
-  primaryInner.className = 'mdc-linear-progress__bar-inner'
+  const icon = document.createElement('i')
+  icon.className = 'material-icons success--check'
+  icon.textContent = 'check'
 
-  primary.appendChild(primaryInner)
-  const secondary = document.createElement('div')
-  secondary.className = 'mdc-linear-progress__bar mdc-linear-progress__secondary-bar'
-
-  const secondaryInner = document.createElement('span')
-  secondaryInner.className = 'mdc-linear-progress__bar-inner'
-
-  secondary.appendChild(secondaryInner)
-  div.appendChild(bufferDots)
-  div.appendChild(buffer)
-  div.appendChild(primary)
-  div.appendChild(secondary)
-  return div
-}
-
-function getInputText(selector) {
-  return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
-}
-
-
-function inputSelect(objectStore, selector, inputFields, activityRecord) {
-  let dataCount = 0
-  let input = ''
-  let autocomplete = ''
-  if(inputFields.main === 'location-text-field') {
-    let input = document.getElementById('location-text-field').querySelector('.mdc-text-field__input');
-    autocomplete =  new google.maps.places.Autocomplete(input);
+  div.appendChild(icon)
+  section.appendChild(div)
+  surface.appendChild(section)
+  aside.appendChild(surface)
+  if(!document.querySelector('#success--dialog')){
+    document.body.appendChild(aside)
   }
 
-  const dbName = firebase.auth().currentUser.uid
-  const req = window.indexedDB.open(dbName)
-  let primaryObjectStore = ''
-  req.onsuccess = function () {
-    const db = req.result
-
-    if (objectStore.name === 'subscriptions' || objectStore.name === 'map' || objectStore.name === 'children') {
-      primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name)
-    } else {
-      primaryObjectStore = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexThree)
-    }
-
-    primaryObjectStore.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) {
-        if (objectStore.name === 'map') return
-        if (objectStore.name === 'subscriptions') return
-        if (objectStore.name === 'children') {
-          if(dataCount == 0) {
-            document.getElementById('children-name').querySelector('.mdc-dialog__footer__button--accept').disabled = true
-          }
-          return;
-        }
-        if (!activityRecord) return
-
-        activityRecord.assignees.forEach(function (people) {
-          document.querySelector(`[data-phone-num="${people}"]`).remove()
-        })
-        return
-      }
-
-      switch (objectStore.name) {
-        case 'map':
-          console.log(selector)
-          locationUI(cursor, selector, inputFields)
-          break
-
-        case 'users':
-          assigneeListUI(cursor, selector, inputFields.main)
-          break
-
-        case 'subscriptions':
-        console.log(cursor.value)
-          if(cursor.value.template !== 'subscription') {
-             officeTemplateCombo(cursor, selector, inputFields.main)
-          }
-          break
-
-        case 'children':
-        console.log(activityRecord.template);
-
-        if (cursor.value.template === activityRecord.template && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
-            // if(!cursor.value.attachment.hasOwnProperty('Name')) return
-            console.log(cursor.value)
-            dataCount++
-            childrenNames(cursor, selector, inputFields.main)
-        }
-
-
-          break;
-      }
-      cursor.continue()
-    }
-  }
-  // console.log(isMapPinPresent)
-
-  document.getElementById(inputFields.main).addEventListener('input', function () {
-
-    if(inputFields.main === 'location-text-field') {
-        if(getInputText('location-text-field').value == '') {
-          document.getElementById('location--container').style.marginTop = '0px'
-          return
-        }
-        else {
-
-          document.getElementById('location--container').style.marginTop = '150px'
-          document.getElementById('location--container')
-          initializeAutocomplete(autocomplete)
-          return;
-        }
-    }
-
-
-    document.getElementById(selector).innerHTML = ''
-
-    const dbName = firebase.auth().currentUser.uid
-    const req = window.indexedDB.open(dbName)
-
-    req.onsuccess = function () {
-      const db = req.result
-      let indexMain
-      if (objectStore.name === 'subscriptions' || objectStore.name === 'map' || objectStore.name === 'children') {
-        indexMain = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indexone)
-      } else {
-        indexMain = db.transaction(objectStore.name).objectStore(objectStore.name)
-      }
-      const indexSecondary = db.transaction(objectStore.name).objectStore(objectStore.name).index(objectStore.indextwo)
-
-      const boundKeyRange = IDBKeyRange
-        .bound(
-          getInputText(inputFields.main).value.toLowerCase(),
-          `${getInputText(inputFields.main).value.toLowerCase()}\uffff`
-        )
-
-      indexMain.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord)
-      }
-
-      console.log(boundKeyRange)
-      if (boundKeyRange.upper === '\uffff') return
-      indexSecondary.openCursor(boundKeyRange).onsuccess = function (event) {
-        fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord)
-      }
-    }
-  })
+  const successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'))
+  successDialog.show()
+  setTimeout(function(){
+    successDialog.close()
+  },3000)
 }
 
-function fetchRecordsForBothIndexs(objectStore, event, selector, inputFields, activityRecord) {
+function snacks(message) {
+  const snack = document.createElement('div')
+  snack.className = 'mdc-snackbar'
+  snack.setAttribute('aria-live', 'assertive')
+  snack.setAttribute('aria-atomic', 'true')
+  snack.setAttribute('aria-hidden', 'true')
 
-  const cursor = event.target.result
+  const snackbarText = document.createElement('div')
+  snackbarText.className = 'mdc-snackbar__text'
 
-  if (!cursor) {
-    if (objectStore.name === 'subscriptions') return
+  const snackbarAction = document.createElement('div')
+  snackbarAction.className = 'mdc-snackbar__action-wrapper'
 
-    if (objectStore.name === 'children') return
-    if (!activityRecord) return
+  const button = document.createElement('button')
+  button.className = 'mdc-snackbar__action-button'
 
-    activityRecord.assignees.forEach(function (people) {
-      if (document.querySelector(`[data-phone-num="${people}"]`)) {
-        document.querySelector(`[data-phone-num="${people}"]`).remove()
-      }
-    })
+  snackbarAction.appendChild(button)
+
+  snack.appendChild(snackbarText)
+  snack.appendChild(snackbarAction)
+  document.getElementById('snackbar-container').innerHTML = snack.outerHTML
+
+  const data = {
+    message: message,
+    actionText: 'Ok',
+    timeout: 3000,
+    actionHandler: function () {
+      console.log('okay')
+    }
   }
 
+  const snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'))
 
-  switch (objectStore.name) {
-
-    case 'users':
-      console.log(cursor.value)
-      assigneeListUI(cursor, selector, inputFields.main)
-
-      break
-    case 'subscriptions':
-      console.log(inputFields.main)
-      officeTemplateCombo(cursor, selector, inputFields.main)
-
-      break
-    case 'children':
-      if (cursor.value.template === activityRecord.template && cursor.value.office === activityRecord.office && status != 'CANCELLED') {
-        if (!cursor.value.attachment.hasOwnProperty('Name')) return
-        childrenNames(cursor, selector, inputFields.main)
-      }
-      break;
-  }
-
-  cursor.continue()
+  snackbar.show(data)
 }
-
-
-function initializeAutocomplete(autocomplete) {
-
-
-  autocomplete.addListener('place_changed', function () {
-    let place = autocomplete.getPlace();
-
-    if (!place.geometry) {
-      snacks("Please select a valid location")
-      return
-    }
-     document.getElementById('location--container').style.marginTop = '0px'
-
-    var address = '';
-    if (place.address_components) {
-      address = [
-        (place.address_components[0] && place.address_components[0].short_name || ''),
-        (place.address_components[1] && place.address_components[1].short_name || ''),
-        (place.address_components[2] && place.address_components[2].short_name || '')
-      ].join(' ');
-    }
-
-    document.getElementById('location-text-field').dataset.location = place.name
-    document.getElementById('location-text-field').dataset.address = address
-    document.getElementById('location-text-field').dataset.inputlat = place.geometry.location.lat()
-    document.getElementById('location-text-field').dataset.inputlon = place.geometry.location.lng()
-
-    console.log(address)
-    console.log(place)
-  })
-}
-
-
-
-
 
 function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime
@@ -257,64 +91,13 @@ function fetchCurrentLocation() {
   })
 }
 
-
-
-
-function locationServices() {
-
-  const locationHandler = new Worker('js/locationHandler.js');
-
-  setInterval(function () {
-    fetchCurrentLocation().then(function (geopoints) {
-      locationHandler.postMessage(geopoints);
-    })
-  }, 500)
-
-
-  locationHandler.onmessage = handleLocationCorrection
-  locationHandler.onerror = handleLocationError
-
-}
-
-
-function handleLocationCorrection(msg) {
-  // console.log(msg.data)
-  if (!msg.data.value) {
-
-    //   snacks(`value : ${msg.data.value} ,  count : ${msg.data.count}`)
-    return;
-  };
-
-  snacks(`latitude : ${msg.data.stream.lat}  longitude: ${msg.data.stream.lon} , ${msg.data.count}`)
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = window.indexedDB.open(dbName)
-
-  req.onsuccess = function () {
-    const db = req.result
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      const record = event.target.result
-      record.location = msg.data
-      rootObjectStore.put(record)
-    }
-  }
-}
-
-function handleLocationError(err) {
-  console.log(err)
-}
-
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+    // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
   return document.getElementById(selector)
 }
-let offset
-
 
 function requestCreator(requestType, requestBody) {
 
@@ -328,6 +111,7 @@ function requestCreator(requestType, requestBody) {
     body: ''
   }
 
+
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
@@ -336,8 +120,8 @@ function requestCreator(requestType, requestBody) {
       requestGenerator.body = requestBody
       apiHandler.postMessage(requestGenerator)
     }
-    else {
 
+    else {
     fetchCurrentLocation().then(function (geopoints) {
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
@@ -366,9 +150,13 @@ function requestCreator(requestType, requestBody) {
 }
 
 function loadViewFromRoot(response) {
-  console.log(response)
 
-  if (response.data.type === 'notification') return
+  if (response.data.type === 'notification') {
+    successDialog()
+    return
+  }
+
+  // only for development
   if(response.data.type === 'error') {
     snacks(response.data.msg)
     return;
@@ -384,7 +172,6 @@ function loadViewFromRoot(response) {
     document.getElementById("main-layout-app").style.display = 'block'
 
     localStorage.setItem('dbexist',response.data.dbName);
-
     return;
   }
 
@@ -394,24 +181,19 @@ function loadViewFromRoot(response) {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
 
-
       if(response.data.type === 'updateAssigneeList') {
         console.log("only update assingee list")
         const activityObjectStore = db.transaction('activity').objectStore('activity')
         //here dbName is activityId
         activityObjectStore.get(response.data.dbName.id).onsuccess = function(event){
           const record = event.target.result
-          // createAssigneeList(db,record.assignees,{
-          //   canEdit: record.canEdit,
-          //   showLabel: true,
-          //   activityId: record.activityId
-          // })
+
           readNameAndImageFromNumber([response.data.dbName.number],db)
         }
 
       }
       else {
-        console.log("phrs se")
+      console.log("yahan tak chak raha hai")
       rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
       const record = event.target.result
       let currentView = record.view
@@ -478,7 +260,6 @@ function onErrorMessage(error) {
     'file': error.filename
   })
 }
-
 
 function handleTimeout() {
   console.log('load now')
