@@ -268,7 +268,6 @@ function creatListHeader() {
 }
 
 function initMenu(db, officeRecord) {
-  console.log(officeRecord)
   const filters = [{
       type: 'Incoming',
       icon: 'call_made'
@@ -291,7 +290,7 @@ function initMenu(db, officeRecord) {
       icon: 'check'
     }, {
       type: 'Pending',
-      icon: 'maximize'
+      icon: ''
     }, {
       type: 'Cancelled',
       icon: 'clear'
