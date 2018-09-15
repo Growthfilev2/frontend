@@ -29,11 +29,7 @@ function fetchAddendumForComment(id, user) {
   req.onsuccess = function() {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
-    const rootTx = db.transaction('root', 'readwrite')
-    const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(user.uid).onsuccess = function(event) {
-      createHeaderContent(db, id, event.target.result.hasMultipleOffice)
-    }
+    createHeaderContent(db, id)
     commentPanel(id)
     sendCurrentViewNameToAndroid('conversation')
     let commentDom = ''
@@ -57,6 +53,7 @@ function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
     return
   }
+
   const commentPanel = document.createElement('div')
   commentPanel.className = 'activity--chat-card-container  mdc-top-app-bar--fixed-adjust panel-card'
 
@@ -185,7 +182,7 @@ function readNameFromNumber(db, number) {
   })
 }
 
-function createHeaderContent(db, id, unique) {
+function createHeaderContent(db, id) {
 
 
   const activityObjectStore = db.transaction('activity').objectStore('activity')
