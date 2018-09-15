@@ -1,46 +1,46 @@
 function listView(dbName) {
-
+  // sendCurrentViewNameToAndroid('listView')
 
   history.pushState(['listView', dbName], null, null)
-
   listPanel()
+
   document.body.style.backgroundColor = 'white'
   if (!dbName) {
-
     dbName = firebase.auth().currentUser.uid
   }
-  const req = window.indexedDB.open(dbName)
 
-  req.onerror = function (event) {
+  const req = window.indexedDB.open(dbName)
+  req.onerror = function(event) {
     console.log(event)
   }
 
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     let hasMultipleOffice = ''
     let allOffices = ''
-    rootObjectStore.get(dbName).onsuccess = function (event) {
+    rootObjectStore.get(dbName).onsuccess = function(event) {
       const record = event.target.result
       record.view = 'list'
       hasMultipleOffice = record.offices.hasMultipleOffice
       allOffices = record.offices.allOffices
       rootObjectStore.put(record)
-      rootTx.oncomplete = function () {
-        if(!document.querySelector('.mdc-drawer--temporary')){
-          initMenu(db,{multipleOffice:hasMultipleOffice,offices:allOffices})
+      rootTx.oncomplete = function() {
+        if (!document.querySelector('.mdc-drawer--temporary')) {
+          initMenu(db, {
+            multipleOffice: hasMultipleOffice,
+            offices: allOffices
+          })
         }
-      creatListHeader()
-      fetchDataForActivityList(db, {multipleOffice:hasMultipleOffice,offices:allOffices})
-
+        creatListHeader()
+        fetchDataForActivityList(db)
+      }
     }
   }
-  sendCurrentViewNameToAndroid('listView')
-}
 }
 
-function fetchDataForActivityList(db, officeRecord) {
+function fetchDataForActivityList(db) {
   console.log("fetch for list")
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
@@ -48,61 +48,57 @@ function fetchDataForActivityList(db, officeRecord) {
 
   const activityVisibleIndex = activityObjectStore.index('timestamp')
 
-  activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
+  activityVisibleIndex.openCursor(null, 'prev').onsuccess = function(event) {
     let cursor = event.target.result
     if (!cursor) {
-      setTimeout(function(){
         appendActivityListToDom(activityDom)
         createActivityIcon(db)
-      },500)
-      return
+        return
     }
 
     if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value, officeRecord).then(function (li) {
+      createActivityList(db, cursor.value).then(function(li) {
         activityDom += li
       })
     }
-
     cursor.continue()
   }
 }
 
-function createActivityList(db, data, officeRecord) {
+function createActivityList(db, data) {
 
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
     const metaData = {
       src: '',
-      lastComment : {
+      lastComment: {
         user: '',
         comment: ''
       }
     }
 
-    activityCount.get(data.activityId).onsuccess = function (event) {
+    activityCount.get(data.activityId).onsuccess = function(event) {
       const record = event.target.result
 
       const userObjStore = db.transaction('users').objectStore('users')
-      userObjStore.get(data.creator).onsuccess = function (userstore) {
+      userObjStore.get(data.creator).onsuccess = function(userstore) {
         const addendumObjStore = db.transaction('addendum').objectStore('addendum').index('activityId')
 
-        addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function (addendumstore) {
+        addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function(addendumstore) {
           const addendumCursor = addendumstore.target.result;
           if (addendumCursor) {
             metaData.src = userstore.target.result.photoURL
-             readNameFromNumber(db,addendumCursor.value.user).then(function(nameOrNum){
-              // console.log(nameOrNum)
-              if(addendumCursor.value.isComment === 1) {
+            readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
+              if (addendumCursor.value.isComment === 1) {
                 metaData.lastComment.user = nameOrNum
               }
 
               metaData.lastComment.comment = addendumCursor.value.comment
 
               if (!record) {
-                resolve(activityListUI(data, officeRecord, 0, metaData))
+                resolve(activityListUI(data, 0, metaData))
               } else {
-                resolve(activityListUI(data, officeRecord, record.count, metaData))
+                resolve(activityListUI(data, record.count, metaData))
               }
             })
           }
@@ -112,12 +108,12 @@ function createActivityList(db, data, officeRecord) {
   })
 }
 
-function activityListUI(data, officeRecord, count, metaData) {
+function activityListUI(data, count, metaData) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
-  // mdc.ripple.MDCRipple.attachTo(li)
+
   const creator = document.createElement('img')
   creator.className = 'mdc-list-item__graphic material-icons'
   creator.src = metaData.src || 'img/empty-user.jpg'
@@ -131,24 +127,15 @@ function activityListUI(data, officeRecord, count, metaData) {
   activityNameText.textContent = data.activityName
   const lastComment = document.createElement('span')
   lastComment.className = 'mdc-list-item__secondary-text'
-  if(metaData.lastComment.user){
+  if (metaData.lastComment.user) {
 
     lastComment.textContent = `${metaData.lastComment.user} : ${metaData.lastComment.comment}`
-  }
-  else {
+  } else {
     lastComment.textContent = `${metaData.lastComment.comment}`
 
   }
   leftTextContainer.appendChild(activityNameText)
   leftTextContainer.appendChild(lastComment)
-
-  if (officeRecord.multipleOffice) {
-    const leftTextSecondaryContainer = document.createElement('span')
-    leftTextSecondaryContainer.classList.add('mdc-list-item__secondary-text')
-    leftTextSecondaryContainer.textContent = data.office
-    leftTextContainer.appendChild(leftTextSecondaryContainer)
-  }
-
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta')
@@ -169,20 +156,16 @@ function activityListUI(data, officeRecord, count, metaData) {
     const timeCustomText = document.createElement('div')
     timeCustomText.className = 'mdc-meta__custom-text'
     timeCustomText.style.width = '80px';
+    timeCustomText.style.fontSize = '14px';
     timeCustomText.textContent = moment(data.timestamp).calendar()
     li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1')
     metaTextContainer.appendChild(timeCustomText)
   }
 
-
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', `${data.status}`)
   const statusIcon = document.createElement('i')
   statusIcon.className = 'material-icons'
-
-  const pendingIcon = document.createElement('i')
-  pendingIcon.classList.add('status-pending', 'material-icons')
-  pendingIcon.appendChild(document.createTextNode('maximize'))
 
   const cancelIcon = document.createElement('i')
   cancelIcon.classList.add('status-cancel', 'material-icons')
@@ -192,18 +175,12 @@ function activityListUI(data, officeRecord, count, metaData) {
   confirmedIcon.classList.add('status-confirmed', 'material-icons')
   confirmedIcon.appendChild(document.createTextNode('check'))
 
-  if(data.status === 'CONFIRMED') {
+  if (data.status === 'CONFIRMED') {
     metaTextActivityStatus.appendChild(confirmedIcon)
   }
-  if(data.status === 'CANCELLED') {
+  if (data.status === 'CANCELLED') {
     metaTextActivityStatus.appendChild(cancelIcon)
   }
-
-  if(data.status === 'PENDING') {
-    metaTextActivityStatus.appendChild(pendingIcon)
-  }
-
-  // metaTextActivityStatus.textContent = data.status
 
   metaTextContainer.appendChild(metaTextActivityStatus)
 
@@ -211,15 +188,15 @@ function activityListUI(data, officeRecord, count, metaData) {
   return li.outerHTML
 }
 
-function appendActivityListToDom(activityDom){
+function appendActivityListToDom(activityDom) {
   document.getElementById('activity--list').innerHTML = activityDom
 }
 
-function createActivityIcon(db){
+function createActivityIcon(db) {
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
-  subscriptionCount.onsuccess = function(){
-    if(subscriptionCount.result) {
+  subscriptionCount.onsuccess = function() {
+    if (subscriptionCount.result) {
       const fab = document.createElement('button')
       fab.className = 'mdc-fab create-activity'
       fab.setAttribute('aria-label', 'Add')
@@ -228,10 +205,10 @@ function createActivityIcon(db){
       span.textContent = 'add'
       fab.appendChild(span)
       document.getElementById('activity--list').appendChild(fab)
-      document.querySelector('.create-activity').addEventListener('click', function(evt){
-        selectorUI(evt,{
-          record:'',
-          store:'subscriptions',
+      document.querySelector('.create-activity').addEventListener('click', function(evt) {
+        selectorUI(evt, {
+          record: '',
+          store: 'subscriptions',
         })
       })
     }
@@ -280,107 +257,130 @@ function creatListHeader() {
   searchIcon.appendChild(sicon);
 
 
-  header(parentIconDiv.outerHTML, searchIcon.outerHTML,'list')
+  header(parentIconDiv.outerHTML, searchIcon.outerHTML, 'list')
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
   // console.log(drawer)
-  document.getElementById('menu--panel').addEventListener('click',function(){
+  document.getElementById('menu--panel').addEventListener('click', function() {
 
-  drawer.open = true
+    drawer.open = true
   })
 
 }
 
-function initMenu(db,officeRecord){
+function initMenu(db, officeRecord) {
   console.log(officeRecord)
-    const filters = [{type:'Incoming',icon:'call_made'},{type:'Outgoing',icon:'call_received'},
-    {type:'Urgent',icon:'star_rate'},{type:'Recent',icon:'watch_later'},{type:'Nearby',icon:'near_me'},
-    {type:'Confirmed',icon:'check'},{type:'Pending',icon:'maximize'},{type:'Cancelled',icon:'clear'}]
-
-
-    const aside = document.createElement('aside')
-    aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
-
-    const nav = document.createElement('nav')
-    nav.className = 'mdc-drawer__drawer'
-
-    const header = document.createElement('header')
-    header.className = 'mdc-drawer__header drawer--header'
-
-    const headerContent = document.createElement('div')
-    headerContent.className = 'mdc-drawer__header-content'
-
-    const ImageDiv = document.createElement('div')
-    ImageDiv.className = 'drawer--header-div'
-    ImageDiv.onclick = function(){
-      profileView()
-
+  const filters = [{
+      type: 'Incoming',
+      icon: 'call_made'
+    }, {
+      type: 'Outgoing',
+      icon: 'call_received'
+    },
+    {
+      type: 'Urgent',
+      icon: 'star_rate'
+    }, {
+      type: 'Recent',
+      icon: 'watch_later'
+    }, {
+      type: 'Nearby',
+      icon: 'near_me'
+    },
+    {
+      type: 'Confirmed',
+      icon: 'check'
+    }, {
+      type: 'Pending',
+      icon: 'maximize'
+    }, {
+      type: 'Cancelled',
+      icon: 'clear'
     }
-    const headerIcon = document.createElement('img')
-    headerIcon.className = 'drawer-header-icon'
-    setTimeout(function(){
-
-      headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-    },2000)
+  ]
 
 
-    const headerDetails = document.createElement('div')
-    headerDetails.className = 'header--details'
+  const aside = document.createElement('aside')
+  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
 
-    const name = document.createElement('div')
-    name.className = 'mdc-typography--subtitle'
-    setTimeout(function(){
-      name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
+  const nav = document.createElement('nav')
+  nav.className = 'mdc-drawer__drawer'
 
-    },2000)
+  const header = document.createElement('header')
+  header.className = 'mdc-drawer__header drawer--header'
 
-    const officeName = document.createElement('div')
-    officeName.textContent = officeRecord.offices[0]
-    officeName.className = 'mdc-typography--caption'
+  const headerContent = document.createElement('div')
+  headerContent.className = 'mdc-drawer__header-content'
 
-    const changeOfficeIon = document.createElement('i')
+  const ImageDiv = document.createElement('div')
+  ImageDiv.className = 'drawer--header-div'
+  ImageDiv.onclick = function() {
+    profileView()
+
+  }
+  const headerIcon = document.createElement('img')
+  headerIcon.className = 'drawer-header-icon'
+  setTimeout(function() {
+
+    headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
+  }, 2000)
 
 
-    headerDetails.appendChild(name)
-    headerDetails.appendChild(officeName)
+  const headerDetails = document.createElement('div')
+  headerDetails.className = 'header--details'
 
-    if(officeRecord.hasMultipleOffice){
-      changeOfficeIon.className = 'material-icons'
-      changeOfficeIon.textContent = 'arrow_drop_down'
-      headerDetails.appendChild(changeOfficeIon)
-      changeOfficeIon.onclick = function(){
-        createOfficeSelectionUI(officeRecord.offices)
-      }
+  const name = document.createElement('div')
+  name.className = 'mdc-typography--subtitle'
+  setTimeout(function() {
+    name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
 
+  }, 2000)
+
+
+  const officeName = document.createElement('div')
+  officeName.textContent = officeRecord.offices[0]
+  officeName.className = 'mdc-typography--caption'
+
+  const changeOfficeIon = document.createElement('i')
+
+  headerDetails.appendChild(name)
+  headerDetails.appendChild(officeName)
+
+  if (officeRecord.hasMultipleOffice) {
+    changeOfficeIon.className = 'material-icons'
+    changeOfficeIon.textContent = 'arrow_drop_down'
+    headerDetails.appendChild(changeOfficeIon)
+    changeOfficeIon.onclick = function() {
+      createOfficeSelectionUI(officeRecord.offices)
     }
+  }
 
-    ImageDiv.appendChild(headerIcon)
-    headerContent.appendChild(ImageDiv)
-    headerContent.appendChild(headerDetails)
-    header.appendChild(headerContent)
+  ImageDiv.appendChild(headerIcon)
+  headerContent.appendChild(ImageDiv)
+  headerContent.appendChild(headerDetails)
+  header.appendChild(headerContent)
 
+  const navContent = document.createElement('nav')
 
-    const navContent = document.createElement('nav')
+  navContent.className = 'mdc-drawer__content mdc-list'
 
-    navContent.className  = 'mdc-drawer__content mdc-list'
+  if (officeRecord.hasMultipleOffice) {
+    const all = document.createElement('a')
+    all.className = 'mdc-list-item mdc-list-item--activated'
+    all.href = '#'
 
-    if(officeRecord.hasMultipleOffice){
-      const all = document.createElement('a')
-      all.className = 'mdc-list-item mdc-list-item--activated'
-      all.href = '#'
+    const i = document.createElement('i')
+    i.className = 'material-icons mdc-list-item__graphic drawer--icons'
+    i.setAttribute('aria-hidden', 'true')
+    i.textContent = 'all_inbox'
+    const textSpan = document.createElement('span')
+    textSpan.textContent = 'All offices'
 
-      const i = document.createElement('i')
-      i.className = 'material-icons mdc-list-item__graphic drawer--icons'
-      i.setAttribute('aria-hidden', 'true')
-      i.textContent = 'all_inbox'
-      const textSpan = document.createElement('span')
-      textSpan.textContent = 'All offices'
+    a.appendChild(i)
+    a.appendChild(textSpan)
+    navContent.appendChild(a)
+  }
 
-      a.appendChild(i)
-      a.appendChild(textSpan)
-      navContent.appendChild(a)
-    }
-
-    filters.forEach(function(filter){
+  filters.forEach(function(filter) {
 
     const a = document.createElement('a')
     a.className = 'mdc-list-item mdc-list-item--activated'
@@ -396,44 +396,38 @@ function initMenu(db,officeRecord){
     a.appendChild(i)
     a.appendChild(textSpan)
     a.onclick = function() {
-      if(filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled'){
-
-      filterActivities(filter.type,db,officeRecord)
+      if (filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled') {
+        filterActivities(filter.type, db, officeRecord)
       }
-      if(filter.type === 'Incoming' || filter.type === 'Outgoing'){
-        sortByCreator(filter.type,db,officeRecord)
+      if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
+        sortByCreator(filter.type, db, officeRecord)
       }
-
-      if(filter.type === 'Urgent') {
-        sortByDates(filter.type,db,officeRecord)
+      if (filter.type === 'Urgent') {
+        sortByDates(filter.type, db, officeRecord)
       }
-
-      if(filter.type === 'Nearby') {
-        sortByLocation(filter.type,officeRecord)
+      if (filter.type === 'Nearby') {
+        sortByLocation(filter.type, officeRecord)
       }
-
-      if(filter.type === 'Recent') {
+      if (filter.type === 'Recent') {
         listView(firebase.auth().currentUser.uid)
       }
-
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       drawer.open = false
       document.querySelector('.current--selcted-filter').textContent = filter.type
-
     }
 
     navContent.appendChild(a)
   })
   nav.appendChild(header)
-    nav.appendChild(navContent)
-    aside.appendChild(nav)
-    document.body.appendChild(aside)
+  nav.appendChild(navContent)
+  aside.appendChild(nav)
+  document.body.appendChild(aside)
 }
 
-function createOfficeSelectionUI(allOffices){
+function createOfficeSelectionUI(allOffices) {
   document.getElementById('mdc-drawer__content mdc-list').innerHTML = ''
   const dbName = firebase.auth().currentUser.uid
-  allOffices.forEach(function(office){
+  allOffices.forEach(function(office) {
     const a = document.createElement('a')
     a.className = 'mdc-list-item mdc-list-item--activated'
     a.href = '#'
@@ -441,7 +435,7 @@ function createOfficeSelectionUI(allOffices){
     const textSpan = document.createElement('span')
     textSpan.textContent = office
     a.appendChild(textSpan)
-    a.onclick = function(){
+    a.onclick = function() {
       listView(dbName)
     }
     document.getElementById('mdc-drawer__content mdc-list').appendChild(a)
@@ -449,50 +443,50 @@ function createOfficeSelectionUI(allOffices){
 
 }
 
-function filterActivities(type,db,hasMultipleOffice){
+function filterActivities(type, db, hasMultipleOffice) {
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
   let activityDom = ''
-  activityStore.openCursor(null,'prev').onsuccess = function(event){
+  activityStore.openCursor(null, 'prev').onsuccess = function(event) {
     const cursor = event.target.result
-    if(!cursor) {
+    if (!cursor) {
       appendActivityListToDom(activityDom)
       createActivityIcon(db)
       return
     }
-    if(cursor.value.status === type.toUpperCase() && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db,cursor.value,hasMultipleOffice).then(function(li){
+    if (cursor.value.status === type.toUpperCase() && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      createActivityList(db, cursor.value, hasMultipleOffice).then(function(li) {
 
-         activityDom += li
+        activityDom += li
       })
     }
     cursor.continue()
   }
 }
 
-function sortByCreator(type,db,hasMultipleOffice) {
+function sortByCreator(type, db, hasMultipleOffice) {
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
   let activityDom = ''
   const me = firebase.auth().currentUser.phoneNumber
-  activityStore.openCursor(null,'prev').onsuccess = function(event){
+  activityStore.openCursor(null, 'prev').onsuccess = function(event) {
     const cursor = event.target.result
-    if(!cursor) {
+    if (!cursor) {
       appendActivityListToDom(activityDom)
       createActivityIcon(db)
       return
     }
-    if(type === 'Incoming') {
-      if(cursor.value.creator !== me  && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db,cursor.value,hasMultipleOffice).then(function(li){
+    if (type === 'Incoming') {
+      if (cursor.value.creator !== me && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        createActivityList(db, cursor.value, hasMultipleOffice).then(function(li) {
 
           activityDom += li
         })
       }
     }
-    if(type === 'Outgoing') {
-      if(cursor.value.creator === me  && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db,cursor.value,hasMultipleOffice).then(function(li){
+    if (type === 'Outgoing') {
+      if (cursor.value.creator === me && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        createActivityList(db, cursor.value, hasMultipleOffice).then(function(li) {
 
           activityDom += li
         })
@@ -503,31 +497,30 @@ function sortByCreator(type,db,hasMultipleOffice) {
   }
 }
 
-function sortByDates(type,db,hasMultipleOffice){
+function sortByDates(type, db, hasMultipleOffice) {
   const activityDom = ''
   const today = moment().format('YYYY-MM-DD')
   const sortingOrder = {
-    HIGH:[],
-    LOW:[]
+    HIGH: [],
+    LOW: []
   }
   const calendar = db.transaction('calendar').objectStore('calendar').index('range')
-  calendar.openCursor().onsuccess = function(event){
+  calendar.openCursor().onsuccess = function(event) {
     const cursor = event.target.result
-    if(!cursor) {
-      sortingOrder['HIGH'].sort(function(a,b){
+    if (!cursor) {
+      sortingOrder['HIGH'].sort(function(a, b) {
         return moment(b.start).valueOf() - moment(a.start).valueOf()
       })
-      sortingOrder['LOW'].sort(function(a,b){
+      sortingOrder['LOW'].sort(function(a, b) {
         return moment(b.end).valueOf() - moment(a.end).valueOf()
       })
 
-      generateActivitiesByDate(sortingOrder,hasMultipleOffice)
+      generateActivitiesByDate(sortingOrder, hasMultipleOffice)
       return
     }
-    if(today >= cursor.value.start && today <= cursor.value.end) {
+    if (today >= cursor.value.start && today <= cursor.value.end) {
       sortingOrder['HIGH'].push(cursor.value)
-    }
-    else {
+    } else {
       sortingOrder['LOW'].push(cursor.value)
     }
     cursor.continue()
@@ -535,89 +528,96 @@ function sortByDates(type,db,hasMultipleOffice){
 
 }
 
-function generateActivitiesByDate(sortingOrder,hasMultipleOffice){
+function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
   const dbName = firebase.auth().currentUser.uid
-  const req= indexedDB.open(dbName)
+  const req = indexedDB.open(dbName)
   let activityDom = ''
-  req.onsuccess = function(){
+  req.onsuccess = function() {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
-    sortingOrder['HIGH'].forEach(function(record){
-      activityObjectStore.get(record.activityId).onsuccess = function(event){
+    sortingOrder['HIGH'].forEach(function(record) {
+      activityObjectStore.get(record.activityId).onsuccess = function(event) {
         const activity = event.target.result
-        createActivityList(db,activity,hasMultipleOffice).then(function(li){
+        createActivityList(db, activity, hasMultipleOffice).then(function(li) {
 
           activityDom += li
         })
       }
     })
-    sortingOrder['LOW'].forEach(function(record){
-      activityObjectStore.get(record.activityId).onsuccess = function(event){
+    sortingOrder['LOW'].forEach(function(record) {
+      activityObjectStore.get(record.activityId).onsuccess = function(event) {
         const activity = event.target.result
-        createActivityList(db,activity,hasMultipleOffice).then(function(li){
+        createActivityList(db, activity, hasMultipleOffice).then(function(li) {
           activityDom += li
         })
       }
     })
 
-    setTimeout(function(){
-    appendActivityListToDom(activityDom)
-    createActivityIcon(db)
-  },1000)
+    setTimeout(function() {
+      appendActivityListToDom(activityDom)
+      createActivityIcon(db)
+    }, 1000)
 
 
   }
 }
 
-function sortByLocation(type,hasMultipleOffice) {
+function sortByLocation(type, hasMultipleOffice) {
 
   const dbName = firebase.auth().currentUser.uid
 
   const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
 
-  nearestLocationHandler.onmessage = function(message){
+  nearestLocationHandler.onmessage = function(message) {
     sortActivitiesByLocation(hasMultipleOffice)
   }
   nearestLocationHandler.onerror = locationSortError
 
 
-  fetchCurrentLocation().then(function(coords){
-    nearestLocationHandler.postMessage({geopoint:{lat:coords.latitude,lng:coords.longitude},dbName : dbName })
+  fetchCurrentLocation().then(function(coords) {
+    nearestLocationHandler.postMessage({
+      geopoint: {
+        lat: coords.latitude,
+        lng: coords.longitude
+      },
+      dbName: dbName
+    })
   })
 
 }
 
-function sortActivitiesByLocation(hasMultipleOffice){
+function sortActivitiesByLocation(hasMultipleOffice) {
   let activityDom = ''
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function(){
-  const db = req.result
-  const mapObjectStore = db.transaction('map').objectStore('map').index('distance')
+  req.onsuccess = function() {
+    const db = req.result
+    const mapObjectStore = db.transaction('map').objectStore('map').index('distance')
 
-  mapObjectStore.openCursor().onsuccess = function(event){
+    mapObjectStore.openCursor().onsuccess = function(event) {
       const cursor = event.target.result
-      if(!cursor) {
+      if (!cursor) {
         appendActivityListToDom(activityDom)
         createActivityIcon(db)
         return
       }
-      if(cursor.value.hasOwnProperty('distance')){
+      if (cursor.value.hasOwnProperty('distance')) {
         const activityStore = db.transaction('activity').objectStore('activity')
-        activityStore.get(cursor.value.activityId).onsuccess = function(event){
+        activityStore.get(cursor.value.activityId).onsuccess = function(event) {
           const record = event.target.result
-          createActivityList(db,record,hasMultipleOffice).then(function(li){
+          createActivityList(db, record, hasMultipleOffice).then(function(li) {
             activityDom += li
           })
         }
       }
       cursor.continue()
+    }
+
   }
 
 }
 
-}
-function locationSortError(error){
+function locationSortError(error) {
   console.log(error)
 }
 
@@ -632,19 +632,19 @@ function profileView() {
   const user = firebase.auth().currentUser
   const dbName = user.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function (event) {
+    rootObjectStore.get(dbName).onsuccess = function(event) {
       const record = event.target.result
       record.view = 'profile'
       rootObjectStore.put(record)
-      rootTx.oncomplete = function () {
+      rootTx.oncomplete = function() {
         createProfileHeader()
         createProfilePanel()
         disableInputs()
-        document.getElementById('close-profile--panel').addEventListener('click', function () {
+        document.getElementById('close-profile--panel').addEventListener('click', function() {
           // listView(dbName)
           handleViewFromHistory()
         })
@@ -676,11 +676,11 @@ function createProfileHeader() {
   backIcon.className = 'material-icons'
 
 
-    backIcon.textContent = 'arrow_back'
-    backSpan.appendChild(backIcon)
-    header(backSpan.outerHTML, iconCont.outerHTML)
+  backIcon.textContent = 'arrow_back'
+  backSpan.appendChild(backIcon)
+  header(backSpan.outerHTML, iconCont.outerHTML)
 
-    handleChangeNumberMenu()
+  handleChangeNumberMenu()
 
 }
 
@@ -790,7 +790,7 @@ function toggleIconData(icon, inputField) {
   const iconEl = document.getElementById(icon)
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl)
-  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function ({
+  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function({
     detail
   }) {
     if (!detail.isOn) {
@@ -817,7 +817,7 @@ function handleFieldInput(key, value) {
   if (key === 'displayName') {
     user.updateProfile({
       [key]: value
-    }).then(function () {
+    }).then(function() {
       successDialog()
     }).catch(authUpdatedError)
   }
@@ -856,7 +856,7 @@ function newSignIn(value) {
 
   // DOM element to insert firebaseui login UI
   ui.start('#refresh-login', firebaseUiConfig(value))
-  setTimeout(function () {
+  setTimeout(function() {
     document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber
     document.querySelector('.firebaseui-id-phone-number').disabled = true
     document.querySelector('.firebaseui-label').remove()
@@ -1016,7 +1016,7 @@ function createConfirmView() {
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
   document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
-  document.getElementById('back-profile').addEventListener('click', function () {
+  document.getElementById('back-profile').addEventListener('click', function() {
     profileView()
   })
 }
@@ -1109,7 +1109,7 @@ function changePhoneNumber() {
 
   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
-  document.getElementById('cancelUpdate').addEventListener('click', function (event) {
+  document.getElementById('cancelUpdate').addEventListener('click', function(event) {
     profileView()
   })
 
@@ -1123,7 +1123,7 @@ function changePhoneNumber() {
   for (let i = 0; i < allInputFields.length; i++) {
     input.addEventListener('input', handleIllegalNumberInput)
   }
-  document.getElementById('updatePhone').addEventListener('click', function (e) {
+  document.getElementById('updatePhone').addEventListener('click', function(e) {
     if (verifyCurrentPhoneNumber() && verifyPhoneNumber()) {
       const reqBody = {
         'phoneNumber': newPhoneNumber()
@@ -1167,11 +1167,11 @@ function verifyCurrentPhoneNumber() {
   return false
 }
 
- function header (contentStart, contentEnd,headerType) {
+function header(contentStart, contentEnd, headerType) {
 
   const header = document.createElement('header')
   header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
-  if(headerType === 'list'){
+  if (headerType === 'list') {
     header.classList.add('header-list--gray')
   }
   const row = document.createElement('div')
@@ -1198,10 +1198,9 @@ function verifyCurrentPhoneNumber() {
   row.appendChild(sectionStart)
   row.appendChild(sectionEnd)
   header.innerHTML = row.outerHTML
-  if(headerType === 'selector') {
+  if (headerType === 'selector') {
     return header
-  }
-  else {
+  } else {
     document.getElementById('header').innerHTML = header.outerHTML
   }
 }
@@ -1245,19 +1244,15 @@ function handleChangeNumberMenu() {
   var menuButtonEl = document.querySelector('.profile--toolbar-icon')
 
   // Toggle menu open
-  menuButtonEl.addEventListener('click', function () {
+  menuButtonEl.addEventListener('click', function() {
     menu.open = !menu.open
   })
 
   // Listen for selected item
-  menuEl.addEventListener('MDCMenu:selected', function (evt) {
+  menuEl.addEventListener('MDCMenu:selected', function(evt) {
     createConfirmView(evt)
   })
 
-  // Set Anchor Corner to Bottom End
-  // menu.setAnchorCorner('Corner.BOTTOM_END')
-
-  // Turn off menu open animations
   menu.quickOpen = false
 }
 
@@ -1278,7 +1273,6 @@ function createInputForProfile(key, type, classtype) {
   if (type && key === 'email') {
     mainInput.placeholder = 'Your Email'
   }
-
 
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'

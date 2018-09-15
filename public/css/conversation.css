@@ -83,7 +83,6 @@ body {
 .comment-box .talktext span {
   float: left;
   font-size: 13px;
-  padding-top: 10px;
 }
 
 .current-user--comment {
@@ -904,7 +903,7 @@ input[type="datetime-local"] {
   }
 
   .bigBlackBold {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
   }
 
@@ -1165,4 +1164,10 @@ input[type="datetime-local"] {
 }
 .image-preview--attachment {
   display: inline;
+}
+
+.comment--info {
+  width:100%;
+  padding-top: 11px;
+padding-bottom: 3px;
 }

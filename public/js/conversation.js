@@ -4,9 +4,7 @@ function conversation(id,pushState) {
     history.pushState(['conversation', id], null, null)
   }
 
-  if (!id) return
   const currentUser = firebase.auth().currentUser
-
   const req = window.indexedDB.open(currentUser.uid)
 
   req.onsuccess = function() {
@@ -53,6 +51,7 @@ function fetchAddendumForComment(id, user) {
     }
   }
 }
+
 
 function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
@@ -131,6 +130,7 @@ function createComment(db, addendum, currentUser) {
 
     let user = document.createElement('p')
     user.classList.add('user-name--comment')
+
     readNameFromNumber(db, addendum.user).then(function(nameOrNumber) {
       // console.log(nameOrNumber)
       user.textContent = nameOrNumber
@@ -140,7 +140,7 @@ function createComment(db, addendum, currentUser) {
       comment.textContent = addendum.comment
 
       let commentInfo = document.createElement('span')
-      commentInfo.style.width = '100%'
+      commentInfo.className = 'comment--info'
       const datespan = document.createElement('span')
       datespan.textContent = moment(addendum.timestamp).calendar()
       datespan.classList.add('comment-date')
@@ -340,6 +340,8 @@ function selectorUI(evt, data) {
   searchIcon.className = 'material-icons'
   searchIcon.textContent = 'search'
   searchIcon.id = 'selector--search'
+
+
 
   const backSpan = document.createElement('span')
   backSpan.className = 'material-icons dialog--header-back'
@@ -1766,6 +1768,7 @@ function createSelectMenu(key,value,canEdit) {
 }
 
 function createSimpleMenu(status) {
+
   const div = document.createElement("div")
   div.className = 'mdc-menu mdc-menu--status'
   div.setAttribute('tabindex', '-1')
@@ -1775,12 +1778,15 @@ function createSimpleMenu(status) {
   ul.setAttribute('role', 'menu')
   ul.setAttribute('aria-hidden', 'true')
   const statuses = []
+
   if(status === 'CONFIRMED') {
       statuses.push('Pending','Cancelled')
   }
+
   if(status === 'PENDING') {
     statuses.push('confirmed','Cancelled')
   }
+
   if(status === 'CANCELLED') {
     statuses.push('Confirmed','Pending')
   }
