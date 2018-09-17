@@ -708,17 +708,18 @@ footer.mdc-dialog__footer {
   margin: 0 auto;
 }
 #attachment-container {
-  padding-left: 15px;
-  padding-right: 15px;
   padding-top: 10px;
 }
 
-#attachment-container .label--text {
+.label--text {
   color: #ff9800 !important;
 }
 
 .attachment-field {
-  padding: 0px 0px 5px 0px;
+  padding: 5Px 0px 5px 0px;
+  padding-left: 15px;
+  padding-right: 15px;
+
 }
 
 .attachment input {
@@ -859,7 +860,7 @@ input[type="datetime-local"] {
   }
 
   .attachment-selector-label {
-    margin-top: 0px;
+    margin-top: -5px;
   }
 
   .mdc-fab .mdc-fab__icon {
@@ -962,12 +963,15 @@ input[type="datetime-local"] {
 
   }
   #assignees--list .mdc-list-item:nth-child(1) .mdc-list-item__meta {
-    margin-top: 0px;
+    margin-top: 4px;
   }
   #assignees--list .add--assignee-icon {
-    margin-top: 7px;
+    margin-top: 0px;
   }
 
+  #assignees--list {
+    padding-top:5px;
+  }
   .attachment-field.base64 {
     display: inline-flex;
     margin-bottom: 0px;
@@ -981,8 +985,8 @@ input[type="datetime-local"] {
   }
 
   .attachment-field.base64 img {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     margin-left: 20px;
     margin-top: -15px;
     border-radius: 50%
@@ -1157,11 +1161,9 @@ input[type="datetime-local"] {
 
 #attachment-container .mdc-text-field {
   max-width: 50%;
+  margin-bottom: 0px;
 }
 
-.selector--margin {
-  margin-top:10px;
-}
 .image-preview--attachment {
   display: inline;
 }
@@ -1170,4 +1172,45 @@ input[type="datetime-local"] {
   width:100%;
   padding-top: 11px;
 padding-bottom: 3px;
+}
+
+.update-create--activity .mdc-list {
+  background-color:white;
+  margin-top:10px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.attachment--divider {
+  opacity: 0.5
+}
+
+#schedule--group {
+  margin-left: 0px;
+  margin-right: 0px;
+  padding-bottom: 5px;
+  background-color: white;
+
+}
+
+#schedule--group .mdc-list-group__subheader {
+  margin-bottom:0px;
+  padding-top: 10px;
+  margin-top: 0px;
+  color: #ff9800;
+}
+
+#schedule--group .mdc-list {
+  margin-top:0px;
+}
+
+#schedule--group .mdc-list input {
+  border:none;
+  padding-top:10px;
+
+}
+.time--input {
+  position: absolute;
+  right:0;
+  width: 15%;
+  margin-right: 15px;
 }

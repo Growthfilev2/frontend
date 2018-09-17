@@ -9,7 +9,6 @@ function conversation(id,pushState) {
 
   req.onsuccess = function() {
     const db = req.result
-
     const rootTx = db.transaction('root', 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(currentUser.uid).onsuccess = function(event) {
@@ -773,6 +772,8 @@ function convertIdToKey(id) {
 
 function updateCreateContainer(record) {
 
+  document.body.style.backgroundColor = '#eeeeee'
+
   const leftHeaderContent = document.createElement('div')
   leftHeaderContent.style.display = 'inline-flex'
   const backSpan = document.createElement('span')
@@ -809,18 +810,30 @@ function updateCreateContainer(record) {
     const containerList = document.createElement('ul')
     containerList.className = 'mdc-list custom--list-margin';
 
+    const listGroup = document.createElement('div')
     switch (TOTAL_LIST_TYPES[i]) {
       case 'office':
         containerList.classList.remove('custom--list-margin')
+        break;
+        case 'schedule':
+        listGroup.className = 'mdc-list-group__subheader'
+        listGroup.id = 'schedule--group'
         break;
       case 'venue':
       case 'assignees':
         containerList.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
         break;
+
     };
+
+    if(TOTAL_LIST_TYPES[i] === 'schedule') {
+      container.appendChild(listGroup)
+    }
+    else {
 
     containerList.id = TOTAL_LIST_TYPES[i] + '--list'
     container.appendChild(containerList)
+    }
   }
   if (record.canEdit) {
 
@@ -861,7 +874,6 @@ function updateCreateActivity(record) {
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {
       office: record.office,
-      ts: record.timestamp,
       showLabel: true
     }))
 
@@ -872,12 +884,9 @@ function updateCreateActivity(record) {
     }
 
     createVenueSection(record)
+    createScheduleTable(record);
 
-    const scheduleSection = document.getElementById('schedule--list')
-    scheduleSection.appendChild(createScheduleTable({
-      canEdit: record.canEdit,
-      schedules: record.schedule
-    }))
+
     const attachmentSection = document.getElementById('attachment--list')
     // canEdit, office, template
     attachmentSection.appendChild(createAttachmentContainer(record))
@@ -917,10 +926,6 @@ function createSimpleLi(key, data) {
     listItemLabel.textContent = key
     listItem.appendChild(listItemLabel)
     listItem.appendChild(dataVal)
-    listItemMeta.className = 'mdc-list-item__meta'
-    listItemMeta.setAttribute('aria-hidden', 'true')
-    listItemMeta.textContent = moment(data.ts).calendar()
-    listItem.appendChild(listItemMeta)
   }
   if (key === 'children') {
     const metaInput = document.createElement('span')
@@ -1068,89 +1073,107 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
 function createScheduleTable(data) {
 
-  if (!data.schedules.length) {
-    document.getElementById('schedule--list').style.display = 'none'
-    return document.createElement('span')
+  if (!data.schedule.length) {
+    document.getElementById('schedule--group').style.display = 'none'
+    // return document.createElement('span')
   }
 
-  const table = document.createElement('table')
-  table.className = 'schedule--show-table activity--detail--section'
-  const trMain = document.createElement('tr')
-  trMain.className = 'row-main'
-  const th0 = document.createElement('th')
-  const th1 = document.createElement('th')
-  th1.className = 'detail--static-text schedule-label'
-  const th2 = document.createElement('th')
-  th2.className = 'detail--static-text schedule-label'
 
-  th0.textContent = ''
-  th1.textContent = 'Start Time'
-  th2.textContent = 'End Time'
-  trMain.appendChild(th0)
-  trMain.appendChild(th1)
-  trMain.appendChild(th2)
 
-  table.appendChild(trMain)
-  data.schedules.forEach(function(schedule) {
-    console.log(schedule)
-    const tr = document.createElement('tr')
-    const td0 = document.createElement('td')
-    td0.className = 'detail--static-text'
 
-    const td1 = document.createElement('td')
+  data.schedule.forEach(function(schedule){
+    console.log(schedule.startTime)
+    const scheduleName = document.createElement('h5')
+    scheduleName.className = 'mdc-list-group__subheader label--text'
+    scheduleName.textContent = schedule.name
 
-    td1.className = `schedule--time`
-    td1.dataset.start = `${schedule.name}-startDate`
-    // const td1Input = document.createElement('input')
+    const ul = document.createElement('ul')
+    ul.className = 'mdc-list mdc-list--dense'
 
-    const td2 = document.createElement('td')
-    td2.className = `schedule--time`
-    td2.dataset.end = `${schedule.name}-endDate`
-    td0.textContent = schedule.name
+    const divider = document.createElement('li')
+    divider.className = 'mdc-list-divider'
+    divider.setAttribute('role','separator')
 
-    const timeTr = document.createElement('tr')
-    const spaceTd = document.createElement('td')
+    const startLi = document.createElement('li')
+    startLi.className  = 'mdc-list-item'
 
-    const tdStartTime = document.createElement('td')
-    tdStartTime.className = `schedule--time`
-    tdStartTime.dataset.start = `${schedule.name}-startTime`
-    const tdEndTime = document.createElement('td')
-    tdEndTime.className = `schedule--time`
-    tdEndTime.dataset.end = `${schedule.name}-endTime`
+    const sdDiv = document.createElement('div')
+    sdDiv.className = 'mdc-text-field'
 
-    td1.appendChild(createTimeInput(schedule.startTime ? moment(schedule.startTime).format('YYYY-MM-DD') : '', data.canEdit, {
-      type: 'date',
-      simple: true
-    }))
-    td2.appendChild(createTimeInput(schedule.endTime ? moment(schedule.endTime).format('YYYY-MM-DD') : '', data.canEdit, {
-      type: 'date',
-      simple: true
-    }))
+    const startDateInput = document.createElement('input')
+    startDateInput.value = moment(schedule.startTime).format('YYYY-MM-DD')
+    startDateInput.type = 'date'
+    startDateInput.disabled = !data.canEdit
+    startDateInput.className = 'mdc-text-field__input'
 
-    tdStartTime.appendChild(createTimeInput(schedule.startTime ? moment(schedule.startTime).format('hh:mm') : '', data.canEdit, {
-      type: 'time',
-      simple: true
-    }))
-    tdEndTime.appendChild(createTimeInput(schedule.endTime ? moment(schedule.endTime).format('hh:mm') : '', data.canEdit, {
-      type: 'time',
-      simple: true
-    }))
+    sdDiv.appendChild(startDateInput)
 
-    tr.appendChild(td0)
-    tr.appendChild(td1)
-    tr.appendChild(td2)
-    timeTr.appendChild(spaceTd)
-    timeTr.appendChild(tdStartTime)
-    timeTr.appendChild(tdEndTime)
+    const stSpan = document.createElement("span")
+    stSpan.className = 'mdc-list-item__meta'
 
-    table.appendChild(tr)
-    table.appendChild(timeTr)
+    const stDiv = document.createElement('div')
+    stDiv.className = 'mdc-text-field'
+
+    const startTimeInput = document.createElement('input')
+    startTimeInput.value = moment(schedule.startTime).format('hh:mm')
+    startTimeInput.type = 'time'
+    startTimeInput.className = 'time--input'
+    startTimeInput.disabled = !data.canEdit
+    startTimeInput.className = 'mdc-text-field__input'
+    stDiv.appendChild(startTimeInput)
+
+    stSpan.appendChild(stDiv)
+
+
+    const endLi = document.createElement('li')
+    endLi.className  = 'mdc-list-item'
+
+    const edDiv = document.createElement('div')
+    edDiv.className = 'mdc-text-field'
+
+    const endDateInput = document.createElement('input')
+    endDateInput.value = moment(schedule.endTime).format('YYYY-MM-DD')
+    endDateInput.type = 'date'
+    endDateInput.disabled = !data.canEdit
+    endDateInput.className = 'mdc-text-field__input'
+    edDiv.appendChild(endDateInput)
+
+    const etSpan = document.createElement("span")
+    etSpan.className = 'mdc-list-item__meta'
+
+    const etDiv = document.createElement('div')
+    etDiv.className = 'mdc-text-field'
+
+
+    const endTimeInput = document.createElement('input')
+    endTimeInput.value = moment(schedule.endTime).format('hh:mm')
+    endTimeInput.type = 'time'
+    endTimeInput.disabled = !data.canEdit
+    endTimeInput.className = 'mdc-text-field__input'
+
+    etDiv.appendChild(endTimeInput)
+
+    etSpan.appendChild(etDiv)
+
+
+    startLi.appendChild(sdDiv)
+    startLi.appendChild(stSpan)
+
+    endLi.appendChild(edDiv)
+    endLi.appendChild(etSpan)
+
+    ul.appendChild(startLi)
+    ul.appendChild(divider)
+    ul.appendChild(endLi)
+
+    document.getElementById('schedule--group').appendChild(scheduleName)
+    document.getElementById('schedule--group').appendChild(ul)
   })
-  return table
 }
 
+
+
 function createAttachmentContainer(data) {
-  // attachment,canEdit, office, template
 
   const availTypes = {
     'phoneNumber': '',
@@ -1182,6 +1205,7 @@ function createAttachmentContainer(data) {
       div.appendChild(label)
       div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
     }
+
 
     if (data.attachment[key].type === 'phoneNumber') {
       div.classList.add('selector--margin')
@@ -1298,6 +1322,10 @@ function createAttachmentContainer(data) {
     }
 
     attachCont.appendChild(div)
+    const hr = document.createElement('hr')
+    hr.className = 'attachment--divider'
+    attachCont.appendChild(hr)
+
   })
   console.log(attachCont)
   return attachCont
@@ -1307,15 +1335,10 @@ function createAssigneeList(db, record, showLabel) {
   if (showLabel) {
 
     const labelAdd = document.createElement('li')
-    labelAdd.className = 'mdc-list-item'
+    labelAdd.className = 'mdc-list-item label--text'
+    labelAdd.textContent = 'Assignees'
 
-    const labelTextSpan = document.createElement('span')
-    labelTextSpan.className = 'mdc-list-item__text'
-    const labelText = document.createElement('span')
-    labelText.className = 'mdc-list-item__primary-text detail--static-text'
-    labelText.textContent = 'Assignees'
 
-    labelTextSpan.appendChild(labelText)
 
     const labelButton = document.createElement('span')
     labelButton.className = 'mdc-list-item__meta'
@@ -1336,7 +1359,7 @@ function createAssigneeList(db, record, showLabel) {
     addButton.appendChild(span)
     labelButton.appendChild(addButton)
 
-    labelAdd.appendChild(labelTextSpan)
+
     if (record.canEdit) {
       labelAdd.appendChild(labelButton)
     }
