@@ -96,6 +96,7 @@ function sendCurrentViewNameToAndroid(viewName) {
     console.log(viewName)
 }
 
+
 function inputFile(selector) {
   return document.getElementById(selector)
 }

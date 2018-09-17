@@ -5,33 +5,26 @@ function listView(dbName) {
   listPanel()
 
   document.body.style.backgroundColor = 'white'
-  if (!dbName) {
-    dbName = firebase.auth().currentUser.uid
-  }
 
-  const req = window.indexedDB.open(dbName)
-  req.onerror = function(event) {
-    console.log(event)
-  }
-
+  const req = indexedDB.open(dbName || localStorage.getItem('dbexist'))
+  let record = ''
   req.onsuccess = function() {
-    const db = req.result
+    const db = req.result;
     const rootTx = db.transaction(['root'], 'readwrite')
-    const rootObjectStore = rootTx.objectStore('root')
-    let hasMultipleOffice = ''
-    let allOffices = ''
-    rootObjectStore.get(dbName).onsuccess = function(event) {
-      const record = event.target.result
-      record.view = 'list'
-      hasMultipleOffice = record.offices.hasMultipleOffice
-      allOffices = record.offices.allOffices
-      rootObjectStore.put(record)
+    const rootStore = rootTx.objectStore('root')
+    rootStore.get(dbName || localStorage.getItem('dbexist')).onsuccess = function(event) {
+      const officeRecord = event.target.result
+      officeRecord.view = 'list'
+      rootStore.put(officeRecord)
+
       rootTx.oncomplete = function() {
+
         if (!document.querySelector('.mdc-drawer--temporary')) {
-          initMenu(db, {
-            multipleOffice: hasMultipleOffice,
-            offices: allOffices
-          })
+          initMenu(
+            db, {
+              multipleOffice: officeRecord.offices.hasMultipleOffice,
+              offices: officeRecord.offices.allOffices
+            })
         }
         creatListHeader()
         fetchDataForActivityList(db)
@@ -41,7 +34,6 @@ function listView(dbName) {
 }
 
 function fetchDataForActivityList(db) {
-  console.log("fetch for list")
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
@@ -51,9 +43,9 @@ function fetchDataForActivityList(db) {
   activityVisibleIndex.openCursor(null, 'prev').onsuccess = function(event) {
     let cursor = event.target.result
     if (!cursor) {
-        appendActivityListToDom(activityDom)
-        createActivityIcon(db)
-        return
+      appendActivityListToDom(activityDom)
+      createActivityIcon(db)
+      return
     }
 
     if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
@@ -268,8 +260,11 @@ function creatListHeader() {
 
 }
 
+function androidSwiper(openOrClose) {
+  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+  drawer.open = openOrClose
+}
 function initMenu(db, officeRecord) {
-
   const filters = [{
       type: 'Incoming',
       icon: 'call_made'
@@ -298,7 +293,6 @@ function initMenu(db, officeRecord) {
       icon: 'clear'
     }
   ]
-
 
   const aside = document.createElement('aside')
   aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
@@ -424,13 +418,6 @@ function initMenu(db, officeRecord) {
   aside.appendChild(nav)
   document.body.appendChild(aside)
 }
-if(document.querySelector('.mdc-drawer--temporary')){
-  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  if(drawer.open = false) {
-    sendCurrentViewNameToAndroid('listView')
-  }
-}
-
 
 
 function createOfficeSelectionUI(allOffices) {
