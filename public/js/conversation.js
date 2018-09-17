@@ -225,8 +225,7 @@ function createHeaderContent(db, id) {
 
       leftDiv.appendChild(backDiv)
       leftDiv.appendChild(primarySpan)
-
-      createFunctionalHeader(leftDiv, record)
+      header(leftDiv.outerHTML, '')
 
       document.getElementById('back-conv').addEventListener('click', function() {
         reinitCount(db, id)
@@ -322,7 +321,9 @@ function getImageFromNumber(db, number) {
 }
 
 function selectorUI(evt, data) {
-  console.log(data)
+
+  sendCurrentViewNameToAndroid('selector')
+
   const aside = document.createElement('aside')
 
   aside.id = 'dialog--component'
@@ -1111,7 +1112,7 @@ function createScheduleTable(data) {
     startLi.className  = 'mdc-list-item'
 
     const sdDiv = document.createElement('div')
-    sdDiv.className = 'mdc-text-field'
+    sdDiv.className = 'mdc-text-field start--date'
 
     const startDateInput = document.createElement('input')
     startDateInput.value = moment(schedule.startTime).format('YYYY-MM-DD')
@@ -1125,7 +1126,7 @@ function createScheduleTable(data) {
     stSpan.className = 'mdc-list-item__meta'
 
     const stDiv = document.createElement('div')
-    stDiv.className = 'mdc-text-field'
+    stDiv.className = 'mdc-text-field start--time'
 
     const startTimeInput = document.createElement('input')
     startTimeInput.value = moment(schedule.startTime).format('hh:mm')
@@ -1142,7 +1143,7 @@ function createScheduleTable(data) {
     endLi.className  = 'mdc-list-item'
 
     const edDiv = document.createElement('div')
-    edDiv.className = 'mdc-text-field'
+    edDiv.className = 'mdc-text-field end--date'
 
     const endDateInput = document.createElement('input')
     endDateInput.value = moment(schedule.endTime).format('YYYY-MM-DD')
@@ -1155,7 +1156,7 @@ function createScheduleTable(data) {
     etSpan.className = 'mdc-list-item__meta'
 
     const etDiv = document.createElement('div')
-    etDiv.className = 'mdc-text-field'
+    etDiv.className = 'mdc-text-field end--time'
 
 
     const endTimeInput = document.createElement('input')
@@ -1526,8 +1527,6 @@ function insertInputsIntoActivity(record, activityStore) {
     }
   }
 
-  console.log(record.attachment)
-
   let sd;
   let st;
   let ed;
@@ -1535,30 +1534,30 @@ function insertInputsIntoActivity(record, activityStore) {
   let allow = true;
   for (var i = 0; i < record.schedule.length; i++) {
 
-     sd = document.querySelector(`[data-start="${record.schedule[i].name}-startDate"] input`)
-     st = document.querySelector(`[data-start="${record.schedule[i].name}-startTime"] input`)
-     ed = document.querySelector(`[data-end="${record.schedule[i].name}-endDate"] input`)
-     et = document.querySelector(`[data-end="${record.schedule[i].name}-endTime"] input`)
+     sd = getInputText('.start--date').value
+     st = getInputText('.start--time').value
+     ed = getInputText('.end--date').value
+     et = getInputText('.end--time').value
 
-     if (sd.value !== "" && ed.value == "") {
+     if (sd !== "" && ed == "") {
        snacks('Add a valid End Date')
        allow = false
      }
 
-     if (ed.value !== "" && sd.value == "") {
+     if (ed !== "" && sd == "") {
        snacks('Add a valid Start Date')
        allow = false
 
      }
 
-     if (sd.value && ed.value && moment(ed.value).valueOf() < moment(sd.value).valueOf()) {
+     if (sd && ed && moment(ed).valueOf() < moment(sd).valueOf()) {
        snacks('End Date cannot be before Start Date')
        allow = false
      }
 
      if(allow){
-       record.schedule[i].startTime = concatDateWithTime(sd.value, st.value) || ''
-       record.schedule[i].endTime = concatDateWithTime(ed.value, et.value)  || ''
+       record.schedule[i].startTime = concatDateWithTime(sd, st) || ''
+       record.schedule[i].endTime = concatDateWithTime(ed, et)  || ''
      }
   }
 

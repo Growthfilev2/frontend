@@ -92,7 +92,8 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-    // Fetchview.startConversation(viewName)
+    // Fetchview.disabledSwipe(viewName)
+    console.log(viewName)
 }
 
 function inputFile(selector) {
@@ -250,5 +251,5 @@ function handleTimeout() {
 }
 
 function getInputText(selector) {
-  return mdc.textField.MDCTextField.attachTo(document.getElementById(selector))
+  return mdc.textField.MDCTextField.attachTo(document.querySelector(selector))
 }

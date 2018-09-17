@@ -912,7 +912,7 @@ input[type="datetime-local"] {
     width:35px;
     height: 35px;
     border-radius: 50%;
-
+    margin-top:3px;
   }
 
   .back-icon--large {

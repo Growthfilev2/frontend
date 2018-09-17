@@ -1,5 +1,5 @@
 function listView(dbName) {
-  // sendCurrentViewNameToAndroid('listView')
+  sendCurrentViewNameToAndroid('listView')
 
   history.pushState(['listView', dbName], null, null)
   listPanel()
@@ -261,13 +261,15 @@ function creatListHeader() {
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
   // console.log(drawer)
   document.getElementById('menu--panel').addEventListener('click', function() {
-
     drawer.open = true
+    sendCurrentViewNameToAndroid('drawer')
+
   })
 
 }
 
 function initMenu(db, officeRecord) {
+
   const filters = [{
       type: 'Incoming',
       icon: 'call_made'
@@ -331,7 +333,6 @@ function initMenu(db, officeRecord) {
   name.className = 'mdc-typography--subtitle'
   setTimeout(function() {
     name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
-
   }, 2000)
 
 
@@ -412,6 +413,7 @@ function initMenu(db, officeRecord) {
       }
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       drawer.open = false
+      sendCurrentViewNameToAndroid('listView')
       document.querySelector('.current--selcted-filter').textContent = filter.type
     }
 
@@ -422,6 +424,14 @@ function initMenu(db, officeRecord) {
   aside.appendChild(nav)
   document.body.appendChild(aside)
 }
+if(document.querySelector('.mdc-drawer--temporary')){
+  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+  if(drawer.open = false) {
+    sendCurrentViewNameToAndroid('listView')
+  }
+}
+
+
 
 function createOfficeSelectionUI(allOffices) {
   document.getElementById('mdc-drawer__content mdc-list').innerHTML = ''
@@ -942,7 +952,7 @@ function authUpdatedError(error) {
 }
 
 function changeDisplayName(user) {
-  const displayNameField = getInputText('displayName')
+  const displayNameField = getInputText('#displayName')
 
   if (user.displayName) {
     displayNameField.value = user.displayName
@@ -952,7 +962,7 @@ function changeDisplayName(user) {
 }
 
 function changeEmailAddress(user) {
-  const emailField = getInputText('email')
+  const emailField = getInputText('#email')
   if (user.email) {
     emailField.value = user.email
   }
@@ -1021,8 +1031,8 @@ function createConfirmView() {
 }
 
 function disableInputs() {
-  getInputText('displayName')['input_'].disabled = true
-  getInputText('email')['input_'].disabled = true
+  getInputText('#displayName')['input_'].disabled = true
+  getInputText('#email')['input_'].disabled = true
 }
 
 function changePhoneNumber() {
@@ -1112,10 +1122,10 @@ function changePhoneNumber() {
     profileView()
   })
 
-  getInputText('new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
-  getInputText('new-phone--number').value = ''
-  getInputText('current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
-  getInputText('current-phone--number').value = ''
+  getInputText('#new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
+  getInputText('#new-phone--number').value = ''
+  getInputText('#current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
+  getInputText('#current-phone--number').value = ''
 
   const allInputFields = document.querySelectorAll('.phoneNumber')
 
@@ -1137,8 +1147,8 @@ function changePhoneNumber() {
 }
 
 function newPhoneNumber() {
-  const newCountryCode = getInputText('new-country--code').value
-  const newNumber = getInputText('new-phone--number').value
+  const newCountryCode = getInputText('#new-country--code').value
+  const newNumber = getInputText('#new-phone--number').value
   return newCountryCode.concat(newNumber)
 }
 
@@ -1155,8 +1165,8 @@ function handleIllegalNumberInput(value) {
 }
 
 function verifyCurrentPhoneNumber() {
-  const currentCountryCode = getInputText('current-country--code').value
-  const currentNumber = getInputText('current-phone--number').value
+  const currentCountryCode = getInputText('#current-country--code').value
+  const currentNumber = getInputText('#current-phone--number').value
   const numberInAuth = firebase.auth().currentUser.phoneNumber
 
   console.log(currentCountryCode.concat(currentNumber))
