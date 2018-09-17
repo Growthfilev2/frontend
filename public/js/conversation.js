@@ -715,9 +715,11 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       updatedActivity = updateVenue(updatedActivity, attr, data)
 
-      Mutation(convertKeyToId(attr.key))
+
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
+      document.getElementById('send-activity').classList.remove('hidden')
+
       if (!activityRecord.hasOwnProperty('create')) {
         activityStore.put(updatedActivity)
       }
@@ -734,9 +736,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
 
     updatedActivity.attachment[attr.key].value = data.primary
-    Mutation(convertKeyToId(attr.key))
-
-
 
     if (!activityRecord.hasOwnProperty('create')) {
       activityStore.put(updatedActivity)
@@ -749,6 +748,8 @@ function updateDomFromIDB(activityRecord, attr, data) {
     if (data.hasOwnProperty('secondary')) {
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
     }
+    document.getElementById('send-activity').classList.remove('hidden')
+
   }
 
 }
@@ -1838,26 +1839,4 @@ function createSimpleMenu(status) {
   div.appendChild(ul)
 
   return div
-}
-
-function Mutation(targetNode){
-  const node = document.getElementById(targetNode)
-
-  const config = {attributes:true,childList:true,subtree:true}
-
-  const callback = function(mutationsList) {
-    console.log(mutationsList)
-    for(let mutation of mutationsList){
-      if(mutation.type === 'childList') {
-        document.getElementById('send-activity').classList.remove('hidden')
-      }
-      if(mutation.type === 'attributes') {
-        console.log(mutation.attributeName)
-      }
-    }
-  }
-
-  const observer = new MutationObserver(callback)
-  observer.observe(node,config)
-
 }
