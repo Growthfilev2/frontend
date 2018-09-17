@@ -1214,3 +1214,6 @@ padding-bottom: 3px;
   width: 15%;
   margin-right: 15px;
 }
+.hidden{
+  display: none;
+}

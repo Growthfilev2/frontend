@@ -509,13 +509,14 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
     }
     cursor.continue()
   }
+
   document.getElementById('selector--search').addEventListener('click', function() {
     initSearchForSelectors('map', activityRecord, data)
   })
+
   dialog['acceptButton_'].onclick = function() {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
-    console.log(selectedField)
     updateDomFromIDB(activityRecord, {
       hash: 'venue',
       key: data.key
@@ -525,7 +526,6 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-
     })
     removeDialog()
   }
@@ -714,6 +714,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       updatedActivity = updateVenue(updatedActivity, attr, data)
 
+      Mutation(convertKeyToId(attr.key))
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
       if (!activityRecord.hasOwnProperty('create')) {
@@ -732,6 +733,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
 
     updatedActivity.attachment[attr.key].value = data.primary
+    Mutation(convertKeyToId(attr.key))
 
 
 
@@ -740,6 +742,8 @@ function updateDomFromIDB(activityRecord, attr, data) {
     }
     if (attr.hash === 'weekday') return
     if (!attr.hasOwnProperty('key')) return
+
+
     document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
     if (data.hasOwnProperty('secondary')) {
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
@@ -841,6 +845,7 @@ function updateCreateContainer(record) {
     updateBtn.className = 'mdc-fab send--activity-fab'
     updateBtn.setAttribute('aria-label', 'Send')
     updateBtn.id = 'send-activity'
+    updateBtn.classList.add('hidden')
     const sendIcon = document.createElement('span')
     sendIcon.className = 'mdc-fab__icon material-icons'
     sendIcon.textContent = 'send'
@@ -851,7 +856,6 @@ function updateCreateContainer(record) {
 }
 
 function updateCreateActivity(record) {
-  console.log(history.state[0])
 
   history.pushState(['updateCreateActivity', record.activityId], null, null)
 
@@ -890,6 +894,15 @@ function updateCreateActivity(record) {
     const attachmentSection = document.getElementById('attachment--list')
     // canEdit, office, template
     attachmentSection.appendChild(createAttachmentContainer(record))
+
+    const inputFields = document.querySelectorAll('.update-create--activity input');
+    for (var i = 0; i < inputFields.length; i++) {
+      inputFields[i].addEventListener('input',function(e){
+        if(document.getElementById('send-activity').classList.contains('hidden')) {
+            document.getElementById('send-activity').classList.remove('hidden')
+        }
+      })
+    }
 
     if (document.querySelector('.mdc-select')) {
       const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
@@ -1171,8 +1184,6 @@ function createScheduleTable(data) {
   })
 }
 
-
-
 function createAttachmentContainer(data) {
 
   const availTypes = {
@@ -1204,6 +1215,7 @@ function createAttachmentContainer(data) {
 
       div.appendChild(label)
       div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+
     }
 
 
@@ -1693,14 +1705,14 @@ function createSimpleInput(value, canEdit, withIcon, key) {
   }
 
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input'
+  input.className = 'mdc-text-field__input input--value--update'
   input.style.paddingTop = '0px'
+  input.value = value
 
 
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
-  input.value = value
   if (withIcon) {
 
     textField.id = 'search--bar--field'
@@ -1711,6 +1723,8 @@ function createSimpleInput(value, canEdit, withIcon, key) {
   textField.appendChild(input)
   textField.appendChild(ripple)
   const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
+
+
   return textField
 }
 
@@ -1825,4 +1839,26 @@ function createSimpleMenu(status) {
   div.appendChild(ul)
 
   return div
+}
+
+function Mutation(targetNode){
+  const node = document.getElementById(targetNode)
+
+  const config = {attributes:true,childList:true,subtree:true}
+
+  const callback = function(mutationsList) {
+    console.log(mutationsList)
+    for(let mutation of mutationsList){
+      if(mutation.type === 'childList') {
+        document.getElementById('send-activity').classList.remove('hidden')
+      }
+      if(mutation.type === 'attributes') {
+        console.log(mutation.attributeName)
+      }
+    }
+  }
+
+  const observer = new MutationObserver(callback)
+  observer.observe(node,config)
+
 }
