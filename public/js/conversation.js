@@ -446,10 +446,10 @@ function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return
 
     const userRecord = cursor.value
-    if (data.attachment.present) {
+    if (data.attachment.present && !alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
       ul.appendChild(createSimpleAssigneeLi(userRecord, true))
     }
-    if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+    else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
       ul.appendChild(createSimpleAssigneeLi(userRecord, true))
     }
 
