@@ -92,8 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-    // Fetchview.disabledSwipe(viewName)
-    console.log(viewName)
+   Fetchview.disabledSwipe(viewName)
 }
 
 

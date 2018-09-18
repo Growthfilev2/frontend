@@ -1,5 +1,5 @@
 function listView(dbName) {
-  sendCurrentViewNameToAndroid('listView')
+  // sendCurrentViewNameToAndroid('listView')
 
   history.pushState(['listView', dbName], null, null)
   listPanel()
@@ -261,8 +261,10 @@ function creatListHeader() {
 }
 
 function androidSwiper(openOrClose) {
+  if(history.state[0] === 'listView') {
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
   drawer.open = openOrClose
+  }
 }
 function initMenu(db, officeRecord) {
   const filters = [{
