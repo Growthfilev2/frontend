@@ -30,7 +30,7 @@ function fetchAddendumForComment(id, user) {
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
     createHeaderContent(db, id)
     commentPanel(db, id)
-    statusChange(db,id)
+    statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
     let commentDom = ''
     addendumIndex.openCursor(id).onsuccess = function(event) {
@@ -68,51 +68,51 @@ function commentPanel(db, id) {
   const statusChangeContainer = document.createElement('div')
   statusChangeContainer.className = 'status--change-cont'
 
-    const commentCont = document.createElement('div')
-    commentCont.className = 'comment--container'
+  const commentCont = document.createElement('div')
+  commentCont.className = 'comment--container'
 
-    const inputField = document.createElement('div')
-    inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
-    inputField.id = 'write--comment'
+  const inputField = document.createElement('div')
+  inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
+  inputField.id = 'write--comment'
 
-    const input = document.createElement('input')
-    input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
-    input.type = 'text'
+  const input = document.createElement('input')
+  input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
+  input.type = 'text'
 
-    inputField.appendChild(input)
+  inputField.appendChild(input)
 
-    commentCont.appendChild(inputField)
+  commentCont.appendChild(inputField)
 
 
-    const btn = document.createElement('button')
-    btn.classList.add('mdc-fab', 'mdc-fab--mini')
-    btn.id = 'send-chat--input'
+  const btn = document.createElement('button')
+  btn.classList.add('mdc-fab', 'mdc-fab--mini')
+  btn.id = 'send-chat--input'
 
-    const btnIcon = document.createElement('span')
-    btnIcon.classList.add('mdc-fac__icon', 'material-icons')
-    btnIcon.textContent = 'send'
-    btn.appendChild(btnIcon)
+  const btnIcon = document.createElement('span')
+  btnIcon.classList.add('mdc-fac__icon', 'material-icons')
+  btnIcon.textContent = 'send'
+  btn.appendChild(btnIcon)
 
-    commentCont.appendChild(btn)
+  commentCont.appendChild(btn)
 
-    commentPanel.appendChild(chatCont)
+  commentPanel.appendChild(chatCont)
 
-    userCommentCont.appendChild(commentCont)
+  userCommentCont.appendChild(commentCont)
 
-    document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
+  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
 
-    document.getElementById('send-chat--input').onclick = function() {
-      const reqBody = {
-        'activityId': id,
-        'comment': getInputText('write--comment').value
-      }
-
-      requestCreator('comment', reqBody)
-      getInputText('write--comment').value = ''
+  document.getElementById('send-chat--input').onclick = function() {
+    const reqBody = {
+      'activityId': id,
+      'comment': getInputText('write--comment').value
     }
+
+    requestCreator('comment', reqBody)
+    getInputText('write--comment').value = ''
+  }
 }
 
-function statusChange(db,id){
+function statusChange(db, id) {
 
   const statusSpan = document.createElement("span")
   const icon = document.createElement("i")
@@ -120,32 +120,81 @@ function statusChange(db,id){
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function(event) {
+    const record = event.target.result;
+    if (!record.canEdit) {
 
-    const record = event.target.result
-    statusSpan.textContent = record.status
-
-
-    if (record.status === 'CONFIRMED' || record.status === 'CANCELLED') {
-      icon.dataset.status = 'PENDING'
-      icon.textContent = 'undo'
-    }
-    if (record.status === 'PENDING') {
-      icon.dataset.status = 'CONFIRMED'
-      icon.textContent = 'check'
+      const record = event.target.result
+      statusSpan.textContent = record.status
+      document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
+      return
     }
 
-    if(record.canEdit) {
-      statusSpan.appendChild(icon)
+    const StautsCont = document.createElement('div')
+    StautsCont.className = 'status--completed-cont'
+
+
+    const div = document.createElement('div')
+    div.className = 'mdc-switch'
+
+    if (record.status === 'CONFIRMED') {
+      div.classList.add('mdc-switch--checked')
     }
-    document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
-    document.querySelector('[data-status]').onclick = function(){
-      requestCreator('statusChange',{
-        activityId:id,
-        status:this.dataset.status
-      })
+
+    const track = document.createElement('div')
+    track.className = 'mdc-switch__track'
+
+    const thumbUnderlay = document.createElement('div')
+    thumbUnderlay.className = 'mdc-switch__thumb-underlay'
+
+    const thumb = document.createElement("div")
+    thumb.className = 'mdc-switch__thumb'
+
+    const input = document.createElement("input")
+    input.className = 'mdc-switch__native-control'
+    input.id = 'toggle-status'
+    input.setAttribute('role', 'switch')
+
+    if (record.status === 'CONFIRMED') {
+      input.checked = true
     }
+
+    input.type = 'checkbox'
+
+    thumb.appendChild(input)
+    thumbUnderlay.appendChild(thumb)
+
+    div.appendChild(track)
+    div.appendChild(thumbUnderlay)
+
+    const label = document.createElement('label')
+    label.setAttribute('for', 'toggle-status')
+    label.textContent = 'Activity Completed'
+    StautsCont.appendChild(label)
+    StautsCont.appendChild(div)
+
+    if(!document.querySelector('.status--completed-cont')) {
+      document.querySelector('.status--change-cont').appendChild(StautsCont)
+    }
+
+    const switchControl = new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
+    document.querySelector('.mdc-switch').onclick = function() {
+
+      if (switchControl.checked) {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CONFIRMED'
+        })
+      } else {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'PENDING'
+        })
+      }
+    }
+
   }
 }
+
 function createComment(db, addendum, currentUser) {
   // console.log(addendum)
   return new Promise(function(resolve) {
@@ -1468,15 +1517,15 @@ function readCameraFile() {
   FetchCameraForAttachment.startCamera()
 }
 
-function createActivityCancellation(record){
+function createActivityCancellation(record) {
 
-  const cancelStaus = document.createElement('div')
-  cancelStaus.className = 'status--cancel-cont'
+  const StautsCont = document.createElement('div')
+  StautsCont.className = 'status--cancel-cont'
 
-  if(record.canEdit && !record.hasOwnProperty('create')) {
+  if (record.canEdit && !record.hasOwnProperty('create')) {
     const div = document.createElement('div')
     div.className = 'mdc-switch'
-    if(record.status === 'CANCELLED') {
+    if (record.status === 'CANCELLED') {
       div.classList.add('mdc-switch--checked')
     }
     const track = document.createElement('div')
@@ -1491,8 +1540,8 @@ function createActivityCancellation(record){
     const input = document.createElement("input")
     input.className = 'mdc-switch__native-control'
     input.id = 'toggle-status'
-    input.setAttribute('role','switch')
-    if(record.status === 'CANCELLED') {
+    input.setAttribute('role', 'switch')
+    if (record.status === 'CANCELLED') {
       input.checked = true
     }
     input.type = 'checkbox'
@@ -1504,30 +1553,30 @@ function createActivityCancellation(record){
     div.appendChild(thumbUnderlay)
 
     const label = document.createElement('label')
-    label.setAttribute('for','toggle-status')
+    label.setAttribute('for', 'toggle-status')
     label.textContent = 'Cancel Activity '
-    cancelStaus.appendChild(label)
-    cancelStaus.appendChild(div)
-    document.querySelector('.update-create--activity').appendChild(cancelStaus)
+    StautsCont.appendChild(label)
+    StautsCont.appendChild(div)
+    document.querySelector('.update-create--activity').appendChild(StautsCont)
 
-    const switchControl =  new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
-    document.querySelector('.mdc-switch').onclick = function(){
+    const switchControl = new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
+    document.querySelector('.mdc-switch').onclick = function() {
 
-      if(switchControl.checked) {
-        requestCreator('statusChange',{
-          activityId:record.activityId,
-          status : 'CANCELLED'
+      if (switchControl.checked) {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CANCELLED'
         })
-      }
-      else {
-        requestCreator('statusChange',{
-          activityId:record.activityId,
-          status : 'PENDING'
+      } else {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'PENDING'
         })
       }
     }
   }
 }
+
 
 
 function sendActivity(record) {

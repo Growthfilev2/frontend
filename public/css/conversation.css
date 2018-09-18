@@ -147,6 +147,9 @@ padding: 8px 20px 8px 25px;
   font-size: 20px;
   color: #0399f4;
 }
+.status--change-cont label {
+  color: inherit;
+}
 
 .change--status--icon {
   padding-left: 15px;
@@ -171,7 +174,7 @@ padding: 8px 20px 8px 25px;
   font-size: 18px;
   color: red;
 }
-.status--cancel-cont .mdc-switch  {
+ .mdc-switch  {
   float: right;
   margin-top: 3px;
 }
