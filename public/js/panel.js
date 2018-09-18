@@ -1,5 +1,4 @@
 function listView(dbName) {
-  // sendCurrentViewNameToAndroid('listView')
 
   history.pushState(['listView', dbName], null, null)
   listPanel()
@@ -261,6 +260,7 @@ function creatListHeader() {
 }
 
 function androidSwiper(openOrClose) {
+
   if(history.state[0] === 'listView') {
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
   drawer.open = openOrClose
@@ -442,6 +442,7 @@ function createOfficeSelectionUI(allOffices) {
 }
 
 function filterActivities(type, db, hasMultipleOffice) {
+  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
   let activityDom = ''
@@ -463,6 +464,8 @@ function filterActivities(type, db, hasMultipleOffice) {
 }
 
 function sortByCreator(type, db, hasMultipleOffice) {
+  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
+
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
   let activityDom = ''
@@ -496,6 +499,8 @@ function sortByCreator(type, db, hasMultipleOffice) {
 }
 
 function sortByDates(type, db, hasMultipleOffice) {
+  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
+
   const activityDom = ''
   const today = moment().format('YYYY-MM-DD')
   const sortingOrder = {
@@ -561,6 +566,7 @@ function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
 }
 
 function sortByLocation(type, hasMultipleOffice) {
+  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
 
   const dbName = firebase.auth().currentUser.uid
 
