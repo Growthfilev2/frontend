@@ -467,8 +467,12 @@ function instantUpdateDB(dbName, data, type) {
     objStoreTx.oncomplete = function() {
       if(type === 'share') {
         requestHandlerResponse('updateAssigneeList',200,'user added in store',{id:data.activityId,number:data.share[0]})
+        return
       }
-
+      if(type === 'statusChange') {
+        requestHandlerResponse('updateStatusView', 200, 'IDB instantly updated', {id:data.activityId,status:data[type]})
+        return
+      }
       else {
         requestHandlerResponse('updateIDB', 200, 'IDB instantly updated', dbName)
       }

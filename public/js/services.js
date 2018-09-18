@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-   Fetchview.disabledSwipe(viewName)
+   // Fetchview.disabledSwipe(viewName)
 }
 
 
@@ -191,8 +191,20 @@ function loadViewFromRoot(response) {
 
           readNameAndImageFromNumber([response.data.dbName.number],db)
         }
-
+        return
       }
+
+      if(response.data.type === 'updateStatusView') {
+        const activityObjectStore = db.transaction('activity').objectStore('activity')
+        activityObjectStore.get(response.data.dbName.id).onsuccess = function(event){
+          const record = event.target.result;
+          if(response.data.staus !== 'CANCELLED') {
+            statusChange(db,record.activityId)
+          }
+        }
+        return
+      }
+
       else {
       console.log("yahan tak chak raha hai")
       rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
