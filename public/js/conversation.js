@@ -74,7 +74,7 @@ function commentPanel(db, id) {
   const inputField = document.createElement('div')
   inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
   inputField.id = 'write--comment'
-
+  inputField.style.width = '100%';
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
   input.type = 'text'
@@ -85,7 +85,7 @@ function commentPanel(db, id) {
 
 
   const btn = document.createElement('button')
-  btn.classList.add('mdc-fab', 'mdc-fab--mini')
+  btn.classList.add('mdc-fab', 'mdc-fab--mini','hidden')
   btn.id = 'send-chat--input'
 
   const btnIcon = document.createElement('span')
@@ -100,6 +100,22 @@ function commentPanel(db, id) {
   userCommentCont.appendChild(commentCont)
 
   document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
+
+  document.querySelector('.comment-field').oninput = function(evt){
+    if(!evt.target.value || evt.target.value === ' ') {
+      document.getElementById('send-chat--input').classList.add('hidden')
+      document.getElementById('write--comment').style.width = '100%'
+      document.getElementById('write--comment').style.transition = '0.3s ease'
+      document.querySelector('.status--change-cont').style.transition = '0.3s ease'
+      document.querySelector('.status--change-cont').style.opacity = '1'
+    }
+    else {
+      document.getElementById('send-chat--input').classList.remove('hidden')
+      document.getElementById('write--comment').style.width = '80%'
+      document.querySelector('.status--change-cont').style.opacity = '0';
+    }
+
+  }
 
   document.getElementById('send-chat--input').onclick = function() {
     const reqBody = {
