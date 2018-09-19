@@ -1,5 +1,8 @@
 function listView(dbName) {
 
+
+
+
   history.pushState(['listView', dbName], null, null)
 
   listPanel()
@@ -26,7 +29,7 @@ function listView(dbName) {
               offices: officeRecord.offices.allOffices
             })
         }
-        creatListHeader()
+        creatListHeader('Recent')
         fetchDataForActivityList(db)
       }
     }
@@ -43,7 +46,7 @@ function fetchDataForActivityList(db) {
   activityVisibleIndex.openCursor(null, 'prev').onsuccess = function(event) {
     let cursor = event.target.result
     if (!cursor) {
-      appendActivityListToDom(activityDom)
+      appendActivityListToDom(activityDom,true)
       createActivityIcon(db)
       return
     }
@@ -180,7 +183,12 @@ function activityListUI(data, count, metaData) {
   return li.outerHTML
 }
 
-function appendActivityListToDom(activityDom) {
+function appendActivityListToDom(activityDom,hasHeaderAndCard,headerName) {
+  if(!hasHeaderAndCard) {
+    listPanel()
+    creatListHeader(headerName,!hasHeaderAndCard)
+  }
+
   document.getElementById('activity--list').innerHTML = activityDom
 }
 
@@ -222,7 +230,7 @@ function listPanel() {
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 }
 
-function creatListHeader() {
+function creatListHeader(headerName,backIcon) {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -230,11 +238,17 @@ function creatListHeader() {
   menuIcon.id = 'menu--panel'
   const icon = document.createElement('i')
   icon.className = 'material-icons'
-  icon.textContent = 'menu'
+  if(backIcon) {
+    icon.textContent = 'keyboard_backspace'
+  }
+  else {
+
+    icon.textContent = 'menu'
+  }
 
   const menuSpan = document.createElement('span')
   menuSpan.className = 'current--selcted-filter'
-  menuSpan.textContent = 'Recent'
+  menuSpan.textContent = headerName
 
   menuIcon.appendChild(icon)
   menuIcon.appendChild(menuSpan)
@@ -250,9 +264,16 @@ function creatListHeader() {
 
 
   header(parentIconDiv.outerHTML, searchIcon.outerHTML, 'list')
+
+
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  // console.log(drawer)
+
   document.getElementById('menu--panel').addEventListener('click', function() {
+    if(backIcon){
+      handleViewFromHistory()
+      return
+    }
+
     drawer.open = true
     sendCurrentViewNameToAndroid('drawer')
 
@@ -394,24 +415,26 @@ function initMenu(db, officeRecord) {
     a.appendChild(textSpan)
     a.onclick = function() {
       if (filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled') {
-        filterActivities(filter.type, db, officeRecord)
+        filterActivities(filter.type, db)
       }
       if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, db, officeRecord)
+        sortByCreator(filter.type, db)
       }
       if (filter.type === 'Urgent') {
-        sortByDates(filter.type, db, officeRecord)
+        sortByDates(filter.type, db)
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, officeRecord)
+        sortByLocation(filter.type)
       }
       if (filter.type === 'Recent') {
         listView(firebase.auth().currentUser.uid)
       }
+
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       drawer.open = false
       sendCurrentViewNameToAndroid('listView')
       document.querySelector('.current--selcted-filter').textContent = filter.type
+
     }
 
     navContent.appendChild(a)
@@ -442,20 +465,20 @@ function createOfficeSelectionUI(allOffices) {
 
 }
 
-function filterActivities(type, db, hasMultipleOffice) {
-  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
+function filterActivities(type, db) {
+  history.pushState([type,localStorage.getItem('dbexist')],null,null)
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
   let activityDom = ''
   activityStore.openCursor(null, 'prev').onsuccess = function(event) {
     const cursor = event.target.result
     if (!cursor) {
-      appendActivityListToDom(activityDom)
+      appendActivityListToDom(activityDom,false,type)
       createActivityIcon(db)
       return
     }
     if (cursor.value.status === type.toUpperCase() && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value, hasMultipleOffice).then(function(li) {
+      createActivityList(db, cursor.value).then(function(li) {
 
         activityDom += li
       })
@@ -464,8 +487,8 @@ function filterActivities(type, db, hasMultipleOffice) {
   }
 }
 
-function sortByCreator(type, db, hasMultipleOffice) {
-  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
+function sortByCreator(type, db) {
+  history.pushState([type,localStorage.getItem('dbexist')],null,null)
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
@@ -474,13 +497,13 @@ function sortByCreator(type, db, hasMultipleOffice) {
   activityStore.openCursor(null, 'prev').onsuccess = function(event) {
     const cursor = event.target.result
     if (!cursor) {
-      appendActivityListToDom(activityDom)
+      appendActivityListToDom(activityDom,false,type)
       createActivityIcon(db)
       return
     }
     if (type === 'Incoming') {
       if (cursor.value.creator !== me && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value, hasMultipleOffice).then(function(li) {
+        createActivityList(db, cursor.value).then(function(li) {
 
           activityDom += li
         })
@@ -488,7 +511,7 @@ function sortByCreator(type, db, hasMultipleOffice) {
     }
     if (type === 'Outgoing') {
       if (cursor.value.creator === me && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value, hasMultipleOffice).then(function(li) {
+        createActivityList(db, cursor.value).then(function(li) {
 
           activityDom += li
         })
@@ -499,8 +522,8 @@ function sortByCreator(type, db, hasMultipleOffice) {
   }
 }
 
-function sortByDates(type, db, hasMultipleOffice) {
-  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
+function sortByDates(type, db) {
+  history.pushState([type,localStorage.getItem('dbexist')],null,null)
 
   const activityDom = ''
   const today = moment().format('YYYY-MM-DD')
@@ -519,7 +542,7 @@ function sortByDates(type, db, hasMultipleOffice) {
         return moment(b.end).valueOf() - moment(a.end).valueOf()
       })
 
-      generateActivitiesByDate(sortingOrder, hasMultipleOffice)
+      generateActivitiesByDate(sortingOrder)
       return
     }
     if (today >= cursor.value.start && today <= cursor.value.end) {
@@ -532,7 +555,7 @@ function sortByDates(type, db, hasMultipleOffice) {
 
 }
 
-function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
+function generateActivitiesByDate(sortingOrder) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let activityDom = ''
@@ -542,7 +565,7 @@ function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
     sortingOrder['HIGH'].forEach(function(record) {
       activityObjectStore.get(record.activityId).onsuccess = function(event) {
         const activity = event.target.result
-        createActivityList(db, activity, hasMultipleOffice).then(function(li) {
+        createActivityList(db, activity).then(function(li) {
 
           activityDom += li
         })
@@ -551,14 +574,14 @@ function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
     sortingOrder['LOW'].forEach(function(record) {
       activityObjectStore.get(record.activityId).onsuccess = function(event) {
         const activity = event.target.result
-        createActivityList(db, activity, hasMultipleOffice).then(function(li) {
+        createActivityList(db, activity).then(function(li) {
           activityDom += li
         })
       }
     })
 
     setTimeout(function() {
-      appendActivityListToDom(activityDom)
+      appendActivityListToDom(activityDom,false,'Urgent')
       createActivityIcon(db)
     }, 500)
 
@@ -566,15 +589,14 @@ function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
   }
 }
 
-function sortByLocation(type, hasMultipleOffice) {
-  history.replaceState(['listView',localStorage.getItem('dbexist')],null,null)
+function sortByLocation(type) {
 
   const dbName = firebase.auth().currentUser.uid
 
   const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
 
   nearestLocationHandler.onmessage = function(message) {
-    sortActivitiesByLocation(hasMultipleOffice)
+    sortActivitiesByLocation()
   }
   nearestLocationHandler.onerror = locationSortError
 
@@ -591,7 +613,9 @@ function sortByLocation(type, hasMultipleOffice) {
 
 }
 
-function sortActivitiesByLocation(hasMultipleOffice) {
+function sortActivitiesByLocation() {
+  history.pushState(['Nearby',localStorage.getItem('dbexist')],null,null)
+
   let activityDom = ''
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
@@ -602,7 +626,7 @@ function sortActivitiesByLocation(hasMultipleOffice) {
     mapObjectStore.openCursor().onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) {
-        appendActivityListToDom(activityDom)
+        appendActivityListToDom(activityDom,false,'Nearby')
         createActivityIcon(db)
         return
       }
@@ -610,7 +634,7 @@ function sortActivitiesByLocation(hasMultipleOffice) {
         const activityStore = db.transaction('activity').objectStore('activity')
         activityStore.get(cursor.value.activityId).onsuccess = function(event) {
           const record = event.target.result
-          createActivityList(db, record, hasMultipleOffice).then(function(li) {
+          createActivityList(db, record).then(function(li) {
             activityDom += li
           })
         }

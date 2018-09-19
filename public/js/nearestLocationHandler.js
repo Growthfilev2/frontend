@@ -41,7 +41,6 @@ function calculateDistance(userCoords,otherLocations,mapObjectStore){
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const distance = R * c;
   record.distance = distance
-  console.log(record)
   mapObjectStore.put(record)
 
   //to do remove empty distance records

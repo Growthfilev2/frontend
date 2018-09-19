@@ -164,10 +164,24 @@ function handleViewFromHistory(backFromAndroid) {
       listView: listView,
       conversation: conversation,
       updateCreateActivity: updateCreateActivity,
+      Confirmed: filterActivities,
+      Pending:filterActivities,
+      Cancelled:filterActivities,
+      Incoming:sortByCreator,
+      Outgoing:sortByCreator,
+      Urgent:sortByDates,
+      Nearby:sortActivitiesByLocation
     }
-
-    views[event.state[0]](event.state[1])
-
+    if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
+      const req = indexedDB.open(event.state[1])
+      req.onsuccess = function(){
+        const db = req.result
+        views[event.state[0]](event.state[0],db);
+      }
+    }
+    else {
+      views[event.state[0]](event.state[1]);
+    }
   }
 }
 
