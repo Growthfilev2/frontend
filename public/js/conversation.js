@@ -1,17 +1,14 @@
-function conversation(id,pushState) {
+function conversation(id, pushState) {
 
-  if(pushState) {
+  if (pushState) {
     history.pushState(['conversation', id], null, null)
   }
 
-  if (!id) return
   const currentUser = firebase.auth().currentUser
-
   const req = window.indexedDB.open(currentUser.uid)
 
   req.onsuccess = function() {
     const db = req.result
-
     const rootTx = db.transaction('root', 'readwrite')
     const rootObjectStore = rootTx.objectStore('root')
     rootObjectStore.get(currentUser.uid).onsuccess = function(event) {
@@ -31,12 +28,9 @@ function fetchAddendumForComment(id, user) {
   req.onsuccess = function() {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
-    const rootTx = db.transaction('root', 'readwrite')
-    const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(user.uid).onsuccess = function(event) {
-      createHeaderContent(db, id, event.target.result.hasMultipleOffice)
-    }
-    commentPanel(id)
+    createHeaderContent(db, id)
+    commentPanel(db, id)
+    statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
     let commentDom = ''
     addendumIndex.openCursor(id).onsuccess = function(event) {
@@ -54,18 +48,25 @@ function fetchAddendumForComment(id, user) {
   }
 }
 
-function commentPanel(id) {
+
+function commentPanel(db, id) {
   if (document.querySelector('.activity--chat-card-container')) {
     return
   }
+
   const commentPanel = document.createElement('div')
   commentPanel.className = 'activity--chat-card-container  mdc-top-app-bar--fixed-adjust panel-card'
 
   const chatCont = document.createElement('div')
   chatCont.id = 'chat-container'
   chatCont.className = 'mdc-card reverser-parent'
+
+
   const userCommentCont = document.createElement('div')
   userCommentCont.className = 'user-comment--container'
+
+  const statusChangeContainer = document.createElement('div')
+  statusChangeContainer.className = 'status--change-cont'
 
   const commentCont = document.createElement('div')
   commentCont.className = 'comment--container'
@@ -73,33 +74,49 @@ function commentPanel(id) {
   const inputField = document.createElement('div')
   inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
   inputField.id = 'write--comment'
-
+  inputField.style.width = '100%';
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
   input.type = 'text'
 
-  inputField.innerHTML = input.outerHTML
-  commentCont.innerHTML = inputField.outerHTML
+  inputField.appendChild(input)
 
-  const sendButton = document.createElement('div')
-  sendButton.className = 'send--container'
-  sendButton.id = 'send-message'
+  commentCont.appendChild(inputField)
+
 
   const btn = document.createElement('button')
-  btn.classList.add('mdc-fab', 'mdc-fab--mini')
+  btn.classList.add('mdc-fab', 'mdc-fab--mini','hidden')
   btn.id = 'send-chat--input'
 
   const btnIcon = document.createElement('span')
   btnIcon.classList.add('mdc-fac__icon', 'material-icons')
   btnIcon.textContent = 'send'
-  btn.innerHTML = btnIcon.outerHTML
-  sendButton.innerHTML = btn.outerHTML
+  btn.appendChild(btnIcon)
 
-  userCommentCont.appendChild(commentCont)
-  userCommentCont.appendChild(sendButton)
+  commentCont.appendChild(btn)
+
   commentPanel.appendChild(chatCont)
 
-  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + userCommentCont.outerHTML
+  userCommentCont.appendChild(commentCont)
+
+  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
+
+  document.querySelector('.comment-field').oninput = function(evt){
+    if(!evt.target.value || evt.target.value === ' ') {
+      document.getElementById('send-chat--input').classList.add('hidden')
+      document.getElementById('write--comment').style.width = '100%'
+      document.getElementById('write--comment').style.transition = '0.3s ease'
+      document.querySelector('.status--change-cont').style.transition = '0.3s ease'
+      document.querySelector('.status--change-cont').style.opacity = '1'
+    }
+    else {
+      document.getElementById('send-chat--input').classList.remove('hidden')
+      document.getElementById('write--comment').style.width = '80%'
+      document.querySelector('.status--change-cont').style.opacity = '0';
+    }
+
+  }
+
   document.getElementById('send-chat--input').onclick = function() {
     const reqBody = {
       'activityId': id,
@@ -109,7 +126,89 @@ function commentPanel(id) {
     requestCreator('comment', reqBody)
     getInputText('write--comment').value = ''
   }
+}
 
+function statusChange(db, id) {
+
+  const statusSpan = document.createElement("span")
+  const icon = document.createElement("i")
+  icon.className = 'material-icons change--status--icon'
+
+  const activityStore = db.transaction('activity').objectStore('activity');
+  activityStore.get(id).onsuccess = function(event) {
+    const record = event.target.result;
+    if (!record.canEdit) {
+
+      const record = event.target.result
+      statusSpan.textContent = record.status
+      document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
+      return
+    }
+
+    const StautsCont = document.createElement('div')
+    StautsCont.className = 'status--completed-cont'
+
+
+    const div = document.createElement('div')
+    div.className = 'mdc-switch'
+
+    if (record.status === 'CONFIRMED') {
+      div.classList.add('mdc-switch--checked')
+    }
+
+    const track = document.createElement('div')
+    track.className = 'mdc-switch__track'
+
+    const thumbUnderlay = document.createElement('div')
+    thumbUnderlay.className = 'mdc-switch__thumb-underlay'
+
+    const thumb = document.createElement("div")
+    thumb.className = 'mdc-switch__thumb'
+
+    const input = document.createElement("input")
+    input.className = 'mdc-switch__native-control'
+    input.id = 'toggle-status'
+    input.setAttribute('role', 'switch')
+
+    if (record.status === 'CONFIRMED') {
+      input.checked = true
+    }
+
+    input.type = 'checkbox'
+
+    thumb.appendChild(input)
+    thumbUnderlay.appendChild(thumb)
+
+    div.appendChild(track)
+    div.appendChild(thumbUnderlay)
+
+    const label = document.createElement('label')
+    label.setAttribute('for', 'toggle-status')
+    label.textContent = 'Activity Completed'
+    StautsCont.appendChild(label)
+    StautsCont.appendChild(div)
+
+    if(!document.querySelector('.status--completed-cont')) {
+      document.querySelector('.status--change-cont').appendChild(StautsCont)
+    }
+
+    const switchControl = new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
+    document.querySelector('.mdc-switch').onclick = function() {
+
+      if (switchControl.checked) {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CONFIRMED'
+        })
+      } else {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'PENDING'
+        })
+      }
+    }
+
+  }
 }
 
 function createComment(db, addendum, currentUser) {
@@ -131,6 +230,7 @@ function createComment(db, addendum, currentUser) {
 
     let user = document.createElement('p')
     user.classList.add('user-name--comment')
+
     readNameFromNumber(db, addendum.user).then(function(nameOrNumber) {
       // console.log(nameOrNumber)
       user.textContent = nameOrNumber
@@ -140,7 +240,7 @@ function createComment(db, addendum, currentUser) {
       comment.textContent = addendum.comment
 
       let commentInfo = document.createElement('span')
-      commentInfo.style.width = '100%'
+      commentInfo.className = 'comment--info'
       const datespan = document.createElement('span')
       datespan.textContent = moment(addendum.timestamp).calendar()
       datespan.classList.add('comment-date')
@@ -185,7 +285,7 @@ function readNameFromNumber(db, number) {
   })
 }
 
-function createHeaderContent(db, id, unique) {
+function createHeaderContent(db, id) {
 
 
   const activityObjectStore = db.transaction('activity').objectStore('activity')
@@ -229,8 +329,7 @@ function createHeaderContent(db, id, unique) {
 
       leftDiv.appendChild(backDiv)
       leftDiv.appendChild(primarySpan)
-
-      createFunctionalHeader(leftDiv, record)
+      header(leftDiv.outerHTML, '')
 
       document.getElementById('back-conv').addEventListener('click', function() {
         reinitCount(db, id)
@@ -259,63 +358,6 @@ function reinitCount(db, id) {
   }
 }
 
-function createFunctionalHeader(leftDiv, record) {
-  const rightDiv = document.createElement('div')
-  rightDiv.className = 'status--cont'
-  const currentStat = document.createElement('span')
-  currentStat.textContent = record.status
-  currentStat.className = 'current-status'
-  currentStat.id = 'change--status'
-
-  const iconMenu = document.createElement('i')
-  iconMenu.className = 'material-icons status--icon'
-  if (record.status === 'PENDING') {
-    iconMenu.style.marginTop = '4px'
-    iconMenu.textContent = 'maximize'
-  }
-  if (record.status === 'CONFIRMED') {
-    iconMenu.textContent = 'check'
-  }
-
-  if (record.status === 'CANCELLED') {
-    iconMenu.textContent = 'clear'
-  }
-  currentStat.appendChild(iconMenu)
-  rightDiv.appendChild(currentStat)
-
-  header(leftDiv.outerHTML, rightDiv.outerHTML)
-  if (record.canEdit) {
-
-    document.getElementById('header').appendChild(createSimpleMenu(record.status))
-    document.querySelector('#header').classList.add('mdc-menu-anchor')
-
-    // Instantiation
-    var menuEl = document.querySelector('.mdc-menu--status')
-    var menu = new mdc.menu.MDCMenu(menuEl)
-    var menuButtonEl = document.querySelector('#change--status')
-
-    // Toggle menu open
-    menuButtonEl.addEventListener('click', function() {
-      menu.open = !menu.open
-    })
-    console.log(menu)
-    // Listen for selected item
-    menuEl.addEventListener('MDCMenu:selected', function(evt) {
-      const statusObj = {
-        status: evt.detail.item.textContent.toUpperCase(),
-        activityId: record.activityId
-      }
-      requestCreator('statusChange', statusObj)
-    })
-
-    // Set Anchor Corner to Bottom End
-    // menu.setAnchorCorner('Corner.BOTTOM_END')
-
-    // Turn off menu open animations
-    menu.quickOpen = false
-  }
-}
-
 function getImageFromNumber(db, number) {
   return new Promise(function(resolve) {
     const userObjStore = db.transaction('users').objectStore('users')
@@ -326,7 +368,9 @@ function getImageFromNumber(db, number) {
 }
 
 function selectorUI(evt, data) {
-  console.log(data)
+
+  sendCurrentViewNameToAndroid('selector')
+
   const aside = document.createElement('aside')
 
   aside.id = 'dialog--component'
@@ -340,6 +384,8 @@ function selectorUI(evt, data) {
   searchIcon.className = 'material-icons'
   searchIcon.textContent = 'search'
   searchIcon.id = 'selector--search'
+
+
 
   const backSpan = document.createElement('span')
   backSpan.className = 'material-icons dialog--header-back'
@@ -448,10 +494,9 @@ function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return
 
     const userRecord = cursor.value
-    if (data.attachment.present) {
+    if (data.attachment.present && !alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
       ul.appendChild(createSimpleAssigneeLi(userRecord, true))
-    }
-    if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+    } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
       ul.appendChild(createSimpleAssigneeLi(userRecord, true))
     }
 
@@ -511,13 +556,14 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
     }
     cursor.continue()
   }
+
   document.getElementById('selector--search').addEventListener('click', function() {
     initSearchForSelectors('map', activityRecord, data)
   })
+
   dialog['acceptButton_'].onclick = function() {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
-    console.log(selectedField)
     updateDomFromIDB(activityRecord, {
       hash: 'venue',
       key: data.key
@@ -527,7 +573,6 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-
     })
     removeDialog()
   }
@@ -588,13 +633,13 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
     officeIndex.openCursor(cursor.value.office).onsuccess = function(event) {
       const officeCursor = event.target.result
       if (!officeCursor) return
-      if(officeCursor.value.template !== 'subscription') {
-      ul.appendChild(createGroupList(cursor.value.office, officeCursor.value.template))
-    }
+      if (officeCursor.value.template !== 'subscription') {
+        ul.appendChild(createGroupList(cursor.value.office, officeCursor.value.template))
+      }
       officeCursor.continue()
     }
 
-  cursor.continue()
+    cursor.continue()
   }
   ul.appendChild(grp)
 
@@ -707,7 +752,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function(event) {
 
-      let updatedActivity = activityRecord;
+    let updatedActivity = activityRecord;
 
     const db = req.result
     const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
@@ -716,8 +761,11 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       updatedActivity = updateVenue(updatedActivity, attr, data)
 
+
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
+      document.getElementById('send-activity').classList.remove('hidden')
+
       if (!activityRecord.hasOwnProperty('create')) {
         activityStore.put(updatedActivity)
       }
@@ -735,17 +783,19 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
     updatedActivity.attachment[attr.key].value = data.primary
 
-
-
     if (!activityRecord.hasOwnProperty('create')) {
       activityStore.put(updatedActivity)
     }
     if (attr.hash === 'weekday') return
     if (!attr.hasOwnProperty('key')) return
+
+
     document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
     if (data.hasOwnProperty('secondary')) {
       document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
     }
+    document.getElementById('send-activity').classList.remove('hidden')
+
   }
 
 }
@@ -773,6 +823,8 @@ function convertIdToKey(id) {
 }
 
 function updateCreateContainer(record) {
+
+  document.body.style.backgroundColor = '#eeeeee'
 
   const leftHeaderContent = document.createElement('div')
   leftHeaderContent.style.display = 'inline-flex'
@@ -810,18 +862,29 @@ function updateCreateContainer(record) {
     const containerList = document.createElement('ul')
     containerList.className = 'mdc-list custom--list-margin';
 
+    const listGroup = document.createElement('div')
     switch (TOTAL_LIST_TYPES[i]) {
       case 'office':
         containerList.classList.remove('custom--list-margin')
+        break;
+      case 'schedule':
+        listGroup.className = 'mdc-list-group__subheader'
+        listGroup.id = 'schedule--group'
         break;
       case 'venue':
       case 'assignees':
         containerList.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
         break;
+
     };
 
-    containerList.id = TOTAL_LIST_TYPES[i] + '--list'
-    container.appendChild(containerList)
+    if (TOTAL_LIST_TYPES[i] === 'schedule') {
+      container.appendChild(listGroup)
+    } else {
+
+      containerList.id = TOTAL_LIST_TYPES[i] + '--list'
+      container.appendChild(containerList)
+    }
   }
   if (record.canEdit) {
 
@@ -829,6 +892,7 @@ function updateCreateContainer(record) {
     updateBtn.className = 'mdc-fab send--activity-fab'
     updateBtn.setAttribute('aria-label', 'Send')
     updateBtn.id = 'send-activity'
+    updateBtn.classList.add('hidden')
     const sendIcon = document.createElement('span')
     sendIcon.className = 'mdc-fab__icon material-icons'
     sendIcon.textContent = 'send'
@@ -839,7 +903,6 @@ function updateCreateContainer(record) {
 }
 
 function updateCreateActivity(record) {
-  console.log(history.state[0])
 
   history.pushState(['updateCreateActivity', record.activityId], null, null)
 
@@ -862,7 +925,6 @@ function updateCreateActivity(record) {
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {
       office: record.office,
-      ts: record.timestamp,
       showLabel: true
     }))
 
@@ -873,15 +935,21 @@ function updateCreateActivity(record) {
     }
 
     createVenueSection(record)
+    createScheduleTable(record);
 
-    const scheduleSection = document.getElementById('schedule--list')
-    scheduleSection.appendChild(createScheduleTable({
-      canEdit: record.canEdit,
-      schedules: record.schedule
-    }))
+
     const attachmentSection = document.getElementById('attachment--list')
     // canEdit, office, template
     attachmentSection.appendChild(createAttachmentContainer(record))
+
+    const inputFields = document.querySelectorAll('.update-create--activity input');
+    for (var i = 0; i < inputFields.length; i++) {
+      inputFields[i].addEventListener('input', function(e) {
+        if (document.getElementById('send-activity').classList.contains('hidden')) {
+          document.getElementById('send-activity').classList.remove('hidden')
+        }
+      })
+    }
 
     if (document.querySelector('.mdc-select')) {
       const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
@@ -897,6 +965,9 @@ function updateCreateActivity(record) {
     }
 
     createAssigneeList(db, record, true)
+
+    createActivityCancellation(record);
+
   }
 }
 
@@ -918,10 +989,6 @@ function createSimpleLi(key, data) {
     listItemLabel.textContent = key
     listItem.appendChild(listItemLabel)
     listItem.appendChild(dataVal)
-    listItemMeta.className = 'mdc-list-item__meta'
-    listItemMeta.setAttribute('aria-hidden', 'true')
-    listItemMeta.textContent = moment(data.ts).calendar()
-    listItem.appendChild(listItemMeta)
   }
   if (key === 'children') {
     const metaInput = document.createElement('span')
@@ -1045,8 +1112,8 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         location: venue.location,
         address: venue.address,
         geopoint: {
-          '_latitude':venue.latitude,
-          '_longitude':venue.longitude
+          '_latitude': venue.latitude,
+          '_longitude': venue.longitude
         },
         venueDesc: venue.venueDescriptor
       })
@@ -1069,89 +1136,105 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
 function createScheduleTable(data) {
 
-  if (!data.schedules.length) {
-    document.getElementById('schedule--list').style.display = 'none'
-    return document.createElement('span')
+  if (!data.schedule.length) {
+    document.getElementById('schedule--group').style.display = 'none'
+    // return document.createElement('span')
   }
 
-  const table = document.createElement('table')
-  table.className = 'schedule--show-table activity--detail--section'
-  const trMain = document.createElement('tr')
-  trMain.className = 'row-main'
-  const th0 = document.createElement('th')
-  const th1 = document.createElement('th')
-  th1.className = 'detail--static-text schedule-label'
-  const th2 = document.createElement('th')
-  th2.className = 'detail--static-text schedule-label'
 
-  th0.textContent = ''
-  th1.textContent = 'Start Time'
-  th2.textContent = 'End Time'
-  trMain.appendChild(th0)
-  trMain.appendChild(th1)
-  trMain.appendChild(th2)
 
-  table.appendChild(trMain)
-  data.schedules.forEach(function(schedule) {
-    console.log(schedule)
-    const tr = document.createElement('tr')
-    const td0 = document.createElement('td')
-    td0.className = 'detail--static-text'
 
-    const td1 = document.createElement('td')
+  data.schedule.forEach(function(schedule) {
+    console.log(schedule.startTime)
+    const scheduleName = document.createElement('h5')
+    scheduleName.className = 'mdc-list-group__subheader label--text'
+    scheduleName.textContent = schedule.name
 
-    td1.className = `schedule--time`
-    td1.dataset.start = `${schedule.name}-startDate`
-    // const td1Input = document.createElement('input')
+    const ul = document.createElement('ul')
+    ul.className = 'mdc-list mdc-list--dense'
 
-    const td2 = document.createElement('td')
-    td2.className = `schedule--time`
-    td2.dataset.end = `${schedule.name}-endDate`
-    td0.textContent = schedule.name
+    const divider = document.createElement('li')
+    divider.className = 'mdc-list-divider'
+    divider.setAttribute('role', 'separator')
 
-    const timeTr = document.createElement('tr')
-    const spaceTd = document.createElement('td')
+    const startLi = document.createElement('li')
+    startLi.className = 'mdc-list-item'
 
-    const tdStartTime = document.createElement('td')
-    tdStartTime.className = `schedule--time`
-    tdStartTime.dataset.start = `${schedule.name}-startTime`
-    const tdEndTime = document.createElement('td')
-    tdEndTime.className = `schedule--time`
-    tdEndTime.dataset.end = `${schedule.name}-endTime`
+    const sdDiv = document.createElement('div')
+    sdDiv.className = 'mdc-text-field start--date'
 
-    td1.appendChild(createTimeInput(schedule.startTime ? moment(schedule.startTime).format('YYYY-MM-DD') : '', data.canEdit, {
-      type: 'date',
-      simple: true
-    }))
-    td2.appendChild(createTimeInput(schedule.endTime ? moment(schedule.endTime).format('YYYY-MM-DD') : '', data.canEdit, {
-      type: 'date',
-      simple: true
-    }))
+    const startDateInput = document.createElement('input')
+    startDateInput.value = moment(schedule.startTime).format('YYYY-MM-DD')
+    startDateInput.type = 'date'
+    startDateInput.disabled = !data.canEdit
+    startDateInput.className = 'mdc-text-field__input'
 
-    tdStartTime.appendChild(createTimeInput(schedule.startTime ? moment(schedule.startTime).format('hh:mm') : '', data.canEdit, {
-      type: 'time',
-      simple: true
-    }))
-    tdEndTime.appendChild(createTimeInput(schedule.endTime ? moment(schedule.endTime).format('hh:mm') : '', data.canEdit, {
-      type: 'time',
-      simple: true
-    }))
+    sdDiv.appendChild(startDateInput)
 
-    tr.appendChild(td0)
-    tr.appendChild(td1)
-    tr.appendChild(td2)
-    timeTr.appendChild(spaceTd)
-    timeTr.appendChild(tdStartTime)
-    timeTr.appendChild(tdEndTime)
+    const stSpan = document.createElement("span")
+    stSpan.className = 'mdc-list-item__meta'
 
-    table.appendChild(tr)
-    table.appendChild(timeTr)
+    const stDiv = document.createElement('div')
+    stDiv.className = 'mdc-text-field start--time'
+
+    const startTimeInput = document.createElement('input')
+    startTimeInput.value = moment(schedule.startTime).format('hh:mm')
+    startTimeInput.type = 'time'
+    startTimeInput.className = 'time--input'
+    startTimeInput.disabled = !data.canEdit
+    startTimeInput.className = 'mdc-text-field__input'
+    stDiv.appendChild(startTimeInput)
+
+    stSpan.appendChild(stDiv)
+
+
+    const endLi = document.createElement('li')
+    endLi.className = 'mdc-list-item'
+
+    const edDiv = document.createElement('div')
+    edDiv.className = 'mdc-text-field end--date'
+
+    const endDateInput = document.createElement('input')
+    endDateInput.value = moment(schedule.endTime).format('YYYY-MM-DD')
+    endDateInput.type = 'date'
+    endDateInput.disabled = !data.canEdit
+    endDateInput.className = 'mdc-text-field__input'
+    edDiv.appendChild(endDateInput)
+
+    const etSpan = document.createElement("span")
+    etSpan.className = 'mdc-list-item__meta'
+
+    const etDiv = document.createElement('div')
+    etDiv.className = 'mdc-text-field end--time'
+
+
+    const endTimeInput = document.createElement('input')
+    endTimeInput.value = moment(schedule.endTime).format('hh:mm')
+    endTimeInput.type = 'time'
+    endTimeInput.disabled = !data.canEdit
+    endTimeInput.className = 'mdc-text-field__input'
+
+    etDiv.appendChild(endTimeInput)
+
+    etSpan.appendChild(etDiv)
+
+
+    startLi.appendChild(sdDiv)
+    startLi.appendChild(stSpan)
+
+    endLi.appendChild(edDiv)
+    endLi.appendChild(etSpan)
+
+    ul.appendChild(startLi)
+    ul.appendChild(divider)
+    ul.appendChild(endLi)
+
+    document.getElementById('schedule--group').appendChild(scheduleName)
+    document.getElementById('schedule--group').appendChild(ul)
   })
-  return table
 }
 
 function createAttachmentContainer(data) {
-  // attachment,canEdit, office, template
 
   const availTypes = {
     'phoneNumber': '',
@@ -1182,7 +1265,9 @@ function createAttachmentContainer(data) {
 
       div.appendChild(label)
       div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+
     }
+
 
     if (data.attachment[key].type === 'phoneNumber') {
       div.classList.add('selector--margin')
@@ -1225,7 +1310,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
-      div.appendChild(createSelectMenu(key,data.attachment[key].value,data.canEdit))
+      div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
 
     }
 
@@ -1247,11 +1332,10 @@ function createAttachmentContainer(data) {
 
         div.appendChild(addCamera)
         div.appendChild(imagePreview);
-        addCamera.onclick = function(){
+        addCamera.onclick = function() {
           readCameraFile()
         }
-      }
-      else {
+      } else {
 
         const viewImage = document.createElement('img')
         viewImage.src = `${data.attachment[key].value}`
@@ -1299,6 +1383,10 @@ function createAttachmentContainer(data) {
     }
 
     attachCont.appendChild(div)
+    const hr = document.createElement('hr')
+    hr.className = 'attachment--divider'
+    attachCont.appendChild(hr)
+
   })
   console.log(attachCont)
   return attachCont
@@ -1308,15 +1396,10 @@ function createAssigneeList(db, record, showLabel) {
   if (showLabel) {
 
     const labelAdd = document.createElement('li')
-    labelAdd.className = 'mdc-list-item'
+    labelAdd.className = 'mdc-list-item label--text'
+    labelAdd.textContent = 'Assignees'
 
-    const labelTextSpan = document.createElement('span')
-    labelTextSpan.className = 'mdc-list-item__text'
-    const labelText = document.createElement('span')
-    labelText.className = 'mdc-list-item__primary-text detail--static-text'
-    labelText.textContent = 'Assignees'
 
-    labelTextSpan.appendChild(labelText)
 
     const labelButton = document.createElement('span')
     labelButton.className = 'mdc-list-item__meta'
@@ -1337,7 +1420,7 @@ function createAssigneeList(db, record, showLabel) {
     addButton.appendChild(span)
     labelButton.appendChild(addButton)
 
-    labelAdd.appendChild(labelTextSpan)
+
     if (record.canEdit) {
       labelAdd.appendChild(labelButton)
     }
@@ -1450,6 +1533,68 @@ function readCameraFile() {
   FetchCameraForAttachment.startCamera()
 }
 
+function createActivityCancellation(record) {
+
+  const StautsCont = document.createElement('div')
+  StautsCont.className = 'status--cancel-cont'
+
+  if (record.canEdit && !record.hasOwnProperty('create')) {
+    const div = document.createElement('div')
+    div.className = 'mdc-switch'
+    if (record.status === 'CANCELLED') {
+      div.classList.add('mdc-switch--checked')
+    }
+    const track = document.createElement('div')
+    track.className = 'mdc-switch__track'
+
+    const thumbUnderlay = document.createElement('div')
+    thumbUnderlay.className = 'mdc-switch__thumb-underlay'
+
+    const thumb = document.createElement("div")
+    thumb.className = 'mdc-switch__thumb'
+
+    const input = document.createElement("input")
+    input.className = 'mdc-switch__native-control'
+    input.id = 'toggle-status'
+    input.setAttribute('role', 'switch')
+    if (record.status === 'CANCELLED') {
+      input.checked = true
+    }
+    input.type = 'checkbox'
+
+    thumb.appendChild(input)
+    thumbUnderlay.appendChild(thumb)
+
+    div.appendChild(track)
+    div.appendChild(thumbUnderlay)
+
+    const label = document.createElement('label')
+    label.setAttribute('for', 'toggle-status')
+    label.textContent = 'Cancel Activity '
+    StautsCont.appendChild(label)
+    StautsCont.appendChild(div)
+    document.querySelector('.update-create--activity').appendChild(StautsCont)
+
+    const switchControl = new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
+    document.querySelector('.mdc-switch').onclick = function() {
+
+      if (switchControl.checked) {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CANCELLED'
+        })
+      } else {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'PENDING'
+        })
+      }
+    }
+  }
+}
+
+
+
 function sendActivity(record) {
 
   if (record.hasOwnProperty('create')) {
@@ -1471,7 +1616,7 @@ function sendActivity(record) {
 }
 
 function concatDateWithTime(date, time) {
-  const dateConcat = moment(date  + " " + time)
+  const dateConcat = moment(date + " " + time)
   return moment(dateConcat).valueOf()
 }
 
@@ -1482,17 +1627,15 @@ function insertInputsIntoActivity(record, activityStore) {
     console.log(convertIdToKey(allStringTypes[i].id))
   }
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
-  for(let i=0;i<imagesInAttachments.length;i++){
-    if(!imagesInAttachments[i].querySelector('img')) {
+  for (let i = 0; i < imagesInAttachments.length; i++) {
+    if (!imagesInAttachments[i].querySelector('img')) {
       record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = ''
 
-    }else {
+    } else {
 
       record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].querySelector('img').src
     }
   }
-
-  console.log(record.attachment)
 
   let sd;
   let st;
@@ -1501,38 +1644,38 @@ function insertInputsIntoActivity(record, activityStore) {
   let allow = true;
   for (var i = 0; i < record.schedule.length; i++) {
 
-     sd = document.querySelector(`[data-start="${record.schedule[i].name}-startDate"] input`)
-     st = document.querySelector(`[data-start="${record.schedule[i].name}-startTime"] input`)
-     ed = document.querySelector(`[data-end="${record.schedule[i].name}-endDate"] input`)
-     et = document.querySelector(`[data-end="${record.schedule[i].name}-endTime"] input`)
+    sd = getInputText('.start--date').value
+    st = getInputText('.start--time').value
+    ed = getInputText('.end--date').value
+    et = getInputText('.end--time').value
 
-     if (sd.value !== "" && ed.value == "") {
-       snacks('Add a valid End Date')
-       allow = false
-     }
+    if (sd !== "" && ed == "") {
+      snacks('Add a valid End Date')
+      allow = false
+    }
 
-     if (ed.value !== "" && sd.value == "") {
-       snacks('Add a valid Start Date')
-       allow = false
+    if (ed !== "" && sd == "") {
+      snacks('Add a valid Start Date')
+      allow = false
 
-     }
+    }
 
-     if (sd.value && ed.value && moment(ed.value).valueOf() < moment(sd.value).valueOf()) {
-       snacks('End Date cannot be before Start Date')
-       allow = false
-     }
+    if (sd && ed && moment(ed).valueOf() < moment(sd).valueOf()) {
+      snacks('End Date cannot be before Start Date')
+      allow = false
+    }
 
-     if(allow){
-       record.schedule[i].startTime = concatDateWithTime(sd.value, st.value) || ''
-       record.schedule[i].endTime = concatDateWithTime(ed.value, et.value)  || ''
-     }
+    if (allow) {
+      record.schedule[i].startTime = concatDateWithTime(sd, st) || ''
+      record.schedule[i].endTime = concatDateWithTime(ed, et) || ''
+    }
   }
 
   for (var i = 0; i < record.venue.length; i++) {
-        record.venue[i].geopoint = {
-          latitude : record.venue[i].geopoint['_latitude'],
-          longitude : record.venue[i].geopoint['_longitude']
-        }
+    record.venue[i].geopoint = {
+      latitude: record.venue[i].geopoint['_latitude'],
+      longitude: record.venue[i].geopoint['_longitude']
+    }
   }
 
   const requiredObject = {
@@ -1543,7 +1686,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
-    requestCreator('update',requiredObject)
+    requestCreator('update', requiredObject)
 
     return
   }
@@ -1552,7 +1695,7 @@ function insertInputsIntoActivity(record, activityStore) {
   requiredObject.template = record.template
   requiredObject.share = record.assignees
 
-  requestCreator('create',requiredObject)
+  requestCreator('create', requiredObject)
 }
 
 function initSearchForSelectors(type, record, attr) {
@@ -1671,14 +1814,14 @@ function createSimpleInput(value, canEdit, withIcon, key) {
   }
 
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input'
+  input.className = 'mdc-text-field__input input--value--update'
   input.style.paddingTop = '0px'
+  input.value = value
 
 
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
-  input.value = value
   if (withIcon) {
 
     textField.id = 'search--bar--field'
@@ -1689,6 +1832,8 @@ function createSimpleInput(value, canEdit, withIcon, key) {
   textField.appendChild(input)
   textField.appendChild(ripple)
   const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
+
+
   return textField
 }
 
@@ -1727,8 +1872,8 @@ function createTimeInput(value, canEdit, attr) {
   return textField
 }
 
-function createSelectMenu(key,value,canEdit) {
-  if(!canEdit) {
+function createSelectMenu(key, value, canEdit) {
+  if (!canEdit) {
     const span = document.createElement('span')
     span.className = 'data--value-list'
     span.textContent = value
@@ -1762,41 +1907,5 @@ function createSelectMenu(key,value,canEdit) {
   div.appendChild(label)
   div.appendChild(select)
   div.appendChild(ripple)
-  return div
-}
-
-function createSimpleMenu(status) {
-  const div = document.createElement("div")
-  div.className = 'mdc-menu mdc-menu--status'
-  div.setAttribute('tabindex', '-1')
-
-  const ul = document.createElement('ul')
-  ul.className = 'mdc-menu__items'
-  ul.setAttribute('role', 'menu')
-  ul.setAttribute('aria-hidden', 'true')
-  const statuses = []
-  if(status === 'CONFIRMED') {
-      statuses.push('Pending','Cancelled')
-  }
-  if(status === 'PENDING') {
-    statuses.push('confirmed','Cancelled')
-  }
-  if(status === 'CANCELLED') {
-    statuses.push('Confirmed','Pending')
-  }
-
-  statuses.forEach(function(status) {
-    const li = document.createElement('li')
-    li.className = 'mdc-list-item'
-    li.setAttribute('role', 'menuitem')
-    li.setAttribute('tabindex', '0')
-    const span = document.createElement('span')
-    span.className = 'mdc-list-item__text'
-    span.textContent = status
-    li.appendChild(span)
-    ul.appendChild(li)
-  })
-  div.appendChild(ul)
-
   return div
 }
