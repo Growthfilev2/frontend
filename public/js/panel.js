@@ -559,7 +559,7 @@ function generateActivitiesByDate(sortingOrder, hasMultipleOffice) {
     setTimeout(function() {
       appendActivityListToDom(activityDom)
       createActivityIcon(db)
-    }, 1000)
+    }, 500)
 
 
   }

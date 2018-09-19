@@ -92,9 +92,8 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-   // Fetchview.disabledSwipe(viewName)
+   Fetchview.startConversation(viewName)
 }
-
 
 function inputFile(selector) {
   return document.getElementById(selector)
