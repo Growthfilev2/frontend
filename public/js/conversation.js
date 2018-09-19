@@ -1528,7 +1528,6 @@ function setFilePath(str) {
   img.className = 'profile-container--main attachment-picture'
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
   document.getElementById('send-activity').classList.remove('hidden')
-
 }
 
 function readCameraFile() {
