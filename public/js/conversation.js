@@ -85,7 +85,7 @@ function commentPanel(db, id) {
 
 
   const btn = document.createElement('button')
-  btn.classList.add('mdc-fab', 'mdc-fab--mini','hidden')
+  btn.classList.add('mdc-fab', 'mdc-fab--mini', 'hidden')
   btn.id = 'send-chat--input'
 
   const btnIcon = document.createElement('span')
@@ -101,15 +101,14 @@ function commentPanel(db, id) {
 
   document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
 
-  document.querySelector('.comment-field').oninput = function(evt){
-    if(!evt.target.value || evt.target.value === ' ') {
+  document.querySelector('.comment-field').oninput = function(evt) {
+    if (!evt.target.value || evt.target.value === ' ') {
       document.getElementById('send-chat--input').classList.add('hidden')
       document.getElementById('write--comment').style.width = '100%'
       document.getElementById('write--comment').style.transition = '0.3s ease'
       document.querySelector('.status--change-cont').style.transition = '0.3s ease'
       document.querySelector('.status--change-cont').style.opacity = '1'
-    }
-    else {
+    } else {
       document.getElementById('send-chat--input').classList.remove('hidden')
       document.getElementById('write--comment').style.width = '80%'
       document.querySelector('.status--change-cont').style.opacity = '0';
@@ -188,7 +187,7 @@ function statusChange(db, id) {
     StautsCont.appendChild(label)
     StautsCont.appendChild(div)
 
-    if(!document.querySelector('.status--completed-cont')) {
+    if (!document.querySelector('.status--completed-cont')) {
       document.querySelector('.status--change-cont').appendChild(StautsCont)
     }
 
@@ -938,9 +937,7 @@ function updateCreateActivity(record) {
     createScheduleTable(record);
 
 
-    const attachmentSection = document.getElementById('attachment--list')
-    // canEdit, office, template
-    attachmentSection.appendChild(createAttachmentContainer(record))
+  createAttachmentContainer(record)
 
     const inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
@@ -1236,6 +1233,14 @@ function createScheduleTable(data) {
 
 function createAttachmentContainer(data) {
 
+  const ordering = ['Name', 'Template', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
+
+  ordering.forEach(function(order) {
+    const group = document.createElement("div")
+    group.className = `${order}--group`
+    document.getElementById('attachment--list').appendChild(group)
+  })
+
   const availTypes = {
     'phoneNumber': '',
     'weekday': '',
@@ -1244,8 +1249,6 @@ function createAttachmentContainer(data) {
     'base64': ''
   }
 
-  const attachCont = document.createElement('div')
-  attachCont.id = 'attachment-container'
 
   Object.keys(data.attachment).forEach(function(key) {
 
@@ -1261,7 +1264,12 @@ function createAttachmentContainer(data) {
     label.className = 'label--text'
     label.textContent = key
 
-    if (data.attachment[key].type === 'string') {
+    if (key === 'Name') {
+      div.appendChild(label)
+      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+    }
+
+    if (data.attachment[key].type === 'string' && key !== 'Name') {
 
       div.appendChild(label)
       div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
@@ -1335,12 +1343,14 @@ function createAttachmentContainer(data) {
         addCamera.onclick = function() {
           readCameraFile()
         }
-      } else {
-
-        const viewImage = document.createElement('img')
-        viewImage.src = `${data.attachment[key].value}`
-        div.appendChild(viewImage);
       }
+      const viewImage = document.createElement('img')
+      viewImage.src = `${data.attachment[key].value}` || '#'
+      viewImage.onclick = function(){
+        openImage(this.src)
+      }
+      imagePreview.appendChild(viewImage);
+      div.appendChild(imagePreview)
     }
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
@@ -1382,14 +1392,26 @@ function createAttachmentContainer(data) {
       }
     }
 
-    attachCont.appendChild(div)
+
+
     const hr = document.createElement('hr')
     hr.className = 'attachment--divider'
-    attachCont.appendChild(hr)
+    if (data.attachment[key].type === 'HH:MM') {
 
+      document.querySelector('.HHMM--group').appendChild(div)
+      document.querySelector('.HHMM--group').appendChild(hr)
+    } else if (key === 'Name') {
+      document.querySelector('.Name--group').appendChild(div)
+      document.querySelector('.Name--group').appendChild(hr)
+    } else if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
+      document.querySelector('.Template--group').appendChild(div)
+      document.querySelector('.Template--group').appendChild(hr)
+    }
+    else {
+      document.querySelector(`.${data.attachment[key].type}--group`).appendChild(div)
+      document.querySelector(`.${data.attachment[key].type}--group`).appendChild(hr)
+    }
   })
-  console.log(attachCont)
-  return attachCont
 }
 
 function createAssigneeList(db, record, showLabel) {
@@ -1527,11 +1549,20 @@ function setFilePath(str) {
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
+
   document.getElementById('send-activity').classList.remove('hidden')
 }
 
 function readCameraFile() {
   FetchCameraForAttachment.startCamera()
+}
+
+function openImage(imageSrc){
+  if(imageSrc.substring(0,4) !== "data") return
+
+  document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
+  const imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));
+  imageDialog.show()
 }
 
 function createActivityCancellation(record) {
@@ -1858,7 +1889,7 @@ function createTimeInput(value, canEdit, attr) {
   attr.type === 'date' ? input.value = moment(value).format('YYYY-MM-DD') : input.value = value
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
-    input.style.width = '90%'
+    input.style.width = '100%'
   }
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
@@ -1888,7 +1919,7 @@ function createSelectMenu(key, value, canEdit) {
   div.dataset.primary = ''
   const select = document.createElement('select')
   select.className = 'mdc-select__native-control'
-  select.style.paddingTop = '0px';
+  select.style.paddingRight = '0px';
   const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
   for (var i = 0; i < weekdays.length; i++) {

@@ -69,16 +69,44 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-  const scrim = document.createElement('div')
-  scrim.className = 'mdc-drawer-scrim'
   layoutInner.appendChild(headerDiv)
-  layoutInner.appendChild(scrim)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
-
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
+  imageViewDialog()
 }
+
+function imageViewDialog(){
+
+  const aside = document.createElement('aside')
+
+  aside.id = 'viewImage--dialog-component'
+  aside.className = 'mdc-dialog'
+  aside.role = 'alertdialog'
+
+  const dialogSurface = document.createElement('div')
+  dialogSurface.className = 'mdc-dialog__surface'
+
+  const section = document.createElement('section')
+  section.className = 'mdc-dialog__content'
+
+  const image = document.createElement("img")
+  image.src = ''
+  image.style.width = '100%'
+  section.appendChild(image)
+
+  dialogSurface.appendChild(section)
+
+  aside.appendChild(dialogSurface)
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mdc-dialog__backdrop'
+  aside.appendChild(backdrop)
+
+
+  document.body.appendChild(aside)
+}
+
 
 moment.locale('en', {
   calendar: {
@@ -156,7 +184,7 @@ var xDown = null;
 var yDown = null;
 
 function getTouches(evt) {
-  return evt.touches 
+  return evt.touches
 }
 
 function handleTouchStart(evt) {
