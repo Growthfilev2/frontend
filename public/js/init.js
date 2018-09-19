@@ -156,7 +156,7 @@ var xDown = null;
 var yDown = null;
 
 function getTouches(evt) {
-  return evt.touches          // browser API
+  return evt.touches 
 }
 
 function handleTouchStart(evt) {

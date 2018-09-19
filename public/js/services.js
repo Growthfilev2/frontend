@@ -6,14 +6,14 @@ function loader() {
   return div
 }
 
-function successDialog(){
+function successDialog() {
 
   const aside = document.createElement('aside')
   aside.className = 'mdc-dialog mdc-dialog--open success--dialog'
   aside.id = 'success--dialog'
 
   const surface = document.createElement('div')
-  surface.className  = 'mdc-dialog__surface round--surface'
+  surface.className = 'mdc-dialog__surface round--surface'
 
   const section = document.createElement('section')
   section.className = 'mdc-dialog__body'
@@ -29,15 +29,15 @@ function successDialog(){
   section.appendChild(div)
   surface.appendChild(section)
   aside.appendChild(surface)
-  if(!document.querySelector('#success--dialog')){
+  if (!document.querySelector('#success--dialog')) {
     document.body.appendChild(aside)
   }
 
   const successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'))
   successDialog.show()
-  setTimeout(function(){
+  setTimeout(function() {
     successDialog.close()
-  },3000)
+  }, 3000)
 }
 
 function snacks(message) {
@@ -66,7 +66,7 @@ function snacks(message) {
     message: message,
     actionText: 'Ok',
     timeout: 3000,
-    actionHandler: function () {
+    actionHandler: function() {
       console.log('okay')
     }
   }
@@ -81,8 +81,8 @@ function fetchCurrentTime(serverTime) {
 }
 
 function fetchCurrentLocation() {
-  return new Promise(function (resolve) {
-    navigator.geolocation.getCurrentPosition(function (position) {
+  return new Promise(function(resolve) {
+    navigator.geolocation.getCurrentPosition(function(position) {
       resolve({
         'latitude': position.coords.latitude,
         'longitude': position.coords.longitude
@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-   Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -115,33 +115,30 @@ function requestCreator(requestType, requestBody) {
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
-    if(requestBody.hasOwnProperty('firstTime')) {
-
+    if (requestBody.hasOwnProperty('firstTime')) {
       requestGenerator.body = requestBody
       apiHandler.postMessage(requestGenerator)
-    }
+    } else {
+      fetchCurrentLocation().then(function(geopoints) {
+        const dbName = firebase.auth().currentUser.uid
+        const req = indexedDB.open(dbName)
+        req.onsuccess = function() {
+          const db = req.result;
+          const rootObjectStore = db.transaction('root').objectStore('root')
+          rootObjectStore.get(dbName).onsuccess = function(event) {
 
-    else {
-    fetchCurrentLocation().then(function (geopoints) {
-      const dbName = firebase.auth().currentUser.uid
-      const req = indexedDB.open(dbName)
-      req.onsuccess = function () {
-        const db = req.result;
-        const rootObjectStore = db.transaction('root').objectStore('root')
-        rootObjectStore.get(dbName).onsuccess = function (event) {
+            requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
+            requestBody['geopoint'] = geopoints
+            requestGenerator.body = requestBody
+            // post the requestGenerator object to the apiHandler to perform IDB and api
+            // operations
 
-          requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
-          requestBody['geopoint'] = geopoints
-          requestGenerator.body = requestBody
-          // post the requestGenerator object to the apiHandler to perform IDB and api
-          // operations
-
-          apiHandler.postMessage(requestGenerator)
+            apiHandler.postMessage(requestGenerator)
+          }
         }
-      }
-    })
+      })
+    }
   }
-}
 
   // handle the response from apiHandler when operation is completed
 
@@ -157,87 +154,87 @@ function loadViewFromRoot(response) {
   }
 
   // only for development
-  if(response.data.type === 'error') {
+  if (response.data.type === 'error') {
     snacks(response.data.msg)
     return;
   }
 
-  if(response.data.type === 'loggedOut') {
+  if (response.data.type === 'loggedOut') {
     document.getElementById("main-layout-app").style.display = 'none'
     userSignedOut()
     return;
   }
 
-  if(response.data.type === 'setLocalStorage'){
+  if (response.data.type === 'setLocalStorage') {
     document.getElementById("main-layout-app").style.display = 'block'
 
-    localStorage.setItem('dbexist',response.data.dbName);
+    localStorage.setItem('dbexist', response.data.dbName);
     return;
   }
 
+
+
   const req = window.indexedDB.open(firebase.auth().currentUser.uid)
 
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
 
-      if(response.data.type === 'updateAssigneeList') {
-        console.log("only update assingee list")
-        const activityObjectStore = db.transaction('activity').objectStore('activity')
-        //here dbName is activityId
-        activityObjectStore.get(response.data.dbName.id).onsuccess = function(event){
-          const record = event.target.result
+    if (response.data.type === 'updateAssigneeList') {
+      console.log("only update assingee list")
+      const activityObjectStore = db.transaction('activity').objectStore('activity')
+      //here dbName is activityId
+      activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
+        const record = event.target.result
 
-          readNameAndImageFromNumber([response.data.dbName.number],db)
-        }
-        return
+        readNameAndImageFromNumber([response.data.dbName.number], db)
       }
+      return
+    }
 
-      if(response.data.type === 'updateStatusView') {
-        const activityObjectStore = db.transaction('activity').objectStore('activity')
-        activityObjectStore.get(response.data.dbName.id).onsuccess = function(event){
-          const record = event.target.result;
-          if(response.data.staus !== 'CANCELLED') {
-            statusChange(db,record.activityId)
-          }
+    if (response.data.type === 'updateStatusView') {
+      const activityObjectStore = db.transaction('activity').objectStore('activity')
+      activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
+        const record = event.target.result;
+        if (response.data.staus !== 'CANCELLED') {
+          statusChange(db, record.activityId)
         }
-        return
       }
-
-      else {
+      return
+    } else {
       console.log("yahan tak chak raha hai")
-      rootObjectStore.get(response.data.dbName).onsuccess = function (event) {
-      const record = event.target.result
-      let currentView = record.view
-      if(response.data.type === 'create-success') {
-        currentView = 'list'
-      }
+      rootObjectStore.get(response.data.dbName).onsuccess = function(event) {
+        const record = event.target.result
+        let currentView = record.view
+        if (response.data.type === 'create-success') {
+          currentView = 'list'
+        }
 
-      switch (currentView) {
-        case 'list':
-          listView(response.data.dbName)
-          handleTimeout()
-          break
+        switch (currentView) {
+          case 'list':
+            listView(response.data.dbName)
+            handleTimeout()
+            break
 
-        case 'conversation':
-          conversation(event.target.result.id)
-          handleTimeout()
-          break
-        case 'profile':
-        handleTimeout()
-        break;
-        case 'updateCreateActivity':
-        handleTimeout()
-        break;
-        default:
-          record.currentView = 'list'
-          rootObjectStore.put(record)
-          listView(response.data.dbName)
-          handleTimeout()
+          case 'conversation':
+            conversation(event.target.result.id)
+            handleTimeout()
+            break
+          case 'profile':
+            handleTimeout()
+            break;
+          case 'updateCreateActivity':
+            handleTimeout()
+            break;
+          default:
+            record.currentView = 'list'
+            rootObjectStore.put(record)
+            listView(response.data.dbName)
+            handleTimeout()
+        }
       }
     }
   }
-}
 }
 
 function onErrorMessage(error) {
@@ -253,7 +250,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   console.log('load now')
   const TIME_OUT_VALUE = 10000
-  const offset = setTimeout(function () {
+  const offset = setTimeout(function() {
     requestCreator('Null')
   }, TIME_OUT_VALUE)
   if (offset) {

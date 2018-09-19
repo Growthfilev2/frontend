@@ -1,6 +1,7 @@
 function listView(dbName) {
 
   history.pushState(['listView', dbName], null, null)
+
   listPanel()
 
   document.body.style.backgroundColor = 'white'

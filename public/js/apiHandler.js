@@ -234,7 +234,6 @@ function initializeIDB() {
         fromTime: 0,
         view: 'list'
       })
-      // requestHandlerResponse('creatingIDB', 200, 'IDB creation started', db.name)
     }
 
     request.onsuccess = function() {
@@ -247,11 +246,8 @@ function initializeIDB() {
               const record = event.target.result
               record.serverTime = timestamp - Date.now()
               rootObjectStore.put(record)
-              // requestHandlerResponse('notification', 200, 'server time added', request.result.name)
             }
           })
-
-
     }
   })
 }
