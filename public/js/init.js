@@ -158,6 +158,7 @@ function handleViewFromHistory(backFromAndroid) {
     UserCanExitApp()
     return;
   }
+
   window.history.go(-1)
   window.onpopstate = function(event) {
     const views = {
@@ -172,6 +173,8 @@ function handleViewFromHistory(backFromAndroid) {
       Urgent:sortByDates,
       Nearby:sortActivitiesByLocation
     }
+
+    if(!event.state) return
     if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
       const req = indexedDB.open(event.state[1])
       req.onsuccess = function(){
