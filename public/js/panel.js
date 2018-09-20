@@ -1,8 +1,5 @@
 function listView(dbName) {
 
-
-
-
   history.pushState(['listView', dbName], null, null)
 
   listPanel()
@@ -188,8 +185,7 @@ function appendActivityListToDom(activityDom,hasHeaderAndCard,headerName) {
     listPanel()
     creatListHeader(headerName,!hasHeaderAndCard)
   }
-
-  document.getElementById('activity--list').innerHTML = activityDom
+    document.getElementById('activity--list').innerHTML = activityDom
 }
 
 function createActivityIcon(db) {
@@ -270,7 +266,7 @@ function creatListHeader(headerName,backIcon) {
 
   document.getElementById('menu--panel').addEventListener('click', function() {
     if(backIcon){
-      handleViewFromHistory()
+      listView(localStorage.getItem('dbexist'))
       return
     }
 
