@@ -1,5 +1,5 @@
-function listView(dbName) {
-
+function listView() {
+  const dbName = localStorage.getItem('dbexist');
   history.pushState(['listView', dbName], null, null)
 
   listPanel()
@@ -14,22 +14,14 @@ function listView(dbName) {
     const rootStore = rootTx.objectStore('root')
     rootStore.get(dbName || localStorage.getItem('dbexist')).onsuccess = function(event) {
       const officeRecord = event.target.result
-      officeRecord.view = 'list'
-      rootStore.put(officeRecord)
-
-      rootTx.oncomplete = function() {
 
         if (!document.querySelector('.mdc-drawer--temporary')) {
-          initMenu(
-            db, {
-              multipleOffice: officeRecord.offices.hasMultipleOffice,
-              offices: officeRecord.offices.allOffices
-            })
+          initMenu(db, officeRecord.offices)
         }
         creatListHeader('Recent')
         fetchDataForActivityList(db)
       }
-    }
+
   }
 }
 
@@ -266,7 +258,7 @@ function creatListHeader(headerName,backIcon) {
 
   document.getElementById('menu--panel').addEventListener('click', function() {
     if(backIcon){
-      listView(localStorage.getItem('dbexist'))
+      handleViewFromHistory()
       return
     }
 
@@ -351,7 +343,13 @@ function initMenu(db, officeRecord) {
 
 
   const officeName = document.createElement('div')
-  officeName.textContent = officeRecord.offices[0]
+  if(!officeRecord) {
+    officeName.textContent = ''
+  }
+  else {
+    officeName.textContent = officeRecord.allOffices[0]
+  }
+
   officeName.className = 'mdc-typography--caption'
 
   const changeOfficeIon = document.createElement('i')
@@ -364,7 +362,7 @@ function initMenu(db, officeRecord) {
     changeOfficeIon.textContent = 'arrow_drop_down'
     headerDetails.appendChild(changeOfficeIon)
     changeOfficeIon.onclick = function() {
-      createOfficeSelectionUI(officeRecord.offices)
+      createOfficeSelectionUI(officeRecord.allOffices)
     }
   }
 
@@ -411,19 +409,19 @@ function initMenu(db, officeRecord) {
     a.appendChild(textSpan)
     a.onclick = function() {
       if (filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled') {
-        filterActivities(filter.type, db)
+        filterActivities(filter.type, db,true)
       }
       if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, db)
+        sortByCreator(filter.type, db,true)
       }
       if (filter.type === 'Urgent') {
-        sortByDates(filter.type, db)
+        sortByDates(filter.type, db,true)
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type)
+        sortByLocation(filter.type,true)
       }
       if (filter.type === 'Recent') {
-        listView(firebase.auth().currentUser.uid)
+        listView()
       }
 
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
@@ -449,20 +447,22 @@ function createOfficeSelectionUI(allOffices) {
     const a = document.createElement('a')
     a.className = 'mdc-list-item mdc-list-item--activated'
     a.href = '#'
-
     const textSpan = document.createElement('span')
     textSpan.textContent = office
     a.appendChild(textSpan)
     a.onclick = function() {
-      listView(dbName)
+      listView()
     }
     document.getElementById('mdc-drawer__content mdc-list').appendChild(a)
   })
-
 }
 
-function filterActivities(type, db) {
-  history.pushState([type,localStorage.getItem('dbexist')],null,null)
+function filterActivities(type, db,pushState) {
+  if(pushState){
+
+    history.pushState([type,localStorage.getItem('dbexist')],null,null)
+  }
+
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
   let activityDom = ''
@@ -473,6 +473,7 @@ function filterActivities(type, db) {
       createActivityIcon(db)
       return
     }
+
     if (cursor.value.status === type.toUpperCase() && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
       createActivityList(db, cursor.value).then(function(li) {
 
@@ -483,8 +484,10 @@ function filterActivities(type, db) {
   }
 }
 
-function sortByCreator(type, db) {
-  history.pushState([type,localStorage.getItem('dbexist')],null,null)
+function sortByCreator(type, db,pushState) {
+  if(pushState){
+    history.pushState([type,localStorage.getItem('dbexist')],null,null)
+  }
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
 
@@ -518,8 +521,10 @@ function sortByCreator(type, db) {
   }
 }
 
-function sortByDates(type, db) {
-  history.pushState([type,localStorage.getItem('dbexist')],null,null)
+function sortByDates(type, db,pushState) {
+  if(pushState){
+    history.pushState([type,localStorage.getItem('dbexist')],null,null)
+  }
 
   const activityDom = ''
   const today = moment().format('YYYY-MM-DD')
@@ -610,7 +615,7 @@ function sortByLocation(type) {
 }
 
 function sortActivitiesByLocation() {
-  history.pushState(['Nearby',localStorage.getItem('dbexist')],null,null)
+  // history.pushState(['Nearby',localStorage.getItem('dbexist')],null,null)
 
   let activityDom = ''
   const dbName = firebase.auth().currentUser.uid
@@ -646,9 +651,10 @@ function locationSortError(error) {
   console.log(error)
 }
 
-function profileView() {
-
-  history.replaceState(['profileView'], null, null)
+function profileView(pushState) {
+  // if(pushState){
+    history.replaceState(['profileView'], null, null)
+  // }
 
   const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary '))
   drawer.open = false;

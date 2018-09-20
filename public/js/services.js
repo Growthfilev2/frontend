@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -201,39 +201,51 @@ function loadViewFromRoot(response) {
         }
       }
       return
-    } else {
-      console.log("yahan tak chak raha hai")
-      rootObjectStore.get(response.data.dbName).onsuccess = function(event) {
-        const record = event.target.result
-        let currentView = record.view
-        if (response.data.type === 'create-success') {
-          currentView = 'list'
-        }
-
-        switch (currentView) {
-          case 'list':
-            listView(response.data.dbName)
-            handleTimeout()
-            break
-
-          case 'conversation':
-            conversation(event.target.result.id)
-            handleTimeout()
-            break
-          case 'profile':
-            handleTimeout()
-            break;
-          case 'updateCreateActivity':
-            handleTimeout()
-            break;
-          default:
-            record.currentView = 'list'
-            rootObjectStore.put(record)
-            listView(response.data.dbName)
-            handleTimeout()
-        }
-      }
     }
+
+    if(!history.state) {
+      setTimeout(function(){
+        window["listView"]()
+      },2000)
+    }
+    else {
+      if(history.state[0] === 'updateCreateActivity') return
+      window[history.state[0]](history.state[1],false)
+      handleTimeout()
+    }
+    //  else {
+    //   console.log("yahan tak chak raha hai")
+    //   rootObjectStore.get(response.data.dbName).onsuccess = function(event) {
+    //     const record = event.target.result
+    //     let currentView = record.view
+    //     if (response.data.type === 'create-success') {
+    //       currentView = 'list'
+    //     }
+    //
+    //     switch (currentView) {
+    //       case 'list':
+    //         listView(response.data.dbName)
+    //         handleTimeout()
+    //         break
+    //
+    //       case 'conversation':
+    //         conversation(event.target.result.id)
+    //         handleTimeout()
+    //         break
+    //       case 'profile':
+    //         handleTimeout()
+    //         break;
+    //       case 'updateCreateActivity':
+    //         handleTimeout()
+    //         break;
+    //       default:
+    //         record.currentView = 'list'
+    //         rootObjectStore.put(record)
+    //         listView(response.data.dbName)
+    //         handleTimeout()
+    //     }
+    //   }
+    // }
   }
 }
 
@@ -249,7 +261,7 @@ function onErrorMessage(error) {
 
 function handleTimeout() {
   console.log('load now')
-  const TIME_OUT_VALUE = 10000
+  const TIME_OUT_VALUE = 300
   const offset = setTimeout(function() {
     requestCreator('Null')
   }, TIME_OUT_VALUE)

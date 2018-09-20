@@ -57,11 +57,8 @@ self.onmessage = function(event) {
       return void(0)
     }
 
-
-
     if (event.data.body.hasOwnProperty('firstTime')) {
       requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
-      // requestHandlerResponse('loggedIn', '200', 'user logged in',firebase.auth().currentUser.uid)
       requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
       return
     }
@@ -801,8 +798,8 @@ function successResponse(read) {
 
       putAttachment(db, activity)
     })
-    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log);
 
+    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log);
 
     read.templates.forEach(function(subscription) {
       updateSubscription(db, subscription)
@@ -819,8 +816,8 @@ function successResponse(read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     activitytx.oncomplete = function(){
-
       requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+
     }
   }
 }

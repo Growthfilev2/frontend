@@ -151,41 +151,55 @@ function startApp() {
   }
 }
 
-
-function handleViewFromHistory(backFromAndroid) {
-
-  if (backFromAndroid && history.state[0] === 'listView') {
-    UserCanExitApp()
-    return;
-  }
-
-  window.history.go(-1)
-  window.onpopstate = function(event) {
-    const views = {
-      listView: listView,
-      conversation: conversation,
-      updateCreateActivity: updateCreateActivity,
-      Confirmed: filterActivities,
-      Pending:filterActivities,
-      Cancelled:filterActivities,
-      Incoming:sortByCreator,
-      Outgoing:sortByCreator,
-      Urgent:sortByDates,
-      Nearby:sortActivitiesByLocation
-    }
-
-    if(!event.state) return
-    if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
-      const req = indexedDB.open(event.state[1])
-      req.onsuccess = function(){
-        const db = req.result
-        views[event.state[0]](event.state[0],db);
-      }
-    }
-    else {
-      views[event.state[0]](event.state[1]);
+window.onpopstate = function(event) {
+  if(!event.state) return;
+  if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
+    const req = indexedDB.open(event.state[1])
+    req.onsuccess = function(){
+      const db = req.result
+      window[event.state[0]](event.state[0],db,false);
     }
   }
+  else {
+    window[event.state[0]](event.state[1],false)
+  }
+}
+
+function handleViewFromHistory() {
+  //
+  // if (backFromAndroid && history.state[0] === 'listView') {
+  //   UserCanExitApp()
+  //   return;
+  // }
+
+  history.back();
+
+
+    // const views = {
+    //   listView: listView,
+    //   conversation: conversation,
+    //   updateCreateActivity: updateCreateActivity,
+    //   Confirmed: filterActivities,
+    //   Pending:filterActivities,
+    //   Cancelled:filterActivities,
+    //   Incoming:sortByCreator,
+    //   Outgoing:sortByCreator,
+    //   Urgent:sortByDates,
+    //   Nearby:sortActivitiesByLocation
+    // }
+
+    // if(!event.state) return
+    // if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
+    //   const req = indexedDB.open(event.state[1])
+    //   req.onsuccess = function(){
+    //     const db = req.result
+    //     views[event.state[0]](event.state[0],db);
+    //   }
+    // }
+    // else {
+    //   views[event.state[0]](event.state[1]);
+    // }
+
 }
 
 function UserCanExitApp() {

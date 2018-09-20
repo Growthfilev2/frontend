@@ -4,26 +4,27 @@ function conversation(id, pushState) {
     history.pushState(['conversation', id], null, null)
   }
 
-  const currentUser = firebase.auth().currentUser
-  const req = window.indexedDB.open(currentUser.uid)
-
-  req.onsuccess = function() {
-    const db = req.result
-    const rootTx = db.transaction('root', 'readwrite')
-    const rootObjectStore = rootTx.objectStore('root')
-    rootObjectStore.get(currentUser.uid).onsuccess = function(event) {
-      const record = event.target.result
-      record.id = id
-      record.view = 'conversation'
-      rootObjectStore.put(record)
-      rootTx.oncomplete = function() {
-        fetchAddendumForComment(id, currentUser)
-      }
-    }
-  }
+  // const currentUser = firebase.auth().currentUser
+  // const req = window.indexedDB.open(currentUser.uid)
+  //
+  // req.onsuccess = function() {
+  //   const db = req.result
+  //   const rootTx = db.transaction('root', 'readwrite')
+  //   const rootObjectStore = rootTx.objectStore('root')
+  //   rootObjectStore.get(currentUser.uid).onsuccess = function(event) {
+  //     const record = event.target.result
+  //     record.id = id
+  //     record.view = 'conversation'
+  //     rootObjectStore.put(record)
+  //     rootTx.oncomplete = function() {
+        fetchAddendumForComment(id)
+  //     }
+  //   }
+  // }
 }
 
-function fetchAddendumForComment(id, user) {
+function fetchAddendumForComment(id) {
+  const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
   req.onsuccess = function() {
     const db = req.result
@@ -139,8 +140,9 @@ function statusChange(db, id) {
     if (!record.canEdit) {
 
       const record = event.target.result
-      statusSpan.textContent = record.status
+      statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
       document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
+      document.querySelector('.status--change-cont').style.textAlign = 'center'
       return
     }
 
@@ -332,18 +334,13 @@ function createHeaderContent(db, id) {
 
       document.getElementById('back-conv').addEventListener('click', function() {
         reinitCount(db, id)
-        // listView(db.name)
         handleViewFromHistory()
       })
 
       document.querySelector('.comment-header-primary').addEventListener('click', function() {
-        // fillActivityDetailPage(id)
-        updateCreateActivity(record)
+        updateCreateActivity(record,true)
       })
-
-
     })
-
   }
 }
 
@@ -901,21 +898,23 @@ function updateCreateContainer(record) {
   return container
 }
 
-function updateCreateActivity(record) {
+function updateCreateActivity(record,pushState) {
 
-  history.pushState(['updateCreateActivity', record.activityId], null, null)
+  if(pushState) {
+    history.pushState(['updateCreateActivity', record.activityId], null, null)
+  }
 
   //open indexedDB
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function() {
     const db = req.result
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-    rootObjectStore.get(dbName).onsuccess = function(event) {
-      const root = event.target.result
-      root.view = 'updateCreateActivity'
-      rootObjectStore.put(root)
-    }
+    // const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+    // rootObjectStore.get(dbName).onsuccess = function(event) {
+    //   const root = event.target.result
+    //   root.view = 'updateCreateActivity'
+    //   rootObjectStore.put(root)
+    // }
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
