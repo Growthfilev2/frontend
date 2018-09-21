@@ -514,10 +514,7 @@ function updateMap(db, activity) {
   mapTx.oncomplete = function() {
     const mapTx = db.transaction(['map'], 'readwrite')
     const mapObjectStore = mapTx.objectStore('map')
-    // office: activity.office,
-    // count: 0,
-    // timestamp: activity.timestamp,
-    // hidden: activity.hidden,
+  
 
     activity.venue.forEach(function(newVenue) {
       mapObjectStore.add({
