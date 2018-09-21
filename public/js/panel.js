@@ -16,6 +16,7 @@ function listView() {
       const officeRecord = event.target.result
 
       if (!document.querySelector('.mdc-drawer--temporary')) {
+
         initMenu(db, officeRecord.offices)
       }
       creatListHeader('Recent')
@@ -71,6 +72,7 @@ function createActivityList(db, data) {
         addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function(addendumstore) {
           const addendumCursor = addendumstore.target.result;
           if (addendumCursor) {
+            
             metaData.src = userstore.target.result.photoURL
             readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
               if (addendumCursor.value.isComment === 1) {
@@ -98,8 +100,12 @@ function activityListUI(data, count, metaData) {
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
 
-  const creator = document.createElement('img')
+  const creator = new Image()
   creator.className = 'mdc-list-item__graphic material-icons'
+  creator.onload = function(e){
+    console.log(e)
+  }
+
   creator.src = metaData.src || 'img/empty-user.jpg'
 
   const leftTextContainer = document.createElement('span')
@@ -257,7 +263,7 @@ function creatListHeader(headerName, backIcon) {
 
   document.getElementById('menu--panel').addEventListener('click', function() {
     if (backIcon) {
-      handleViewFromHistory()
+      backNav()
       return
     }
 
@@ -324,12 +330,12 @@ function initMenu(db, officeRecord) {
     profileView(true)
 
   }
-  const headerIcon = document.createElement('img')
+  const headerIcon = new Image()
   headerIcon.className = 'drawer-header-icon'
-  setTimeout(function() {
+  // setTimeout(function() {
 
     headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-  }, 2000)
+  // }, 2000)
 
 
   const headerDetails = document.createElement('div')
@@ -665,7 +671,7 @@ function profileView(pushState) {
         disableInputs()
         document.getElementById('close-profile--panel').addEventListener('click', function() {
           // listView(dbName)
-          handleViewFromHistory()
+          backNav()
         })
         showProfilePicture()
 
@@ -730,10 +736,11 @@ function createProfilePanel() {
   profileImgCont.id = 'profile--image-container'
   profileImgCont.className = 'profile-container--main'
 
-  const profileImg = document.createElement('img')
+  const profileImg = new Image()
+
+  profileImg.src = firebase.auth().currentUser.photoURL;
   profileImg.id = 'user-profile--image'
 
-  // profileImg.src =''
 
   const overlay = document.createElement('div')
   overlay.className = 'insert-overlay'
@@ -937,21 +944,23 @@ function updateAuth(url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
-  }).then(removeLoader).catch(authUpdatedError)
+  }).then(function(){
+    removeLoader(url)
+  }).catch(authUpdatedError)
 }
 
-function removeLoader() {
+function removeLoader(url) {
   document.querySelector('.insert-overlay').classList.remove('middle')
   const container = document.getElementById('profile--image-container')
   container.children[0].classList.add('reset-opacity')
 
   container.removeChild(container.lastChild)
-  showProfilePicture()
+  showProfilePicture(url)
 }
 
-function showProfilePicture() {
+function showProfilePicture(url) {
   const user = firebase.auth().currentUser
-  document.getElementById('user-profile--image').src = user.photoURL || '../img/empty-user.jpg'
+  document.getElementById('user-profile--image').src = url || '../img/empty-user.jpg'
 }
 
 function authUpdatedError(error) {
@@ -1032,14 +1041,14 @@ function createConfirmView(pushState) {
   div.className = 'verfication--image-layout mdc-top-app-bar--fixed-adjust'
   div.id = 'confirm--number-change'
 
-  const img = document.createElement('img')
+  const img = new Image()
   img.src = '../img/change_number.png'
   img.className = 'change-number--info'
   div.appendChild(img)
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
   document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
   document.getElementById('back-profile').addEventListener('click', function() {
-    handleViewFromHistory()
+    backNav()
   })
 }
 
@@ -1132,7 +1141,7 @@ function changePhoneNumber() {
   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
   document.getElementById('cancelUpdate').addEventListener('click', function(event) {
-  handleViewFromHistory()
+  backNav()
   })
 
   getInputText('#new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)

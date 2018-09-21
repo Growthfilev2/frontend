@@ -167,7 +167,7 @@ window.onpopstate = function(event) {
   }
 }
 
-function handleViewFromHistory() {
+function backNav() {
   history.back();
 }
 

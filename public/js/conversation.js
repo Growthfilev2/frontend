@@ -318,7 +318,7 @@ function createHeaderContent(db, id) {
 
       document.getElementById('back-conv').addEventListener('click', function() {
         reinitCount(db, id)
-        handleViewFromHistory()
+        backNav()
       })
 
       document.querySelector('.comment-header-primary').addEventListener('click', function() {
@@ -826,7 +826,7 @@ function updateCreateContainer(record) {
 
 
   document.getElementById('backToConv').addEventListener('click', function() {
-    handleViewFromHistory()
+    backNav()
   })
 
 
@@ -1327,7 +1327,7 @@ function createAttachmentContainer(data) {
           readCameraFile()
         }
       }
-      const viewImage = document.createElement('img')
+      const viewImage = new Image()
       viewImage.src = `${data.attachment[key].value}` || '#'
       viewImage.onclick = function(){
         openImage(this.src)
@@ -1451,10 +1451,11 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (!userRecord) return assigneeLi
   assigneeLi.dataset.value = userRecord.mobile
-  const photoGraphic = document.createElement('img')
+  const photoGraphic = new Image()
   photoGraphic.classList.add('mdc-list-item__graphic')
 
   if (!userRecord.photoURL) {
+
     photoGraphic.src = './img/empty-user.jpg'
   } else {
     photoGraphic.src = userRecord.photoURL
@@ -1528,7 +1529,7 @@ function checkRadioInput(inherit, value) {
 }
 
 function setFilePath(str) {
-  const img = document.createElement('img')
+  const img = new Image()
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
