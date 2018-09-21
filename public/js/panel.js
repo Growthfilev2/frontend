@@ -460,7 +460,7 @@ function createOfficeSelectionUI(allOffices) {
 function filterActivities(type, db,pushState) {
   if(pushState){
 
-    history.pushState([type,localStorage.getItem('dbexist')],null,null)
+    history.pushState(["filterActivities",type],null,null)
   }
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
@@ -486,7 +486,7 @@ function filterActivities(type, db,pushState) {
 
 function sortByCreator(type, db,pushState) {
   if(pushState){
-    history.pushState([type,localStorage.getItem('dbexist')],null,null)
+    history.pushState(["sortByCreator",type],null,null)
   }
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
@@ -523,7 +523,7 @@ function sortByCreator(type, db,pushState) {
 
 function sortByDates(type, db,pushState) {
   if(pushState){
-    history.pushState([type,localStorage.getItem('dbexist')],null,null)
+    history.pushState(["sortByDates",type],null,null)
   }
 
   const activityDom = ''
@@ -590,7 +590,10 @@ function generateActivitiesByDate(sortingOrder) {
   }
 }
 
-function sortByLocation(type) {
+function sortByLocation(type,pushState) {
+  if(pushState) {
+    history.pushState(['sortByLocation',type],null,null)
+  }
 
   const dbName = firebase.auth().currentUser.uid
 
@@ -615,7 +618,6 @@ function sortByLocation(type) {
 }
 
 function sortActivitiesByLocation() {
-  // history.pushState(['Nearby',localStorage.getItem('dbexist')],null,null)
 
   let activityDom = ''
   const dbName = firebase.auth().currentUser.uid

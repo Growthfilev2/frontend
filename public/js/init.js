@@ -153,11 +153,16 @@ function startApp() {
 
 window.onpopstate = function(event) {
   if(!event.state) return;
-  if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
-    const req = indexedDB.open(event.state[1])
+  if(event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
+    const req = indexedDB.open(localStorage.getItem('dbexist'))
     req.onsuccess = function(){
       const db = req.result
-      window[event.state[0]](event.state[0],db,false);
+      if(event.state[0] === 'sortByLocation') {
+        window[event.state[0]](event.state[1],false);
+      }
+      else {
+        window[event.state[0]](event.state[1],db,false);
+      }
     }
   }
   else {
@@ -166,47 +171,12 @@ window.onpopstate = function(event) {
 }
 
 function handleViewFromHistory() {
-  //
-  // if (backFromAndroid && history.state[0] === 'listView') {
-  //   UserCanExitApp()
-  //   return;
-  // }
-
   history.back();
-
-
-    // const views = {
-    //   listView: listView,
-    //   conversation: conversation,
-    //   updateCreateActivity: updateCreateActivity,
-    //   Confirmed: filterActivities,
-    //   Pending:filterActivities,
-    //   Cancelled:filterActivities,
-    //   Incoming:sortByCreator,
-    //   Outgoing:sortByCreator,
-    //   Urgent:sortByDates,
-    //   Nearby:sortActivitiesByLocation
-    // }
-
-    // if(!event.state) return
-    // if(event.state[0] === 'Confirmed' || event.state[0] === 'Pending' || event.state[0] === 'Cancelled' ||  event.state[0] === 'Outgoing' ||  event.state[0] === 'Incoming' ||  event.state[0] === 'Urgent' ||  event.state[0] === 'Nearby') {
-    //   const req = indexedDB.open(event.state[1])
-    //   req.onsuccess = function(){
-    //     const db = req.result
-    //     views[event.state[0]](event.state[0],db);
-    //   }
-    // }
-    // else {
-    //   views[event.state[0]](event.state[1]);
-    // }
-
 }
 
 function UserCanExitApp() {
   FetchHistory.stateView(true)
 }
-
-
 
 document.addEventListener('touchstart', handleTouchStart, false);
 document.addEventListener('touchmove', handleTouchMove, false);

@@ -901,7 +901,7 @@ function updateCreateContainer(record) {
 function updateCreateActivity(record,pushState) {
 
   if(pushState) {
-    history.pushState(['updateCreateActivity', record.activityId], null, null)
+    history.pushState(['updateCreateActivity'], null, null)
   }
 
   //open indexedDB
