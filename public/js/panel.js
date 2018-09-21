@@ -321,7 +321,7 @@ function initMenu(db, officeRecord) {
   const ImageDiv = document.createElement('div')
   ImageDiv.className = 'drawer--header-div'
   ImageDiv.onclick = function() {
-    profileView()
+    profileView(true)
 
   }
   const headerIcon = document.createElement('img')
@@ -417,7 +417,7 @@ function initMenu(db, officeRecord) {
         sortByDates(filter.type, db, true)
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, true)
+        sortByLocation(filter.type,db, true)
       }
       if (filter.type === 'Recent') {
         listView()
@@ -589,7 +589,7 @@ function generateActivitiesByDate(sortingOrder) {
   }
 }
 
-function sortByLocation(type, pushState) {
+function sortByLocation(type,db,pushState) {
   if (pushState) {
     history.pushState(['sortByLocation', type], null, null)
   }
@@ -609,34 +609,29 @@ function sortByLocation(type, pushState) {
   })
 
   nearestLocationHandler.onmessage = function(records) {
-    sortActivitiesByLocation(records.data)
+    sortActivitiesByLocation(db,records.data)
   }
   nearestLocationHandler.onerror = locationSortError
 
 
 }
 
-function sortActivitiesByLocation(distanceArr) {
+function sortActivitiesByLocation(db,distanceArr) {
   let activityDom = ''
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function() {
-    const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     for (var i = 0; i < distanceArr.length; i++) {
 
       activityObjectStore.get(distanceArr[i].activityId).onsuccess = function(event){
         createActivityList(db, event.target.result).then(function(li) {
           activityDom += li
-          appendActivityListToDom(activityDom,false,'Nearby')
         })
       }
 
     }
     setTimeout(function(){
+      appendActivityListToDom(activityDom,false,'Nearby')
       createActivityIcon(db)
     },400)
-}
 }
 
 
@@ -645,9 +640,9 @@ function locationSortError(error) {
 }
 
 function profileView(pushState) {
-  // if(pushState){
-  history.replaceState(['profileView'], null, null)
-  // }
+  if(pushState){
+  history.pushState(['profileView'], null, null)
+  }
 
   const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary '))
   drawer.open = false;
@@ -1009,7 +1004,10 @@ function handleReauthError(error) {
   console.log(error)
 }
 
-function createConfirmView() {
+function createConfirmView(pushState) {
+  if(pushState) {
+    history.pushState(['createConfirmView'],null,null)
+  }
   const backSpan = document.createElement('span')
   backSpan.id = 'back-profile'
 
@@ -1041,7 +1039,7 @@ function createConfirmView() {
   document.getElementById('app-current-panel').innerHTML = div.outerHTML
   document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
   document.getElementById('back-profile').addEventListener('click', function() {
-    profileView()
+    handleViewFromHistory()
   })
 }
 
@@ -1134,7 +1132,7 @@ function changePhoneNumber() {
   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
   document.getElementById('cancelUpdate').addEventListener('click', function(event) {
-    profileView()
+  handleViewFromHistory()
   })
 
   getInputText('#new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
@@ -1145,7 +1143,7 @@ function changePhoneNumber() {
   const allInputFields = document.querySelectorAll('.phoneNumber')
 
   for (let i = 0; i < allInputFields.length; i++) {
-    input.addEventListener('input', handleIllegalNumberInput)
+    allInputFields[i].addEventListener('input', handleIllegalNumberInput)
   }
   document.getElementById('updatePhone').addEventListener('click', function(e) {
     if (verifyCurrentPhoneNumber() && verifyPhoneNumber()) {
@@ -1274,7 +1272,7 @@ function handleChangeNumberMenu() {
 
   // Listen for selected item
   menuEl.addEventListener('MDCMenu:selected', function(evt) {
-    createConfirmView(evt)
+    createConfirmView(true)
   })
 
   menu.quickOpen = false

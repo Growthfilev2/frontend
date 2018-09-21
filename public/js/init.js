@@ -153,18 +153,15 @@ function startApp() {
 
 window.onpopstate = function(event) {
   if(!event.state) return;
+
   if(event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
     const req = indexedDB.open(localStorage.getItem('dbexist'))
     req.onsuccess = function(){
       const db = req.result
-      if(event.state[0] === 'sortByLocation') {
-        window[event.state[0]](event.state[1],false);
-      }
-      else {
         window[event.state[0]](event.state[1],db,false);
-      }
     }
   }
+
   else {
     window[event.state[0]](event.state[1],false)
   }
