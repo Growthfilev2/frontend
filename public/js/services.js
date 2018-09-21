@@ -213,39 +213,7 @@ function loadViewFromRoot(response) {
       window[history.state[0]](history.state[1],false)
       handleTimeout()
     }
-    //  else {
-    //   console.log("yahan tak chak raha hai")
-    //   rootObjectStore.get(response.data.dbName).onsuccess = function(event) {
-    //     const record = event.target.result
-    //     let currentView = record.view
-    //     if (response.data.type === 'create-success') {
-    //       currentView = 'list'
-    //     }
-    //
-    //     switch (currentView) {
-    //       case 'list':
-    //         listView(response.data.dbName)
-    //         handleTimeout()
-    //         break
-    //
-    //       case 'conversation':
-    //         conversation(event.target.result.id)
-    //         handleTimeout()
-    //         break
-    //       case 'profile':
-    //         handleTimeout()
-    //         break;
-    //       case 'updateCreateActivity':
-    //         handleTimeout()
-    //         break;
-    //       default:
-    //         record.currentView = 'list'
-    //         rootObjectStore.put(record)
-    //         listView(response.data.dbName)
-    //         handleTimeout()
-    //     }
-    //   }
-    // }
+
   }
 }
 

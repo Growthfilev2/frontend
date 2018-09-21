@@ -4,23 +4,7 @@ function conversation(id, pushState) {
     history.pushState(['conversation', id], null, null)
   }
 
-  // const currentUser = firebase.auth().currentUser
-  // const req = window.indexedDB.open(currentUser.uid)
-  //
-  // req.onsuccess = function() {
-  //   const db = req.result
-  //   const rootTx = db.transaction('root', 'readwrite')
-  //   const rootObjectStore = rootTx.objectStore('root')
-  //   rootObjectStore.get(currentUser.uid).onsuccess = function(event) {
-  //     const record = event.target.result
-  //     record.id = id
-  //     record.view = 'conversation'
-  //     rootObjectStore.put(record)
-  //     rootTx.oncomplete = function() {
-        fetchAddendumForComment(id)
-  //     }
-  //   }
-  // }
+  fetchAddendumForComment(id)
 }
 
 function fetchAddendumForComment(id) {
