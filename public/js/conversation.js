@@ -1143,7 +1143,7 @@ function createScheduleTable(data) {
     sdDiv.className = 'mdc-text-field start--date'
 
     const startDateInput = document.createElement('input')
-    startDateInput.value = moment(schedule.startTime).format('YYYY-MM-DD')
+    startDateInput.value =  moment(schedule.startTime || new Date()).format('YYYY-MM-DD')
     startDateInput.type = 'date'
     startDateInput.disabled = !data.canEdit
     startDateInput.className = 'mdc-text-field__input'
@@ -1157,7 +1157,7 @@ function createScheduleTable(data) {
     stDiv.className = 'mdc-text-field start--time'
 
     const startTimeInput = document.createElement('input')
-    startTimeInput.value = moment(schedule.startTime).format('hh:mm')
+    startTimeInput.value = moment(schedule.startTime || new Date()).format('hh:mm')
     startTimeInput.type = 'time'
     startTimeInput.className = 'time--input'
     startTimeInput.disabled = !data.canEdit
@@ -1174,7 +1174,7 @@ function createScheduleTable(data) {
     edDiv.className = 'mdc-text-field end--date'
 
     const endDateInput = document.createElement('input')
-    endDateInput.value = moment(schedule.endTime).format('YYYY-MM-DD')
+    endDateInput.value = moment(schedule.endTime || new Date()).format('YYYY-MM-DD')
     endDateInput.type = 'date'
     endDateInput.disabled = !data.canEdit
     endDateInput.className = 'mdc-text-field__input'
@@ -1188,7 +1188,7 @@ function createScheduleTable(data) {
 
 
     const endTimeInput = document.createElement('input')
-    endTimeInput.value = moment(schedule.endTime).format('hh:mm')
+    endTimeInput.value = moment(schedule.endTime || new Date()).format('hh:mm')
     endTimeInput.type = 'time'
     endTimeInput.disabled = !data.canEdit
     endTimeInput.className = 'mdc-text-field__input'

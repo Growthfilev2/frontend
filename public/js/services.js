@@ -212,7 +212,7 @@ function loadViewFromRoot(response) {
     if(!history.state) {
       setTimeout(function(){
         window["listView"]()
-      },2000)
+      },3000)
     }
     else {
       if(history.state[0] === 'updateCreateActivity') return

@@ -437,10 +437,7 @@ function instantUpdateDB(dbName, data, type) {
         objStore.put(record)
       }
       if(type === 'update') {
-        // Object.keys(data).forEach(function(key){
-        //   record[key] = data[key]
-        // })
-        // objStore.put(record)
+    
         const activityStore = db.transaction('activity','readwrite').objectStore('activity')
         activityStore.get(data.activityId).onsuccess = function(event){
           const record = event.target.result
