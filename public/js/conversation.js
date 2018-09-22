@@ -1,5 +1,4 @@
 function conversation(id, pushState) {
-
   if (pushState) {
     history.pushState(['conversation', id], null, null)
   }
@@ -891,7 +890,7 @@ function updateCreateContainer(record) {
 function updateCreateActivity(record, pushState) {
 
   if (pushState) {
-    history.pushState(['updateCreateActivity'], null, null)
+    history.pushState(['updateCreateActivity',record], null, null)
   }
 
   //open indexedDB
@@ -899,12 +898,6 @@ function updateCreateActivity(record, pushState) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function() {
     const db = req.result
-    // const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-    // rootObjectStore.get(dbName).onsuccess = function(event) {
-    //   const root = event.target.result
-    //   root.view = 'updateCreateActivity'
-    //   rootObjectStore.put(root)
-    // }
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')

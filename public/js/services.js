@@ -165,6 +165,12 @@ function loadViewFromRoot(response) {
     return;
   }
 
+  if(response.data.type === 'open list view') {
+    console.log("open list default")
+    listView();
+    return
+  }
+
   if (response.data.type === 'setLocalStorage') {
     document.getElementById("main-layout-app").style.display = 'block'
 

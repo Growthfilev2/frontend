@@ -1174,7 +1174,7 @@ input[type="datetime-local"] {
     border-radius: 50%;
   }
 
-  .mdc-drawer__content a {
+  .mdc-drawer__content div {
     height: 60px;
   }
 

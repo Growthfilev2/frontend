@@ -59,6 +59,10 @@ self.onmessage = function(event) {
 
     if (event.data.body.hasOwnProperty('firstTime')) {
       requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
+        if(!event.data.body.firstTime) {
+          requestHandlerResponse('open list view',200,'open list')
+        }
+
       requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
       return
     }
@@ -514,7 +518,7 @@ function updateMap(db, activity) {
   mapTx.oncomplete = function() {
     const mapTx = db.transaction(['map'], 'readwrite')
     const mapObjectStore = mapTx.objectStore('map')
-  
+
 
     activity.venue.forEach(function(newVenue) {
       mapObjectStore.add({

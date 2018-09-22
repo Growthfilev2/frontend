@@ -1,4 +1,5 @@
 function listView() {
+  console.log("opening list view");
   const dbName = localStorage.getItem('dbexist');
   history.pushState(['listView', dbName], null, null)
 
@@ -6,13 +7,13 @@ function listView() {
 
   document.body.style.backgroundColor = 'white'
 
-  const req = indexedDB.open(dbName || localStorage.getItem('dbexist'))
+  const req = indexedDB.open(dbName)
   let record = ''
   req.onsuccess = function() {
     const db = req.result;
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootStore = rootTx.objectStore('root')
-    rootStore.get(dbName || localStorage.getItem('dbexist')).onsuccess = function(event) {
+    rootStore.get(dbName).onsuccess = function(event) {
       const officeRecord = event.target.result
 
       if (!document.querySelector('.mdc-drawer--temporary')) {
@@ -22,7 +23,6 @@ function listView() {
       creatListHeader('Recent')
       fetchDataForActivityList(db)
     }
-
   }
 }
 
@@ -72,10 +72,9 @@ function createActivityList(db, data) {
         addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function(addendumstore) {
           const addendumCursor = addendumstore.target.result;
           if (addendumCursor) {
-            if(userstore.target.result.mobile === firebase.auth().currentUser.phoneNumber) {
+            if (userstore.target.result.mobile === firebase.auth().currentUser.phoneNumber) {
               metaData.src = firebase.auth().currentUser.photoURL
-            }
-            else {
+            } else {
               metaData.src = userstore.target.result.photoURL
             }
             readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
@@ -284,6 +283,7 @@ function androidSwiper(openOrClose) {
 }
 
 function initMenu(db, officeRecord) {
+
   const filters = [{
       type: 'Incoming',
       icon: 'call_made'
@@ -378,9 +378,8 @@ function initMenu(db, officeRecord) {
   navContent.className = 'mdc-drawer__content mdc-list'
 
   if (officeRecord && officeRecord.hasMultipleOffice) {
-    const all = document.createElement('a')
+    const all = document.createElement('div')
     all.className = 'mdc-list-item mdc-list-item--activated'
-    all.href = '#'
 
     const i = document.createElement('i')
     i.className = 'material-icons mdc-list-item__graphic drawer--icons'
@@ -396,9 +395,8 @@ function initMenu(db, officeRecord) {
 
   filters.forEach(function(filter) {
 
-    const a = document.createElement('a')
+    const a = document.createElement('div')
     a.className = 'mdc-list-item mdc-list-item--activated'
-    a.href = '#'
 
     const i = document.createElement('i')
     i.className = 'material-icons mdc-list-item__graphic drawer--icons'
@@ -420,7 +418,7 @@ function initMenu(db, officeRecord) {
         sortByDates(filter.type, db, true)
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type,db, true)
+        sortByLocation(filter.type, db, true)
       }
       if (filter.type === 'Recent') {
         listView()
@@ -439,6 +437,7 @@ function initMenu(db, officeRecord) {
   nav.appendChild(navContent)
   aside.appendChild(nav)
   document.body.appendChild(aside)
+
 }
 
 
@@ -592,7 +591,7 @@ function generateActivitiesByDate(sortingOrder) {
   }
 }
 
-function sortByLocation(type,db,pushState) {
+function sortByLocation(type, db, pushState) {
   if (pushState) {
     history.pushState(['sortByLocation', type], null, null)
   }
@@ -612,29 +611,29 @@ function sortByLocation(type,db,pushState) {
   })
 
   nearestLocationHandler.onmessage = function(records) {
-    sortActivitiesByLocation(db,records.data)
+    sortActivitiesByLocation(db, records.data)
   }
   nearestLocationHandler.onerror = locationSortError
 
 
 }
 
-function sortActivitiesByLocation(db,distanceArr) {
+function sortActivitiesByLocation(db, distanceArr) {
   let activityDom = ''
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
-    for (var i = 0; i < distanceArr.length; i++) {
+  const activityObjectStore = db.transaction('activity').objectStore('activity')
+  for (var i = 0; i < distanceArr.length; i++) {
 
-      activityObjectStore.get(distanceArr[i].activityId).onsuccess = function(event){
-        createActivityList(db, event.target.result).then(function(li) {
-          activityDom += li
-        })
-      }
-
+    activityObjectStore.get(distanceArr[i].activityId).onsuccess = function(event) {
+      createActivityList(db, event.target.result).then(function(li) {
+        activityDom += li
+      })
     }
-    setTimeout(function(){
-      appendActivityListToDom(activityDom,false,'Nearby')
-      createActivityIcon(db)
-    },400)
+
+  }
+  setTimeout(function() {
+    appendActivityListToDom(activityDom, false, 'Nearby')
+    createActivityIcon(db)
+  }, 400)
 }
 
 
@@ -643,8 +642,8 @@ function locationSortError(error) {
 }
 
 function profileView(pushState) {
-  if(pushState){
-  history.pushState(['profileView'], null, null)
+  if (pushState) {
+    history.pushState(['profileView'], null, null)
   }
 
   const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary '))
@@ -941,7 +940,7 @@ function updateAuth(url) {
   const user = firebase.auth().currentUser
   user.updateProfile({
     photoURL: url
-  }).then(function(){
+  }).then(function() {
     removeLoader(url)
   }).catch(authUpdatedError)
 }
@@ -1011,8 +1010,8 @@ function handleReauthError(error) {
 }
 
 function createConfirmView(pushState) {
-  if(pushState) {
-    history.pushState(['createConfirmView'],null,null)
+  if (pushState) {
+    history.pushState(['createConfirmView'], null, null)
   }
   const backSpan = document.createElement('span')
   backSpan.id = 'back-profile'
@@ -1138,7 +1137,7 @@ function changePhoneNumber() {
   document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
 
   document.getElementById('cancelUpdate').addEventListener('click', function(event) {
-  backNav()
+    backNav()
   })
 
   getInputText('#new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)

@@ -131,6 +131,8 @@ window.scrollBy({
   behavior: 'smooth'
 })
 
+
+
 function startApp() {
   if (window.Worker && window.indexedDB) {
 
@@ -139,7 +141,6 @@ function startApp() {
       requestCreator('initializeIDB', {
         firstTime: false
       })
-      listView(localStorage.getItem('dbexist'))
     } else {
       requestCreator('initializeIDB', {
         firstTime: true
