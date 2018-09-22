@@ -437,7 +437,7 @@ function instantUpdateDB(dbName, data, type) {
         objStore.put(record)
       }
       if(type === 'update') {
-    
+
         const activityStore = db.transaction('activity','readwrite').objectStore('activity')
         activityStore.get(data.activityId).onsuccess = function(event){
           const record = event.target.result
@@ -894,10 +894,8 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function(response) {
-          // if (response.from === response.upto) {
-          //   return
-          // }
-          successResponse(response)
+          if(response.activities.length === 0 && response.addendum.length ===0 && response.templates.length ===0) return
+            successResponse(response)
         })
         .catch(console.log)
       },2000)
