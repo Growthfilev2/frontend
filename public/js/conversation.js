@@ -691,7 +691,7 @@ function createTempRecord(office, template, data) {
       }
 
 
-      updateCreateActivity(bareBonesRecord)
+      updateCreateActivity(bareBonesRecord,true)
     }
   }
 }
