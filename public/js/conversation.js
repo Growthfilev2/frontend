@@ -295,6 +295,7 @@ function createHeaderContent(db, id) {
     const record = event.target.result
     getImageFromNumber(db, record.creator).then(function(uri) {
 
+      console.log(uri)
 
       const creatorImg = document.createElement("img")
       creatorImg.className = 'header--icon-creator'
@@ -322,7 +323,7 @@ function createHeaderContent(db, id) {
       })
 
       document.querySelector('.comment-header-primary').addEventListener('click', function() {
-        updateCreateActivity(record,true)
+        updateCreateActivity(record, true)
       })
     })
   }
@@ -342,7 +343,12 @@ function getImageFromNumber(db, number) {
   return new Promise(function(resolve) {
     const userObjStore = db.transaction('users').objectStore('users')
     userObjStore.get(number).onsuccess = function(event) {
-      resolve(event.target.result.photoURL || './img/empty-user.jpg')
+      if(number === firebase.auth().currentUser.phoneNumber) {
+        resolve(firebase.auth().currentUser.photoURL || './img/empty-user.jpg')
+      }
+      else {
+        resolve(event.target.result.photoURL || './img/empty-user.jpg')
+      }
     }
   })
 }
@@ -882,9 +888,9 @@ function updateCreateContainer(record) {
   return container
 }
 
-function updateCreateActivity(record,pushState) {
+function updateCreateActivity(record, pushState) {
 
-  if(pushState) {
+  if (pushState) {
     history.pushState(['updateCreateActivity'], null, null)
   }
 
@@ -920,7 +926,7 @@ function updateCreateActivity(record,pushState) {
     createScheduleTable(record);
 
 
-  createAttachmentContainer(record)
+    createAttachmentContainer(record)
 
     const inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
@@ -1387,8 +1393,7 @@ function createAttachmentContainer(data) {
     } else if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
       document.querySelector('.Template--group').appendChild(div)
       document.querySelector('.Template--group').appendChild(hr)
-    }
-    else {
+    } else {
       document.querySelector(`.${data.attachment[key].type}--group`).appendChild(div)
       document.querySelector(`.${data.attachment[key].type}--group`).appendChild(hr)
     }
@@ -1452,12 +1457,12 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
 
-  if (!userRecord.photoURL) {
-
-    photoGraphic.src = './img/empty-user.jpg'
+  if (userRecord.mobile === firebase.auth().currentUser.phoneNumber) {
+    photoGraphic.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
   } else {
-    photoGraphic.src = userRecord.photoURL
+    photoGraphic.src = userRecord.photoURL || './img/empty-user.jpg'
   }
+
 
   const assigneeListText = document.createElement('span')
   assigneeListText.classList.add('mdc-list-item__text')
@@ -1539,11 +1544,11 @@ function readCameraFile() {
   FetchCameraForAttachment.startCamera()
 }
 
-function openImage(imageSrc){
+function openImage(imageSrc) {
 
   sendCurrentViewNameToAndroid('selector')
 
-  if(imageSrc.substring(0,4) !== "data") return
+  if (imageSrc.substring(0, 4) !== "data") return
 
   document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
   const imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));

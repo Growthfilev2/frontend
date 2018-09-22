@@ -72,8 +72,12 @@ function createActivityList(db, data) {
         addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function(addendumstore) {
           const addendumCursor = addendumstore.target.result;
           if (addendumCursor) {
-
-            metaData.src = userstore.target.result.photoURL
+            if(userstore.target.result.mobile === firebase.auth().currentUser.phoneNumber) {
+              metaData.src = firebase.auth().currentUser.photoURL
+            }
+            else {
+              metaData.src = userstore.target.result.photoURL
+            }
             readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
               if (addendumCursor.value.isComment === 1) {
                 metaData.lastComment.user = nameOrNum
@@ -338,9 +342,7 @@ function initMenu(db, officeRecord) {
 
   const name = document.createElement('div')
   name.className = 'mdc-typography--subtitle'
-  setTimeout(function() {
-    name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
-  }, 2000)
+  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
 
 
   const officeName = document.createElement('div')
@@ -665,10 +667,10 @@ function profileView(pushState) {
         createProfilePanel()
         disableInputs()
         document.getElementById('close-profile--panel').addEventListener('click', function() {
-          // listView(dbName)
           backNav()
         })
-        showProfilePicture()
+
+        showProfilePicture(firebase.auth().currentUser.photoURL)
 
         inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
 
