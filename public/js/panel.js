@@ -899,6 +899,7 @@ function readUploadedFile(event) {
 
 function processImage(image) {
   const metadata = {
+    cacheControl:'public,max-age=31536000',
     contentType: 'image/jpeg'
   }
 
