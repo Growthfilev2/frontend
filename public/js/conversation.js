@@ -1327,11 +1327,9 @@ function createAttachmentContainer(data) {
           readCameraFile()
         }
       }
-      const viewImage = new Image()
+      const viewImage = document.createElement('img')
       viewImage.src = `${data.attachment[key].value}` || '#'
-      viewImage.onclick = function(){
-        openImage(this.src)
-      }
+
       imagePreview.appendChild(viewImage);
       div.appendChild(imagePreview)
     }
@@ -1451,7 +1449,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (!userRecord) return assigneeLi
   assigneeLi.dataset.value = userRecord.mobile
-  const photoGraphic = new Image()
+  const photoGraphic = document.createElement('img')
   photoGraphic.classList.add('mdc-list-item__graphic')
 
   if (!userRecord.photoURL) {
@@ -1529,7 +1527,7 @@ function checkRadioInput(inherit, value) {
 }
 
 function setFilePath(str) {
-  const img = new Image()
+  const img = document.createElement('img')
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML

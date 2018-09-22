@@ -72,7 +72,7 @@ function createActivityList(db, data) {
         addendumObjStore.openCursor(data.activityId, 'prev').onsuccess = function(addendumstore) {
           const addendumCursor = addendumstore.target.result;
           if (addendumCursor) {
-            
+
             metaData.src = userstore.target.result.photoURL
             readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
               if (addendumCursor.value.isComment === 1) {
@@ -100,11 +100,8 @@ function activityListUI(data, count, metaData) {
   li.dataset.id = data.activityId
   li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
 
-  const creator = new Image()
+  const creator = document.createElement("img")
   creator.className = 'mdc-list-item__graphic material-icons'
-  creator.onload = function(e){
-    console.log(e)
-  }
 
   creator.src = metaData.src || 'img/empty-user.jpg'
 
@@ -330,12 +327,10 @@ function initMenu(db, officeRecord) {
     profileView(true)
 
   }
-  const headerIcon = new Image()
+  const headerIcon = document.createElement('img')
   headerIcon.className = 'drawer-header-icon'
-  // setTimeout(function() {
 
-    headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-  // }, 2000)
+  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
 
 
   const headerDetails = document.createElement('div')
@@ -736,7 +731,7 @@ function createProfilePanel() {
   profileImgCont.id = 'profile--image-container'
   profileImgCont.className = 'profile-container--main'
 
-  const profileImg = new Image()
+  const profileImg = document.createElement('img')
 
   profileImg.src = firebase.auth().currentUser.photoURL;
   profileImg.id = 'user-profile--image'
