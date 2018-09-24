@@ -291,10 +291,10 @@ function initMenu(db, officeRecord) {
 
   const filters = [{
       type: 'Incoming',
-      icon: 'call_made'
+      icon: 'call_received'
     }, {
       type: 'Outgoing',
-      icon: 'call_received'
+      icon: 'call_made'
     },
     {
       type: 'Urgent',
