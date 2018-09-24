@@ -290,27 +290,68 @@ function readNameFromNumber(db, number) {
 }
 
 function maps(evt,show,id,location){
+  let selector =  ''
+  evt ? selector =  document.getElementById(id).querySelector('.map-convo') : selector =  document.querySelector(`.map-detail.${id}`)
 
   console.log(show)
   if(!show) {
-    document.getElementById(id).querySelector('.map-convo').style.height = '0px'
-    evt.target.textContent = 'location_on'
+    selector.style.height = '0px'
+    evt ? evt.target.textContent = 'location_on' : ''
     return    
   }
 
-  if(document.getElementById(id).querySelector('.map-convo').children.length !== 0) {
-    document.getElementById(id).querySelector('.map-convo').style.height = '200px'
-    evt.target.textContent = 'arrow_drop_down'
+  if(selector.children.length !== 0) {
+    selector.style.height = '200px'
+    evt ? evt.target.textContent = 'arrow_drop_down' : ''
     return;
   }
   
-  
-  evt.target.textContent = 'arrow_drop_down'
-  document.getElementById(id).querySelector('.map-convo').style.height = '200px'
+  evt ? evt.target.textContent = 'arrow_drop_down' : ''
 
-  const map = new google.maps.Map(document.getElementById(id).querySelector('.map-convo'),
-  {zoom:16,center:location, disableDefaultUI: true});
+  selector.style.height = '200px'
+
+  const map = new google.maps.Map(selector,
+   {zoom:16,center:location, disableDefaultUI: true});
+  
+   if(!evt) {
+    var customControlDiv = document.createElement('div');
+    var customControl = new MapsCustomControl(customControlDiv, map,location.lat,location.lng);
+
+    customControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
+   }
+
   const marker = new google.maps.Marker({position:location,map:map});
+
+}
+
+function MapsCustomControl (customControlDiv, map,lat,lng) {
+  var controlUI = document.createElement('div');
+
+        controlUI.style.backgroundColor = '#fff';
+        controlUI.style.border = '2px solid #fff';
+        controlUI.style.borderRadius = '3px';
+        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+        controlUI.style.cursor = 'pointer';
+        controlUI.style.marginBottom = '22px';
+        controlUI.style.textAlign = 'center';
+        controlUI.style.padding = '0px 5px 0px 5px';
+
+        customControlDiv.appendChild(controlUI);
+
+        // Set CSS for the control interior.
+        var controlText = document.createElement('a');
+        controlText.href = `https://www.google.com/maps?q=${lat},${lng}`
+        controlText.className = 'material-icons'
+        controlText.style.color = 'rgb(25,25,25)';
+        controlText.style.fontSize = '16px';
+        controlText.style.lineHeight = '38px';
+        controlText.style.paddingLeft = '5px';
+        controlText.style.paddingRight = '5px';
+        controlText.style.textDecoration = 'none'
+
+        controlText.innerHTML = 'open_in_new';
+        controlUI.appendChild(controlText);
 
 }
 
@@ -583,6 +624,7 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return
     if (cursor.value.location) {
       ul.appendChild(createVenueLi(cursor.value, false, activityRecord, true));
+     
     }
     cursor.continue()
   }
@@ -1062,6 +1104,9 @@ function createVenueSection(record) {
 
   record.venue.forEach(function(venue) {
     venueSection.appendChild(createVenueLi(venue, true, record))
+    const mapDom = document.createElement('div');
+    mapDom.className = 'map-detail ' + convertIdToKey(venue.venueDescriptor)
+    venueSection.appendChild(mapDom)
   })
 
   if (record.venue.length === 0) {
@@ -1070,11 +1115,12 @@ function createVenueSection(record) {
 }
 
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
+  let showMap = false
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
   listItem.id = convertKeyToId(venue.venueDescriptor)
 
-  const textSpan = document.createElement('a')
+  const textSpan = document.createElement('div')
   textSpan.className = 'mdc-list-item__text link--span'
 
   const primarySpan = document.createElement('span')
@@ -1102,7 +1148,17 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     primarySpan.appendChild(listItemLabel)
     primarySpan.appendChild(dataValue)
     textSpan.appendChild(primarySpan)
-    textSpan.href = `https://maps.google.com/?q=${venue.geopoint['_latitude']},${venue.geopoint['_longitude']}`
+    
+    textSpan.onclick = function(evt){
+      showMap = !showMap
+
+      const loc = {
+        lat : venue.geopoint['_latitude'],
+        lng: venue.geopoint['_longitude']
+      }
+
+      maps('',showMap, convertKeyToId(venue.venueDescriptor),loc)
+    }
 
     if (record.canEdit) {
       selectorIcon.setAttribute('aria-hidden', 'true')
@@ -1154,8 +1210,11 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
     listItem.appendChild(selectorIcon)
+   
   }
+
   return listItem
+
 }
 
 function createScheduleTable(data) {
