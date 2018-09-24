@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -209,13 +209,18 @@ function loadViewFromRoot(response) {
       return
     }
 
+    if(response.data.type === 'create-success') {
+      listView()
+      return;
+    }
+
     if(!history.state) {
       setTimeout(function(){
         window["listView"]()
       },5000)
     }
     else {
-      if(history.state[0] === 'updateCreateActivity') return
+      if(history.state[0] === 'updateCreateActivity') return     
       window[history.state[0]](history.state[1],false)
       handleTimeout()
     }
