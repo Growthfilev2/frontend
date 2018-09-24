@@ -204,6 +204,7 @@ function getTouches(evt) {
 }
 
 function handleTouchStart(evt) {
+    
     xDown = getTouches(evt)[0].clientX;
     yDown = getTouches(evt)[0].clientY;
 };
@@ -224,11 +225,7 @@ function handleTouchMove(evt) {
         if ( xDiff < 0 ) {
           androidSwiper(true)
         }
-        if(xDiff > 0) {
-          evt.stopPropogation();
-          androidSwiper(false)
-        }
-        
+      
     }
     /* reset values */
     xDown = null;
