@@ -280,10 +280,8 @@ function androidSwiper(openOrClose) {
 
 
     let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-    setTimeout(function(){
       drawer.open = openOrClose
 
-    },300)
 
 }
 

@@ -220,8 +220,13 @@ function handleTouchMove(evt) {
     var yDiff = yDown - yUp;
 
     if ( Math.abs( xDiff ) > Math.abs( yDiff ) ) {/*most significant*/
+      console.log(xDiff)
         if ( xDiff < 0 ) {
           androidSwiper(true)
+        }
+        if(xDiff > 0) {
+          evt.stopPropogation();
+          androidSwiper(false)
         }
         
     }
