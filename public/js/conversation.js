@@ -367,6 +367,7 @@ function createHeaderContent(db, id) {
   backDiv.id = 'back-conv'
   backDiv.style.float = 'left'
   const backIcon = document.createElement('i')
+  backIcon.style.marginRight = '5px'
   backIcon.className = 'material-icons back-icon--large'
   backIcon.textContent = 'arrow_back'
 

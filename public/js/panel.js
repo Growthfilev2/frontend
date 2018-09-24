@@ -355,17 +355,18 @@ function initMenu(db, officeRecord) {
 
   officeName.className = 'mdc-typography--caption'
 
-  const changeOfficeIon = document.createElement('i')
+  const changeOfficeIon = document.createElement('div')
+  headerDetails.appendChild(changeOfficeIon)
 
   headerDetails.appendChild(name)
   headerDetails.appendChild(officeName)
 
   if (officeRecord && officeRecord.hasMultipleOffice) {
     changeOfficeIon.className = 'material-icons'
+    changeOfficeIon.style.float = 'right'
     changeOfficeIon.textContent = 'arrow_drop_down'
-    headerDetails.appendChild(changeOfficeIon)
     changeOfficeIon.onclick = function() {
-      createOfficeSelectionUI(officeRecord.allOffices)
+      createOfficeSelectionUI(officeRecord.allOffices,db)
     }
   }
 
@@ -376,7 +377,7 @@ function initMenu(db, officeRecord) {
 
   const navContent = document.createElement('nav')
 
-  navContent.className = 'mdc-drawer__content mdc-list'
+  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
 
   if (officeRecord && officeRecord.hasMultipleOffice) {
     const all = document.createElement('div')
@@ -388,10 +389,14 @@ function initMenu(db, officeRecord) {
     i.textContent = 'all_inbox'
     const textSpan = document.createElement('span')
     textSpan.textContent = 'All offices'
-
-    a.appendChild(i)
-    a.appendChild(textSpan)
-    navContent.appendChild(a)
+    all.onclick = function(){
+      listView()
+      let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+      drawer.open = false
+    }
+    all.appendChild(i)
+    all.appendChild(textSpan)
+    navContent.appendChild(all)
   }
 
   filters.forEach(function(filter) {
@@ -442,21 +447,56 @@ function initMenu(db, officeRecord) {
 }
 
 
-function createOfficeSelectionUI(allOffices) {
-  document.getElementById('mdc-drawer__content mdc-list').innerHTML = ''
-  const dbName = firebase.auth().currentUser.uid
+function createOfficeSelectionUI(allOffices,db) {
+ 
+  document.querySelector('.filter-sort--list').classList.add('hidden');
+  const navContent = document.createElement('nav')
+
+  navContent.className = 'mdc-drawer__content mdc-list office-selection-lists'
+  document.querySelector('.mdc-drawer__drawer').appendChild(navContent)
+
   allOffices.forEach(function(office) {
-    const a = document.createElement('a')
+    const a = document.createElement('div')
     a.className = 'mdc-list-item mdc-list-item--activated'
-    a.href = '#'
     const textSpan = document.createElement('span')
     textSpan.textContent = office
     a.appendChild(textSpan)
     a.onclick = function() {
-      listView()
+      filterByOffice(office,db,true)
+      document.querySelector('.filter-sort--list').classList.remove('hidden');
+      navContent.remove()
+      const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
+      drawer.open = false;
     }
-    document.getElementById('mdc-drawer__content mdc-list').appendChild(a)
+    navContent.appendChild(a)
   })
+}
+
+function filterByOffice(office,db,pushState) {
+  if (pushState) {
+
+    history.pushState(["filterByOffice",office], null, null)
+  }
+
+  const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
+
+  let activityDom = ''
+  activityStore.openCursor(null, 'prev').onsuccess = function(event) {
+    const cursor = event.target.result
+    if (!cursor) {
+      appendActivityListToDom(activityDom, false, office)
+      createActivityIcon(db)
+      return
+    }
+
+    if (cursor.value.office === office && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      createActivityList(db, cursor.value).then(function(li) {
+
+        activityDom += li
+      })
+    }
+    cursor.continue()
+  } 
 }
 
 function filterActivities(type, db, pushState) {
@@ -647,7 +687,7 @@ function profileView(pushState) {
     history.pushState(['profileView'], null, null)
   }
 
-  const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary '))
+  const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'))
   drawer.open = false;
 
   document.body.style.backgroundColor = '#eeeeee'

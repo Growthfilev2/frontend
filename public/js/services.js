@@ -92,7 +92,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -212,7 +212,7 @@ function loadViewFromRoot(response) {
     if(!history.state) {
       setTimeout(function(){
         window["listView"]()
-      },3000)
+      },5000)
     }
     else {
       if(history.state[0] === 'updateCreateActivity') return

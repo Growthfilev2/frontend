@@ -151,8 +151,7 @@ function startApp() {
     if (localStorage.getItem('dbexist')) {
       firebase.auth().onAuthStateChanged(function(auth){
         if(auth){
-          console.log("auth is set now")
-          console.log("uid is " + firebase.auth().currentUser.uid)
+        
           listView()
           requestCreator('initializeIDB', {
             firstTime: false
