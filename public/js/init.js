@@ -223,6 +223,7 @@ function handleTouchMove(evt) {
         if ( xDiff < 0 ) {
           androidSwiper(true)
         }
+        
     }
     /* reset values */
     xDown = null;

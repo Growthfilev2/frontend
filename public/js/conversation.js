@@ -1106,7 +1106,7 @@ function createVenueSection(record) {
   record.venue.forEach(function(venue) {
     venueSection.appendChild(createVenueLi(venue, true, record))
     const mapDom = document.createElement('div');
-    mapDom.className = 'map-detail ' + convertIdToKey(venue.venueDescriptor)
+    mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
     venueSection.appendChild(mapDom)
   })
 
