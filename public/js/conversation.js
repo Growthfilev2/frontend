@@ -20,13 +20,16 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) {
-        document.getElementById('chat-container').innerHTML = commentDom
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
         return
       }
-      createComment(db, cursor.value, user).then(function(comment) {
-        commentDom += comment
-      })
+      if(!document.getElementById(cursor.value.addendumId)) {
+
+        createComment(db, cursor.value, user).then(function(comment) {
+          document.getElementById('chat-container').appendChild(comment)
+        })
+      }  
+      
       cursor.continue()
     }
   }
@@ -103,11 +106,13 @@ function commentPanel(db, id) {
   document.getElementById('send-chat--input').onclick = function() {
     const reqBody = {
       'activityId': id,
-      'comment': getInputText('write--comment').value
+      'comment':document.querySelector('.comment-field').value
     }
 
     requestCreator('comment', reqBody)
-    getInputText('write--comment').value = ''
+    document.querySelector('.comment-field').value = ''
+    document.querySelector('.status--change-cont').style.opacity = '1'
+
   }
 }
 
@@ -197,6 +202,7 @@ function statusChange(db, id) {
 
 function createComment(db, addendum, currentUser) {
   // console.log(addendum)
+  let showMap = false
   return new Promise(function(resolve) {
     if (document.getElementById(addendum.addendumId)) {
       resolve(document.getElementById(addendum.addendumId).outerHTML)
@@ -229,14 +235,27 @@ function createComment(db, addendum, currentUser) {
       datespan.textContent = moment(addendum.timestamp).calendar()
       datespan.classList.add('comment-date')
 
-      const link = document.createElement('a')
+      const link = document.createElement('div')
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
-      link.href = `https://maps.google.com/?q=${addendum.location['_latitude']},${addendum.location['_longitude']}`
+      
+      link.onclick = function(evt) {
+        showMap = !showMap;
+        const loc = {
+          lat :addendum.location['_latitude'],
+          lng:addendum.location['_longitude']
+        }
+        maps(evt,showMap,addendum.addendumId,loc) 
+      }
+
       mapIcon.dataset.latitude = addendum.location['_latitude']
       mapIcon.dataset.longitude = addendum.location['_longitude']
       link.appendChild(mapIcon)
+
+      const mapDom  = document.createElement('div')
+      mapDom.className = 'map-convo'
+      
 
       commentInfo.appendChild(datespan)
       commentInfo.appendChild(link)
@@ -245,7 +264,8 @@ function createComment(db, addendum, currentUser) {
       textContainer.appendChild(commentInfo)
 
       commentBox.appendChild(textContainer)
-      resolve(commentBox.outerHTML)
+      commentBox.appendChild(mapDom);
+      resolve(commentBox)
     }).catch(console.log)
   })
 }
@@ -267,6 +287,31 @@ function readNameFromNumber(db, number) {
       reject(event)
     }
   })
+}
+
+function maps(evt,show,id,location){
+
+  console.log(show)
+  if(!show) {
+    document.getElementById(id).querySelector('.map-convo').style.height = '0px'
+    evt.target.textContent = 'location_on'
+    return    
+  }
+
+  if(document.getElementById(id).querySelector('.map-convo').children.length !== 0) {
+    document.getElementById(id).querySelector('.map-convo').style.height = '200px'
+    evt.target.textContent = 'arrow_drop_down'
+    return;
+  }
+  
+  
+  evt.target.textContent = 'arrow_drop_down'
+  document.getElementById(id).querySelector('.map-convo').style.height = '200px'
+
+  const map = new google.maps.Map(document.getElementById(id).querySelector('.map-convo'),
+  {zoom:16,center:location, disableDefaultUI: true});
+  const marker = new google.maps.Marker({position:location,map:map});
+
 }
 
 function createHeaderContent(db, id) {

@@ -8,7 +8,7 @@ function listView() {
   document.body.style.backgroundColor = 'white'
 
   const req = indexedDB.open(dbName)
-  let record = ''
+ 
   req.onsuccess = function() {
     const db = req.result;
     const rootTx = db.transaction(['root'], 'readwrite')
@@ -17,8 +17,8 @@ function listView() {
       const officeRecord = event.target.result
 
       if (!document.querySelector('.mdc-drawer--temporary')) {
-
-        initMenu(db, officeRecord.offices)
+        
+       initMenu(db, officeRecord.offices)
       }
       creatListHeader('Recent')
       fetchDataForActivityList(db)

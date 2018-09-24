@@ -1266,8 +1266,14 @@ input[type="datetime-local"] {
   width: calc(100% - 30px);
 }
 
+.map-convo {
+  margin-top: 30px;
+  transition: 0.3s ease;
+}
+
 @media only screen and (max-width:369px) {
     #attachment--list .mdc-text-field {
       width:50%;
     }
 }
+

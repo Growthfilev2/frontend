@@ -59,10 +59,7 @@ self.onmessage = function(event) {
 
     if (event.data.body.hasOwnProperty('firstTime')) {
       requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
-        if(!event.data.body.firstTime) {
-          requestHandlerResponse('open list view',200,'open list')
-        }
-
+      
       requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
       return
     }

@@ -48,9 +48,20 @@ function userSignedOut() {
   document.body.appendChild(login)
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
-
-  // DOM element to insert firebaseui login UI
-  ui.start('#login-container', firebaseUiConfig())
+  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  .then(function() {
+ 
+    // DOM element to insert firebaseui login UI
+    ui.start('#login-container', firebaseUiConfig())
+  })
+  .catch(function(error) {
+    // Handle Errors here.
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    console.log(errorCode)
+    console.log(errorMessage)
+  });
+  
 }
 
 function layoutGrid() {
@@ -138,8 +149,15 @@ function startApp() {
 
     layoutGrid()
     if (localStorage.getItem('dbexist')) {
-      requestCreator('initializeIDB', {
-        firstTime: false
+      firebase.auth().onAuthStateChanged(function(auth){
+        if(auth){
+          console.log("auth is set now")
+          console.log("uid is " + firebase.auth().currentUser.uid)
+          listView()
+          requestCreator('initializeIDB', {
+            firstTime: false
+          })
+        }
       })
     } else {
       requestCreator('initializeIDB', {
