@@ -14,14 +14,14 @@ function listView() {
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootStore = rootTx.objectStore('root')
     rootStore.get(dbName).onsuccess = function(event) {
-      const officeRecord = event.target.result
+        const officeRecord = event.target.result
 
-      if (!document.querySelector('.mdc-drawer--temporary')) {
-        
-       initMenu(db, officeRecord.offices)
-      }
-      creatListHeader('Recent')
-      fetchDataForActivityList(db)
+          if (!document.querySelector('.mdc-drawer--temporary')) {
+            
+            initMenu(db, officeRecord.offices)
+          }
+          creatListHeader('Recent')
+          fetchDataForActivityList(db)
     }
   }
 }
@@ -39,8 +39,9 @@ function fetchDataForActivityList(db) {
       setTimeout(function(){
 
         appendActivityListToDom(activityDom, true)
+        createActivityIcon(db)
+
       },200)
-      createActivityIcon(db)
       return
     }
     
@@ -328,6 +329,7 @@ function initMenu(db, officeRecord) {
 
   const aside = document.createElement('aside')
   aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
+  
   aside.dataset.currentOffice  = officeRecord.allOffices[0]
   const nav = document.createElement('nav')
   nav.className = 'mdc-drawer__drawer'

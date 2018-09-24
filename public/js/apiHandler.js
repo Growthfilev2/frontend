@@ -758,7 +758,8 @@ function successResponse(read) {
   request.onsuccess = function() {
     const db = request.result
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
+    const rootObjectStoreTx = db.transaction(['root'], 'readwrite')
+    const rootObjectStore = rootObjectStoreTx.objectStore('root')
       const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
@@ -794,7 +795,7 @@ function successResponse(read) {
       putAttachment(db, activity)
     })
 
-    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log);
+    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
 
     read.templates.forEach(function(subscription) {
       updateSubscription(db, subscription)
@@ -811,8 +812,7 @@ function successResponse(read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     activitytx.oncomplete = function(){
-      requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
-
+        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
     }
   }
 }
@@ -871,6 +871,7 @@ function setUniqueOffice(data) {
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
+
     }
   }
 }
