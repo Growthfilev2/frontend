@@ -651,17 +651,15 @@ function putAssignessInStore(db, assigneeArray) {
   })
 }
 
-function readNonUpdatedAssignee(db) {
+function createUsersApiUrl(db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
-  const isUpdatedIndex = usersObjectStore.index('isUpdated')
-  const NON_UPDATED_USERS = 0
   let assigneeString = ''
 
   const defaultReadUserString = `${apiUrl}services/users/read?q=`
   let fullReadUserString = ''
 
   return new Promise(function(resolve) {
-    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function(event) {
+    usersObjectStore.openCursor().onsuccess = function(event) {
       const cursor = event.target.result
 
       if (!cursor) {
@@ -692,11 +690,8 @@ function updateUserObjectStore(successUrl) {
       console.log(userProfile)
 
       const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
-      const isUpdatedIndex = usersObjectStore.index('isUpdated')
-      const USER_NOT_UPDATED = 0
-      const USER_UPDATED = 1
-
-      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function(event) {
+  
+      usersObjectStore.openCursor().onsuccess = function(event) {
         const cursor = event.target.result
 
         if (!cursor) {
@@ -708,9 +703,7 @@ function updateUserObjectStore(successUrl) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.value.mobile].photoURL
           record.displayName = userProfile[cursor.value.mobile].displayName
-          record.isUpdated = USER_UPDATED
-          console.log(record)
-          console.log(cursor.value)
+         
           usersObjectStore.put(record)
         }
         cursor.continue()
@@ -808,7 +801,7 @@ function successResponse(read) {
       rootObjectStore.put(record)
     }
 
-    readNonUpdatedAssignee(db).then(updateUserObjectStore, notUpdateUserObjectStore)
+    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     activitytx.oncomplete = function(){
@@ -892,7 +885,7 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function(response) {
-          if(response.activities.length === 0 && response.addendum.length ===0 && response.templates.length ===0) return
+          // if(response.activities.length === 0 && response.addendum.length ===0 && response.templates.length ===0) return
             successResponse(response)
         })
         .catch(console.log)

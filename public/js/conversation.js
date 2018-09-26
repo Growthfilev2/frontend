@@ -416,10 +416,10 @@ function createHeaderContent(db, id) {
 }
 
 function reinitCount(db, id) {
-
   const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
   activityCount.get(id).onsuccess = function(event) {
     const record = event.target.result
+    if(!record) return;
     record.count = 0
     activityCount.put(record)
   }
@@ -724,7 +724,6 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
     createTempRecord(selectedField.office, selectedField.template, data)
-    removeDialog()
   }
 
 }
@@ -778,8 +777,9 @@ function createTempRecord(office, template, data) {
         create: true
       }
 
-
+      removeDialog()
       updateCreateActivity(bareBonesRecord,true)
+      
     }
   }
 }
@@ -1890,6 +1890,8 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
         (place.address_components[2] && place.address_components[2].short_name || '')
       ].join(' ');
     }
+    
+    console.log(address)
     const selectedAreaAttributes = {
       primary: place.name,
       secondary: {
