@@ -186,6 +186,25 @@ function loadViewFromRoot(response) {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
 
+    if(response.data.type === 'updateList') {
+      const activityObjectStore = db.transaction('activity').objectStore('activity');
+      const append = true;
+      activityObjectStore.index('timestamp').openCursor(null,'prev').onsuccess = function(event){
+        const cursor = event.target.result;
+        if(!cursor) return
+        if(response.data.params.indexOf(cursor.value.activityId) > -1) {
+
+          createActivityList(db,cursor.value,append).then(function(dom){
+            
+          })
+        }
+        cursor.continue()
+      }
+      
+      
+      return
+    }
+
     if (response.data.type === 'updateAssigneeList') {
       console.log("only update assingee list")
       const activityObjectStore = db.transaction('activity').objectStore('activity')

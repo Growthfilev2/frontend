@@ -39,12 +39,13 @@ const requestFunctionCaller = {
   Null: Null
 }
 
-function requestHandlerResponse(type, code, message, dbName) {
+function requestHandlerResponse(type, code, message, dbName,params) {
   self.postMessage({
     type: type,
     code: code,
     msg: message,
-    dbName: dbName
+    dbName: dbName,
+    params: params
   })
 }
 
@@ -769,10 +770,11 @@ function successResponse(read) {
         count: counter[count]
       })
     })
-
+    const activityPar = []
     read.activities.forEach(function(activity) {
       // put activity in activity object store
       activityObjectStore.put(activity)
+      activityPar.push(activity.activityId)
 
       updateMap(db, activity)
 
@@ -804,7 +806,9 @@ function successResponse(read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     activitytx.oncomplete = function(){
-        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+        // requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+        requestHandlerResponse('updateList', 200, 'IDB updated successfully', user.uid,activityPar)
+
     }
   }
 }

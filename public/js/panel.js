@@ -66,14 +66,15 @@ function fetchDataForActivityList(db) {
 
 }
 
-function createActivityList(db, data) {
+function createActivityList(db, data,append) {
   return new Promise(function(resolve){
 
     getCount(db, data.activityId).then(function (count) {
       getCommentUndUser(db,  data.activityId, data.creator).then(function (meta) {
         getCreatorDetails(db, meta).then(function(metaWiwthData){
           metaWiwthData.count = count
-          resolve(activityListUI(data,metaWiwthData))
+   
+            resolve(activityListUI(data,metaWiwthData,append))
         })
       })
     })
@@ -114,9 +115,9 @@ function getCommentUndUser(db, id, creator) {
       } else if (addendumCursor.value.isComment) {
         meta.comment = addendumCursor.value.comment
         readNameFromNumber(db, addendumCursor.value.user).then(function (nameOrNum) {
-          meta.user = nameOrNum
+          meta.commentUser = nameOrNum
+          resolve(meta)
         })
-        resolve(meta)
       } else {
         meta.comment = addendumCursor.value.comment
         resolve(meta)
@@ -144,7 +145,7 @@ function getCreatorDetails(db, meta) {
   })
 }
 
-function activityListUI(data, metaData) {
+function activityListUI(data, metaData,append) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
@@ -200,7 +201,7 @@ function activityListUI(data, metaData) {
   }
 
   const metaTextActivityStatus = document.createElement('span')
-  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', `${data.status}`)
+  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
   const statusIcon = document.createElement('i')
   statusIcon.className = 'material-icons'
 
@@ -220,6 +221,14 @@ function activityListUI(data, metaData) {
   }
 
   metaTextContainer.appendChild(metaTextActivityStatus)
+
+  if(append){
+
+    li.appendChild(creator)
+    li.appendChild(leftTextContainer)
+    li.appendChild(metaTextContainer)
+    return li
+  }
 
   li.innerHTML += creator.outerHTML + leftTextContainer.outerHTML + metaTextContainer.outerHTML
   return li.outerHTML
