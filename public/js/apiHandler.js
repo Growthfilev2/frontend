@@ -695,7 +695,6 @@ function updateUserObjectStore(successUrl) {
         const cursor = event.target.result
 
         if (!cursor) {
-          // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
 
