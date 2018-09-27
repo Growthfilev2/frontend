@@ -1772,29 +1772,28 @@ function insertInputsIntoActivity(record, activityStore) {
     ed = getInputText('.end--date'+i).value
     et = getInputText('.end--time'+i).value
 
-    if (sd !== "" && ed == "") {
+    if (concatDateWithTime(sd,st) !== "" && concatDateWithTime(ed,et) == "") {
       snacks('Add a valid End Date')
       allow = false
     }
 
-    if (ed !== "" && sd == "") {
+    if (concatDateWithTime(ed,et) !== "" && concatDateWithTime(sd,st) == "") {
       snacks('Add a valid Start Date')
       allow = false
 
     }
 
-    if (sd && ed && moment(ed).valueOf() < moment(sd).valueOf()) {
+    if (concatDateWithTime(ed,et) < concatDateWithTime(sd,st)) {
       snacks('End Date cannot be before Start Date')
       allow = false
     }
-
+    if(!allow) return
     if (allow) {
       record.schedule[i-1].startTime = concatDateWithTime(sd, st) || ''
       record.schedule[i-1].endTime = concatDateWithTime(ed, et) || ''
     }
   }
   
-  console.log(record)
   for (var i = 0; i < record.venue.length; i++) {
     record.venue[i].geopoint = {
       latitude: record.venue[i].geopoint['_latitude'],
@@ -1810,7 +1809,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
-    requestCreator('update', requiredObject)
+    // requestCreator('update', requiredObject)
 
     return
   }
