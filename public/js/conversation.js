@@ -1034,6 +1034,13 @@ function updateCreateActivity(record, pushState) {
         }
       });
     }
+    if( document.querySelector('.image-preview--attachment')) {
+
+      document.querySelector('.image-preview--attachment').onclick = function(){
+        console.log(this.children[0].src)
+        openImage(this.children[0].src)
+      }
+    }
 
     createAssigneeList(db, record, true)
 
@@ -1428,6 +1435,8 @@ function createAttachmentContainer(data) {
       const imagePreview = document.createElement('div')
       imagePreview.className = 'image-preview--attachment'
       imagePreview.dataset.photoKey = key
+      
+
       if (data.canEdit) {
 
         div.appendChild(addCamera)
@@ -1436,8 +1445,14 @@ function createAttachmentContainer(data) {
           readCameraFile()
         }
       }
-      const viewImage = document.createElement('img')
-      viewImage.src = `${data.attachment[key].value}` || '#'
+      let viewImage;
+      if(data.attachment[key].value) {
+        viewImage = document.createElement('img')
+        viewImage.src = `${data.attachment[key].value}`
+      }
+      else {
+        viewImage = document.createElement('div');
+      }
 
       imagePreview.appendChild(viewImage);
       div.appendChild(imagePreview)
@@ -1638,19 +1653,26 @@ function checkRadioInput(inherit, value) {
 
 function setFilePath(str) {
   const img = document.createElement('img')
-  img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
-  document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
+  if(!str) {
+    img.src = '#'
+  }
+  else {
+    img.src = `data:image/jpeg;base64,${str}`
+  }
 
+  document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
+  
   document.getElementById('send-activity').classList.remove('hidden')
 }
 
 function readCameraFile() {
+  
   FetchCameraForAttachment.startCamera()
 }
 
 function openImage(imageSrc) {
-
+  console.log(imageSrc)
   sendCurrentViewNameToAndroid('selector')
 
   if (imageSrc.substring(0, 4) !== "data") return
