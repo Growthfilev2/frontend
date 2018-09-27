@@ -1983,6 +1983,7 @@ function createTimeInput(value, canEdit, attr) {
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'
+    input.value = value || moment(new Date()).format('hh:mm')
   }
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
