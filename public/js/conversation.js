@@ -1021,14 +1021,17 @@ function updateCreateActivity(record, pushState) {
 
     if (document.querySelector('.mdc-select')) {
       const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-      console.log(select)
       select.listen('change', () => {
+        console.log(select)
         updateDomFromIDB(record, {
           hash: 'weekday',
           key: select['root_'].dataset.value
         }, {
           primary: select.value
         })
+        if (document.getElementById('send-activity').classList.contains('hidden')) {
+          document.getElementById('send-activity').classList.remove('hidden')
+        }
       });
     }
 
@@ -1408,7 +1411,7 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
       div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
-
+      
     }
 
     if (data.attachment[key].type === 'base64') {
@@ -1499,6 +1502,8 @@ function createAttachmentContainer(data) {
     }
   })
 }
+
+
 
 function createAssigneeList(db, record, showLabel) {
   if (showLabel) {
