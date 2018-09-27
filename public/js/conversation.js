@@ -386,6 +386,7 @@ function createHeaderContent(db, id) {
       const creatorImg = document.createElement("img")
       creatorImg.className = 'header--icon-creator'
       creatorImg.src = uri
+      creatorImg.setAttribute('onerror','handleImageError(this)');
       backDiv.appendChild(creatorImg);
 
       const primarySpan = document.createElement('div')
@@ -1560,7 +1561,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   } else {
     photoGraphic.src = userRecord.photoURL || './img/empty-user.jpg'
   }
-
+  photoGraphic.setAttribute('onerror','handleImageError(this)')
 
   const assigneeListText = document.createElement('span')
   assigneeListText.classList.add('mdc-list-item__text')

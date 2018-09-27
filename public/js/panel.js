@@ -37,11 +37,11 @@ function fetchDataForActivityList(db) {
     let cursor = event.target.result
     if (!cursor) {
       console.log(count)
-          // setTimeout(function(){
+          setTimeout(function(){
 
             appendActivityListToDom(activityDom, true)
             createActivityIcon(db)
-          // },1000)
+           },100)
       return
     }
 
@@ -153,7 +153,7 @@ function activityListUI(data, metaData,append) {
 
   const creator = document.createElement("img")
   creator.className = 'mdc-list-item__graphic material-icons'
-
+  creator.setAttribute('onerror','handleImageError(this)')
   creator.src = metaData.creator
 
   const leftTextContainer = document.createElement('span')
@@ -395,7 +395,7 @@ function initMenu(db, officeRecord) {
   headerIcon.className = 'drawer-header-icon'
 
   headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-
+  headerIcon.setAttribute('onerror','handleImageError(this)');
 
   const headerDetails = document.createElement('div')
   headerDetails.className = 'header--details'
@@ -853,7 +853,7 @@ function createProfilePanel() {
 
   profileImg.src = firebase.auth().currentUser.photoURL;
   profileImg.id = 'user-profile--image'
-
+  profileImg.setAttribute('onerror','handleImageError(this)');
 
   const overlay = document.createElement('div')
   overlay.className = 'insert-overlay'
