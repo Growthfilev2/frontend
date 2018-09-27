@@ -425,6 +425,8 @@ function initMenu(db, officeRecord) {
     changeOfficeIon.style.float = 'right'
     changeOfficeIon.textContent = 'arrow_drop_down'
     changeOfficeIon.onclick = function () {
+      if(document.querySelector('.office-selection-lists')) return;
+
       createOfficeSelectionUI(officeRecord.allOffices, db)
     }
   }
@@ -518,8 +520,9 @@ function createOfficeSelectionUI(allOffices, db) {
 
   allOffices.forEach(function (office) {
     if (office === document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) return
+    if(document.querySelector('.different-office-link')) return;
     const a = document.createElement('div')
-    a.className = 'mdc-list-item mdc-list-item--activated'
+    a.className = 'mdc-list-item mdc-list-item--activated different-office-link'
     const textSpan = document.createElement('span')
     textSpan.textContent = office
     a.appendChild(textSpan)
