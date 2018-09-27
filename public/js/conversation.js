@@ -1035,6 +1035,10 @@ function updateCreateActivity(record, pushState) {
       });
     }
 
+    document.querySelector('.image-preview--attachment').onclick = function(){
+      openImage(this.children[0].src)
+    }
+
     createAssigneeList(db, record, true)
 
     createActivityCancellation(record);
@@ -1428,6 +1432,8 @@ function createAttachmentContainer(data) {
       const imagePreview = document.createElement('div')
       imagePreview.className = 'image-preview--attachment'
       imagePreview.dataset.photoKey = key
+      
+
       if (data.canEdit) {
 
         div.appendChild(addCamera)
@@ -1640,8 +1646,9 @@ function setFilePath(str) {
   const img = document.createElement('img')
   img.src = `data:image/jpeg;base64,${str}`
   img.className = 'profile-container--main attachment-picture'
+  
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
-
+  
   document.getElementById('send-activity').classList.remove('hidden')
 }
 
@@ -1650,7 +1657,7 @@ function readCameraFile() {
 }
 
 function openImage(imageSrc) {
-
+  console.log(imageSrc)
   sendCurrentViewNameToAndroid('selector')
 
   if (imageSrc.substring(0, 4) !== "data") return
