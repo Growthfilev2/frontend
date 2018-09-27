@@ -1228,8 +1228,9 @@ function createScheduleTable(data) {
 
 
 
-
+  let count =0;
   data.schedule.forEach(function(schedule) {
+    count++
     console.log(schedule.startTime)
     const scheduleName = document.createElement('h5')
     scheduleName.className = 'mdc-list-group__subheader label--text'
@@ -1246,7 +1247,7 @@ function createScheduleTable(data) {
     startLi.className = 'mdc-list-item'
 
     const sdDiv = document.createElement('div')
-    sdDiv.className = 'mdc-text-field start--date'
+    sdDiv.className = 'mdc-text-field start--date'+count
 
     const startDateInput = document.createElement('input')
     startDateInput.value =  moment(schedule.startTime || new Date()).format('YYYY-MM-DD')
@@ -1260,7 +1261,7 @@ function createScheduleTable(data) {
     stSpan.className = 'mdc-list-item__meta'
 
     const stDiv = document.createElement('div')
-    stDiv.className = 'mdc-text-field start--time'
+    stDiv.className = 'mdc-text-field start--time'+count
 
     const startTimeInput = document.createElement('input')
     startTimeInput.value = moment(schedule.startTime || new Date()).format('hh:mm')
@@ -1277,7 +1278,7 @@ function createScheduleTable(data) {
     endLi.className = 'mdc-list-item'
 
     const edDiv = document.createElement('div')
-    edDiv.className = 'mdc-text-field end--date'
+    edDiv.className = 'mdc-text-field end--date'+count
 
     const endDateInput = document.createElement('input')
     endDateInput.value = moment(schedule.endTime || new Date()).format('YYYY-MM-DD')
@@ -1290,7 +1291,7 @@ function createScheduleTable(data) {
     etSpan.className = 'mdc-list-item__meta'
 
     const etDiv = document.createElement('div')
-    etDiv.className = 'mdc-text-field end--time'
+    etDiv.className = 'mdc-text-field end--time'+count
 
 
     const endTimeInput = document.createElement('input')
@@ -1742,6 +1743,7 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, activityStore) {
+  console.log(record)
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = allStringTypes[i].querySelector('.mdc-text-field__input').value
@@ -1763,12 +1765,12 @@ function insertInputsIntoActivity(record, activityStore) {
   let ed;
   let et
   let allow = true;
-  for (var i = 0; i < record.schedule.length; i++) {
+  for (var i = 1; i < record.schedule.length +1; i++) {
 
-    sd = getInputText('.start--date').value
-    st = getInputText('.start--time').value
-    ed = getInputText('.end--date').value
-    et = getInputText('.end--time').value
+    sd = getInputText('.start--date'+i).value
+    st = getInputText('.start--time'+i).value
+    ed = getInputText('.end--date'+i).value
+    et = getInputText('.end--time'+i).value
 
     if (sd !== "" && ed == "") {
       snacks('Add a valid End Date')
@@ -1787,11 +1789,12 @@ function insertInputsIntoActivity(record, activityStore) {
     }
 
     if (allow) {
-      record.schedule[i].startTime = concatDateWithTime(sd, st) || ''
-      record.schedule[i].endTime = concatDateWithTime(ed, et) || ''
+      record.schedule[i-1].startTime = concatDateWithTime(sd, st) || ''
+      record.schedule[i-1].endTime = concatDateWithTime(ed, et) || ''
     }
   }
-
+  
+  console.log(record)
   for (var i = 0; i < record.venue.length; i++) {
     record.venue[i].geopoint = {
       latitude: record.venue[i].geopoint['_latitude'],

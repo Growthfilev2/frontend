@@ -808,7 +808,6 @@ function successResponse(read) {
     activitytx.oncomplete = function(){
         // requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
         requestHandlerResponse('updateList', 200, 'IDB updated successfully', user.uid,activityPar)
-
     }
   }
 }
