@@ -991,7 +991,8 @@ function updateCreateActivity(record, pushState) {
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     appView.innerHTML = updateCreateContainer(record).outerHTML
-
+    
+ 
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {
       office: record.office,
@@ -1041,9 +1042,11 @@ function updateCreateActivity(record, pushState) {
         openImage(this.children[0].src)
       }
     }
+    if(document.querySelector('.image-preview--attachment')) {
 
-    document.querySelector('.image-preview--attachment').onclick = function(){
-      openImage(this.children[0].src)
+      document.querySelector('.image-preview--attachment').onclick = function(){
+        openImage(this.children[0].src)
+      }
     }
 
     createAssigneeList(db, record, true)
@@ -1658,7 +1661,6 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str) {
   const img = document.createElement('img')
   img.className = 'profile-container--main attachment-picture'
-<<<<<<< HEAD
   if(!str) {
     img.src = '#'
   }
@@ -1666,9 +1668,6 @@ function setFilePath(str) {
     img.src = `data:image/jpeg;base64,${str}`
   }
 
-=======
-  
->>>>>>> 8db8f9dbd033e41f4d2a1870b779278db408d90a
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
   
   document.getElementById('send-activity').classList.remove('hidden')
@@ -2069,4 +2068,23 @@ function createSelectMenu(key, value, canEdit) {
   div.appendChild(select)
   div.appendChild(ripple)
   return div
+}
+
+
+
+function showSendActivity(evt) {
+  console.log(evt)
+  const sendActivity = document.getElementById('send-activity')
+  const rect1 =sendActivity.getBoundingClientRect();
+  const rect2 =  document.querySelector('.status--cancel-cont').getBoundingClientRect()
+  var isOverlap = !(rect1.right < rect2.left || 
+    rect1.left > rect2.right || 
+    rect1.bottom < rect2.top || 
+    rect1.top > rect2.bottom)
+    console.log(isOverlap)
+  if(isOverlap) {
+    sendActivity.classList.add('hidden')
+    return
+  }
+  sendActivity.classList.remove('hidden');
 }
