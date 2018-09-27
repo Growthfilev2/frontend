@@ -1042,6 +1042,10 @@ function updateCreateActivity(record, pushState) {
       }
     }
 
+    document.querySelector('.image-preview--attachment').onclick = function(){
+      openImage(this.children[0].src)
+    }
+
     createAssigneeList(db, record, true)
 
     createActivityCancellation(record);
@@ -1654,6 +1658,7 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str) {
   const img = document.createElement('img')
   img.className = 'profile-container--main attachment-picture'
+<<<<<<< HEAD
   if(!str) {
     img.src = '#'
   }
@@ -1661,6 +1666,9 @@ function setFilePath(str) {
     img.src = `data:image/jpeg;base64,${str}`
   }
 
+=======
+  
+>>>>>>> 8db8f9dbd033e41f4d2a1870b779278db408d90a
   document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
   
   document.getElementById('send-activity').classList.remove('hidden')
