@@ -1035,20 +1035,8 @@ function updateCreateActivity(record, pushState) {
         }
       });
     }
-    if( document.querySelector('.image-preview--attachment')) {
 
-      document.querySelector('.image-preview--attachment').onclick = function(){
-        console.log(this.children[0].src)
-        openImage(this.children[0].src)
-      }
-    }
-    if(document.querySelector('.image-preview--attachment')) {
-
-      document.querySelector('.image-preview--attachment').onclick = function(){
-        openImage(this.children[0].src)
-      }
-    }
-
+    
     createAssigneeList(db, record, true)
 
     createActivityCancellation(record);
@@ -1449,12 +1437,17 @@ function createAttachmentContainer(data) {
       span.className = 'mdc-fab__icon material-icons'
       span.textContent = 'add_a_photo'
       addCamera.appendChild(span)
-      div.appendChild(label)
 
-      const imagePreview = document.createElement('div')
-      imagePreview.className = 'image-preview--attachment'
-      imagePreview.dataset.photoKey = key
+      const imagePreview = document.createElement('ul')
+      imagePreview.className = 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
       
+
+
+      imagePreview.appendChild(setFilePath(data.attachment[key].value,key,true))
+
+     
+      div.appendChild(imagePreview)
+    
 
       if (data.canEdit) {
 
@@ -1462,20 +1455,14 @@ function createAttachmentContainer(data) {
         div.appendChild(imagePreview);
         addCamera.onclick = function() {
           readCameraFile()
+          document.getElementById('label--image').textContent = key
+          document.getElementById('attachment-picture').dataset.photoKey = key
         }
       }
-      let viewImage;
-      if(data.attachment[key].value) {
-        viewImage = document.createElement('img')
-        viewImage.src = `${data.attachment[key].value}`
-      }
-      else {
-        viewImage = document.createElement('div');
-      }
 
-      imagePreview.appendChild(viewImage);
-      div.appendChild(imagePreview)
+    
     }
+
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
 
@@ -1670,21 +1657,29 @@ function checkRadioInput(inherit, value) {
   console.log(radio.value)
 }
 
-function setFilePath(str) {
+function setFilePath(str,key,show) {
 
-  const ul = document.createElement('ul')
-  ul.className = 'mdc-image-list standard-image-list mdc-image-list--with-text-protection'
+
   const li = document.createElement('li')
   li.className = 'mdc-image-list__item'
 
   const container = document.createElement('div')
-  container.className = 'mdc-image-list__image-aspect-container'
-
 
   const img = document.createElement('img')
-
-  img.className = 'profile-container--main attachment-picture mdc-image-list__image'
-
+  img.className = 'profile-container--main mdc-image-list__image '
+  img.id = 'attachment-picture'
+  img.dataset.photoKey = key
+  if(!str) {
+    img.src = './img/placeholder.png'
+    img.dataset.empty = true
+  }
+  else {
+    img.src = `data:image/jpeg;base64,${str}`
+    img.dataset.empty = false
+  }
+  img.onclick = function(){
+    openImage(this.src)
+  }
   container.appendChild(img)
   li.appendChild(container)
 
@@ -1692,21 +1687,18 @@ function setFilePath(str) {
   textCont.className = 'mdc-image-list__supporting'
 
   const span = document.createElement('span')
-  span.textContent = label
+  key ? span.textContent = key : span.textContent = '';
   span.className = 'mdc-image-list__label'
-
+  span.id = 'label--image'
   textCont.appendChild(span)
   li.appendChild(textCont)
-  ul.appendChild(li)
-  document.querySelector('.image-preview--attachment').innerHTML = ul.outerHTML
-  document.getElementById('send-activity').classList.remove('hidden')
+  if(show) return li
 
-  if(!str) {
-    img.src = './img/empty-user.jpg'
+  document.querySelector('.image-preview--attachment').innerHTML = li.outerHTML
+  document.querySelector('.image-preview--attachment img').onclick = function(){
+    openImage(this.src)
   }
-  else {
-    img.src = `data:image/jpeg;base64,${str}`
-  }
+  document.getElementById('send-activity').classList.remove('hidden')
 
   
 }
@@ -1827,14 +1819,14 @@ function insertInputsIntoActivity(record, activityStore) {
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   
   }
-  const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
+  const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    if (!imagesInAttachments[i].children[0].tagName === 'img') {
+    if (imagesInAttachments[i].dataset.empty === 'true') {
       record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = ''
 
     } else {
 
-      record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].querySelector('img').src
+      record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
     }
   }
 
@@ -1898,8 +1890,7 @@ function insertInputsIntoActivity(record, activityStore) {
   requiredObject.office = record.office
   requiredObject.template = record.template
   requiredObject.share = record.assignees
-  console.log(requiredObject)
-  // requestCreator('create', requiredObject)
+  requestCreator('create', requiredObject)
 }
 
 function checkSpacesInString(input){

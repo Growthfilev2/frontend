@@ -1019,16 +1019,8 @@ input[type="datetime-local"] {
     margin-top:10px;
   }
 
-  .attachment-field.base64 img {
-    width: 45px;
-    height: 45px;
-    margin-left: 20px;
-    margin-top: -15px;
-    border-radius: 50%
-  }
-  .attachment-field.base64.editable--true img {
-    margin-bottom:-13px;
-
+  .mdc-image-list__image-aspect-container .mdc-image-list__image {
+    position: relative;
   }
   .custom--list-margin {
     margin-top:-11px;
@@ -1229,10 +1221,9 @@ input[type="datetime-local"] {
     margin-bottom: 0px;
   }
 
-  .image-preview--attachment {
-    display: inline;
-  }
-
+.mdc-image-list__item {
+  width: 50%;
+}
   .comment--info {
     width:100%;
     padding-top: 11px;

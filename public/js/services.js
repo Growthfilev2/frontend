@@ -1,7 +1,6 @@
 let offset
 
 function handleImageError(img){
-  console.log(img)
   img.onerror = null;
   img.src = './img/empty-user.jpg';
   return true
