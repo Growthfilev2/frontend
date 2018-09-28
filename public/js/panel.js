@@ -461,6 +461,8 @@ function initMenu(db, officeRecord) {
     navContent.appendChild(all)
   }
 
+  let push = true;
+  let stateCount = 0;
   filters.forEach(function (filter) {
 
     const a = document.createElement('div')
@@ -476,17 +478,23 @@ function initMenu(db, officeRecord) {
     a.appendChild(i)
     a.appendChild(textSpan)
     a.onclick = function () {
+      stateCount++
+      if(stateCount > 1) {
+        push = false
+      } 
+
       if (filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled') {
-        filterActivities(filter.type, db, true)
+        
+        filterActivities(filter.type, db, push)
       }
       if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, db, true)
+        sortByCreator(filter.type, db, push)
       }
       if (filter.type === 'Urgent') {
-        sortByDates(filter.type, db, true)
+        sortByDates(filter.type, db, push)
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, db, true)
+        sortByLocation(filter.type, db, push)
       }
       if (filter.type === 'Recent') {
         listView()
@@ -572,6 +580,10 @@ function filterActivities(type, db, pushState) {
 
     history.pushState(["filterActivities", type], null, null)
   }
+  else {
+    history.replaceState(["filterActivities", type], null, null)
+
+  }
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
   const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
@@ -597,8 +609,12 @@ function filterActivities(type, db, pushState) {
 }
 
 function sortByCreator(type, db, pushState) {
+
   if (pushState) {
     history.pushState(["sortByCreator", type], null, null)
+  }
+  else {
+    history.replaceState(["sortByCreator", type], null, null)
   }
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
@@ -637,6 +653,10 @@ function sortByCreator(type, db, pushState) {
 function sortByDates(type, db, pushState) {
   if (pushState) {
     history.pushState(["sortByDates", type], null, null)
+  }
+  else {
+    history.replaceState(["sortByDates", type], null, null)
+
   }
   const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
 
@@ -710,7 +730,9 @@ function sortByLocation(type, db, pushState) {
   if (pushState) {
     history.pushState(['sortByLocation', type], null, null)
   }
-
+  else {
+    history.replaceState(['sortByLocation',type],null,null)
+  }
   const dbName = firebase.auth().currentUser.uid
 
   const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')

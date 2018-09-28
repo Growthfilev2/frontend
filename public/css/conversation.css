@@ -1278,6 +1278,7 @@ input[type="datetime-local"] {
 }
 
 
+
 @media only screen and (max-width:400px) {
     #attachment--list .mdc-text-field {
       width:50%;
