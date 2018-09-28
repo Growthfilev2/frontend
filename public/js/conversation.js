@@ -1671,18 +1671,44 @@ function checkRadioInput(inherit, value) {
 }
 
 function setFilePath(str) {
+
+  const ul = document.createElement('ul')
+  ul.className = 'mdc-image-list standard-image-list mdc-image-list--with-text-protection'
+  const li = document.createElement('li')
+  li.className = 'mdc-image-list__item'
+
+  const container = document.createElement('div')
+  container.className = 'mdc-image-list__image-aspect-container'
+
+
   const img = document.createElement('img')
-  img.className = 'profile-container--main attachment-picture'
+
+  img.className = 'profile-container--main attachment-picture mdc-image-list__image'
+
+  container.appendChild(img)
+  li.appendChild(container)
+
+  const textCont = document.createElement('div')
+  textCont.className = 'mdc-image-list__supporting'
+
+  const span = document.createElement('span')
+  span.textContent = label
+  span.className = 'mdc-image-list__label'
+
+  textCont.appendChild(span)
+  li.appendChild(textCont)
+  ul.appendChild(li)
+  document.querySelector('.image-preview--attachment').innerHTML = ul.outerHTML
+  document.getElementById('send-activity').classList.remove('hidden')
+
   if(!str) {
-    img.src = '#'
+    img.src = './img/empty-user.jpg'
   }
   else {
     img.src = `data:image/jpeg;base64,${str}`
   }
 
-  document.querySelector('.image-preview--attachment').innerHTML = img.outerHTML
   
-  document.getElementById('send-activity').classList.remove('hidden')
 }
 
 function readCameraFile() {
@@ -1803,7 +1829,7 @@ function insertInputsIntoActivity(record, activityStore) {
   }
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    if (!imagesInAttachments[i].querySelector('img')) {
+    if (!imagesInAttachments[i].children[0].tagName === 'img') {
       record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = ''
 
     } else {
@@ -1872,8 +1898,8 @@ function insertInputsIntoActivity(record, activityStore) {
   requiredObject.office = record.office
   requiredObject.template = record.template
   requiredObject.share = record.assignees
-
-  requestCreator('create', requiredObject)
+  console.log(requiredObject)
+  // requestCreator('create', requiredObject)
 }
 
 function checkSpacesInString(input){
