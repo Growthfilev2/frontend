@@ -44,6 +44,7 @@ function successDialog() {
 }
 
 function snacks(message) {
+  document.body.style.pointerEvents = 'none'
   const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
   snack.setAttribute('aria-live', 'assertive')
@@ -70,7 +71,7 @@ function snacks(message) {
     actionText: 'Ok',
     timeout: 300000,
     actionHandler: function() {
-      console.log('okay')
+      document.body.style.pointerEvents = 'all'
     }
   }
 

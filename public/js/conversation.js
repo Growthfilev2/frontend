@@ -1339,7 +1339,7 @@ function createScheduleTable(data) {
 
 function createAttachmentContainer(data) {
 
-  const ordering = ['Name', 'Template', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
+  const ordering = ['Name', 'Template','email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
 
   ordering.forEach(function(order) {
     const group = document.createElement("div")
@@ -1353,7 +1353,8 @@ function createAttachmentContainer(data) {
     'HH:MM': '',
     'string': '',
     'base64': '',
-    'number' : ''
+    'number' : '',
+    'email':''
   }
 
 
@@ -1387,6 +1388,11 @@ function createAttachmentContainer(data) {
     if(data.attachment[key].type === 'number') {
       div.appendChild(label)
       div.appendChild(createNumberInput(data.attachment[key].value,data.canEdit))
+    }
+
+    if(data.attachment[key].type === 'email') {
+      div.appendChild(label)
+      div.appendChild(createEmailInput(data.attachment[key].value,data.canEdit))
     }
 
     if (data.attachment[key].type === 'phoneNumber') {
@@ -2039,6 +2045,28 @@ function createNumberInput(value,canEdit){
   return textField
 }
 
+function createEmailInput(value,canEdit) {
+  if(!canEdit) {
+    const simeplText = document.createElement('span')
+    simeplText.className = 'data--value-list'
+    simeplText.textContent = value
+    return simeplText
+  }
+  const textField = document.createElement('div')
+  textField.className = 'mdc-text-field data--value-list'
+  const input = document.createElement('input')
+  input.className = 'mdc-text-field__input input--type-email'
+  input.type = 'email'
+  input.style.paddingTop = '0px'
+  input.value = value
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+
+  textField.appendChild(input)
+  textField.appendChild(ripple)
+ 
+  return textField
+}
 function createTimeInput(value, canEdit, attr) {
   if (!canEdit) {
     const simeplText = document.createElement('span')
