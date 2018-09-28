@@ -1372,7 +1372,8 @@ function createAttachmentContainer(data) {
 
     if (key === 'Name') {
       div.appendChild(label)
-      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+      const required = true
+      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key,required))
     }
 
     if (data.attachment[key].type === 'string' && key !== 'Name') {
@@ -1780,8 +1781,14 @@ function insertInputsIntoActivity(record, activityStore) {
   console.log(record)
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
-    record.attachment[convertIdToKey(allStringTypes[i].id)].value = allStringTypes[i].querySelector('.mdc-text-field__input').value
-    console.log(convertIdToKey(allStringTypes[i].id))
+    let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
+ 
+    if(allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
+      snacks('Please provide an input for the field “Name” ')
+      return;
+    } 
+    record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
+  
   }
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment')
   for (let i = 0; i < imagesInAttachments.length; i++) {
@@ -1856,6 +1863,11 @@ function insertInputsIntoActivity(record, activityStore) {
   requiredObject.share = record.assignees
 
   requestCreator('create', requiredObject)
+}
+
+function checkSpacesInString(input){
+  if(!input.replace(/\s/g,'').length) return true
+  return false
 }
 
 function initSearchForSelectors(type, record, attr) {
@@ -1958,7 +1970,7 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
   })
 }
 
-function createSimpleInput(value, canEdit, withIcon, key) {
+function createSimpleInput(value, canEdit, withIcon, key,required) {
 
   if (!canEdit) {
     const onlyText = document.createElement('span')
@@ -1979,7 +1991,7 @@ function createSimpleInput(value, canEdit, withIcon, key) {
   input.className = 'mdc-text-field__input input--value--update'
   input.style.paddingTop = '0px'
   input.value = value
-
+  input.required = required
 
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
