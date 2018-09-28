@@ -1352,7 +1352,8 @@ function createAttachmentContainer(data) {
     'weekday': '',
     'HH:MM': '',
     'string': '',
-    'base64': ''
+    'base64': '',
+    'number' : ''
   }
 
 
@@ -1383,6 +1384,10 @@ function createAttachmentContainer(data) {
 
     }
 
+    if(data.attachment[key].type === 'number') {
+      div.appendChild(label)
+      div.appendChild(createNumberInput(data.attachment[key].value,data.canEdit))
+    }
 
     if (data.attachment[key].type === 'phoneNumber') {
       div.classList.add('selector--margin')
@@ -2008,6 +2013,29 @@ function createSimpleInput(value, canEdit, withIcon, key,required) {
   const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
 
 
+  return textField
+}
+
+function createNumberInput(value,canEdit){
+  if(!canEdit) {
+    const simeplText = document.createElement('span')
+    simeplText.className = 'data--value-list'
+    simeplText.textContent = value
+    return simeplText
+  }
+  const textField = document.createElement('div')
+  textField.className = 'mdc-text-field data--value-list'
+  const input = document.createElement('input')
+  input.className = 'mdc-text-field__input input--type-number'
+  input.type = 'number'
+  input.style.paddingTop = '0px'
+  input.value = value
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+
+  textField.appendChild(input)
+  textField.appendChild(ripple)
+ 
   return textField
 }
 
