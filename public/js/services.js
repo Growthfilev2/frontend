@@ -27,23 +27,20 @@ function successDialog() {
   const div = document.createElement('div')
   div.className = 'success--container'
 
-  const icon = document.createElement('i')
-  icon.className = 'material-icons success--check'
-  icon.textContent = 'check'
+  const icon = document.createElement('div')
+  icon.className = 'success--check'
 
   div.appendChild(icon)
   section.appendChild(div)
   surface.appendChild(section)
   aside.appendChild(surface)
-  if (!document.querySelector('#success--dialog')) {
-    document.body.appendChild(aside)
-  }
+  document.body.appendChild(aside)
 
   const successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'))
   successDialog.show()
   setTimeout(function() {
-    successDialog.close()
-  }, 3000)
+    document.getElementById('success--dialog').remove()
+  }, 1200)
 }
 
 function snacks(message) {

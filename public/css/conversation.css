@@ -1147,10 +1147,37 @@ input[type="datetime-local"] {
   }
 
   .success--check {
-    font-size: 143px;
     color: #ffffff;
-
+    animation: checking 1s ease both;
+  
+    border: solid 12px white;
+    width: 60px;
+    height: 60px;
+    margin: 65px 0 0 0px;
+    border-top: none;
+    border-right: none;
+    transform: rotate(-45deg);
+    transform-origin: top left;
+    box-shadow: -5px 5px 0 0 rgba(0,0,0,.5);
   }
+
+  @keyframes checking {
+    0% {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    50% {
+      opacity: 1;
+      width: 0;
+      height: 60px;
+    }
+    100% {
+      width: 100px;
+    }
+  }
+
   .link--span {
     text-decoration: none;
   }
