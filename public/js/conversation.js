@@ -1806,26 +1806,29 @@ function insertInputsIntoActivity(record, activityStore) {
     ed = getInputText('.end--date'+i).value
     et = getInputText('.end--time'+i).value
 
-    if (concatDateWithTime(sd,st) !== "" && concatDateWithTime(ed,et) == "") {
-      snacks('Add a valid End Date')
-      allow = false
+    console.log(concatDateWithTime(sd,st))
+
+    if(!concatDateWithTime(sd,st)  && !concatDateWithTime(ed,et)){
+      snacks('Please Select A Start Date and End Date')
+      return
     }
 
-    if (concatDateWithTime(ed,et) !== "" && concatDateWithTime(sd,st) == "") {
-      snacks('Add a valid Start Date')
-      allow = false
-
+    if(sd === "") {
+      snacks('Please Select a Start Date')
+      return;
     }
+    if(ed === "") {
+      snacks('Please Select an End Date')
+      return;
+    }
+
 
     if (concatDateWithTime(ed,et) < concatDateWithTime(sd,st)) {
-      snacks('End Date cannot be before Start Date')
-      allow = false
+      snacks('The End Date and Time should be greater or equal to the start time')
+      return;
     }
-    if(!allow) return
-    if (allow) {
       record.schedule[i-1].startTime = concatDateWithTime(sd, st) || ''
       record.schedule[i-1].endTime = concatDateWithTime(ed, et) || ''
-    }
   }
   
   for (var i = 0; i < record.venue.length; i++) {
@@ -1843,7 +1846,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
-    // requestCreator('update', requiredObject)
+    requestCreator('update', requiredObject)
 
     return
   }

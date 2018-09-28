@@ -54,7 +54,7 @@ function snacks(message) {
   snack.setAttribute('aria-hidden', 'true')
 
   const snackbarText = document.createElement('div')
-  snackbarText.className = 'mdc-snackbar__text'
+  snackbarText.className = 'mdc-snackbar__text mdc-typography--subtitle2'
 
   const snackbarAction = document.createElement('div')
   snackbarAction.className = 'mdc-snackbar__action-wrapper'
@@ -71,7 +71,7 @@ function snacks(message) {
   const data = {
     message: message,
     actionText: 'Ok',
-    timeout: 3000,
+    timeout: 300000,
     actionHandler: function() {
       console.log('okay')
     }

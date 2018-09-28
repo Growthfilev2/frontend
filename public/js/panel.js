@@ -778,7 +778,6 @@ function sortActivitiesByLocation(db, distanceArr) {
   }, 400)
 }
 
-
 function locationSortError(error) {
   console.log(error)
 }
