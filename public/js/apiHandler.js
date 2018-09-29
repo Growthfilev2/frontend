@@ -65,7 +65,6 @@ self.onmessage = function(event) {
       return
     }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-
   })
 }
 
@@ -467,17 +466,9 @@ function instantUpdateDB(dbName, data, type) {
         requestHandlerResponse('updateAssigneeList',200,'user added in store',{id:data.activityId,number:data.share[0]})
         return
       }
-      if(type === 'status') {
-
-        requestHandlerResponse('updateStatusView', 200, 'IDB instantly updated', {id:data.activityId,status:data[type]})
-        return
+      if(type === 'status' && data[type] === 'CANCELLED') {
+        requestHandlerResponse('delete-succes',200,'activity delete',{id:data.activityId})
       }
-      if(type === 'update') {
-        requestHandlerResponse('toggleDetailActions', 200, 'IDB instantly updated', dbName,{editable:0})
-        return
-      }
-      
-      
     }
   }
 }

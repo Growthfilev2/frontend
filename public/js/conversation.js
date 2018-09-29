@@ -1,4 +1,5 @@
 function conversation(id, pushState) {
+
   if (pushState) {
     history.pushState(['conversation', id], null, null)
   }
@@ -16,6 +17,7 @@ function fetchAddendumForComment(id) {
     commentPanel(db, id)
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
+    reinitCount(db, id)
     let commentDom = ''
     addendumIndex.openCursor(id).onsuccess = function(event) {
       const cursor = event.target.result
@@ -117,93 +119,88 @@ function commentPanel(db, id) {
 }
 
 function statusChange(db, id) {
-
-  const statusSpan = document.createElement("span")
-  const icon = document.createElement("i")
-  icon.className = 'material-icons change--status--icon'
+   
+  const label = document.createElement('label')
+  label.setAttribute('for', 'toggle-status')
+  label.textContent = 'Mark Complete'
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function(event) {
-    const record = event.target.result;
-    if (!record.canEdit || record.editable == 0) {
 
+    const record = event.target.result;
+    if (!record.canEdit) {
+      const statusSpan = document.createElement('span')
       const record = event.target.result
       statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
       document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
       document.querySelector('.status--change-cont').style.textAlign = 'center'
       return
     }
+    if(record.editable == 0) {
 
-    const StautsCont = document.createElement('div')
-    StautsCont.className = 'status--completed-cont'
-
-
-    const div = document.createElement('div')
-    div.className = 'mdc-form-field'
-
-    const checkbox = document.createElement('div')
-    checkbox.className = 'mdc-checkbox'
-
-
-    const input = document.createElement("input")
-    input.className = 'mdc-checkbox__native-control'
-    input.id = 'toggle-status'
-    input.type = 'checkbox'
-
-    const checkbox_bckg = document.createElement('div')
-    checkbox_bckg.className = 'mdc-checkbox__background'
-
-    const svg = `<svg class="mdc-checkbox__checkmark"
-    viewBox="0 0 24 24">
- <path class="mdc-checkbox__checkmark-path"
-       fill="none"
-       d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-</svg>
-<div class="mdc-checkbox__mixedmark"></div>
-`
-
-    const mixedmark = document.createElement('div')
-    mixedmark.className = 'mdc-checkbox__mixedmark'
-    checkbox_bckg.innerHTML =svg
-    checkbox.appendChild(input)
-    checkbox.appendChild(checkbox_bckg)
-
-    div.appendChild(checkbox)
-
-  
-    const label = document.createElement('label')
-    label.setAttribute('for', 'toggle-status')
-    label.textContent = 'Mark Complete'
-    StautsCont.appendChild(label)
-    StautsCont.appendChild(div)
-    document.querySelector('.status--change-cont').innerHTML = ''
-    if (!document.querySelector('.status--completed-cont')) {
-      document.querySelector('.status--change-cont').appendChild(StautsCont)
+      document.querySelector('.status--change-cont').innerHTML= label.outerHTML + loader('status-loader').outerHTML;
+      return
     }
-
-    const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
-
-    if(record.status === 'CONFIRMED') {
-      switchControl.checked = true
-    }
-    
-    document.querySelector('.mdc-checkbox').onclick = function() {
-      if (switchControl.checked) {
-        requestCreator('statusChange', {
-          activityId: record.activityId,
-          status: 'CONFIRMED'
-        })
-      } else {
-        requestCreator('statusChange', {
-          activityId: record.activityId,
-          status: 'PENDING'
-        })
+            
+      const div = document.createElement('div')
+      div.className = 'mdc-form-field form-field-status'
+      
+      const checkbox = document.createElement('div')
+      checkbox.className = 'mdc-checkbox'
+      
+      
+      const input = document.createElement("input")
+      input.className = 'mdc-checkbox__native-control'
+      input.id = 'toggle-status'
+      input.type = 'checkbox'
+      
+      const checkbox_bckg = document.createElement('div')
+      checkbox_bckg.className = 'mdc-checkbox__background'
+      
+      const svg = `<svg class="mdc-checkbox__checkmark"
+      viewBox="0 0 24 24">
+      <path class="mdc-checkbox__checkmark-path"
+      fill="none"
+      d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+      </svg>
+      <div class="mdc-checkbox__mixedmark"></div>`
+      
+      const mixedmark = document.createElement('div')
+      mixedmark.className = 'mdc-checkbox__mixedmark'
+      checkbox_bckg.innerHTML =svg
+      checkbox.appendChild(input)
+      checkbox.appendChild(checkbox_bckg)
+      
+      div.appendChild(checkbox)
+      
+     
+      document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+      const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
+      
+      if(record.status === 'CONFIRMED') {
+        switchControl.checked = true
       }
+      
+      document.querySelector('.mdc-checkbox').onclick = function() {
+        document.querySelector('.form-field-status').classList.add('hidden');
+        
+        document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+        
+        if (switchControl.checked) {
+          requestCreator('statusChange', {
+            activityId: record.activityId,
+            status: 'CONFIRMED'
+          })
+        } else {
+          requestCreator('statusChange', {
+            activityId: record.activityId,
+            status: 'PENDING'
+          })
+        }
+      }      
     }
-
   }
-}
-
+  
 function createComment(db, addendum, currentUser) {
   // console.log(addendum)
   let showMap = false
@@ -409,7 +406,6 @@ function createHeaderContent(db, id) {
       header(leftDiv.outerHTML, '')
 
       document.getElementById('back-conv').addEventListener('click', function() {
-        reinitCount(db, id)
         backNav()
       })
 
@@ -610,6 +606,9 @@ function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
       removeDialog()
       return
     }
+
+    document.querySelector('#assignees--list').appendChild(loader('user-loader'));
+    document.body.style.pointerEvents = 'none'
 
     const reqBody = {
       'activityId': activityRecord.activityId,
@@ -1673,7 +1672,7 @@ function checkRadioInput(inherit, value) {
 }
 
 function setFilePath(str,key,show) {
-
+  console.log(str)
 
   const li = document.createElement('li')
   li.className = 'mdc-image-list__item'
@@ -1684,12 +1683,13 @@ function setFilePath(str,key,show) {
   img.className = 'profile-container--main mdc-image-list__image '
   img.id = 'attachment-picture'
   img.dataset.photoKey = key
+  img.setAttribute('onerror','handleImageErrorAttachment(this)')
   if(!str) {
     img.src = './img/placeholder.png'
     img.dataset.empty = true
   }
   else {
-    img.src = `data:image/jpeg;base64,${str}`
+    img.src = str
     img.dataset.empty = false
   }
   img.onclick = function(){
@@ -1915,6 +1915,9 @@ function insertInputsIntoActivity(record, activityStore) {
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
+    document.querySelector('.update-create--activity').appendChild(loader('update-loader'))
+    document.body.style.pointerEvents = 'none'
+    document.querySelector('#send-activity').classList.add('hidden')
     requestCreator('update', requiredObject)
 
     return
@@ -2210,18 +2213,24 @@ function showSendActivity(evt) {
   sendActivity.classList.remove('hidden');
 }
 
-function toggleActionables(editable){
+function toggleActionables(id,editable){
+  if(!id) return;
   if(document.getElementById('app-current-panel').dataset.view === 'create') return
-snacks('Please wait till the activity is getting updated.')
- const actions =  document.querySelectorAll('.mdc-fab')
- for (let index = 0; index < actions.length; index++) {
-   const element = actions[index];
-   if(editable) {
-     element.classList.remove('hidden')
-   }
-   else {
+  const req =indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db = req.result
+    const activityStore = db.transaction('activity').objectStore('activity')
+    activityStore.get(id).onsuccess = function(event){
+      const record = event.target.result
+      const actions =  document.querySelectorAll('.mdc-fab')
+ 
+        if(record.editable) {
+          if(document.querySelector('.loader')) {
+            document.body.style.pointerEvents = 'all'
+            document.querySelector('.loader').remove()
 
-     element.classList.add('hidden')
-   }
- }
+          }
+        }        
+    }
+  }
 }

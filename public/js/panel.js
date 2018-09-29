@@ -297,7 +297,7 @@ function creatListHeader(headerName, backIcon) {
 
   const menuSpan = document.createElement('span')
   menuSpan.className = 'current--selcted-filter'
-  menuSpan.textContent = headerName
+  headerName === 'Cancelled' ? menuSpan.textContent = 'Trash' : menuSpan.textContent = headerName
 
   menuIcon.appendChild(icon)
   menuIcon.appendChild(menuSpan)
@@ -562,7 +562,7 @@ function allOffices(type, db, pushState) {
       return
     }
 
-    if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+    if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED') {
       createActivityList(db, cursor.value).then(function (li) {
 
         activityDom += li
