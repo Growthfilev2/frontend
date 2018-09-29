@@ -407,6 +407,8 @@ function create(body) {
         JSON.stringify(body)
       )
       .then(function(success) {
+        requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
+
         requestHandlerResponse('create-success', 200, 'activity created successfully', firebase.auth().currentUser.uid)
         resolve(firebase.auth().currentUser.uid)
       })

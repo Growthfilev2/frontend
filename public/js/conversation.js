@@ -724,6 +724,7 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
   dialog['acceptButton_'].onclick = function() {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
+    document.getElementById('app-current-panel').dataset.view  = 'create'
     createTempRecord(selectedField.office, selectedField.template, data)
   }
 
@@ -2178,6 +2179,7 @@ function showSendActivity(evt) {
 }
 
 function toggleActionables(editable){
+  if(document.getElementById('app-current-panel').dataset.view === 'create') return
 snacks('Please wait till the activity is getting updated.')
  const actions =  document.querySelectorAll('.mdc-fab')
  for (let index = 0; index < actions.length; index++) {
