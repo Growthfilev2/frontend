@@ -46,13 +46,13 @@ function fetchDataForActivityList(db) {
     }
 
     if (currOffice === 'all') {
-      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED')  {
         createActivityList(db, cursor.value).then(function (li) {
           activityDom += li
         })
       }
     }
-     else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice) {
+     else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice && cursor.value.status !== 'CANCELLED') {
        count++
 
         createActivityList(db, cursor.value).then(function (li) {
@@ -360,15 +360,12 @@ function initMenu(db, officeRecord) {
       type: 'Nearby',
       icon: 'near_me'
     },
-    {
-      type: 'Confirmed',
-      icon: 'check'
-    }, {
+     {
       type: 'Pending',
       icon: ''
     }, {
       type: 'Cancelled',
-      icon: 'clear'
+      icon: 'delete'
     }
   ]
 
@@ -473,7 +470,7 @@ function initMenu(db, officeRecord) {
     i.setAttribute('aria-hidden', 'true')
     i.textContent = filter.icon
     const textSpan = document.createElement('span')
-    textSpan.textContent = filter.type
+    filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' :textSpan.textContent = filter.type
 
     a.appendChild(i)
     a.appendChild(textSpan)
@@ -483,7 +480,7 @@ function initMenu(db, officeRecord) {
         push = false
       } 
 
-      if (filter.type === 'Confirmed' || filter.type === 'Pending' || filter.type === 'Cancelled') {
+      if (filter.type === 'Pending' || filter.type === 'Cancelled') {
         
         filterActivities(filter.type, db, push)
       }
@@ -630,7 +627,7 @@ function sortByCreator(type, db, pushState) {
       return
     }
     if (type === 'Incoming') {
-      if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED') {
         createActivityList(db, cursor.value).then(function (li) {
 
           activityDom += li
@@ -638,9 +635,8 @@ function sortByCreator(type, db, pushState) {
       }
     }
     if (type === 'Outgoing') {
-      if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+      if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED') {
         createActivityList(db, cursor.value).then(function (li) {
-
           activityDom += li
         })
       }
@@ -681,7 +677,7 @@ function sortByDates(type, db, pushState) {
       return
     }
 
-    if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice) {
+    if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice && cursor.value.status !== 'CANCELLED') {
       sortingOrder['HIGH'].push(cursor.value)
     } else {
       sortingOrder['LOW'].push(cursor.value)
@@ -763,7 +759,7 @@ function sortActivitiesByLocation(db, distanceArr) {
   for (var i = 0; i < distanceArr.length; i++) {
 
     activityObjectStore.get(distanceArr[i].activityId).onsuccess = function (event) {
-      if (event.target.result.office === Curroffice) {
+      if (event.target.result.office === Curroffice && event.target.result !== 'CANCELLED') {
 
         createActivityList(db, event.target.result).then(function (li) {
           activityDom += li

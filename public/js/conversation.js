@@ -1756,7 +1756,8 @@ function createActivityCancellation(record) {
         
          requestCreator('statusChange', {
           activityId: record.activityId,
-           status: 'CANCELLED'
+           status: 'CANCELLED',
+          
          })
          
         })

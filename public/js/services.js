@@ -226,7 +226,7 @@ function loadViewFromRoot(response) {
       activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
         const record = event.target.result;
         if(response.data.dbName.status === 'CANCELLED') {
-          snacks(`You have deleted  ${response.data.dbName.name}`,'undo')
+          snacks(`You have deleted  ${record.activityName}`,'Undo')
           listView();
           return
         }
