@@ -139,41 +139,44 @@ function statusChange(db, id) {
 
 
     const div = document.createElement('div')
-    div.className = 'mdc-switch'
+    div.className = 'mdc-form-field'
 
-    if (record.status === 'CONFIRMED') {
-      div.classList.add('mdc-switch--checked')
-    }
+    const checkbox = document.createElement('div')
+    checkbox.className = 'mdc-checkbox'
 
-    const track = document.createElement('div')
-    track.className = 'mdc-switch__track'
-
-    const thumbUnderlay = document.createElement('div')
-    thumbUnderlay.className = 'mdc-switch__thumb-underlay'
-
-    const thumb = document.createElement("div")
-    thumb.className = 'mdc-switch__thumb'
 
     const input = document.createElement("input")
-    input.className = 'mdc-switch__native-control'
+    input.className = 'mdc-checkbox__native-control'
     input.id = 'toggle-status'
-    input.setAttribute('role', 'switch')
-
-    if (record.status === 'CONFIRMED') {
-      input.checked = true
-    }
-
     input.type = 'checkbox'
 
-    thumb.appendChild(input)
-    thumbUnderlay.appendChild(thumb)
+    const checkbox_bckg = document.createElement('div')
+    checkbox_bckg.className = 'mdc-checkbox__background'
 
-    div.appendChild(track)
-    div.appendChild(thumbUnderlay)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg')
+    svg.className = 'mdc-checkbox__checkmark'
+    svg.setAttributeNS(null,'viewBox','0 0 24 24')
 
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path')
+    path.className = 'mdc-checkbox__checkmark-path'
+    path.setAttributeNS(null,'fill','none')
+    path.setAttributeNS(null,'d',"M1.73,12.91 8.1,19.28 22.79,4.59")
+    path.setAttributeNS(null,'stroke',"white")
+    svg.appendChild(path)
+
+    const mixedmark = document.createElement('div')
+    mixedmark.className = 'mdc-checkbox__mixedmark'
+    checkbox_bckg.appendChild(svg)
+    checkbox_bckg.appendChild(mixedmark)
+    checkbox.appendChild(input)
+    checkbox.appendChild(checkbox_bckg)
+
+    div.appendChild(checkbox)
+
+  
     const label = document.createElement('label')
     label.setAttribute('for', 'toggle-status')
-    label.textContent = 'Activity Completed'
+    label.textContent = 'Mark Complete'
     StautsCont.appendChild(label)
     StautsCont.appendChild(div)
     document.querySelector('.status--change-cont').innerHTML = ''
@@ -181,9 +184,13 @@ function statusChange(db, id) {
       document.querySelector('.status--change-cont').appendChild(StautsCont)
     }
 
-    const switchControl = new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
-    document.querySelector('.mdc-switch').onclick = function() {
+    const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
 
+    if(record.status === 'CONFIRMED') {
+      switchControl.checked = true
+    }
+    
+    document.querySelector('.mdc-checkbox').onclick = function() {
       if (switchControl.checked) {
         requestCreator('statusChange', {
           activityId: record.activityId,
@@ -1079,6 +1086,15 @@ function createSimpleLi(key, data) {
       })
     }
   }
+  if(key === 'delete') {
+
+    dataVal.className = 'mdc-list-item__graphic material-icons delete-activity'
+    dataVal.textContent = key
+    listItemLabel.classList.remove('detail--static-text')
+    listItemLabel.textContent = data.text
+    listItem.appendChild(dataVal)
+    listItem.appendChild(listItemLabel)
+  }
 
   return listItem
 }
@@ -1726,58 +1742,75 @@ function createActivityCancellation(record) {
   StautsCont.className = 'status--cancel-cont'
 
   if (record.canEdit && !record.hasOwnProperty('create')) {
-    const div = document.createElement('div')
-    div.className = 'mdc-switch'
-    if (record.status === 'CANCELLED') {
-      div.classList.add('mdc-switch--checked')
+    
+    StautsCont.appendChild(createSimpleLi('delete',{text:'delete activity'}))
+
+  
+    document.querySelector('.update-create--activity').appendChild(StautsCont);
+    if(!document.getElementById('cancel-alert')) {
+      cancelAlertDialog()
     }
-    const track = document.createElement('div')
-    track.className = 'mdc-switch__track'
-
-    const thumbUnderlay = document.createElement('div')
-    thumbUnderlay.className = 'mdc-switch__thumb-underlay'
-
-    const thumb = document.createElement("div")
-    thumb.className = 'mdc-switch__thumb'
-
-    const input = document.createElement("input")
-    input.className = 'mdc-switch__native-control'
-    input.id = 'toggle-status'
-    input.setAttribute('role', 'switch')
-    if (record.status === 'CANCELLED') {
-      input.checked = true
-    }
-    input.type = 'checkbox'
-
-    thumb.appendChild(input)
-    thumbUnderlay.appendChild(thumb)
-
-    div.appendChild(track)
-    div.appendChild(thumbUnderlay)
-
-    const label = document.createElement('label')
-    label.setAttribute('for', 'toggle-status')
-    label.textContent = 'Cancel Activity '
-    StautsCont.appendChild(label)
-    StautsCont.appendChild(div)
-    document.querySelector('.update-create--activity').appendChild(StautsCont)
-
-    const switchControl = new mdc.switchControl.MDCSwitch.attachTo(document.querySelector('.mdc-switch'));
-    document.querySelector('.mdc-switch').onclick = function() {
-
-      if (switchControl.checked) {
-        requestCreator('statusChange', {
+    var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
+    
+        dialog.listen('MDCDialog:accept', function() {
+        
+         requestCreator('statusChange', {
           activityId: record.activityId,
-          status: 'CANCELLED'
+           status: 'CANCELLED'
+         })
+         
         })
-      } else {
-        requestCreator('statusChange', {
-          activityId: record.activityId,
-          status: 'PENDING'
+        
+        dialog.listen('MDCDialog:cancel', function() {
+          console.log('canceled');
         })
-      }
-    }
-  }
+    document.querySelector('.delete-activity').addEventListener('click', function (evt) {
+      dialog.lastFocusedTarget = evt.target;
+      dialog.show();
+    })
+    
+    
+   }
+    
+}
+
+function cancelAlertDialog(){
+  const aside = document.createElement('aside')
+  aside.className = 'mdc-dialog'
+  aside.id = 'cancel-alert'
+
+  const surface = document.createElement('div')
+  surface.className = 'mdc-dialog__surface'
+
+  const section = document.createElement('section')
+  section.className = 'mdc-dialog__body'
+
+  section.textContent = 'Are you sure you want to delete this activity ? '
+
+  const footer = document.createElement('footer')
+  footer.className = 'mdc-dialog__footer'
+
+  const accept = document.createElement('button')
+  accept.type = 'button'
+  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept delete-btn'
+  accept.textContent = 'Delete'
+
+  const cancel = document.createElement('button')
+  cancel.type = 'button'
+  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel cancel-delete-btn'
+  cancel.textContent = 'Cancel'
+
+  footer.appendChild(cancel)
+  footer.appendChild(accept)
+  surface.appendChild(section)
+  surface.appendChild(footer)
+  aside.appendChild(surface)
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mdc-dialog__backdrop'
+  aside.appendChild(backdrop)
+  document.body.appendChild(aside)
+
+ 
 }
 
 

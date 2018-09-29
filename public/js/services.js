@@ -43,7 +43,7 @@ function successDialog() {
   }, 1200)
 }
 
-function snacks(message) {
+function snacks(message,type) {
   document.body.style.pointerEvents = 'none'
   const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
@@ -68,7 +68,7 @@ function snacks(message) {
 
   const data = {
     message: message,
-    actionText: 'Ok',
+    actionText: type ? type : 'OK',
     timeout: 300000,
     actionHandler: function() {
       document.body.style.pointerEvents = 'all'
@@ -225,10 +225,13 @@ function loadViewFromRoot(response) {
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
         const record = event.target.result;
-        if (response.data.status !== 'CANCELLED') {
+        if(response.data.dbName.status === 'CANCELLED') {
+          snacks(`You have deleted  ${response.data.dbName.name}`,'undo')
+          listView();
+          return
+        }
           snacks('Please wait till the activity is getting updated.')
           statusChange(db, record.activityId)
-        }
       }
       return
     }

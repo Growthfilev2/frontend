@@ -142,10 +142,18 @@ body {
 }
 
 .status--completed-cont label {
-
+  padding-left: 20px;
   font-size: 18px;
 }
-
+.status--completed-cont .mdc-form-field {
+  float: right;
+  margin-top: -8px;
+}
+.mdc-checkbox__background {
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+}
 .status--change-cont {
 padding: 8px 20px 8px 20px;
   background-color: #eeeeee;
@@ -173,11 +181,14 @@ padding: 8px 20px 8px 20px;
 }
 
 .status--cancel-cont {
-  padding: 10px 20px 10px 20px;
-  margin-top:10px;
+  margin-top: 20px;
   background-color: white;
+  margin-bottom: 20px;
 }
-.status--cancel-cont label {
+.delete-activity {
+  color: red;
+}
+.status--cancel-cont {
   font-size: 18px;
   color: red;
 }
@@ -1311,3 +1322,11 @@ input[type="datetime-local"] {
     }
 }
 
+#cancel-alert .mdc-dialog__surface {
+  height: auto;
+    width: calc(100% - 30px);
+}
+.delete-btn , .cancel-delete-btn {
+  color: #0399f4 !important;
+
+}

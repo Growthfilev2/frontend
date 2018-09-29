@@ -468,13 +468,15 @@ function instantUpdateDB(dbName, data, type) {
         return
       }
       if(type === 'status') {
-        requestHandlerResponse('updateStatusView', 200, 'IDB instantly updated', {id:data.activityId,status:data[type]})
+
+        requestHandlerResponse('updateStatusView', 200, 'IDB instantly updated', {id:data.activityId,status:data[type],name:data.activityName})
         return
       }
       if(type === 'update') {
         requestHandlerResponse('toggleDetailActions', 200, 'IDB instantly updated', dbName,{editable:0})
         return
       }
+      
       
     }
   }
