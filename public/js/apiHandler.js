@@ -64,7 +64,15 @@ self.onmessage = function(event) {
       requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
       return
     }
+
+    if(event.data.body.hasOwnProperty('share')) {
+      requestFunctionCaller[event.data.type](event.data.body).then(function(uid){
+        updateIDB(uid,{type:event.data.type,data:event.data.body.share})
+      })
+      return;
+    }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+      
   })
 }
 
@@ -437,6 +445,7 @@ function instantUpdateDB(dbName, data, type) {
       if (type === 'share') {
         record.assignees.push(data.share[0])
         objStore.put(record)
+        console.log(record)
       }
       if(type === 'update') {
 
@@ -462,10 +471,7 @@ function instantUpdateDB(dbName, data, type) {
       
     }
     objStoreTx.oncomplete = function() {
-      if(type === 'share') {
-        requestHandlerResponse('updateAssigneeList',200,'user added in store',{id:data.activityId,number:data.share[0]})
-        return
-      }
+    
       if(type === 'status' && data[type] === 'CANCELLED') {
         requestHandlerResponse('delete-succes',200,'activity delete',{id:data.activityId})
       }
@@ -741,7 +747,7 @@ function updateSubscription(db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse(read) {
+function successResponse(read,caller) {
   console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
@@ -814,9 +820,11 @@ function successResponse(read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     activitytx.oncomplete = function(){
-      
+        if(caller) {
+          requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid,{caller :caller})
+          return
+        }
         requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
-        // requestHandlerResponse('updateList', 200, 'IDB updated successfully', user.uid,activityPar)
     }
   }
 }
@@ -880,7 +888,7 @@ function setUniqueOffice(data) {
   }
 }
 
-function updateIDB(dbName) {
+function updateIDB(dbName,launchedFromAnotherReq) {
   console.log(dbName)
   const req = indexedDB.open(dbName)
 
@@ -896,7 +904,8 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function(response) {
-          successResponse(response)
+          if(response.activities.length ==0 && response.addendum.length ==0 && response.templates.length ==0) return
+          successResponse(response,launchedFromAnotherReq)
         })
         .catch(console.log)
         

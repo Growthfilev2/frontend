@@ -126,7 +126,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -240,8 +240,10 @@ function loadViewFromRoot(response) {
       //here dbName is activityId
       activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
         const record = event.target.result
-        // toggleActionables(record.editable)
 
+        // toggleActionables(record.editable)
+        document.querySelector('#assignees--list [data-prop="delete"]').remove()
+        document.querySelector('.user-loader').style.opacity = 0;
         readNameAndImageFromNumber([response.data.dbName.number], db)
       }
       return
@@ -277,6 +279,19 @@ function loadViewFromRoot(response) {
       },5000)
     }
     else {
+      if(history.state[0] === 'updateCreateActivity' && response.data.params &&  response.data.params.hasOwnProperty('caller')){
+        const activityObjectStore = db.transaction('activity').objectStore('activity')
+        //here dbName is activityId
+        activityObjectStore.get(history.state[1].activityId).onsuccess = function(event) {
+          const record = event.target.result
+          console.log(record)
+          document.querySelector('#assignees--list [data-prop="delete"]').remove()
+          toggleActionables(history.state[1].activityId)
+          
+          readNameAndImageFromNumber([response.data.params.caller.data[0]], db)
+        }
+        return;
+      }
       if(history.state[0] === 'updateCreateActivity') {
         toggleActionables(history.state[1].activityId)
         return

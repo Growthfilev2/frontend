@@ -537,7 +537,11 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillUsersInSelector(selectorStore, activityRecord, dialog, data)
+      const activityStore = db.transaction('activity').objectStore('activity');
+      activityStore.get(activityRecord.activityId).onsuccess = function(event){
+        const record = event.target.result
+        fillUsersInSelector(record, dialog, data)
+      }
     }
 
     if (data.store === 'children') {
@@ -551,7 +555,7 @@ function initializeSelectorWithData(evt, data) {
 
 }
 
-function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
+function fillUsersInSelector(activityRecord, dialog, data) {
   const ul = document.getElementById('data-list--container')
   const alreadyPresntAssigness = {}
   const usersInRecord = activityRecord.assignees
@@ -560,37 +564,40 @@ function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
     alreadyPresntAssigness[user] = ''
   })
 
-  console.log(data)
-
-  selectorStore.openCursor().onsuccess = function(event) {
-    const cursor = event.target.result
-    if (!cursor) return
-
-    const userRecord = cursor.value
-    if (data.attachment.present && !alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
-      ul.appendChild(createSimpleAssigneeLi(userRecord, true))
-    } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
-      ul.appendChild(createSimpleAssigneeLi(userRecord, true))
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db = req.result
+    console.log(alreadyPresntAssigness)
+    const selectorStore  = db.transaction('users').objectStore('users');
+    selectorStore.openCursor().onsuccess = function(event) {
+      const cursor = event.target.result
+      if (!cursor) return
+      
+      const userRecord = cursor.value
+      if (data.attachment.present && !alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true))
+      } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true))
+      }
+      
+      cursor.continue()
     }
-
-    cursor.continue()
-  }
-
-  document.getElementById('selector--search').addEventListener('click', function() {
-    initSearchForSelectors('users', activityRecord, data)
-  })
-
-  dialog['acceptButton_'].onclick = function() {
-
-    const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-    console.log(radio)
-
-    if (data.attachment.present) {
-      console.log("run")
-      updateDomFromIDB(activityRecord, {
-        hash: '',
-        key: data.attachment.key
-      }, {
+    
+    document.getElementById('selector--search').addEventListener('click', function() {
+      initSearchForSelectors('users', activityRecord, data)
+    })
+    
+    dialog['acceptButton_'].onclick = function() {
+      
+      const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+      console.log(radio)
+      
+      if (data.attachment.present) {
+        console.log("run")
+        updateDomFromIDB(activityRecord, {
+          hash: '',
+          key: data.attachment.key
+        }, {
         primary: JSON.parse(radio.value)
       })
       removeDialog()
@@ -606,10 +613,10 @@ function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
       removeDialog()
       return
     }
-
+    
+    document.getElementById('assignees--list').appendChild(createSimpleLi('empty'))
     document.querySelector('#assignees--list').appendChild(loader('user-loader'));
-    document.body.style.pointerEvents = 'none'
-
+    
     const reqBody = {
       'activityId': activityRecord.activityId,
       'share': [JSON.parse(radio.value)]
@@ -617,9 +624,10 @@ function fillUsersInSelector(selectorStore, activityRecord, dialog, data) {
     requestCreator('share', reqBody)
     removeDialog()
     return
-
+    
   }
-
+}
+  
 }
 
 function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
@@ -1083,7 +1091,6 @@ function createSimpleLi(key, data) {
     }
   }
   if(key === 'delete') {
-
     dataVal.className = 'mdc-list-item__graphic material-icons'
     dataVal.textContent = key
     listItemLabel.classList.remove('detail--static-text')
@@ -1091,6 +1098,9 @@ function createSimpleLi(key, data) {
     listItemLabel.textContent = data.text
     listItem.appendChild(dataVal)
     listItem.appendChild(listItemLabel)
+  }
+  if(key === 'empty'){
+    listItem.dataset.prop = 'delete'
   }
 
   return listItem
@@ -1916,7 +1926,6 @@ function insertInputsIntoActivity(record, activityStore) {
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
     document.querySelector('.update-create--activity').appendChild(loader('update-loader'))
-    document.body.style.pointerEvents = 'none'
     document.querySelector('#send-activity').classList.add('hidden')
     requestCreator('update', requiredObject)
 
@@ -2226,7 +2235,6 @@ function toggleActionables(id,editable){
  
         if(record.editable) {
           if(document.querySelector('.loader')) {
-            document.body.style.pointerEvents = 'all'
             document.querySelector('.loader').remove()
 
           }

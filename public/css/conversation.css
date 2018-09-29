@@ -558,6 +558,10 @@ footer.mdc-dialog__footer {
   margin-top: 2px;
   position: inherit;
 }
+.user-loader {
+  bottom:3%;
+  top:inherit;
+}
 .update-loader {
   position: fixed;
 }
