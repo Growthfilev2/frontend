@@ -1330,3 +1330,6 @@ input[type="datetime-local"] {
   color: #0399f4 !important;
 
 }
+.status--cancel-cont .mdc-list-item__graphic {
+  color:  red;
+}

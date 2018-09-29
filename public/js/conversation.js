@@ -153,21 +153,18 @@ function statusChange(db, id) {
     const checkbox_bckg = document.createElement('div')
     checkbox_bckg.className = 'mdc-checkbox__background'
 
-    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg')
-    svg.className = 'mdc-checkbox__checkmark'
-    svg.setAttributeNS(null,'viewBox','0 0 24 24')
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg','path')
-    path.className = 'mdc-checkbox__checkmark-path'
-    path.setAttributeNS(null,'fill','none')
-    path.setAttributeNS(null,'d',"M1.73,12.91 8.1,19.28 22.79,4.59")
-    path.setAttributeNS(null,'stroke',"white")
-    svg.appendChild(path)
+    const svg = `<svg class="mdc-checkbox__checkmark"
+    viewBox="0 0 24 24">
+ <path class="mdc-checkbox__checkmark-path"
+       fill="none"
+       d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+</svg>
+<div class="mdc-checkbox__mixedmark"></div>
+`
 
     const mixedmark = document.createElement('div')
     mixedmark.className = 'mdc-checkbox__mixedmark'
-    checkbox_bckg.appendChild(svg)
-    checkbox_bckg.appendChild(mixedmark)
+    checkbox_bckg.innerHTML =svg
     checkbox.appendChild(input)
     checkbox.appendChild(checkbox_bckg)
 
@@ -1088,9 +1085,10 @@ function createSimpleLi(key, data) {
   }
   if(key === 'delete') {
 
-    dataVal.className = 'mdc-list-item__graphic material-icons delete-activity'
+    dataVal.className = 'mdc-list-item__graphic material-icons'
     dataVal.textContent = key
     listItemLabel.classList.remove('detail--static-text')
+    listItemLabel.classList.add('delete-activity')
     listItemLabel.textContent = data.text
     listItem.appendChild(dataVal)
     listItem.appendChild(listItemLabel)
@@ -1743,7 +1741,7 @@ function createActivityCancellation(record) {
 
   if (record.canEdit && !record.hasOwnProperty('create')) {
     
-    StautsCont.appendChild(createSimpleLi('delete',{text:'delete activity'}))
+    StautsCont.appendChild(createSimpleLi('delete',{text:'Delete Activity'}))
 
   
     document.querySelector('.update-create--activity').appendChild(StautsCont);
