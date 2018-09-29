@@ -273,13 +273,14 @@ function statusChange(body) {
 
   return new Promise(function(resolve, reject) {
     fetchRecord(dbName,body.activityId).then(function(originalRecord){
-      instantUpdateDB(dbName, body, 'status')
     http(
       'PATCH',
       `${apiUrl}activities/change-status`,
       JSON.stringify(body),
       originalRecord
-    ).then(function() {
+    ).then(function(success) {
+      instantUpdateDB(dbName, body, 'status')
+
       requestHandlerResponse('notification', 200, 'status changed successfully', dbName)
 
       resolve(
@@ -324,12 +325,12 @@ function share(body) {
 
   return new Promise(function(resolve, reject) {
       fetchRecord(dbName,body.activityId).then(function(originalRecord){
+        http(
+          'PATCH',
+          `${apiUrl}activities/share`,
+          JSON.stringify(body))
+          .then(function(success) {
         instantUpdateDB(dbName, body, 'share')
-    http(
-        'PATCH',
-        `${apiUrl}activities/share`,
-        JSON.stringify(body))
-      .then(function(success) {
         requestHandlerResponse('notification', 200, 'assignne added successfully',dbName)
         resolve(
           firebase.auth().currentUser.uid
@@ -379,13 +380,13 @@ function update(body) {
 
   return new Promise(function(resolve, reject) {
       fetchRecord(dbName,body.activityId).then(function(originalRecord){
-        instantUpdateDB(dbName, body, 'update')
-    http(
-        'PATCH',
-        `${apiUrl}activities/update`,
-        JSON.stringify(body)
-      )
-      .then(function(success) {
+        http(
+          'PATCH',
+          `${apiUrl}activities/update`,
+          JSON.stringify(body)
+        )
+        .then(function(success) {
+          instantUpdateDB(dbName, body, 'update')
         requestHandlerResponse('notification', 200, 'activity update successfully', dbName)
 
         resolve(firebase.auth().currentUser.uid)
@@ -425,11 +426,13 @@ function instantUpdateDB(dbName, data, type) {
     const objStore = objStoreTx.objectStore('activity')
     objStore.get(data.activityId).onsuccess = function(event) {
       const record = event.target.result
-      if (type === 'remove') {
-        const index = record.assignees.indexOf(data.remove)
-        record.assignees.splice(index, 1)
-        objStore.put(record)
-      }
+      record.editable = 0
+
+      // if (type === 'remove') {
+      //   const index = record.assignees.indexOf(data.remove)
+      //   record.assignees.splice(index, 1)
+      //   objStore.put(record)
+      // }
       if (type === 'share') {
         record.assignees.push(data.share[0])
         objStore.put(record)
@@ -450,25 +453,27 @@ function instantUpdateDB(dbName, data, type) {
           activityStore.put(record)
         }
       }
-      else {
+      if(type === 'status') {
 
         record[type] = data[type]
         objStore.put(record)
       }
+      
     }
     objStoreTx.oncomplete = function() {
       if(type === 'share') {
         requestHandlerResponse('updateAssigneeList',200,'user added in store',{id:data.activityId,number:data.share[0]})
         return
       }
-      if(type === 'statusChange') {
+      if(type === 'status') {
         requestHandlerResponse('updateStatusView', 200, 'IDB instantly updated', {id:data.activityId,status:data[type]})
         return
       }
-      else {
-        requestHandlerResponse('updateIDB', 200, 'IDB instantly updated', dbName)
+      if(type === 'update') {
+        requestHandlerResponse('toggleDetailActions', 200, 'IDB instantly updated', dbName,{editable:0})
+        return
       }
-
+      
     }
   }
 }
@@ -773,7 +778,15 @@ function successResponse(read) {
     const activityPar = []
     read.activities.forEach(function(activity) {
       // put activity in activity object store
-      activityObjectStore.put(activity)
+      if(activity.canEdit) {
+        activity.editable = 1
+        activityObjectStore.put(activity)
+      }
+      else {
+        activity.editable = 0
+        activityObjectStore.put(activity)
+      }
+
       activityPar.push(activity.activityId)
 
       updateMap(db, activity)
@@ -806,8 +819,9 @@ function successResponse(read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     activitytx.oncomplete = function(){
-        // requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
-        requestHandlerResponse('updateList', 200, 'IDB updated successfully', user.uid,activityPar)
+      
+        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+        // requestHandlerResponse('updateList', 200, 'IDB updated successfully', user.uid,activityPar)
     }
   }
 }
@@ -882,15 +896,15 @@ function updateIDB(dbName) {
     rootObjectStore.get(dbName).onsuccess = function(root) {
       setTimeout(function(){
 
-      http(
+        http(
           'GET',
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function(response) {
-          // if(response.activities.length === 0 && response.addendum.length ===0 && response.templates.length ===0) return
-            successResponse(response)
+          successResponse(response)
         })
         .catch(console.log)
+        
       },2000)
     }
   }

@@ -125,7 +125,7 @@ function statusChange(db, id) {
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function(event) {
     const record = event.target.result;
-    if (!record.canEdit) {
+    if (!record.canEdit || record.editable == 0) {
 
       const record = event.target.result
       statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
@@ -176,7 +176,7 @@ function statusChange(db, id) {
     label.textContent = 'Activity Completed'
     StautsCont.appendChild(label)
     StautsCont.appendChild(div)
-
+    document.querySelector('.status--change-cont').innerHTML = ''
     if (!document.querySelector('.status--completed-cont')) {
       document.querySelector('.status--change-cont').appendChild(StautsCont)
     }
@@ -219,21 +219,21 @@ function createComment(db, addendum, currentUser) {
     textContainer.classList.add('talktext')
 
     let user = document.createElement('p')
-    user.classList.add('user-name--comment')
+    user.classList.add('user-name--comment','mdc-typography--subtitle2')
 
     readNameFromNumber(db, addendum.user).then(function(nameOrNumber) {
       // console.log(nameOrNumber)
       user.textContent = nameOrNumber
 
       let comment = document.createElement('p')
-      comment.classList.add('comment')
+      comment.classList.add('comment','mdc-typography--subtitle2')
       comment.textContent = addendum.comment
 
       let commentInfo = document.createElement('span')
       commentInfo.className = 'comment--info'
       const datespan = document.createElement('span')
       datespan.textContent = moment(addendum.timestamp).calendar()
-      datespan.classList.add('comment-date')
+      datespan.classList.add('comment-date','mdc-typography--caption')
 
       const link = document.createElement('div')
       let mapIcon = document.createElement('i')
@@ -2175,4 +2175,19 @@ function showSendActivity(evt) {
     return
   }
   sendActivity.classList.remove('hidden');
+}
+
+function toggleActionables(editable){
+snacks('Please wait till the activity is getting updated.')
+ const actions =  document.querySelectorAll('.mdc-fab')
+ for (let index = 0; index < actions.length; index++) {
+   const element = actions[index];
+   if(editable) {
+     element.classList.remove('hidden')
+   }
+   else {
+
+     element.classList.add('hidden')
+   }
+ }
 }

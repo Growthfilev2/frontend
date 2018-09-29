@@ -39,6 +39,7 @@ function successDialog() {
   successDialog.show()
   setTimeout(function() {
     document.getElementById('success--dialog').remove()
+    document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200)
 }
 
@@ -214,7 +215,7 @@ function loadViewFromRoot(response) {
       //here dbName is activityId
       activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
         const record = event.target.result
-
+        toggleActionables(record.editable)
         readNameAndImageFromNumber([response.data.dbName.number], db)
       }
       return
@@ -224,10 +225,16 @@ function loadViewFromRoot(response) {
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
         const record = event.target.result;
-        if (response.data.staus !== 'CANCELLED') {
+        if (response.data.status !== 'CANCELLED') {
+          snacks('Please wait till the activity is getting updated.')
           statusChange(db, record.activityId)
         }
       }
+      return
+    }
+
+    if (response.data.type === 'toggleDetailActions') {
+       toggleActionables(response.data.params.editable)
       return
     }
 
@@ -242,7 +249,10 @@ function loadViewFromRoot(response) {
       },5000)
     }
     else {
-      if(history.state[0] === 'updateCreateActivity') return     
+      if(history.state[0] === 'updateCreateActivity') {
+        toggleActionables(true)
+        return
+      }     
       window[history.state[0]](history.state[1],false)
       handleTimeout()
     }

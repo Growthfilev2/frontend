@@ -57,7 +57,7 @@ body {
 
 #chat-container .comment-box {
   width: 63%;
-  padding: 10px;
+  padding: 10px 10px 5px 10px;
   margin: 5px 10px 5px 20px;
   display: inline-block;
   position: relative;
@@ -69,26 +69,26 @@ body {
 }
 
 .comment-box .talktext .user-name--comment {
-  font-size: 12px;
   font-weight: 500;
+ 
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 .comment-box .talktext .comment {
-  margin: 0;
-  word-break: break-word;
-  font-size: 14px;
-  line-height: 17px;
-  text-align: left;
+      word-break: break-word;
+     
+      margin-bottom: 0px;
+      margin-top: 0px;
+      font-weight: normal;
 }
 
 .comment-box .talktext span {
   float: left;
-  font-size: 13px;
 }
 
 .current-user--comment {
   float: right;
-  /* background-color: hsl(206, 92%, 70%) !important; */
 }
 
 .current-user--comment .user-map--span {
@@ -1227,8 +1227,9 @@ input[type="datetime-local"] {
   width: 50%;
 }
   .comment--info {
+
     width:100%;
-    padding-top: 11px;
+    padding-top: 3px;
     padding-bottom: 3px;
   }
 
