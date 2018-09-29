@@ -1925,7 +1925,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
-    document.querySelector('.update-create--activity').appendChild(loader('update-loader'))
+    document.querySelector('header').appendChild(progressBar())
     document.querySelector('#send-activity').classList.add('hidden')
     requestCreator('update', requiredObject)
 
@@ -2236,7 +2236,9 @@ function toggleActionables(id,editable){
         if(record.editable) {
           if(document.querySelector('.loader')) {
             document.querySelector('.loader').remove()
-
+          }
+          if(document.querySelector('.progress--update')){
+            document.querySelector('.progress--update').remove()
           }
         }        
     }

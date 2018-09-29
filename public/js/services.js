@@ -49,7 +49,7 @@ function successDialog() {
 }
 function progressBar() {
   const div = document.createElement('div')
-  div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate'
+  div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update'
   div.role = 'progressbar'
   const bufferDots = document.createElement('div')
   bufferDots.className = 'mdc-linear-progress__buffering-dots'

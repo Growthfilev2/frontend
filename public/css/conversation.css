@@ -564,6 +564,7 @@ footer.mdc-dialog__footer {
 }
 .update-loader {
   position: fixed;
+  top: 40%;
 }
 .profile--loader {
   right: 43%;
@@ -1158,6 +1159,7 @@ input[type="datetime-local"] {
     height: 300px;
     background-color: #0399f4;;
     transform: scale(0.38) !important;
+    z-index: 99999;
     /* transition: 1s ease; */
   }
   .success--container {
