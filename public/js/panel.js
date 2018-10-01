@@ -330,17 +330,6 @@ function creatListHeader(headerName, backIcon) {
 
 }
 
-function androidSwiper(openOrClose) {
-
-  if (history.state[0] === 'conversation' || history.state[0] === 'updateCreateActivity' || history.state[0] === 'profileView' || history.state[0] === 'createConfirmView') return
-
-
-  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  drawer.open = openOrClose
-
-
-}
-
 function initMenu(db, officeRecord) {
 
   const filters = [{
