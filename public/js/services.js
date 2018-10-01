@@ -296,6 +296,7 @@ function loadViewFromRoot(response) {
       }
       if(history.state[0] === 'updateCreateActivity') {
         toggleActionables(history.state[1].activityId)
+        handleTimeout()
         return
       }     
       window[history.state[0]](history.state[1],false)
@@ -317,13 +318,13 @@ function onErrorMessage(error) {
 
 function handleTimeout() {
   console.log('load now')
-  const TIME_OUT_VALUE = 300
+  const TIME_OUT_VALUE = 1000
   const offset = setTimeout(function() {
     requestCreator('Null')
+    if (offset) {
+      clearTimeout(offset)
+    }
   }, TIME_OUT_VALUE)
-  if (offset) {
-    clearTimeout(offset)
-  }
 }
 
 function getInputText(selector) {
