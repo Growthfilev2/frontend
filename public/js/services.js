@@ -129,6 +129,13 @@ function sendCurrentViewNameToAndroid(viewName) {
   // Fetchview.startConversation(viewName)
 }
 
+// base 64
+// double checking
+// scroll 
+// drawer 
+// first time not runing
+
+
 function inputFile(selector) {
   return document.getElementById(selector)
 }

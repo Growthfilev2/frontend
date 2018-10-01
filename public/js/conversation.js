@@ -1483,7 +1483,8 @@ function createAttachmentContainer(data) {
         div.appendChild(addCamera)
         div.appendChild(imagePreview);
         addCamera.onclick = function() {
-          fillUsersInSelector()
+          // readCameraFile()
+          setFilePath(localStorage.getItem('str'))
           document.getElementById('label--image').textContent = key
           document.getElementById('attachment-picture').dataset.photoKey = key
         }
@@ -1688,7 +1689,6 @@ function checkRadioInput(inherit, value) {
 
 function setFilePath(str,key,show) {
   console.log(str)
-
   const li = document.createElement('li')
   li.className = 'mdc-image-list__item'
 
@@ -1704,7 +1704,7 @@ function setFilePath(str,key,show) {
     img.dataset.empty = true
   }
   else {
-    img.src = str
+    show ? img.src = str :img.src = `data:image/jpeg;base64,${str}`
     img.dataset.empty = false
   }
   img.onclick = function(){
@@ -1927,6 +1927,8 @@ function insertInputsIntoActivity(record, activityStore) {
     schedule: record.schedule,
     attachment: record.attachment
   }
+
+
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
