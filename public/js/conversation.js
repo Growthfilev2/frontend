@@ -578,7 +578,8 @@ function fillUsersInSelector(activityRecord, dialog, data) {
       if (!cursor) return
       
       const userRecord = cursor.value
-      if (data.attachment.present && !alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+
+      if (data.attachment.present) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true))
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true))
@@ -1482,7 +1483,7 @@ function createAttachmentContainer(data) {
         div.appendChild(addCamera)
         div.appendChild(imagePreview);
         addCamera.onclick = function() {
-          readCameraFile()
+          fillUsersInSelector()
           document.getElementById('label--image').textContent = key
           document.getElementById('attachment-picture').dataset.photoKey = key
         }
@@ -1697,7 +1698,7 @@ function setFilePath(str,key,show) {
   img.className = 'profile-container--main mdc-image-list__image '
   img.id = 'attachment-picture'
   img.dataset.photoKey = key
-  img.setAttribute('onerror','handleImageErrorAttachment(this)')
+  // img.setAttribute('onerror','handleImageErrorAttachment(this)')
   if(!str) {
     img.src = './img/placeholder.png'
     img.dataset.empty = true
