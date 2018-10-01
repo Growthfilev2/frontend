@@ -126,11 +126,9 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
-// scroll 
-// first time not runing
 
 
 function inputFile(selector) {
