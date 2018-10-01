@@ -1470,8 +1470,6 @@ function createAttachmentContainer(data) {
       const imagePreview = document.createElement('ul')
       imagePreview.className = 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
       
-
-
       imagePreview.appendChild(setFilePath(data.attachment[key].value,key,true))
 
      
@@ -1483,14 +1481,9 @@ function createAttachmentContainer(data) {
         div.appendChild(addCamera)
         div.appendChild(imagePreview);
         addCamera.onclick = function() {
-          // readCameraFile()
-          setFilePath(localStorage.getItem('str'))
-          document.getElementById('label--image').textContent = key
-          document.getElementById('attachment-picture').dataset.photoKey = key
+          readCameraFile()
         }
       }
-
-    
     }
 
 
@@ -1688,9 +1681,13 @@ function checkRadioInput(inherit, value) {
 }
 
 function setFilePath(str,key,show) {
-  console.log(str)
+  if(document.querySelector('.image--list-li')) {
+    document.getElementById('attachment-picture').src = `data:image/jpeg;base64,${str}`
+    document.getElementById('send-activity').classList.remove('hidden')
+    return
+  }
   const li = document.createElement('li')
-  li.className = 'mdc-image-list__item'
+  li.className = 'mdc-image-list__item image--list-li'
 
   const container = document.createElement('div')
 
@@ -1698,14 +1695,12 @@ function setFilePath(str,key,show) {
   img.className = 'profile-container--main mdc-image-list__image '
   img.id = 'attachment-picture'
   img.dataset.photoKey = key
-  // img.setAttribute('onerror','handleImageErrorAttachment(this)')
+  img.setAttribute('onerror','handleImageErrorAttachment(this)')
   if(!str) {
     img.src = './img/placeholder.png'
-    img.dataset.empty = true
   }
   else {
-    show ? img.src = str :img.src = `data:image/jpeg;base64,${str}`
-    img.dataset.empty = false
+    img.src = str;
   }
   img.onclick = function(){
     openImage(this.src)
@@ -1717,24 +1712,19 @@ function setFilePath(str,key,show) {
   textCont.className = 'mdc-image-list__supporting'
 
   const span = document.createElement('span')
-  key ? span.textContent = key : span.textContent = '';
+  span.textContent = key 
   span.className = 'mdc-image-list__label'
   span.id = 'label--image'
   textCont.appendChild(span)
   li.appendChild(textCont)
   if(show) return li
 
-  document.querySelector('.image-preview--attachment').innerHTML = li.outerHTML
-  document.querySelector('.image-preview--attachment img').onclick = function(){
-    openImage(this.src)
-  }
-  document.getElementById('send-activity').classList.remove('hidden')
 
   
 }
 
 function readCameraFile() {
-  
+  // setFilePath(localStorage.getItem('str'))
   FetchCameraForAttachment.startCamera()
 }
 
@@ -1869,13 +1859,7 @@ function insertInputsIntoActivity(record, activityStore) {
   }
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    if (imagesInAttachments[i].dataset.empty === 'true') {
-      record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = ''
-
-    } else {
-
       record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
-    }
   }
 
   let sd;
@@ -2229,7 +2213,8 @@ function showSendActivity(evt) {
   sendActivity.classList.remove('hidden');
 }
 
-function toggleActionables(id,editable){
+function toggleActionables(id){
+  console.log(id);
   if(!id) return;
   if(document.getElementById('app-current-panel').dataset.view === 'create') return
   const req =indexedDB.open(firebase.auth().currentUser.uid)
