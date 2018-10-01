@@ -699,39 +699,35 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 }
 
 function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data) {
-  const ul = document.getElementById('data-list--container')
+  const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
   const officeIndex = selectorStore.index('office')
   officeIndex.openCursor(null, 'nextunique').onsuccess = function(event) {
     const cursor = event.target.result
-    if (!cursor) return
-    console.log(cursor.value)
-
-
+    
+    if (!cursor) {
+      insertTemplateByOffice()
+      return;
+    }
+    
+    
     const headline3 = document.createElement('h3')
     headline3.className = 'mdc-list-group__subheader subheader--group-small'
     headline3.textContent = cursor.value.office
-
     const ul = document.createElement('ul')
     ul.className = 'mdc-list'
+    ul.dataset.selection = cursor.value.office
     ul.setAttribute('aria-orientation', 'vertical')
+
+   
 
     grp.appendChild(headline3)
     grp.appendChild(ul)
-
-    officeIndex.openCursor(cursor.value.office).onsuccess = function(event) {
-      const officeCursor = event.target.result
-      if (!officeCursor) return
-      if (officeCursor.value.template !== 'subscription') {
-        ul.appendChild(createGroupList(cursor.value.office, officeCursor.value.template))
-      }
-      officeCursor.continue()
-    }
-
-    cursor.continue()
+    cursor.continue();
   }
-  ul.appendChild(grp)
+  mainUL.appendChild(grp)
+
 
   document.getElementById('selector--search').addEventListener('click', function() {
     initSearchForSelectors('users', activityRecord, data)
@@ -744,6 +740,22 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
     createTempRecord(selectedField.office, selectedField.template, data)
   }
 
+}
+
+function insertTemplateByOffice(){
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db = req.result
+    const subscriotions = db.transaction('subscriptions').objectStore('subscriptions')
+    subscriotions.openCursor().onsuccess = function(event){
+      const cursor = event.target.result
+      if(!cursor) return
+      if(cursor.value.template !== 'Subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
+        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office,cursor.value.template))
+      }
+      cursor.continue()
+    }
+  }
 }
 
 function createTempRecord(office, template, data) {
@@ -1115,7 +1127,7 @@ function createGroupList(office, template) {
 
   const li = document.createElement('li')
   li.className = 'mdc-list-item'
-
+  li.dataset.template = template
   const span = document.createElement('span')
   span.className = 'mdc-list-item__text'
   span.textContent = template.toUpperCase()
@@ -1676,8 +1688,8 @@ function checkRadioInput(inherit, value) {
   const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
   radio['root_'].classList.add('radio-selected')
   radio.checked = true
+  console.log(value)
   radio.value = JSON.stringify(value)
-  console.log(radio.value)
 }
 
 function setFilePath(str,key,show) {

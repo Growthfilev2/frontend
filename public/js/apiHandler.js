@@ -742,7 +742,7 @@ function updateSubscription(db, subscription) {
         subscriptionObjectStore.add(subscription)
         return;
       }
-      subscriptionObjectStore.delete(cursor.primaryKey)
+      cursor.delete()
       subscriptionObjectStore.add(subscription)
     }
 
