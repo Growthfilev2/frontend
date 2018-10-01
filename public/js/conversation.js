@@ -1926,7 +1926,7 @@ function insertInputsIntoActivity(record, activityStore) {
   requiredObject.share = record.assignees
   document.querySelector('header').appendChild(progressBar())
   document.querySelector('#send-activity').classList.add('hidden')
-  requestCreator('create', requiredO\bject)
+  requestCreator('create', requiredObject)
 }
 
 function checkSpacesInString(input){
