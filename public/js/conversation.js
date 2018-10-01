@@ -537,8 +537,12 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      const activityStore = db.transaction('activity').objectStore('activity');
-      activityStore.get(activityRecord.activityId).onsuccess = function(event){
+        if(data.record.create) {
+          fillUsersInSelector(data.record, dialog, data)
+          return 
+        }
+        const activityStore = db.transaction('activity').objectStore('activity');
+        activityStore.get(activityRecord.activityId).onsuccess = function(event){
         const record = event.target.result
         fillUsersInSelector(record, dialog, data)
       }
