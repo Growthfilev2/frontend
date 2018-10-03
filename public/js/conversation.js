@@ -1312,7 +1312,7 @@ function createScheduleTable(data) {
     stDiv.className = 'mdc-text-field start--time'+count
 
     const startTimeInput = document.createElement('input')
-    startTimeInput.value = moment(schedule.startTime || new Date()).format('hh:mm')
+    startTimeInput.value = moment(schedule.startTime || new Date()).format('HH:mm')
     startTimeInput.type = 'time'
     startTimeInput.className = 'time--input'
     startTimeInput.disabled = !data.canEdit
@@ -1343,7 +1343,7 @@ function createScheduleTable(data) {
 
 
     const endTimeInput = document.createElement('input')
-    endTimeInput.value = moment(schedule.endTime || new Date()).format('hh:mm')
+    endTimeInput.value = moment(schedule.endTime || new Date()).format('HH:mm')
     endTimeInput.type = 'time'
     endTimeInput.disabled = !data.canEdit
     endTimeInput.className = 'mdc-text-field__input'
@@ -2159,7 +2159,7 @@ function createTimeInput(value, canEdit, attr) {
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'
-    input.value = value || moment(new Date()).format('hh:mm')
+    input.value =  moment(value || new Date()).format('HH:mm')
   }
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
