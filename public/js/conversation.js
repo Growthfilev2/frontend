@@ -995,7 +995,9 @@ function updateCreateContainer(record) {
     updateBtn.className = 'mdc-fab send--activity-fab'
     updateBtn.setAttribute('aria-label', 'Send')
     updateBtn.id = 'send-activity'
-    updateBtn.classList.add('hidden')
+    if(!record.hasOwnProperty('create')) {
+      updateBtn.classList.add('hidden')
+    }
     const sendIcon = document.createElement('span')
     sendIcon.className = 'mdc-fab__icon material-icons'
     sendIcon.textContent = 'send'
