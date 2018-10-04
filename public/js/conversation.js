@@ -2193,10 +2193,12 @@ function createSelectMenu(key, value, canEdit) {
   const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
   for (var i = 0; i < weekdays.length; i++) {
-
     const option = document.createElement('option')
     option.value = weekdays[i]
     option.textContent = weekdays[i]
+          if(value === weekdays[i]) {
+            option.setAttribute('selected','true')
+          }
 
     select.appendChild(option)
   }

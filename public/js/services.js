@@ -318,7 +318,7 @@ function onErrorMessage(error) {
 
 function handleTimeout() {
   console.log('load now')
-  const TIME_OUT_VALUE = 1000
+  const TIME_OUT_VALUE = 1000000
   const offset = setTimeout(function() {
     requestCreator('Null')
     if (offset) {
