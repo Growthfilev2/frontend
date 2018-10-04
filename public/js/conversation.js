@@ -2107,6 +2107,7 @@ function createNumberInput(value,canEdit){
   input.type = 'number'
   input.style.paddingTop = '0px'
   input.value = value
+  input.setAttribute('onkeypress',"return event.charCode >= 48 && event.charCode <= 57")
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
