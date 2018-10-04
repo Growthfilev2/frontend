@@ -191,6 +191,9 @@ function loadViewFromRoot(response) {
 
   // only for development
   if (response.data.type === 'error') {
+    if(document.querySelector('header .mdc-linear-progress')) {
+      document.querySelector('header .mdc-linear-progress').remove()
+    }
     snacks(response.data.msg)
     return;
   }
