@@ -1076,6 +1076,10 @@ input[type="datetime-local"] {
     width: 100%;
     border-bottom: none;
   }
+
+  .mdc-text-field__input {
+    font-size: 20px;
+  }
   .pac-container {
     margin-left: -21px
   }
