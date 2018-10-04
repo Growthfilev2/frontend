@@ -10,6 +10,7 @@ function conversation(id, pushState) {
 function fetchAddendumForComment(id) {
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
+
   req.onsuccess = function() {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
@@ -128,7 +129,7 @@ function statusChange(db, id) {
   activityStore.get(id).onsuccess = function(event) {
 
     const record = event.target.result;
-    if (!record.canEdit) {
+    if (!record.canEdit || record.status === 'CANCELLED') {
       const statusSpan = document.createElement('span')
       const record = event.target.result
       statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
@@ -1772,7 +1773,6 @@ function createActivityCancellation(record) {
          requestCreator('statusChange', {
           activityId: record.activityId,
            status: 'CANCELLED',
-          
          })
          
         })
