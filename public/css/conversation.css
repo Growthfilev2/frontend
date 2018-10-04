@@ -1360,3 +1360,6 @@ input[type="datetime-local"] {
   background-color: #0399f4;
 }
 
+.undo-deleted {
+  color: #0399f4 !important;
+}

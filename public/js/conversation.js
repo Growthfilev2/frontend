@@ -11,7 +11,7 @@ function fetchAddendumForComment(id) {
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
 
-  req.onsuccess = function() {
+  req.onsuccess = function () {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
     createHeaderContent(db, id)
@@ -20,19 +20,19 @@ function fetchAddendumForComment(id) {
     sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
     let commentDom = ''
-    addendumIndex.openCursor(id).onsuccess = function(event) {
+    addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
         return
       }
-      if(!document.getElementById(cursor.value.addendumId)) {
+      if (!document.getElementById(cursor.value.addendumId)) {
 
-        createComment(db, cursor.value, user).then(function(comment) {
+        createComment(db, cursor.value, user).then(function (comment) {
           document.getElementById('chat-container').appendChild(comment)
         })
-      }  
-      
+      }
+
       cursor.continue()
     }
   }
@@ -91,7 +91,7 @@ function commentPanel(db, id) {
 
   document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
 
-  document.querySelector('.comment-field').oninput = function(evt) {
+  document.querySelector('.comment-field').oninput = function (evt) {
     if (!evt.target.value || evt.target.value === ' ') {
       document.getElementById('send-chat--input').classList.add('hidden')
       document.getElementById('write--comment').style.width = '100%'
@@ -106,10 +106,10 @@ function commentPanel(db, id) {
 
   }
 
-  document.getElementById('send-chat--input').onclick = function() {
+  document.getElementById('send-chat--input').onclick = function () {
     const reqBody = {
       'activityId': id,
-      'comment':document.querySelector('.comment-field').value
+      'comment': document.querySelector('.comment-field').value
     }
 
     requestCreator('comment', reqBody)
@@ -120,13 +120,13 @@ function commentPanel(db, id) {
 }
 
 function statusChange(db, id) {
-   
+
   const label = document.createElement('label')
   label.setAttribute('for', 'toggle-status')
   label.textContent = 'Confirm Completion'
 
   const activityStore = db.transaction('activity').objectStore('activity');
-  activityStore.get(id).onsuccess = function(event) {
+  activityStore.get(id).onsuccess = function (event) {
 
     const record = event.target.result;
     if (!record.canEdit || record.status === 'CANCELLED') {
@@ -137,75 +137,75 @@ function statusChange(db, id) {
       document.querySelector('.status--change-cont').style.textAlign = 'center'
       return
     }
-    if(record.editable == 0) {
+    if (record.editable == 0) {
 
-      document.querySelector('.status--change-cont').innerHTML= label.outerHTML + loader('status-loader').outerHTML;
+      document.querySelector('.status--change-cont').innerHTML = label.outerHTML + loader('status-loader').outerHTML;
       return
     }
-            
-      const div = document.createElement('div')
-      div.className = 'mdc-form-field form-field-status'
-      
-      const checkbox = document.createElement('div')
-      checkbox.className = 'mdc-checkbox'
-      
-      
-      const input = document.createElement("input")
-      input.className = 'mdc-checkbox__native-control'
-      input.id = 'toggle-status'
-      input.type = 'checkbox'
-      
-      const checkbox_bckg = document.createElement('div')
-      checkbox_bckg.className = 'mdc-checkbox__background'
-      
-      const svg = `<svg class="mdc-checkbox__checkmark"
+
+    const div = document.createElement('div')
+    div.className = 'mdc-form-field form-field-status'
+
+    const checkbox = document.createElement('div')
+    checkbox.className = 'mdc-checkbox'
+
+
+    const input = document.createElement("input")
+    input.className = 'mdc-checkbox__native-control'
+    input.id = 'toggle-status'
+    input.type = 'checkbox'
+
+    const checkbox_bckg = document.createElement('div')
+    checkbox_bckg.className = 'mdc-checkbox__background'
+
+    const svg = `<svg class="mdc-checkbox__checkmark"
       viewBox="0 0 24 24">
       <path class="mdc-checkbox__checkmark-path"
       fill="none"
       d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
       </svg>
       <div class="mdc-checkbox__mixedmark"></div>`
-      
-      const mixedmark = document.createElement('div')
-      mixedmark.className = 'mdc-checkbox__mixedmark'
-      checkbox_bckg.innerHTML =svg
-      checkbox.appendChild(input)
-      checkbox.appendChild(checkbox_bckg)
-      
-      div.appendChild(checkbox)
-      
-     
-      document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
-      const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
-      
-      if(record.status === 'CONFIRMED') {
-        switchControl.checked = true
+
+    const mixedmark = document.createElement('div')
+    mixedmark.className = 'mdc-checkbox__mixedmark'
+    checkbox_bckg.innerHTML = svg
+    checkbox.appendChild(input)
+    checkbox.appendChild(checkbox_bckg)
+
+    div.appendChild(checkbox)
+
+
+    document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+    const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
+
+    if (record.status === 'CONFIRMED') {
+      switchControl.checked = true
+    }
+
+    document.querySelector('.mdc-checkbox').onclick = function () {
+      document.querySelector('.form-field-status').classList.add('hidden');
+
+      document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+
+      if (switchControl.checked) {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CONFIRMED'
+        })
+      } else {
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'PENDING'
+        })
       }
-      
-      document.querySelector('.mdc-checkbox').onclick = function() {
-        document.querySelector('.form-field-status').classList.add('hidden');
-        
-        document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
-        
-        if (switchControl.checked) {
-          requestCreator('statusChange', {
-            activityId: record.activityId,
-            status: 'CONFIRMED'
-          })
-        } else {
-          requestCreator('statusChange', {
-            activityId: record.activityId,
-            status: 'PENDING'
-          })
-        }
-      }      
     }
   }
-  
+}
+
 function createComment(db, addendum, currentUser) {
   // console.log(addendum)
   let showMap = false
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     if (document.getElementById(addendum.addendumId)) {
       resolve(document.getElementById(addendum.addendumId).outerHTML)
     }
@@ -221,43 +221,43 @@ function createComment(db, addendum, currentUser) {
     textContainer.classList.add('talktext')
 
     let user = document.createElement('p')
-    user.classList.add('user-name--comment','mdc-typography--subtitle2')
+    user.classList.add('user-name--comment', 'mdc-typography--subtitle2')
 
-    readNameFromNumber(db, addendum.user).then(function(nameOrNumber) {
+    readNameFromNumber(db, addendum.user).then(function (nameOrNumber) {
       // console.log(nameOrNumber)
       user.textContent = nameOrNumber
 
       let comment = document.createElement('p')
-      comment.classList.add('comment','mdc-typography--subtitle2')
+      comment.classList.add('comment', 'mdc-typography--subtitle2')
       comment.textContent = addendum.comment
 
       let commentInfo = document.createElement('span')
       commentInfo.className = 'comment--info'
       const datespan = document.createElement('span')
       datespan.textContent = moment(addendum.timestamp).calendar()
-      datespan.classList.add('comment-date','mdc-typography--caption')
+      datespan.classList.add('comment-date', 'mdc-typography--caption')
 
       const link = document.createElement('div')
       let mapIcon = document.createElement('i')
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
-      
-      link.onclick = function(evt) {
+
+      link.onclick = function (evt) {
         showMap = !showMap;
         const loc = {
-          lat :addendum.location['_latitude'],
-          lng:addendum.location['_longitude']
+          lat: addendum.location['_latitude'],
+          lng: addendum.location['_longitude']
         }
-        maps(evt,showMap,addendum.addendumId,loc) 
+        maps(evt, showMap, addendum.addendumId, loc)
       }
 
       mapIcon.dataset.latitude = addendum.location['_latitude']
       mapIcon.dataset.longitude = addendum.location['_longitude']
       link.appendChild(mapIcon)
 
-      const mapDom  = document.createElement('div')
+      const mapDom = document.createElement('div')
       mapDom.className = 'map-convo'
-      
+
 
       commentInfo.appendChild(datespan)
       commentInfo.appendChild(link)
@@ -273,10 +273,10 @@ function createComment(db, addendum, currentUser) {
 }
 
 function readNameFromNumber(db, number) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     // if (number === firebase.auth().currentUser.phoneNumber) return resolve(firebase.auth().currentUser.displayName)
     const usersObjectStore = db.transaction('users').objectStore('users')
-    usersObjectStore.get(number).onsuccess = function(event) {
+    usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       if (!record) return resolve(number)
       if (!record.displayName) {
@@ -285,75 +285,81 @@ function readNameFromNumber(db, number) {
       }
       return resolve(record.displayName)
     }
-    usersObjectStore.get(number).onerror = function(event) {
+    usersObjectStore.get(number).onerror = function (event) {
       reject(event)
     }
   })
 }
 
-function maps(evt,show,id,location){
-  let selector =  ''
-  evt ? selector =  document.getElementById(id).querySelector('.map-convo') : selector =  document.querySelector(`.map-detail.${id}`)
+function maps(evt, show, id, location) {
+  let selector = ''
+  evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector(`.map-detail.${id}`)
 
   console.log(show)
-  if(!show) {
+  if (!show) {
     selector.style.height = '0px'
     evt ? evt.target.textContent = 'location_on' : ''
-    return    
+    return
   }
 
-  if(selector.children.length !== 0) {
+  if (selector.children.length !== 0) {
     selector.style.height = '200px'
     evt ? evt.target.textContent = 'arrow_drop_down' : ''
     return;
   }
-  
+
   evt ? evt.target.textContent = 'arrow_drop_down' : ''
 
   selector.style.height = '200px'
 
-  const map = new google.maps.Map(selector,
-   {zoom:16,center:location, disableDefaultUI: true});
-  
-   if(!evt) {
+  const map = new google.maps.Map(selector, {
+    zoom: 16,
+    center: location,
+    disableDefaultUI: true
+  });
+
+  if (!evt) {
     var customControlDiv = document.createElement('div');
-    var customControl = new MapsCustomControl(customControlDiv, map,location.lat,location.lng);
+    var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
 
     customControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-   }
+  }
 
-  const marker = new google.maps.Marker({position:location,map:map});
+  const marker = new google.maps.Marker({
+    position: location,
+    map: map
+  });
 
 }
 
-function MapsCustomControl (customControlDiv, map,lat,lng) {
+function MapsCustomControl(customControlDiv, map, lat, lng) {
   var controlUI = document.createElement('div');
 
-        controlUI.style.backgroundColor = '#fff';
-        controlUI.style.border = '2px solid #fff';
-        controlUI.style.borderRadius = '3px';
-        controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-        controlUI.style.cursor = 'pointer';
-        controlUI.style.marginBottom = '22px';
-        controlUI.style.textAlign = 'center';
-        controlUI.style.padding = '0px 5px 0px 5px';
+  controlUI.style.backgroundColor = '#fff';
+  controlUI.style.border = '2px solid #fff';
+  controlUI.style.borderRadius = '3px';
+  controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.marginBottom = '22px';
+  controlUI.style.textAlign = 'center';
+  controlUI.style.padding = '0px 5px 0px 5px';
 
-        customControlDiv.appendChild(controlUI);
+  customControlDiv.appendChild(controlUI);
 
-        // Set CSS for the control interior.
-        var controlText = document.createElement('a');
-        controlText.href = `https://www.google.com/maps?q=${lat},${lng}`
-        controlText.className = 'material-icons'
-        controlText.style.color = 'rgb(25,25,25)';
-        controlText.style.fontSize = '16px';
-        controlText.style.lineHeight = '38px';
-        controlText.style.paddingLeft = '5px';
-        controlText.style.paddingRight = '5px';
-        controlText.style.textDecoration = 'none'
+  // Set CSS for the control interior.
+  var controlText = document.createElement('a');
+  controlText.href = `https://www.google.com/maps?q=${lat},${lng}`
+  controlText.className = 'material-icons'
+  controlText.style.color = 'rgb(25,25,25)';
+  controlText.style.fontSize = '16px';
+  controlText.style.lineHeight = '38px';
+  controlText.style.paddingLeft = '5px';
+  controlText.style.paddingRight = '5px';
+  controlText.style.textDecoration = 'none'
 
-        controlText.innerHTML = 'open_in_new';
-        controlUI.appendChild(controlText);
+  controlText.innerHTML = 'open_in_new';
+  controlUI.appendChild(controlText);
 
 }
 
@@ -376,19 +382,19 @@ function createHeaderContent(db, id) {
   backDiv.appendChild(backIcon)
 
 
-  activityObjectStore.get(id).onsuccess = function(event) {
+  activityObjectStore.get(id).onsuccess = function (event) {
 
 
 
     const record = event.target.result
-    getImageFromNumber(db, record.creator).then(function(uri) {
+    getImageFromNumber(db, record.creator).then(function (uri) {
 
       console.log(uri)
 
       const creatorImg = document.createElement("img")
       creatorImg.className = 'header--icon-creator'
       creatorImg.src = uri
-      creatorImg.setAttribute('onerror','handleImageError(this)');
+      creatorImg.setAttribute('onerror', 'handleImageError(this)');
       backDiv.appendChild(creatorImg);
 
       const primarySpan = document.createElement('div')
@@ -406,11 +412,12 @@ function createHeaderContent(db, id) {
       leftDiv.appendChild(primarySpan)
       header(leftDiv.outerHTML, '')
 
-      document.getElementById('back-conv').addEventListener('click', function() {
+      document.getElementById('back-conv').addEventListener('click', function () {
         backNav()
+
       })
 
-      document.querySelector('.comment-header-primary').addEventListener('click', function() {
+      document.querySelector('.comment-header-primary').addEventListener('click', function () {
         updateCreateActivity(record, true)
       })
     })
@@ -419,22 +426,21 @@ function createHeaderContent(db, id) {
 
 function reinitCount(db, id) {
   const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-  activityCount.get(id).onsuccess = function(event) {
+  activityCount.get(id).onsuccess = function (event) {
     const record = event.target.result
-    if(!record) return;
+    if (!record) return;
     record.count = 0
     activityCount.put(record)
   }
 }
 
 function getImageFromNumber(db, number) {
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
     const userObjStore = db.transaction('users').objectStore('users')
-    userObjStore.get(number).onsuccess = function(event) {
-      if(number === firebase.auth().currentUser.phoneNumber) {
+    userObjStore.get(number).onsuccess = function (event) {
+      if (number === firebase.auth().currentUser.phoneNumber) {
         resolve(firebase.auth().currentUser.photoURL || './img/empty-user.jpg')
-      }
-      else {
+      } else {
         resolve(event.target.result.photoURL || './img/empty-user.jpg')
       }
     }
@@ -499,7 +505,7 @@ function selectorUI(evt, data) {
   aside.appendChild(backdrop)
   document.body.appendChild(aside)
 
-  document.querySelector('.dialog--header-back').addEventListener('click', function(e) {
+  document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
     removeDialog(e)
   })
 
@@ -525,7 +531,7 @@ function initializeSelectorWithData(evt, data) {
   let selectorStore;
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function() {
+  req.onsuccess = function () {
     const db = req.result
     if (data.store === 'map') {
       const objectStore = db.transaction(data.store).objectStore(data.store)
@@ -538,12 +544,12 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-        if(data.record.create) {
-          fillUsersInSelector(data.record, dialog, data)
-          return 
-        }
-        const activityStore = db.transaction('activity').objectStore('activity');
-        activityStore.get(activityRecord.activityId).onsuccess = function(event){
+      if (data.record.create) {
+        fillUsersInSelector(data.record, dialog, data)
+        return
+      }
+      const activityStore = db.transaction('activity').objectStore('activity');
+      activityStore.get(activityRecord.activityId).onsuccess = function (event) {
         const record = event.target.result
         fillUsersInSelector(record, dialog, data)
       }
@@ -565,19 +571,19 @@ function fillUsersInSelector(activityRecord, dialog, data) {
   const alreadyPresntAssigness = {}
   const usersInRecord = activityRecord.assignees
 
-  usersInRecord.forEach(function(user) {
+  usersInRecord.forEach(function (user) {
     alreadyPresntAssigness[user] = ''
   })
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function(){
+  req.onsuccess = function () {
     const db = req.result
     console.log(alreadyPresntAssigness)
-    const selectorStore  = db.transaction('users').objectStore('users');
-    selectorStore.openCursor().onsuccess = function(event) {
+    const selectorStore = db.transaction('users').objectStore('users');
+    selectorStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      
+
       const userRecord = cursor.value
 
       if (data.attachment.present) {
@@ -585,74 +591,74 @@ function fillUsersInSelector(activityRecord, dialog, data) {
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true))
       }
-      
+
       cursor.continue()
     }
-    
-    document.getElementById('selector--search').addEventListener('click', function() {
+
+    document.getElementById('selector--search').addEventListener('click', function () {
       initSearchForSelectors('users', activityRecord, data)
     })
-    
-    dialog['acceptButton_'].onclick = function() {
-      
+
+    dialog['acceptButton_'].onclick = function () {
+
       const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
       console.log(radio)
-      
+
       if (data.attachment.present) {
         console.log("run")
         updateDomFromIDB(activityRecord, {
           hash: '',
           key: data.attachment.key
         }, {
-        primary: JSON.parse(radio.value)
-      })
-      removeDialog()
-      return;
-    }
-    if (activityRecord.hasOwnProperty('create')) {
-      updateDomFromIDB(activityRecord, {
-        hash: 'addOnlyAssignees',
-        // key: data.attachment.key
-      }, {
-        primary: JSON.parse(radio.value)
-      })
+          primary: JSON.parse(radio.value)
+        })
+        removeDialog()
+        return;
+      }
+      if (activityRecord.hasOwnProperty('create')) {
+        updateDomFromIDB(activityRecord, {
+          hash: 'addOnlyAssignees',
+          // key: data.attachment.key
+        }, {
+          primary: JSON.parse(radio.value)
+        })
+        removeDialog()
+        return
+      }
+
+      document.getElementById('assignees--list').appendChild(createSimpleLi('empty'))
+      document.querySelector('#assignees--list').appendChild(loader('user-loader'));
+
+      const reqBody = {
+        'activityId': activityRecord.activityId,
+        'share': [JSON.parse(radio.value)]
+      }
+      requestCreator('share', reqBody)
       removeDialog()
       return
+
     }
-    
-    document.getElementById('assignees--list').appendChild(createSimpleLi('empty'))
-    document.querySelector('#assignees--list').appendChild(loader('user-loader'));
-    
-    const reqBody = {
-      'activityId': activityRecord.activityId,
-      'share': [JSON.parse(radio.value)]
-    }
-    requestCreator('share', reqBody)
-    removeDialog()
-    return
-    
   }
-}
-  
+
 }
 
 function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
   const ul = document.getElementById('data-list--container')
-  selectorStore.openCursor(null, 'nextunique').onsuccess = function(event) {
+  selectorStore.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return
     if (cursor.value.location) {
       ul.appendChild(createVenueLi(cursor.value, false, activityRecord, true));
-     
+
     }
     cursor.continue()
   }
 
-  document.getElementById('selector--search').addEventListener('click', function() {
+  document.getElementById('selector--search').addEventListener('click', function () {
     initSearchForSelectors('map', activityRecord, data)
   })
 
-  dialog['acceptButton_'].onclick = function() {
+  dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
     updateDomFromIDB(activityRecord, {
@@ -672,7 +678,7 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
 function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   const ul = document.getElementById('data-list--container')
   console.log(data)
-  selectorStore.openCursor().onsuccess = function(event) {
+  selectorStore.openCursor().onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
 
@@ -682,11 +688,11 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     cursor.continue()
   }
 
-  document.getElementById('selector--search').addEventListener('click', function() {
+  document.getElementById('selector--search').addEventListener('click', function () {
     initSearchForSelectors('users', activityRecord, data)
   })
 
-  dialog['acceptButton_'].onclick = function() {
+  dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
     updateDomFromIDB(activityRecord, {
@@ -704,15 +710,15 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
   const officeIndex = selectorStore.index('office')
-  officeIndex.openCursor(null, 'nextunique').onsuccess = function(event) {
+  officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
-    
+
     if (!cursor) {
       insertTemplateByOffice()
       return;
     }
-    
-    
+
+
     const headline3 = document.createElement('h3')
     headline3.className = 'mdc-list-group__subheader subheader--group-small'
     headline3.textContent = cursor.value.office
@@ -721,7 +727,7 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
     ul.dataset.selection = cursor.value.office
     ul.setAttribute('aria-orientation', 'vertical')
 
-   
+
 
     grp.appendChild(headline3)
     grp.appendChild(ul)
@@ -730,29 +736,29 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
   mainUL.appendChild(grp)
 
 
-  document.getElementById('selector--search').addEventListener('click', function() {
+  document.getElementById('selector--search').addEventListener('click', function () {
     initSearchForSelectors('users', activityRecord, data)
   })
 
-  dialog['acceptButton_'].onclick = function() {
+  dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
-    document.getElementById('app-current-panel').dataset.view  = 'create'
+    document.getElementById('app-current-panel').dataset.view = 'create'
     createTempRecord(selectedField.office, selectedField.template, data)
   }
 
 }
 
-function insertTemplateByOffice(){
+function insertTemplateByOffice() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function(){
+  req.onsuccess = function () {
     const db = req.result
     const subscriotions = db.transaction('subscriptions').objectStore('subscriptions')
-    subscriotions.openCursor().onsuccess = function(event){
+    subscriotions.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
-      if(!cursor) return
-      if(cursor.value.template !== 'Subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
-        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office,cursor.value.template))
+      if (!cursor) return
+      if (cursor.value.template !== 'Subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
+        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
       }
       cursor.continue()
     }
@@ -762,18 +768,18 @@ function insertTemplateByOffice(){
 function createTempRecord(office, template, data) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function() {
+  req.onsuccess = function () {
     const db = req.result
     const selectorStore = db.transaction('subscriptions').objectStore('subscriptions')
     const officeTemplateCombo = selectorStore.index('officeTemplate')
     const range = IDBKeyRange.only([office, template])
-    officeTemplateCombo.get(range).onsuccess = function(event) {
+    officeTemplateCombo.get(range).onsuccess = function (event) {
       const selectedCombo = event.target.result
       const bareBonesVenue = {}
       const bareBonesVenueArray = []
 
       const bareBonesScheduleArray = []
-      selectedCombo.venue.forEach(function(venue) {
+      selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
 
         bareBonesVenue.venueDescriptor = venue
@@ -787,7 +793,7 @@ function createTempRecord(office, template, data) {
       })
 
       console.log(selectedCombo)
-      selectedCombo.schedule.forEach(function(schedule) {
+      selectedCombo.schedule.forEach(function (schedule) {
         const bareBonesSchedule = {}
         bareBonesSchedule.name = schedule
         bareBonesSchedule.startTime = ''
@@ -809,8 +815,8 @@ function createTempRecord(office, template, data) {
       }
 
       removeDialog()
-      updateCreateActivity(bareBonesRecord,true)
-      
+      updateCreateActivity(bareBonesRecord, true)
+
     }
   }
 }
@@ -820,14 +826,14 @@ function createTempRecord(office, template, data) {
 function hasAnyValueInChildren(office, template, status) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  return new Promise(function(resolve) {
+  return new Promise(function (resolve) {
 
-    req.onsuccess = function() {
+    req.onsuccess = function () {
       const db = req.result
       const childrenStore = db.transaction('children').objectStore('children')
       let count = 0;
       let result = false
-      childrenStore.openCursor().onsuccess = function(event) {
+      childrenStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
           if (count === 0) {
@@ -854,7 +860,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function(event) {
+  req.onsuccess = function (event) {
 
     let updatedActivity = activityRecord;
 
@@ -906,7 +912,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
 function updateVenue(updatedActivity, attr, data) {
 
-  updatedActivity.venue.forEach(function(field) {
+  updatedActivity.venue.forEach(function (field) {
     if (field.venueDescriptor === attr.key) {
       field.location = data.primary
       field.address = data.secondary.address
@@ -949,7 +955,7 @@ function updateCreateContainer(record) {
   header(leftHeaderContent.outerHTML, '')
 
 
-  document.getElementById('backToConv').addEventListener('click', function() {
+  document.getElementById('backToConv').addEventListener('click', function () {
     backNav()
   })
 
@@ -996,7 +1002,7 @@ function updateCreateContainer(record) {
     updateBtn.className = 'mdc-fab send--activity-fab'
     updateBtn.setAttribute('aria-label', 'Send')
     updateBtn.id = 'send-activity'
-    if(!record.hasOwnProperty('create')) {
+    if (!record.hasOwnProperty('create')) {
       updateBtn.classList.add('hidden')
     }
     const sendIcon = document.createElement('span')
@@ -1011,20 +1017,20 @@ function updateCreateContainer(record) {
 function updateCreateActivity(record, pushState) {
 
   if (pushState) {
-    history.pushState(['updateCreateActivity',record], null, null)
+    history.pushState(['updateCreateActivity', record], null, null)
   }
 
   //open indexedDB
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function() {
+  req.onsuccess = function () {
     const db = req.result
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     appView.innerHTML = updateCreateContainer(record).outerHTML
-    
- 
+
+
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {
       office: record.office,
@@ -1032,7 +1038,7 @@ function updateCreateActivity(record, pushState) {
     }))
 
     if (document.getElementById('send-activity')) {
-      document.getElementById('send-activity').addEventListener('click', function() {
+      document.getElementById('send-activity').addEventListener('click', function () {
         sendActivity(record)
       })
     }
@@ -1045,7 +1051,7 @@ function updateCreateActivity(record, pushState) {
 
     const inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
-      inputFields[i].addEventListener('input', function(e) {
+      inputFields[i].addEventListener('input', function (e) {
         if (document.getElementById('send-activity').classList.contains('hidden')) {
           document.getElementById('send-activity').classList.remove('hidden')
         }
@@ -1068,7 +1074,7 @@ function updateCreateActivity(record, pushState) {
       });
     }
 
-    
+
     createAssigneeList(db, record, true)
 
     createActivityCancellation(record);
@@ -1103,14 +1109,14 @@ function createSimpleLi(key, data) {
 
     listItem.textContent = data
     listItem.appendChild(metaInput)
-    listItem.onclick = function() {
+    listItem.onclick = function () {
 
       checkRadioInput(this, {
         name: data
       })
     }
   }
-  if(key === 'delete') {
+  if (key === 'delete') {
     dataVal.className = 'mdc-list-item__graphic material-icons'
     dataVal.textContent = key
     listItemLabel.classList.remove('detail--static-text')
@@ -1119,8 +1125,30 @@ function createSimpleLi(key, data) {
     listItem.appendChild(dataVal)
     listItem.appendChild(listItemLabel)
   }
-  if(key === 'empty'){
+  if (key === 'empty') {
     listItem.dataset.prop = 'delete'
+  }
+  if (key === 'undo-deleted') {
+    dataVal.className = 'mdc-list-item__graphic material-icons'
+    dataVal.textContent = 'delete'
+    listItemLabel.classList.remove('detail--static-text')
+    listItemLabel.classList.add('delete-activity')
+
+    listItemLabel.textContent = data.text
+    listItem.appendChild(dataVal)
+    listItem.appendChild(listItemLabel)
+    const undo = document.createElement('button')
+    undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
+    undo.textContent = 'Undo'
+    undo.onclick = function () {
+
+      requestCreator('statusChange', {
+        activityId: data.id,
+        status: 'PENDING'
+      })
+    }
+    listItem.appendChild(undo)
+
   }
 
   return listItem
@@ -1138,7 +1166,7 @@ function createGroupList(office, template) {
   const metaInput = document.createElement('span')
   metaInput.className = 'mdc-list-item__meta'
   metaInput.appendChild(createRadioInput())
-  li.onclick = function() {
+  li.onclick = function () {
     checkRadioInput(this, {
       office: office,
       template: template
@@ -1153,7 +1181,7 @@ function createVenueSection(record) {
   console.log(record)
   const venueSection = document.getElementById('venue--list')
 
-  record.venue.forEach(function(venue) {
+  record.venue.forEach(function (venue) {
     venueSection.appendChild(createVenueLi(venue, true, record))
     const mapDom = document.createElement('div');
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
@@ -1199,22 +1227,22 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     primarySpan.appendChild(listItemLabel)
     primarySpan.appendChild(dataValue)
     textSpan.appendChild(primarySpan)
-    
-    textSpan.onclick = function(evt){
+
+    textSpan.onclick = function (evt) {
       showMap = !showMap
 
       const loc = {
-        lat : venue.geopoint['_latitude'],
+        lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       }
 
-      maps('',showMap, convertKeyToId(venue.venueDescriptor),loc)
+      maps('', showMap, convertKeyToId(venue.venueDescriptor), loc)
     }
 
     if (record.canEdit) {
       selectorIcon.setAttribute('aria-hidden', 'true')
       selectorIcon.appendChild(addLocation)
-      addLocation.onclick = function(evt) {
+      addLocation.onclick = function (evt) {
         selectorUI(evt, {
           record: record,
           store: 'map',
@@ -1237,7 +1265,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   if (showMetaInput) {
 
     metaInput.appendChild(createRadioInput())
-    listItem.onclick = function() {
+    listItem.onclick = function () {
       console.log(venue)
       checkRadioInput(this, {
         location: venue.location,
@@ -1261,7 +1289,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
     listItem.appendChild(selectorIcon)
-   
+
   }
 
   return listItem
@@ -1277,8 +1305,8 @@ function createScheduleTable(data) {
 
 
 
-  let count =0;
-  data.schedule.forEach(function(schedule) {
+  let count = 0;
+  data.schedule.forEach(function (schedule) {
     count++
     console.log(schedule.startTime)
     const scheduleName = document.createElement('h5')
@@ -1296,10 +1324,10 @@ function createScheduleTable(data) {
     startLi.className = 'mdc-list-item'
 
     const sdDiv = document.createElement('div')
-    sdDiv.className = 'mdc-text-field start--date'+count
+    sdDiv.className = 'mdc-text-field start--date' + count
 
     const startDateInput = document.createElement('input')
-    startDateInput.value =  moment(schedule.startTime || new Date()).format('YYYY-MM-DD')
+    startDateInput.value = moment(schedule.startTime || new Date()).format('YYYY-MM-DD')
     startDateInput.type = 'date'
     startDateInput.disabled = !data.canEdit
     startDateInput.className = 'mdc-text-field__input'
@@ -1310,7 +1338,7 @@ function createScheduleTable(data) {
     stSpan.className = 'mdc-list-item__meta'
 
     const stDiv = document.createElement('div')
-    stDiv.className = 'mdc-text-field start--time'+count
+    stDiv.className = 'mdc-text-field start--time' + count
 
     const startTimeInput = document.createElement('input')
     startTimeInput.value = moment(schedule.startTime || new Date()).format('HH:mm')
@@ -1327,7 +1355,7 @@ function createScheduleTable(data) {
     endLi.className = 'mdc-list-item'
 
     const edDiv = document.createElement('div')
-    edDiv.className = 'mdc-text-field end--date'+count
+    edDiv.className = 'mdc-text-field end--date' + count
 
     const endDateInput = document.createElement('input')
     endDateInput.value = moment(schedule.endTime || new Date()).format('YYYY-MM-DD')
@@ -1340,7 +1368,7 @@ function createScheduleTable(data) {
     etSpan.className = 'mdc-list-item__meta'
 
     const etDiv = document.createElement('div')
-    etDiv.className = 'mdc-text-field end--time'+count
+    etDiv.className = 'mdc-text-field end--time' + count
 
 
     const endTimeInput = document.createElement('input')
@@ -1371,9 +1399,9 @@ function createScheduleTable(data) {
 
 function createAttachmentContainer(data) {
 
-  const ordering = ['Name', 'Template','email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
+  const ordering = ['Name', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
 
-  ordering.forEach(function(order) {
+  ordering.forEach(function (order) {
     const group = document.createElement("div")
     group.className = `${order}--group`
     document.getElementById('attachment--list').appendChild(group)
@@ -1385,12 +1413,12 @@ function createAttachmentContainer(data) {
     'HH:MM': '',
     'string': '',
     'base64': '',
-    'number' : '',
-    'email':''
+    'number': '',
+    'email': ''
   }
 
 
-  Object.keys(data.attachment).forEach(function(key) {
+  Object.keys(data.attachment).forEach(function (key) {
 
     const div = document.createElement('div')
     div.className = `attachment-field ${data.attachment[key].type}`
@@ -1407,7 +1435,7 @@ function createAttachmentContainer(data) {
     if (key === 'Name') {
       div.appendChild(label)
       const required = true
-      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key,required))
+      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key, required))
     }
 
     if (data.attachment[key].type === 'string' && key !== 'Name') {
@@ -1417,14 +1445,14 @@ function createAttachmentContainer(data) {
 
     }
 
-    if(data.attachment[key].type === 'number') {
+    if (data.attachment[key].type === 'number') {
       div.appendChild(label)
-      div.appendChild(createNumberInput(data.attachment[key].value,data.canEdit))
+      div.appendChild(createNumberInput(data.attachment[key].value, data.canEdit))
     }
 
-    if(data.attachment[key].type === 'email') {
+    if (data.attachment[key].type === 'email') {
       div.appendChild(label)
-      div.appendChild(createEmailInput(data.attachment[key].value,data.canEdit))
+      div.appendChild(createEmailInput(data.attachment[key].value, data.canEdit))
     }
 
     if (data.attachment[key].type === 'phoneNumber') {
@@ -1441,7 +1469,7 @@ function createAttachmentContainer(data) {
       dataVal.dataset.primary = ''
       if (data.canEdit) {
         div.appendChild(addButton)
-        addButton.onclick = function(evt) {
+        addButton.onclick = function (evt) {
           selectorUI(evt, {
             record: data,
             store: 'users',
@@ -1469,7 +1497,7 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
       div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
-      
+
     }
 
     if (data.attachment[key].type === 'base64') {
@@ -1484,18 +1512,18 @@ function createAttachmentContainer(data) {
 
       const imagePreview = document.createElement('ul')
       imagePreview.className = 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
-      
-      imagePreview.appendChild(setFilePath(data.attachment[key].value,key,true))
 
-     
+      imagePreview.appendChild(setFilePath(data.attachment[key].value, key, true))
+
+
       div.appendChild(imagePreview)
-    
+
 
       if (data.canEdit) {
 
         div.appendChild(addCamera)
         div.appendChild(imagePreview);
-        addCamera.onclick = function() {
+        addCamera.onclick = function () {
           readCameraFile()
         }
       }
@@ -1517,12 +1545,12 @@ function createAttachmentContainer(data) {
       div.appendChild(valueField)
       // div.appendChild(createInput(key, data.attachment[key].type, 'attachment', true))
       if (data.canEdit) {
-        hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function(hasValue) {
+        hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
           if (hasValue) {
             console.log(hasValue)
             div.appendChild(addButtonName);
             div.classList.add('selector--margin')
-            addButtonName.onclick = function(evt) {
+            addButtonName.onclick = function (evt) {
               valueField.dataset.primary = ''
               selectorUI(evt, {
                 record: data,
@@ -1577,7 +1605,7 @@ function createAssigneeList(db, record, showLabel) {
     labelButton.className = 'mdc-list-item__meta'
     const addButton = document.createElement('div')
     addButton.className = 'mdc-fab add--assignee-icon'
-    addButton.onclick = function(evt) {
+    addButton.onclick = function (evt) {
       selectorUI(evt, {
         record: record,
         store: 'users',
@@ -1604,8 +1632,8 @@ function createAssigneeList(db, record, showLabel) {
 
 function readNameAndImageFromNumber(assignees, db) {
   const userObjStore = db.transaction('users').objectStore('users')
-  assignees.forEach(function(assignee) {
-    userObjStore.get(assignee).onsuccess = function(event) {
+  assignees.forEach(function (assignee) {
+    userObjStore.get(assignee).onsuccess = function (event) {
       const userRecord = event.target.result
 
       document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
@@ -1626,7 +1654,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   } else {
     photoGraphic.src = userRecord.photoURL || './img/empty-user.jpg'
   }
-  photoGraphic.setAttribute('onerror','handleImageError(this)')
+  photoGraphic.setAttribute('onerror', 'handleImageError(this)')
 
   const assigneeListText = document.createElement('span')
   assigneeListText.classList.add('mdc-list-item__text')
@@ -1651,7 +1679,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   if (showMetaInput) {
 
     metaInput.appendChild(createRadioInput())
-    assigneeLi.onclick = function() {
+    assigneeLi.onclick = function () {
       checkRadioInput(this, assigneeLi.dataset.value)
     }
   }
@@ -1695,8 +1723,8 @@ function checkRadioInput(inherit, value) {
   radio.value = JSON.stringify(value)
 }
 
-function setFilePath(str,key,show) {
-  if(document.querySelector('.image--list-li')) {
+function setFilePath(str, key, show) {
+  if (document.querySelector('.image--list-li')) {
     document.getElementById('attachment-picture').src = `data:image/jpeg;base64,${str}`
     document.getElementById('send-activity').classList.remove('hidden')
     return
@@ -1710,14 +1738,13 @@ function setFilePath(str,key,show) {
   img.className = 'profile-container--main mdc-image-list__image '
   img.id = 'attachment-picture'
   img.dataset.photoKey = key
-  img.setAttribute('onerror','handleImageErrorAttachment(this)')
-  if(!str) {
+  img.setAttribute('onerror', 'handleImageErrorAttachment(this)')
+  if (!str) {
     img.src = './img/placeholder.png'
-  }
-  else {
+  } else {
     img.src = str;
   }
-  img.onclick = function(){
+  img.onclick = function () {
     openImage(this.src)
   }
   container.appendChild(img)
@@ -1727,15 +1754,15 @@ function setFilePath(str,key,show) {
   textCont.className = 'mdc-image-list__supporting'
 
   const span = document.createElement('span')
-  span.textContent = key 
+  span.textContent = key
   span.className = 'mdc-image-list__label'
   span.id = 'label--image'
   textCont.appendChild(span)
   li.appendChild(textCont)
-  if(show) return li
+  if (show) return li
 
 
-  
+
 }
 
 function readCameraFile() {
@@ -1753,44 +1780,68 @@ function openImage(imageSrc) {
 }
 
 function createActivityCancellation(record) {
-
   const StautsCont = document.createElement('div')
   StautsCont.className = 'status--cancel-cont'
 
-  if (record.canEdit && !record.hasOwnProperty('create')) {
-    
-    StautsCont.appendChild(createSimpleLi('delete',{text:'Delete Activity'}))
+  if (record.hasOwnProperty('create')) return
 
-  
+  if (!record.canEdit) {
+    // StautsCont.appendChild(createSimpleLi('delete',{text:'Deleted'}))
+    // document.querySelector('.update-create--activity').appendChild(StautsCont);
+    return
+  }
+
+  if (record.status === 'CANCELLED') {
+    StautsCont.appendChild(createSimpleLi('undo-deleted', {
+      text: 'Deleted',
+      id: record.activityId
+    }))
+
     document.querySelector('.update-create--activity').appendChild(StautsCont);
-    if(!document.getElementById('cancel-alert')) {
+    const undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'))
+
+    return
+  }
+  if (record.status !== 'CANCELLED') {
+
+    StautsCont.appendChild(createSimpleLi('delete', {
+      text: 'Delete Activity'
+    }))
+
+
+    document.querySelector('.update-create--activity').appendChild(StautsCont);
+    if (!document.getElementById('cancel-alert')) {
       cancelAlertDialog()
     }
+
+
+
+
+
+
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
-    
-        dialog.listen('MDCDialog:accept', function() {
-        
-         requestCreator('statusChange', {
-          activityId: record.activityId,
-           status: 'CANCELLED',
-         })
-         
-        })
-        
-        dialog.listen('MDCDialog:cancel', function() {
-          console.log('canceled');
-        })
+    document.getElementById('delete-allow').onclick = function(){
+      requestCreator('statusChange', {
+        activityId: record.activityId,
+        status: 'CANCELLED',
+      })
+
+    }
+  
+    dialog.listen('MDCDialog:cancel', function () {
+      console.log('canceled');
+    })
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
       dialog.lastFocusedTarget = evt.target;
       dialog.show();
     })
-    
-    
-   }
-    
+
+
+  }
+
 }
 
-function cancelAlertDialog(){
+function cancelAlertDialog() {
   const aside = document.createElement('aside')
   aside.className = 'mdc-dialog'
   aside.id = 'cancel-alert'
@@ -1810,6 +1861,7 @@ function cancelAlertDialog(){
   accept.type = 'button'
   accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept delete-btn'
   accept.textContent = 'Delete'
+  accept.id = 'delete-allow'
 
   const cancel = document.createElement('button')
   cancel.type = 'button'
@@ -1826,7 +1878,7 @@ function cancelAlertDialog(){
   aside.appendChild(backdrop)
   document.body.appendChild(aside)
 
- 
+
 }
 
 
@@ -1840,11 +1892,11 @@ function sendActivity(record) {
 
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function(event) {
+  req.onsuccess = function (event) {
     const db = req.result
     const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
 
-    activityStore.get(record.activityId).onsuccess = function(event) {
+    activityStore.get(record.activityId).onsuccess = function (event) {
       const record = event.target.result
       insertInputsIntoActivity(record, activityStore)
     }
@@ -1861,17 +1913,29 @@ function insertInputsIntoActivity(record, activityStore) {
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
     let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
- 
-    if(allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
+
+    if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
       snacks('Please provide an input for the field “Name” ')
       return;
-    } 
+    }
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
-  
   }
+
+  const allNumberTypes = document.querySelectorAll('.number')
+  for (var i = 0; i < allNumberTypes.length; i++) {
+    let inputValue = allNumberTypes[i].querySelector('.mdc-text-field__input').value
+    record.attachment[convertIdToKey(allNumberTypes[i].id)].value = inputValue
+  }
+
+  const allEmailTypes = document.querySelectorAll('.email')
+  for (var i = 0; i < allEmailTypes.length; i++) {
+    let inputValue = allEmailTypes[i].querySelector('.mdc-text-field__input').value
+    record.attachment[convertIdToKey(allEmailTypes[i].id)].value = inputValue
+  }
+
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-      record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
+    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
   }
 
   let sd;
@@ -1879,38 +1943,38 @@ function insertInputsIntoActivity(record, activityStore) {
   let ed;
   let et
   let allow = true;
-  for (var i = 1; i < record.schedule.length +1; i++) {
+  for (var i = 1; i < record.schedule.length + 1; i++) {
 
-    sd = getInputText('.start--date'+i).value
-    st = getInputText('.start--time'+i).value
-    ed = getInputText('.end--date'+i).value
-    et = getInputText('.end--time'+i).value
+    sd = getInputText('.start--date' + i).value
+    st = getInputText('.start--time' + i).value
+    ed = getInputText('.end--date' + i).value
+    et = getInputText('.end--time' + i).value
 
-    console.log(concatDateWithTime(sd,st))
+    console.log(concatDateWithTime(sd, st))
 
-    if(!concatDateWithTime(sd,st)  && !concatDateWithTime(ed,et)){
+    if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
       snacks('Please Select A Start Date and End Date')
       return
     }
 
-    if(sd === "") {
+    if (sd === "") {
       snacks('Please Select a Start Date')
       return;
     }
-    if(ed === "") {
+    if (ed === "") {
       snacks('Please Select an End Date')
       return;
     }
 
 
-    if (concatDateWithTime(ed,et) < concatDateWithTime(sd,st)) {
+    if (concatDateWithTime(ed, et) < concatDateWithTime(sd, st)) {
       snacks('The End Date and Time should be greater or equal to the start time')
       return;
     }
-      record.schedule[i-1].startTime = concatDateWithTime(sd, st) || ''
-      record.schedule[i-1].endTime = concatDateWithTime(ed, et) || ''
+    record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
+    record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
   }
-  
+
   for (var i = 0; i < record.venue.length; i++) {
     record.venue[i].geopoint = {
       latitude: record.venue[i].geopoint['_latitude'],
@@ -1943,8 +2007,8 @@ function insertInputsIntoActivity(record, activityStore) {
   requestCreator('create', requiredObject)
 }
 
-function checkSpacesInString(input){
-  if(!input.replace(/\s/g,'').length) return true
+function checkSpacesInString(input) {
+  if (!input.replace(/\s/g, '').length) return true
   return false
 }
 
@@ -2007,7 +2071,7 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
   document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '100vw'
   document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '100vh'
 
-  autocomplete.addListener('place_changed', function() {
+  autocomplete.addListener('place_changed', function () {
     let place = autocomplete.getPlace();
 
     if (!place.geometry) {
@@ -2024,7 +2088,7 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
         (place.address_components[2] && place.address_components[2].short_name || '')
       ].join(' ');
     }
-    
+
     console.log(address)
     const selectedAreaAttributes = {
       primary: place.name,
@@ -2052,7 +2116,7 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
   })
 }
 
-function createSimpleInput(value, canEdit, withIcon, key,required) {
+function createSimpleInput(value, canEdit, withIcon, key, required) {
 
   if (!canEdit) {
     const onlyText = document.createElement('span')
@@ -2093,8 +2157,8 @@ function createSimpleInput(value, canEdit, withIcon, key,required) {
   return textField
 }
 
-function createNumberInput(value,canEdit){
-  if(!canEdit) {
+function createNumberInput(value, canEdit) {
+  if (!canEdit) {
     const simeplText = document.createElement('span')
     simeplText.className = 'data--value-list'
     simeplText.textContent = value
@@ -2107,18 +2171,18 @@ function createNumberInput(value,canEdit){
   input.type = 'number'
   input.style.paddingTop = '0px'
   input.value = value
-  input.setAttribute('onkeypress',"return event.charCode >= 48 && event.charCode <= 57")
+  input.setAttribute('onkeypress', "return event.charCode >= 48 && event.charCode <= 57")
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
   textField.appendChild(input)
   textField.appendChild(ripple)
- 
+
   return textField
 }
 
-function createEmailInput(value,canEdit) {
-  if(!canEdit) {
+function createEmailInput(value, canEdit) {
+  if (!canEdit) {
     const simeplText = document.createElement('span')
     simeplText.className = 'data--value-list'
     simeplText.textContent = value
@@ -2136,9 +2200,10 @@ function createEmailInput(value,canEdit) {
 
   textField.appendChild(input)
   textField.appendChild(ripple)
- 
+
   return textField
 }
+
 function createTimeInput(value, canEdit, attr) {
   if (!canEdit) {
     const simeplText = document.createElement('span')
@@ -2160,7 +2225,7 @@ function createTimeInput(value, canEdit, attr) {
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'
-    input.value =  moment(value || new Date()).format('HH:mm')
+    input.value = moment(value || new Date()).format('HH:mm')
   }
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
@@ -2197,9 +2262,9 @@ function createSelectMenu(key, value, canEdit) {
     const option = document.createElement('option')
     option.value = weekdays[i]
     option.textContent = weekdays[i]
-          if(value === weekdays[i]) {
-            option.setAttribute('selected','true')
-          }
+    if (value === weekdays[i]) {
+      option.setAttribute('selected', 'true')
+    }
 
     select.appendChild(option)
   }
@@ -2220,40 +2285,40 @@ function createSelectMenu(key, value, canEdit) {
 function showSendActivity(evt) {
   console.log(evt)
   const sendActivity = document.getElementById('send-activity')
-  const rect1 =sendActivity.getBoundingClientRect();
-  const rect2 =  document.querySelector('.status--cancel-cont').getBoundingClientRect()
-  var isOverlap = !(rect1.right < rect2.left || 
-    rect1.left > rect2.right || 
-    rect1.bottom < rect2.top || 
+  const rect1 = sendActivity.getBoundingClientRect();
+  const rect2 = document.querySelector('.status--cancel-cont').getBoundingClientRect()
+  var isOverlap = !(rect1.right < rect2.left ||
+    rect1.left > rect2.right ||
+    rect1.bottom < rect2.top ||
     rect1.top > rect2.bottom)
-    console.log(isOverlap)
-  if(isOverlap) {
+  console.log(isOverlap)
+  if (isOverlap) {
     sendActivity.classList.add('hidden')
     return
   }
   sendActivity.classList.remove('hidden');
 }
 
-function toggleActionables(id){
+function toggleActionables(id) {
   console.log(id);
-  if(!id) return;
-  if(document.getElementById('app-current-panel').dataset.view === 'create') return
-  const req =indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function(){
+  if (!id) return;
+  if (document.getElementById('app-current-panel').dataset.view === 'create') return
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
     const db = req.result
     const activityStore = db.transaction('activity').objectStore('activity')
-    activityStore.get(id).onsuccess = function(event){
+    activityStore.get(id).onsuccess = function (event) {
       const record = event.target.result
-      const actions =  document.querySelectorAll('.mdc-fab')
- 
-        if(record.editable) {
-          if(document.querySelector('.loader')) {
-            document.querySelector('.loader').remove()
-          }
-          if(document.querySelector('.progress--update')){
-            document.querySelector('.progress--update').remove()
-          }
-        }        
+      const actions = document.querySelectorAll('.mdc-fab')
+
+      if (record.editable) {
+        if (document.querySelector('.loader')) {
+          document.querySelector('.loader').remove()
+        }
+        if (document.querySelector('.progress--update')) {
+          document.querySelector('.progress--update').remove()
+        }
+      }
     }
   }
 }

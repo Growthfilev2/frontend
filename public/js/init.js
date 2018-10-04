@@ -48,19 +48,8 @@ function userSignedOut() {
   document.body.appendChild(login)
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
-  firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-  .then(function() {
- 
-    // DOM element to insert firebaseui login UI
-    ui.start('#login-container', firebaseUiConfig())
-  })
-  .catch(function(error) {
-    // Handle Errors here.
-    var errorCode = error.code;
-    var errorMessage = error.message;
-    console.log(errorCode)
-    console.log(errorMessage)
-  });
+  ui.start('#login-container', firebaseUiConfig())
+  
   
 }
 

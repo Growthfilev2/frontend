@@ -99,9 +99,15 @@ function snacks(message,type) {
 
   const data = {
     message: message,
-    actionText: type ? type : 'OK',
+    actionText: type ? type.btn : 'OK',
     timeout: 10000,
     actionHandler: function() {
+      if(type) {
+        requestCreator('statusChange',{
+          activityId:type.id,
+          status:'PENDING'
+        })
+      }
     }
   }
 
@@ -194,6 +200,7 @@ function loadViewFromRoot(response) {
     if(document.querySelector('header .mdc-linear-progress')) {
       document.querySelector('header .mdc-linear-progress').remove()
     }
+    
     snacks(response.data.msg)
     return;
   }
@@ -266,18 +273,11 @@ function loadViewFromRoot(response) {
       return;
     }
 
-    if(response.data.type === 'delete-succes') {
-      const activityObjectStore = db.transaction('activity').objectStore('activity')
-      activityObjectStore.get(response.data.dbName.id).onsuccess = function(event){
-        const record = event.target.result
-        snacks(`${record.activityName} has been deleted`,'Undo')
-        listView()
-        return;
-      }
+    if(response.data.type === 'redirect-to-list') {
+     history.pushState(['listView'],null,null)
+     return
     }
 
-
- 
     if(!history.state) {
       setTimeout(function(){
         window["listView"]()

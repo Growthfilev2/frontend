@@ -52,6 +52,7 @@ function fetchDataForActivityList(db) {
         })
       }
     }
+    
      else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice && cursor.value.status !== 'CANCELLED') {
        count++
 
@@ -170,8 +171,8 @@ function activityListUI(data, metaData,append) {
     lastComment.textContent = `${metaData.commentUser} : ${metaData.comment}`
   } else {
     lastComment.textContent = `${metaData.comment}`
-
   }
+
   leftTextContainer.appendChild(activityNameText)
   leftTextContainer.appendChild(lastComment)
 

@@ -53,10 +53,10 @@ function requestHandlerResponse(type, code, message, dbName, params) {
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     console.log(auth)
-    if (!auth) {
-      requestHandlerResponse('loggedOut', '200', 'user logged out')
-      return void(0)
-    }
+    // if (!auth) {
+    //   requestHandlerResponse('loggedOut', '200', 'user logged out')
+    //   return void(0)
+    // }
 
     if (event.data.body.hasOwnProperty('firstTime')) {
       requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
@@ -419,7 +419,7 @@ function create(body) {
       .then(function (success) {
         requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
 
-        requestHandlerResponse('create-success', 200, 'activity created successfully', firebase.auth().currentUser.uid)
+        requestHandlerResponse('redirect-to-list', 200, 'activity created successfully', firebase.auth().currentUser.uid)
         resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {
@@ -475,11 +475,10 @@ function instantUpdateDB(dbName, data, type) {
     }
     objStoreTx.oncomplete = function () {
 
-      if (type === 'status' && data[type] === 'CANCELLED') {
-        requestHandlerResponse('delete-succes', 200, 'activity delete', {
-          id: data.activityId
-        })
+      if (type === 'status') {
+        requestHandlerResponse('redirect-to-list', 200, 'activity status changed')
       }
+
     }
   }
 }
@@ -914,7 +913,6 @@ function updateIDB(dbName, launchedFromAnotherReq) {
             `${apiUrl}read?from=${root.target.result.fromTime}`
           )
           .then(function (response) {
-            if (response.activities.length == 0 && response.addendum.length == 0 && response.templates.length == 0) return
         
             successResponse(response, launchedFromAnotherReq)
           })
