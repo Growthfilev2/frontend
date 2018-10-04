@@ -1888,25 +1888,25 @@ function insertInputsIntoActivity(record, activityStore) {
 
     console.log(concatDateWithTime(sd,st))
 
-    // if(!concatDateWithTime(sd,st)  && !concatDateWithTime(ed,et)){
-    //   snacks('Please Select A Start Date and End Date')
-    //   return
-    // }
+    if(!concatDateWithTime(sd,st)  && !concatDateWithTime(ed,et)){
+      snacks('Please Select A Start Date and End Date')
+      return
+    }
 
-    // if(sd === "") {
-    //   snacks('Please Select a Start Date')
-    //   return;
-    // }
-    // if(ed === "") {
-    //   snacks('Please Select an End Date')
-    //   return;
-    // }
+    if(sd === "") {
+      snacks('Please Select a Start Date')
+      return;
+    }
+    if(ed === "") {
+      snacks('Please Select an End Date')
+      return;
+    }
 
 
-    // if (concatDateWithTime(ed,et) < concatDateWithTime(sd,st)) {
-    //   snacks('The End Date and Time should be greater or equal to the start time')
-    //   return;
-    // }
+    if (concatDateWithTime(ed,et) < concatDateWithTime(sd,st)) {
+      snacks('The End Date and Time should be greater or equal to the start time')
+      return;
+    }
       record.schedule[i-1].startTime = concatDateWithTime(sd, st) || ''
       record.schedule[i-1].endTime = concatDateWithTime(ed, et) || ''
   }
