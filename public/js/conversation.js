@@ -122,7 +122,7 @@ function statusChange(db, id) {
    
   const label = document.createElement('label')
   label.setAttribute('for', 'toggle-status')
-  label.textContent = 'Mark Complete'
+  label.textContent = 'Confirm Completion'
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function(event) {
