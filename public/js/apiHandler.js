@@ -53,10 +53,10 @@ function requestHandlerResponse(type, code, message, dbName, params) {
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     console.log(auth)
-    // if (!auth) {
-    //   requestHandlerResponse('loggedOut', '200', 'user logged out')
-    //   return void(0)
-    // }
+    if (!auth) {
+      requestHandlerResponse('loggedOut', '200', 'user logged out')
+      return void(0)
+    }
 
     if (event.data.body.hasOwnProperty('firstTime')) {
       requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)

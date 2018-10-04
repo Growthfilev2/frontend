@@ -1,3 +1,7 @@
+function getDeviceId(dId){
+localStorage.setItem('deviceId',dId)
+}
+
 firebase.initializeApp({
   apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
   authDomain: 'growthfile-207204.firebaseapp.com',
