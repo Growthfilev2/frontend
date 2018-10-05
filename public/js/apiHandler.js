@@ -36,7 +36,8 @@ const requestFunctionCaller = {
   updateUserNumber: updateUserNumber,
   update: update,
   create: create,
-  Null: Null
+  Null: Null,
+  now:fetchServerTime
 }
 
 function requestHandlerResponse(type, code, message, dbName, params) {
@@ -53,29 +54,11 @@ function requestHandlerResponse(type, code, message, dbName, params) {
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     console.log(auth)
-    if (!auth) {
-      requestHandlerResponse('loggedOut', '200', 'user logged out')
-      return void(0)
-    }
-
-    if (event.data.body.hasOwnProperty('firstTime')) {
-      requestHandlerResponse('setLocalStorage', '200', 'user logged in', firebase.auth().currentUser.uid)
-
-      requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+    if(event.data.type === 'now') {
+      fetchServerTime()
       return
     }
-
-    if (event.data.body.hasOwnProperty('share')) {
-      requestFunctionCaller[event.data.type](event.data.body).then(function (uid) {
-        updateIDB(uid, {
-          type: event.data.type,
-          data: event.data.body.share
-        })
-      })
-      return;
-    }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-
   })
 }
 
@@ -120,15 +103,14 @@ function http(method, url, data, originalRecord) {
 }
 
 function fetchServerTime() {
-  return new Promise(function (resolve) {
     http(
       'GET',
       `${apiUrl}now`
     ).then(function (response) {
-      resolve(response.timestamp)
+        initializeIDB(response.timestamp).then(updateIDB).catch(console.log)
     }).catch(console.log)
-  })
 }
+
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
@@ -149,7 +131,7 @@ function fetchRecord(dbName, id) {
 }
 
 
-function initializeIDB() {
+function initializeIDB(serverTime) {
   // onAuthStateChanged is added because app is reinitialized
   // let hasFirstView = true
   return new Promise(function (resolve, reject) {
@@ -246,17 +228,20 @@ function initializeIDB() {
     }
 
     request.onsuccess = function () {
-      resolve(auth.uid)
-
-      fetchServerTime().then(function (timestamp) {
+      
+      if(serverTime){
         const rootTx = request.result.transaction('root', 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
         rootObjectStore.get(auth.uid).onsuccess = function (event) {
           const record = event.target.result
-          record.serverTime = timestamp - Date.now()
+          record.serverTime = serverTime - Date.now()
           rootObjectStore.put(record)
         }
-      })
+        rootTx.oncomplete = function() {
+          resolve(auth.uid)
+        }
+      }
+ 
     }
   })
 }
