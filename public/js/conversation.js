@@ -626,6 +626,7 @@ function fillUsersInSelector(activityRecord, dialog, data) {
         return
       }
       
+      document.querySelector('#assignees--list').appendChild(loader('user-loader'));      
       document.querySelector('#assignees--list').appendChild(loader('user-loader'));
 
       const reqBody = {
