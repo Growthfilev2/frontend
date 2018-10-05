@@ -1,5 +1,5 @@
-function getDeviceId(dId){
-localStorage.setItem('deviceId',dId)
+function getDeviceId(dId) {
+  localStorage.setItem('deviceId', dId)
 }
 
 firebase.initializeApp({
@@ -16,7 +16,7 @@ function firebaseUiConfig(value) {
 
   return {
     'callbacks': {
-      'signInSuccess': function(user, credential, redirectUrl) {
+      'signInSuccess': function (user, credential, redirectUrl) {
         if (value) {
           updateEmail(user, value)
           return
@@ -25,7 +25,7 @@ function firebaseUiConfig(value) {
         // no redirect
         return false
       },
-      'signInFailure': function(error) {
+      'signInFailure': function (error) {
         return handleUIError(error)
       }
     },
@@ -53,8 +53,8 @@ function userSignedOut() {
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
   ui.start('#login-container', firebaseUiConfig())
-  
-  
+
+
 }
 
 function layoutGrid() {
@@ -81,7 +81,7 @@ function layoutGrid() {
   imageViewDialog()
 }
 
-function imageViewDialog(){
+function imageViewDialog() {
 
   const aside = document.createElement('aside')
 
@@ -138,43 +138,44 @@ window.scrollBy({
 
 
 function startApp() {
-  if (window.Worker && window.indexedDB) {
+  layoutGrid()
 
-    layoutGrid()
-    if (localStorage.getItem('dbexist')) {
-      firebase.auth().onAuthStateChanged(function(auth){
-        if(auth){
-        
-          listView()
-          requestCreator('initializeIDB', {
-            firstTime: false
-          })
-        }
-      })
-    } else {
-      requestCreator('initializeIDB', {
-        firstTime: true
-      })
-    }
-  } else {
-    console.log("cannot run in this mode")
+  if (!window.Worker && !window.indexedDB) {
     firebase.auth().signOut().catch(signOutError)
+    return
   }
+
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      document.getElementById("main-layout-app").style.display = 'none'
+      userSignedOut()
+      return
+    }
+
+    document.getElementById("main-layout-app").style.display = 'block'
+    if (localStorage.getItem('dbexist')) {
+      listView()
+      requestCreator('now')
+      return
+    }
+    localStorage.setItem('dbexist', auth.uid)
+    requestCreator('now')
+    return
+  })
 }
 
-window.onpopstate = function(event) {
-  if(!event.state) return;
 
-  if(event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
+window.onpopstate = function (event) {
+  if (!event.state) return;
+
+  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
     const req = indexedDB.open(localStorage.getItem('dbexist'))
-    req.onsuccess = function(){
+    req.onsuccess = function () {
       const db = req.result
-        window[event.state[0]](event.state[1],db,false);
+      window[event.state[0]](event.state[1], db, false);
     }
-  }
-
-  else {
-    window[event.state[0]](event.state[1],false)
+  } else {
+    window[event.state[0]](event.state[1], false)
   }
 }
 
@@ -185,4 +186,3 @@ function backNav() {
 function UserCanExitApp() {
   FetchHistory.stateView(true)
 }
-
