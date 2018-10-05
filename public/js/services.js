@@ -219,8 +219,6 @@ function loadViewFromRoot(response) {
 
   req.onsuccess = function () {
     const db = req.result
-    const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
-
 
     if (response.data.type === 'updateAssigneeList') {
       console.log("only update assingee list")
@@ -272,7 +270,7 @@ function onErrorMessage(error) {
 
 function handleTimeout() {
   console.log('load now')
-  const TIME_OUT_VALUE = 1000000
+  const TIME_OUT_VALUE = 3000
   const offset = setTimeout(function () {
     requestCreator('Null')
     if (offset) {

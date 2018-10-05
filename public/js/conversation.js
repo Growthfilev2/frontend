@@ -142,12 +142,12 @@ function statusChange(db, id) {
       document.querySelector('.status--change-cont').innerHTML = label.outerHTML + loader('status-loader').outerHTML;
       return
     }
-
+    if(!document.querySelector('.status-check')) {
     const div = document.createElement('div')
     div.className = 'mdc-form-field form-field-status'
 
     const checkbox = document.createElement('div')
-    checkbox.className = 'mdc-checkbox'
+    checkbox.className = 'mdc-checkbox status-check'
 
 
     const input = document.createElement("input")
@@ -176,6 +176,9 @@ function statusChange(db, id) {
 
 
     document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+  }
+  
+
     const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
 
     if (record.status === 'CONFIRMED') {
