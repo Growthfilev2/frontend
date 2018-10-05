@@ -578,7 +578,6 @@ function fillUsersInSelector(activityRecord, dialog, data) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
-    console.log(alreadyPresntAssigness)
     const selectorStore = db.transaction('users').objectStore('users');
     selectorStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result

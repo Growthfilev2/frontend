@@ -45,7 +45,6 @@ function requestHandlerResponse(type, code, message, dbName, params) {
     type: type,
     code: code,
     msg: message,
-    dbName: dbName,
     params: params
   })
 }
@@ -811,13 +810,7 @@ function successResponse(read, caller) {
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
-    activitytx.oncomplete = function () {
-      if (caller) {
-        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid, {
-          caller: caller
-        })
-        return
-      }
+    rootObjectStoreTx.oncomplete = function () {
       requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
     }
   }
@@ -882,7 +875,7 @@ function setUniqueOffice(data) {
   }
 }
 
-function updateIDB(dbName, launchedFromAnotherReq) {
+function updateIDB(dbName) {
   console.log(dbName)
   const req = indexedDB.open(dbName)
 
@@ -899,7 +892,7 @@ function updateIDB(dbName, launchedFromAnotherReq) {
           )
           .then(function (response) {
         
-            successResponse(response, launchedFromAnotherReq)
+            successResponse(response)
           })
           .catch(console.log)
 

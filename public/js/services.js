@@ -1,15 +1,17 @@
 let offset
 
-function handleImageError(img){
+function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
   return true
 }
-function handleImageErrorAttachment(img){
+
+function handleImageErrorAttachment(img) {
   img.onerror = null;
   img.src = './img/placeholder.png';
   return true
 }
+
 function loader(nameClass) {
   const div = document.createElement('div')
   div.className = 'loader ' + nameClass
@@ -42,11 +44,12 @@ function successDialog() {
 
   const successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'))
   successDialog.show()
-  setTimeout(function() {
+  setTimeout(function () {
     document.getElementById('success--dialog').remove()
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200)
 }
+
 function progressBar() {
   const div = document.createElement('div')
   div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update'
@@ -75,7 +78,8 @@ function progressBar() {
   div.appendChild(secondary)
   return div
 }
-function snacks(message,type) {
+
+function snacks(message, type) {
   const snack = document.createElement('div')
   snack.className = 'mdc-snackbar'
   snack.setAttribute('aria-live', 'assertive')
@@ -101,11 +105,11 @@ function snacks(message,type) {
     message: message,
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
-    actionHandler: function() {
-      if(type) {
-        requestCreator('statusChange',{
-          activityId:type.id,
-          status:'PENDING'
+    actionHandler: function () {
+      if (type) {
+        requestCreator('statusChange', {
+          activityId: type.id,
+          status: 'PENDING'
         })
       }
     }
@@ -121,8 +125,8 @@ function fetchCurrentTime(serverTime) {
 }
 
 function fetchCurrentLocation() {
-  return new Promise(function(resolve) {
-    navigator.geolocation.getCurrentPosition(function(position) {
+  return new Promise(function (resolve) {
+    navigator.geolocation.getCurrentPosition(function (position) {
       resolve({
         'latitude': position.coords.latitude,
         'longitude': position.coords.longitude
@@ -161,13 +165,13 @@ function requestCreator(requestType, requestBody) {
       requestGenerator.body = requestBody
       apiHandler.postMessage(requestGenerator)
     } else {
-      fetchCurrentLocation().then(function(geopoints) {
+      fetchCurrentLocation().then(function (geopoints) {
         const dbName = firebase.auth().currentUser.uid
         const req = indexedDB.open(dbName)
-        req.onsuccess = function() {
+        req.onsuccess = function () {
           const db = req.result;
           const rootObjectStore = db.transaction('root').objectStore('root')
-          rootObjectStore.get(dbName).onsuccess = function(event) {
+          rootObjectStore.get(dbName).onsuccess = function (event) {
 
             requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
             requestBody['geopoint'] = geopoints
@@ -197,115 +201,60 @@ function loadViewFromRoot(response) {
 
   // only for development
   if (response.data.type === 'error') {
-    if(document.querySelector('header .mdc-linear-progress')) {
+    if (document.querySelector('header .mdc-linear-progress')) {
       document.querySelector('header .mdc-linear-progress').remove()
     }
-    
+
     snacks(response.data.msg)
     return;
   }
 
-  if (response.data.type === 'loggedOut') {
-    document.getElementById("main-layout-app").style.display = 'none'
-    userSignedOut()
-    return;
-  }
-
-
-  if (response.data.type === 'setLocalStorage') {
-    document.getElementById("main-layout-app").style.display = 'block'
-
-    localStorage.setItem('dbexist', response.data.dbName);
-    return;
-  }
-
-
 
   const req = window.indexedDB.open(firebase.auth().currentUser.uid)
 
-  req.onsuccess = function() {
+  req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
 
-    if(response.data.type === 'updateList') {
-      const activityObjectStore = db.transaction('activity').objectStore('activity');
-      const append = true;
-      activityObjectStore.index('timestamp').openCursor(null,'prev').onsuccess = function(event){
-        const cursor = event.target.result;
-        if(!cursor) return
-        if(response.data.params.indexOf(cursor.value.activityId) > -1) {
-
-          createActivityList(db,cursor.value,append).then(function(dom){
-            
-          })
-        }
-        cursor.continue()
-      }
-      
-      
-      return
-    }
 
     if (response.data.type === 'updateAssigneeList') {
       console.log("only update assingee list")
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       //here dbName is activityId
-      activityObjectStore.get(response.data.dbName.id).onsuccess = function(event) {
+      activityObjectStore.get(response.data.dbName.id).onsuccess = function (event) {
         const record = event.target.result
-
         // toggleActionables(record.editable)
-        document.querySelector('#assignees--list [data-prop="delete"]').remove()
-        document.querySelector('.user-loader').style.opacity = 0;
+
         readNameAndImageFromNumber([response.data.dbName.number], db)
       }
       return
     }
 
-
-    if (response.data.type === 'toggleDetailActions') {
-       toggleActionables(response.data.params.editable)
-      return
-    }
-
-    if(response.data.type === 'create-success') {
-      
+    if (response.data.type === 'create-success') {
       listView()
       return;
     }
 
-    if(response.data.type === 'redirect-to-list') {
-     history.pushState(['listView'],null,null)
-     return
+    if (response.data.type === 'redirect-to-list') {
+      history.pushState(['listView'], null, null)
+      return
     }
 
-    if(!history.state) {
-      setTimeout(function(){
-        window["listView"]()
-      },5000)
+
+    // updateIDB
+
+    if (!history.state) {
+      window["listView"]()
+      return
     }
-    else {
-      if(history.state[0] === 'updateCreateActivity' && response.data.params &&  response.data.params.hasOwnProperty('caller')){
-        const activityObjectStore = db.transaction('activity').objectStore('activity')
-        //here dbName is activityId
-        activityObjectStore.get(history.state[1].activityId).onsuccess = function(event) {
-          const record = event.target.result
-          console.log(record)
-          document.querySelector('#assignees--list [data-prop="delete"]').remove()
-          toggleActionables(history.state[1].activityId)
-          
-          readNameAndImageFromNumber([response.data.params.caller.data[0]], db)
-        }
-        return;
-      }
-      if(history.state[0] === 'updateCreateActivity') {
-        toggleActionables(history.state[1].activityId)
-        handleTimeout()
-        return
-      }     
-      window[history.state[0]](history.state[1],false)
+
+    if (history.state[0] === 'updateCreateActivity') {
+      toggleActionables(history.state[1].activityId)
       handleTimeout()
+      return
     }
-
+    window[history.state[0]](history.state[1], false)
+    handleTimeout()
   }
 }
 
@@ -322,7 +271,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   console.log('load now')
   const TIME_OUT_VALUE = 1000000
-  const offset = setTimeout(function() {
+  const offset = setTimeout(function () {
     requestCreator('Null')
     if (offset) {
       clearTimeout(offset)
