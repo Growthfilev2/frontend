@@ -154,7 +154,7 @@ function startApp() {
 
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
-      listView()
+      listView(false,true)
       requestCreator('now')
       return
     }
@@ -176,6 +176,7 @@ window.onpopstate = function (event) {
     }
   } else {
     window[event.state[0]](event.state[1], false)
+ 
   }
 }
 

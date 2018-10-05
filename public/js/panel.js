@@ -1,8 +1,10 @@
-function listView() {
-  console.log("opening list view");
+function listView(scrollId,pushState) {
   const dbName = localStorage.getItem('dbexist');
-  history.pushState(['listView', dbName], null, null)
-
+  if(pushState){
+    
+    history.pushState(['listView'], null, null)
+  }
+ 
   listPanel()
 
   document.body.style.backgroundColor = 'white'
@@ -21,12 +23,12 @@ function listView() {
         initMenu(db, officeRecord.offices)
       }
       creatListHeader('Recent')
-      fetchDataForActivityList(db)
+      fetchDataForActivityList(db,scrollId)
     }
   }
 }
 
-function fetchDataForActivityList(db) {
+function fetchDataForActivityList(db,scrollId) {
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
@@ -41,6 +43,8 @@ function fetchDataForActivityList(db) {
 
             appendActivityListToDom(activityDom, true)
             createActivityIcon(db)
+            if(!scrollId) return
+            document.querySelector(`[data-id="${scrollId}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
            },100)
       return
     }
@@ -150,7 +154,7 @@ function activityListUI(data, metaData,append) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
-  li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
+  li.setAttribute('onclick', 'history.pushState(["listView",this.dataset.id],null,null);conversation(this.dataset.id,true)')
 
   const creator = document.createElement("img")
   creator.className = 'mdc-list-item__graphic material-icons'
@@ -241,6 +245,7 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
     creatListHeader(headerName, !hasHeaderAndCard)
   }
   document.getElementById('activity--list').innerHTML = activityDom
+
 }
 
 function createActivityIcon(db) {
