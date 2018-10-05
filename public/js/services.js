@@ -209,6 +209,11 @@ function loadViewFromRoot(response) {
     return;
   }
 
+  if (response.data.type === 'create-success') {
+    listView()
+    return;
+  }
+
 
   const req = window.indexedDB.open(firebase.auth().currentUser.uid)
 
@@ -230,17 +235,12 @@ function loadViewFromRoot(response) {
       return
     }
 
-    if (response.data.type === 'create-success') {
-      listView()
-      return;
-    }
 
     if (response.data.type === 'redirect-to-list') {
       history.pushState(['listView'], null, null)
       return
     }
-
-
+    
     // updateIDB
 
     if (!history.state) {
@@ -253,8 +253,10 @@ function loadViewFromRoot(response) {
       handleTimeout()
       return
     }
+
     window[history.state[0]](history.state[1], false)
     handleTimeout()
+
   }
 }
 

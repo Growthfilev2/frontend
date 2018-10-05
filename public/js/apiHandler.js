@@ -739,7 +739,7 @@ function updateSubscription(db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
-function successResponse(read, caller) {
+function successResponse(read) {
   console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
@@ -884,8 +884,6 @@ function updateIDB(dbName) {
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
     rootObjectStore.get(dbName).onsuccess = function (root) {
-      setTimeout(function () {
-
         http(
             'GET',
             `${apiUrl}read?from=${root.target.result.fromTime}`
@@ -895,8 +893,6 @@ function updateIDB(dbName) {
             successResponse(response)
           })
           .catch(console.log)
-
-      }, 2000)
     }
   }
 }

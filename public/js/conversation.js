@@ -587,7 +587,9 @@ function fillUsersInSelector(activityRecord, dialog, data) {
 
       if (data.attachment.present) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true))
-      } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+      }
+      
+      else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true))
       }
 
@@ -617,15 +619,13 @@ function fillUsersInSelector(activityRecord, dialog, data) {
       if (activityRecord.hasOwnProperty('create')) {
         updateDomFromIDB(activityRecord, {
           hash: 'addOnlyAssignees',
-          // key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
         })
         removeDialog()
         return
       }
-
-      document.getElementById('assignees--list').appendChild(createSimpleLi('empty'))
+      
       document.querySelector('#assignees--list').appendChild(loader('user-loader'));
 
       const reqBody = {
