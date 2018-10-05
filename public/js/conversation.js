@@ -1421,7 +1421,7 @@ function createAttachmentContainer(data) {
   Object.keys(data.attachment).forEach(function (key) {
 
     const div = document.createElement('div')
-    div.className = `attachment-field ${data.attachment[key].type}`
+    data.attachment[key].type === 'HH:MM' ?  div.className = `attachment-field HHMM` :   div.className = `attachment-field ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
 
     if (data.canEdit) {
@@ -1933,6 +1933,14 @@ function insertInputsIntoActivity(record, activityStore) {
     record.attachment[convertIdToKey(allEmailTypes[i].id)].value = inputValue
   }
 
+  const allTimeTypes = document.querySelectorAll('.HHMM')
+  for (var i = 0; i < allTimeTypes.length; i++) {
+    let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
+    record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
+  }
+
+  
+
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
@@ -2225,7 +2233,7 @@ function createTimeInput(value, canEdit, attr) {
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'
-    input.value = moment(value || new Date()).format('HH:mm')
+    input.value = value || moment(new Date()).format('HH:mm')
   }
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
