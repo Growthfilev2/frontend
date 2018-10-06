@@ -559,8 +559,10 @@ footer.mdc-dialog__footer {
   position: inherit;
 }
 .user-loader {
-  bottom:3%;
-  top:inherit;
+ width: 15px;
+ height: 15px;
+ top: inherit;
+ right: 3%;
 }
 .update-loader {
   position: fixed;

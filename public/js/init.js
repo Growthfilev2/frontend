@@ -1,6 +1,4 @@
-function getDeviceId(dId) {
-  localStorage.setItem('deviceId', dId)
-}
+
 
 firebase.initializeApp({
   apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
@@ -107,7 +105,6 @@ function imageViewDialog() {
   backdrop.className = 'mdc-dialog__backdrop'
   aside.appendChild(backdrop)
 
-
   document.body.appendChild(aside)
 }
 
@@ -138,6 +135,7 @@ window.scrollBy({
 
 
 function startApp() {
+  
   layoutGrid()
 
   if (!window.Worker && !window.indexedDB) {
@@ -155,11 +153,12 @@ function startApp() {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(false,true)
-      requestCreator('now')
+      requestCreator('now',{device:''})
       return
     }
+
     localStorage.setItem('dbexist', auth.uid)
-    requestCreator('now')
+    requestCreator('now',{device:''})
     return
   })
 }

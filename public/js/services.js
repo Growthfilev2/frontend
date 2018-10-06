@@ -1,4 +1,3 @@
-let offset
 
 function handleImageError(img) {
   img.onerror = null;
@@ -160,31 +159,35 @@ function requestCreator(requestType, requestBody) {
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
-  } else {
-    if (requestBody.hasOwnProperty('firstTime')) {
-      requestGenerator.body = requestBody
-      apiHandler.postMessage(requestGenerator)
-    } else {
-      fetchCurrentLocation().then(function (geopoints) {
-        const dbName = firebase.auth().currentUser.uid
-        const req = indexedDB.open(dbName)
-        req.onsuccess = function () {
-          const db = req.result;
-          const rootObjectStore = db.transaction('root').objectStore('root')
-          rootObjectStore.get(dbName).onsuccess = function (event) {
-
-            requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
-            requestBody['geopoint'] = geopoints
-            requestGenerator.body = requestBody
-            // post the requestGenerator object to the apiHandler to perform IDB and api
-            // operations
-
-            apiHandler.postMessage(requestGenerator)
-          }
-        }
-      })
-    }
+    return
+  
   }
+
+  if(requestBody.hasOwnProperty('device')) {
+    requestGenerator.body = requestBody.device
+    apiHandler.postMessage(requestGenerator)
+    return
+  }
+    fetchCurrentLocation().then(function (geopoints) {
+      const dbName = firebase.auth().currentUser.uid
+      const req = indexedDB.open(dbName)
+      req.onsuccess = function () {
+        const db = req.result;
+        const rootObjectStore = db.transaction('root').objectStore('root')
+        rootObjectStore.get(dbName).onsuccess = function (event) {
+
+          requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
+          requestBody['geopoint'] = geopoints
+          requestGenerator.body = requestBody
+          // post the requestGenerator object to the apiHandler to perform IDB and api
+          // operations
+
+          apiHandler.postMessage(requestGenerator)
+        }
+      }
+    })
+
+  
 
   // handle the response from apiHandler when operation is completed
 
@@ -205,6 +208,8 @@ function loadViewFromRoot(response) {
       document.querySelector('header .mdc-linear-progress').remove()
     }
 
+    requestCreator('instant',{code:response.data.code,msg:response.data.msg})
+
     snacks(response.data.msg)
     return;
   }
@@ -220,16 +225,18 @@ function loadViewFromRoot(response) {
   req.onsuccess = function () {
     const db = req.result
 
-    if (response.data.type === 'updateAssigneeList') {
+    if (response.data.type === 'updateAssigneesList') {
       console.log("only update assingee list")
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       //here dbName is activityId
-      activityObjectStore.get(response.data.dbName.id).onsuccess = function (event) {
+     
+      activityObjectStore.get(response.data.params.id).onsuccess = function (event) {
         const record = event.target.result
         // toggleActionables(record.editable)
 
-        readNameAndImageFromNumber([response.data.dbName.number], db)
+        readNameAndImageFromNumber([response.data.params.number], db)
       }
+    
       return
     }
 
@@ -238,7 +245,7 @@ function loadViewFromRoot(response) {
       history.pushState(['listView'], null, null)
       return
     }
-    
+
     // updateIDB
 
     if (!history.state) {
@@ -269,14 +276,11 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
-  console.log('load now')
-  const TIME_OUT_VALUE = 500000
-  const offset = setTimeout(function () {
+
+ const offset = setTimeout(function(){
     requestCreator('Null')
-    if (offset) {
-      clearTimeout(offset)
-    }
-  }, TIME_OUT_VALUE)
+ },3000)
+
 }
 
 function getInputText(selector) {

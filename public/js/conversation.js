@@ -629,8 +629,8 @@ function fillUsersInSelector(activityRecord, dialog, data) {
         return
       }
 
-      document.querySelector('#assignees--list').appendChild(loader('user-loader'));      
-      document.querySelector('#assignees--list').appendChild(loader('user-loader'));
+      document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));      
+      document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
 
       const reqBody = {
         'activityId': activityRecord.activityId,
@@ -1599,7 +1599,7 @@ function createAssigneeList(db, record, showLabel) {
   if (showLabel) {
 
     const labelAdd = document.createElement('li')
-    labelAdd.className = 'mdc-list-item label--text'
+    labelAdd.className = 'mdc-list-item label--text add--assignee-loader'
     labelAdd.textContent = 'Assignees'
 
 
@@ -2321,15 +2321,16 @@ function toggleActionables(id) {
     activityStore.get(id).onsuccess = function (event) {
       const record = event.target.result
       const actions = document.querySelectorAll('.mdc-fab')
-
-      if (record.editable) {
+      if(!record.editable) return
+      
         if (document.querySelector('.loader')) {
           document.querySelector('.loader').remove()
+          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
         }
         if (document.querySelector('.progress--update')) {
           document.querySelector('.progress--update').remove()
         }
-      }
+      
     }
   }
 }

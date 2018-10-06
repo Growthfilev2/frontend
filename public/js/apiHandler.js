@@ -3,6 +3,7 @@
 /* eslint-env worker */
 // import firebase app script because there is no native support of firebase inside web workers
 
+
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
@@ -37,10 +38,11 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   Null: Null,
-  now:fetchServerTime
+  now:fetchServerTime,
 }
 
-function requestHandlerResponse(type, code, message, dbName, params) {
+
+function requestHandlerResponse(type, code, message, params) {
   self.postMessage({
     type: type,
     code: code,
@@ -54,9 +56,14 @@ self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     console.log(auth)
     if(event.data.type === 'now') {
-      fetchServerTime()
+      fetchServerTime(event.data.body)
       return
     }
+    if(event.data.type === 'instant') {
+      instant(event.data.body)
+      return
+    }
+
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
   })
 }
@@ -82,6 +89,7 @@ function http(method, url, data, originalRecord) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
+              
               requestHandlerResponse('error', errorObject.code, errorObject.message)
               if (originalRecord) {
                 console.log(originalRecord)
@@ -101,8 +109,9 @@ function http(method, url, data, originalRecord) {
   })
 }
 
-function fetchServerTime() {
-    http(
+function fetchServerTime(deviceId) {
+	console.log(deviceId);    
+http(
       'GET',
       `${apiUrl}now`
     ).then(function (response) {
@@ -110,6 +119,29 @@ function fetchServerTime() {
     }).catch(console.log)
 }
 
+function instant(error){
+  console.log(error)
+  const errorLogs = {
+    message : {
+      meta : {
+        geopoint: error.geopoint,
+        timestamp : error.timestamp
+      },
+      javascript : {
+        code : error.code,
+        errorMsg : error.msg,
+      }
+    }
+  }
+
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   JSON.stringify(errorLogs)
+  // ).then(function(response){
+  //   console.log(response)
+  // }).catch(console.log)
+}
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
@@ -462,6 +494,13 @@ function instantUpdateDB(dbName, data, type) {
       if (type === 'status') {
         requestHandlerResponse('redirect-to-list', 200, 'activity status changed')
       }
+      if(type === 'share') {
+        
+        requestHandlerResponse('updateAssigneesList',200,'update user',{
+          id:data.activityId,
+          number:data.share[0]
+        })
+      }
 
     }
   }
@@ -810,11 +849,10 @@ function successResponse(read) {
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
-    rootObjectStoreTx.oncomplete = function () {
-      setTimeout(function(){
+    rootObjectStoreTx.oncomplete = function(){
         requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
-      },200)
     }
+    
   }
 }
 

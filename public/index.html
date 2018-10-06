@@ -38,6 +38,15 @@
   </div>
   <script>
 window.addEventListener('load', function() {
+window.onerror = function(msg,url,lineNo,columnNo,error){
+alert(msg)
+alert(url)
+alert(lineNo)
+alert(columnNo)
+alert(error)
+}
+	
+
   // if ('serviceWorker' in navigator) {
   //   console.log('webview started')
   //   initSW()
@@ -47,8 +56,6 @@ window.addEventListener('load', function() {
   // }   
 
     startApp()
-
-
 })
   </script>
 
@@ -67,7 +74,8 @@ window.addEventListener('load', function() {
         // state via installingWorker.onstatechange
       });
 
-      startApp()
+      // startApp()
+      AndroidId.getDeviceId()
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
     }, function(err) {
     //   // registration failed :(
