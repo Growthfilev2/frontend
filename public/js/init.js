@@ -159,7 +159,7 @@ function startApp() {
 
     localStorage.setItem('dbexist', auth.uid)
     requestCreator('now',{device:''})
-    return
+    
   })
 }
 

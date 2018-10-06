@@ -54,7 +54,6 @@ function requestHandlerResponse(type, code, message, params) {
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
-    console.log(auth)
     if(event.data.type === 'now') {
       fetchServerTime(event.data.body)
       return
@@ -98,7 +97,6 @@ function http(method, url, data, originalRecord) {
               return reject(xhr)
               // return reject(xhr)
             }
-            console.log(xhr)
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
           }
@@ -110,7 +108,6 @@ function http(method, url, data, originalRecord) {
 }
 
 function fetchServerTime(deviceId) {
-	console.log(deviceId);    
 http(
       'GET',
       `${apiUrl}now`
@@ -167,7 +164,6 @@ function initializeIDB(serverTime) {
   // let hasFirstView = true
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
-    console.log(auth)
 
     const request = indexedDB.open(auth.uid)
 
@@ -259,8 +255,7 @@ function initializeIDB(serverTime) {
     }
 
     request.onsuccess = function () {
-      
-      if(serverTime){
+
         const rootTx = request.result.transaction('root', 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
         rootObjectStore.get(auth.uid).onsuccess = function (event) {
@@ -271,8 +266,7 @@ function initializeIDB(serverTime) {
         rootTx.oncomplete = function() {
           resolve(auth.uid)
         }
-      }
- 
+    
     }
   })
 }
@@ -698,14 +692,12 @@ function createUsersApiUrl(db) {
 
       if (!cursor) {
         fullReadUserString = `${defaultReadUserString}${assigneeString}`
-        console.log(fullReadUserString)
         resolve({
           db: db,
           url: fullReadUserString
         })
         return
       }
-      console.log(cursor.value.mobile)
       const assigneeFormat = `%2B${cursor.value.mobile}&q=`
       assigneeString += `${assigneeFormat.replace('+', '')}`
       cursor.continue()
@@ -721,8 +713,6 @@ function updateUserObjectStore(successUrl) {
       successUrl.url
     )
     .then(function (userProfile) {
-      console.log(userProfile)
-
       const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
 
       usersObjectStore.openCursor().onsuccess = function (event) {
@@ -779,7 +769,6 @@ function updateSubscription(db, subscription) {
 // with the uptoTime received from response.
 
 function successResponse(read) {
-  console.log(read)
   console.log('start success')
   const user = firebase.auth().currentUser
 
@@ -793,7 +782,6 @@ function successResponse(read) {
     const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-
     let counter = {}
     read.addendum.forEach(function (addendum) {
       let key = addendum.activityId
@@ -839,21 +827,21 @@ function successResponse(read) {
       updateSubscription(db, subscription)
     })
 
+    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
+    
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
       record.fromTime = Date.parse(read.upto)
 
       rootObjectStore.put(record)
     }
-
-    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
-
+  
+    requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+    return
     // after the above operations are done , send a response message back to the requestCreator(main thread).
-    rootObjectStoreTx.oncomplete = function(){
-        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
-    }
-    
+
   }
+
 }
 
 function notUpdateUserObjectStore(errorUrl) {
