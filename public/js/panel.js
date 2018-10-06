@@ -21,7 +21,7 @@ function listView(scrollId,pushState) {
       if (!document.querySelector('.mdc-drawer--temporary')) {
         initMenu(db, officeRecord.offices)
       }
-      
+
       creatListHeader('Recent')
       fetchDataForActivityList(db,scrollId)
     }
@@ -1091,6 +1091,7 @@ function removeLoader(url) {
 function showProfilePicture(url) {
   const user = firebase.auth().currentUser
   document.getElementById('user-profile--image').src = url || '../img/empty-user.jpg'
+  document.querySelector('.drawer-header-icon').src = url  || '../img/empty-user.jpg'
 }
 
 function authUpdatedError(error) {
