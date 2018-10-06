@@ -811,7 +811,9 @@ function successResponse(read) {
 
     // after the above operations are done , send a response message back to the requestCreator(main thread).
     rootObjectStoreTx.oncomplete = function () {
-      requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+      setTimeout(function(){
+        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+      },200)
     }
   }
 }
@@ -828,8 +830,8 @@ function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     req.onsuccess = function () {
       const db = req.result
-      const activityOfficeIndex = db.transaction('activity').objectStore('activity').index('office')
-      activityOfficeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
+      const subscriptionOffice = db.transaction('subscriptions').objectStore('subscriptions').index('office')
+      subscriptionOffice.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
           resolve({

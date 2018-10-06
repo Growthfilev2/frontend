@@ -628,7 +628,7 @@ function fillUsersInSelector(activityRecord, dialog, data) {
         removeDialog()
         return
       }
-      
+
       document.querySelector('#assignees--list').appendChild(loader('user-loader'));      
       document.querySelector('#assignees--list').appendChild(loader('user-loader'));
 

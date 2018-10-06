@@ -1,7 +1,7 @@
 function listView(scrollId,pushState) {
+
   const dbName = localStorage.getItem('dbexist');
-  if(pushState){
-    
+  if(pushState){    
     history.pushState(['listView'], null, null)
   }
  
@@ -19,9 +19,9 @@ function listView(scrollId,pushState) {
       const officeRecord = event.target.result
 
       if (!document.querySelector('.mdc-drawer--temporary')) {
-
         initMenu(db, officeRecord.offices)
       }
+      
       creatListHeader('Recent')
       fetchDataForActivityList(db,scrollId)
     }
