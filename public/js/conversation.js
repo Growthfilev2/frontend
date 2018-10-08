@@ -1140,11 +1140,13 @@ function createSimpleLi(key, data) {
     listItemLabel.textContent = data.text
     listItem.appendChild(dataVal)
     listItem.appendChild(listItemLabel)
+    listItem.classList.add('undo-delete-activity')
     const undo = document.createElement('button')
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-
+      document.querySelector('.undo-deleted').style.display = 'none'
+      listItem.appendChild(loader('undo-delete-loader'));
       requestCreator('statusChange', {
         activityId: data.id,
         status: 'PENDING'
@@ -1818,12 +1820,11 @@ function createActivityCancellation(record) {
     }
 
 
-
-
-
-
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
     document.getElementById('delete-allow').onclick = function(){
+    document.querySelector('.delete-activity').style.display = 'none';
+    document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
+
       requestCreator('statusChange', {
         activityId: record.activityId,
         status: 'CANCELLED',

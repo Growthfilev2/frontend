@@ -207,8 +207,17 @@ function loadViewFromRoot(response) {
     if (document.querySelector('header .mdc-linear-progress')) {
       document.querySelector('header .mdc-linear-progress').remove()
     }
+    if(document.querySelector('.loader')){
+      document.querySelector('.loader').remove()
+    }
+    if(document.querySelector('.delete-activity')){
+      document.querySelector('.delete-activity').style.display = 'block';
+    }
+    if(document.querySelector('.undo-delete-loader')) {
+      document.querySelector('.undo-delete-loader').style.display = 'block';
+    }
 
-    requestCreator('instant',{code:response.data.code,msg:response.data.msg})
+    // requestCreator('instant',{code:response.data.code,msg:response.data.msg})
 
     snacks(response.data.msg)
     return;
@@ -236,7 +245,7 @@ function loadViewFromRoot(response) {
 
         readNameAndImageFromNumber([response.data.params.number], db)
       }
-    
+      history.pushState(['listView'],null,null)
       return
     }
 
@@ -258,7 +267,6 @@ function loadViewFromRoot(response) {
       handleTimeout()
       return
     }
-
     window[history.state[0]](history.state[1], false)
     handleTimeout()
 
@@ -276,8 +284,7 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
-
- const offset = setTimeout(function(){
+setTimeout(function(){
     requestCreator('Null')
  },3000)
 

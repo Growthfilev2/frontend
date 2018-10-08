@@ -1,5 +1,5 @@
 function listView(scrollId,pushState) {
-
+  console.log("list view openend")
   const dbName = localStorage.getItem('dbexist');
   if(pushState){    
     history.pushState(['listView'], null, null)

@@ -572,7 +572,19 @@ footer.mdc-dialog__footer {
   right: 43%;
   top: 43%;
 }
-
+.cancel-loader {
+  height: 15px;
+  width: 15px;
+  left: 20%;
+  right: auto;
+  top: 28%;
+}
+.undo-delete-loader {
+  right: 5%;
+  width: 15px;
+  height: 15px;
+  top: 27%;
+}
 #assignee--list {
   position: relative;
   margin-top: 10px;

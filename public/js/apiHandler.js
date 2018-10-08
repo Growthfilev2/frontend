@@ -56,15 +56,15 @@ self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
     console.log(auth)
     if(event.data.type === 'now') {
-      fetchServerTime(event.data.body)
+      fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
       return
     }
     if(event.data.type === 'instant') {
       instant(event.data.body)
       return
     }
-
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+
   })
 }
 
@@ -110,13 +110,16 @@ function http(method, url, data, originalRecord) {
 }
 
 function fetchServerTime(deviceId) {
-	console.log(deviceId);    
-http(
+  return new Promise(function(resolve){
+
+    console.log(deviceId);    
+    http(
       'GET',
       `${apiUrl}now`
-    ).then(function (response) {
-        initializeIDB(response.timestamp).then(updateIDB).catch(console.log)
-    }).catch(console.log)
+      ).then(function (response) {
+        resolve(response.timestamp)
+      }).catch(console.log)
+    })
 }
 
 function instant(error){
@@ -163,6 +166,7 @@ function fetchRecord(dbName, id) {
 
 
 function initializeIDB(serverTime) {
+  console.log("init db")
   // onAuthStateChanged is added because app is reinitialized
   // let hasFirstView = true
   return new Promise(function (resolve, reject) {
@@ -313,6 +317,7 @@ function statusChange(body) {
           firebase.auth().currentUser.uid
         )
       }).catch(function (error) {
+        requestHandlerResponse('e')
         reject(error)
       })
     })
@@ -491,7 +496,7 @@ function instantUpdateDB(dbName, data, type) {
     }
     objStoreTx.oncomplete = function () {
 
-      if (type === 'status') {
+      if (type === 'status' || type === 'update') {
         requestHandlerResponse('redirect-to-list', 200, 'activity status changed')
       }
       if(type === 'share') {
@@ -917,6 +922,7 @@ function setUniqueOffice(data) {
 
 function updateIDB(dbName) {
   console.log(dbName)
+  
   const req = indexedDB.open(dbName)
 
   req.onsuccess = function () {
