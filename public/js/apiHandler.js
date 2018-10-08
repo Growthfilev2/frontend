@@ -70,7 +70,7 @@ self.onmessage = function (event) {
 
 // Performs XMLHTTPRequest for the API's.
 
-function http(method, url, data, originalRecord) {
+function http(method, url, data) {
   return new Promise(function (resolve, reject) {
     firebase
       .auth()
@@ -91,11 +91,8 @@ function http(method, url, data, originalRecord) {
               const errorObject = JSON.parse(xhr.response)
               
               requestHandlerResponse('error', errorObject.code, errorObject.message)
-              if (originalRecord) {
-                console.log(originalRecord)
-                resetInstantDB(originalRecord)
-              }
-              return reject(xhr)
+          
+              return reject(JSON.stringify(xhr.response))
               // return reject(xhr)
             }
             console.log(xhr)
@@ -105,7 +102,10 @@ function http(method, url, data, originalRecord) {
         }
 
         xhr.send(data || null)
-      }).catch(console.log)
+      }).catch(function(error){
+        instant(error)
+      
+      })
   })
 }
 
@@ -116,33 +116,28 @@ function fetchServerTime() {
       `${apiUrl}now`
     ).then(function (response) {
        resolve(response.timestamp)
-    }).catch(console.log)
+    }).catch(function(error){
+      instant(error)
+    })
   })
 }
 
 
 function instant(error){
-  console.log(error)
+   error = JSON.parse(error)
   const errorLogs = {
     message : {
-      meta : {
-        geopoint: error.geopoint,
-        timestamp : error.timestamp
-      },
-      javascript : {
-        code : error.code,
-        errorMsg : error.msg,
-      }
+        error
     }
   }
 
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   JSON.stringify(errorLogs)
-  // ).then(function(response){
-  //   console.log(response)
-  // }).catch(console.log)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+   errorLogs
+  ).then(function(response){
+    console.log(response)
+  }).catch(console.log)
 }
 
 /**
@@ -291,7 +286,9 @@ function comment(body) {
       // requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
       resolve(firebase.auth().currentUser.uid)
     }).catch(function (error) {
-      reject(error)
+
+      instant(error)
+      
     })
   })
 }
@@ -316,8 +313,8 @@ function statusChange(body) {
           firebase.auth().currentUser.uid
         )
       }).catch(function (error) {
-        requestHandlerResponse('e')
-        reject(error)
+        instant(error)
+
       })
     })
   })
@@ -367,7 +364,8 @@ function share(body) {
           )
         })
         .catch(function (error) {
-          reject(error)
+          instant(error)
+
         })
     })
   })
@@ -387,7 +385,8 @@ function updateUserNumber(body) {
         resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {
-        reject(error)
+        instant(error)
+
       })
   })
 }
@@ -422,7 +421,8 @@ function update(body) {
           resolve(firebase.auth().currentUser.uid)
         })
         .catch(function (error) {
-          reject(error)
+          instant(error)
+
         })
     })
   })
@@ -443,7 +443,8 @@ function create(body) {
         resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {
-        reject(error)
+        instant(error)
+
       })
   })
 }
@@ -937,7 +938,10 @@ function updateIDB(dbName) {
         
             successResponse(response)
           })
-          .catch(console.log)
+          .catch(function(error){
+            instant(error)
+
+          })
     }
   }
 }

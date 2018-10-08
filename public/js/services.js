@@ -161,13 +161,14 @@ function requestCreator(requestType, requestBody) {
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   }
-  else if(requestBody.hasOwnProperty('device')) {
-    requestGenerator.body = requestBody.device
+  else if(requestType === 'instant' || requestType === 'now') {
+    requestGenerator.body = JSON.stringify(requestBody)
     apiHandler.postMessage(requestGenerator)
   }
   else {
-
+    offset = '';
     fetchCurrentLocation().then(function (geopoints) {
+
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
       req.onsuccess = function () {
@@ -274,6 +275,12 @@ function loadViewFromRoot(response) {
 }
 
 function onErrorMessage(error) {
+  const errorWorker = JSON.stringify({
+    msg :error.message,
+    lineno :error.lineno,
+    url:error.filename
+  })
+  requestCreator('instant',errorWorker)
   console.log(error)
   console.log(error.message)
   console.table({
@@ -284,9 +291,9 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
-setTimeout(function(){
+offset = setTimeout(function(){
     requestCreator('Null')
- },10000)
+ },1000000)
 
 }
 

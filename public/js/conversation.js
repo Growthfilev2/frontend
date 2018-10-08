@@ -18,7 +18,7 @@ function fetchAddendumForComment(id) {
     commentPanel(db, id)
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
-    reinitCount(db, id)
+    reinitCount(db,id)
     let commentDom = ''
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
