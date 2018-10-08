@@ -173,7 +173,11 @@ window.onpopstate = function (event) {
       const db = req.result
       window[event.state[0]](event.state[1], db, false);
     }
-  } else {
+  } 
+  else if (event.state[0] === 'listView') {
+    window[event.state[0]](event.state[1],true)
+  }
+  else {
     window[event.state[0]](event.state[1], false)
  
   }

@@ -113,7 +113,7 @@ function fetchServerTime(deviceId) {
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now?deviceId=${deviceId}`
+      `${apiUrl}now?deviceId=${deviceId.device}`
     ).then(function (response) {
       if(response.revokeSession){
         firebase.auth().signOut().then(function(){
