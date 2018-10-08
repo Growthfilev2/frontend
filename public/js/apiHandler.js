@@ -109,18 +109,17 @@ function http(method, url, data, originalRecord) {
   })
 }
 
-function fetchServerTime(deviceId) {
-  return new Promise(function(resolve){
-
-    console.log(deviceId);    
+function fetchServerTime() {
+  return new Promise(function (resolve) {
     http(
       'GET',
       `${apiUrl}now`
-      ).then(function (response) {
-        resolve(response.timestamp)
-      }).catch(console.log)
-    })
+    ).then(function (response) {
+        initializeIDB(response.timestamp).then(updateIDB).catch(console.log)
+    }).catch(console.log)
+  })
 }
+
 
 function instant(error){
   console.log(error)
