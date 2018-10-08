@@ -66,7 +66,7 @@ function commentPanel(db, id) {
   inputField.id = 'write--comment'
   inputField.style.width = '100%';
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
+  input.className = 'mdc-text-field__input comment-field mdc-elevation--z4'
   input.type = 'text'
 
   inputField.appendChild(input)
