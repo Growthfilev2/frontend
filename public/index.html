@@ -58,9 +58,9 @@ window.addEventListener('load', function() {
   //   console.log("direct run")
   //   startApp()
   // }   
+  startApp()
  
 
-    startApp()
 })
   </script>
 
@@ -78,8 +78,7 @@ window.addEventListener('load', function() {
         // state via installingWorker.onstatechange
       });
 
-      // startApp()
-      AndroidId.getDeviceId()
+      startApp()
       console.log('ServiceWorker registration successful with scope: ', registration.scope);
     }, function(err) {
     //   // registration failed :(

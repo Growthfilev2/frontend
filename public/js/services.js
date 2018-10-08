@@ -203,6 +203,11 @@ function loadViewFromRoot(response) {
     return
   }
 
+  if(response.data.type === 'removeLocalStorage'){
+    localStorage.removeItem('dbexist')
+    return
+  }
+
   // only for development
   if (response.data.type === 'error') {
     if (document.querySelector('header .mdc-linear-progress')) {
@@ -259,7 +264,7 @@ function loadViewFromRoot(response) {
     // updateIDB
 
     if (!history.state) {
-      window["listView"]()
+        window["listView"](false,true)
       return
     }
 
@@ -293,7 +298,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
 offset = setTimeout(function(){
     requestCreator('Null')
- },1000000)
+ },10000)
 
 }
 

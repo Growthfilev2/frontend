@@ -109,13 +109,27 @@ function http(method, url, data) {
   })
 }
 
-function fetchServerTime() {
+function fetchServerTime(deviceId) {
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now`
+      `${apiUrl}now?deviceId=${deviceId}`
     ).then(function (response) {
-       resolve(response.timestamp)
+      if(response.revokeSession){
+        firebase.auth().signOut().then(function(){
+         const req =  indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
+         req.onsuccess = function(){
+          requestHandlerResponse('removeLocalStorage')
+         }
+         req.onerror = function(){
+          instant(error) 
+         }
+        },function(error){
+          instant(error)
+        })
+        return
+      }
+      resolve(response.timestamp)
     }).catch(function(error){
       instant(error)
     })
@@ -124,20 +138,20 @@ function fetchServerTime() {
 
 
 function instant(error){
-   error = JSON.parse(error)
-  const errorLogs = {
-    message : {
-        error
-    }
-  }
+  //  error = JSON.parse(error)
+  // const errorLogs = {
+  //   message : {
+  //       error
+  //   }
+  // }
 
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-   errorLogs
-  ).then(function(response){
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //  errorLogs
+  // ).then(function(response){
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**
@@ -798,7 +812,7 @@ function successResponse(read) {
     const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-
+    const activityAndRoot = db.transaction(['activity','root'])
     let counter = {}
     read.addendum.forEach(function (addendum) {
       let key = addendum.activityId
@@ -853,11 +867,12 @@ function successResponse(read) {
 
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
-    // after the above operations are done , send a response message back to the requestCreator(main thread).
-    rootObjectStoreTx.oncomplete = function(){
-        requestHandlerResponse('updateIDB', 200, 'IDB updated successfully', user.uid)
+    activityAndRoot.oncomplete = function(){
+      requestHandlerResponse('updateIDB',200,'update successfull')
     }
     
+    // after the above operations are done , send a response message back to the requestCreator(main thread).
+
   }
 }
 
@@ -915,7 +930,6 @@ function setUniqueOffice(data) {
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
-
     }
   }
 }
