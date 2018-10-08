@@ -950,7 +950,6 @@ function updateCreateContainer(record) {
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
 
-  activityName.style.paddingLeft = '10px'
   activityName.style.fontSize = '19px'
 
   leftHeaderContent.appendChild(backSpan)
