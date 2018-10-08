@@ -945,13 +945,12 @@ function updateCreateContainer(record) {
   backSpan.className = 'material-icons'
   backSpan.textContent = 'arrow_back'
   backSpan.id = 'backToConv'
-  backSpan.style.paddingLeft = '10px'
 
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
 
   activityName.style.fontSize = '19px'
-
+  activityName.style.paddingLeft = '10px'
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)
   header(leftHeaderContent.outerHTML, '')
