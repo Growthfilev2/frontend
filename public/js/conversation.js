@@ -2074,8 +2074,6 @@ function resetSelectorUI() {
   document.querySelector('#search--bar--field').style.display = 'none'
   dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#eeeeee'
   document.getElementById('data-list--container').style.display = 'block'
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '-webkit-fill-available'
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '-webkit-fill-available'
 
 }
 

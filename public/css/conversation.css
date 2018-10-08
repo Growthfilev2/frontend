@@ -486,9 +486,10 @@ padding: 8px 20px 8px 20px;
 }
 
 .mdc-dialog__surface {
-  height: -webkit-fill-available;
-  width: -webkit-fill-available;
+  height: 100vh;
+  width: 100vw;
 }
+
 
 .mdc-dialog__body--scrollable {
   min-height: -webkit-fill-available;
