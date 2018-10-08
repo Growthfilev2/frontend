@@ -115,7 +115,7 @@ function fetchServerTime() {
       'GET',
       `${apiUrl}now`
     ).then(function (response) {
-        initializeIDB(response.timestamp).then(updateIDB).catch(console.log)
+       resolve(response.timestamp)
     }).catch(console.log)
   })
 }

@@ -154,20 +154,19 @@ function requestCreator(requestType, requestBody) {
   const requestGenerator = {
     type: requestType,
     body: ''
+
   }
 
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
-    return
-  
   }
-
-  if(requestBody.hasOwnProperty('device')) {
+  else if(requestBody.hasOwnProperty('device')) {
     requestGenerator.body = requestBody.device
     apiHandler.postMessage(requestGenerator)
-    return
   }
+  else {
+
     fetchCurrentLocation().then(function (geopoints) {
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
@@ -175,22 +174,23 @@ function requestCreator(requestType, requestBody) {
         const db = req.result;
         const rootObjectStore = db.transaction('root').objectStore('root')
         rootObjectStore.get(dbName).onsuccess = function (event) {
-
+          
           requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
           requestBody['geopoint'] = geopoints
           requestGenerator.body = requestBody
           // post the requestGenerator object to the apiHandler to perform IDB and api
           // operations
-
+          
           apiHandler.postMessage(requestGenerator)
         }
       }
     })
-
-  
-
-  // handle the response from apiHandler when operation is completed
-
+  }
+    
+    
+    
+    // handle the response from apiHandler when operation is completed
+    
   apiHandler.onmessage = loadViewFromRoot
   apiHandler.onerror = onErrorMessage
 }
