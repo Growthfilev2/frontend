@@ -286,7 +286,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
 setTimeout(function(){
     requestCreator('Null')
- },3000)
+ },10000)
 
 }
 
