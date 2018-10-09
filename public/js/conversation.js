@@ -652,8 +652,8 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return
     if (cursor.value.location) {
       ul.appendChild(createVenueLi(cursor.value, false, activityRecord, true));
-
     }
+    
     cursor.continue()
   }
 
@@ -749,11 +749,11 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
     document.getElementById('app-current-panel').dataset.view = 'create'
     createTempRecord(selectedField.office, selectedField.template, data)
   }
-
 }
 
+
 function insertTemplateByOffice() {
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
+ const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     const subscriotions = db.transaction('subscriptions').objectStore('subscriptions')
@@ -761,7 +761,9 @@ function insertTemplateByOffice() {
       const cursor = event.target.result
       if (!cursor) return
       if (cursor.value.status !== 'CANCELLED' && cursor.value.template !== 'admin' &&  cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
-        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
+    
+    
+        document.querySelector(`[data-selection="${cursor.value.office}"]`).innerHTML += createGroupList(cursor.value.office, cursor.value.template).outerHTML
       }
       cursor.continue()
     }

@@ -118,7 +118,7 @@ function fetchServerTime(deviceInfo) {
     os : deviceInfo[3]
   }
   console.log(deviceObject)
-  
+  console.log("model " + deviceObject.model)
   return new Promise(function (resolve) {
     http(
       'GET',
