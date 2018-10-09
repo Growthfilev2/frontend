@@ -298,7 +298,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
 offset = setTimeout(function(){
     requestCreator('Null')
- },10000)
+ },10000000)
 
 }
 

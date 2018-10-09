@@ -797,6 +797,7 @@ function updateSubscription(db, subscription) {
 // after every operation is done, update the root object sotre's from time value
 // with the uptoTime received from response.
 
+let firstTime = 0;
 function successResponse(read) {
   console.log(read)
   console.log('start success')
@@ -814,6 +815,7 @@ function successResponse(read) {
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
     const activityAndRoot = db.transaction(['activity','root'])
     let counter = {}
+    firstTime++
     read.addendum.forEach(function (addendum) {
       let key = addendum.activityId
       counter[key] = (counter[key] || 0) + 1
@@ -852,11 +854,12 @@ function successResponse(read) {
       putAttachment(db, activity)
     })
 
-    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
-
+    
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
     })
+    
+    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
 
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
@@ -868,6 +871,12 @@ function successResponse(read) {
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
 
     activityAndRoot.oncomplete = function(){
+      if(firstTime == 1) {
+        setTimeout(function(){
+          requestHandlerResponse('updateIDB',200,'update successfull')
+        },6000)
+        return
+      }
       requestHandlerResponse('updateIDB',200,'update successfull')
     }
     
