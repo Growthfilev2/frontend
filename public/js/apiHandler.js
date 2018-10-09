@@ -109,11 +109,20 @@ function http(method, url, data) {
   })
 }
 
-function fetchServerTime(deviceId) {
+function fetchServerTime(deviceInfo) {
+  deviceInfo = JSON.parse(deviceInfo).split("&")
+  const deviceObject = {
+    deviceId : deviceInfo[0],
+    brand : deviceInfo[1],
+    model : deviceInfo[2],
+    os : deviceInfo[3]
+  }
+  console.log(deviceObject)
+  
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now?deviceId=${deviceId.device}`
+      `${apiUrl}now?deviceId=${deviceObject.deviceId}`
     ).then(function (response) {
       if(response.revokeSession){
         firebase.auth().signOut().then(function(){
@@ -131,11 +140,10 @@ function fetchServerTime(deviceId) {
       }
       resolve(response.timestamp)
     }).catch(function(error){
-      instant(error)
+      instant(JSON.stringify(deviceObject))
     })
   })
 }
-
 
 function instant(error){
   //  error = JSON.parse(error)
