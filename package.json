@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Growthfile frontend application",
   "main": "index.html",
-  "dependencies": {},
-  "devDependencies": {
-    "standard": "^11.0.1"
-  },
   "scripts": {
     "test": "standard"
   },

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src='https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js' defer></script>
+  <script src='https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js' defer></script>
+  <script src="js/init.js" defer></script>
+  <script src="js/services.js" defer></script>
+  <script src="js/panel.js" defer></script>
+  <link rel="stylesheet" href='external/material-css.css' async>
+
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" async>
+
+  <script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js" defer></script>
+
+  <script src='https://www.gstatic.com/firebasejs/5.2.0/firebase-storage.js' defer></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
+  <script src='external/material-js.js' async></script>
+  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c&libraries=places" async></script>
+
+  <link href="css/theme.css" rel="stylesheet" type="text/css" async>
+  <link href="css/conversation.css" rel="stylesheet" type="text/css" async>
+  <script src="js/conversation.js" defer></script>
+
+</head>
+
+<body id="growthfile">
+
+  <div id="login-container">
+
+
+  </div>
+  <script>
+window.addEventListener('load', function() {
+  window.onerror = function(msg,url,lineNo,columnNo,error){
+  const errorJS  = {
+    msg : msg,
+    url :url,
+    lineNo:lineNo,
+    columnNo :columnNo,
+    error:error
+  }
+  requestCreator('instant',errorJS)
+
+  }
+	
+
+  // if ('serviceWorker' in navigator) {
+  //   console.log('webview started')
+  //   initSW()
+  // } else {
+  //   console.log("direct run")
+  //   startApp()
+  // }   
+  startApp()
+ 
+
+})
+  </script>
+
+  <script>
+  function initSW() {
+    navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
+      registration.addEventListener('updatefound', function() {
+         // If updatefound is fired, it means that there's
+         // a new service worker being installed.
+        var installingWorker = registration.installing;
+        console.log('A new service worker is being installed:',
+          installingWorker);
+
+        // You can listen for changes to the installing service worker's
+        // state via installingWorker.onstatechange
+      });
+
+      startApp()
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+    //   // registration failed :(
+      console.log('ServiceWorker registration failed: ', err);
+    });
+
+  }
+  </script>
+</body>
+
+</html>
