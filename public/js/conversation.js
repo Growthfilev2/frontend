@@ -760,7 +760,7 @@ function insertTemplateByOffice() {
     subscriotions.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      if (cursor.value.template !== 'admin' &&  cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
+      if (cursor.value.status !== 'CANCELLED' && cursor.value.template !== 'admin' &&  cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
         document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
       }
       cursor.continue()

@@ -1,0 +1,27 @@
+[debug] [2018-10-09T09:28:15.559Z] ----------------------------------------------------------------------
+[debug] [2018-10-09T09:28:15.564Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\ABC\AppData\Roaming\npm\node_modules\firebase-tools\bin\firebase deploy
+[debug] [2018-10-09T09:28:15.564Z] CLI Version:   3.17.4
+[debug] [2018-10-09T09:28:15.564Z] Platform:      win32
+[debug] [2018-10-09T09:28:15.564Z] Node Version:  v8.9.4
+[debug] [2018-10-09T09:28:15.566Z] Time:          Tue Oct 09 2018 14:58:15 GMT+0530 (India Standard Time)
+[debug] [2018-10-09T09:28:15.566Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2018-10-09T09:28:15.602Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2018-10-09T09:28:15.604Z] > authorizing via signed-in user
+[debug] [2018-10-09T09:28:15.609Z] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] [2018-10-09T09:28:15.610Z] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token  
+ { refresh_token: '1/x5gedolxru0_agCKrcZ6y6bjcGNr17eddtrHwu9CzgJbfznR9IEVs5fDH-RPBZf5',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  grant_type: 'refresh_token',
+  scope: 'email https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/cloudplatformprojects.readonly https://www.googleapis.com/auth/firebase openid' } 
+ Tue Oct 09 2018 14:58:15 GMT+0530 (India Standard Time)
+[debug] [2018-10-09T09:28:16.330Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-09T09:28:16.367Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/growthfile-207204  
+  
+ Tue Oct 09 2018 14:58:16 GMT+0530 (India Standard Time)
+[debug] [2018-10-09T09:28:17.993Z] <<< HTTP RESPONSE 200
+[debug] [2018-10-09T09:28:17.995Z] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/growthfile-207204/tokens  
+  
+ Tue Oct 09 2018 14:58:17 GMT+0530 (India Standard Time)
+[debug] [2018-10-09T09:28:19.033Z] <<< HTTP RESPONSE 200
