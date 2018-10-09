@@ -17,7 +17,7 @@ function listView(scrollId,pushState) {
     const rootStore = rootTx.objectStore('root')
     rootStore.get(dbName).onsuccess = function (event) {
       const officeRecord = event.target.result
-
+      
       if (!document.querySelector('.mdc-drawer--temporary')) {
         initMenu(db, officeRecord.offices)
       }
@@ -366,8 +366,14 @@ function initMenu(db, officeRecord) {
 
   const aside = document.createElement('aside')
   aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
+  if(officeRecord) {
+    aside.dataset.currentOffice = officeRecord.allOffices[0]
 
-  aside.dataset.currentOffice = officeRecord.allOffices[0]
+  }
+  else {
+    aside.dataset.currentOffice = 'all'
+  }
+
   const nav = document.createElement('nav')
   nav.className = 'mdc-drawer__drawer'
 

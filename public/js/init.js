@@ -71,10 +71,14 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
+  const drawerDiv = document.createElement('div')
+  drawerDiv.className = 'drawer--cont'
+
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
+  layout.appendChild(drawerDiv)
   document.body.innerHTML = layout.outerHTML
   imageViewDialog()
 }

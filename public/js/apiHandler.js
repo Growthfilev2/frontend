@@ -859,24 +859,20 @@ function successResponse(read) {
       updateSubscription(db, subscription)
     })
     
-    getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
-
+    
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
       record.fromTime = Date.parse(read.upto)
-
+      
       rootObjectStore.put(record)
     }
-
+    
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
+    
+    getUniqueOfficeCount(firstTime).then(setUniqueOffice).catch(console.log)
 
     activityAndRoot.oncomplete = function(){
-      if(firstTime == 1) {
-        setTimeout(function(){
-          requestHandlerResponse('updateIDB',200,'update successfull')
-        },6000)
-        return
-      }
+      if(firstTime === 1) return
       requestHandlerResponse('updateIDB',200,'update successfull')
     }
     
@@ -889,7 +885,7 @@ function notUpdateUserObjectStore(errorUrl) {
   console.log(errorUrl)
 }
 
-function getUniqueOfficeCount() {
+function getUniqueOfficeCount(firstTime) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
@@ -904,7 +900,8 @@ function getUniqueOfficeCount() {
           resolve({
             dbName: dbName,
             count: officeCount,
-            allOffices: offices
+            allOffices: offices,
+            firstTime : firstTime
           })
           return
         }
@@ -934,11 +931,20 @@ function setUniqueOffice(data) {
         offices.hasMultipleOffice = 0
         record.offices = offices
         rootObjectStore.put(record)
+        if(data.firstTime === 1) {
+
+          requestHandlerResponse('updateIDB',200,'update successfull')
+        }
+
         return
       }
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
+      if(data.firstTime === 1) {
+        requestHandlerResponse('updateIDB',200,'update successfull')
+      }
+
     }
   }
 }
