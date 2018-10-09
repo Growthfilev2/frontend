@@ -1,4 +1,8 @@
 function listView(scrollId,pushState) {
+  if(document.querySelector('.init-loader')) {
+    document.querySelector('.init-loader').remove()
+  }
+  
   console.log("list view openend")
   const dbName = localStorage.getItem('dbexist');
   if(pushState){    

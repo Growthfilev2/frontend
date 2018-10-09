@@ -78,7 +78,6 @@ function layoutGrid() {
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
-  layout.appendChild(drawerDiv)
   document.body.innerHTML = layout.outerHTML
   imageViewDialog()
 }
@@ -160,7 +159,7 @@ function startApp() {
       requestCreator('now',{device:'AndroidId.getDeviceId()'})
       return
     }
-
+    document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
     requestCreator('now',{device:'AndroidId.getDeviceId()'})
     return

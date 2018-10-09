@@ -551,6 +551,17 @@ footer.mdc-dialog__footer {
   }
 }
 
+.init-loader {
+  border: 6px solid #3498db;
+
+  border-top: 7px solid #f3f3f3;
+  width: 100px;
+  height: 100px;
+
+  right: 36%;
+  top: 39%;
+}
+
 .status-loader {
   float: right;
   width: 15px;
