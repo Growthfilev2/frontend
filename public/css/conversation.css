@@ -92,7 +92,7 @@ body {
 }
 
 .current-user--comment .user-map--span {
-  color: black !important;
+  color: #0399f4 !important
 }
 
 .other-user--comment {
@@ -106,7 +106,7 @@ body {
 }
 
 .other-user--comment .user-map--span {
-  color: black !important;
+  color: #0399f4 !important
 }
 
 
