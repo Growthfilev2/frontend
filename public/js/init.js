@@ -156,12 +156,12 @@ function startApp() {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(false,true)
-      requestCreator('now',{device:'AndroidId.getDeviceId()'})
+      requestCreator('now','AndroidId.getDeviceId()')
       return
     }
     document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
-    requestCreator('now',{device:'AndroidId.getDeviceId()'})
+    requestCreator('now','AndroidId.getDeviceId()')
     return
   })
 }

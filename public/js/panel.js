@@ -1,17 +1,19 @@
+
 function listView(scrollId,pushState) {
+  document.body.style.backgroundColor = 'white'
+
   if(document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
   
-  console.log("list view openend")
-  const dbName = localStorage.getItem('dbexist');
+  
   if(pushState){    
     history.pushState(['listView'], null, null)
   }
- 
+  
   listPanel()
-
-  document.body.style.backgroundColor = 'white'
+  
+  const dbName = localStorage.getItem('dbexist');
 
   const req = indexedDB.open(dbName)
 
