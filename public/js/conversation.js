@@ -600,7 +600,7 @@ function fillUsersInSelector(activityRecord, dialog, data) {
     }
 
     document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors('users', activityRecord, data)
+      initSearchForSelectors(db,'users', data)
     })
 
     dialog['acceptButton_'].onclick = function () {
@@ -658,7 +658,7 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
   }
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('map', activityRecord, data)
+    initSearchForSelectors(db,'map', activityRecord, data)
   })
 
   dialog['acceptButton_'].onclick = function () {
@@ -692,7 +692,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   }
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('users', activityRecord, data)
+    initSearchForSelectors('children', activityRecord, data)
   })
 
   dialog['acceptButton_'].onclick = function () {
@@ -740,12 +740,14 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
 
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('users', activityRecord, data)
+    initSearchForSelectors('subscriptions', activityRecord, data)
   })
 
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+    console.log(radio)
     const selectedField = JSON.parse(radio.value)
+    console.log(selectedField)
     document.getElementById('app-current-panel').dataset.view = 'create'
     createTempRecord(selectedField.office, selectedField.template, data)
   }
@@ -762,8 +764,9 @@ function insertTemplateByOffice() {
       if (!cursor) return
       if (cursor.value.status !== 'CANCELLED' && cursor.value.template !== 'admin' &&  cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
     
-    
-        document.querySelector(`[data-selection="${cursor.value.office}"]`).innerHTML += createGroupList(cursor.value.office, cursor.value.template).outerHTML
+     
+         
+        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
       }
       cursor.continue()
     }
@@ -2024,7 +2027,7 @@ function checkSpacesInString(input) {
   return false
 }
 
-function initSearchForSelectors(type, record, attr) {
+function initSearchForSelectors(db,type, record, attr) {
   searchBarUI()
   if (type === 'map') {
     let input = document.getElementById('search--bar-selector')
@@ -2035,8 +2038,12 @@ function initSearchForSelectors(type, record, attr) {
     }
     autocomplete = new google.maps.places.Autocomplete(input, options);
     initializeAutocompleteGoogle(autocomplete, record, attr)
+    return
   }
-
+  
+  if(type === 'users' ) {
+    initUserSelectorSearch(db,attr)
+  }
 }
 
 function searchBarUI() {
@@ -2057,7 +2064,7 @@ function searchBarUI() {
   document.getElementById('selector--search').style.display = 'none'
   document.querySelector('.selector-send').style.display = 'none'
   dialogEl.querySelector('#view-type span').dataset.type = 'back-list'
-  document.getElementById('data-list--container').style.display = 'none'
+  // document.getElementById('data-list--container').style.display = 'none'
 }
 
 function resetSelectorUI() {
