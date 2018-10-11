@@ -717,11 +717,13 @@ footer.mdc-dialog__footer {
   padding-top: 10px;
   padding-bottom: 10px;
 }
+
 .activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text {
   padding-top: 4px;
 }
-.activity--list-item .mdc-list-item__meta {
 
+.activity--list-item .mdc-list-item__meta {
+  margin-top: 6px;
   text-align: right;
 }
 
