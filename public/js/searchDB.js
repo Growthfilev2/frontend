@@ -8,7 +8,7 @@ searchField.addEventListener('input',function(e){
     
     if(isNumber(searchString)){
         objectStore = db.transaction('users').objectStore('users')
-        searchDB(formatNumber(searchString),objectStore,frag)
+        searchDB(formatNumber(searchString),objectStore,frag,record)
         return
     }
 
@@ -48,7 +48,12 @@ function formatName(name) {
    return result.join(' ')
 }
 
-function searchDB(searchTerm,objectStore,frag){
+function checkNumber(number){
+    const expression = /^\+[1-9]\d{5,14}$/
+    return expression.test(number)
+}
+
+function searchDB(searchTerm,objectStore,frag,record){
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm,searchTerm+'\uffff')
     const ul = document.getElementById('data-list--container')
@@ -56,10 +61,25 @@ function searchDB(searchTerm,objectStore,frag){
     objectStore.openCursor(bound).onsuccess = function(event){
         const cursor = event.target.result
         if(!cursor) {
+
+            if(checkNumber(searchTerm) && ul.children.length == 0){
+                const notify = document.createElement('div')
+                notify.className = 'data-not-found'
+                const textSpan = document.createElement('span')
+                textSpan.textContent = 'Not found'
+                const addNumber = document.createElement('button')
+                addNumber.className = 'mdc-button'
+                notify.appendChild(textSpan)
+                notify.appendChild(addNumber)
+                ul.appendChild(notify)
+                return
+            }
+
             ul.innerHTML = ''
             ul.appendChild(frag)
             return
         }
+      
         frag.appendChild(createSimpleAssigneeLi(cursor.value, true))
         cursor.continue()
     }
