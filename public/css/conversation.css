@@ -58,7 +58,7 @@ body {
 #chat-container .comment-box {
   width: 63%;
   padding: 10px 10px 5px 10px;
-  margin: 5px 10px 5px 20px;
+  margin: 5px 10px 5px 15px;
   display: inline-block;
   position: relative;
   border-radius: 12px;
@@ -92,7 +92,7 @@ body {
 }
 
 .current-user--comment .user-map--span {
-  color: black !important;
+  color: #0399f4 !important
 }
 
 .other-user--comment {
@@ -106,7 +106,7 @@ body {
 }
 
 .other-user--comment .user-map--span {
-  color: black !important;
+  color: #0399f4 !important
 }
 
 
@@ -142,7 +142,6 @@ body {
 }
 
 .status--change-cont label {
-  padding-left: 20px;
   font-size: 18px;
 }
 .status--change-cont .mdc-form-field {
@@ -382,7 +381,7 @@ padding: 8px 20px 8px 20px;
 
 .comment-header-primary .mdc-list-item__secondary-text {
   margin-top: -5px;
-  color: black;
+  color: #0399f4;
 }
 
 .reauth-recaptcha {
@@ -487,9 +486,10 @@ padding: 8px 20px 8px 20px;
 }
 
 .mdc-dialog__surface {
-  height: -webkit-fill-available;
-  width: -webkit-fill-available;
+  height: 100vh;
+  width: 100vw;
 }
+
 
 .mdc-dialog__body--scrollable {
   min-height: -webkit-fill-available;
@@ -551,6 +551,17 @@ footer.mdc-dialog__footer {
   }
 }
 
+.init-loader {
+  border: 6px solid #3498db;
+
+  border-top: 7px solid #f3f3f3;
+  width: 100px;
+  height: 100px;
+
+  right: 36%;
+  top: 39%;
+}
+
 .status-loader {
   float: right;
   width: 15px;
@@ -572,7 +583,19 @@ footer.mdc-dialog__footer {
   right: 43%;
   top: 43%;
 }
-
+.cancel-loader {
+  height: 15px;
+  width: 15px;
+  left: 20%;
+  right: auto;
+  top: 28%;
+}
+.undo-delete-loader {
+  right: 5%;
+  width: 15px;
+  height: 15px;
+  top: 27%;
+}
 #assignee--list {
   position: relative;
   margin-top: 10px;
@@ -614,7 +637,7 @@ footer.mdc-dialog__footer {
 }
 
 #view-type {
-  padding-left: 5px;
+  padding-left: 10px;
   padding-top:5px;
 }
 
@@ -694,11 +717,13 @@ footer.mdc-dialog__footer {
   padding-top: 10px;
   padding-bottom: 10px;
 }
+
 .activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text {
   padding-top: 4px;
 }
-.activity--list-item .mdc-list-item__meta {
 
+.activity--list-item .mdc-list-item__meta {
+  margin-top: 6px;
   text-align: right;
 }
 

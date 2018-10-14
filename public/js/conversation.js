@@ -66,7 +66,7 @@ function commentPanel(db, id) {
   inputField.id = 'write--comment'
   inputField.style.width = '100%';
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input comment-field mdc-elevation--z6'
+  input.className = 'mdc-text-field__input comment-field mdc-elevation--z4'
   input.type = 'text'
 
   inputField.appendChild(input)
@@ -142,23 +142,23 @@ function statusChange(db, id) {
       document.querySelector('.status--change-cont').innerHTML = label.outerHTML + loader('status-loader').outerHTML;
       return
     }
-    if(!document.querySelector('.status-check')) {
-    const div = document.createElement('div')
-    div.className = 'mdc-form-field form-field-status'
+    if (!document.querySelector('.status-check')) {
+      const div = document.createElement('div')
+      div.className = 'mdc-form-field form-field-status'
 
-    const checkbox = document.createElement('div')
-    checkbox.className = 'mdc-checkbox status-check'
+      const checkbox = document.createElement('div')
+      checkbox.className = 'mdc-checkbox status-check'
 
 
-    const input = document.createElement("input")
-    input.className = 'mdc-checkbox__native-control'
-    input.id = 'toggle-status'
-    input.type = 'checkbox'
+      const input = document.createElement("input")
+      input.className = 'mdc-checkbox__native-control'
+      input.id = 'toggle-status'
+      input.type = 'checkbox'
 
-    const checkbox_bckg = document.createElement('div')
-    checkbox_bckg.className = 'mdc-checkbox__background'
+      const checkbox_bckg = document.createElement('div')
+      checkbox_bckg.className = 'mdc-checkbox__background'
 
-    const svg = `<svg class="mdc-checkbox__checkmark"
+      const svg = `<svg class="mdc-checkbox__checkmark"
       viewBox="0 0 24 24">
       <path class="mdc-checkbox__checkmark-path"
       fill="none"
@@ -166,18 +166,18 @@ function statusChange(db, id) {
       </svg>
       <div class="mdc-checkbox__mixedmark"></div>`
 
-    const mixedmark = document.createElement('div')
-    mixedmark.className = 'mdc-checkbox__mixedmark'
-    checkbox_bckg.innerHTML = svg
-    checkbox.appendChild(input)
-    checkbox.appendChild(checkbox_bckg)
+      const mixedmark = document.createElement('div')
+      mixedmark.className = 'mdc-checkbox__mixedmark'
+      checkbox_bckg.innerHTML = svg
+      checkbox.appendChild(input)
+      checkbox.appendChild(checkbox_bckg)
 
-    div.appendChild(checkbox)
+      div.appendChild(checkbox)
 
 
-    document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
-  }
-  
+      document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+    }
+
 
     const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
 
@@ -471,9 +471,9 @@ function selectorUI(evt, data) {
 
 
   const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons dialog--header-back'
+  backSpan.className = 'material-icons dialog--header-back selector--type-'+data.store
   backSpan.textContent = 'arrow_back'
-
+  
 
   const section = document.createElement('section')
   section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
@@ -509,19 +509,26 @@ function selectorUI(evt, data) {
   document.body.appendChild(aside)
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
-    removeDialog(e)
+    if(e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back' ) {
+      resetSelectedContacts().then(function(people){
+        removeDialog(e, data)
+      })
+      return
+    }
+    removeDialog(e, data)
   })
 
   initializeSelectorWithData(evt, data)
 }
 
-function removeDialog(evt) {
+function removeDialog(evt, data) {
   if (document.getElementById('dialog--component')) {
     if (evt && evt.target.dataset.type === 'back-list') {
-      resetSelectorUI()
+      resetSelectorUI(data)
     } else {
       document.getElementById('dialog--component').remove();
       document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock')
+
     }
   }
 }
@@ -547,15 +554,18 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      if (data.record.create) {
-        fillUsersInSelector(data.record, dialog, data)
-        return
-      }
-      const activityStore = db.transaction('activity').objectStore('activity');
-      activityStore.get(activityRecord.activityId).onsuccess = function (event) {
-        const record = event.target.result
-        fillUsersInSelector(record, dialog, data)
-      }
+      fillUsersInSelector(data, dialog)
+
+
+      // if (data.record.create) {
+      //   fillUsersInSelector(data, dialog)
+      //   return
+      // }
+      // const activityStore = db.transaction('activity').objectStore('activity');
+      // activityStore.get(activityRecord.activityId).onsuccess = function (event) {
+      //   const record = event.target.result
+      //   fillUsersInSelector(record, dialog)
+      // }
     }
 
     if (data.store === 'children') {
@@ -569,10 +579,10 @@ function initializeSelectorWithData(evt, data) {
 
 }
 
-function fillUsersInSelector(activityRecord, dialog, data) {
+function fillUsersInSelector(data, dialog) {
   const ul = document.getElementById('data-list--container')
   const alreadyPresntAssigness = {}
-  const usersInRecord = activityRecord.assignees
+  const usersInRecord = data.record.assignees
 
   usersInRecord.forEach(function (user) {
     alreadyPresntAssigness[user] = ''
@@ -584,33 +594,41 @@ function fillUsersInSelector(activityRecord, dialog, data) {
     const selectorStore = db.transaction('users').objectStore('users');
     selectorStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) return
+      if (!cursor) {
+        const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
+        selectedBoxes.forEach(function (box) {
+          const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
+          mdcBox.checked = true
+          box.children[1].style.animation = 'none'
+          box.children[1].children[0].children[0].style.animation = 'none'
+        })
+        return
+      }
 
       const userRecord = cursor.value
 
       if (data.attachment.present) {
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true))
-      }
-      
-      else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true))
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true,false))
+      } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true,true))
+
       }
 
       cursor.continue()
     }
 
     document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors('users', activityRecord, data)
+      initSearchForSelectors(db, 'users')
     })
 
     dialog['acceptButton_'].onclick = function () {
 
-      const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-      console.log(radio)
-
+      
       if (data.attachment.present) {
+        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+        console.log(radio)
         console.log("run")
-        updateDomFromIDB(activityRecord, {
+        updateDomFromIDB(data.record, {
           hash: '',
           key: data.attachment.key
         }, {
@@ -619,31 +637,62 @@ function fillUsersInSelector(activityRecord, dialog, data) {
         removeDialog()
         return;
       }
-      if (activityRecord.hasOwnProperty('create')) {
-        updateDomFromIDB(activityRecord, {
-          hash: 'addOnlyAssignees',
-        }, {
-          primary: JSON.parse(radio.value)
+      if (data.record.hasOwnProperty('create')) {
+        resetSelectedContacts().then(function(selectedPeople){
+          updateDomFromIDB(data.record, {
+            hash: 'addOnlyAssignees',
+          }, {
+            primary: selectedPeople
+          })
+          removeDialog()
+
         })
-        removeDialog()
         return
       }
 
-      document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));      
+      document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
       document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
-
-      const reqBody = {
-        'activityId': activityRecord.activityId,
-        'share': [JSON.parse(radio.value)]
-      }
-      requestCreator('share', reqBody)
-      removeDialog()
+      resetSelectedContacts().then(function(people){
+        console.log(people)
+        const reqBody = {
+          'activityId': data.record.activityId,
+          'share': people
+        }
+        requestCreator('share', reqBody)
+        removeDialog()
+      })
       return
 
     }
   }
 
 }
+
+function resetSelectedContacts() {
+  return new Promise(function(resolve){
+    const selectedUsers = []
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      const objectStoreTx = db.transaction(['users'], 'readwrite')
+      const objectStore = objectStoreTx.objectStore('users')
+      const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
+      selectedBoxes.forEach(function (box) {
+        const mobile = box.parentNode.parentNode.dataset.value
+        selectedUsers.push(mobile)
+        objectStore.get(mobile).onsuccess = function (event) {
+          const record = event.target.result;
+          record.isSelected = false
+          objectStore.put(record)
+        }
+      })
+      objectStoreTx.oncomplete = function(){
+        resolve(selectedUsers)
+      }
+    }
+  })
+  }
 
 function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
   const ul = document.getElementById('data-list--container')
@@ -652,13 +701,13 @@ function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return
     if (cursor.value.location) {
       ul.appendChild(createVenueLi(cursor.value, false, activityRecord, true));
-
     }
+
     cursor.continue()
   }
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('map', activityRecord, data)
+    initSearchForSelectors(db, 'map', activityRecord, data)
   })
 
   dialog['acceptButton_'].onclick = function () {
@@ -692,7 +741,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   }
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('users', activityRecord, data)
+    initSearchForSelectors('children', activityRecord, data)
   })
 
   dialog['acceptButton_'].onclick = function () {
@@ -740,17 +789,19 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
 
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('users', activityRecord, data)
+    initSearchForSelectors('subscriptions', activityRecord, data)
   })
 
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+    console.log(radio)
     const selectedField = JSON.parse(radio.value)
+    console.log(selectedField)
     document.getElementById('app-current-panel').dataset.view = 'create'
     createTempRecord(selectedField.office, selectedField.template, data)
   }
-
 }
+
 
 function insertTemplateByOffice() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -760,7 +811,10 @@ function insertTemplateByOffice() {
     subscriotions.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      if (cursor.value.template !== 'admin' &&  cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
+      if (cursor.value.status !== 'CANCELLED' && cursor.value.template !== 'admin' && cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
+
+
+
         document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
       }
       cursor.continue()
@@ -886,9 +940,12 @@ function updateDomFromIDB(activityRecord, attr, data) {
     }
     //for create
     if (attr.hash === 'addOnlyAssignees') {
-      activityRecord.assignees.push(data.primary)
-      console.log(activityRecord)
-      readNameAndImageFromNumber([data.primary], db)
+    
+
+        activityRecord.assignees = data.primary
+        console.log(activityRecord)
+      
+      readNameAndImageFromNumber(data.primary, db)
       return
     }
 
@@ -945,14 +1002,12 @@ function updateCreateContainer(record) {
   backSpan.className = 'material-icons'
   backSpan.textContent = 'arrow_back'
   backSpan.id = 'backToConv'
-  backSpan.style.paddingLeft = '10px'
 
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
 
-  activityName.style.paddingLeft = '10px'
   activityName.style.fontSize = '19px'
-
+  activityName.style.paddingLeft = '10px'
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)
   header(leftHeaderContent.outerHTML, '')
@@ -1140,11 +1195,13 @@ function createSimpleLi(key, data) {
     listItemLabel.textContent = data.text
     listItem.appendChild(dataVal)
     listItem.appendChild(listItemLabel)
+    listItem.classList.add('undo-delete-activity')
     const undo = document.createElement('button')
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-
+      document.querySelector('.undo-deleted').style.display = 'none'
+      listItem.appendChild(loader('undo-delete-loader'));
       requestCreator('statusChange', {
         activityId: data.id,
         status: 'PENDING'
@@ -1424,7 +1481,7 @@ function createAttachmentContainer(data) {
   Object.keys(data.attachment).forEach(function (key) {
 
     const div = document.createElement('div')
-    data.attachment[key].type === 'HH:MM' ?  div.className = `attachment-field HHMM` :   div.className = `attachment-field ${data.attachment[key].type}`
+    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
 
     if (data.canEdit) {
@@ -1644,7 +1701,7 @@ function readNameAndImageFromNumber(assignees, db) {
   })
 }
 
-function createSimpleAssigneeLi(userRecord, showMetaInput) {
+function createSimpleAssigneeLi(userRecord, showMetaInput,isCheckbox) {
   const assigneeLi = document.createElement('li')
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (!userRecord) return assigneeLi
@@ -1680,10 +1737,14 @@ function createSimpleAssigneeLi(userRecord, showMetaInput) {
   const metaInput = document.createElement('span')
   metaInput.className = 'mdc-list-item__meta material-icons'
   if (showMetaInput) {
-
-    metaInput.appendChild(createRadioInput())
-    assigneeLi.onclick = function () {
-      checkRadioInput(this, assigneeLi.dataset.value)
+    if(isCheckbox) {
+      metaInput.appendChild(createCheckBox(userRecord))
+    }
+    else {
+      metaInput.appendChild(createRadioInput())
+      assigneeLi.onclick = function () {
+        checkRadioInput(this, assigneeLi.dataset.value)
+      }
     }
   }
   assigneeLi.appendChild(photoGraphic)
@@ -1715,6 +1776,57 @@ function createRadioInput() {
   div.appendChild(radioBckg)
   return div
 
+}
+
+function createCheckBox(userRecord) {
+
+  const checkbox = document.createElement('div')
+  checkbox.className = 'mdc-checkbox status-check'
+  checkbox.dataset.selected = userRecord.isSelected
+
+  const input = document.createElement("input")
+  input.className = 'mdc-checkbox__native-control'
+  input.type = 'checkbox'
+  input.onclick = function (evt) {
+
+    checkCheckboxInput(evt, userRecord)
+  }
+  const checkbox_bckg = document.createElement('div')
+  checkbox_bckg.className = 'mdc-checkbox__background'
+
+  const svg = `<svg class="mdc-checkbox__checkmark"
+    viewBox="0 0 24 24">
+    <path class="mdc-checkbox__checkmark-path"
+    fill="none"
+    d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+    </svg>
+    <div class="mdc-checkbox__mixedmark"></div>`
+
+  const mixedmark = document.createElement('div')
+  mixedmark.className = 'mdc-checkbox__mixedmark'
+  checkbox_bckg.innerHTML = svg
+  checkbox.appendChild(input)
+  checkbox.appendChild(checkbox_bckg)
+
+  return checkbox
+}
+
+function checkCheckboxInput(evt, record) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const objectStore = db.transaction('users', 'readwrite').objectStore('users')
+    if (record.hasOwnProperty('isSelected') && record.isSelected) {
+      evt.target.parentNode.dataset.selected = false
+      record.isSelected = false
+    } else {
+      evt.target.parentNode.dataset.selected = true
+
+      record.isSelected = true
+    }
+    objectStore.put(record)
+  }
 }
 
 function checkRadioInput(inherit, value) {
@@ -1818,19 +1930,18 @@ function createActivityCancellation(record) {
     }
 
 
-
-
-
-
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
-    document.getElementById('delete-allow').onclick = function(){
+    document.getElementById('delete-allow').onclick = function () {
+      document.querySelector('.delete-activity').style.display = 'none';
+      document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
+
       requestCreator('statusChange', {
         activityId: record.activityId,
         status: 'CANCELLED',
       })
 
     }
-  
+
     dialog.listen('MDCDialog:cancel', function () {
       console.log('canceled');
     })
@@ -1942,7 +2053,7 @@ function insertInputsIntoActivity(record, activityStore) {
     record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
   }
 
-  
+
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
@@ -2023,8 +2134,8 @@ function checkSpacesInString(input) {
   return false
 }
 
-function initSearchForSelectors(type, record, attr) {
-  searchBarUI()
+function initSearchForSelectors(db, type, record, attr) {
+  searchBarUI(type)
   if (type === 'map') {
     let input = document.getElementById('search--bar-selector')
     const options = {
@@ -2034,11 +2145,16 @@ function initSearchForSelectors(type, record, attr) {
     }
     autocomplete = new google.maps.places.Autocomplete(input, options);
     initializeAutocompleteGoogle(autocomplete, record, attr)
+    return
   }
 
+  if (type === 'users') {
+
+    initUserSelectorSearch(db)
+  }
 }
 
-function searchBarUI() {
+function searchBarUI(type) {
 
   const dialogEl = document.getElementById('dialog--component')
   const actionCont = dialogEl.querySelector("#action-data")
@@ -2056,10 +2172,13 @@ function searchBarUI() {
   document.getElementById('selector--search').style.display = 'none'
   document.querySelector('.selector-send').style.display = 'none'
   dialogEl.querySelector('#view-type span').dataset.type = 'back-list'
-  document.getElementById('data-list--container').style.display = 'none'
+  if(type === 'users') {
+    dialogEl.querySelector('#view-type span').dataset.state = 'user-list-back'
+  }
+  // document.getElementById('data-list--container').style.display = 'none'
 }
 
-function resetSelectorUI() {
+function resetSelectorUI(data) {
 
   const dialogEl = document.getElementById('dialog--component')
   const actionCont = dialogEl.querySelector("#action-data")
@@ -2073,8 +2192,9 @@ function resetSelectorUI() {
   document.querySelector('#search--bar--field').style.display = 'none'
   dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#eeeeee'
   document.getElementById('data-list--container').style.display = 'block'
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '-webkit-fill-available'
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '-webkit-fill-available'
+  const selectorDialog = new mdc.dialog.MDCDialog(dialogEl)
+  document.getElementById('data-list--container').innerHTML = ''
+  fillUsersInSelector(data, selectorDialog)
 
 }
 
@@ -2321,16 +2441,16 @@ function toggleActionables(id) {
     activityStore.get(id).onsuccess = function (event) {
       const record = event.target.result
       const actions = document.querySelectorAll('.mdc-fab')
-      if(!record.editable) return
-      
-        if (document.querySelector('.loader')) {
-          document.querySelector('.loader').remove()
-          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
-        }
-        if (document.querySelector('.progress--update')) {
-          document.querySelector('.progress--update').remove()
-        }
-      
+      if (!record.editable) return
+
+      if (document.querySelector('.loader')) {
+        document.querySelector('.loader').remove()
+        document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
+      }
+      if (document.querySelector('.progress--update')) {
+        document.querySelector('.progress--update').remove()
+      }
+
     }
   }
 }

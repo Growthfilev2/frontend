@@ -154,43 +154,44 @@ function requestCreator(requestType, requestBody) {
   const requestGenerator = {
     type: requestType,
     body: ''
+
   }
 
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
-    return
-  
   }
-
-  if(requestBody.hasOwnProperty('device')) {
-    requestGenerator.body = requestBody.device
+  else if(requestType === 'instant' || requestType === 'now') {
+    requestGenerator.body = JSON.stringify(requestBody)
     apiHandler.postMessage(requestGenerator)
-    return
   }
+  else {
+    offset = '';
     fetchCurrentLocation().then(function (geopoints) {
+
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
       req.onsuccess = function () {
         const db = req.result;
         const rootObjectStore = db.transaction('root').objectStore('root')
         rootObjectStore.get(dbName).onsuccess = function (event) {
-
+          
           requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
           requestBody['geopoint'] = geopoints
           requestGenerator.body = requestBody
           // post the requestGenerator object to the apiHandler to perform IDB and api
           // operations
-
+          
           apiHandler.postMessage(requestGenerator)
         }
       }
     })
-
-  
-
-  // handle the response from apiHandler when operation is completed
-
+  }
+    
+    
+    
+    // handle the response from apiHandler when operation is completed
+    
   apiHandler.onmessage = loadViewFromRoot
   apiHandler.onerror = onErrorMessage
 }
@@ -202,13 +203,27 @@ function loadViewFromRoot(response) {
     return
   }
 
+  if(response.data.type === 'removeLocalStorage'){
+    localStorage.removeItem('dbexist')
+    return
+  }
+
   // only for development
   if (response.data.type === 'error') {
     if (document.querySelector('header .mdc-linear-progress')) {
       document.querySelector('header .mdc-linear-progress').remove()
     }
+    if(document.querySelector('.loader')){
+      document.querySelector('.loader').remove()
+    }
+    if(document.querySelector('.delete-activity')){
+      document.querySelector('.delete-activity').style.display = 'block';
+    }
+    if(document.querySelector('.undo-delete-loader')) {
+      document.querySelector('.undo-delete-loader').style.display = 'block';
+    }
 
-    requestCreator('instant',{code:response.data.code,msg:response.data.msg})
+    // requestCreator('instant',{code:response.data.code,msg:response.data.msg})
 
     snacks(response.data.msg)
     return;
@@ -236,7 +251,7 @@ function loadViewFromRoot(response) {
 
         readNameAndImageFromNumber([response.data.params.number], db)
       }
-    
+      history.pushState(['listView'],null,null)
       return
     }
 
@@ -249,7 +264,7 @@ function loadViewFromRoot(response) {
     // updateIDB
 
     if (!history.state) {
-      window["listView"]()
+        window["listView"](false,true)
       return
     }
 
@@ -258,7 +273,6 @@ function loadViewFromRoot(response) {
       handleTimeout()
       return
     }
-
     window[history.state[0]](history.state[1], false)
     handleTimeout()
 
@@ -266,6 +280,12 @@ function loadViewFromRoot(response) {
 }
 
 function onErrorMessage(error) {
+  const errorWorker = JSON.stringify({
+    msg :error.message,
+    lineno :error.lineno,
+    url:error.filename
+  })
+  requestCreator('instant',errorWorker)
   console.log(error)
   console.log(error.message)
   console.table({
@@ -276,10 +296,9 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
-
- const offset = setTimeout(function(){
+offset = setTimeout(function(){
     requestCreator('Null')
- },3000)
+ },30000000)
 
 }
 

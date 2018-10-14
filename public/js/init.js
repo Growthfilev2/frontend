@@ -71,6 +71,9 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
+  const drawerDiv = document.createElement('div')
+  drawerDiv.className = 'drawer--cont'
+
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
@@ -153,13 +156,13 @@ function startApp() {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(false,true)
-      requestCreator('now',{device:''})
+      requestCreator('now','AndroidId.getDeviceId()')
       return
     }
-
+    document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
-    requestCreator('now',{device:''})
-    
+    requestCreator('now','AndroidId.getDeviceId()')
+    return
   })
 }
 
@@ -173,7 +176,11 @@ window.onpopstate = function (event) {
       const db = req.result
       window[event.state[0]](event.state[1], db, false);
     }
-  } else {
+  } 
+  else if (event.state[0] === 'listView') {
+    window[event.state[0]](event.state[1],true)
+  }
+  else {
     window[event.state[0]](event.state[1], false)
  
   }
