@@ -471,9 +471,9 @@ function selectorUI(evt, data) {
 
 
   const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons dialog--header-back selector--type-'+data.store
+  backSpan.className = 'material-icons dialog--header-back selector--type-' + data.store
   backSpan.textContent = 'arrow_back'
-  
+
 
   const section = document.createElement('section')
   section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
@@ -488,12 +488,20 @@ function selectorUI(evt, data) {
 
 
 
+
   const accept = document.createElement('button')
   accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send'
   accept.type = 'button'
+
   const acceptIcon = document.createElement('span')
   acceptIcon.className = 'mdc-fab__icon material-icons'
-  acceptIcon.textContent = 'send'
+  if (data.store === 'users') {
+    acceptIcon.textContent = 'add'
+    accept.dataset.clicktype = 'numpad'
+  } else {
+    acceptIcon.textContent = 'send'
+
+  }
   accept.appendChild(acceptIcon)
 
   footer.appendChild(accept)
@@ -509,8 +517,8 @@ function selectorUI(evt, data) {
   document.body.appendChild(aside)
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
-    if(e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back' ) {
-      resetSelectedContacts().then(function(people){
+    if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
+      resetSelectedContacts().then(function (people) {
         removeDialog(e, data)
       })
       return
@@ -554,8 +562,11 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillUsersInSelector(data, dialog)
+      resetSelectedContacts().then(function () {
 
+        fillUsersInSelector(data, dialog)
+
+      })
 
       // if (data.record.create) {
       //   fillUsersInSelector(data, dialog)
@@ -608,9 +619,9 @@ function fillUsersInSelector(data, dialog) {
       const userRecord = cursor.value
 
       if (data.attachment.present) {
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true,false))
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true, false ))
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true,true))
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
 
       }
 
@@ -618,12 +629,19 @@ function fillUsersInSelector(data, dialog) {
     }
 
     document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(db, 'users')
+      initSearchForSelectors(db, 'users',data.record,data)
     })
 
     dialog['acceptButton_'].onclick = function () {
 
-      
+      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+        document.getElementById('selector--search').style.display = 'none'
+        document.getElementById('data-list--container').innerHTML = ''
+        document.querySelector('.mdc-dialog__footer').style.display = 'none'
+        addNewNumber(data,dialog)
+        return
+      }
+
       if (data.attachment.present) {
         const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
         console.log(radio)
@@ -638,7 +656,7 @@ function fillUsersInSelector(data, dialog) {
         return;
       }
       if (data.record.hasOwnProperty('create')) {
-        resetSelectedContacts().then(function(selectedPeople){
+        resetSelectedContacts().then(function (selectedPeople) {
           updateDomFromIDB(data.record, {
             hash: 'addOnlyAssignees',
           }, {
@@ -652,7 +670,7 @@ function fillUsersInSelector(data, dialog) {
 
       document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
       document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
-      resetSelectedContacts().then(function(people){
+      resetSelectedContacts().then(function (people) {
         console.log(people)
         const reqBody = {
           'activityId': data.record.activityId,
@@ -668,8 +686,137 @@ function fillUsersInSelector(data, dialog) {
 
 }
 
-function resetSelectedContacts() {
+function addNewNumber(data) {
+  const container = document.createElement('div')
+  container.className = 'custom-number--container'
+
+
+  const input = document.createElement('input')
+  input.className = 'mdc-text-field__input'
+  input.id = 'number-field'
+  input.type = 'number'
+  input.setAttribute('maxlength', '10')
+  input.setAttribute('size', '10')
+  input.required = true
+  input.onkeypress = function (event) {
+    return event.charCode >= 48 && event.charCode <= 57
+  }
+
+  input.oninput = function () {
+      if (this.value.length > this.maxLength) {
+        console.log(this)
+        this.value = this.value.slice(0, this.maxLength)
+
+      }
+      else if(this.value.length === this.maxLength) {
+        document.querySelector('.message-field').classList.remove('error-message')
+         this.classList.add('valid-input')
+        document.querySelector('.message-field').textContent = ''
+        document.getElementById('new-contact').disabled = false
+
+      }
+      else {
+        document.querySelector('.message-field').classList.add('error-message')
+        document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
+        document.getElementById('new-contact').disabled = true
+      }
+      
+  }
+
+  const createButton = document.createElement('button')
+  createButton.className ='mdc-button'
+  createButton.textContent = 'Add Contact'
+  createButton.id = 'new-contact'
+  createButton.onclick = function(){
+    const number = document.getElementById('number-field').value
+ 
+    const formattedNumber = formatNumber(number)
+    if(checkNumber(formattedNumber)) {
+      
+      numberNotExist(formattedNumber).then(function(exist){
+        if(exist) {
+          document.getElementById('new-contact').disabled = true
+          document.querySelector('.message-field').classList.add('error-message')
+          document.querySelector('.message-field').textContent = '* Contact already exist'
+          return
+        }
+     
+          if(data.attachment.present) {
+            updateDomFromIDB(data.record, {
+              hash: '',
+              key: data.attachment.key
+            }, {
+              primary: [formattedNumber]
+            })
+            removeDialog()
+            return
+          }
+
+          if(data.record.hasOwnProperty('create')) {
+            updateDomFromIDB(data.record, {
+              hash: 'addOnlyAssignees',
+            }, {
+              primary: [formattedNumber]
+            })
+            removeDialog()
+            return
+          }
+    
+          requestCreator('share',{
+            activityId : data.record.activityId,
+            'share':[formattedNumber]
+          })
+          removeDialog()
+        
+      })
+
+    }
+    else {
+      document.querySelector('.message-field').classList.add('error-message')
+      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
+      document.getElementById('new-contact').disabled = true
+
+    }
+    
+  }
+
+  const message = document.createElement('p')
+  message.className = 'mdc-typography--subtitle2 message-field'
+  message.textContent = 'Enter new phone contact without country code'
+  message.id = 'helper-message'
+  
+  container.appendChild(input)
+  container.appendChild(message)
+  container.appendChild(createButton)
+  document.querySelector('#dialog--component section.mdc-dialog__body--scrollable').appendChild(container)
+  const getNumber = new mdc.ripple.MDCRipple.attachTo(document.getElementById('new-contact'))
+   
+}
+
+function numberNotExist(number) {
   return new Promise(function(resolve){
+
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function(){
+      const db = req.result
+      const store = db.transaction('users').objectStore('users')
+      store.get(number).onsuccess = function(event){
+        const record = event.target.result
+        if(record){
+         
+          resolve(true)
+        }
+        else {
+          resolve(false)
+        }
+      }
+    }
+  })
+}
+  
+  function resetSelectedContacts() {
+  return new Promise(function (resolve) {
     const selectedUsers = []
     const dbName = firebase.auth().currentUser.uid
     const req = indexedDB.open(dbName)
@@ -677,22 +824,24 @@ function resetSelectedContacts() {
       const db = req.result
       const objectStoreTx = db.transaction(['users'], 'readwrite')
       const objectStore = objectStoreTx.objectStore('users')
-      const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-      selectedBoxes.forEach(function (box) {
-        const mobile = box.parentNode.parentNode.dataset.value
-        selectedUsers.push(mobile)
-        objectStore.get(mobile).onsuccess = function (event) {
-          const record = event.target.result;
-          record.isSelected = false
-          objectStore.put(record)
+      objectStore.openCursor().onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) {
+         
+          resolve(selectedUsers)
+          return
         }
-      })
-      objectStoreTx.oncomplete = function(){
-        resolve(selectedUsers)
+        if(cursor.value.isSelected){
+          selectedUsers.push(cursor.value.mobile)
+          cursor.value.isSelected = false
+          objectStore.put(cursor.value)
+        }
+        cursor.continue()
       }
+
     }
   })
-  }
+}
 
 function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
   const ul = document.getElementById('data-list--container')
@@ -940,11 +1089,15 @@ function updateDomFromIDB(activityRecord, attr, data) {
     }
     //for create
     if (attr.hash === 'addOnlyAssignees') {
-    
 
-        activityRecord.assignees = data.primary
-        console.log(activityRecord)
-      
+      if(data.primary.length >0){
+        data.primary.forEach(function(number){
+          if(activityRecord.assignees.indexOf(number) > -1) return
+          activityRecord.assignees.push(number)
+        })
+      }
+      console.log(activityRecord)
+
       readNameAndImageFromNumber(data.primary, db)
       return
     }
@@ -1694,14 +1847,25 @@ function readNameAndImageFromNumber(assignees, db) {
   const userObjStore = db.transaction('users').objectStore('users')
   assignees.forEach(function (assignee) {
     userObjStore.get(assignee).onsuccess = function (event) {
-      const userRecord = event.target.result
+      let userRecord = event.target.result
+      if(!userRecord) {
+        userRecord = {
+          mobile:assignee,
+          displayName:'',
+          photoURL:'',
+        }
+        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
 
-      document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
+      }
+      else{
+        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
+
+      }
     }
   })
 }
 
-function createSimpleAssigneeLi(userRecord, showMetaInput,isCheckbox) {
+function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   const assigneeLi = document.createElement('li')
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (!userRecord) return assigneeLi
@@ -1737,10 +1901,9 @@ function createSimpleAssigneeLi(userRecord, showMetaInput,isCheckbox) {
   const metaInput = document.createElement('span')
   metaInput.className = 'mdc-list-item__meta material-icons'
   if (showMetaInput) {
-    if(isCheckbox) {
+    if (isCheckbox) {
       metaInput.appendChild(createCheckBox(userRecord))
-    }
-    else {
+    } else {
       metaInput.appendChild(createRadioInput())
       assigneeLi.onclick = function () {
         checkRadioInput(this, assigneeLi.dataset.value)
@@ -1812,6 +1975,7 @@ function createCheckBox(userRecord) {
 }
 
 function checkCheckboxInput(evt, record) {
+
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1820,12 +1984,23 @@ function checkCheckboxInput(evt, record) {
     if (record.hasOwnProperty('isSelected') && record.isSelected) {
       evt.target.parentNode.dataset.selected = false
       record.isSelected = false
+
     } else {
       evt.target.parentNode.dataset.selected = true
-
       record.isSelected = true
+      document.querySelector('.selector-send span').textContent = 'send'
+
     }
     objectStore.put(record)
+    if (document.querySelectorAll('[data-selected="true"]').length == 0) {
+      document.querySelector('.selector-send span').textContent = 'add'
+      document.querySelector('.selector-send').dataset.clicktype = 'numpad'
+    }
+    else {
+      document.querySelector('.selector-send').dataset.clicktype = ''
+
+    }
+
   }
 }
 
@@ -1835,6 +2010,8 @@ function checkRadioInput(inherit, value) {
   radio['root_'].classList.add('radio-selected')
   radio.checked = true
   console.log(value)
+  document.querySelector('.selector-send span').textContent = 'send'
+  document.querySelector('.selector-send').dataset.clicktype = ''
   radio.value = JSON.stringify(value)
 }
 
@@ -2150,7 +2327,7 @@ function initSearchForSelectors(db, type, record, attr) {
 
   if (type === 'users') {
 
-    initUserSelectorSearch(db)
+    initUserSelectorSearch(db,attr)
   }
 }
 
@@ -2170,9 +2347,10 @@ function searchBarUI(type) {
     document.getElementById('search--bar--field').style.display = 'block'
   }
   document.getElementById('selector--search').style.display = 'none'
-  document.querySelector('.selector-send').style.display = 'none'
+  document.querySelector('.selector-send').dataset.clicktype = ''
+  document.querySelector('.selector-send span').textContent = 'send'
   dialogEl.querySelector('#view-type span').dataset.type = 'back-list'
-  if(type === 'users') {
+  if (type === 'users') {
     dialogEl.querySelector('#view-type span').dataset.state = 'user-list-back'
   }
   // document.getElementById('data-list--container').style.display = 'none'

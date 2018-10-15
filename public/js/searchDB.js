@@ -1,21 +1,27 @@
-function initUserSelectorSearch(db){
+function initUserSelectorSearch(db,data){
 const searchField = document.getElementById('search--bar-selector');    
 searchField.value = ''
 let objectStore = ''
 let frag = document.createDocumentFragment()
+const alreadyPresntAssigness = {}
+const usersInRecord = data.record.assignees
+
+usersInRecord.forEach(function (user) {
+  alreadyPresntAssigness[user] = ''
+})
 
 searchField.addEventListener('input',function(e){
     let searchString = e.target.value
     
     if(isNumber(searchString)){
         objectStore = db.transaction('users').objectStore('users')
-        searchDB(formatNumber(searchString),objectStore,frag)
+        searchDB(formatNumber(searchString),objectStore,frag,alreadyPresntAssigness,data)
         return
     }
 
     frag = document.createDocumentFragment()
     objectStore = db.transaction('users').objectStore('users').index('displayName')
-    searchDB(formatName(searchString),objectStore,frag)
+    searchDB(formatName(searchString),objectStore,frag,alreadyPresntAssigness,data)
 })
 }
 
@@ -50,11 +56,11 @@ function formatName(name) {
 }
 
 function checkNumber(number){
-    const expression = /^\+[1-9]\d{5,14}$/
+    const expression = /^\+[1-9]\d{11,14}$/
     return expression.test(number)
 }
 
-function searchDB(searchTerm,objectStore,frag){
+function searchDB(searchTerm,objectStore,frag,alreadyPresntAssigness,data){
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm,searchTerm+'\uffff')
     const ul = document.getElementById('data-list--container')
@@ -91,7 +97,13 @@ function searchDB(searchTerm,objectStore,frag){
             return
         }
         
-        frag.appendChild(createSimpleAssigneeLi(cursor.value, true,true))
+
+        if (data.attachment.present) {
+            frag.appendChild(createSimpleAssigneeLi(cursor.value, true,false))
+          } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+            frag.appendChild(createSimpleAssigneeLi(cursor.value, true,true))
+          }
+
         cursor.continue()
 
     }

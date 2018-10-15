@@ -1086,6 +1086,9 @@ input[type="datetime-local"] {
   #data-list--container .mdc-list-item {
     height: 100%;
   }
+  #data-list--container li:nth-last-child(1) {
+    margin-bottom: 70px;
+  }
 
   .search-icon-input {
     font-size:32px;
@@ -1293,12 +1296,17 @@ input[type="datetime-local"] {
     padding-bottom: 3px;
   }
 
+  .update-create--activity {
+    margin-bottom: 80px;
+  }
+  
   .update-create--activity .mdc-list {
     background-color:white;
     margin-top:30px;
     padding-top: 0px;
     padding-bottom: 0px;
   }
+
   .update-create--activity .mdc-list:nth-child(1) {
     margin-top: 10px;
   }
@@ -1313,7 +1321,6 @@ input[type="datetime-local"] {
     margin-right: 0px;
     padding-bottom: 5px;
     background-color: white;
-
   }
 
   #schedule--group .mdc-list-group__subheader {
@@ -1389,4 +1396,48 @@ input[type="datetime-local"] {
 
 .undo-deleted {
   color: #0399f4 !important;
+}
+.custom-number--container {
+  display: table;
+  margin: 0 auto;
+  margin-top: 10%;
+
+
+}
+.custom-number--container .mdc-text-field__input {
+  letter-spacing: 17px;
+    font-size: 30px;
+    padding: 20px 10px 1px 10px;
+    height: 50px;
+    background-color: #eeeeee;
+  width: inherit;
+  }
+.custom-number--container .mdc-text-field input {
+  width:inherit;
+}
+#new-contact {
+  background-color: #0399f4 !important;
+  color: white;
+  display: table;
+  margin: 0 auto;
+  margin-top: 10%;
+}
+.error-message {
+  color: red;
+}
+.valid-input {
+  border-bottom-color: #0399f4;
+  border-bottom-width: 2px;
+}
+@media(max-width:360px) {
+  .custom-number--container .mdc-text-field__input {
+    letter-spacing: 15px;
+    font-size: 29px;
+  }
+}
+@media(max-width:320px) {
+  .custom-number--container .mdc-text-field__input {
+    letter-spacing: 15px;
+    font-size: 25px;
+  }
 }
