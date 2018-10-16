@@ -924,6 +924,7 @@ function fillSubscriptionInSelector(db,selectorStore,dialog, data) {
     const headline3 = document.createElement('h3')
     headline3.className = 'mdc-list-group__subheader subheader--group-small'
     headline3.textContent = cursor.value.office
+    headline3.dataset.groupOffice = cursor.value.office
     const ul = document.createElement('ul')
     ul.className = 'mdc-list'
     ul.dataset.selection = cursor.value.office
@@ -965,12 +966,10 @@ function insertTemplateByOffice(offices) {
   req.onsuccess = function () {
     const db = req.result
     const subscriotions = db.transaction('subscriptions').objectStore('subscriptions').index('office')
-    offices.forEach(function(office){
-      
-      subscriotions.openCursor(office).onsuccess = function (event) {
+    
+      subscriotions.openCursor().onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
-            document.querySelector(`[data-selection="${office}"]`).appendChild(frag)
           return
         }
         
@@ -982,18 +981,12 @@ function insertTemplateByOffice(offices) {
           cursor.continue()
           return
         }
-        if(document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)) {
-          cursor.continue()
-          return
-        }
-
-      
-          frag.appendChild(createGroupList(cursor.value.office, cursor.value.template))
-        
+        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
+        console.log(cursor.value)
       
         cursor.continue()
       }
-    })
+    
     }
 }
 
@@ -1396,7 +1389,7 @@ function createSimpleLi(key, data) {
 function createGroupList(office, template) {
 
   const li = document.createElement('li')
-  li.className = 'mdc-list-item'
+  li.className = 'mdc-list-item transition-ease'
   li.dataset.template = template
   const span = document.createElement('span')
   span.className = 'mdc-list-item__text'
@@ -2399,9 +2392,19 @@ function resetSelectorUI(data) {
   document.querySelector('#search--bar--field').style.display = 'none'
   dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#eeeeee'
   document.getElementById('data-list--container').style.display = 'block'
+  
   const selectorDialog = new mdc.dialog.MDCDialog(dialogEl)
-  document.getElementById('data-list--container').innerHTML = ''
-  fillUsersInSelector(data, selectorDialog)
+  
+  if(data.store === 'users'){
+    document.getElementById('data-list--container').innerHTML = ''
+    fillUsersInSelector(data, selectorDialog)
+  }
+
+  if(data.store === 'subscriptions'){
+    document.getElementById('data-list--container').querySelectorAll('li').forEach(function(li){
+      li.style.display = 'flex'
+    })
+  }
 
 }
 
