@@ -895,9 +895,6 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     cursor.continue()
   }
 
-  document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('children', activityRecord, data)
-  })
 
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
