@@ -35,7 +35,7 @@ function initSubscriptionSelectorSearch(db, data) {
                     li.style.display = 'none'
                 })
         const objectStore = db.transaction('subscriptions').objectStore('subscriptions').index('template')
-        let searchString = e.target.value
+        let searchString = e.target.value.toLowerCase()
         searchTemplatesDB(searchString, objectStore, searchedTemp)
     })
 }
