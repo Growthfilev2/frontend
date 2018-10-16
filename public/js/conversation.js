@@ -505,8 +505,14 @@ function selectorUI(evt, data) {
   accept.appendChild(acceptIcon)
 
   footer.appendChild(accept)
+  if(data.store === 'subscriptions' || data.store === 'children') {
+    dialogSurface.appendChild(header(backSpan.outerHTML, '', 'selector'))
 
-  dialogSurface.appendChild(header(backSpan.outerHTML, searchIcon.outerHTML, 'selector'))
+  }
+  else {
+
+    dialogSurface.appendChild(header(backSpan.outerHTML, searchIcon.outerHTML, 'selector'))
+  }
   dialogSurface.appendChild(section)
   dialogSurface.appendChild(footer)
 
@@ -937,11 +943,6 @@ function fillSubscriptionInSelector(db,selectorStore,dialog, data) {
     cursor.continue();
   }
   mainUL.appendChild(grp)
-
-
-  document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors(db,'subscriptions','', data)
-  })
 
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
