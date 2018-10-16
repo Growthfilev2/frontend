@@ -139,6 +139,29 @@ function searchTemplatesDB(searchTerm, os, searchedTemp) {
     os.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
+            if(searchedTemp.length ==0){
+                const notify = document.createElement('div')
+                notify.className = 'data-not-found'
+                const textSpan = document.createElement('p')
+                textSpan.textContent = 'No Results Found'
+                textSpan.className = 'mdc-typography--headline5'
+                notify.appendChild(textSpan)
+                document.getElementById('data-list--container').style.display = 'none'
+                document.querySelector('.selector-send').style.display = 'none'
+                if(!document.querySelector('.data-not-found')) {
+                    document.querySelector('.mdc-dialog__body--scrollable').appendChild(notify)
+                }
+                return
+            }
+
+            if(document.querySelector('.data-not-found')) {
+                document.querySelector('.data-not-found').remove()
+                document.querySelector('.selector-send').style.display = 'block'
+                document.getElementById('data-list--container').style.display = 'block'
+
+
+            }
+            
             console.log(searchedTemp)
             searchedTemp.forEach(function (selection) {
                 
