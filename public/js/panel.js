@@ -160,7 +160,7 @@ function activityListUI(data, metaData,append) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
-  li.setAttribute('onclick', 'history.pushState(["listView",this.dataset.id],null,null);conversation(this.dataset.id,true)')
+  li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
 
   const creator = document.createElement("img")
   creator.className = 'mdc-list-item__graphic material-icons'
@@ -482,11 +482,7 @@ function initMenu(db, officeRecord) {
     a.appendChild(i)
     a.appendChild(textSpan)
     a.onclick = function () {
-      stateCount++
-      if(stateCount > 1) {
-        push = false
-      } 
-
+     let push = true
       if (filter.type === 'Pending' || filter.type === 'Cancelled') {
         
         filterActivities(filter.type, db, push)

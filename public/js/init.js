@@ -168,6 +168,7 @@ function startApp() {
 
 
 window.onpopstate = function (event) {
+  
   if (!event.state) return;
 
   if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
@@ -177,13 +178,15 @@ window.onpopstate = function (event) {
       window[event.state[0]](event.state[1], db, false);
     }
   } 
+  
   else if (event.state[0] === 'listView') {
     window[event.state[0]](event.state[1],true)
   }
+  
   else {
     window[event.state[0]](event.state[1], false)
- 
   }
+
 }
 
 function backNav() {
