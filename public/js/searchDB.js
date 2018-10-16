@@ -15,14 +15,39 @@ searchField.addEventListener('input',function(e){
     
     if(isNumber(searchString)){
         objectStore = db.transaction('users').objectStore('users')
-        searchDB(formatNumber(searchString),objectStore,frag,alreadyPresntAssigness,data)
+        searchUsersDB(formatNumber(searchString),objectStore,frag,alreadyPresntAssigness,data)
         return
     }
 
     frag = document.createDocumentFragment()
     objectStore = db.transaction('users').objectStore('users').index('displayName')
-    searchDB(formatName(searchString),objectStore,frag,alreadyPresntAssigness,data)
+    searchUsersDB(formatName(searchString),objectStore,frag,alreadyPresntAssigness,data)
 })
+}
+
+function initSubscriptionSelectorSearch(db,data){
+    const searchField = document.getElementById('search--bar-selector');    
+    searchField.value = ''
+    let frag = document.createDocumentFragment()
+    const allOffices = document.querySelectorAll('[data-selection]')
+    searchField.addEventListener('input',function(e){
+        // if(allOffices.length >1) {
+
+        //     allOffices.forEach(function(officeDom){
+        //         while(officeDom.firstChild) {
+        //             officeDom.removeChild(officeDom.firstChild)
+        //         }
+        //     })
+        // }
+        // else {
+        //     while(allOffices[0].firstChild) {
+        //         allOffices[0].removeChild(allOffices[0].firstChild)
+        //     }
+        // }
+        const objectStore = db.transaction('subscriptions').objectStore('subscriptions').index('template')
+        let searchString = e.target.value
+        searchTemplatesDB(searchString,objectStore,frag)
+    })
 }
 
 function isNumber(searchTerm){
@@ -60,7 +85,7 @@ function checkNumber(number){
     return expression.test(number)
 }
 
-function searchDB(searchTerm,objectStore,frag,alreadyPresntAssigness,data){
+function searchUsersDB(searchTerm,objectStore,frag,alreadyPresntAssigness,data){
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm,searchTerm+'\uffff')
     const ul = document.getElementById('data-list--container')
@@ -104,6 +129,60 @@ function searchDB(searchTerm,objectStore,frag,alreadyPresntAssigness,data){
             frag.appendChild(createSimpleAssigneeLi(cursor.value, true,true))
           }
 
+        cursor.continue()
+
+    }
+}
+
+function searchTemplatesDB(searchTerm,os,frag) {
+    const avoid = {
+        'admin':'',
+        'recipient':'',
+        'employee':'',
+        'subscription':'',
+      }
+    const bound = IDBKeyRange.bound(searchTerm,searchTerm+'\uffff')
+
+    const grp = document.createElement('div')
+    grp.className = 'mdc-list-group'
+    
+    os.openCursor(bound).onsuccess = function(event){
+        const cursor = event.target.result
+        if(!cursor) {
+            return
+        }
+        if(cursor.value.status === 'CANCELLED') {
+            cursor.continue()
+            return
+        }
+
+        if(avoid.hasOwnProperty(cursor.value.template)){
+            cursor.continue()
+            return
+        }
+        
+
+
+        document.querySelectorAll(`[data-selection="${cursor.value.office}"] li`).forEach(function(li){
+                if(li.dataset.template !== cursor.value.template) {
+                    if(!li.classList.contains('visible')) {
+                        li.style.display = 'none'
+                    } 
+                }
+                else {
+                    li.style.display = 'flex'
+                    li.classList.add('visible')
+                }
+        })
+        
+        // document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
+        // console.log( document.querySelector(`[data-selection="${cursor.value.office}"] li:not([data-template="${cursor.value.template}"])`))
+    
+        // if(document.querySelector(`[data-selection="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)){
+        //     this.style.display = 'block'
+        // }
+
+        console.log(cursor.value)
         cursor.continue()
 
     }

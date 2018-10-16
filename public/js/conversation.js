@@ -558,7 +558,7 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'subscriptions') {
       const selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
+      fillSubscriptionInSelector(db,selectorStore,dialog, data)
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
@@ -906,16 +906,17 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   }
 }
 
-function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data) {
+function fillSubscriptionInSelector(db,selectorStore,dialog, data) {
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
+  const offices = []
   const officeIndex = selectorStore.index('office')
   officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
 
     if (!cursor) {
-      insertTemplateByOffice()
+      insertTemplateByOffice(offices)
       return;
     }
 
@@ -928,7 +929,7 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
     ul.dataset.selection = cursor.value.office
     ul.setAttribute('aria-orientation', 'vertical')
 
-
+    offices.push(cursor.value.office)
 
     grp.appendChild(headline3)
     grp.appendChild(ul)
@@ -938,7 +939,7 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
 
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors('subscriptions', activityRecord, data)
+    initSearchForSelectors(db,'subscriptions','', data)
   })
 
   dialog['acceptButton_'].onclick = function () {
@@ -952,23 +953,48 @@ function fillSubscriptionInSelector(selectorStore, activityRecord, dialog, data)
 }
 
 
-function insertTemplateByOffice() {
+function insertTemplateByOffice(offices) {
+  const avoid = {
+    'admin':'',
+    'recipient':'',
+    'employee':'',
+    'subscription':'',
+  }
   const req = indexedDB.open(firebase.auth().currentUser.uid)
+  const frag = document.createDocumentFragment()
   req.onsuccess = function () {
     const db = req.result
-    const subscriotions = db.transaction('subscriptions').objectStore('subscriptions')
-    subscriotions.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
-      if (cursor.value.status !== 'CANCELLED' && cursor.value.template !== 'admin' && cursor.value.template !== 'recipient' && cursor.value.template !== 'employee' && cursor.value.template !== 'subscription' && !document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"] `)) {
+    const subscriotions = db.transaction('subscriptions').objectStore('subscriptions').index('office')
+    offices.forEach(function(office){
+      
+      subscriotions.openCursor(office).onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) {
+            document.querySelector(`[data-selection="${office}"]`).appendChild(frag)
+          return
+        }
+        
+        if(cursor.value.status === 'CANCELLED') {
+          cursor.continue()
+          return
+        }
+        if(avoid.hasOwnProperty(cursor.value.template)){
+          cursor.continue()
+          return
+        }
+        if(document.querySelector(`[data-office="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)) {
+          cursor.continue()
+          return
+        }
 
-
-
-        document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
+      
+          frag.appendChild(createGroupList(cursor.value.office, cursor.value.template))
+        
+      
+        cursor.continue()
       }
-      cursor.continue()
+    })
     }
-  }
 }
 
 function createTempRecord(office, template, data) {
@@ -1020,8 +1046,8 @@ function createTempRecord(office, template, data) {
         create: true
       }
 
-      removeDialog()
       updateCreateActivity(bareBonesRecord, true)
+      removeDialog()
 
     }
   }
@@ -2328,6 +2354,9 @@ function initSearchForSelectors(db, type, record, attr) {
   if (type === 'users') {
 
     initUserSelectorSearch(db,attr)
+  }
+  if(type === 'subscriptions'){
+    initSubscriptionSelectorSearch(db,attr)
   }
 }
 
