@@ -38,7 +38,7 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   Null: Null,
-  now:fetchServerTime,
+  now: fetchServerTime,
 }
 
 
@@ -54,11 +54,11 @@ function requestHandlerResponse(type, code, message, params) {
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
   firebase.auth().onAuthStateChanged(function (auth) {
-    if(event.data.type === 'now') {
+    if (event.data.type === 'now') {
       fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
       return
     }
-    if(event.data.type === 'instant') {
+    if (event.data.type === 'instant') {
       instant(event.data.body)
       return
     }
@@ -88,9 +88,9 @@ function http(method, url, data) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
-              
+
               requestHandlerResponse('error', errorObject.code, errorObject.message)
-          
+
               return reject(JSON.stringify(xhr.response))
               // return reject(xhr)
             }
@@ -100,9 +100,9 @@ function http(method, url, data) {
         }
 
         xhr.send(data || null)
-      }).catch(function(error){
+      }).catch(function (error) {
         instant(error)
-      
+
       })
   })
 }
@@ -110,10 +110,10 @@ function http(method, url, data) {
 function fetchServerTime(deviceInfo) {
   deviceInfo = JSON.parse(deviceInfo).split("&")
   const deviceObject = {
-    deviceId : deviceInfo[0],
-    brand : deviceInfo[1],
-    model : deviceInfo[2],
-    os : deviceInfo[3]
+    deviceId: deviceInfo[0],
+    brand: deviceInfo[1],
+    model: deviceInfo[2],
+    os: deviceInfo[3]
   }
   console.log(deviceObject)
   console.log("model " + deviceObject.model)
@@ -122,28 +122,28 @@ function fetchServerTime(deviceInfo) {
       'GET',
       `${apiUrl}now?deviceId=${deviceObject.deviceId}`
     ).then(function (response) {
-      if(response.revokeSession){
-        firebase.auth().signOut().then(function(){
-         const req =  indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
-         req.onsuccess = function(){
-          requestHandlerResponse('removeLocalStorage')
-         }
-         req.onerror = function(){
-          instant(error) 
-         }
-        },function(error){
+      if (response.revokeSession) {
+        firebase.auth().signOut().then(function () {
+          const req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
+          req.onsuccess = function () {
+            requestHandlerResponse('removeLocalStorage')
+          }
+          req.onerror = function () {
+            instant(error)
+          }
+        }, function (error) {
           instant(error)
         })
         return
       }
       resolve(response.timestamp)
-    }).catch(function(error){
+    }).catch(function (error) {
       instant(JSON.stringify(deviceObject))
     })
   })
 }
 
-function instant(error){
+function instant(error) {
   //  error = JSON.parse(error)
   // const errorLogs = {
   //   message : {
@@ -163,6 +163,7 @@ function instant(error){
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
+
 function fetchRecord(dbName, id) {
   return new Promise(function (resolve) {
 
@@ -277,17 +278,17 @@ function initializeIDB(serverTime) {
 
     request.onsuccess = function () {
 
-        const rootTx = request.result.transaction('root', 'readwrite')
-        const rootObjectStore = rootTx.objectStore('root')
-        rootObjectStore.get(auth.uid).onsuccess = function (event) {
-          const record = event.target.result
-          record.serverTime = serverTime - Date.now()
-          rootObjectStore.put(record)
-        }
-        rootTx.oncomplete = function() {
-          resolve(auth.uid)
-        }
-    
+      const rootTx = request.result.transaction('root', 'readwrite')
+      const rootObjectStore = rootTx.objectStore('root')
+      rootObjectStore.get(auth.uid).onsuccess = function (event) {
+        const record = event.target.result
+        record.serverTime = serverTime - Date.now()
+        rootObjectStore.put(record)
+      }
+      rootTx.oncomplete = function () {
+        resolve(auth.uid)
+      }
+
     }
   })
 }
@@ -305,7 +306,7 @@ function comment(body) {
     }).catch(function (error) {
 
       instant(error)
-      
+
     })
   })
 }
@@ -516,11 +517,11 @@ function instantUpdateDB(dbName, data, type) {
       if (type === 'status' || type === 'update') {
         requestHandlerResponse('redirect-to-list', 200, 'activity status changed')
       }
-      if(type === 'share') {
-        
-        requestHandlerResponse('updateAssigneesList',200,'update user',{
-          id:data.activityId,
-          number:data.share[0]
+      if (type === 'share') {
+
+        requestHandlerResponse('updateAssigneesList', 200, 'update user', {
+          id: data.activityId,
+          number: data.share[0]
         })
       }
 
@@ -690,9 +691,12 @@ function putAttachment(db, activity) {
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
 function putAssignessInStore(db, assigneeArray) {
+  if (assigneeArray.indexOf(firebase.auth().currentUser.phoneNumber) == -1) {
+    removeActivityFromDB(db)
+    return
+  }
   assigneeArray.forEach(function (assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
-
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
       const cursor = event.target.result
       if (cursor) return
@@ -705,6 +709,106 @@ function putAssignessInStore(db, assigneeArray) {
       })
     }
   })
+}
+
+function removeActivityFromDB(db) {
+  const activitiesToRemove = []
+  const activityObjectStore = db.transaction('activity').objectStore('activity')
+  const myNumber = firebase.auth().currentUser.phoneNumber
+  activityObjectStore.openCursor().onsuccess = function (event) {
+    const cursor = event.target.result
+    if (!cursor) {
+      removeActivityFromKeyPath(activitiesToRemove, 'activityCount')
+      return
+    }
+
+    if (cursor.value.assignees.indexOf(myNumber) == -1) {
+      activitiesToRemove.push(cursor.value.activityId)
+      cursor.delete()
+    }
+    cursor.continue()
+  }
+
+}
+
+function removeActivityFromKeyPath(activitiesToRemove, store) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const activityStore = db.transaction(store).objectStore(store)
+    activitiesToRemove.forEach(function (id) {
+      activityStore.delete(id)
+    })
+
+    if (store === 'activityCount') {
+      removeActivityFromCalendar(activitiesToRemove, db)
+
+    }
+  }
+}
+
+function removeActivityFromCalendar(activitiesToRemove, db) {
+  const calendarObjectStore = db.transaction('calendar').objectStore('calendar').index('activityId')
+  let count = 0
+  activitiesToRemove.forEach(function (id) {
+    count++
+    calendarObjectStore.openCursor(id).onsuccess = function (event) {
+      const cursor = event.target.result
+      if (!cursor) {
+        if (count === activitiesToRemove.length) {
+          removeActivityFromMap(activitiesToRemove)
+          return
+        }
+        return
+      }
+      cursor.delete()
+      cursor.continue()
+    }
+  })
+}
+
+function removeActivityFromMap(activitiesToRemove) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  let count = 0
+  req.onsuccess = function () {
+    const db = req.result
+    const mapObjectStore = db.transaction('map').objectStore('map').index('activityId')
+    activitiesToRemove.forEach(function (id) {
+      count++
+      mapObjectStore.openCursor(id).onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) {
+          if (count === activitiesToRemove.length) {
+            removeActivityFromKeyPath(activitiesToRemove, 'children')
+            removeActivityFromAddendum(activitiesToRemove)
+            return
+          }
+          return
+        }
+        cursor.delete()
+        cursor.continue()
+      }
+    })
+  }
+}
+
+function removeActivityFromAddendum(activitiesToRemove) {
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const addendumObjectStore = db.transaction('addendum').objectStore('addendum').index('activityId')
+    activitiesToRemove.forEach(function (id) {
+      addendumObjectStore.openCursor(id).onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return
+        cursor.delete()
+        cursor.continue()
+      }
+    })
+  }
 }
 
 function createUsersApiUrl(db) {
@@ -796,6 +900,7 @@ function updateSubscription(db, subscription) {
 // with the uptoTime received from response.
 
 let firstTime = 0;
+
 function successResponse(read) {
   console.log('start success')
   const user = firebase.auth().currentUser
@@ -810,7 +915,7 @@ function successResponse(read) {
     const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-    const activityAndRoot = db.transaction(['activity','root'])
+    const activityAndRoot = db.transaction(['activity', 'root'])
     let counter = {}
     firstTime++
     read.addendum.forEach(function (addendum) {
@@ -851,28 +956,28 @@ function successResponse(read) {
       putAttachment(db, activity)
     })
 
-    
+
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
     })
-    
-    
+
+
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
       record.fromTime = Date.parse(read.upto)
-      
+
       rootObjectStore.put(record)
     }
-    
+
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
-    
+
     getUniqueOfficeCount(firstTime).then(setUniqueOffice).catch(console.log)
 
-    activityAndRoot.oncomplete = function(){
-      if(firstTime === 1) return
-      requestHandlerResponse('updateIDB',200,'update successfull')
+    activityAndRoot.oncomplete = function () {
+      if (firstTime === 1) return
+      requestHandlerResponse('updateIDB', 200, 'update successfull')
     }
-    
+
     // after the above operations are done , send a response message back to the requestCreator(main thread).
 
   }
@@ -899,7 +1004,7 @@ function getUniqueOfficeCount(firstTime) {
             dbName: dbName,
             count: officeCount,
             allOffices: offices,
-            firstTime : firstTime
+            firstTime: firstTime
           })
           return
         }
@@ -929,9 +1034,9 @@ function setUniqueOffice(data) {
         offices.hasMultipleOffice = 0
         record.offices = offices
         rootObjectStore.put(record)
-        if(data.firstTime === 1) {
+        if (data.firstTime === 1) {
 
-          requestHandlerResponse('updateIDB',200,'update successfull')
+          requestHandlerResponse('updateIDB', 200, 'update successfull')
         }
 
         return
@@ -939,8 +1044,8 @@ function setUniqueOffice(data) {
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
-      if(data.firstTime === 1) {
-        requestHandlerResponse('updateIDB',200,'update successfull')
+      if (data.firstTime === 1) {
+        requestHandlerResponse('updateIDB', 200, 'update successfull')
       }
 
     }
@@ -949,7 +1054,7 @@ function setUniqueOffice(data) {
 
 function updateIDB(dbName) {
   console.log(dbName)
-  
+
   const req = indexedDB.open(dbName)
 
   req.onsuccess = function () {
@@ -957,18 +1062,18 @@ function updateIDB(dbName) {
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
 
     rootObjectStore.get(dbName).onsuccess = function (root) {
-        http(
-            'GET',
-            `${apiUrl}read?from=${root.target.result.fromTime}`
-          )
-          .then(function (response) {
-        
-            successResponse(response)
-          })
-          .catch(function(error){
-            instant(error)
+      http(
+          'GET',
+          `${apiUrl}read?from=${root.target.result.fromTime}`
+        )
+        .then(function (response) {
 
-          })
+          successResponse(response)
+        })
+        .catch(function (error) {
+          instant(error)
+
+        })
     }
   }
 }
