@@ -236,15 +236,17 @@ function fetchCurrentLocation() {
       } else {
         reject(error)
       }
+
       setTimeout(function () {
         mockLocationDialog(resolve)
       }, 10000)
+  
     })
   })
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
 
