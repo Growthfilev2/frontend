@@ -324,7 +324,7 @@ function creatListHeader(headerName, backIcon) {
   searchIcon.appendChild(sicon);
 
 
-  header(parentIconDiv.outerHTML, searchIcon.outerHTML, 'list')
+  header(parentIconDiv.outerHTML, '', 'list')
 
 
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));

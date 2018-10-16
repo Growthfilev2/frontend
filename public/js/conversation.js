@@ -107,6 +107,17 @@ function commentPanel(db, id) {
   }
 
   document.getElementById('send-chat--input').onclick = function () {
+
+    if(!Internet.isNetwork()) {
+      snacks('Please Check your internet Connection')
+      return
+    }
+
+    if(!IsGpsEnabled.gpsEnabled()) {
+      enableGps()
+      return
+    }
+
     const reqBody = {
       'activityId': id,
       'comment': document.querySelector('.comment-field').value
@@ -186,9 +197,22 @@ function statusChange(db, id) {
     }
 
     document.querySelector('.mdc-checkbox').onclick = function () {
-      document.querySelector('.form-field-status').classList.add('hidden');
+    
+      
+      
+            document.querySelector('.form-field-status').classList.add('hidden');
+      
+            document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+      
+      if(!Internet.isNetwork()) {
+        snacks('Please Check your internet Connection')
+        return
+      }
 
-      document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+      if(!IsGpsEnabled.gpsEnabled()) {
+        enableGps()
+        return
+      }
 
       if (switchControl.checked) {
         requestCreator('statusChange', {
@@ -560,7 +584,7 @@ function initializeSelectorWithData(evt, data) {
     if (data.store === 'map') {
       const objectStore = db.transaction(data.store).objectStore(data.store)
       selectorStore = objectStore.index('location')
-      fillMapInSelector(selectorStore, activityRecord, dialog, data)
+      fillMapInSelector(db,selectorStore,dialog, data)
     }
     if (data.store === 'subscriptions') {
       const selectorStore = db.transaction(data.store).objectStore(data.store)
@@ -635,7 +659,7 @@ function fillUsersInSelector(data, dialog) {
     }
 
     document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(db, 'users',data.record,data)
+      initSearchForSelectors(db, 'users',data)
     })
 
     dialog['acceptButton_'].onclick = function () {
@@ -674,8 +698,18 @@ function fillUsersInSelector(data, dialog) {
         return
       }
 
-      document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
-      document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
+      
+            document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
+            document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
+      if(!Internet.isNetwork()) {
+        snacks('Please Check your internet Connection')
+        return
+      }
+
+      if(!IsGpsEnabled.gpsEnabled()) {
+        enableGps()
+        return
+      }
       resetSelectedContacts().then(function (people) {
         console.log(people)
         const reqBody = {
@@ -767,6 +801,16 @@ function addNewNumber(data) {
             removeDialog()
             return
           }
+
+          if(!Internet.isNetwork()) {
+            snacks('Please Check your internet Connection')
+            return
+          }
+    
+          if(!IsGpsEnabled.gpsEnabled()) {
+            enableGps()
+            return
+          }
     
           requestCreator('share',{
             activityId : data.record.activityId,
@@ -849,26 +893,27 @@ function numberNotExist(number) {
   })
 }
 
-function fillMapInSelector(selectorStore, activityRecord, dialog, data) {
+function fillMapInSelector(db,selectorStore, dialog, data) {
   const ul = document.getElementById('data-list--container')
   selectorStore.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return
     if (cursor.value.location) {
-      ul.appendChild(createVenueLi(cursor.value, false, activityRecord, true));
+      ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
     }
 
     cursor.continue()
   }
 
   document.getElementById('selector--search').addEventListener('click', function () {
-    initSearchForSelectors(db, 'map', activityRecord, data)
+
+    initSearchForSelectors(db, 'map', data)
   })
 
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
-    updateDomFromIDB(activityRecord, {
+    updateDomFromIDB(data.record, {
       hash: 'venue',
       key: data.key
     }, {
@@ -1373,6 +1418,16 @@ function createSimpleLi(key, data) {
     undo.textContent = 'Undo'
     undo.onclick = function () {
       document.querySelector('.undo-deleted').style.display = 'none'
+      if(!Internet.isNetwork()) {
+        snacks('Please Check your internet Connection')
+        return
+      }
+
+      if(!IsGpsEnabled.gpsEnabled()) {
+        enableGps()
+        return
+      }
+
       listItem.appendChild(loader('undo-delete-loader'));
       requestCreator('statusChange', {
         activityId: data.id,
@@ -2128,6 +2183,17 @@ function createActivityCancellation(record) {
 
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
     document.getElementById('delete-allow').onclick = function () {
+
+      if(!Internet.isNetwork()) {
+        snacks('Please Check your internet Connection')
+        return
+      }
+
+      if(!IsGpsEnabled.gpsEnabled()) {
+        enableGps()
+        return
+      }
+
       document.querySelector('.delete-activity').style.display = 'none';
       document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
 
@@ -2306,12 +2372,21 @@ function insertInputsIntoActivity(record, activityStore) {
     attachment: record.attachment
   }
 
+  if(!Internet.isNetwork()) {
+    snacks('Please Check your internet Connection')
+    return
+  }
 
+  if(!IsGpsEnabled.gpsEnabled()) {    
+    enableGps()
+    return
+  }
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
     document.querySelector('header').appendChild(progressBar())
     document.querySelector('#send-activity').classList.add('hidden')
+    
     requestCreator('update', requiredObject)
 
     return
@@ -2330,7 +2405,7 @@ function checkSpacesInString(input) {
   return false
 }
 
-function initSearchForSelectors(db, type, record, attr) {
+function initSearchForSelectors(db, type,attr) {
   searchBarUI(type)
   if (type === 'map') {
     let input = document.getElementById('search--bar-selector')
@@ -2340,7 +2415,7 @@ function initSearchForSelectors(db, type, record, attr) {
       }
     }
     autocomplete = new google.maps.places.Autocomplete(input, options);
-    initializeAutocompleteGoogle(autocomplete, record, attr)
+    initializeAutocompleteGoogle(autocomplete, attr.record, attr)
     return
   }
 
@@ -2348,9 +2423,7 @@ function initSearchForSelectors(db, type, record, attr) {
 
     initUserSelectorSearch(db,attr)
   }
-  if(type === 'subscriptions'){
-    initSubscriptionSelectorSearch(db,attr)
-  }
+ 
 }
 
 function searchBarUI(type) {

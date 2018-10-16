@@ -106,7 +106,45 @@ function mockLocationDialog(resolve) {
   }
   const mockDialog = new mdc.dialog.MDCDialog(document.querySelector('#mock-location'))
   mockDialog.show()
+}
 
+function enableGps() {
+  if (!document.getElementById('enable-gps')) {
+
+    const aside = document.createElement('aside')
+    aside.className = 'mdc-dialog mdc-dialog--open'
+    aside.id = 'enable-gps'
+
+    const surface = document.createElement('div')
+    surface.className = 'mdc-dialog__surface'
+    surface.style.width = '90%'
+    surface.style.height = 'auto'
+
+    const section = document.createElement('section')
+    section.className = 'mdc-dialog__body mock-main-body'
+    section.textContent = 'Please Enable GPS on your phone'
+ 
+    const footer = document.createElement('footer')
+    footer.className = 'mdc-dialog__footer mock-footer'
+
+    const ok = document.createElement('button')
+    ok.type = 'button'
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
+    ok.textContent = 'Ok'
+    ok.id = ''
+    ok.style.backgroundColor = '#3498db'
+
+    footer.appendChild(ok)
+
+    surface.appendChild(section)
+    surface.appendChild(footer)
+    aside.appendChild(surface)
+    document.body.appendChild(aside)
+  
+  }
+
+  const gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'))
+  gpsDialog.show()
 }
 
 function progressBar() {
@@ -165,12 +203,14 @@ function snacks(message, type) {
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
     actionHandler: function () {
+      
       if (type) {
         requestCreator('statusChange', {
           activityId: type.id,
           status: 'PENDING'
         })
       }
+      
     }
   }
 
@@ -189,16 +229,16 @@ function fetchCurrentLocation() {
     navigator.geolocation.getCurrentPosition(function (position, error) {
       if (position) {
 
-        // resolve({
-        //   'latitude': position.coords.latitude,
-        //   'longitude': position.coords.longitude
-        // })
+        resolve({
+          'latitude': position.coords.latitude,
+          'longitude': position.coords.longitude
+        })
       } else {
         reject(error)
       }
       setTimeout(function () {
         mockLocationDialog(resolve)
-      }, 1000)
+      }, 10000)
     })
   })
 }
@@ -365,7 +405,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null')
-  }, 30000000)
+  }, 30000)
 
 }
 
