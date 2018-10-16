@@ -85,20 +85,20 @@ function searchUsersDB(searchTerm, objectStore, frag, alreadyPresntAssigness, da
         const cursor = event.target.result
         if (!cursor) {
 
-            if (checkNumber(searchTerm) && ul.children.length == 0) {
+            ul.innerHTML = ''
+            if (frag.children.length ==0) {
                 const notify = document.createElement('div')
                 notify.className = 'data-not-found'
-                const textSpan = document.createElement('span')
-                textSpan.textContent = 'Not found'
-                const addNumber = document.createElement('button')
-                addNumber.className = 'mdc-button'
+                const textSpan = document.createElement('p')
+                textSpan.textContent = 'No Contact Found'
+                textSpan.className = 'mdc-typography--headline5'                
                 notify.appendChild(textSpan)
-                notify.appendChild(addNumber)
-                ul.appendChild(notify)
+                if(!document.querySelector('.data-not-found')) {
+                    ul.appendChild(notify)
+                }
                 return
             }
 
-            ul.innerHTML = ''
             ul.appendChild(frag)
 
             const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
