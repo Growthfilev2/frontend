@@ -1454,3 +1454,18 @@ input[type="datetime-local"] {
 .data-not-found p {
   color: gray
 }
+.mock-main-body {
+  padding-bottom: 5px;
+}
+.warning-body {
+  margin-top: 5%;
+  padding-bottom: 10px;
+}
+.mock-footer {
+  border-bottom: 1px solid gray;
+  padding-bottom: 10px;
+}
+.continue-link {
+  text-decoration: underline;
+    padding-right: 5px;
+}

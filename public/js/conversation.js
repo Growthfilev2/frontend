@@ -909,6 +909,8 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   }
 }
 
+
+
 function fillSubscriptionInSelector(db,selectorStore,dialog, data) {
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
