@@ -224,21 +224,26 @@ function fetchCurrentTime(serverTime) {
 }
 
 function fetchCurrentLocation() {
-
+  let geo = {
+    'latitude':'',
+    'longitude':''
+  }
   return new Promise(function (resolve) {
     navigator.geolocation.getCurrentPosition(function (position, error) {
       if (position) {
+        geo.latitude = position.coords.latitude
+        geo.longitude = position.coords.longitude
 
-        resolve({
-          'latitude': position.coords.latitude,
-          'longitude': position.coords.longitude
-        })
+        resolve(geo)
       } else {
         reject(error)
       }
 
       setTimeout(function () {
-        mockLocationDialog(resolve)
+        if(geo.latitude === '' && geo.longitude === '') {
+
+          mockLocationDialog(resolve)
+        }
       }, 10000)
   
     })
