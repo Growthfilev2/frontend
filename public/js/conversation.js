@@ -707,8 +707,8 @@ function fillUsersInSelector(data, dialog) {
       }
 
       
-            document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
-            document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
+      document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
+      document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
       // if(!Internet.isNetwork()) {
       //   snacks('Please Check your internet Connection')
       //   return
@@ -1914,6 +1914,7 @@ function createAssigneeList(db, record, showLabel) {
     labelButton.className = 'mdc-list-item__meta'
     const addButton = document.createElement('div')
     addButton.className = 'mdc-fab add--assignee-icon'
+    
     addButton.onclick = function (evt) {
       selectorUI(evt, {
         record: record,
