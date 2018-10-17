@@ -108,14 +108,18 @@ function commentPanel(db, id) {
 
   document.getElementById('send-chat--input').onclick = function () {
 
-    if(!Internet.isNetwork()) {
-      snacks('Please Check your internet Connection')
-      return
-    }
+    // if(!Internet.isNetwork()) {
+    //   snacks('Please Check your internet Connection')
+    //   return
+    // }
+    try {
 
-    if(!IsGpsEnabled.gpsEnabled()) {
-      enableGps()
-      return
+      if(!IsGpsEnabled.gpsEnabled()) {
+        enableGps()
+        return
+      }
+    } catch(e){
+      console.log(e)
     }
 
     const reqBody = {
@@ -204,14 +208,18 @@ function statusChange(db, id) {
       
             document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
       
-      if(!Internet.isNetwork()) {
-        snacks('Please Check your internet Connection')
-        return
-      }
+      // if(!Internet.isNetwork()) {
+      //   snacks('Please Check your internet Connection')
+      //   return
+      // }
+      try {
 
-      if(!IsGpsEnabled.gpsEnabled()) {
-        enableGps()
-        return
+        if(!IsGpsEnabled.gpsEnabled()) {
+          enableGps()
+          return
+        }
+      } catch(e){
+        console.log(e)
       }
 
       if (switchControl.checked) {
@@ -701,15 +709,20 @@ function fillUsersInSelector(data, dialog) {
       
             document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
             document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
-      if(!Internet.isNetwork()) {
-        snacks('Please Check your internet Connection')
-        return
+      // if(!Internet.isNetwork()) {
+      //   snacks('Please Check your internet Connection')
+      //   return
+      // }
+      try {
+
+        if(!IsGpsEnabled.gpsEnabled()) {
+          enableGps()
+          return
+        }
+      } catch(e){
+        console.log(e)
       }
 
-      if(!IsGpsEnabled.gpsEnabled()) {
-        enableGps()
-        return
-      }
       resetSelectedContacts().then(function (people) {
         console.log(people)
         const reqBody = {
@@ -802,14 +815,18 @@ function addNewNumber(data) {
             return
           }
 
-          if(!Internet.isNetwork()) {
-            snacks('Please Check your internet Connection')
-            return
-          }
-    
-          if(!IsGpsEnabled.gpsEnabled()) {
-            enableGps()
-            return
+          // if(!Internet.isNetwork()) {
+          //   snacks('Please Check your internet Connection')
+          //   return
+          // }
+          try {
+
+            if(!IsGpsEnabled.gpsEnabled()) {
+              enableGps()
+              return
+            }
+          } catch(e){
+            console.log(e)
           }
     
           requestCreator('share',{
@@ -1418,15 +1435,20 @@ function createSimpleLi(key, data) {
     undo.textContent = 'Undo'
     undo.onclick = function () {
       document.querySelector('.undo-deleted').style.display = 'none'
-      if(!Internet.isNetwork()) {
-        snacks('Please Check your internet Connection')
-        return
-      }
+      // if(!Internet.isNetwork()) {
+      //   snacks('Please Check your internet Connection')
+      //   return
+      // }
+      try {
 
-      if(!IsGpsEnabled.gpsEnabled()) {
-        enableGps()
-        return
+        if(!IsGpsEnabled.gpsEnabled()) {
+          enableGps()
+          return
+        }
       }
+      catch(exception) {
+        console.log(exception)
+      } 
 
       listItem.appendChild(loader('undo-delete-loader'));
       requestCreator('statusChange', {
@@ -2184,14 +2206,18 @@ function createActivityCancellation(record) {
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
     document.getElementById('delete-allow').onclick = function () {
 
-      if(!Internet.isNetwork()) {
-        snacks('Please Check your internet Connection')
-        return
-      }
+      // if(!Internet.isNetwork()) {
+      //   snacks('Please Check your internet Connection')
+      //   return
+      // }
+      try {
 
-      if(!IsGpsEnabled.gpsEnabled()) {
-        enableGps()
-        return
+        if(!IsGpsEnabled.gpsEnabled()) {
+          enableGps()
+          return
+        }
+      } catch(e){
+        console.log(e)
       }
 
       document.querySelector('.delete-activity').style.display = 'none';
@@ -2372,14 +2398,18 @@ function insertInputsIntoActivity(record, activityStore) {
     attachment: record.attachment
   }
 
-  if(!Internet.isNetwork()) {
-    snacks('Please Check your internet Connection')
-    return
-  }
+  // if(!Internet.isNetwork()) {
+  //   snacks('Please Check your internet Connection')
+  //   return
+  // }
+  try {
 
-  if(!IsGpsEnabled.gpsEnabled()) {    
-    enableGps()
-    return
+    if(!IsGpsEnabled.gpsEnabled()) {    
+      enableGps()
+      return
+    }
+  } catch(e){
+    console.log(e)
   }
 
   if (!record.hasOwnProperty('create')) {

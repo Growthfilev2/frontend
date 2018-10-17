@@ -246,7 +246,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 
