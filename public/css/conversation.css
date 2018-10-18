@@ -1469,3 +1469,6 @@ input[type="datetime-local"] {
   text-decoration: underline;
     padding-right: 5px;
 }
+.schedule-start-li , .schedule-end-li {
+  padding-right: 0px;
+}

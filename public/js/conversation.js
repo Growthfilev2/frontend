@@ -1630,7 +1630,7 @@ function createScheduleTable(data) {
     divider.setAttribute('role', 'separator')
 
     const startLi = document.createElement('li')
-    startLi.className = 'mdc-list-item'
+    startLi.className = 'mdc-list-item schedule-start-li'
 
     const sdDiv = document.createElement('div')
     sdDiv.className = 'mdc-text-field start--date' + count
@@ -1661,7 +1661,7 @@ function createScheduleTable(data) {
 
 
     const endLi = document.createElement('li')
-    endLi.className = 'mdc-list-item'
+    endLi.className = 'mdc-list-item schedule-end-li'
 
     const edDiv = document.createElement('div')
     edDiv.className = 'mdc-text-field end--date' + count
