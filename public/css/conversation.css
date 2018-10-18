@@ -1401,7 +1401,7 @@ input[type="datetime-local"] {
   display: table;
   margin: 0 auto;
   margin-top: 10%;
-
+  width: 90%;
 
 }
 .custom-number--container .mdc-text-field__input {
@@ -1410,7 +1410,7 @@ input[type="datetime-local"] {
     padding: 20px 10px 1px 10px;
     height: 50px;
     background-color: #eeeeee;
-  width: inherit;
+  width: 95%;
   }
 .custom-number--container .mdc-text-field input {
   width:inherit;
