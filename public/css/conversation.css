@@ -332,6 +332,10 @@ padding: 8px 20px 8px 20px;
 .drawer--icons span {
   padding: 0px 10px 0px 10px;
   float: right;
+  margin-top: 3px;
+}
+.filter-sort--list {
+  overflow: scroll;
 }
 
 .date-container {
@@ -1126,10 +1130,7 @@ input[type="datetime-local"] {
     padding-bottom: 0px;
   }
 
-  #dialog--component .dialog--header-back {
-    font-size: 32px;
-    /* color: rgba(0,0,0,0.54) !important; */
-  }
+  
   .search--cont {
     width: 100%
   }
@@ -1421,6 +1422,9 @@ input[type="datetime-local"] {
   display: table;
   margin: 0 auto;
   margin-top: 10%;
+}
+.message-field {
+  text-align: center;
 }
 .error-message {
   color: red;

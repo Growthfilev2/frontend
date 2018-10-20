@@ -87,6 +87,7 @@
 .mdc-top-app-bar {
   color: black !important; }
   .mdc-top-app-bar .material-icons {
-    color: #0399f4 !important; }
+    color: #0399f4 !important; 
+  font-size: 30px;}
 
 /*# sourceMappingURL=theme.css.map */

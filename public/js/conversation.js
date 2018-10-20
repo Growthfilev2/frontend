@@ -1043,6 +1043,10 @@ function insertTemplateByOffice(offices) {
           cursor.continue()
           return
         }
+        if(document.querySelector(`[data-selection="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)){
+          cursor.continue()
+          return
+        }
         document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
         console.log(cursor.value)
       
@@ -1242,6 +1246,8 @@ function updateCreateContainer(record) {
 
   activityName.style.fontSize = '19px'
   activityName.style.paddingLeft = '10px'
+  activityName.style.marginTop = '5px'
+
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)
   header(leftHeaderContent.outerHTML, '')

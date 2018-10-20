@@ -50,8 +50,10 @@ function fetchDataForActivityList(db,scrollId) {
 
             appendActivityListToDom(activityDom, true)
             createActivityIcon(db)
-            if(!scrollId) return
-            document.querySelector(`[data-id="${scrollId}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+            if(localStorage.getItem('clickedActivity')) {
+              document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+            }
+      
            },100)
       return
     }
@@ -157,11 +159,12 @@ function getCreatorDetails(db, meta) {
   })
 }
 
-function activityListUI(data, metaData,append) {
+
+function activityListUI(data, metaData,append,state) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
-  li.setAttribute('onclick', 'conversation(this.dataset.id,true)')
+  li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
 
   const creator = document.createElement("img")
   creator.className = 'mdc-list-item__graphic material-icons'
@@ -466,8 +469,6 @@ function initMenu(db, officeRecord) {
     navContent.appendChild(all)
   }
 
-  let push = true;
-  let stateCount = 0;
   filters.forEach(function (filter) {
 
     const a = document.createElement('div')
@@ -483,19 +484,20 @@ function initMenu(db, officeRecord) {
     a.appendChild(i)
     a.appendChild(textSpan)
     a.onclick = function () {
-     let push = true
+      localStorage.removeItem('clickedActivity')
+
       if (filter.type === 'Pending' || filter.type === 'Cancelled') {
         
-        filterActivities(filter.type, db, push)
+        filterActivities(filter.type, db, true)
       }
       if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, db, push)
+        sortByCreator(filter.type, db, true)
       }
       if (filter.type === 'Urgent') {
-        sortByDates(filter.type, db, push)
+        sortByDates(filter.type, db, true)
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, db, push)
+        sortByLocation(filter.type, db, true)
       }
       if (filter.type === 'Recent') {
         listView()
@@ -586,6 +588,7 @@ function filterActivities(type, db, pushState) {
 
   }
 
+
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
   const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
 
@@ -595,12 +598,17 @@ function filterActivities(type, db, pushState) {
     if (!cursor) {
       appendActivityListToDom(activityDom, false, type)
       createActivityIcon(db)
+      if(localStorage.getItem('clickedActivity')) {
+
+        document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+      }
+
       return
     }
 
 
     if (cursor.value.status === type.toUpperCase() && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value).then(function (li) {
+      createActivityList(db, cursor.value,).then(function (li) {
 
         activityDom += li
       })
@@ -628,6 +636,11 @@ function sortByCreator(type, db, pushState) {
     if (!cursor) {
       appendActivityListToDom(activityDom, false, type)
       createActivityIcon(db)
+      if(localStorage.getItem('clickedActivity')) {
+
+        document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+      }
+
       return
     }
     if (type === 'Incoming') {
@@ -720,6 +733,11 @@ function generateActivitiesByDate(sortingOrder) {
     setTimeout(function () {
       appendActivityListToDom(activityDom, false, 'Urgent')
       createActivityIcon(db)
+      if(localStorage.getItem('clickedActivity')) {
+
+        document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+      }
+
     }, 500)
 
 
@@ -775,6 +793,11 @@ function sortActivitiesByLocation(db, distanceArr) {
   setTimeout(function () {
     appendActivityListToDom(activityDom, false, 'Nearby')
     createActivityIcon(db)
+    if(localStorage.getItem('clickedActivity')) {
+
+      document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+    }
+
   }, 400)
 }
 
