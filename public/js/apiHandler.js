@@ -144,20 +144,14 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  //  error = JSON.parse(error)
-  // const errorLogs = {
-  //   message : {
-  //       error
-  //   }
-  // }
-
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //  errorLogs
-  // ).then(function(response){
-  //   console.log(response)
-  // }).catch(console.log)
+ 
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function(response){
+    console.log(response)
+  }).catch(console.log)
 }
 
 /**

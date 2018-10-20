@@ -251,7 +251,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
 
@@ -395,9 +395,11 @@ function loadViewFromRoot(response) {
 
 function onErrorMessage(error) {
   const errorWorker = JSON.stringify({
-    msg: error.message,
-    lineno: error.lineno,
-    url: error.filename
+    message : {
+      msg: error.message,
+      lineno: error.lineno,
+      url: error.filename
+    }
   })
   requestCreator('instant', errorWorker)
   console.log(error)
@@ -412,7 +414,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null')
-  }, 300000)
+  }, 30000)
 
 }
 

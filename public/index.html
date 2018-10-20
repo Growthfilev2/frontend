@@ -41,25 +41,28 @@
 window.addEventListener('load', function() {
   window.onerror = function(msg,url,lineNo,columnNo,error){
   const errorJS  = {
-    msg : msg,
-    url :url,
-    lineNo:lineNo,
-    columnNo :columnNo,
-    error:error
+    message : {
+
+      msg : msg,
+      url :url,
+      lineNo:lineNo,
+      columnNo :columnNo,
+      error:error
+    }
   }
-  requestCreator('instant',errorJS)
+  requestCreator('instant',JSON.stringify(errorJS))
 
   }
 	
 
-  // if ('serviceWorker' in navigator) {
-  //   console.log('webview started')
-  //   initSW()
-  // } else {
-  //   console.log("direct run")
-  //   startApp()
-  // }   
-  startApp()
+  if ('serviceWorker' in navigator) {
+    console.log('webview started')
+    initSW()
+  } else {
+    console.log("direct run")
+    startApp()
+  }   
+  // startApp()
  
 
 })

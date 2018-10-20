@@ -1,5 +1,4 @@
 
-
 function listView(scrollId,pushState) {
   document.body.style.backgroundColor = 'white'
 
