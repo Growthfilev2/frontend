@@ -251,7 +251,7 @@ function fetchCurrentLocation() {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 
@@ -394,27 +394,29 @@ function loadViewFromRoot(response) {
 }
 
 function onErrorMessage(error) {
-  const errorWorker = JSON.stringify({
-    message : {
-      msg: error.message,
-      lineno: error.lineno,
-      url: error.filename
+  
+  const logs = {
+    message : error.message,
+    body : {
+    'line-number': error.lineno,
+    'file': error.filename
     }
-  })
-  requestCreator('instant', errorWorker)
-  console.log(error)
-  console.log(error.message)
+  }
+
+  requestCreator('instant',logs)
+ 
   console.table({
     'line-number': error.lineno,
     'error': error.message,
     'file': error.filename
   })
+
 }
 
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null')
-  }, 30000)
+  }, 3000000)
 
 }
 

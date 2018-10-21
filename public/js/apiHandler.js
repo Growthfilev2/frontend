@@ -21,6 +21,8 @@ firebase.initializeApp({
   messagingSenderId: '701025551237'
 })
 
+
+
 // get Device time
 function getTime() {
   return Date.now()
@@ -32,9 +34,7 @@ const requestFunctionCaller = {
   initializeIDB: initializeIDB,
   comment: comment,
   statusChange: statusChange,
-  removeAssignee: removeAssignee,
   share: share,
-  updateUserNumber: updateUserNumber,
   update: update,
   create: create,
   Null: Null,
@@ -49,6 +49,14 @@ function requestHandlerResponse(type, code, message, params) {
     msg: message,
     params: params
   })
+}
+
+function createLog(message,body){
+  const logs  = {
+    message : message,
+    body : body
+  }
+  return logs
 }
 
 // when worker receives the request body from the main thread
@@ -91,7 +99,7 @@ function http(method, url, data) {
 
               requestHandlerResponse('error', errorObject.code, errorObject.message)
 
-              return reject(JSON.stringify(xhr.response))
+              return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
             if (!xhr.responseText) return resolve('success')
@@ -102,7 +110,6 @@ function http(method, url, data) {
         xhr.send(data || null)
       }).catch(function (error) {
         instant(error)
-
       })
   })
 }
@@ -115,8 +122,7 @@ function fetchServerTime(deviceInfo) {
     model: deviceInfo[2],
     os: deviceInfo[3]
   }
-  console.log(deviceObject)
-  console.log("model " + deviceObject.model)
+  
   return new Promise(function (resolve) {
     http(
       'GET',
@@ -129,26 +135,26 @@ function fetchServerTime(deviceInfo) {
             requestHandlerResponse('removeLocalStorage')
           }
           req.onerror = function () {
-            instant(error)
+            instant(createLog(error))
           }
         }, function (error) {
-          instant(error)
+          instant(createLog(error))
         })
         return
       }
       resolve(response.timestamp)
     }).catch(function (error) {
-      instant(JSON.stringify(deviceObject))
+     instant(createLog(error.message,deviceObject))
     })
   })
 }
 
 function instant(error) {
- 
+  
   http(
     'POST',
     `${apiUrl}services/logs`,
-    error
+    JSON.stringify(error)
   ).then(function(response){
     console.log(response)
   }).catch(console.log)
@@ -299,7 +305,7 @@ function comment(body) {
       resolve(firebase.auth().currentUser.uid)
     }).catch(function (error) {
 
-      instant(error)
+      instant(createLog(error.message))
 
     })
   })
@@ -325,7 +331,7 @@ function statusChange(body) {
           firebase.auth().currentUser.uid
         )
       }).catch(function (error) {
-        instant(error)
+        instant(createLog(error.message))
 
       })
     })
@@ -333,37 +339,13 @@ function statusChange(body) {
 
 }
 
-function removeAssignee(body) {
-  const dbName = firebase.auth().currentUser.uid
-
-  return new Promise(function (resolve, reject) {
-    fetchRecord(dbName, body.activityId).then(function (originalRecord) {
-      instantUpdateDB(dbName, body, 'remove')
-      http(
-          'PATCH',
-          `${apiUrl}activities/remove`,
-          JSON.stringify(body)
-        )
-        .then(function () {
-          requestHandlerResponse('notification', 200, 'assignee removed successfully', dbName)
-
-          resolve(
-            firebase.auth().currentUser.uid
-          )
-        })
-        .catch(function (error) {
-          reject(error)
-        })
-    })
-  })
-}
 
 function share(body) {
   const dbName = firebase.auth().currentUser.uid
 
 
   return new Promise(function (resolve, reject) {
-    fetchRecord(dbName, body.activityId).then(function (originalRecord) {
+
       http(
           'PATCH',
           `${apiUrl}activities/share`,
@@ -376,32 +358,12 @@ function share(body) {
           )
         })
         .catch(function (error) {
-          instant(error)
-
+          instant(createLog(error.message,body))
         })
-    })
+    
   })
 }
 
-function updateUserNumber(body) {
-  console.log(body)
-  return new Promise(function (resolve, reject) {
-    http(
-        'PATCH',
-        `${apiUrl}services/users/update`,
-        JSON.stringify(body)
-      )
-      .then(function (success) {
-        requestHandlerResponse('notification', 200, 'number updated successfully', firebase.auth().currentUser.uid)
-
-        resolve(firebase.auth().currentUser.uid)
-      })
-      .catch(function (error) {
-        instant(error)
-
-      })
-  })
-}
 
 function Null() {
   return new Promise(function (resolve, reject) {
@@ -420,7 +382,6 @@ function update(body) {
   console.log(body)
 
   return new Promise(function (resolve, reject) {
-    fetchRecord(dbName, body.activityId).then(function (originalRecord) {
       http(
           'PATCH',
           `${apiUrl}activities/update`,
@@ -432,12 +393,11 @@ function update(body) {
 
           resolve(firebase.auth().currentUser.uid)
         })
-        .catch(function (error) {
-          instant(error)
-
+        .catch(function (error) { 
+          instant(createLog(error.message,body))
         })
     })
-  })
+  
 }
 
 function create(body) {
@@ -455,8 +415,7 @@ function create(body) {
         resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {
-        instant(error)
-
+        instant(createLog(error.message,body))
       })
   })
 }

@@ -845,14 +845,6 @@ function profileView(pushState) {
 }
 
 function createProfileHeader() {
-  const iconCont = document.createElement('div')
-  iconCont.className = 'profile--toolbar-icon'
-
-  const icon = document.createElement('i')
-  icon.className = 'material-icons'
-  icon.textContent = 'more_vert'
-
-  iconCont.appendChild(icon)
 
   const backSpan = document.createElement('span')
   backSpan.id = 'close-profile--panel'
@@ -862,9 +854,8 @@ function createProfileHeader() {
 
   backIcon.textContent = 'arrow_back'
   backSpan.appendChild(backIcon)
-  header(backSpan.outerHTML, iconCont.outerHTML)
+  header(backSpan.outerHTML)
 
-  handleChangeNumberMenu()
 
 }
 
@@ -1175,190 +1166,15 @@ function handleReauthError(error) {
   console.log(error)
 }
 
-function createConfirmView(pushState) {
-  if (pushState) {
-    history.pushState(['createConfirmView'], null, null)
-  }
-  const backSpan = document.createElement('span')
-  backSpan.id = 'back-profile'
-
-  const backIcon = document.createElement('i')
-  backIcon.className = 'material-icons'
-  backIcon.textContent = 'arrow_back'
-  backSpan.appendChild(backIcon)
-
-  const nextSpan = document.createElement('span')
-  nextSpan.id = 'change-number-view'
-  nextSpan.className = 'mdc-typography--headline6'
-  const nextIcon = document.createElement('i')
-  nextIcon.className = 'material-icons change--number-check'
-  nextIcon.textContent = 'check'
-  nextSpan.textContent = 'NEXT'
-
-  nextSpan.appendChild(nextIcon)
-
-  header(backSpan.outerHTML, nextSpan.outerHTML)
-
-  const div = document.createElement('div')
-  div.className = 'verfication--image-layout mdc-top-app-bar--fixed-adjust'
-  div.id = 'confirm--number-change'
-
-  const img = new Image()
-  img.src = '../img/change_number.png'
-  img.className = 'change-number--info'
-  div.appendChild(img)
-  document.getElementById('app-current-panel').innerHTML = div.outerHTML
-  document.getElementById('change-number-view').addEventListener('click', changePhoneNumber)
-  document.getElementById('back-profile').addEventListener('click', function () {
-    backNav()
-  })
-}
 
 function disableInputs() {
   getInputText('#displayName')['input_'].disabled = true
   getInputText('#email')['input_'].disabled = true
 }
 
-function changePhoneNumber() {
-  header('', '')
-  const changeNumberDiv = document.createElement('div')
-  changeNumberDiv.className = 'mdc-card mdc-top-app-bar--fixed-adjust mdc-layout-grid__inner change--number-UI'
-
-  const oldNumberInfo = document.createElement('p')
-  oldNumberInfo.textContent = 'Please enter your old country code and phone number'
-  oldNumberInfo.className = 'mdc-layout-grid__cell--span-12'
-
-  const currentcountryDiv = document.createElement('div')
-  currentcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
-  currentcountryDiv.id = 'current-country--code'
-
-  const currentCountryInput = document.createElement('input')
-  currentCountryInput.classList.add('mdc-text-field__input', 'phoneNumber')
-  currentCountryInput.maxLength = 4
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  currentcountryDiv.appendChild(currentCountryInput)
-  currentcountryDiv.appendChild(ripple)
-
-  const currentNumberDiv = document.createElement('div')
-  currentNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
-  currentNumberDiv.id = 'current-phone--number'
-
-  const currentNumberInput = document.createElement('input')
-  currentNumberInput.maxLength = 14
-  currentNumberInput.classList.add('mdc-text-field__input', 'phoneNumber')
-  const numberRipple = document.createElement('div')
-  numberRipple.className = 'mdc-line-ripple'
-
-  currentNumberDiv.appendChild(currentNumberInput)
-  currentNumberDiv.appendChild(numberRipple)
-
-  const newNumberInfo = document.createElement('p')
-  newNumberInfo.textContent = 'Please enter your new country code and phone number'
-  newNumberInfo.className = 'mdc-layout-grid__cell--span-12'
-
-  const newcountryDiv = document.createElement('div')
-  newcountryDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-1')
-  newcountryDiv.id = 'new-country--code'
-  const newCountryInput = document.createElement('input')
-  newCountryInput.classList.add('mdc-text-field__input', 'phoneNumber')
-  newCountryInput.maxLength = 4
-  const newCountryInputRipple = document.createElement('div')
-  newCountryInputRipple.className = 'mdc-line-ripple'
-  newcountryDiv.appendChild(newCountryInput)
-  newcountryDiv.appendChild(newCountryInputRipple)
-
-  const newNumberDiv = document.createElement('div')
-  newNumberDiv.classList.add('mdc-text-field', 'mdc-layout-grid__cell--span-3')
-  newNumberDiv.id = 'new-phone--number'
-  const newNumberInput = document.createElement('input')
-  newNumberInput.classList.add('mdc-text-field__input', 'phoneNumber')
-  newNumberInput.maxLength = 14
-  const newNumberInputRipple = document.createElement('div')
-  newNumberInputRipple.className = 'mdc-line-ripple'
-  newNumberDiv.appendChild(newNumberInput)
-  newNumberDiv.appendChild(newNumberInputRipple)
-
-  const actions = document.createElement('div')
-  actions.id = 'submit-action'
-  actions.className = 'mdc-layout-grid__cell--span-12'
-  const submit = document.createElement('button')
-  submit.classList.add('mdc-button', 'mdc-ripple-upgraded')
-  submit.id = 'updatePhone'
-  submit.textContent = 'submit'
-
-  const cancel = document.createElement('button')
-  cancel.classList.add('mdc-button', 'mdc-ripple-upgraded')
-  cancel.id = 'cancelUpdate'
-  cancel.textContent = 'cancel'
-  actions.appendChild(cancel)
-  actions.appendChild(submit)
-
-  changeNumberDiv.innerHTML = oldNumberInfo.outerHTML + currentcountryDiv.outerHTML + currentNumberDiv.outerHTML + newNumberInfo.outerHTML + newcountryDiv.outerHTML + newNumberDiv.outerHTML + actions.outerHTML
-
-  document.getElementById('app-current-panel').innerHTML = changeNumberDiv.outerHTML
-
-  document.getElementById('submit-action').innerHTML = submit.outerHTML + cancel.outerHTML
-
-  document.getElementById('cancelUpdate').addEventListener('click', function (event) {
-    backNav()
-  })
-
-  getInputText('#new-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
-  getInputText('#new-phone--number').value = ''
-  getInputText('#current-country--code').value = firebase.auth().currentUser.phoneNumber.substr(0, 3)
-  getInputText('#current-phone--number').value = ''
-
-  const allInputFields = document.querySelectorAll('.phoneNumber')
-
-  for (let i = 0; i < allInputFields.length; i++) {
-    allInputFields[i].addEventListener('input', handleIllegalNumberInput)
-  }
-  document.getElementById('updatePhone').addEventListener('click', function (e) {
-    if (verifyCurrentPhoneNumber() && verifyPhoneNumber()) {
-      const reqBody = {
-        'phoneNumber': newPhoneNumber()
-      }
-      requestCreator('updateUserNumber', reqBody)
-    } else {
-      snacks('Please enter correct phone number')
-    }
-  })
 
 
-}
 
-function newPhoneNumber() {
-  const newCountryCode = getInputText('#new-country--code').value
-  const newNumber = getInputText('#new-phone--number').value
-  return newCountryCode.concat(newNumber)
-}
-
-function verifyPhoneNumber() {
-  const expression = /^\+[1-9]\d{5,14}$/
-  return expression.test(newPhoneNumber())
-}
-
-function handleIllegalNumberInput(value) {
-  const exp = /^\+[1-9]\d{1,3}$/
-  if (!exp.test(evt.target.value)) {
-    evt.target.value = evt.target.value.replace(/[^+0-9]/g, '')
-  }
-}
-
-function verifyCurrentPhoneNumber() {
-  const currentCountryCode = getInputText('#current-country--code').value
-  const currentNumber = getInputText('#current-phone--number').value
-  const numberInAuth = firebase.auth().currentUser.phoneNumber
-
-  console.log(currentCountryCode.concat(currentNumber))
-  if (currentCountryCode.concat(currentNumber) === numberInAuth) {
-    return true
-  }
-  return false
-}
 
 function header(contentStart, contentEnd, headerType) {
 
@@ -1410,44 +1226,6 @@ function backIconHeader(id) {
   header(backSpan.outerHTML)
 }
 
-function handleChangeNumberMenu() {
-
-  const div = document.createElement('div')
-  div.className = 'mdc-menu mdc-menu--animating-open'
-  div.id = 'change-number--menu'
-  const ul = document.createElement('ul')
-  ul.className = 'mdc-menu__items mdc-list'
-  ul.setAttribute('aria-hidden', 'true')
-  ul.setAttribute('role', 'menu')
-
-  const li = document.createElement('li')
-  li.className = 'mdc-list-item'
-  li.setAttribute('role', 'menuitem')
-  li.setAttribute('tabindex', '0')
-  li.textContent = 'change number'
-  li.id = 'change--span'
-  ul.appendChild(li)
-  div.appendChild(ul)
-  document.querySelector('.mdc-top-app-bar__section--align-end').classList.add('mdc-menu-anchor')
-  document.querySelector('.mdc-top-app-bar__section--align-end').appendChild(div)
-
-  // Instantiation
-  var menuEl = document.querySelector('#change-number--menu')
-  var menu = new mdc.menu.MDCMenu(menuEl)
-  var menuButtonEl = document.querySelector('.profile--toolbar-icon')
-
-  // Toggle menu open
-  menuButtonEl.addEventListener('click', function () {
-    menu.open = !menu.open
-  })
-
-  // Listen for selected item
-  menuEl.addEventListener('MDCMenu:selected', function (evt) {
-    createConfirmView(true)
-  })
-
-  menu.quickOpen = false
-}
 
 
 function createInputForProfile(key, type, classtype) {
