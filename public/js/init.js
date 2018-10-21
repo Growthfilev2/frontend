@@ -180,7 +180,7 @@ window.onpopstate = function (event) {
   } 
   
   else if (event.state[0] === 'listView') {
-    window[event.state[0]](event.state[1],true)
+    window[event.state[0]](true)
   }
   
   else {

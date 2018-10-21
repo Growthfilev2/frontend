@@ -42,7 +42,6 @@ window.addEventListener('load', function() {
   window.onerror = function(msg,url,lineNo,columnNo,error){
   const errorJS  = {
     message : {
-
       msg : msg,
       url :url,
       lineNo:lineNo,
@@ -50,18 +49,17 @@ window.addEventListener('load', function() {
       error:error
     }
   }
-  requestCreator('instant',errorJS)
-
+    requestCreator('instant',errorJS)
   }
 	
-
   // if ('serviceWorker' in navigator) {
   //   console.log('webview started')
   //   initSW()
   // } else {
   //   console.log("direct run")
   //   startApp()
-  // }   
+  // }
+
   startApp()
  
 

@@ -269,7 +269,7 @@ function createComment(db, addendum, currentUser) {
       let commentInfo = document.createElement('span')
       commentInfo.className = 'comment--info'
       const datespan = document.createElement('span')
-      datespan.textContent = moment(addendum.timestamp).calendar()
+      datespan.textContent = moment(addendum.timestamp).format('DD-MM-YY H:mm')
       datespan.classList.add('comment-date', 'mdc-typography--caption')
 
       const link = document.createElement('div')

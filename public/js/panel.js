@@ -1,5 +1,5 @@
 
-function listView(scrollId,pushState) {
+function listView(pushState) {
   document.body.style.backgroundColor = 'white'
 
   if(document.querySelector('.init-loader')) {
@@ -29,12 +29,12 @@ function listView(scrollId,pushState) {
       }
 
       creatListHeader('Recent')
-      fetchDataForActivityList(db,scrollId)
+      fetchDataForActivityList(db)
     }
   }
 }
 
-function fetchDataForActivityList(db,scrollId) {
+function fetchDataForActivityList(db) {
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
