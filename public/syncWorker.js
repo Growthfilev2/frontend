@@ -1,5 +1,5 @@
 (function () {
-  const CACHE_NAME = 'V76'
+  const CACHE_NAME = 'V77'
   const urlsToCache = [
     'https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js',
     'https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js',
