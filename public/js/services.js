@@ -1,6 +1,23 @@
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
+
+  const req = window.indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db  = req.result
+    const usersObjectStoreTx = db.transaction('users','readwrite')
+    const usersObjectStore = usersObjectStoreTx.objectStore('users')
+    usersObjectStore.get(img.dataset.number).onsuccess = function(event){
+      const record = event.target.result
+      if(record.isUpdated == 0) return
+      record.isUpdated = 0
+      usersObjectStore.put(record)
+      usersObjectStoreTx.oncomplete = function (){
+        requestCreator('fetchUserDetails')
+      }
+    }
+  }
+
   return true
 }
 
@@ -276,7 +293,7 @@ function requestCreator(requestType, requestBody) {
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
-  } else if (requestType === 'instant' || requestType === 'now') {
+  } else if (requestType === 'instant' || requestType === 'now' || requestType === 'fetchUserDetails') {
     requestGenerator.body = JSON.stringify(requestBody)
     apiHandler.postMessage(requestGenerator)
   } else {

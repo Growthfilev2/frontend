@@ -428,6 +428,7 @@ function createHeaderContent(db, id) {
 
       const creatorImg = document.createElement("img")
       creatorImg.className = 'header--icon-creator'
+      creatorImg.dataset.number = record.creator
       creatorImg.src = uri
       creatorImg.setAttribute('onerror', 'handleImageError(this)');
       backDiv.appendChild(creatorImg);

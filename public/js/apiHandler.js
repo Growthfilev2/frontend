@@ -70,6 +70,14 @@ self.onmessage = function (event) {
       instant(event.data.body)
       return
     }
+    if(event.data.type === 'fetchUserDetails') {
+      const req = indexedDB.open(auth.uid)
+      req.onsuccess = function(){
+        const db = req.result
+        createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
+      }
+      return
+    }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
 
   })
@@ -657,7 +665,6 @@ function putAssignessInStore(db, assigneeArray) {
       usersObjectStore.add({
         mobile: assignee,
         isUpdated: 0,
-        count: 0,
         displayName: ''
       })
     }
@@ -764,62 +771,83 @@ function removeActivityFromAddendum(activitiesToRemove) {
   }
 }
 
+function updateOneUser(db){
+  const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+
+}
+
 function createUsersApiUrl(db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
+  const isUpdatedIndex = usersObjectStore.index('isUpdated')
+  const NON_UPDATED_USERS = 0
   let assigneeString = ''
 
   const defaultReadUserString = `${apiUrl}services/users/read?q=`
   let fullReadUserString = ''
 
   return new Promise(function (resolve) {
-    usersObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
+ 
 
-      if (!cursor) {
-        fullReadUserString = `${defaultReadUserString}${assigneeString}`
-        resolve({
-          db: db,
-          url: fullReadUserString
-        })
-        return
+      isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+        const cursor = event.target.result
+        
+        if (!cursor) {
+          fullReadUserString = `${defaultReadUserString}${assigneeString}`
+          console.log(fullReadUserString)
+          resolve({
+            db: db,
+            url: fullReadUserString,
+          })
+          return
+        }
+        console.log(cursor.value.mobile)
+        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+        assigneeString += `${assigneeFormat.replace('+', '')}`
+        cursor.continue()
       }
-      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-      assigneeString += `${assigneeFormat.replace('+', '')}`
-      cursor.continue()
-    }
-  })
-}
+    
+    })
+  }
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(successUrl) {
   http(
-      'GET',
-      successUrl.url
-    )
-    .then(function (userProfile) {
-      const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
+    'GET',
+    successUrl.url
+  )
+  .then(function (userProfile) {
+    console.log(userProfile)
 
-      usersObjectStore.openCursor().onsuccess = function (event) {
+    const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
+    const isUpdatedIndex = usersObjectStore.index('isUpdated')
+    const USER_NOT_UPDATED = 0
+    const USER_UPDATED = 1
+
+      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
-
+        
         if (!cursor) {
+          // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
-
-        if (userProfile[cursor.value.mobile].displayName || userProfile[cursor.value.mobile].photoURL) {
+        
+        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
-          record.photoURL = userProfile[cursor.value.mobile].photoURL
-          record.displayName = userProfile[cursor.value.mobile].displayName
+          record.photoURL = userProfile[cursor.primaryKey].photoURL
+          record.displayName = userProfile[cursor.primaryKey].displayName
+          record.isUpdated = USER_UPDATED
+          console.log(record)
           usersObjectStore.put(record)
         }
         cursor.continue()
       }
+    
     }).catch(console.log)
-}
-
-function updateSubscription(db, subscription) {
-  const subscriptionObjectStore = db
+  }
+  
+  function updateSubscription(db, subscription) {
+    const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
     .objectStore('subscriptions')
 

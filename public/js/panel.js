@@ -81,23 +81,19 @@ function fetchDataForActivityList(db) {
 
 function createActivityList(db, data,append) {
   return new Promise(function(resolve){
-
     getCount(db, data.activityId).then(function (count) {
       getCommentUndUser(db,  data.activityId, data.creator).then(function (meta) {
         getCreatorDetails(db, meta).then(function(metaWiwthData){
           metaWiwthData.count = count
-   
             resolve(activityListUI(data,metaWiwthData,append))
         })
       })
     })
   })
-
 }
 
 function getCount(db, id) {
   return new Promise(function (resolve) {
-
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
     activityCount.get(id).onsuccess = function (event) {
       const record = event.target.result
@@ -147,11 +143,11 @@ function getCreatorDetails(db, meta) {
 
     const userObjStore = db.transaction('users').objectStore('users')
     if (meta.creator === firebase.auth().currentUser.phoneNumber) {
-      meta.creator = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
+      meta.creator = {photo:firebase.auth().currentUser.photoURL || './img/empty-user.jpg',number:firebase.auth().currentUser.phoneNumber}
       resolve(meta)
     } else {
-      userObjStore.get(meta.creator).onsuccess = function (userstore) {
-        meta.creator = userstore.target.result.photoURL || './img/empty-user.jpg'
+      userObjStore.get(meta.creator).onsuccess = function (userstore) { 
+        meta.creator = {photo: userstore.target.result.photoURL || './img/empty-user.jpg',number:userstore.target.result.mobile}
         resolve(meta)
       }
     }
@@ -166,9 +162,10 @@ function activityListUI(data, metaData,append) {
   li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
 
   const creator = document.createElement("img")
+  creator.dataset.number = metaData.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
-  creator.setAttribute('onerror','handleImageError(this)')
-  creator.src = metaData.creator
+  creator.setAttribute('onerror',`handleImageError(this)`)
+  creator.src = metaData.creator.photo
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
@@ -1080,10 +1077,12 @@ function processImage(image) {
   }
 
   function storageErrorHandler(error) {
-    if (error.code === 'storage/unknown') {
-      console.log(error)
-    }
+   
     console.log(error)
+    const log = {
+      message : error
+    }
+    requestCreator('instant',log)
   }
 
   function storageSuccessHandler() {
