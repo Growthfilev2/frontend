@@ -3,18 +3,15 @@ function handleImageError(img) {
   img.src = './img/empty-user.jpg';
 
   const req = window.indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function(){
-    const db  = req.result
-    const usersObjectStoreTx = db.transaction('users','readwrite')
+  req.onsuccess = function () {
+    const db = req.result
+    const usersObjectStoreTx = db.transaction('users', 'readwrite')
     const usersObjectStore = usersObjectStoreTx.objectStore('users')
-    usersObjectStore.get(img.dataset.number).onsuccess = function(event){
+    usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
       const record = event.target.result
-      if(record.isUpdated == 0) return
+      if (record.isUpdated == 0) return
       record.isUpdated = 0
       usersObjectStore.put(record)
-      usersObjectStoreTx.oncomplete = function (){
-        requestCreator('fetchUserDetails')
-      }
     }
   }
 
@@ -80,7 +77,7 @@ function mockLocationDialog(resolve) {
     const section = document.createElement('section')
     section.className = 'mdc-dialog__body mock-main-body'
     section.textContent = 'There seems to a Mock Location Application in your device which is preventing Growthfile from locating you. Please turn off all mock location applications and try again later.'
- 
+
     const footer = document.createElement('footer')
     footer.className = 'mdc-dialog__footer mock-footer'
 
@@ -97,14 +94,14 @@ function mockLocationDialog(resolve) {
 
     const warningText = document.createElement('section')
     warningText.className = 'mdc-typography--subtitle2 mdc-dialog__body warning-body'
-    
+
     const continueAnyway = document.createElement('span')
     continueAnyway.className = 'continue-link'
     continueAnyway.textContent = 'Proceed anyway '
-    continueAnyway.onclick = function(){
+    continueAnyway.onclick = function () {
       resolve({
-        latitude:'',
-        longitude:''
+        latitude: '',
+        longitude: ''
       })
       document.querySelector('#mock-location').remove()
     }
@@ -114,7 +111,7 @@ function mockLocationDialog(resolve) {
     const warningTextNode = document.createTextNode(' This activity will not be recorded in any of the reports.')
     warningText.appendChild(warningTextNode)
 
-  
+
     surface.appendChild(section)
     surface.appendChild(footer)
     surface.appendChild(warningText)
@@ -140,7 +137,7 @@ function enableGps() {
     const section = document.createElement('section')
     section.className = 'mdc-dialog__body mock-main-body'
     section.textContent = 'Please Enable GPS on your phone'
- 
+
     const footer = document.createElement('footer')
     footer.className = 'mdc-dialog__footer mock-footer'
 
@@ -157,7 +154,7 @@ function enableGps() {
     surface.appendChild(footer)
     aside.appendChild(surface)
     document.body.appendChild(aside)
-  
+
   }
 
   const gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'))
@@ -220,14 +217,14 @@ function snacks(message, type) {
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
     actionHandler: function () {
-      
+
       if (type) {
         requestCreator('statusChange', {
           activityId: type.id,
           status: 'PENDING'
         })
       }
-      
+
     }
   }
 
@@ -241,37 +238,82 @@ function fetchCurrentTime(serverTime) {
 }
 
 function fetchCurrentLocation() {
-  let geo = {
-    'latitude':'',
-    'longitude':''
-  }
+ 
+
   return new Promise(function (resolve) {
-    navigator.geolocation.getCurrentPosition(function (position, error) {
-      if (position) {
-        geo.latitude = position.coords.latitude
-        geo.longitude = position.coords.longitude
-
-        resolve(geo)
-      } else {
-        reject(error)
-      }
-
-      setTimeout(function () {
-        if(geo.latitude === '' && geo.longitude === '') {
-
-          mockLocationDialog(resolve)
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const db = req.result
+      const rootStore = db.transaction('root').objectStore('root')
+      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+        const record = event.target.result
+        if (record.provider === 'CELLID') {
+          // handle from android
+          console.log("handle from android")
+          return
         }
-      }, 10000)
-  
-    })
+        if(record.provider === 'HTML5' || record.provider === '') {
+          console.log("from html 5")
+          locationInterval(resolve,true)
+          return
+        }
+        locationInterval(resolve)
+      }
+    }
   })
 }
 
-function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+function locationInterval(resolve,isHTML5) {
+  const stabalzied = []
+  let count = 0
+  let geo = {
+    'latitude': '',
+    'longitude': ''
+  }
+  let geoData = {}
+  
+  let myInterval = setInterval(function () {
+
+    navigator.geolocation.getCurrentPosition(function (position) {
+      if (position) {
+        geo.latitude = position.coords.latitude
+        geo.longitude = position.coords.longitude
+        if (stabalzied.length == 0) {
+          stabalzied.push(geo)
+          return
+        }
+        if (stabalzied[0].latitude.toFixed(3) === geo.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === geo.longitude.toFixed(3)) {
+          ++count
+          if (count < 3) {
+            stabalzied.push(geo)
+          }
+          if (count == 3) {
+            clearInterval(myInterval);
+            geoData.geo = stabalzied[2]
+            geoData.provider = 'HTML5'
+            resolve(geoData)
+            return
+          }
+        }
+        // resolve(geo)
+      } 
+      if(!isHTML5) {
+
+        setTimeout(function () {  
+
+        if (geo.latitude === '' && geo.longitude === '') {
+          geoData.provider = 'CELLID'
+          resolve(geoData)
+        }
+      }, 10000)
+    }
+    })
+  }, 500)
 }
 
-
+function sendCurrentViewNameToAndroid(viewName) {
+  // Fetchview.startConversation(viewName)
+}
 
 function inputFile(selector) {
   return document.getElementById(selector)
@@ -298,22 +340,29 @@ function requestCreator(requestType, requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else {
     offset = '';
-    fetchCurrentLocation().then(function (geopoints) {
-    
+
+    fetchCurrentLocation().then(function (geoData) {
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
       req.onsuccess = function () {
         const db = req.result;
-        const rootObjectStore = db.transaction('root').objectStore('root')
-        rootObjectStore.get(dbName).onsuccess = function (event) {
+        const rootTx = db.transaction('root', 'readwrite')
+        const rootObjectStore = rootTx.objectStore('root')
 
-          requestBody['timestamp'] = fetchCurrentTime(event.target.result.serverTime)
-          requestBody['geopoint'] = geopoints
-          requestGenerator.body = requestBody
+        rootObjectStore.get(dbName).onsuccess = function (event) {
+          const record = event.target.result
+          record.provider = geoData.provider
+          rootObjectStore.put(record)
+
+          rootTx.oncomplete = function () {
+            requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
+            requestBody['geopoint'] = geoData.geo
+            requestGenerator.body = requestBody
+            apiHandler.postMessage(requestGenerator)
+          }
           // post the requestGenerator object to the apiHandler to perform IDB and api
           // operations
 
-          apiHandler.postMessage(requestGenerator)
         }
       }
     })
@@ -404,7 +453,7 @@ function loadViewFromRoot(response) {
       handleTimeout()
       return
     }
-    
+
     window[history.state[0]](history.state[1], false)
     handleTimeout()
 
@@ -412,17 +461,17 @@ function loadViewFromRoot(response) {
 }
 
 function onErrorMessage(error) {
-  
+
   const logs = {
-    message : error.message,
-    body : {
-    'line-number': error.lineno,
-    'file': error.filename
+    message: error.message,
+    body: {
+      'line-number': error.lineno,
+      'file': error.filename
     }
   }
 
-  requestCreator('instant',logs)
- 
+  requestCreator('instant', logs)
+
   console.table({
     'line-number': error.lineno,
     'error': error.message,
