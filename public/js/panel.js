@@ -159,7 +159,7 @@ function getCreatorDetails(db, meta) {
 }
 
 
-function activityListUI(data, metaData,append,state) {
+function activityListUI(data, metaData,append) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId

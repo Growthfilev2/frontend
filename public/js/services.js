@@ -387,6 +387,7 @@ function loadViewFromRoot(response) {
       handleTimeout()
       return
     }
+    
     window[history.state[0]](history.state[1], false)
     handleTimeout()
 

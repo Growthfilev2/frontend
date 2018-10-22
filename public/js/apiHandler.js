@@ -51,10 +51,10 @@ function requestHandlerResponse(type, code, message, params) {
   })
 }
 
-function createLog(message,body){
-  const logs  = {
-    message : message,
-    body : body
+function createLog(message, body) {
+  const logs = {
+    message: message,
+    body: body
   }
   return logs
 }
@@ -109,7 +109,7 @@ function http(method, url, data) {
 
         xhr.send(data || null)
       }).catch(function (error) {
-        instant(error)
+        instant(createLog(error.message))
       })
   })
 }
@@ -122,7 +122,7 @@ function fetchServerTime(deviceInfo) {
     model: deviceInfo[2],
     os: deviceInfo[3]
   }
-  
+
   return new Promise(function (resolve) {
     http(
       'GET',
@@ -144,18 +144,18 @@ function fetchServerTime(deviceInfo) {
       }
       resolve(response.timestamp)
     }).catch(function (error) {
-     instant(createLog(error.message,deviceObject))
+      instant(createLog(error.message, deviceObject))
     })
   })
 }
 
 function instant(error) {
-  
+
   http(
     'POST',
     `${apiUrl}services/logs`,
     JSON.stringify(error)
-  ).then(function(response){
+  ).then(function (response) {
     console.log(response)
   }).catch(console.log)
 }
@@ -346,21 +346,21 @@ function share(body) {
 
   return new Promise(function (resolve, reject) {
 
-      http(
-          'PATCH',
-          `${apiUrl}activities/share`,
-          JSON.stringify(body))
-        .then(function (success) {
-          instantUpdateDB(dbName, body, 'share')
-          requestHandlerResponse('notification', 200, 'assignne added successfully', dbName)
-          resolve(
-            firebase.auth().currentUser.uid
-          )
-        })
-        .catch(function (error) {
-          instant(createLog(error.message,body))
-        })
-    
+    http(
+        'PATCH',
+        `${apiUrl}activities/share`,
+        JSON.stringify(body))
+      .then(function (success) {
+        instantUpdateDB(dbName, body, 'share')
+        requestHandlerResponse('notification', 200, 'assignne added successfully', dbName)
+        resolve(
+          firebase.auth().currentUser.uid
+        )
+      })
+      .catch(function (error) {
+        instant(createLog(error.message, body))
+      })
+
   })
 }
 
@@ -382,22 +382,22 @@ function update(body) {
   console.log(body)
 
   return new Promise(function (resolve, reject) {
-      http(
-          'PATCH',
-          `${apiUrl}activities/update`,
-          JSON.stringify(body)
-        )
-        .then(function (success) {
-          instantUpdateDB(dbName, body, 'update')
-          requestHandlerResponse('notification', 200, 'activity update successfully', dbName)
+    http(
+        'PATCH',
+        `${apiUrl}activities/update`,
+        JSON.stringify(body)
+      )
+      .then(function (success) {
+        instantUpdateDB(dbName, body, 'update')
+        requestHandlerResponse('notification', 200, 'activity update successfully', dbName)
 
-          resolve(firebase.auth().currentUser.uid)
-        })
-        .catch(function (error) { 
-          instant(createLog(error.message,body))
-        })
-    })
-  
+        resolve(firebase.auth().currentUser.uid)
+      })
+      .catch(function (error) {
+        instant(createLog(error.message, body))
+      })
+  })
+
 }
 
 function create(body) {
@@ -415,7 +415,7 @@ function create(body) {
         resolve(firebase.auth().currentUser.uid)
       })
       .catch(function (error) {
-        instant(createLog(error.message,body))
+        instant(createLog(error.message, body))
       })
   })
 }
@@ -915,23 +915,22 @@ function successResponse(read) {
     })
 
 
+
+
+
+
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
+      getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log)
+
       record.fromTime = Date.parse(read.upto)
-
       rootObjectStore.put(record)
+      if (record.fromTime !== 0) {
+        requestHandlerResponse('updateIDB', 200);
+      }
+
+      createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
     }
-
-    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
-
-    getUniqueOfficeCount(firstTime).then(setUniqueOffice).catch(console.log)
-
-    activityAndRoot.oncomplete = function () {
-      if (firstTime === 1) return
-      requestHandlerResponse('updateIDB', 200, 'update successfull')
-    }
-
-    // after the above operations are done , send a response message back to the requestCreator(main thread).
 
   }
 
@@ -987,7 +986,7 @@ function setUniqueOffice(data) {
         offices.hasMultipleOffice = 0
         record.offices = offices
         rootObjectStore.put(record)
-        if (data.firstTime === 1) {
+        if (data.firstTime === 0) {
 
           requestHandlerResponse('updateIDB', 200, 'update successfull')
         }
@@ -997,7 +996,7 @@ function setUniqueOffice(data) {
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
-      if (data.firstTime === 1) {
+      if (data.firstTime === 0) {
         requestHandlerResponse('updateIDB', 200, 'update successfull')
       }
 
@@ -1024,7 +1023,7 @@ function updateIDB(dbName) {
           successResponse(response)
         })
         .catch(function (error) {
-          instant(error)
+          instant(createLog(error.message, root.target.result.fromTime));
 
         })
     }
