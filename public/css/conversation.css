@@ -1052,6 +1052,7 @@ input[type="datetime-local"] {
 
   #assignees--list .mdc-list-item:nth-child(1) {
     height: 40px;
+    padding-bottom: 10px;
   }
   #assignees--list .mdc-list-item:nth-child(1) .mdc-list-item__text {
     height: 100%;
