@@ -437,7 +437,6 @@ function createHeaderContent(db, id) {
       primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2'
       primarySpan.textContent = record.activityName
 
-
       const secondarySpan = document.createElement('span')
       secondarySpan.className = 'mdc-list-item__secondary-text'
       secondarySpan.textContent = 'Click here to see Details'
@@ -2645,6 +2644,7 @@ function createEmailInput(value, canEdit) {
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input input--type-email'
   input.type = 'email'
+  input.placeholder = 'johndoe@example.com'
   input.style.paddingTop = '0px'
   input.value = value
   const ripple = document.createElement('div')
