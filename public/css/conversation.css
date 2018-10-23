@@ -810,11 +810,9 @@ footer.mdc-dialog__footer {
 .label--text {
   color: #ff9800 !important;
 }
-#attachment--list .attachment-field:nth-child(1) {
-  padding-top: 15px;
-}
+
 .attachment-field {
-  padding: 10Px 0px 0px 0px;
+  padding: 5Px 0px 5px 0px;
   padding-left: 15px;
   padding-right: 15px;
 
@@ -1476,4 +1474,7 @@ input[type="datetime-local"] {
 }
 .schedule-start-li , .schedule-end-li {
   padding-right: 0px;
+}
+#attachment--list {
+  padding-top: 10px;
 }
