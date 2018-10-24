@@ -494,11 +494,11 @@ function initMenu(db, officeRecord) {
     a.appendChild(i)
     a.appendChild(textSpan)
     a.onclick = function () {
-      localStorage.removeItem('clickedActivity')
 
+      window.scrollTo(0,0)  
       if (filter.type === 'Pending' || filter.type === 'Cancelled') {
-        
         filterActivities(filter.type, db, true)
+      
       }
       if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
         sortByCreator(filter.type, db, true)
