@@ -70,14 +70,6 @@ self.onmessage = function (event) {
       instant(event.data.body)
       return
     }
-    if(event.data.type === 'fetchUserDetails') {
-      const req = indexedDB.open(auth.uid)
-      req.onsuccess = function(){
-        const db = req.result
-        createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
-      }
-      return
-    }
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
 
   })
@@ -373,14 +365,18 @@ function share(body) {
 }
 
 
-function Null() {
+function Null(swipe) {
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
       reject(null)
       return
     }
-    console.log('ASdasdasdasd')
+    if(swipe && swipe === "true") {
+      console.log(JSON.parse(swipe))
+      requestHandlerResponse('reset-offset')
+    }
+    console.log("Null Ran")
     resolve(user.uid)
   })
 }

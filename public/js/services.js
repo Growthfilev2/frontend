@@ -312,7 +312,7 @@ function locationInterval(resolve,isHTML5) {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  //  Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -335,8 +335,10 @@ function requestCreator(requestType, requestBody) {
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
-  } else if (requestType === 'instant' || requestType === 'now' || requestType === 'fetchUserDetails') {
-    requestGenerator.body = JSON.stringify(requestBody)
+  } else if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
+    if(requestBody){
+      requestGenerator.body = JSON.stringify(requestBody)
+    }
     apiHandler.postMessage(requestGenerator)
   } else {
     if(offset){
@@ -416,6 +418,14 @@ function loadViewFromRoot(response) {
     return;
   }
 
+  if(response.data.type === 'reset-offset') {
+    if(offset) {
+	console.log("removing offset")
+      clearTimeout(offset)
+      offset = null
+    }
+    return
+  }
 
   const req = window.indexedDB.open(firebase.auth().currentUser.uid)
 
@@ -447,7 +457,7 @@ function loadViewFromRoot(response) {
     // updateIDB
 
     if (!history.state) {
-      window["listView"](false, true)
+      window["listView"](true)
       return
     }
 
@@ -459,17 +469,9 @@ function loadViewFromRoot(response) {
       return
     }
 
-    if(response.data.type === 'update--list') {
-        if(history.state[0] === 'listView') {
-          window[history.state[0]](history.state[1],response.data.params)
-          return
-        }
-      return
-    }
-
+    console.log("running view in state")
     window[history.state[0]](history.state[1], false)
     handleTimeout()
-
   }
 }
 

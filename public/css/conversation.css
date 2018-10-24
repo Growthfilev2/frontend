@@ -1,4 +1,6 @@
-
+.mdc-drawer-scroll-lock{
+	overflow:hidden !important;
+}
 
 body {
   margin: 0;
