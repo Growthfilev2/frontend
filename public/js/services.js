@@ -339,8 +339,10 @@ function requestCreator(requestType, requestBody) {
     requestGenerator.body = JSON.stringify(requestBody)
     apiHandler.postMessage(requestGenerator)
   } else {
-    offset = '';
-
+    if(offset){
+      clearTimeout(offset)
+      offset = null
+    }
     fetchCurrentLocation().then(function (geoData) {
       const dbName = firebase.auth().currentUser.uid
       const req = indexedDB.open(dbName)
@@ -441,6 +443,7 @@ function loadViewFromRoot(response) {
       return
     }
 
+
     // updateIDB
 
     if (!history.state) {
@@ -448,9 +451,19 @@ function loadViewFromRoot(response) {
       return
     }
 
+    
+
     if (history.state[0] === 'updateCreateActivity') {
       toggleActionables(history.state[1].activityId)
       handleTimeout()
+      return
+    }
+
+    if(response.data.type === 'update--list') {
+        if(history.state[0] === 'listView') {
+          window[history.state[0]](history.state[1],response.data.params)
+          return
+        }
       return
     }
 
@@ -484,7 +497,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null')
   }, 30000)
-
+  
 }
 
 function getInputText(selector) {

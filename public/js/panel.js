@@ -29,34 +29,31 @@ function listView(pushState) {
       }
 
       creatListHeader('Recent')
-      fetchDataForActivityList(db)
+      fetchDataForActivityList(db,['E3ci1cJBt3aORhBz37Bb','Hf7MWyNILYy9rRFns98L'])
     }
   }
 }
 
 function fetchDataForActivityList(db) {
   let activityDom = ''
+  const ul = document.getElementById('activty--list')
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
-  let count = 0
   const activityVisibleIndex = activityObjectStore.index('timestamp')
   const currOffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
   activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
     let cursor = event.target.result
     if (!cursor) {
-      console.log(count)
+          let yOffset = window.pageYOffset
           setTimeout(function(){
-
-            appendActivityListToDom(activityDom, true)
-            createActivityIcon(db)
-            if(localStorage.getItem('clickedActivity')) {
-              document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
-            }
-      
+              appendActivityListToDom(activityDom, true)
+              createActivityIcon(db)
+              scrollToActivity(yOffset)
            },100)
       return
     }
 
+    
     if (currOffice === 'all') {
       if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED')  {
         createActivityList(db, cursor.value).then(function (li) {
@@ -66,7 +63,6 @@ function fetchDataForActivityList(db) {
     }
     
      else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice && cursor.value.status !== 'CANCELLED') {
-       count++
 
         createActivityList(db, cursor.value).then(function (li) {
 
@@ -76,7 +72,6 @@ function fetchDataForActivityList(db) {
 
     cursor.continue()
   }
-
 }
 
 function createActivityList(db, data,append) {
@@ -342,6 +337,25 @@ function creatListHeader(headerName, backIcon) {
 
 }
 
+function scrollToActivity(yOffset){
+  if (localStorage.getItem('clickedActivity')) {
+    document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+    localStorage.removeItem('clickedActivity')
+    return
+  }
+  
+  if(yOffset == 0) {
+    localStorage.removeItem('clickedActivity')
+    window.scrollTo(0,0)
+    return
+  }
+
+  if(yOffset > 0) {
+    window.scrollTo(0,yOffset);
+  }
+
+}
+
 function initMenu(db, officeRecord) {
 
   const filters = [{
@@ -592,12 +606,11 @@ function filterActivities(type, db, pushState) {
   activityStore.openCursor(null, 'prev').onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
+      let yOffset = window.pageYOffset
       appendActivityListToDom(activityDom, false, type)
       createActivityIcon(db)
-      if(localStorage.getItem('clickedActivity')) {
+      scrollToActivity(yOffset)
 
-        document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
-      }
 
       return
     }
@@ -630,13 +643,10 @@ function sortByCreator(type, db, pushState) {
   activityStore.openCursor(null, 'prev').onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
+      let yOffset = window.pageYOffset 
       appendActivityListToDom(activityDom, false, type)
       createActivityIcon(db)
-      if(localStorage.getItem('clickedActivity')) {
-
-        document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
-      }
-
+     scrollToActivity(yOffset)
       return
     }
     if (type === 'Incoming') {
@@ -727,14 +737,11 @@ function generateActivitiesByDate(sortingOrder) {
     })
 
     setTimeout(function () {
+      let yOffset = window.pageYOffset
       appendActivityListToDom(activityDom, false, 'Urgent')
       createActivityIcon(db)
-      if(localStorage.getItem('clickedActivity')) {
-
-        document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
-      }
-
-    }, 500)
+      scrollToActivity(yOffset)
+    }, 600)
 
 
   }
@@ -787,14 +794,12 @@ function sortActivitiesByLocation(db, distanceArr) {
 
   }
   setTimeout(function () {
+    let yOffset = window.pageYOffset
     appendActivityListToDom(activityDom, false, 'Nearby')
     createActivityIcon(db)
-    if(localStorage.getItem('clickedActivity')) {
+    scrollToActivity(yOffset)
 
-      document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
-    }
-
-  }, 400)
+  }, 500)
 }
 
 function locationSortError(error) {

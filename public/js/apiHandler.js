@@ -956,13 +956,12 @@ function successResponse(read) {
       if (record.fromTime !== 0) {
         requestHandlerResponse('updateIDB', 200);
       }
-
-      createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
     }
-
+    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
   }
 
 }
+
 
 function notUpdateUserObjectStore(errorUrl) {
   console.log(errorUrl)
