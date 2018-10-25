@@ -202,11 +202,9 @@ function statusChange(db, id) {
 
     document.querySelector('.mdc-checkbox').onclick = function () {
     
+      document.querySelector('.form-field-status').classList.add('hidden');
       
-      
-            document.querySelector('.form-field-status').classList.add('hidden');
-      
-            document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+      document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
       
       // if(!Internet.isNetwork()) {
       //   snacks('Please Check your internet Connection')
@@ -216,23 +214,35 @@ function statusChange(db, id) {
 
         if(!IsGpsEnabled.gpsEnabled()) {
           enableGps()
+          document.querySelector('.form-field-status').classList.remove('hidden');
+      
+          document.querySelector('.status--change-cont .status-loader').remove();
+          if (record.status === 'CONFIRMED') {
+            switchControl.checked = true
+          }
+          else {
+            switchControl.checked = false
+          }     
           return
         }
-      } catch(e){
+
+        if (switchControl.checked) {
+          requestCreator('statusChange', {
+            activityId: record.activityId,
+            status: 'CONFIRMED'
+          })
+        } else {
+          requestCreator('statusChange', {
+            activityId: record.activityId,
+            status: 'PENDING'
+          })
+        }
+      } 
+      catch(e){
         console.log(e)
       }
 
-      if (switchControl.checked) {
-        requestCreator('statusChange', {
-          activityId: record.activityId,
-          status: 'CONFIRMED'
-        })
-      } else {
-        requestCreator('statusChange', {
-          activityId: record.activityId,
-          status: 'PENDING'
-        })
-      }
+     
     }
   }
 }

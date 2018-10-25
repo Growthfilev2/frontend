@@ -158,7 +158,9 @@ function instant(error) {
   ).then(function (response) {
     console.log(response)
   }).catch(console.log)
+
 }
+
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.

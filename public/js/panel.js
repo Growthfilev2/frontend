@@ -29,7 +29,7 @@ function listView(pushState) {
       }
 
       creatListHeader('Recent')
-      fetchDataForActivityList(db,['E3ci1cJBt3aORhBz37Bb','Hf7MWyNILYy9rRFns98L'])
+      fetchDataForActivityList(db)
     }
   }
 }
@@ -1260,10 +1260,10 @@ let handleMutations = function(mutationList,observer) {
     }
     else {
       mutation.target.style.overflow = 'scroll'
-
     }
   })
 }
+
 let observer = new MutationObserver(handleMutations);
 observer.observe(document.body,{
   attributes: true,
@@ -1271,6 +1271,3 @@ observer.observe(document.body,{
   attributeOldValue: true,
   characterDataOldValue: true
 })
-
-
-

@@ -263,7 +263,8 @@ function geolocationApi(method, url, data) {
     if (!data) {
       resolve(undefined)
     } else {
-      xhr.send(JSON.stringify(data))
+      console.log(data)
+      xhr.send(data)
     }
   }).catch(function (error) {
     return error
@@ -271,38 +272,16 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
+  const apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c'
   let CelllarJson;
   try {
     CelllarJson = Towers.getCellularData()
+    console.log(CelllarJson)
   } catch (e) {
-    console.log(e)
     requestCreator('instant', {
       message: e.message
     })
-    CelllarJson = {
-      "homeMobileCountryCode": 404,
-      "homeMobileNetworkCode": 11,
-      "radioType": "LTE",
-      "carrier": "Vodafone IN",
-      "considerIp": "true",
-      "cellTowers": [{
-        "cellId": 206371074,
-        "locationAreaCode": 52594,
-        "mobileCountryCode": 404,
-        "mobileNetworkCode:": 11
-
-      }],
-
-      "wifiAccessPoints": [{
-          "macAddress": "a0:ab:1b:e7:cf:e7",
-          "signalStrength": -63
-        },
-        {
-          "macAddress": "10:be:f5:ff:84:46",
-          "signalStrength": -62
-        }
-      ]
-    }
+    CelllarJson = ''
   }
  
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -315,7 +294,7 @@ function manageLocation() {
         const record = event.target.result
         // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
 
-        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c', CelllarJson)
+        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+apiKey, CelllarJson)
         navigatorFetchPromise = locationInterval(record.provider)
 
 
