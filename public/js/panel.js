@@ -1,6 +1,6 @@
 
 function listView(pushState) {
-  document.body.style.backgroundColor = 'white'
+  // document.body.style.backgroundColor = 'white'
 
   if(document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
@@ -12,7 +12,7 @@ function listView(pushState) {
   }
   
   listPanel()
-  
+
   const dbName = localStorage.getItem('dbexist');
 
   const req = indexedDB.open(dbName)
@@ -285,6 +285,7 @@ function listPanel() {
   listCard.appendChild(listUl)
 
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
+
 }
 
 function creatListHeader(headerName, backIcon) {
@@ -1250,3 +1251,26 @@ function createInputForProfile(key, type, classtype) {
   mainTextField.appendChild(ripple)
   return mainTextField
 }
+
+let handleMutations = function(mutationList,observer) {
+  mutationList.forEach(function(mutation){
+    console.log(mutation)
+    if(mutation.target.classList.contains('mdc-drawer-scroll-lock')) {
+      mutation.target.style.overflow = 'hidden'
+    }
+    else {
+      mutation.target.style.overflow = 'scroll'
+
+    }
+  })
+}
+let observer = new MutationObserver(handleMutations);
+observer.observe(document.body,{
+  attributes: true,
+  characterData: true,
+  attributeOldValue: true,
+  characterDataOldValue: true
+})
+
+
+
