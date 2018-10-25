@@ -955,7 +955,6 @@ function successResponse(read) {
     }
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
   }
-
 }
 
 

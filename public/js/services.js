@@ -237,33 +237,69 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime
 }
 
-function fetchCurrentLocation() {
- 
+function http(method, url, data) {
+  return new Promise(function (resolve, reject) {
+    const xhr = new XMLHttpRequest()
 
-  return new Promise(function (resolve) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result
-      const rootStore = db.transaction('root').objectStore('root')
-      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-        const record = event.target.result
-        if (record.provider === 'CELLID') {
-          // handle from android
-          console.log("handle from android")
-          return
+    xhr.open(method, url, true)
+    xhr.setRequestHeader('Content-Type', 'application/json')
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          resolve(JSON.parse(xhr.responseText))
+        } else {
+          reject(xhr.statusText)
         }
-        if(record.provider === 'HTML5' || record.provider === '') {
-          console.log("from html 5")
-          locationInterval(resolve,true)
-          return
-        }
-        locationInterval(resolve)
       }
     }
+
+    xhr.send(data)
   })
 }
 
-function locationInterval(resolve,isHTML5) {
+function manageLocation() {
+  const CelllarJson = Towers.getCellularData()
+  const locations = []
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
+    const db = req.result
+    const rootStore = db.transaction('root').objectStore('root')
+    rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      return new Promise(function(resolve){
+
+        const record = event.target.result
+        
+        http('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=', CelllarJson).then(function (cellularGeo) {
+          const geoData ={
+            'latitude':geo.location.lat,
+            'longitude':geo.location.lng,
+            'accuracy':geo.accuracy
+          }
+          locations.push(geoData)
+          
+          if (record.provider === 'Cellular') {
+            return
+          }  
+          locationInterval(resolve).then(function(html5Geo){
+            locations.push(geo)        
+          })
+
+        }, function error(error) {
+          if(record.provider === 'Cellular') {
+            snacks('Your Location is Fetching')
+            return
+          }
+          locationInterval(resolve).then(function(geo){
+            locations.push(geo)
+          })
+        })
+      })
+      }
+  }
+}
+
+function locationInterval(resolve) {
   const stabalzied = []
   let count = 0
   let geo = {
@@ -271,13 +307,14 @@ function locationInterval(resolve,isHTML5) {
     'longitude': ''
   }
   let geoData = {}
-  
+
   let myInterval = setInterval(function () {
 
     navigator.geolocation.getCurrentPosition(function (position) {
       if (position) {
         geo.latitude = position.coords.latitude
         geo.longitude = position.coords.longitude
+
         if (stabalzied.length == 0) {
           stabalzied.push(geo)
           return
@@ -287,28 +324,62 @@ function locationInterval(resolve,isHTML5) {
           if (count < 3) {
             stabalzied.push(geo)
           }
-          if (count == 3) {
+          if (count == 3 && position.coords.accuracy < 350) {
             clearInterval(myInterval);
-            geoData.geo = stabalzied[2]
-            geoData.provider = 'HTML5'
-            resolve(geoData)
+
+            resolve({
+              'lattitude': stabalzied[2].latitude,
+              'longitude': stabalzied[2].longitude,
+              'accuracy': position.coords.accuracy,
+              'provider': 'HTML5'
+            })
             return
           }
-        }
-        // resolve(geo)
-      } 
-      if(!isHTML5) {
 
-        setTimeout(function () {  
+        }
+
+      }
+
+
+      setTimeout(function () {
 
         if (geo.latitude === '' && geo.longitude === '') {
-          geoData.provider = 'CELLID'
-          resolve(geoData)
+          clearInterval(myInterval)
+
+          resolve({
+            'latitude': '',
+            'longitude': '',
+            accuracy: -1,
+            'provider': 'Cellular'
+          })
+          return
         }
-      }, 10000)
-    }
+      }, 5000)
     })
   }, 500)
+}
+
+function updateLocation(geoData) {
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
+    const db = req.result
+    const rootStore = db.transaction('root').objectStore('root')
+    rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      const record = event.target.result
+      if (!record.latitude) return
+      if (!record.longitude) return
+      if (!record.accuracy) return
+      if (record.accuracy < geoData.accuracy) return
+
+      record.latitude = geoData.latitude
+      record.longitude = geoData.longitude
+      record.accuracy = geoData.accuracy
+      rootStore.put(record)
+
+
+    }
+  }
+}
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
@@ -336,12 +407,12 @@ function requestCreator(requestType, requestBody) {
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
   } else if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    if(requestBody){
+    if (requestBody) {
       requestGenerator.body = JSON.stringify(requestBody)
     }
     apiHandler.postMessage(requestGenerator)
   } else {
-    if(offset){
+    if (offset) {
       clearTimeout(offset)
       offset = null
     }
@@ -418,9 +489,9 @@ function loadViewFromRoot(response) {
     return;
   }
 
-  if(response.data.type === 'reset-offset') {
-    if(offset) {
-	console.log("removing offset")
+  if (response.data.type === 'reset-offset') {
+    if (offset) {
+      console.log("removing offset")
       clearTimeout(offset)
       offset = null
     }
@@ -461,7 +532,7 @@ function loadViewFromRoot(response) {
       return
     }
 
-    
+
 
     if (history.state[0] === 'updateCreateActivity') {
       toggleActionables(history.state[1].activityId)
@@ -497,9 +568,10 @@ function onErrorMessage(error) {
 
 function handleTimeout() {
   offset = setTimeout(function () {
+    manageLocation();
     requestCreator('Null')
   }, 30000)
-  
+
 }
 
 function getInputText(selector) {
