@@ -304,7 +304,7 @@ function manageLocation() {
       ]
     }
   }
-
+ 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -324,8 +324,8 @@ function manageLocation() {
             return el !== undefined
           })
 
-
           const mostAccurate = sortedByAccuracy(removeFalseData)
+    
           updateLocationInRoot(mostAccurate)
          
         }).catch(function (error) {
@@ -472,9 +472,6 @@ function updateLocationInRoot(finalLocation){
       record.accuracy = finalLocation.accuracy
       record.provider = finalLocation.provider
       record.lastLocationTime = finalLocation.timestamp
-      if(finalLocation.provider === 'Mock') {
-      alert('Mock detected')
-      }
       rootStore.put(record)
     }
   }
@@ -551,6 +548,10 @@ function loadViewFromRoot(response) {
 
   if (response.data.type === 'removeLocalStorage') {
     localStorage.removeItem('dbexist')
+    return
+  }
+  if(response.data.type === 'manageLocation') {
+    manageLocation()
     return
   }
 
@@ -658,10 +659,11 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
+ 
   offset = setTimeout(function () {
     requestCreator('Null')
     manageLocation();
-  }, 1000000)
+  }, 30000)
 
 }
 

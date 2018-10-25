@@ -275,6 +275,7 @@ function initializeIDB(serverTime) {
         view: 'list',
         provider:''
       })
+      requestHandlerResponse('manageLocation')
     }
 
     request.onsuccess = function () {

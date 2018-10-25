@@ -157,11 +157,13 @@ function startApp() {
     if (localStorage.getItem('dbexist')) {
       listView(true)
       requestCreator('now','AndroidId.getDeviceId()')
+      manageLocation()
       return
     }
     document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
     requestCreator('now','AndroidId.getDeviceId()')
+    
     return
   })
 }
