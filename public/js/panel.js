@@ -755,18 +755,12 @@ function sortByLocation(type, db, pushState) {
     history.replaceState(['sortByLocation',type],null,null)
   }
   const dbName = firebase.auth().currentUser.uid
-
   const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
 
-  fetchCurrentLocation().then(function (coords) {
     nearestLocationHandler.postMessage({
-      geopoint: {
-        lat: coords.latitude,
-        lng: coords.longitude
-      },
+    
       dbName: dbName
     })
-  })
 
   nearestLocationHandler.onmessage = function (records) {
     sortActivitiesByLocation(db, records.data)

@@ -1,24 +1,31 @@
 self.onmessage = function(event) {
-  const userCoords = event.data.geopoint
+  
   const req = indexedDB.open(event.data.dbName)
 
   let distanceArr = []
   req.onsuccess = function() {
     const db = req.result
     const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
-      mapObjectStore.openCursor().onsuccess = function(curEvent) {
-        const cursor = curEvent.target.result
-        if (!cursor) {
-          distanceArr.sort(function(a,b){
-              return a.distance - b.distance
-          })
-          self.postMessage(distanceArr);
-          return
-        }
-        distanceArr.push(calculateDistance(userCoords, cursor.value, mapObjectStore))
-        cursor.continue()
+    const rootStore = db.transaction('root').objectStore('root')
+    rootStore.get(event.data.dbName).onsuccess = function(event){
+      const record = event.target.result;
+      const userCoords = {
+        'latitude':record.latitude,
+        'longitude':record.longitude
       }
+      mapObjectStore.openCursor().onsuccess = function(curEvent) {
+          const cursor = curEvent.target.result
+          if (!cursor) {
+            distanceArr.sort(function(a,b){
+                return a.distance - b.distance
+            })
+            self.postMessage(distanceArr);
+            return
+          }
+          distanceArr.push(calculateDistance(userCoords, cursor.value, mapObjectStore))
+          cursor.continue()
+        }
+    }
   }
 }
 
