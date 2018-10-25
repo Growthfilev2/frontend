@@ -247,136 +247,238 @@ function geolocationApi(method, url, data) {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
-          resolve(JSON.parse(xhr.responseText))
+          const result = JSON.parse(xhr.responseText)
+          resolve({
+            'latitude': result.location.lat,
+            'longitude': result.location.lng,
+            'accuracy': result.accuracy,
+            'provider': 'Cellular',
+            'lastLocationTime':Date.now()
+          })
         } else {
           reject(xhr.statusText)
         }
       }
     }
-    xhr.send(data)
-  }).catch(function(error){
+    if (!data) {
+      resolve(undefined)
+    } else {
+      xhr.send(JSON.stringify(data))
+    }
+  }).catch(function (error) {
     return error
   })
 }
 
 function manageLocation() {
-  const CelllarJson = Towers.getCellularData()
-  const locations = []
+  let CelllarJson;
+  try {
+    CelllarJson = Towers.getCellularData()
+  } catch (e) {
+    console.log(e)
+    requestCreator('instant', {
+      message: e.message
+    })
+    CelllarJson = {
+      "homeMobileCountryCode": 404,
+      "homeMobileNetworkCode": 11,
+      "radioType": "LTE",
+      "carrier": "Vodafone IN",
+      "considerIp": "true",
+      "cellTowers": [{
+        "cellId": 206371074,
+        "locationAreaCode": 52594,
+        "mobileCountryCode": 404,
+        "mobileNetworkCode:": 11
+
+      }],
+
+      "wifiAccessPoints": [{
+          "macAddress": "a0:ab:1b:e7:cf:e7",
+          "signalStrength": -63
+        },
+        {
+          "macAddress": "10:be:f5:ff:84:46",
+          "signalStrength": -62
+        }
+      ]
+    }
+  }
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
-    const rootStore = db.transaction('root').objectStore('root')
+    const rootStore = db.transaction('root','readwrite').objectStore('root')
     rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-      return new Promise(function(resolve){
+      return new Promise(function (resolve) {
 
         const record = event.target.result
-        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=', CelllarJson)
-        if(record.provider === 'Cellular') return
-        const navigatorFetchPromise = locationInterval()
-        Promise.all([geoFetchPromise,navigatorFetchPromise]).then(function(geoData){
-          const sortedByAccuracy = geoData.sort(function(a,b){
-            return a.accuracy - b.accuracy
+        // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
+
+        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c', CelllarJson)
+        navigatorFetchPromise = locationInterval(record.provider)
+
+
+        Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
+          const removeFalseData = geoData.filter(function (el) {
+            return el !== undefined
           })
-          const mostAccurate = sortedByAccuracy[0]
-          record.latitude = mostAccurate.latitude
-          record.longitude = mostAccurate.longitude
-          record.accuracy = mostAccurate.accuracy
-          record.provider = mostAccurate.provider
-          rootObjectStore.put(record)
-        }).catch(function(error){
-          requestCreator('instant',{
-            message:error
+
+
+          const mostAccurate = sortedByAccuracy(removeFalseData)
+          updateLocationInRoot(mostAccurate)
+         
+        }).catch(function (error) {
+          requestCreator('instant', {
+            message: error
           })
         })
-  
-        })
-      }
-      
-      }
+
+      })
+    }
+
   }
+}
 
 
-  function locationInterval() {
-    
-        const stabalzied = []
-        let count = 0
-        let geo = {
-          'latitude': '',
-          'longitude': '',
-          'accuracy':''
-      }
-      
-  return new Promise(function(resolve,reject){
+function locationInterval(provider) {
 
-  let myInterval = setInterval(function () {
-    
-    navigator.geolocation.getCurrentPosition(function (position) {
-      if (position) {
-   
+  const stabalzied = []
+  let count = 0
+  let geo = {
+    'latitude': '',
+    'longitude': '',
+    'accuracy': '',
+    'lastLocationTime':''
+  }
+  let lowAccuracy;
+  let mockTimeout;
+  
+  return new Promise(function (resolve, reject) {
+    if (provider === 'Mock') {
+      resolve(undefined)
+      return
+    }
+
+       
+    if(!mockTimeout) {
         
-        if (stabalzied.length == 0) {
-          stabalzied.push({
-            'latitude':position.coords.latitude,
-            'longitude':position.coords.longitude,
-            'accuracy':position.coords.accuracy
-          })
-          return
-        }
-        if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-          ++count
-          if (count < 3) {
-            stabalzied.push({
-              'latitude':position.coords.latitude,
-              'longitude':position.coords.longitude,
-              'accuracy':position.coords.accuracy
-            })
-          }
-          if (count == 3 && position.coords.accuracy < 350) {
-            clearInterval(myInterval);
-            geo.latitude = stabalzied[2].latitude,
-            geo.longitude = stabalzied[2].longitude,
-            geo.accuracy = stabalzied[2].accuracy,
-            geo.provider ='HTML5'
-            resolve(geo)
-            return
-          }
-          setTimeout(function(){
-            if(position.coords.accuracy > 350){
-            clearInterval(myInterval);
-            geo.latitude = stabalzied[2].latitude,
-            geo.longitude = stabalzied[2].longitude,
-            geo.accuracy = stabalzied[2].accuracy
-            geo.provider ='HTML5'
-            resolve(geo)
-            return
-            }
-          },2500)
-          
-        }
-
-      }
-      
-
-      setTimeout(function () {
-
+      mockTimeout =  setTimeout(function () {
+        
         if (geo.latitude === '' && geo.longitude === '') {
           clearInterval(myInterval)
-
+          
           resolve({
             'latitude': '',
             'longitude': '',
             'accuracy': -1,
-            'provider': 'Cellular'
+            'provider': 'Mock',
+            'lastLocationTime':0
           })
           return
         }
-      }, 5000)
-    })
-  }, 500)
-})
+      }, 8000)
+    }
+    
+    let myInterval = setInterval(function () {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        if (position) {
+
+
+          if (stabalzied.length == 0) {
+            stabalzied.push({
+              'latitude': position.coords.latitude,
+              'longitude': position.coords.longitude,
+              'accuracy': position.coords.accuracy,
+              'lastLocationTime':Date.now()
+            })
+            return
+          }
+          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+            ++count
+            if (count < 3) {
+              stabalzied.push({
+                'latitude': position.coords.latitude,
+                'longitude': position.coords.longitude,
+                'accuracy': position.coords.accuracy,
+                'lastLocationTime':Date.now()
+              })
+            }
+            if (count == 3) {
+              if (stabalzied[2].accuracy < 350) {
+
+                clearInterval(myInterval);
+                geo.latitude = stabalzied[2].latitude,
+                  geo.longitude = stabalzied[2].longitude,
+                  geo.accuracy = stabalzied[2].accuracy,
+                  geo.provider = 'HTML5',
+                  geo.lastLocationTime = stabalzied[2].lastLocationTime
+                resolve(geo)
+                return
+              }
+            }
+            if (!lowAccuracy) {
+              console.log("time out for low accurate location")
+
+              lowAccuracy = setTimeout(function () {
+
+                const mostAccurate = sortedByAccuracy(stabalzied)
+                geo.latitude = mostAccurate.latitude,
+                geo.longitude = mostAccurate.longitude,
+                geo.accuracy = mostAccurate.accuracy
+                geo.provider = 'HTML5'
+                geo.lastLocationTime = mostAccurate.lastLocationTime
+                clearInterval(myInterval);
+                resolve(geo)
+                return
+              }, 2500)
+
+            }
+
+          }
+
+        }
+
+      },function(error){
+        reject(error)
+      })
+
+    }, 500)
+ 
+
+  }).catch(function(error){
+    return error
+  })
 }
 
 
+function sortedByAccuracy(geoData) {
+  let result = geoData.sort(function (a, b) {
+    return a.accuracy - b.accuracy
+  })
+  return result[0]
+}
+
+function updateLocationInRoot(finalLocation){
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function(){
+    const db = req.result
+    const rootStore = db.transaction('root','readwrite').objectStore('root')
+    rootStore.get(dbName).onsuccess = function(event){
+      const record = event.target.result
+      record.latitude = finalLocation.latitude
+      record.longitude = finalLocation.longitude
+      record.accuracy = finalLocation.accuracy
+      record.provider = finalLocation.provider
+      record.lastLocationTime = finalLocation.timestamp
+      if(finalLocation.provider === 'Mock') {
+      alert('Mock detected')
+      }
+      rootStore.put(record)
+    }
+  }
+}
 
 function sendCurrentViewNameToAndroid(viewName) {
   //  Fetchview.startConversation(viewName)
@@ -412,29 +514,27 @@ function requestCreator(requestType, requestBody) {
       clearTimeout(offset)
       offset = null
     }
-      const dbName = firebase.auth().currentUser.uid
-      const req = indexedDB.open(dbName)
-      req.onsuccess = function () {
-        const db = req.result;
-        const rootTx = db.transaction('root', 'readwrite')
-        const rootObjectStore = rootTx.objectStore('root')
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result;
+      const rootTx = db.transaction('root', 'readwrite')
+      const rootObjectStore = rootTx.objectStore('root')
 
-        rootObjectStore.get(dbName).onsuccess = function (event) {
-          const record = event.target.result
-          const geopoints = {
-            'latitude':record.latitude,
-            'longitude' : record.longitude,
-            'accuracy' : record.accuracy
-          }
-            requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
-            requestBody['geopoint'] = geopoints 
-            requestGenerator.body = requestBody
-            apiHandler.postMessage(requestGenerator)
+      rootObjectStore.get(dbName).onsuccess = function (event) {
+        const record = event.target.result
+        const geopoints = {
+          'latitude': record.latitude,
+          'longitude': record.longitude,
+          'accuracy': record.accuracy
         }
+        requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
+        requestBody['geopoint'] = geopoints
+        requestGenerator.body = requestBody
+        apiHandler.postMessage(requestGenerator)
       }
+    }
   }
-
-
 
   // handle the response from apiHandler when operation is completed
 
@@ -559,9 +659,9 @@ function onErrorMessage(error) {
 
 function handleTimeout() {
   offset = setTimeout(function () {
-    manageLocation();
     requestCreator('Null')
-  }, 30000)
+    manageLocation();
+  }, 1000000)
 
 }
 

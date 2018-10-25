@@ -272,7 +272,8 @@ function initializeIDB(serverTime) {
       root.put({
         uid: auth.uid,
         fromTime: 0,
-        view: 'list'
+        view: 'list',
+        provider:''
       })
     }
 
@@ -948,6 +949,7 @@ function successResponse(read) {
       getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log)
 
       record.fromTime = Date.parse(read.upto)
+      console.log(record)
       rootObjectStore.put(record)
       if (record.fromTime !== 0) {
         requestHandlerResponse('updateIDB', 200);

@@ -5,7 +5,6 @@ self.onmessage = function(event) {
   let distanceArr = []
   req.onsuccess = function() {
     const db = req.result
-    const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
     const rootStore = db.transaction('root').objectStore('root')
     rootStore.get(event.data.dbName).onsuccess = function(event){
       const record = event.target.result;
@@ -13,6 +12,7 @@ self.onmessage = function(event) {
         'latitude':record.latitude,
         'longitude':record.longitude
       }
+      const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
       mapObjectStore.openCursor().onsuccess = function(curEvent) {
           const cursor = curEvent.target.result
           if (!cursor) {
