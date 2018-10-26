@@ -771,10 +771,6 @@ function removeActivityFromAddendum(activitiesToRemove) {
   }
 }
 
-function updateOneUser(db){
-  const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
-
-}
 
 function createUsersApiUrl(db) {
   const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
