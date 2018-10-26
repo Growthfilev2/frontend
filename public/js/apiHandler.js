@@ -102,6 +102,7 @@ function http(method, url, data) {
               return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
+            
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
           }
