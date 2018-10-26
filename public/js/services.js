@@ -346,7 +346,7 @@ function locationInterval(provider) {
         
         if (geo.latitude === '' && geo.longitude === '') {
           clearInterval(myInterval)
-          
+          clearTimeout(mockTimeout)
           resolve({
             'latitude': '',
             'longitude': '',
@@ -356,7 +356,8 @@ function locationInterval(provider) {
           })
           return
         }
-      }, 8000)
+      }, 10000)
+      
     }
     
     let myInterval = setInterval(function () {
@@ -457,7 +458,7 @@ function updateLocationInRoot(finalLocation){
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  //  Fetchview.startConversation(viewName)
+   Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -499,6 +500,7 @@ function requestCreator(requestType, requestBody) {
 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
+        
         const geopoints = {
           'latitude': record.latitude,
           'longitude': record.longitude,

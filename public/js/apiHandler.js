@@ -782,7 +782,7 @@ function createUsersApiUrl(db) {
   const NON_UPDATED_USERS = 0
   let assigneeString = ''
 
-  const defaultReadUserString = `${apiUrl}services/users/read?q=`
+  const defaultReadUserString = `${apiUrl}services/users?q=`
   let fullReadUserString = ''
 
   return new Promise(function (resolve) {

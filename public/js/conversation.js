@@ -118,18 +118,19 @@ function commentPanel(db, id) {
         enableGps()
         return
       }
+
+      const reqBody = {
+        'activityId': id,
+        'comment': document.querySelector('.comment-field').value
+      }
+  
+      requestCreator('comment', reqBody)
+      document.querySelector('.comment-field').value = ''
+      document.querySelector('.status--change-cont').style.opacity = '1'
+  
     } catch(e){
       console.log(e)
     }
-
-    const reqBody = {
-      'activityId': id,
-      'comment': document.querySelector('.comment-field').value
-    }
-
-    requestCreator('comment', reqBody)
-    document.querySelector('.comment-field').value = ''
-    document.querySelector('.status--change-cont').style.opacity = '1'
 
   }
 }
@@ -717,8 +718,7 @@ function fillUsersInSelector(data, dialog) {
       }
 
       
-      document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
-      document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
+     
       // if(!Internet.isNetwork()) {
       //   snacks('Please Check your internet Connection')
       //   return
@@ -729,21 +729,22 @@ function fillUsersInSelector(data, dialog) {
           enableGps()
           return
         }
+        document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
+        document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
+        resetSelectedContacts().then(function (people) {
+          console.log(people)
+          const reqBody = {
+            'activityId': data.record.activityId,
+            'share': people
+          }
+          requestCreator('share', reqBody)
+          removeDialog()
+        })
       } catch(e){
         console.log(e)
       }
 
-      resetSelectedContacts().then(function (people) {
-        console.log(people)
-        const reqBody = {
-          'activityId': data.record.activityId,
-          'share': people
-        }
-        requestCreator('share', reqBody)
-        removeDialog()
-      })
-      return
-
+  
     }
   }
 
@@ -835,15 +836,16 @@ function addNewNumber(data) {
               enableGps()
               return
             }
+            requestCreator('share',{
+              activityId : data.record.activityId,
+              'share':[formattedNumber]
+            })
+            removeDialog()
           } catch(e){
             console.log(e)
           }
     
-          requestCreator('share',{
-            activityId : data.record.activityId,
-            'share':[formattedNumber]
-          })
-          removeDialog()
+    
         
       })
 
@@ -1450,7 +1452,6 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-      document.querySelector('.undo-deleted').style.display = 'none'
       // if(!Internet.isNetwork()) {
       //   snacks('Please Check your internet Connection')
       //   return
@@ -1459,6 +1460,12 @@ function createSimpleLi(key, data) {
 
         if(!IsGpsEnabled.gpsEnabled()) {
           enableGps()
+          document.querySelector('.undo-deleted').style.display = 'none'
+          listItem.appendChild(loader('undo-delete-loader'));
+          requestCreator('statusChange', {
+            activityId: data.id,
+            status: 'PENDING'
+          })
           return
         }
       }
@@ -1466,11 +1473,7 @@ function createSimpleLi(key, data) {
         console.log(exception)
       } 
 
-      listItem.appendChild(loader('undo-delete-loader'));
-      requestCreator('statusChange', {
-        activityId: data.id,
-        status: 'PENDING'
-      })
+     
     }
     listItem.appendChild(undo)
 
@@ -2425,9 +2428,6 @@ function insertInputsIntoActivity(record, activityStore) {
       enableGps()
       return
     }
-  } catch(e){
-    console.log(e)
-  }
 
   if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId
@@ -2445,6 +2445,10 @@ function insertInputsIntoActivity(record, activityStore) {
   document.querySelector('header').appendChild(progressBar())
   document.querySelector('#send-activity').classList.add('hidden')
   requestCreator('create', requiredObject)
+  } catch(e){
+    console.log(e)
+  }
+
 }
 
 function checkSpacesInString(input) {
