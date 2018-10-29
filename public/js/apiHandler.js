@@ -96,12 +96,18 @@ function http(method, url, data) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
+              if(xhr.status === 400 || xhr.status ===500) {
+                return reject(JSON.parse(xhr.response))              
+              }
+              else {
+                requestHandlerResponse('error', errorObject.code, errorObject.message)
 
-              requestHandlerResponse('error', errorObject.code, errorObject.message)
-
+              }
+              
               return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
+            
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
           }
@@ -150,15 +156,13 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   JSON.stringify(error)
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
-
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -789,11 +793,13 @@ function createUsersApiUrl(db) {
         
         if (!cursor) {
           fullReadUserString = `${defaultReadUserString}${assigneeString}`
-          console.log(fullReadUserString)
-          resolve({
-            db: db,
-            url: fullReadUserString,
-          })
+          if(assigneeString) {
+
+            resolve({
+              db: db,
+              url: fullReadUserString,
+            })
+          }
           return
         }
         console.log(cursor.value.mobile)
@@ -839,7 +845,9 @@ function updateUserObjectStore(successUrl) {
         cursor.continue()
       }
     
-    }).catch(console.log)
+    }).catch(function(error){
+        instant(createLog(error.message,''))
+    })
   }
   
   function updateSubscription(db, subscription) {
@@ -1027,97 +1035,6 @@ function setUniqueOffice(data) {
   }
 }
 
-const data = [{
-  'activityId': "0dnZRiZpF2msa3RaYiuD",
-  'activityName': "LEAVE: Shikhar Kapila",
-  'assignees': [
-    '+919999288920',
-    '+919999288921'
-  ],
-  'attachment': {
-    "Leave Type": {
-      'type': "leave-type",
-      value: ""
-    },
-    "Number Of Days": {
-      'type': "number",
-      'value': ""
-    },
-    'Reason': {
-      'type': "string",
-      'value': ""
-    },
-    
-  },
-  'canEdit': true,
-  'creator': "+919999288921",
-  'editable': 1,
-  'hidden': 0,
-  'office': "Puja Capital",
-  'schedule': [
-    {
-      'endTime': "2018-10-05T06:06:00.000Z",
-      'name': "Leave Dates",
-      'startTime': "2018-10-05T06:06:00.000Z"
-    }
-  ],
-  'status': "CONFIRMED",
-  'template': "leave",
-  'timestamp': "2018-10-05T19:16:52.557Z",
-  'venue': [
-    
-  ]
-},{
-  'activityId': "BqN3n3AVMdKYjEetYYCL",
-  'activityName': "CHECK-IN: Shikhar Kapila",
-  'assignees': [
-    '+919999288920',
-    '+919999288921'
-  ],
-  'attachment': {
-    "Photo": {
-      'type': "base64",
-       'value': "http://localhost/frontend/public/img/placeholder.png"
-    },    
-  },
-  'canEdit': false,
-  'creator': "+919999288921",
-  'editable': 1,
-  'hidden': 0,
-  'office': "Puja Capital",
-  'status': "CONFIRMED",
-  'template': "check-in",
-  'timestamp': "2018-10-05T20:03:54.910Z",
-  'venue': [{
-    'address': "19 sector 63 rd a block",
-'geopoint': {_latitude: 28.6310005, _longitude: 77.38204569999994},
-'location': "19, sector 63 rd",
-'venueDescriptor': "Check-In Location",
-  }],
-  'schedule':[]
-}]
-
-const templateTest = [{
-  attachment: {
-    Photo: {type: "base64", value: ""}
-  },
-office: "Test Office 1",
-schedule: [],
-status: "CONFIRMED",
-template: "check-in",
-venue: ["Check-In Location"]
-},{
-  attachment: {
-'Leave Type': {value: "", type: "leave-type"},
-'Number Of Days': {value: "", type: "number"},
-'Reason': {value: "", type: "string"}
-  },
-office: "Puja Capital",
-schedule: ["Leave Dates"],
-status: "CONFIRMED",
-template: "leave",
-venue: []
-}]
 function updateIDB(dbName) {
   console.log(dbName)
 

@@ -158,6 +158,7 @@ function startApp() {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(true)
+      
       requestCreator('now',AndroidId.getDeviceId())
       manageLocation()
       return

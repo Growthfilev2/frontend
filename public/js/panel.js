@@ -334,7 +334,7 @@ function creatListHeader(headerName, backIcon) {
     }
 
     drawer.open = true
-    sendCurrentViewNameToAndroid('drawer')
+    // sendCurrentViewNameToAndroid('drawer')
 
   })
 
@@ -1052,7 +1052,7 @@ function readUploadedFile(event) {
 
 function processImage(image) {
   const metadata = {
-    cacheControl: 'public,max-age=31536000',
+    cacheControl: 'public,max-age=3600',
     contentType: 'image/jpeg'
   }
 

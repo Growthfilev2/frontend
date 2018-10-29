@@ -466,7 +466,7 @@ function updateLocationInRoot(finalLocation) {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  // Fetchview.startConversation(viewName)
+  Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -635,7 +635,7 @@ function onErrorMessage(error) {
       'line-number': error.lineno,
       'file': error.filename
     }
-  }
+}
 
   requestCreator('instant', logs)
 
