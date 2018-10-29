@@ -96,9 +96,14 @@ function http(method, url, data) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
+              if(xhr.status === 400 || xhr.status ===500) {
+                return reject(JSON.parse(xhr.response))              
+              }
+              else {
+                requestHandlerResponse('error', errorObject.code, errorObject.message)
 
-              requestHandlerResponse('error', errorObject.code, errorObject.message)
-
+              }
+              
               return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
@@ -151,15 +156,13 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-
   http(
     'POST',
     `${apiUrl}services/logs`,
-    JSON.stringify(error)
+    error
   ).then(function (response) {
     console.log(response)
   }).catch(console.log)
-
 }
 
 
@@ -790,11 +793,13 @@ function createUsersApiUrl(db) {
         
         if (!cursor) {
           fullReadUserString = `${defaultReadUserString}${assigneeString}`
-          console.log(fullReadUserString)
-          resolve({
-            db: db,
-            url: fullReadUserString,
-          })
+          if(assigneeString) {
+
+            resolve({
+              db: db,
+              url: fullReadUserString,
+            })
+          }
           return
         }
         console.log(cursor.value.mobile)
@@ -840,7 +845,9 @@ function updateUserObjectStore(successUrl) {
         cursor.continue()
       }
     
-    }).catch(console.log)
+    }).catch(function(error){
+        instant(createLog(error.message,''))
+    })
   }
   
   function updateSubscription(db, subscription) {

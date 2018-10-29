@@ -156,13 +156,14 @@ function startApp() {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(true)
-      requestCreator('now',AndroidId.getDeviceId())
+      
+      requestCreator('now','testingios')
       manageLocation()
       return
     }
     document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
-    requestCreator('now',AndroidId.getDeviceId())
+    requestCreator('now','testingios')
     
     return
   })

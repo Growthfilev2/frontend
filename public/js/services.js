@@ -278,9 +278,10 @@ function manageLocation() {
     CelllarJson = Towers.getCellularData()
     console.log(CelllarJson)
   } catch (e) {
-    requestCreator('instant', {
-      message: e.message
-    })
+    
+    // requestCreator('instant', {
+    //   message: e.message
+    // })
     CelllarJson = ''
   }
  
@@ -294,18 +295,18 @@ function manageLocation() {
         const record = event.target.result
         // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
 
-        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+apiKey, CelllarJson)
+        // const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+apiKey, CelllarJson)
         navigatorFetchPromise = locationInterval(record.provider)
 
 
-        Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-          const removeFalseData = geoData.filter(function (el) {
-            return el !== undefined
-          })
+        Promise.all([navigatorFetchPromise]).then(function (geoData) {
+          // const removeFalseData = geoData.filter(function (el) {
+          //   return el !== undefined
+          // })
 
-          const mostAccurate = sortedByAccuracy(removeFalseData)
+          // const mostAccurate = sortedByAccuracy(removeFalseData)
     
-          updateLocationInRoot(mostAccurate)
+          updateLocationInRoot(geoData)
          
         }).catch(function (error) {
           requestCreator('instant', {
@@ -458,7 +459,7 @@ function updateLocationInRoot(finalLocation){
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-   Fetchview.startConversation(viewName)
+  //  Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -627,7 +628,7 @@ function onErrorMessage(error) {
       'line-number': error.lineno,
       'file': error.filename
     }
-  }
+}
 
   requestCreator('instant', logs)
 
