@@ -142,7 +142,9 @@ function getCreatorDetails(db, meta) {
       resolve(meta)
     } else {
       userObjStore.get(meta.creator).onsuccess = function (userstore) { 
-        meta.creator = {photo: userstore.target.result.photoURL || './img/empty-user.jpg',number:userstore.target.result.mobile}
+        const record = userstore.target.result
+        
+        meta.creator = {photo: record ? record.photoURL :  './img/empty-user.jpg',number:meta.creator}
         resolve(meta)
       }
     }

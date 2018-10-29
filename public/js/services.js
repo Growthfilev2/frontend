@@ -10,8 +10,8 @@ function handleImageError(img) {
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
       const record = event.target.result
       if (record.isUpdated == 0) return
-      record.isUpdated = 0
-      usersObjectStore.put(record)
+        record.isUpdated = 0
+        usersObjectStore.put(record)
     }
   }
 
@@ -253,7 +253,7 @@ function geolocationApi(method, url, data) {
             'longitude': result.location.lng,
             'accuracy': result.accuracy,
             'provider': 'Cellular',
-            'lastLocationTime':Date.now()
+            'lastLocationTime': Date.now()
           })
         } else {
           reject(xhr.statusText)
@@ -281,32 +281,40 @@ function manageLocation() {
     requestCreator('instant', {
       message: e.message
     })
-    CelllarJson = ''
+    CelllarJson = false
   }
- 
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
-    const rootStore = db.transaction('root','readwrite').objectStore('root')
+    const rootStore = db.transaction('root', 'readwrite').objectStore('root')
     rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
       return new Promise(function (resolve) {
 
         const record = event.target.result
         // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
+        if (CelllarJson) {
 
-        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+apiKey, CelllarJson)
+          geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson)
+        } else {
+          geoFetchPromise = {
+            'latitude': '',
+            'longitude': '',
+            'accuracy': 999999,
+
+          }
+        }
+
         navigatorFetchPromise = locationInterval(record.provider)
-
-
         Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
           const removeFalseData = geoData.filter(function (el) {
             return el !== undefined
           })
 
           const mostAccurate = sortedByAccuracy(removeFalseData)
-    
+
           updateLocationInRoot(mostAccurate)
-         
+
         }).catch(function (error) {
           requestCreator('instant', {
             message: error
@@ -328,22 +336,22 @@ function locationInterval(provider) {
     'latitude': '',
     'longitude': '',
     'accuracy': '',
-    'lastLocationTime':''
+    'lastLocationTime': ''
   }
   let lowAccuracy;
   let mockTimeout;
-  
+
   return new Promise(function (resolve, reject) {
     if (provider === 'Mock') {
       resolve(undefined)
       return
     }
 
-       
-    if(!mockTimeout) {
-        
-      mockTimeout =  setTimeout(function () {
-        
+
+    if (!mockTimeout) {
+
+      mockTimeout = setTimeout(function () {
+
         if (geo.latitude === '' && geo.longitude === '') {
           clearInterval(myInterval)
           clearTimeout(mockTimeout)
@@ -352,14 +360,14 @@ function locationInterval(provider) {
             'longitude': '',
             'accuracy': -1,
             'provider': 'Mock',
-            'lastLocationTime':0
+            'lastLocationTime': 0
           })
           return
         }
       }, 10000)
-      
+
     }
-    
+
     let myInterval = setInterval(function () {
       navigator.geolocation.getCurrentPosition(function (position) {
         if (position) {
@@ -370,7 +378,7 @@ function locationInterval(provider) {
               'latitude': position.coords.latitude,
               'longitude': position.coords.longitude,
               'accuracy': position.coords.accuracy,
-              'lastLocationTime':Date.now()
+              'lastLocationTime': Date.now()
             })
             return
           }
@@ -381,7 +389,7 @@ function locationInterval(provider) {
                 'latitude': position.coords.latitude,
                 'longitude': position.coords.longitude,
                 'accuracy': position.coords.accuracy,
-                'lastLocationTime':Date.now()
+                'lastLocationTime': Date.now()
               })
             }
             if (count == 3) {
@@ -404,8 +412,8 @@ function locationInterval(provider) {
 
                 const mostAccurate = sortedByAccuracy(stabalzied)
                 geo.latitude = mostAccurate.latitude,
-                geo.longitude = mostAccurate.longitude,
-                geo.accuracy = mostAccurate.accuracy
+                  geo.longitude = mostAccurate.longitude,
+                  geo.accuracy = mostAccurate.accuracy
                 geo.provider = 'HTML5'
                 geo.lastLocationTime = mostAccurate.lastLocationTime
                 clearInterval(myInterval);
@@ -419,14 +427,14 @@ function locationInterval(provider) {
 
         }
 
-      },function(error){
+      }, function (error) {
         reject(error)
       })
 
     }, 500)
- 
 
-  }).catch(function(error){
+
+  }).catch(function (error) {
     return error
   })
 }
@@ -439,13 +447,13 @@ function sortedByAccuracy(geoData) {
   return result[0]
 }
 
-function updateLocationInRoot(finalLocation){
+function updateLocationInRoot(finalLocation) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function(){
+  req.onsuccess = function () {
     const db = req.result
-    const rootStore = db.transaction('root','readwrite').objectStore('root')
-    rootStore.get(dbName).onsuccess = function(event){
+    const rootStore = db.transaction('root', 'readwrite').objectStore('root')
+    rootStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.latitude = finalLocation.latitude
       record.longitude = finalLocation.longitude
@@ -458,7 +466,7 @@ function updateLocationInRoot(finalLocation){
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-   Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
@@ -500,7 +508,7 @@ function requestCreator(requestType, requestBody) {
 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
-        
+
         const geopoints = {
           'latitude': record.latitude,
           'longitude': record.longitude,
@@ -531,7 +539,7 @@ function loadViewFromRoot(response) {
     localStorage.removeItem('dbexist')
     return
   }
-  if(response.data.type === 'manageLocation') {
+  if (response.data.type === 'manageLocation') {
     manageLocation()
     return
   }
@@ -640,7 +648,7 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
- 
+
   offset = setTimeout(function () {
     requestCreator('Null')
     manageLocation();
