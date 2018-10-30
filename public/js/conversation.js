@@ -487,7 +487,8 @@ function getImageFromNumber(db, number) {
       if (number === firebase.auth().currentUser.phoneNumber) {
         resolve(firebase.auth().currentUser.photoURL || './img/empty-user.jpg')
       } else {
-        resolve(event.target.result.photoURL || './img/empty-user.jpg')
+        const record = event.target.result
+        resolve(record ? event.target.result.photoURL : './img/empty-user.jpg')
       }
     }
   })

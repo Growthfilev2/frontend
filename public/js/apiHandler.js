@@ -972,8 +972,8 @@ function getUniqueOfficeCount(firstTime) {
   return new Promise(function (resolve, reject) {
     req.onsuccess = function () {
       const db = req.result
-      const subscriptionOffice = db.transaction('subscriptions').objectStore('subscriptions').index('office')
-      subscriptionOffice.openCursor(null, 'nextunique').onsuccess = function (event) {
+      const activityStore = db.transaction('activity').objectStore('activity').index('office')
+      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
           resolve({
