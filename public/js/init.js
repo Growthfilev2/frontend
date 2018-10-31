@@ -135,11 +135,11 @@ window.scrollBy({
   behavior: 'smooth'
 })
 
-function IOSDeviceInfo(iosDeviceInfo) {
-  console.log(iosDeviceInfo)  
-  requestCreator('now',iosDeviceInfo)
-  manageLocation()    
+var iosDeviceInfo = function(di){
+  requestCreator('now',di)
 }
+
+
 
 function startApp() {
   
@@ -160,13 +160,15 @@ function startApp() {
 
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
-      listView(true)
-      // if(localStorage.getItem('deviceType') === 'Android') {
-        requestCreator('now','AndroidId.getDeviceId()')
+     listView(true)
+      if(localStorage.getItem('deviceType') === 'Android') {
+        requestCreator('now',AndroidId.getDeviceId())
         manageLocation()
         return
-      // }
-      // window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
+      }
+            
+      window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
+      // manageLocation()
 
       return
     }
@@ -176,14 +178,18 @@ function startApp() {
     let deviceInfo = ''
     try {
       deviceInfo = AndroidId.getDeviceId()
-      requestCreator('now',AndroidId.getDeviceId())
+      requestCreator('now',deviceInfo)
       localStorage.setItem('deviceType','Android')
-      manageLocation()
-      return
+      
     } catch(e){
+      navigator.geolocation.getCurrentPosition(function(position){
+        console.log(position)
+      })
       localStorage.setItem('deviceType','Ios')
+
+        
       window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
-      console.log(e)
+    
       } 
     return
   })

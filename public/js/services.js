@@ -275,6 +275,7 @@ function manageLocation() {
   const apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c'
   let CelllarJson;
   try {
+    
     CelllarJson = Towers.getCellularData()
     console.log(CelllarJson)
   } catch (e) {
@@ -348,31 +349,31 @@ function locationInterval(provider) {
     }
 
 
-    if (!mockTimeout) {
+    // if (!mockTimeout) {
 
-      mockTimeout = setTimeout(function () {
+    //   mockTimeout = setTimeout(function () {
 
-        if (geo.latitude === '' && geo.longitude === '') {
-          clearInterval(myInterval)
-          clearTimeout(mockTimeout)
-          resolve({
-            'latitude': '',
-            'longitude': '',
-            'accuracy': -1,
-            'provider': 'Mock',
-            'lastLocationTime': 0
-          })
-          return
-        }
-      }, 10000)
+    //     if (geo.latitude === '' && geo.longitude === '') {
+    //       clearInterval(myInterval)
+    //       clearTimeout(mockTimeout)
+    //       resolve({
+    //         'latitude': '',
+    //         'longitude': '',
+    //         'accuracy': -1,
+    //         'provider': 'Mock',
+    //         'lastLocationTime': 0
+    //       })
+    //       return
+    //     }
+    //   }, 10000)
 
-    }
+    // }
 
     let myInterval = setInterval(function () {
+      debugger;
       navigator.geolocation.getCurrentPosition(function (position) {
         if (position) {
-
-
+          console.log(position)
           if (stabalzied.length == 0) {
             stabalzied.push({
               'latitude': position.coords.latitude,
@@ -493,6 +494,7 @@ function requestCreator(requestType, requestBody) {
     if (requestBody) {
       requestGenerator.body = JSON.stringify(requestBody)
     }
+    
     apiHandler.postMessage(requestGenerator)
   } else {
     if (offset) {

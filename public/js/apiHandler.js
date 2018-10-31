@@ -120,19 +120,23 @@ function http(method, url, data) {
 }
 
 function fetchServerTime(deviceInfo) {
+  console.log(deviceInfo)
   deviceInfo = JSON.parse(deviceInfo).split("&")
+  debugger;
   const deviceObject = {
     deviceId: deviceInfo[0],
     brand: deviceInfo[1],
     model: deviceInfo[2],
     os: deviceInfo[3]
   }
+  debugger;
 
   return new Promise(function (resolve) {
     http(
       'GET',
       `${apiUrl}now?deviceId=${deviceObject.deviceId}`
     ).then(function (response) {
+      console.log(response)
       if (response.revokeSession) {
         firebase.auth().signOut().then(function () {
           const req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
@@ -147,6 +151,7 @@ function fetchServerTime(deviceInfo) {
         })
         return
       }
+      console.log("continue")
       resolve(response.timestamp)
     }).catch(function (error) {
       instant(createLog(error.message, deviceObject))
@@ -155,13 +160,13 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -1048,7 +1053,7 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          
+          console.log(response)
           successResponse(response)
         })
         .catch(function (error) {
