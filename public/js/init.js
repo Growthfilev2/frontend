@@ -135,9 +135,11 @@ window.scrollBy({
   behavior: 'smooth'
 })
 
-
-
-
+function IOSDeviceInfo(iosDeviceInfo) {
+  console.log(iosDeviceInfo)  
+  requestCreator('now',iosDeviceInfo)
+  manageLocation()    
+}
 
 function startApp() {
   
@@ -159,13 +161,13 @@ function startApp() {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(true)
-      if(localStorage.getItem('deviceType') === 'Android') {
-        requestCreator('now',AndroidId.getDeviceId())
+      // if(localStorage.getItem('deviceType') === 'Android') {
+        requestCreator('now','AndroidId.getDeviceId()')
         manageLocation()
         return
-      }
-      requestNowFromIos('')
-        // ca ll handler
+      // }
+      // window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
+
       return
     }
 
@@ -177,19 +179,17 @@ function startApp() {
       requestCreator('now',AndroidId.getDeviceId())
       localStorage.setItem('deviceType','Android')
       manageLocation()
+      return
     } catch(e){
       localStorage.setItem('deviceType','Ios')
-      // call handler
+      window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
       console.log(e)
       } 
     return
   })
 }
 
-function requestNowFromIos(iosDeviceInfo) {
-  requestCreator('now',iosDeviceInfo)
-  manageLocation()
-}
+
 
 
 window.onpopstate = function (event) {

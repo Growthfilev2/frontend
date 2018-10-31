@@ -96,18 +96,17 @@ function http(method, url, data) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
-              if(xhr.status === 400 || xhr.status ===500) {
-                return reject(JSON.parse(xhr.response))              
-              }
-              else {
+              if (xhr.status === 400 || xhr.status === 500) {
+                return reject(JSON.parse(xhr.response))
+              } else {
                 requestHandlerResponse('error', errorObject.code, errorObject.message)
 
               }
-              
+
               return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
-            
+
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
           }
@@ -279,7 +278,7 @@ function initializeIDB(serverTime) {
         uid: auth.uid,
         fromTime: 0,
         view: 'list',
-        provider:''
+        provider: ''
       })
       requestHandlerResponse('manageLocation')
     }
@@ -380,7 +379,7 @@ function Null(swipe) {
       reject(null)
       return
     }
-    if(swipe && swipe === "true") {
+    if (swipe && swipe === "true") {
       console.log(JSON.parse(swipe))
       requestHandlerResponse('reset-offset')
     }
@@ -677,7 +676,7 @@ function putAssignessInStore(db, assigneeArray) {
 
 function removeActivityFromDB(db) {
   const activitiesToRemove = []
-  const activityObjectStore = db.transaction('activity').objectStore('activity')
+  const activityObjectStore = db.transaction('activity','readwrite').objectStore('activity')
   const myNumber = firebase.auth().currentUser.phoneNumber
   activityObjectStore.openCursor().onsuccess = function (event) {
     const cursor = event.target.result
@@ -700,20 +699,19 @@ function removeActivityFromKeyPath(activitiesToRemove, store) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
-    const activityStore = db.transaction(store).objectStore(store)
+    const objectStore = db.transaction(store,'readwrite').objectStore(store)
     activitiesToRemove.forEach(function (id) {
-      activityStore.delete(id)
+      objectStore.delete(id)
     })
 
     if (store === 'activityCount') {
       removeActivityFromCalendar(activitiesToRemove, db)
-
     }
   }
 }
 
 function removeActivityFromCalendar(activitiesToRemove, db) {
-  const calendarObjectStore = db.transaction('calendar').objectStore('calendar').index('activityId')
+  const calendarObjectStore = db.transaction('calendar','readwrite').objectStore('calendar').index('activityId')
   let count = 0
   activitiesToRemove.forEach(function (id) {
     count++
@@ -738,7 +736,7 @@ function removeActivityFromMap(activitiesToRemove) {
   let count = 0
   req.onsuccess = function () {
     const db = req.result
-    const mapObjectStore = db.transaction('map').objectStore('map').index('activityId')
+    const mapObjectStore = db.transaction('map','readwrite').objectStore('map').index('activityId')
     activitiesToRemove.forEach(function (id) {
       count++
       mapObjectStore.openCursor(id).onsuccess = function (event) {
@@ -763,7 +761,7 @@ function removeActivityFromAddendum(activitiesToRemove) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
-    const addendumObjectStore = db.transaction('addendum').objectStore('addendum').index('activityId')
+    const addendumObjectStore = db.transaction('addendum','readwrite').objectStore('addendum').index('activityId')
     activitiesToRemove.forEach(function (id) {
       addendumObjectStore.openCursor(id).onsuccess = function (event) {
         const cursor = event.target.result
@@ -786,54 +784,54 @@ function createUsersApiUrl(db) {
   let fullReadUserString = ''
 
   return new Promise(function (resolve) {
- 
 
-      isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
-        const cursor = event.target.result
-        
-        if (!cursor) {
-          fullReadUserString = `${defaultReadUserString}${assigneeString}`
-          if(assigneeString) {
 
-            resolve({
-              db: db,
-              url: fullReadUserString,
-            })
-          }
-          return
+    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (!cursor) {
+        fullReadUserString = `${defaultReadUserString}${assigneeString}`
+        if (assigneeString) {
+
+          resolve({
+            db: db,
+            url: fullReadUserString,
+          })
         }
-        console.log(cursor.value.mobile)
-        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-        assigneeString += `${assigneeFormat.replace('+', '')}`
-        cursor.continue()
+        return
       }
-    
-    })
-  }
+      console.log(cursor.value.mobile)
+      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+      assigneeString += `${assigneeFormat.replace('+', '')}`
+      cursor.continue()
+    }
+
+  })
+}
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(successUrl) {
   http(
-    'GET',
-    successUrl.url
-  )
-  .then(function (userProfile) {
-    console.log(userProfile)
+      'GET',
+      successUrl.url
+    )
+    .then(function (userProfile) {
+      console.log(userProfile)
 
-    const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
-    const isUpdatedIndex = usersObjectStore.index('isUpdated')
-    const USER_NOT_UPDATED = 0
-    const USER_UPDATED = 1
+      const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
+      const isUpdatedIndex = usersObjectStore.index('isUpdated')
+      const USER_NOT_UPDATED = 0
+      const USER_UPDATED = 1
 
       isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
-        
+
         if (!cursor) {
           // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
-        
+
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL
@@ -844,14 +842,14 @@ function updateUserObjectStore(successUrl) {
         }
         cursor.continue()
       }
-    
-    }).catch(function(error){
-        instant(createLog(error.message,''))
+
+    }).catch(function (error) {
+      instant(createLog(error.message, ''))
     })
-  }
-  
-  function updateSubscription(db, subscription) {
-    const subscriptionObjectStore = db
+}
+
+function updateSubscription(db, subscription) {
+  const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
     .objectStore('subscriptions')
 
@@ -1050,7 +1048,7 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-       
+          
           successResponse(response)
         })
         .catch(function (error) {

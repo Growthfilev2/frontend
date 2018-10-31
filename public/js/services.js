@@ -466,7 +466,7 @@ function updateLocationInRoot(finalLocation) {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  Fetchview.startConversation(viewName)
+  // Fetchview.startConversation(viewName)
 }
 
 function inputFile(selector) {
