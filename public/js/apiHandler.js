@@ -674,7 +674,7 @@ function putAssignessInStore(db, assigneeArray) {
 
 function removeActivityFromDB(db) {
   const activitiesToRemove = []
-  const activityObjectStore = db.transaction('activity').objectStore('activity')
+  const activityObjectStore = db.transaction('activity','readwrite').objectStore('activity')
   const myNumber = firebase.auth().currentUser.phoneNumber
   activityObjectStore.openCursor().onsuccess = function (event) {
     const cursor = event.target.result
@@ -697,7 +697,7 @@ function removeActivityFromKeyPath(activitiesToRemove, store) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
-    const activityStore = db.transaction(store).objectStore(store)
+    const activityStore = db.transaction(store,'readwrite').objectStore(store)
     activitiesToRemove.forEach(function (id) {
       activityStore.delete(id)
     })
@@ -710,7 +710,7 @@ function removeActivityFromKeyPath(activitiesToRemove, store) {
 }
 
 function removeActivityFromCalendar(activitiesToRemove, db) {
-  const calendarObjectStore = db.transaction('calendar').objectStore('calendar').index('activityId')
+  const calendarObjectStore = db.transaction('calendar','readwrite').objectStore('calendar').index('activityId')
   let count = 0
   activitiesToRemove.forEach(function (id) {
     count++
@@ -735,7 +735,7 @@ function removeActivityFromMap(activitiesToRemove) {
   let count = 0
   req.onsuccess = function () {
     const db = req.result
-    const mapObjectStore = db.transaction('map').objectStore('map').index('activityId')
+    const mapObjectStore = db.transaction('map','readwrite').objectStore('map').index('activityId')
     activitiesToRemove.forEach(function (id) {
       count++
       mapObjectStore.openCursor(id).onsuccess = function (event) {
@@ -760,7 +760,7 @@ function removeActivityFromAddendum(activitiesToRemove) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
-    const addendumObjectStore = db.transaction('addendum').objectStore('addendum').index('activityId')
+    const addendumObjectStore = db.transaction('addendum','readwrite').objectStore('addendum').index('activityId')
     activitiesToRemove.forEach(function (id) {
       addendumObjectStore.openCursor(id).onsuccess = function (event) {
         const cursor = event.target.result
@@ -952,7 +952,10 @@ function successResponse(read) {
       console.log(record)
       rootObjectStore.put(record)
       if (record.fromTime !== 0) {
-        requestHandlerResponse('updateIDB', 200);
+        setTimeout(function(){
+
+          requestHandlerResponse('updateIDB', 200);
+        },2000)
       }
     }
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
