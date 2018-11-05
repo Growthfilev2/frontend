@@ -151,7 +151,7 @@ function startApp() {
   }
 
   firebase.auth().onAuthStateChanged(function (auth) {
-   
+    
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
@@ -166,10 +166,10 @@ function startApp() {
         manageLocation()
         return
       }
-            
-      window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
+      console.log(localStorage.getItem('iosUUID'))      
+      requestCreator('now',localStorage.getItem('iosUUID'))
+      manageLocation()
       // manageLocation()
-
       return
     }
 
@@ -180,16 +180,10 @@ function startApp() {
       deviceInfo = AndroidId.getDeviceId()
       requestCreator('now',deviceInfo)
       localStorage.setItem('deviceType','Android')
-      
     } catch(e){
-      navigator.geolocation.getCurrentPosition(function(position){
-        console.log(position)
-      })
       localStorage.setItem('deviceType','Ios')
-
-        
-      window.webkit.messageHandlers.FetchUUID.postMessage("Retreive device Info")
-    
+      console.log(localStorage.getItem('iosUUID'))
+      requestCreator('now',localStorage.getItem('iosUUID'))
       } 
     return
   })

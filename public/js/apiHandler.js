@@ -962,7 +962,9 @@ function successResponse(read) {
       console.log(record)
       rootObjectStore.put(record)
       if (record.fromTime !== 0) {
-        requestHandlerResponse('updateIDB', 200);
+        setTimeout(function(){
+          requestHandlerResponse('updateIDB', 200);
+        },2000)
       }
     }
     createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
