@@ -122,14 +122,14 @@ function http(method, url, data) {
 function fetchServerTime(deviceInfo) {
   console.log(deviceInfo)
   deviceInfo = JSON.parse(deviceInfo).split("&")
-  debugger;
+  
   const deviceObject = {
     deviceId: deviceInfo[0],
     brand: deviceInfo[1],
     model: deviceInfo[2],
     os: deviceInfo[3]
   }
-  debugger;
+
 
   return new Promise(function (resolve) {
     http(

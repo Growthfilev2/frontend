@@ -1,4 +1,5 @@
 
+
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
 
@@ -137,17 +138,20 @@ function getCreatorDetails(db, meta) {
   return new Promise(function (resolve) {
 
     const userObjStore = db.transaction('users').objectStore('users')
-    if (meta.creator === firebase.auth().currentUser.phoneNumber) {
-      meta.creator = {photo:firebase.auth().currentUser.photoURL || './img/empty-user.jpg',number:firebase.auth().currentUser.phoneNumber}
-      resolve(meta)
-    } else {
+   
       userObjStore.get(meta.creator).onsuccess = function (userstore) { 
         const record = userstore.target.result
         
-        meta.creator = {photo: record ? record.photoURL :  './img/empty-user.jpg',number:meta.creator}
+          if(record && record.hasOwnProperty('photoURL')) {
+            meta.creator = {photo:userstore.target.result.photoURL || './img/empty-user.jpg',number:meta.creator}
+          }
+          else {    
+            meta.creator = {photo: './img/empty-user.jpg',number:meta.creator}
+          }
+        
         resolve(meta)
       }
-    }
+    
   })
 }
 
@@ -334,7 +338,7 @@ function creatListHeader(headerName, backIcon) {
     }
 
     drawer.open = true
-    // sendCurrentViewNameToAndroid('drawer')
+    sendCurrentViewNameToAndroid('drawer')
 
   })
 
@@ -610,11 +614,12 @@ function filterActivities(type, db, pushState) {
     const cursor = event.target.result
     if (!cursor) {
       let yOffset = window.pageYOffset
-      appendActivityListToDom(activityDom, false, type)
-      createActivityIcon(db)
-      scrollToActivity(yOffset)
+      setTimeout(function(){
 
-
+        appendActivityListToDom(activityDom, false, type)
+        createActivityIcon(db)
+        scrollToActivity(yOffset)
+      },300)
       return
     }
 
@@ -647,9 +652,12 @@ function sortByCreator(type, db, pushState) {
     const cursor = event.target.result
     if (!cursor) {
       let yOffset = window.pageYOffset 
-      appendActivityListToDom(activityDom, false, type)
-      createActivityIcon(db)
-     scrollToActivity(yOffset)
+      setTimeout(function(){
+
+        appendActivityListToDom(activityDom, false, type)
+        createActivityIcon(db)
+        scrollToActivity(yOffset)
+      },200)
       return
     }
     if (type === 'Incoming') {
@@ -695,11 +703,12 @@ function sortByDates(type, db, pushState) {
       sortingOrder['HIGH'].sort(function (a, b) {
         return moment(b.start).valueOf() - moment(a.start).valueOf()
       })
+
       sortingOrder['LOW'].sort(function (a, b) {
         return moment(b.end).valueOf() - moment(a.end).valueOf()
       })
-
-      generateActivitiesByDate(sortingOrder)
+      
+      generateActivitiesByDate(sortBykeys(sortingOrder))
       return
     }
 
@@ -721,8 +730,9 @@ function generateActivitiesByDate(sortingOrder) {
   req.onsuccess = function () {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
-    sortingOrder['HIGH'].forEach(function (record) {
-      activityObjectStore.get(record.activityId).onsuccess = function (event) {
+
+    Object.keys(sortingOrder['HIGH']).forEach(function (key) {
+      activityObjectStore.get(key).onsuccess = function (event) {
         const activity = event.target.result
         createActivityList(db, activity).then(function (li) {
 
@@ -730,8 +740,8 @@ function generateActivitiesByDate(sortingOrder) {
         })
       }
     })
-    sortingOrder['LOW'].forEach(function (record) {
-      activityObjectStore.get(record.activityId).onsuccess = function (event) {
+    Object.keys(sortingOrder['LOW']).forEach(function (key) {
+      activityObjectStore.get(key).onsuccess = function (event) {
         const activity = event.target.result
         createActivityList(db, activity).then(function (li) {
           activityDom += li
@@ -749,6 +759,38 @@ function generateActivitiesByDate(sortingOrder) {
 
   }
 }
+
+function sortBykeys(data) {
+  console.log(data)
+  const lowerOrder = data['LOW']
+  const higherOrder = data['HIGH']
+  const holder = {
+    'LOW':{},
+    'HIGH':{}
+  } 
+  
+  
+
+  let lowerOrderLength = lowerOrder.length
+  for(let iterator = 0;iterator < lowerOrderLength;iterator++) {
+    key = lowerOrder[iterator]
+    if(!holder['LOW'].hasOwnProperty(key.activityId)){
+      holder['LOW'][key.activityId] = key
+    }
+  }
+ 
+
+  let higherOrderLength = higherOrder.length
+  for(let iterator = 0;iterator < higherOrderLength;iterator++) {
+    key = higherOrder[iterator]
+    if(!holder['HIGH'].hasOwnProperty(key.activityId)){
+      holder['HIGH'][key.activityId] = key
+    }
+  }
+
+  return holder
+}
+
 
 function sortByLocation(type, db, pushState) {
   if (pushState) {
@@ -1052,7 +1094,7 @@ function readUploadedFile(event) {
 
 function processImage(image) {
   const metadata = {
-    cacheControl: 'public,max-age=3600',
+    cacheControl: 'public,max-age=31536000',
     contentType: 'image/jpeg'
   }
 
@@ -1253,23 +1295,3 @@ function createInputForProfile(key, type, classtype) {
   mainTextField.appendChild(ripple)
   return mainTextField
 }
-
-let handleMutations = function(mutationList,observer) {
-  mutationList.forEach(function(mutation){
-    console.log(mutation)
-    if(mutation.target.classList.contains('mdc-drawer-scroll-lock')) {
-      mutation.target.style.overflow = 'hidden'
-    }
-    else {
-      mutation.target.style.overflow = 'scroll'
-    }
-  })
-}
-
-let observer = new MutationObserver(handleMutations);
-observer.observe(document.body,{
-  attributes: true,
-  characterData: true,
-  attributeOldValue: true,
-  characterDataOldValue: true
-})

@@ -166,7 +166,7 @@ function startApp() {
         manageLocation()
         return
       }
-      console.log(localStorage.getItem('iosUUID'))      
+    
       requestCreator('now',localStorage.getItem('iosUUID'))
       manageLocation()
       // manageLocation()
@@ -182,14 +182,12 @@ function startApp() {
       localStorage.setItem('deviceType','Android')
     } catch(e){
       localStorage.setItem('deviceType','Ios')
-      console.log(localStorage.getItem('iosUUID'))
+      localStorage.setItem('iosUUID','12345')
       requestCreator('now',localStorage.getItem('iosUUID'))
       } 
     return
   })
 }
-
-
 
 
 window.onpopstate = function (event) {

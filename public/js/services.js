@@ -1,3 +1,4 @@
+var offset = ''
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
@@ -62,67 +63,7 @@ function successDialog() {
   }, 1200)
 }
 
-function mockLocationDialog(resolve) {
-  if (!document.getElementById('mock-location')) {
-
-    const aside = document.createElement('aside')
-    aside.className = 'mdc-dialog mdc-dialog--open'
-    aside.id = 'mock-location'
-
-    const surface = document.createElement('div')
-    surface.className = 'mdc-dialog__surface'
-    surface.style.width = '90%'
-    surface.style.height = 'auto'
-
-    const section = document.createElement('section')
-    section.className = 'mdc-dialog__body mock-main-body'
-    section.textContent = 'There seems to a Mock Location Application in your device which is preventing Growthfile from locating you. Please turn off all mock location applications and try again later.'
-
-    const footer = document.createElement('footer')
-    footer.className = 'mdc-dialog__footer mock-footer'
-
-    const ok = document.createElement('button')
-    ok.type = 'button'
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
-    ok.textContent = 'Ok'
-    ok.id = 'cancel-mock-dialog'
-    ok.style.backgroundColor = '#3498db'
-
-    footer.appendChild(ok)
-
-
-
-    const warningText = document.createElement('section')
-    warningText.className = 'mdc-typography--subtitle2 mdc-dialog__body warning-body'
-
-    const continueAnyway = document.createElement('span')
-    continueAnyway.className = 'continue-link'
-    continueAnyway.textContent = 'Proceed anyway '
-    continueAnyway.onclick = function () {
-      resolve({
-        latitude: '',
-        longitude: ''
-      })
-      document.querySelector('#mock-location').remove()
-    }
-
-    warningText.appendChild(continueAnyway)
-
-    const warningTextNode = document.createTextNode(' This activity will not be recorded in any of the reports.')
-    warningText.appendChild(warningTextNode)
-
-
-    surface.appendChild(section)
-    surface.appendChild(footer)
-    surface.appendChild(warningText)
-    aside.appendChild(surface)
-    document.body.appendChild(aside)
-  }
-  const mockDialog = new mdc.dialog.MDCDialog(document.querySelector('#mock-location'))
-  mockDialog.show()
-}
-
-function enableGps() {
+function enableGps(messageString) {
   if (!document.getElementById('enable-gps')) {
 
     const aside = document.createElement('aside')
@@ -136,7 +77,7 @@ function enableGps() {
 
     const section = document.createElement('section')
     section.className = 'mdc-dialog__body mock-main-body'
-    section.textContent = 'Please Enable GPS on your phone'
+    section.textContent = messageString
 
     const footer = document.createElement('footer')
     footer.className = 'mdc-dialog__footer mock-footer'
@@ -154,7 +95,6 @@ function enableGps() {
     surface.appendChild(footer)
     aside.appendChild(surface)
     document.body.appendChild(aside)
-
   }
 
   const gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'))
@@ -274,16 +214,23 @@ function geolocationApi(method, url, data) {
 function manageLocation() {
   const apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c'
   let CelllarJson;
-  try {
-    
-    CelllarJson = Towers.getCellularData()
-    console.log(CelllarJson)
-  } catch (e) {
-    requestCreator('instant', {
-      message: e.message
-    })
-    CelllarJson = false
-  }
+
+  if(localStorage.getItem('deviceType') === 'Android') {
+    try {
+
+      CelllarJson = Towers.getCellularData()
+      console.log(CelllarJson)
+    } catch (e) {
+      requestCreator('instant', {
+        message: e.message
+      })
+      CelllarJson = false
+    }  
+}
+else {
+  CelllarJson = false
+}
+  
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -349,31 +296,11 @@ function locationInterval(provider) {
     }
 
 
-    // if (!mockTimeout) {
-
-    //   mockTimeout = setTimeout(function () {
-
-    //     if (geo.latitude === '' && geo.longitude === '') {
-    //       clearInterval(myInterval)
-    //       clearTimeout(mockTimeout)
-    //       resolve({
-    //         'latitude': '',
-    //         'longitude': '',
-    //         'accuracy': -1,
-    //         'provider': 'Mock',
-    //         'lastLocationTime': 0
-    //       })
-    //       return
-    //     }
-    //   }, 10000)
-
-    // }
 
     let myInterval = setInterval(function () {
-      debugger;
+      
       navigator.geolocation.getCurrentPosition(function (position) {
         if (position) {
-          console.log(position)
           if (stabalzied.length == 0) {
             stabalzied.push({
               'latitude': position.coords.latitude,
@@ -507,19 +434,28 @@ function requestCreator(requestType, requestBody) {
       const db = req.result;
       const rootTx = db.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
-
+      const deviceType  = localStorage.getItem('deviceType')
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
-
-        const geopoints = {
-          'latitude': record.latitude,
-          'longitude': record.longitude,
-          'accuracy': record.accuracy
+        if(record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
+            if(record.latitude && record.longitude && record.accuracy) {
+              const geopoints = {
+                'latitude': record.latitude,
+                'longitude': record.longitude,
+                'accuracy': record.accuracy
+              }
+              requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
+              requestBody['geopoint'] = geopoints
+              requestGenerator.body = requestBody
+              apiHandler.postMessage(requestGenerator)       
+            }
+            else {
+              enableGps('Fetching Location Please wait')
+            }
         }
-        requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
-        requestBody['geopoint'] = geopoints
-        requestGenerator.body = requestBody
-        apiHandler.postMessage(requestGenerator)
+        else {
+          enableGps('Fetching Location Please wait')
+        }
       }
     }
   }
