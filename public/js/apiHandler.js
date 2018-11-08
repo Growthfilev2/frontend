@@ -948,12 +948,7 @@ function successResponse(read) {
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
     })
-
-
-
-
-
-
+    
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
       getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log)
