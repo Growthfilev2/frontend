@@ -958,7 +958,7 @@ function successResponse(read) {
       const record = event.target.result
       getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log)
 
-      record.fromTime = Date.parse(read.upto)
+      record.fromTime = read.upto
       console.log(record)
       rootObjectStore.put(record)
       if (record.fromTime !== 0) {
