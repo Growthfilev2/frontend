@@ -412,11 +412,8 @@ function locationInterval(provider) {
                 resolve(geo)
                 return
               }, 2500)
-
             }
-
           }
-
         }
 
       },function(error){

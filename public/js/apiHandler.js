@@ -253,9 +253,7 @@ function initializeIDB(serverTime) {
       })
       map.createIndex('activityId', 'activityId')
       map.createIndex('location', 'location')
-      // map.createIndex('address', 'address')
-      // map.createIndex('office', 'office')
-      // map.createIndex('timestamp', 'timestamp')
+   
       map.createIndex('latitude', 'latitude')
       map.createIndex('longitude', 'longitude')
       map.createIndex('range', ['latitude', 'longitude'])
@@ -1044,12 +1042,10 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-
           successResponse(response)
         })
         .catch(function (error) {
           instant(createLog(error.message, root.target.result.fromTime));
-
         })
     }
   }
