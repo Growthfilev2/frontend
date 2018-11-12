@@ -137,21 +137,29 @@ function getCreatorDetails(db, meta) {
 
   return new Promise(function (resolve) {
 
-    const userObjStore = db.transaction('users').objectStore('users')
-   
+    if(meta.creator === firebase.auth().currentUser.phoneNumber) {
+      meta.creator = {photo:firebase.auth().currentUser.photoURL || './img/empty-user.jpg',number:meta.creator}
+      resolve(meta)
+    }
+    else {
+
+      
+      const userObjStore = db.transaction('users').objectStore('users')
+      
       userObjStore.get(meta.creator).onsuccess = function (userstore) { 
         const record = userstore.target.result
         
-          if(record && record.hasOwnProperty('photoURL')) {
-            meta.creator = {photo:userstore.target.result.photoURL || './img/empty-user.jpg',number:meta.creator}
-          }
-          else {    
-            meta.creator = {photo: './img/empty-user.jpg',number:meta.creator}
-          }
+        if(record && record.hasOwnProperty('photoURL')) {
+          meta.creator = {photo:userstore.target.result.photoURL || './img/empty-user.jpg',number:meta.creator}
+        }
+        else {    
+          meta.creator = {photo: './img/empty-user.jpg',number:meta.creator}
+        }
         
         resolve(meta)
       }
-    
+      
+    }
   })
 }
 
