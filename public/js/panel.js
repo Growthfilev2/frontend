@@ -56,14 +56,14 @@ function fetchDataForActivityList(db) {
 
     
     if (currOffice === 'all') {
-      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED')  {
+      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0)  {
         createActivityList(db, cursor.value).then(function (li) {
           activityDom += li
         })
       }
     }
     
-     else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice && cursor.value.status !== 'CANCELLED') {
+     else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice) {
 
         createActivityList(db, cursor.value).then(function (li) {
 
@@ -585,7 +585,7 @@ function allOffices(type, db, pushState) {
       return
     }
 
-    if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED') {
+    if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
       createActivityList(db, cursor.value).then(function (li) {
 
         activityDom += li
@@ -661,7 +661,7 @@ function sortByCreator(type, db, pushState) {
       return
     }
     if (type === 'Incoming') {
-      if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED') {
+      if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0 ) {
         createActivityList(db, cursor.value).then(function (li) {
 
           activityDom += li
@@ -669,7 +669,7 @@ function sortByCreator(type, db, pushState) {
       }
     }
     if (type === 'Outgoing') {
-      if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.status !== 'CANCELLED') {
+      if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0 ) {
         createActivityList(db, cursor.value).then(function (li) {
           activityDom += li
         })
@@ -712,7 +712,7 @@ function sortByDates(type, db, pushState) {
       return
     }
 
-    if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice && cursor.value.status !== 'CANCELLED') {
+    if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice) {
       sortingOrder['HIGH'].push(cursor.value)
     } else {
       sortingOrder['LOW'].push(cursor.value)
