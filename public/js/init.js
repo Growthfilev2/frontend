@@ -135,11 +135,6 @@ window.scrollBy({
   behavior: 'smooth'
 })
 
-var iosDeviceInfo = function(di){
-  requestCreator('now',di)
-}
-
-
 
 function startApp() {
   
