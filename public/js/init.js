@@ -10,6 +10,59 @@ firebase.initializeApp({
 })
 
 
+
+
+window.addEventListener('load', function() {
+  window.onerror = function(msg,url,lineNo,columnNo,error){
+  const errorJS  = {
+    message : {
+      msg : msg,
+      url :url,
+      lineNo:lineNo,
+      columnNo :columnNo,
+      error:error
+    }
+  }
+  
+    requestCreator('instant',errorJS)
+  }
+
+	
+  //  if ('serviceWorker' in navigator) {
+  //    console.log('webview started')
+  //    initSW()
+  //  } else {
+  //   console.log("direct run")
+  //    startApp()
+  //  }
+
+   startApp()
+ 
+})
+
+function initSW() {
+  navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
+    registration.addEventListener('updatefound', function() {
+       // If updatefound is fired, it means that there's
+       // a new service worker being installed.
+      var installingWorker = registration.installing;
+      console.log('A new service worker is being installed:',
+        installingWorker);
+
+      // You can listen for changes to the installing service worker's
+      // state via installingWorker.onstatechange
+    });
+
+    startApp()
+    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+  }, function(err) {
+  //   // registration failed :(
+    console.log('ServiceWorker registration failed: ', err);
+  });
+
+}
+
+
 function firebaseUiConfig(value) {
 
   return {
@@ -141,7 +194,10 @@ function startApp() {
   layoutGrid()
 
   if (!window.Worker && !window.indexedDB) {
+    snacks('Please upgrade your android version')
+    
     firebase.auth().signOut().catch(signOutError)
+    
     return
   }
 
@@ -162,8 +218,7 @@ function startApp() {
         return
       }
 
-      requestCreator('now','ios-testing')
-      // requestCreator('now',localStorage.getItem('iosUUID'))
+      requestCreator('now',"localStorage.getItem('iosUUID')")
       manageLocation()
       return
     }
@@ -177,10 +232,8 @@ function startApp() {
       localStorage.setItem('deviceType','Android')
     } catch(e){
       localStorage.setItem('deviceType','Ios')
-      // requestCreator('now',localStorage.getItem('iosUUID'))
-      requestCreator('now','ios-testing')
-
-      } 
+      requestCreator('now',"localStorage.getItem('iosUUID')")
+    } 
     return
   })
 }

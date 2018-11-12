@@ -1,12 +1,12 @@
 (function () {
-  const CACHE_NAME = 'V5'
+  const CACHE_NAME = 'V6'
   const urlsToCache = [
     'https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js',
     'https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js',
     'https://www.gstatic.com/firebasejs/5.2.0/firebase-storage.js',
     'external/material-css.css',
     'external/material-js.js',
-    'js/init.js',
+    'js/init.js', 
     'js/panel.js',
     'css/theme.css',
     'css/conversation.css',

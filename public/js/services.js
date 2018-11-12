@@ -418,6 +418,7 @@ function inputFile(selector) {
   return document.getElementById(selector)
 }
 
+
 function requestCreator(requestType, requestBody) {
 
   // A request generator body with type of request to perform and the body/data to send to the api handler.
@@ -449,7 +450,7 @@ function requestCreator(requestType, requestBody) {
       const db = req.result;
       const rootTx = db.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
-      const deviceType  = localStorage.getItem('deviceType')
+ 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
         if(record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
