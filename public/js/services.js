@@ -573,6 +573,8 @@ function loadViewFromRoot(response) {
       return
     }
 
+    if(history.state[0] === 'profileView') return
+
     console.log("running view in state")
     window[history.state[0]](history.state[1], false)
     handleTimeout()

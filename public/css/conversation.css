@@ -667,13 +667,7 @@ footer.mdc-dialog__footer {
   text-align: center;
 }
 
-.profile-container--main:hover #user-profile--image {
-  opacity: 0.3;
-}
 
-.profile-container--main:hover .middle {
-  opacity: 1;
-}
 
 .profile-container--main #user-profile--image.reset-opacity {
   opacity: 1;
