@@ -821,7 +821,7 @@ function updateUserObjectStore(successUrl) {
     )
     .then(function (userProfile) {
       console.log(userProfile)
-
+      if(!Object.keys(userProfile).length) return
       const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
       const isUpdatedIndex = usersObjectStore.index('isUpdated')
       const USER_NOT_UPDATED = 0
