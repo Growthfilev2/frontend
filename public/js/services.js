@@ -390,6 +390,7 @@ function sortedByAccuracy(geoData) {
 }
 
 function updateLocationInRoot(finalLocation) {
+  if(!finalLocation) return
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -416,6 +417,7 @@ function sendCurrentViewNameToAndroid(viewName) {
 function inputFile(selector) {
   return document.getElementById(selector)
 }
+
 
 function requestCreator(requestType, requestBody) {
 
@@ -448,7 +450,7 @@ function requestCreator(requestType, requestBody) {
       const db = req.result;
       const rootTx = db.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
-      const deviceType  = localStorage.getItem('deviceType')
+ 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
         if(record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
