@@ -459,7 +459,7 @@ function sendComment(id) {
 
         const secondarySpan = document.createElement('span')
         secondarySpan.className = 'mdc-list-item__secondary-text'
-        secondarySpan.textContent = 'Click here to see Details'
+        secondarySpan.textContent = 'Click here to see details'
 
         primarySpan.appendChild(secondarySpan)
 

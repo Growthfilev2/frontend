@@ -314,10 +314,7 @@ function profileView(pushState) {
   }
   
   function authUpdatedError(error) {
-    switch (error.code) {
-      case 'auth/email-already-in-use':
         snacks(error.message)
-    }
   }
   
   function changeDisplayName(user) {
