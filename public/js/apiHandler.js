@@ -96,13 +96,17 @@ function http(method, url, data) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
+              if (xhr.status === 400 || xhr.status === 500) {
+                return reject(JSON.parse(xhr.response))
+              } else {
+                requestHandlerResponse('error', errorObject.code, errorObject.message)
 
-              requestHandlerResponse('error', errorObject.code, errorObject.message)
+              }
 
               return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
-            
+
             if (!xhr.responseText) return resolve('success')
             resolve(JSON.parse(xhr.responseText))
           }
@@ -116,7 +120,9 @@ function http(method, url, data) {
 }
 
 function fetchServerTime(deviceInfo) {
+  console.log(deviceInfo)
   deviceInfo = JSON.parse(deviceInfo).split("&")
+  
   const deviceObject = {
     deviceId: deviceInfo[0],
     brand: deviceInfo[1],
@@ -124,11 +130,13 @@ function fetchServerTime(deviceInfo) {
     os: deviceInfo[3]
   }
 
+
   return new Promise(function (resolve) {
     http(
       'GET',
       `${apiUrl}now?deviceId=${deviceObject.deviceId}`
     ).then(function (response) {
+      console.log(response)
       if (response.revokeSession) {
         firebase.auth().signOut().then(function () {
           const req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
@@ -143,6 +151,7 @@ function fetchServerTime(deviceInfo) {
         })
         return
       }
+      console.log("continue")
       resolve(response.timestamp)
     }).catch(function (error) {
       instant(createLog(error.message, deviceObject))
@@ -151,15 +160,13 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    JSON.stringify(error)
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
-
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -274,7 +281,7 @@ function initializeIDB(serverTime) {
         uid: auth.uid,
         fromTime: 0,
         view: 'list',
-        provider:''
+        provider: ''
       })
       requestHandlerResponse('manageLocation')
     }
@@ -375,7 +382,7 @@ function Null(swipe) {
       reject(null)
       return
     }
-    if(swipe && swipe === "true") {
+    if (swipe && swipe === "true") {
       console.log(JSON.parse(swipe))
       requestHandlerResponse('reset-offset')
     }
@@ -695,14 +702,13 @@ function removeActivityFromKeyPath(activitiesToRemove, store) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result
-    const activityStore = db.transaction(store,'readwrite').objectStore(store)
+    const objectStore = db.transaction(store,'readwrite').objectStore(store)
     activitiesToRemove.forEach(function (id) {
-      activityStore.delete(id)
+      objectStore.delete(id)
     })
 
     if (store === 'activityCount') {
       removeActivityFromCalendar(activitiesToRemove, db)
-
     }
   }
 }
@@ -781,52 +787,54 @@ function createUsersApiUrl(db) {
   let fullReadUserString = ''
 
   return new Promise(function (resolve) {
- 
 
-      isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
-        const cursor = event.target.result
-        
-        if (!cursor) {
-          fullReadUserString = `${defaultReadUserString}${assigneeString}`
-          console.log(fullReadUserString)
+
+    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (!cursor) {
+        fullReadUserString = `${defaultReadUserString}${assigneeString}`
+        if (assigneeString) {
+
           resolve({
             db: db,
             url: fullReadUserString,
           })
-          return
         }
-        console.log(cursor.value.mobile)
-        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-        assigneeString += `${assigneeFormat.replace('+', '')}`
-        cursor.continue()
+        return
       }
-    
-    })
-  }
+      console.log(cursor.value.mobile)
+      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+      assigneeString += `${assigneeFormat.replace('+', '')}`
+      cursor.continue()
+    }
+
+  })
+}
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(successUrl) {
   http(
-    'GET',
-    successUrl.url
-  )
-  .then(function (userProfile) {
-    console.log(userProfile)
+      'GET',
+      successUrl.url
+    )
+    .then(function (userProfile) {
+      console.log(userProfile)
 
-    const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
-    const isUpdatedIndex = usersObjectStore.index('isUpdated')
-    const USER_NOT_UPDATED = 0
-    const USER_UPDATED = 1
+      const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
+      const isUpdatedIndex = usersObjectStore.index('isUpdated')
+      const USER_NOT_UPDATED = 0
+      const USER_UPDATED = 1
 
       isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
         const cursor = event.target.result
-        
+
         if (!cursor) {
           // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
-        
+
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL
@@ -837,12 +845,14 @@ function updateUserObjectStore(successUrl) {
         }
         cursor.continue()
       }
-    
-    }).catch(console.log)
-  }
-  
-  function updateSubscription(db, subscription) {
-    const subscriptionObjectStore = db
+
+    }).catch(function (error) {
+      instant(createLog(error.message, ''))
+    })
+}
+
+function updateSubscription(db, subscription) {
+  const subscriptionObjectStore = db
     .transaction('subscriptions', 'readwrite')
     .objectStore('subscriptions')
 
@@ -936,20 +946,16 @@ function successResponse(read) {
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
     })
-
-
-
-
-
-
+    
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
       getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log)
+
       record.fromTime = read.upto
+      
       rootObjectStore.put(record)
       if (record.fromTime !== 0) {
         setTimeout(function(){
-
           requestHandlerResponse('updateIDB', 200);
         },2000)
       }
@@ -1042,6 +1048,7 @@ function updateIDB(dbName) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
+          console.log(response)
           successResponse(response)
         })
         .catch(function (error) {

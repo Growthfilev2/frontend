@@ -136,7 +136,6 @@ window.scrollBy({
 })
 
 
-
 function startApp() {
   
   layoutGrid()
@@ -147,6 +146,7 @@ function startApp() {
   }
 
   firebase.auth().onAuthStateChanged(function (auth) {
+    
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
@@ -155,14 +155,29 @@ function startApp() {
 
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
-      listView(true)
-      requestCreator('now',AndroidId.getDeviceId())
+     listView(true)
+      if(localStorage.getItem('deviceType') === 'Android') {
+        requestCreator('now',AndroidId.getDeviceId())
+        manageLocation()
+        return
+      }
+
+      requestCreator('now',localStorage.getItem('iosUUID'))
       manageLocation()
       return
     }
+
     document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
-    requestCreator('now',AndroidId.getDeviceId())
+    let deviceInfo = ''
+    try {
+      deviceInfo = AndroidId.getDeviceId()
+      requestCreator('now',deviceInfo)
+      localStorage.setItem('deviceType','Android')
+    } catch(e){
+      localStorage.setItem('deviceType','Ios')
+      requestCreator('now',localStorage.getItem('iosUUID'))
+      } 
     return
   })
 }

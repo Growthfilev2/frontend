@@ -1,3 +1,4 @@
+var offset = ''
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
@@ -10,8 +11,8 @@ function handleImageError(img) {
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
       const record = event.target.result
       if (record.isUpdated == 0) return
-      record.isUpdated = 0
-      usersObjectStore.put(record)
+        record.isUpdated = 0
+        usersObjectStore.put(record)
     }
   }
 
@@ -62,67 +63,7 @@ function successDialog() {
   }, 1200)
 }
 
-function mockLocationDialog(resolve) {
-  if (!document.getElementById('mock-location')) {
-
-    const aside = document.createElement('aside')
-    aside.className = 'mdc-dialog mdc-dialog--open'
-    aside.id = 'mock-location'
-
-    const surface = document.createElement('div')
-    surface.className = 'mdc-dialog__surface'
-    surface.style.width = '90%'
-    surface.style.height = 'auto'
-
-    const section = document.createElement('section')
-    section.className = 'mdc-dialog__body mock-main-body'
-    section.textContent = 'There seems to a Mock Location Application in your device which is preventing Growthfile from locating you. Please turn off all mock location applications and try again later.'
-
-    const footer = document.createElement('footer')
-    footer.className = 'mdc-dialog__footer mock-footer'
-
-    const ok = document.createElement('button')
-    ok.type = 'button'
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
-    ok.textContent = 'Ok'
-    ok.id = 'cancel-mock-dialog'
-    ok.style.backgroundColor = '#3498db'
-
-    footer.appendChild(ok)
-
-
-
-    const warningText = document.createElement('section')
-    warningText.className = 'mdc-typography--subtitle2 mdc-dialog__body warning-body'
-
-    const continueAnyway = document.createElement('span')
-    continueAnyway.className = 'continue-link'
-    continueAnyway.textContent = 'Proceed anyway '
-    continueAnyway.onclick = function () {
-      resolve({
-        latitude: '',
-        longitude: ''
-      })
-      document.querySelector('#mock-location').remove()
-    }
-
-    warningText.appendChild(continueAnyway)
-
-    const warningTextNode = document.createTextNode(' This activity will not be recorded in any of the reports.')
-    warningText.appendChild(warningTextNode)
-
-
-    surface.appendChild(section)
-    surface.appendChild(footer)
-    surface.appendChild(warningText)
-    aside.appendChild(surface)
-    document.body.appendChild(aside)
-  }
-  const mockDialog = new mdc.dialog.MDCDialog(document.querySelector('#mock-location'))
-  mockDialog.show()
-}
-
-function enableGps() {
+function enableGps(messageString) {
   if (!document.getElementById('enable-gps')) {
 
     const aside = document.createElement('aside')
@@ -136,7 +77,7 @@ function enableGps() {
 
     const section = document.createElement('section')
     section.className = 'mdc-dialog__body mock-main-body'
-    section.textContent = 'Please Enable GPS on your phone'
+    section.textContent = messageString
 
     const footer = document.createElement('footer')
     footer.className = 'mdc-dialog__footer mock-footer'
@@ -154,7 +95,6 @@ function enableGps() {
     surface.appendChild(footer)
     aside.appendChild(surface)
     document.body.appendChild(aside)
-
   }
 
   const gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'))
@@ -253,7 +193,7 @@ function geolocationApi(method, url, data) {
             'longitude': result.location.lng,
             'accuracy': result.accuracy,
             'provider': 'Cellular',
-            'lastLocationTime':Date.now()
+            'lastLocationTime': Date.now()
           })
         } else {
           reject(xhr.statusText)
@@ -274,39 +214,54 @@ function geolocationApi(method, url, data) {
 function manageLocation() {
   const apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c'
   let CelllarJson;
-  try {
-    CelllarJson = Towers.getCellularData()
-    console.log(CelllarJson)
-  } catch (e) {
-    requestCreator('instant', {
-      message: e.message
-    })
-    CelllarJson = ''
-  }
- 
+
+  if(localStorage.getItem('deviceType') === 'Android') {
+    try {
+
+      CelllarJson = Towers.getCellularData()
+      console.log(CelllarJson)
+    } catch (e) {
+      requestCreator('instant', {
+        message: e.message
+      })
+    }  
+}
+else {
+  CelllarJson = false
+}
+  
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
-    const rootStore = db.transaction('root','readwrite').objectStore('root')
+    const rootStore = db.transaction('root', 'readwrite').objectStore('root')
     rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
       return new Promise(function (resolve) {
 
         const record = event.target.result
         // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
+        if (CelllarJson) {
 
-        const geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+apiKey, CelllarJson)
+          geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson)
+        } else {
+          geoFetchPromise = {
+            'latitude': '',
+            'longitude': '',
+            'accuracy': 999999,
+
+          }
+        }
+
         navigatorFetchPromise = locationInterval(record.provider)
-
-
         Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
           const removeFalseData = geoData.filter(function (el) {
             return el !== undefined
           })
 
           const mostAccurate = sortedByAccuracy(removeFalseData)
-    
+
           updateLocationInRoot(mostAccurate)
-         
+
         }).catch(function (error) {
           requestCreator('instant', {
             message: error
@@ -328,21 +283,21 @@ function locationInterval(provider) {
     'latitude': '',
     'longitude': '',
     'accuracy': '',
-    'lastLocationTime':''
+    'lastLocationTime': ''
   }
   let lowAccuracy;
   let mockTimeout;
-  
+
   return new Promise(function (resolve, reject) {
     if (provider === 'Mock') {
       resolve(undefined)
       return
     }
 
-       
-    if(!mockTimeout) {
+
+    if(!mockTimeout && localStorage.getItem('deviceType') === 'Android') {
         
-      mockTimeout =  setTimeout(function () {
+      mockTimeout = setTimeout(function () {
         
         if (geo.latitude === '' && geo.longitude === '') {
           clearInterval(myInterval)
@@ -356,21 +311,19 @@ function locationInterval(provider) {
           })
           return
         }
-      }, 10000)
-      
+      }, 10000) 
     }
-    
+
     let myInterval = setInterval(function () {
+      
       navigator.geolocation.getCurrentPosition(function (position) {
         if (position) {
-
-
           if (stabalzied.length == 0) {
             stabalzied.push({
               'latitude': position.coords.latitude,
               'longitude': position.coords.longitude,
               'accuracy': position.coords.accuracy,
-              'lastLocationTime':Date.now()
+              'lastLocationTime': Date.now()
             })
             return
           }
@@ -381,7 +334,7 @@ function locationInterval(provider) {
                 'latitude': position.coords.latitude,
                 'longitude': position.coords.longitude,
                 'accuracy': position.coords.accuracy,
-                'lastLocationTime':Date.now()
+                'lastLocationTime': Date.now()
               })
             }
             if (count == 3) {
@@ -404,8 +357,8 @@ function locationInterval(provider) {
 
                 const mostAccurate = sortedByAccuracy(stabalzied)
                 geo.latitude = mostAccurate.latitude,
-                geo.longitude = mostAccurate.longitude,
-                geo.accuracy = mostAccurate.accuracy
+                  geo.longitude = mostAccurate.longitude,
+                  geo.accuracy = mostAccurate.accuracy
                 geo.provider = 'HTML5'
                 geo.lastLocationTime = mostAccurate.lastLocationTime
                 clearInterval(myInterval);
@@ -416,14 +369,14 @@ function locationInterval(provider) {
           }
         }
 
-      },function(error){
+      }, function (error) {
         reject(error)
       })
 
     }, 500)
- 
 
-  }).catch(function(error){
+
+  }).catch(function (error) {
     return error
   })
 }
@@ -436,13 +389,13 @@ function sortedByAccuracy(geoData) {
   return result[0]
 }
 
-function updateLocationInRoot(finalLocation){
+function updateLocationInRoot(finalLocation) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  req.onsuccess = function(){
+  req.onsuccess = function () {
     const db = req.result
-    const rootStore = db.transaction('root','readwrite').objectStore('root')
-    rootStore.get(dbName).onsuccess = function(event){
+    const rootStore = db.transaction('root', 'readwrite').objectStore('root')
+    rootStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
       record.latitude = finalLocation.latitude
       record.longitude = finalLocation.longitude
@@ -455,7 +408,9 @@ function updateLocationInRoot(finalLocation){
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-   Fetchview.startConversation(viewName)
+  if(localStorage.getItem('deviceType') === 'Android') {
+    Fetchview.startConversation(viewName)
+  }
 }
 
 function inputFile(selector) {
@@ -472,9 +427,7 @@ function requestCreator(requestType, requestBody) {
   const requestGenerator = {
     type: requestType,
     body: ''
-
   }
-
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
@@ -482,6 +435,7 @@ function requestCreator(requestType, requestBody) {
     if (requestBody) {
       requestGenerator.body = JSON.stringify(requestBody)
     }
+    
     apiHandler.postMessage(requestGenerator)
   } else {
     if (offset) {
@@ -494,19 +448,28 @@ function requestCreator(requestType, requestBody) {
       const db = req.result;
       const rootTx = db.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
-
+      const deviceType  = localStorage.getItem('deviceType')
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
-        
-        const geopoints = {
-          'latitude': record.latitude,
-          'longitude': record.longitude,
-          'accuracy': record.accuracy
+        if(record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
+            if(record.latitude && record.longitude && record.accuracy) {
+              const geopoints = {
+                'latitude': record.latitude,
+                'longitude': record.longitude,
+                'accuracy': record.accuracy
+              }
+              requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
+              requestBody['geopoint'] = geopoints
+              requestGenerator.body = requestBody
+              apiHandler.postMessage(requestGenerator)       
+            }
+            else {
+              enableGps('Fetching Location Please wait')
+            }
         }
-        requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
-        requestBody['geopoint'] = geopoints
-        requestGenerator.body = requestBody
-        apiHandler.postMessage(requestGenerator)
+        else {
+          enableGps('Fetching Location Please wait')
+        }
       }
     }
   }
@@ -528,7 +491,7 @@ function loadViewFromRoot(response) {
     localStorage.removeItem('dbexist')
     return
   }
-  if(response.data.type === 'manageLocation') {
+  if (response.data.type === 'manageLocation') {
     manageLocation()
     return
   }
@@ -624,7 +587,7 @@ function onErrorMessage(error) {
       'line-number': error.lineno,
       'file': error.filename
     }
-  }
+}
 
   requestCreator('instant', logs)
 
@@ -637,7 +600,7 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout() {
- 
+
   offset = setTimeout(function () {
     requestCreator('Null')
     manageLocation();
