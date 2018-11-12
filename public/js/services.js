@@ -390,6 +390,7 @@ function sortedByAccuracy(geoData) {
 }
 
 function updateLocationInRoot(finalLocation) {
+  if(!finalLocation) return
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
