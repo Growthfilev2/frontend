@@ -8,10 +8,12 @@ self.onmessage = function(event) {
     const rootStore = db.transaction('root').objectStore('root')
     rootStore.get(event.data.dbName).onsuccess = function(event){
       const record = event.target.result;
+      
       const userCoords = {
         'latitude':record.latitude,
         'longitude':record.longitude
       }
+
       const mapObjectStore = db.transaction('map', 'readwrite').objectStore('map')
       mapObjectStore.openCursor().onsuccess = function(curEvent) {
           const cursor = curEvent.target.result

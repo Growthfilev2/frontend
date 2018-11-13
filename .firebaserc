@@ -1,5 +1,6 @@
 {
   "projects": {
-    "staging": "ios-testing-5796"
+    "staging": "ios-testing-5796",
+    "default": "ios-testing-5796"
   }
 }

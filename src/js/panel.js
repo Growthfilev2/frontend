@@ -1,5 +1,3 @@
-
-
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
 
@@ -931,3 +929,4 @@ function createInputForProfile(key, type, classtype) {
   mainTextField.appendChild(ripple)
   return mainTextField
 }
+

@@ -28,15 +28,15 @@ window.addEventListener('load', function() {
   }
 
 	
-   if ('serviceWorker' in navigator) {
-     console.log('webview started')
-     initSW()
-   } else {
-    console.log("direct run")
-     startApp()
-   }
+  //  if ('serviceWorker' in navigator) {
+  //    console.log('webview started')
+  //    initSW()
+  //  } else {
+  //   console.log("direct run")
+  //    startApp()
+  //  }
 
-  //  startApp()
+   startApp()
  
 })
 
@@ -218,7 +218,7 @@ function startApp() {
         return
       }
 
-      requestCreator('now',localStorage.getItem('iosUUID'))
+      requestCreator('now',"localStorage.getItem('iosUUID')")
       manageLocation()
       return
     }
@@ -232,7 +232,7 @@ function startApp() {
       localStorage.setItem('deviceType','Android')
     } catch(e){
       localStorage.setItem('deviceType','Ios')
-      requestCreator('now',localStorage.getItem('iosUUID'))
+      requestCreator('now',"localStorage.getItem('iosUUID')")
     } 
     return
   })
