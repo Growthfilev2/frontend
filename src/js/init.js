@@ -200,7 +200,7 @@ function startApp() {
     
     return
   }
-
+  console.log(firebase)
   firebase.auth().onAuthStateChanged(function (auth) {
     
     if (!auth) {
@@ -208,21 +208,21 @@ function startApp() {
       userSignedOut()
       return
     }
-
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
-     listView(true)
+      listView(true)
       if(localStorage.getItem('deviceType') === 'Android') {
         requestCreator('now',AndroidId.getDeviceId())
         manageLocation()
         return
       }
-
+      
       requestCreator('now',"localStorage.getItem('iosUUID')")
       manageLocation()
       return
     }
-
+    
+    console.log(auth)
     document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
     let deviceInfo = ''
