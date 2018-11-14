@@ -12,14 +12,6 @@ const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
 
 /** reinitialize the firebase app */
 
-firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
-})
 
 
 
@@ -59,21 +51,30 @@ function createLog(message, body) {
   return logs
 }
 
+firebase.initializeApp({
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
+})
+
+
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
-  firebase.auth().onAuthStateChanged(function (auth) {
-    if (event.data.type === 'now') {
-      fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
-      return
-    }
-    if (event.data.type === 'instant') {
-      instant(event.data.body)
-      return
-    }
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
-
-  })
+ 
+      if (event.data.type === 'now') {
+        fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
+        return
+      }
+      if (event.data.type === 'instant') {
+        instant(event.data.body)
+        return
+      }
+      requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
 }
+
 
 // Performs XMLHTTPRequest for the API's.
 
@@ -114,6 +115,7 @@ function http(method, url, data) {
 
         xhr.send(data || null)
       }).catch(function (error) {
+        console.log(error.message)
         instant(createLog(error.message))
       })
   })
@@ -160,13 +162,14 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  console.log(error)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -280,7 +283,6 @@ function initializeIDB(serverTime) {
       root.put({
         uid: auth.uid,
         fromTime: 0,
-        view: 'list',
         provider: ''
       })
       requestHandlerResponse('manageLocation')

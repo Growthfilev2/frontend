@@ -265,23 +265,6 @@ function handleUncompatibility(device){
   
   commonDialog(dialogMsg)
   
-  // if (localStorage.getItem('deviceType') === 'Ios'){
-  //   requestCreator('instant',{
-  //     message:{
-  //       msg : "Ios phone not compatible",
-  //       identifier : localStorage.getItem('iosUUID')
-  //     }
-  //   })
-  // }
-  // else {
-  //   requestCreator('instant',{
-  //     message: {
-  //       msg : "Android phone not compatible",
-  //       identifier : 'AndroidId.getDeviceId()'
-  //     }
-  //   })
-  // }
-  
 }
 
 
