@@ -236,7 +236,7 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  const apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c'
+  const apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
   let CelllarJson;
   let geoFetchPromise;
   let navigatorFetchPromise;

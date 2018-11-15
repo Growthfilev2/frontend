@@ -1,10 +1,10 @@
 firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
+  apiKey: "AIzaSyBgbeCmkuveYZwqKp43KNvlEgwumxRroVY",
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
 })
 
 window.addEventListener('load', function() {
@@ -31,7 +31,7 @@ window.addEventListener('load', function() {
   //    startApp()
   //  }
 
-   startApp()
+  //  startApp()
  
 })
 
