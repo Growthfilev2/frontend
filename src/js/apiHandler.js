@@ -50,27 +50,29 @@ function createLog(message, body) {
 }
 
 firebase.initializeApp({
-  apiKey: "AIzaSyBgbeCmkuveYZwqKp43KNvlEgwumxRroVY",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+    authDomain: "growthfilev2-0.firebaseapp.com",
+    databaseURL: "https://growthfilev2-0.firebaseio.com",
+    projectId: "growthfilev2-0",
+    storageBucket: "growthfilev2-0.appspot.com",
+    messagingSenderId: "1011478688238"
 })
 
 
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
- 
-      if (event.data.type === 'now') {
-        fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
-        return
-      }
-      if (event.data.type === 'instant') {
-        instant(event.data.body)
-        return
-      }
-      requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+  firebase.auth().onAuthStateChanged(function(auth){
+
+    if (event.data.type === 'now') {
+      fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
+      return
+    }
+    if (event.data.type === 'instant') {
+      instant(event.data.body)
+      return
+    }
+    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+  })
 }
 
 
@@ -160,14 +162,14 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  console.log(error)
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // console.log(error)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 

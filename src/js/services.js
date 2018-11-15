@@ -1,5 +1,4 @@
 var offset = ''
-var apiHandler = new Worker('js/apiHandler.js')
 
 function handleImageError(img) {
   img.onerror = null;
@@ -242,14 +241,14 @@ function manageLocation() {
   let navigatorFetchPromise;
 
   if(localStorage.getItem('deviceType') === 'Android') {
-    try {
+    // try {
 
-      CelllarJson = Towers.getCellularData()
-    } catch (e) {
-      requestCreator('instant', {
-        message: e.message
-      })
-    }  
+    //   CelllarJson = Towers.getCellularData()
+    // } catch (e) {
+    //   requestCreator('instant', {
+    //     message: e.message
+    //   })
+    // }  
 }
 else {
   CelllarJson = false
@@ -461,7 +460,8 @@ function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
-  
+  var apiHandler = new Worker('src/js/apiHandler.js')
+
   
   console.log(apiHandler)
   const requestGenerator = {

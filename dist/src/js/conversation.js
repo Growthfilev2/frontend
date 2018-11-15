@@ -204,10 +204,11 @@ function statusChange(db, id) {
       if (localStorage.getItem('deviceType') === 'Android') {
         try {
 
-          // if (!IsGpsEnabled.gpsEnabled()) {
-          // enableGps()
-          // resetStatusConfirmation(switchControl,record)
-          // }
+          if (!IsGpsEnabled.gpsEnabled()) {
+            enableGps();
+            resetStatusConfirmation(switchControl, record);
+            return;
+          }
           changeStatusRequest(switchControl, record);
         } catch (e) {
           console.log(e);

@@ -1,6 +1,4 @@
-// "use strict";
 
-/* eslint-env worker */
 // import firebase app script because there is no native support of firebase inside web workers
 
 
@@ -58,18 +56,18 @@ firebase.initializeApp({
 
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
-firebase.auth().onAuthStateChanged(function(auth){
+  firebase.auth().onAuthStateChanged(function (auth) {
 
-  if (event.data.type === 'now') {
-    fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log);
-    return;
-  }
-  if (event.data.type === 'instant') {
-    instant(event.data.body);
-    return;
-  }
-  requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log);
-})
+    if (event.data.type === 'now') {
+      fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log);
+      return;
+    }
+    if (event.data.type === 'instant') {
+      instant(event.data.body);
+      return;
+    }
+    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log);
+  });
 };
 
 // Performs XMLHTTPRequest for the API's.
@@ -148,12 +146,16 @@ function fetchServerTime(deviceInfo) {
   });
 }
 
-function instant(error) {
-  // console.log(error);
-  // http('POST', apiUrl + 'services/logs', error).then(function (response) {
-  //   console.log(response);
-  // }).catch(console.log);
-}
+function instant(error) {}
+// console.log(error)
+// http(
+//   'POST',
+//   `${apiUrl}services/logs`,
+//   error
+// ).then(function (response) {
+//   console.log(response)
+// }).catch(console.log)
+
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.

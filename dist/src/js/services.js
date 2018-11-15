@@ -233,7 +233,7 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  var apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c';
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = void 0;
   var geoFetchPromise = void 0;
   var navigatorFetchPromise = void 0;
@@ -241,12 +241,12 @@ function manageLocation() {
   if (localStorage.getItem('deviceType') === 'Android') {
     try {
 
-      CelllarJson = Towers.getCellularData();
+      CelllarJson = Towers.getCellularData()
     } catch (e) {
       requestCreator('instant', {
         message: e.message
-      });
-    }
+      })
+    }  
   } else {
     CelllarJson = false;
   }
@@ -440,6 +440,8 @@ function requestCreator(requestType, requestBody) {
   // spawn a new worker called apiHandler.
 
   var apiHandler = new Worker('src/js/apiHandler.js');
+
+  console.log(apiHandler);
   var requestGenerator = {
     type: requestType,
     body: ''

@@ -22,36 +22,8 @@ window.addEventListener('load', function () {
     requestCreator('instant', errorJS);
   };
 
-  //  if ('serviceWorker' in navigator) {
-  //    console.log('webview started')
-  //    initSW()
-  //  } else {
-  //   console.log("direct run")
-  //    startApp()
-  //  }
-
   startApp();
 });
-
-function initSW() {
-  navigator.serviceWorker.register('/syncWorker.js').then(function (registration) {
-    registration.addEventListener('updatefound', function () {
-      // If updatefound is fired, it means that there's
-      // a new service worker being installed.
-      var installingWorker = registration.installing;
-      console.log('A new service worker is being installed:', installingWorker);
-
-      // You can listen for changes to the installing service worker's
-      // state via installingWorker.onstatechange
-    });
-
-    startApp();
-    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-  }, function (err) {
-    //   // registration failed :(
-    console.log('ServiceWorker registration failed: ', err);
-  });
-}
 
 function firebaseUiConfig(value) {
 
@@ -188,12 +160,12 @@ function startApp() {
     return;
   }
 
-  // if (localStorage.getItem('deviceType') === 'Android') {
-  //   if (parseInt(AndroidId.getDeviceId().split("&")[3]) <= 5) {
-  //     handleUncompatibility(AndroidId.getDeviceId());
-  //     return;
-  //   }
-  // }
+  if (localStorage.getItem('deviceType') === 'Android') {
+    if (parseInt(AndroidId.getDeviceId().split("&")[3]) <= 5) {
+      handleUncompatibility(AndroidId.getDeviceId());
+      return;
+    }
+  }
 
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -237,27 +209,10 @@ function extractVersion(device) {
 
 function handleUncompatibility(device) {
   var dialogMsg = '';
-  localStorage.getItem('deviceType') === 'Ios' ? dialogMsg = 'Please upgrade your Ios version to use GrowthfileNew' : dialogMsg = 'Please upgrade your Android version from ' + extractVersion(device) + ' to 6.0 use GrowthfileNew';
+  localStorage.getItem('deviceType') === 'Ios' ? dialogMsg = 'Please upgrade your Ios version to use GrowthfileNew' : dialogMsg = "Please upgrade your Android version from " + extractVersion(device) + " to 6.0 use GrowthfileNew";
   console.log(dialogMsg);
 
   commonDialog(dialogMsg);
-
-  // if (localStorage.getItem('deviceType') === 'Ios'){
-  //   requestCreator('instant',{
-  //     message:{
-  //       msg : "Ios phone not compatible",
-  //       identifier : localStorage.getItem('iosUUID')
-  //     }
-  //   })
-  // }
-  // else {
-  //   requestCreator('instant',{
-  //     message: {
-  //       msg : "Android phone not compatible",
-  //       identifier : 'AndroidId.getDeviceId()'
-  //     }
-  //   })
-  // }
 }
 
 window.onpopstate = function (event) {

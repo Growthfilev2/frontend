@@ -1,6 +1,6 @@
 {
   "projects": {
-    "staging": "production-employee-testing",
+    "staging": "growthfile-testing",
     "default": "ios-testing-5796"
   }
 }

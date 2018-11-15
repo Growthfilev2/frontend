@@ -1,10 +1,10 @@
 firebase.initializeApp({
-  apiKey: "AIzaSyBgbeCmkuveYZwqKp43KNvlEgwumxRroVY",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+    authDomain: "growthfilev2-0.firebaseapp.com",
+    databaseURL: "https://growthfilev2-0.firebaseio.com",
+    projectId: "growthfilev2-0",
+    storageBucket: "growthfilev2-0.appspot.com",
+    messagingSenderId: "1011478688238"
 })
 
 window.addEventListener('load', function() {
@@ -23,39 +23,10 @@ window.addEventListener('load', function() {
   }
 
 	
-  //  if ('serviceWorker' in navigator) {
-  //    console.log('webview started')
-  //    initSW()
-  //  } else {
-  //   console.log("direct run")
-  //    startApp()
-  //  }
-
-  //  startApp()
+   startApp()
  
 })
 
-function initSW() {
-  navigator.serviceWorker.register('/syncWorker.js').then(function(registration) {
-    registration.addEventListener('updatefound', function() {
-       // If updatefound is fired, it means that there's
-       // a new service worker being installed.
-      var installingWorker = registration.installing;
-      console.log('A new service worker is being installed:',
-        installingWorker);
-
-      // You can listen for changes to the installing service worker's
-      // state via installingWorker.onstatechange
-    });
-
-    startApp()
-    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-  }, function(err) {
-  //   // registration failed :(
-    console.log('ServiceWorker registration failed: ', err);
-  });
-
-}
 
 
 function firebaseUiConfig(value) {
@@ -264,24 +235,7 @@ function handleUncompatibility(device){
   console.log(dialogMsg)
   
   commonDialog(dialogMsg)
-  
-  // if (localStorage.getItem('deviceType') === 'Ios'){
-  //   requestCreator('instant',{
-  //     message:{
-  //       msg : "Ios phone not compatible",
-  //       identifier : localStorage.getItem('iosUUID')
-  //     }
-  //   })
-  // }
-  // else {
-  //   requestCreator('instant',{
-  //     message: {
-  //       msg : "Android phone not compatible",
-  //       identifier : 'AndroidId.getDeviceId()'
-  //     }
-  //   })
-  // }
-  
+ 
 }
 
 

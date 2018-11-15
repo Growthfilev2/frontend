@@ -47,7 +47,7 @@ function fetchDataForActivityList(db) {
         appendActivityListToDom(activityDom, true);
         createActivityIcon(db);
         scrollToActivity(yOffset);
-      }, 100);
+      }, 2000);
       return;
     }
 
