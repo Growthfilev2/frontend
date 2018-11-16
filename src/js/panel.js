@@ -1,5 +1,3 @@
-
-
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
 
@@ -50,7 +48,7 @@ function fetchDataForActivityList(db) {
               appendActivityListToDom(activityDom, true)
               createActivityIcon(db)
               scrollToActivity(yOffset)
-           },100)
+           },2000)
       return
     }
 
@@ -808,7 +806,7 @@ function sortByLocation(type, db, pushState) {
     history.replaceState(['sortByLocation',type],null,null)
   }
   const dbName = firebase.auth().currentUser.uid
-  const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
+  const nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js')
 
     nearestLocationHandler.postMessage({
     
@@ -931,3 +929,4 @@ function createInputForProfile(key, type, classtype) {
   mainTextField.appendChild(ripple)
   return mainTextField
 }
+

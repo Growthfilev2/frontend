@@ -220,6 +220,7 @@ function sendComment(id) {
           if (!IsGpsEnabled.gpsEnabled()) {
             enableGps()
             resetStatusConfirmation(switchControl,record)
+            return
           }
           changeStatusRequest(switchControl,record)
         } catch (e) {

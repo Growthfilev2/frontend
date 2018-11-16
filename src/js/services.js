@@ -1,4 +1,5 @@
 var offset = ''
+
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
@@ -15,9 +16,9 @@ function handleImageError(img) {
         usersObjectStore.put(record)
     }
   }
-
   return true
 }
+
 
 function handleImageErrorAttachment(img) {
   img.onerror = null;
@@ -61,6 +62,28 @@ function successDialog() {
     document.getElementById('success--dialog').remove()
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200)
+}
+
+function commonDialog(messageString) {
+  const aside = document.createElement('aside')
+    aside.className = 'mdc-dialog mdc-dialog--open'
+    aside.id = 'common-dialog'
+
+    const surface = document.createElement('div')
+    surface.className = 'mdc-dialog__surface'
+    surface.style.width = '90%'
+    surface.style.height = 'auto'
+
+    const section = document.createElement('section')
+    section.className = 'mdc-dialog__body mock-main-body'
+    section.textContent = messageString
+    section.style.paddingBottom = '20px'
+
+    surface.appendChild(section)
+    aside.appendChild(surface)
+    document.body.appendChild(aside)
+    const commonDialog = new mdc.dialog.MDCDialog(document.querySelector('#common-dialog'))
+    commonDialog.show()
 }
 
 function enableGps(messageString) {
@@ -212,29 +235,31 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  const apiKey = 'AIzaSyCtyIm3PBorFtIfRSjl1JtE4RlYXVx6U6c'
+  const apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
   let CelllarJson;
+  let geoFetchPromise;
+  let navigatorFetchPromise;
 
   if(localStorage.getItem('deviceType') === 'Android') {
-    try {
+    // try {
 
-      CelllarJson = Towers.getCellularData()
-      console.log(CelllarJson)
-    } catch (e) {
-      requestCreator('instant', {
-        message: e.message
-      })
-    }  
+    //   CelllarJson = Towers.getCellularData()
+    // } catch (e) {
+    //   requestCreator('instant', {
+    //     message: e.message
+    //   })
+    // }  
 }
 else {
   CelllarJson = false
 }
-  
+const removeFalseData = []
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     const rootStore = db.transaction('root', 'readwrite').objectStore('root')
+   
     rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
       return new Promise(function (resolve) {
 
@@ -248,16 +273,26 @@ else {
             'latitude': '',
             'longitude': '',
             'accuracy': 999999,
-
           }
         }
 
         navigatorFetchPromise = locationInterval(record.provider)
         Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-          const removeFalseData = geoData.filter(function (el) {
-            return el !== undefined
+        
+        geoData.forEach(function(data){
+            if(!data) {
+            let index =   geoData.indexOf(data)
+            geoData.splice(0,index)
+            }
+            else if(data.accuracy == -1 || data.accuracy == 999999) {
+              let index = geoData.indexOf(data)
+              geoData.splice(0,index)
+            }
+            else {
+              removeFalseData.push(data)
+            }
           })
-
+          console.log(removeFalseData)
           const mostAccurate = sortedByAccuracy(removeFalseData)
 
           updateLocationInRoot(mostAccurate)
@@ -294,7 +329,6 @@ function locationInterval(provider) {
       return
     }
 
-
     if(!mockTimeout && localStorage.getItem('deviceType') === 'Android') {
         
       mockTimeout = setTimeout(function () {
@@ -311,7 +345,7 @@ function locationInterval(provider) {
           })
           return
         }
-      }, 10000) 
+      }, 20000) 
     }
 
     let myInterval = setInterval(function () {
@@ -323,7 +357,8 @@ function locationInterval(provider) {
               'latitude': position.coords.latitude,
               'longitude': position.coords.longitude,
               'accuracy': position.coords.accuracy,
-              'lastLocationTime': Date.now()
+              'lastLocationTime': Date.now(),
+              
             })
             return
           }
@@ -390,6 +425,8 @@ function sortedByAccuracy(geoData) {
 }
 
 function updateLocationInRoot(finalLocation) {
+  console.log(finalLocation)
+  if(!finalLocation) return
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -409,7 +446,7 @@ function updateLocationInRoot(finalLocation) {
 
 function sendCurrentViewNameToAndroid(viewName) {
   if(localStorage.getItem('deviceType') === 'Android') {
-    Fetchview.startConversation(viewName)
+    // Fetchview.startConversation(viewName)
   }
 }
 
@@ -417,13 +454,16 @@ function inputFile(selector) {
   return document.getElementById(selector)
 }
 
+
 function requestCreator(requestType, requestBody) {
 
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
-  const apiHandler = new Worker('js/apiHandler.js')
+  var apiHandler = new Worker('src/js/apiHandler.js')
 
+  
+  console.log(apiHandler)
   const requestGenerator = {
     type: requestType,
     body: ''
@@ -448,7 +488,7 @@ function requestCreator(requestType, requestBody) {
       const db = req.result;
       const rootTx = db.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
-      const deviceType  = localStorage.getItem('deviceType')
+ 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
         if(record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
@@ -475,9 +515,9 @@ function requestCreator(requestType, requestBody) {
   }
 
   // handle the response from apiHandler when operation is completed
-
   apiHandler.onmessage = loadViewFromRoot
   apiHandler.onerror = onErrorMessage
+  
 }
 
 function loadViewFromRoot(response) {
@@ -576,7 +616,7 @@ function loadViewFromRoot(response) {
     if(history.state[0] === 'profileView') return
 
     console.log("running view in state")
-    window[history.state[0]](history.state[1], false)
+    window[history.state[0]](history.state[1], false) 
     handleTimeout()
   }
 }

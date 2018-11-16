@@ -1,4 +1,3 @@
-
 body {
   margin: 0;
 }
@@ -1471,3 +1470,96 @@ input[type="datetime-local"] {
 #attachment--list {
   padding-top: 10px;
 }
+
+:root {
+  --mdc-theme-primary: #eeeeee !important;
+  --mdc-theme-secondary: #0399f4 !important;
+  --mdc-theme-background: #ffffff !important;
+  --mdc-theme-on-primary: #black !important;
+  --mdc-theme-on-secondary: #ffffff !important; }
+
+.mdc-top-app-bar .material-icons {
+  color: rgba(0, 0, 0, 0.54);
+ }
+
+.mdc-line-ripple {
+  background-color: #44a3eb !important; }
+
+@media (max-width: 480px) {
+  #login-container .firebaseui-container {
+    box-shadow: inset;
+    width: 90%; } }
+@media (max-width: 320px) {
+  .comment-field {
+    padding: 15px !important; }
+
+  #send-chat--input {
+    top: 1rem !important;
+    width: 35px !important;
+    height: 35px !important; } }
+/** Labels **/
+.mdc-floating-label.mdc-floating-label--float-above {
+  color: #ff9800 !important; }
+
+.detail--static-text {
+  color: #ff9800 !important; }
+
+/** background **/
+.mdc-theme--background {
+  background-color: #eeeeee; }
+
+/** snackbar **/
+.mdc-snackbar {
+  padding:5px 15px 5px 10px; }
+
+/** menu **/
+:not(.mdc-list--non-interactive) > :not(.mdc-list-item--disabled).mdc-list-item::before,
+:not(.mdc-list--non-interactive) > :not(.mdc-list-item--disabled).mdc-list-item::after {
+  background-color: #ffffff !important; }
+
+/** list **/
+.mdc-list {
+  font-size: 18px;
+}
+.mdc-list-item__meta {
+  margin-top: 0px; }
+  .mdc-list-item__meta .mdc-list-item__secondary-text {
+    margin-left: 11px; }
+
+.count-active .count {
+  display: inline-block; }
+.count-active .mdc-primary__custom-text {
+  font-weight: 500; }
+.count-active .mdc-list-item__meta {
+  margin-top: 0px; }
+  .count-active .mdc-list-item__meta .mdc-meta__custom-text,
+  .count-active .mdc-list-item__meta .mdc-list-item__secondary-text {
+    float: right; }
+
+/** count **/
+.count {
+  display: none;
+  background-color: #ff9800 !important;
+  border-radius: 12px;
+  padding: 0px 5px 0px 5px;
+  text-align: center;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  height: 19px;
+  line-height: 20px;
+  min-width: 9px;
+  vertical-align: top;
+  margin-right: 0;
+  vertical-align: top;
+  margin-left: 56px;
+  margin-top: 5px;
+  margin-bottom: 2px; }
+
+/** top app bar **/
+.mdc-top-app-bar {
+  color: black !important; }
+  .mdc-top-app-bar .material-icons {
+    color: #0399f4 !important; 
+  font-size: 30px;}
+
