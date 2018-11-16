@@ -378,6 +378,8 @@ function share(body) {
 
 
 function Null(swipe) {
+  const swipeInfo = JSON.parse(swipe)
+  
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
@@ -385,11 +387,10 @@ function Null(swipe) {
       return
     }
     if (swipe && swipe === "true") {
-      console.log(JSON.parse(swipe))
       requestHandlerResponse('reset-offset')
     }
-    console.log("Null Ran")
-    resolve(user.uid)
+    
+    resolve(user.uid,swipe)
   })
 }
 
@@ -987,7 +988,8 @@ function getUniqueOfficeCount(firstTime) {
             dbName: dbName,
             count: officeCount,
             allOffices: offices,
-            firstTime: firstTime
+            firstTime: firstTime,
+           
           })
           return
         }
@@ -1019,7 +1021,7 @@ function setUniqueOffice(data) {
         rootObjectStore.put(record)
         if (data.firstTime === 0) {
 
-          requestHandlerResponse('updateIDB', 200, 'update successfull')
+          requestHandlerResponse('updateIDB', 200, data.swipe,'')
         }
 
         return
@@ -1028,7 +1030,7 @@ function setUniqueOffice(data) {
       record.offices = offices
       rootObjectStore.put(record)
       if (data.firstTime === 0) {
-        requestHandlerResponse('updateIDB', 200, 'update successfull')
+        requestHandlerResponse('updateIDB', 200)
       }
 
     }

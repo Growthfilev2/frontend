@@ -201,20 +201,20 @@ function statusChange(db, id) {
       //   snacks('Please Check your internet Connection')
       //   return
       // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-        try {
+      // if (localStorage.getItem('deviceType') === 'Android') {
+      //   try {
 
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-            resetStatusConfirmation(switchControl, record);
-            return;
-          }
-          changeStatusRequest(switchControl, record);
-        } catch (e) {
-          console.log(e);
-        }
-        return;
-      }
+      //     if (!IsGpsEnabled.gpsEnabled()) {
+      //       enableGps()
+      //       resetStatusConfirmation(switchControl,record)
+      //       return
+      //     }
+      //     changeStatusRequest(switchControl,record)
+      //   } catch (e) {
+      //     console.log(e)
+      //   }
+      //   return
+      // }
       changeStatusRequest(switchControl, record);
     };
   };

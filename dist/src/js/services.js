@@ -233,20 +233,20 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
+  var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ';
   var CelllarJson = void 0;
   var geoFetchPromise = void 0;
   var navigatorFetchPromise = void 0;
 
   if (localStorage.getItem('deviceType') === 'Android') {
-    try {
+    // try {
 
-      CelllarJson = Towers.getCellularData()
-    } catch (e) {
-      requestCreator('instant', {
-        message: e.message
-      })
-    }  
+    //   CelllarJson = Towers.getCellularData()
+    // } catch (e) {
+    //   requestCreator('instant', {
+    //     message: e.message
+    //   })
+    // }  
   } else {
     CelllarJson = false;
   }

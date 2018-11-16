@@ -240,19 +240,19 @@ function manageLocation() {
   let geoFetchPromise;
   let navigatorFetchPromise;
 
-  if(localStorage.getItem('deviceType') === 'Android') {
-    // try {
+//   if(localStorage.getItem('deviceType') === 'Android') {
+//     // try {
 
-    //   CelllarJson = Towers.getCellularData()
-    // } catch (e) {
-    //   requestCreator('instant', {
-    //     message: e.message
-    //   })
-    // }  
-}
-else {
+//     //   CelllarJson = Towers.getCellularData()
+//     // } catch (e) {
+//     //   requestCreator('instant', {
+//     //     message: e.message
+//     //   })
+//     // }  
+// }
+// else {
   CelllarJson = false
-}
+// }
 const removeFalseData = []
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -460,7 +460,7 @@ function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
-  var apiHandler = new Worker('src/js/apiHandler.js')
+  var apiHandler = new Worker('js/apiHandler.js')
 
   
   console.log(apiHandler)
@@ -471,11 +471,11 @@ function requestCreator(requestType, requestBody) {
 
   if (!requestBody) {
     apiHandler.postMessage(requestGenerator)
-  } else if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    if (requestBody) {
-      requestGenerator.body = JSON.stringify(requestBody)
+  }
+   else if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
+    if(requestBody){
+      requestGenerator.body = JSON.stringify(requestBody);
     }
-    
     apiHandler.postMessage(requestGenerator)
   } else {
     if (offset) {
@@ -599,26 +599,27 @@ function loadViewFromRoot(response) {
 
 
     // updateIDB
-
-    if (!history.state) {
-      window["listView"](true)
-      return
-    }
-
-
-
-    if (history.state[0] === 'updateCreateActivity') {
+    // if(response.data.type === 'updateIDB') {
+      if(history.state[0] === 'profileView') return
+      if (!history.state) {
+        window["listView"](true)
+        return
+      }
+      // if(response.data.message === true) {
+      //   Android.setRefreshingFalse()
+      // }
+    
+     if (history.state[0] === 'updateCreateActivity') {
       toggleActionables(history.state[1].activityId)
       handleTimeout()
       return
     }
 
-    if(history.state[0] === 'profileView') return
-
     console.log("running view in state")
     window[history.state[0]](history.state[1], false) 
     handleTimeout()
   }
+// }
 }
 
 function onErrorMessage(error) {

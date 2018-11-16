@@ -157,12 +157,12 @@ window.scrollBy({
 
 
 function startApp() {
-  if(localStorage.getItem('iosUUID')) {
-    localStorage.setItem('deviceType', 'Ios')
-  }
-  else {
-    localStorage.setItem('deviceType','Android')
-  }
+  // if(localStorage.getItem('iosUUID')) {
+  //   localStorage.setItem('deviceType', 'Ios')
+  // }
+  // else {
+    localStorage.setItem('deviceType','Web')
+  // }
 
   layoutGrid()
   if (!window.Worker && !window.indexedDB) {
@@ -173,17 +173,18 @@ function startApp() {
     else {
       device = localStorage.getItem('iosUUID')
     }
+
     handleUncompatibility(device)
     return
 }
 
 
-if(localStorage.getItem('deviceType') === 'Android') {
-    if(parseInt(AndroidId.getDeviceId().split("&")[3]) <= 5) {
-      handleUncompatibility(AndroidId.getDeviceId())
-      return
-    }
-}
+// if(localStorage.getItem('deviceType') === 'Android') {
+//     if(parseInt(AndroidId.getDeviceId().split("&")[3]) <= 5) {
+//       handleUncompatibility(AndroidId.getDeviceId())
+//       return
+//     }
+// }
 
 
 
@@ -200,9 +201,9 @@ if(localStorage.getItem('deviceType') === 'Android') {
     document.getElementById("main-layout-app").style.display = 'block'
     if (localStorage.getItem('dbexist')) {
       listView(true)
-      if(localStorage.getItem('deviceType') === 'Android') {
+      if(localStorage.getItem('deviceType') === 'Web') {
        
-        requestCreator('now',AndroidId.getDeviceId())
+        requestCreator('now','AndroidId.getDeviceId()')
         manageLocation()
         return
       }
@@ -215,8 +216,8 @@ if(localStorage.getItem('deviceType') === 'Android') {
     document.getElementById('app-current-panel').appendChild(loader('init-loader'))
     localStorage.setItem('dbexist', auth.uid)
 
-    if(localStorage.getItem('deviceType') === 'Android') {
-      requestCreator('now',AndroidId.getDeviceId())
+    if(localStorage.getItem('deviceType') === 'Web') {
+      requestCreator('now','AndroidId.getDeviceId()')
     }
     else {
       requestCreator('now',localStorage.getItem('iosUUID'))
