@@ -104,22 +104,7 @@ function commentPanel(db, id) {
 
   document.getElementById('send-chat--input').onclick = function () {
 
-    if (localStorage.getItem('deviceType') === 'Android') {
-
-      try {
-
-        if (!IsGpsEnabled.gpsEnabled()) {
-          enableGps('Please turn on GPS to use this application');
-          return;
-        }
-        sendComment(id);
-      } catch (e) {
-        console.log(e);
-      }
-      return;
-    }
     sendComment(id);
-    // IOS
   };
 }
 
@@ -197,24 +182,6 @@ function statusChange(db, id) {
 
       document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-            resetStatusConfirmation(switchControl, record);
-            return;
-          }
-          changeStatusRequest(switchControl, record);
-        } catch (e) {
-          console.log(e);
-        }
-        return;
-      }
       changeStatusRequest(switchControl, record);
     };
   };
@@ -424,8 +391,6 @@ function createHeaderContent(db, id) {
 
     var record = event.target.result;
     getImageFromNumber(db, record.creator).then(function (uri) {
-
-      console.log(uri);
 
       var creatorImg = document.createElement("img");
       creatorImg.className = 'header--icon-creator';
@@ -693,24 +658,6 @@ function fillUsersInSelector(data, dialog) {
         return;
       }
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-            return;
-          }
-          shareReq(data);
-        } catch (e) {
-          console.log(e);
-        }
-        return;
-      }
       shareReq(data);
     };
   };
@@ -799,24 +746,6 @@ function addNewNumber(data) {
           return;
         }
 
-        // if(!Internet.isNetwork()) {
-        //   snacks('Please Check your internet Connection')
-        //   return
-        // }
-        if (localStorage.getItem('deviceType') === 'Android') {
-
-          try {
-
-            if (!IsGpsEnabled.gpsEnabled()) {
-              enableGps();
-              return;
-            }
-            newNumberReq(data, formattedNumber);
-          } catch (e) {
-            console.log(e);
-          }
-          return;
-        }
         newNumberReq(data, formattedNumber);
       });
     } else {
@@ -1398,26 +1327,8 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted';
     undo.textContent = 'Undo';
     undo.onclick = function () {
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
 
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-          } else {
-            reqForUndoDeleted(data.id);
-          }
-        } catch (exception) {
-          console.log(exception);
-        }
-      } else {
-        //IOS
-        reqForUndoDeleted(data.id);
-      }
+      reqForUndoDeleted(data.id);
     };
     listItem.appendChild(undo);
   }
@@ -2143,25 +2054,7 @@ function createActivityCancellation(record) {
 
     document.getElementById('delete-allow').onclick = function () {
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-          } else {
-            deleteActivityReq(record.activityId);
-          }
-        } catch (e) {
-          console.log(e);
-        }
-      } else {
-        deleteActivityReq(record.activityId);
-      }
+      deleteActivityReq(record.activityId);
     };
 
     dialog.listen('MDCDialog:cancel', function () {
@@ -2330,25 +2223,8 @@ function insertInputsIntoActivity(record, activityStore) {
     venue: record.venue,
     schedule: record.schedule,
     attachment: record.attachment
+  };
 
-    // if(!Internet.isNetwork()) {
-    //   snacks('Please Check your internet Connection')
-    //   return
-    // }
-  };if (localStorage.getItem('deviceType') === 'Android') {
-
-    try {
-
-      if (!IsGpsEnabled.gpsEnabled()) {
-        enableGps();
-        return;
-      }
-      sendUpdateReq(requiredObject, record);
-    } catch (e) {
-      console.log(e);
-    }
-    return;
-  }
   sendUpdateReq(requiredObject, record);
 }
 

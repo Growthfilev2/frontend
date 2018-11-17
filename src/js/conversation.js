@@ -338,7 +338,7 @@ function sendComment(id) {
 
     const map = new google.maps.Map(selector, {
       zoom: 16,
-      center: location,
+      center: location, 
       disableDefaultUI: true
     });
 
@@ -412,8 +412,6 @@ function sendComment(id) {
 
       const record = event.target.result
       getImageFromNumber(db, record.creator).then(function (uri) {
-
-        console.log(uri)
 
         const creatorImg = document.createElement("img")
         creatorImg.className = 'header--icon-creator'
@@ -2352,25 +2350,7 @@ function sendComment(id) {
       attachment: record.attachment
     }
 
-    // if(!Internet.isNetwork()) {
-    //   snacks('Please Check your internet Connection')
-    //   return
-    // }
-    if(localStorage.getItem('deviceType') === 'Android') {
-
-      try {
-        
-        if (!IsGpsEnabled.gpsEnabled()) {
-          enableGps()
-          return
-        }
-        sendUpdateReq(requiredObject,record)
-        
-      } catch (e) {
-        console.log(e)
-      }
-      return
-    }
+   
     sendUpdateReq(requiredObject,record)
   }
 

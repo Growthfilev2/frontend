@@ -216,7 +216,8 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  const apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
+  
+  const apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w'
   let CelllarJson;
   let geoFetchPromise;
   let navigatorFetchPromise;
@@ -406,7 +407,7 @@ function updateLocationInRoot(finalLocation) {
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (localStorage.getItem('deviceType') === 'Android') {
-    // Fetchview.startConversation(viewName)
+    Fetchview.startConversation(viewName)
   }
 }
 
@@ -429,6 +430,7 @@ function requestCreator(requestType, requestBody) {
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
     requestGenerator.body = requestBody;
+    apiHandler.postMessage(requestGenerator);
   } else {
 
     if (offset) {
@@ -474,9 +476,9 @@ function requestCreator(requestType, requestBody) {
 
 function loadViewFromRoot(response) {
 
-  if (respons.data.type === 'update-app') {
+  if (response.data.type === 'update-app') {
     if (native.getName() === 'Android') {
-      updateApp.notification(response.data.message)
+      Android.notification(response.data.msg)
       return
     }
     webkit.messageHandlers.updateApp.postMessage(response.data.message);
@@ -563,9 +565,10 @@ function loadViewFromRoot(response) {
     // updateIDB
 
     if (response.data.type === 'updateIDB') {
-      if (response.data.message === 'true') {
+      if (response.data.msg === 'true') {
         if (native.getName() === 'Android') {
-          Android.setRefreshing('false')
+          console.log("send signal to android to stop refreshing")
+          AndroidRefreshing.stopRefreshing(true)
         } else {
           webkit.messageHandlers.setRefreshing.postMessage('false')
         }
@@ -611,9 +614,36 @@ function onErrorMessage(error) {
 
 }
 
+function checkGpsAvail(){
+  if(native.getName() === 'Android'){
+    if(!gps.isEnabled()) {
+      const messageData = {
+        title:'Cannot determine Location',
+        message:'Please Turn On Gps, To Use Growthfile',
+        cancelable:true,
+        button:{
+          text:'Okay',
+          show:true,
+          clickAction:{
+            redirection: {
+              text:'',
+              value:false
+            },
+            enableGps:{
+              value:true
+            }
+          }
+        }
+      }
+      Android.notification(JSON.stringify(messageData))
+    }
+  }
+}
+
 function handleTimeout() {
 
   offset = setTimeout(function () {
+    checkGpsAvail()
     requestCreator('Null', 'false')
     manageLocation();
   }, 30000)

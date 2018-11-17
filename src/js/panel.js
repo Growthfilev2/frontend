@@ -1,6 +1,6 @@
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
-
+  
   if(document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
@@ -47,7 +47,7 @@ function fetchDataForActivityList(db) {
               appendActivityListToDom(activityDom, true)
               createActivityIcon(db)
               scrollToActivity(yOffset)
-           },2000)
+           },1000)
       return
     }
 

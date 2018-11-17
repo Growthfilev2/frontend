@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
-var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
+var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 /** reinitialize the firebase app */
 
@@ -18,7 +18,6 @@ function getTime() {
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
 var requestFunctionCaller = {
-  initializeIDB: initializeIDB,
   comment: comment,
   statusChange: statusChange,
   share: share,
@@ -42,16 +41,16 @@ function createLog(message, body) {
     message: message,
     body: body
   };
-  return logs;
+  return JSON.stringify(logs);
 }
 
 firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
+  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
 });
 
 // when worker receives the request body from the main thread
@@ -111,51 +110,60 @@ function http(method, url, data) {
 }
 
 function fetchServerTime(deviceInfo) {
-  console.log(deviceInfo);
-  deviceInfo = JSON.parse(deviceInfo).split("&");
 
-  var deviceObject = {
-    deviceId: deviceInfo[0],
-    brand: deviceInfo[1],
-    model: deviceInfo[2],
-    os: deviceInfo[3]
-  };
+  var parsedDeviceInfo = JSON.parse(deviceInfo);
 
   return new Promise(function (resolve) {
-    http('GET', apiUrl + 'now?deviceId=' + deviceObject.deviceId).then(function (response) {
+    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
       console.log(response);
-      if (response.revokeSession) {
-        firebase.auth().signOut().then(function () {
-          var req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid);
-          req.onsuccess = function () {
-            requestHandlerResponse('removeLocalStorage');
-          };
-          req.onerror = function () {
-            instant(createLog(error));
-          };
-        }, function (error) {
-          instant(createLog(error));
-        });
+      if (response.updateClient) {
+        // handle client udpation of android code
+        console.log("please update device");
+        var title = 'Message';
+        var message = 'There is anew version of your app available';
+
+        var button = {
+          text: 'Update',
+          show: true,
+          clickAction: {
+            redirection: {
+              text: 'com.growthfile.growthfileNew',
+              value: true
+            },
+            enableGps: {
+              value: false
+            }
+          }
+        };
+
+        var alertData = JSON.stringify({ title: title, message: message, cancelable: false, button: button });
+
+        requestHandlerResponse('update-app', 200, alertData, '');
         return;
       }
-      console.log("continue");
+
+      if (response.revokeSession) {
+        requestHandlerResponse('revoke-session', 200);
+        return;
+      }
+
       resolve(response.timestamp);
     }).catch(function (error) {
-      instant(createLog(error.message, deviceObject));
+      instant(createLog(error.message, deviceInfo));
     });
   });
 }
 
-function instant(error) {}
-// console.log(error)
-// http(
-//   'POST',
-//   `${apiUrl}services/logs`,
-//   error
-// ).then(function (response) {
-//   console.log(response)
-// }).catch(console.log)
-
+function instant(error) {
+  console.log(error);
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
+}
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
@@ -281,7 +289,7 @@ function initializeIDB(serverTime) {
         rootObjectStore.put(record);
       };
       rootTx.oncomplete = function () {
-        resolve(auth.uid);
+        resolve({ dbName: auth.uid, swipe: 'false' });
       };
     };
   });
@@ -292,7 +300,7 @@ function comment(body) {
   return new Promise(function (resolve, reject) {
     http('POST', apiUrl + 'activities/comment', JSON.stringify(body)).then(function () {
       // requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
-      resolve(firebase.auth().currentUser.uid);
+      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
     }).catch(function (error) {
 
       instant(createLog(error.message));
@@ -311,7 +319,7 @@ function statusChange(body) {
 
         requestHandlerResponse('notification', 200, 'status changed successfully', dbName);
 
-        resolve(firebase.auth().currentUser.uid);
+        resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
       }).catch(function (error) {
         instant(createLog(error.message));
       });
@@ -327,7 +335,7 @@ function share(body) {
     http('PATCH', apiUrl + 'activities/share', JSON.stringify(body)).then(function (success) {
       instantUpdateDB(dbName, body, 'share');
       requestHandlerResponse('notification', 200, 'assignne added successfully', dbName);
-      resolve(firebase.auth().currentUser.uid);
+      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
     }).catch(function (error) {
       instant(createLog(error.message, body));
     });
@@ -335,18 +343,19 @@ function share(body) {
 }
 
 function Null(swipe) {
+  console.log(swipe);
   return new Promise(function (resolve, reject) {
     var user = firebase.auth().currentUser;
     if (!user) {
       reject(null);
       return;
     }
-    if (swipe && swipe === "true") {
+    if (swipe === "true") {
       console.log(JSON.parse(swipe));
       requestHandlerResponse('reset-offset');
     }
     console.log("Null Ran");
-    resolve(user.uid);
+    resolve({ dbName: user.uid, swipe: swipe });
   });
 }
 
@@ -359,7 +368,7 @@ function update(body) {
       instantUpdateDB(dbName, body, 'update');
       requestHandlerResponse('notification', 200, 'activity update successfully', dbName);
 
-      resolve(firebase.auth().currentUser.uid);
+      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
     }).catch(function (error) {
       instant(createLog(error.message, body));
     });
@@ -373,7 +382,7 @@ function create(body) {
       requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid);
 
       requestHandlerResponse('redirect-to-list', 200, 'activity created successfully', firebase.auth().currentUser.uid);
-      resolve(firebase.auth().currentUser.uid);
+      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
     }).catch(function (error) {
       instant(createLog(error.message, body));
     });
@@ -436,29 +445,6 @@ function instantUpdateDB(dbName, data, type) {
         });
       }
     };
-  };
-}
-
-function resetInstantDB(resetBody) {
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var objStore = db.transaction('activity', 'readwrite').objectStore('activity');
-    // const objStore = objStoreTx.objectStore('activity')
-    //
-    console.log(resetBody);
-    objStore.get(resetBody.activityId).onsuccess = function (event) {
-      var record = event.target.result;
-      console.log(record);
-      record = resetBody;
-      console.log(record);
-      objStore.put(record);
-      requestHandlerResponse('updateIDB', 200, 'activity updated to default state', dbName);
-    };
-
-    // objStoreTx.oncomplete = function(){
-    // }
   };
 }
 
@@ -778,7 +764,7 @@ function updateUserObjectStore(successUrl) {
       cursor.continue();
     };
   }).catch(function (error) {
-    instant(createLog(error.message, ''));
+    instant(createLog(error.message));
   });
 }
 
@@ -814,8 +800,8 @@ function updateSubscription(db, subscription) {
 
 var firstTime = 0;
 
-function successResponse(read) {
-  console.log('start success');
+function successResponse(read, swipeInfo) {
+  console.log(swipeInfo);
   var user = firebase.auth().currentUser;
 
   var request = indexedDB.open(user.uid);
@@ -828,7 +814,6 @@ function successResponse(read) {
     var activitytx = db.transaction(['activity'], 'readwrite');
     var activityObjectStore = activitytx.objectStore('activity');
     var activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
-    var activityAndRoot = db.transaction(['activity', 'root']);
     var counter = {};
     firstTime++;
     read.addendum.forEach(function (addendum) {
@@ -875,26 +860,22 @@ function successResponse(read) {
 
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       var record = event.target.result;
-      getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log);
+      getUniqueOfficeCount(record.fromTime, swipeInfo).then(setUniqueOffice).catch(console.log);
 
       record.fromTime = read.upto;
-
       rootObjectStore.put(record);
+      createUsersApiUrl(db).then(updateUserObjectStore);
+
       if (record.fromTime !== 0) {
         setTimeout(function () {
-          requestHandlerResponse('updateIDB', 200);
-        }, 2000);
+          requestHandlerResponse('updateIDB', 200, swipeInfo);
+        }, 1500);
       }
     };
-    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore);
   };
 }
 
-function notUpdateUserObjectStore(errorUrl) {
-  console.log(errorUrl);
-}
-
-function getUniqueOfficeCount(firstTime) {
+function getUniqueOfficeCount(firstTime, swipeInfo) {
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
   var officeCount = 0;
@@ -910,7 +891,8 @@ function getUniqueOfficeCount(firstTime) {
             dbName: dbName,
             count: officeCount,
             allOffices: offices,
-            firstTime: firstTime
+            firstTime: firstTime,
+            swipe: swipeInfo
           });
           return;
         }
@@ -920,6 +902,7 @@ function getUniqueOfficeCount(firstTime) {
       };
     };
     req.onerror = function (event) {
+      console.log("error in 1007 bitch");
       reject(event.error);
     };
   });
@@ -931,6 +914,7 @@ function setUniqueOffice(data) {
     'hasMultipleOffice': '',
     'allOffices': data.allOffices
   };
+  console.log(db);
   req.onsuccess = function () {
     var db = req.result;
     var rootObjectStore = db.transaction('root', 'readwrite').objectStore('root');
@@ -941,35 +925,33 @@ function setUniqueOffice(data) {
         record.offices = offices;
         rootObjectStore.put(record);
         if (data.firstTime === 0) {
-
-          requestHandlerResponse('updateIDB', 200, 'update successfull');
+          requestHandlerResponse('updateIDB', 200, data.swipe);
         }
-
         return;
       }
       offices.hasMultipleOffice = 1;
       record.offices = offices;
       rootObjectStore.put(record);
       if (data.firstTime === 0) {
-        requestHandlerResponse('updateIDB', 200, 'update successfull');
+        requestHandlerResponse('updateIDB', 200, data.swipe);
       }
     };
   };
 }
 
-function updateIDB(dbName) {
-  console.log(dbName);
+function updateIDB(param) {
 
-  var req = indexedDB.open(dbName);
+  var req = indexedDB.open(param.dbName);
 
   req.onsuccess = function () {
     var db = req.result;
     var rootObjectStore = db.transaction('root', 'readonly').objectStore('root');
-
-    rootObjectStore.get(dbName).onsuccess = function (root) {
+    console.log(rootObjectStore);
+    rootObjectStore.get(param.dbName).onsuccess = function (root) {
+      console.log(root);
       http('GET', apiUrl + 'read?from=' + root.target.result.fromTime).then(function (response) {
         console.log(response);
-        successResponse(response);
+        successResponse(response, param.swipe);
       }).catch(function (error) {
         instant(createLog(error.message, root.target.result.fromTime));
       });

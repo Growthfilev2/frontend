@@ -1,24 +1,24 @@
 firebase.initializeApp({
   apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
-    authDomain: "growthfilev2-0.firebaseapp.com",
-    databaseURL: "https://growthfilev2-0.firebaseio.com",
-    projectId: "growthfilev2-0",
-    storageBucket: "growthfilev2-0.appspot.com",
-    messagingSenderId: "1011478688238"
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
 })
 
-window.onerror = function(msg,url,lineNo,columnNo,error){
-  const errorJS  = {
-    message : {
-      msg : msg,
-      url :url,
-      lineNo:lineNo,
-      columnNo :columnNo,
-      error:error
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  const errorJS = {
+    message: {
+      msg: msg,
+      url: url,
+      lineNo: lineNo,
+      columnNo: columnNo,
+      error: error
     }
   }
-  
-    requestCreator('instant', JSON.stringify(errorJS))
+
+  requestCreator('instant', JSON.stringify(errorJS))
 }
 
 
@@ -31,11 +31,20 @@ window.scrollBy({
 
 
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
   if (!window.Worker && !window.indexedDB) {
     const title = 'Device Incompatibility'
     const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-    updateApp.notification({title:title,message:message})
+    const messageData = {
+      title: title,
+      message: message,
+      cancelable:false,
+      button:{
+        text:'',
+        show:false
+      }
+    }
+    Android.notification(JSON.stringify(messageData))
     return
   }
 
@@ -48,22 +57,22 @@ window.addEventListener('load', function() {
       nextWeek: 'dddd [at] LT',
       sameElse: 'L'
     },
-  
+
     months: [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
       'August', 'September', 'October', 'November', 'December'
     ]
-  
+
   })
-    
+
   layoutGrid()
 
   startApp()
- 
+
 })
 
 window.onpopstate = function (event) {
-  
+
   if (!event.state) return;
 
   if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
@@ -72,13 +81,9 @@ window.onpopstate = function (event) {
       const db = req.result
       window[event.state[0]](event.state[1], db, false);
     }
-  } 
-  
-  else if (event.state[0] === 'listView') {
+  } else if (event.state[0] === 'listView') {
     window[event.state[0]](true)
-  }
-  
-  else {
+  } else {
     window[event.state[0]](event.state[1], false)
   }
 
@@ -189,22 +194,22 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-let native = function(){
+let native = function () {
   return {
-    setName : function(device){
-      localStorage.setItem('deviceType',device);
+    setName: function (device) {
+      localStorage.setItem('deviceType', device);
     },
-    getName : function(){
+    getName: function () {
       return localStorage.getItem('deviceType');
     },
-    setIosInfo : function(iosDeviceInfo){
-      localStorage.setItem('iosUUID',iosDeviceInfo)
+    setIosInfo: function (iosDeviceInfo) {
+      localStorage.setItem('iosUUID', iosDeviceInfo)
     },
-    getIosInfo : function(){
+    getIosInfo: function () {
       return localStorage.getItem('iosUUID');
     },
-    getInfo : function(){
-      if(this.getName === 'Android'){
+    getInfo: function () {
+      if (this.getName() === 'Android') {
         return AndroidId.getDeviceId();
       }
       return this.getIosInfo();
@@ -213,23 +218,22 @@ let native = function(){
 }();
 
 function checkIndexedDbSanitization() {
-  return new Promise(function(resolve){
+  return new Promise(function (resolve) {
     const dbName = firebase.auth().currentUser.uid
     const req = indexedDB.open(dbName)
-    req.onsuccess = function(){
+    req.onsuccess = function () {
       const totalObjectStores = 9
-      const db =req.result;
-      if(Object.keys(db.objectStoreNames).length < totalObjectStores) {
-        resolve(false)    
-      }
-      else {
+      const db = req.result;
+      if (Object.keys(db.objectStoreNames).length < totalObjectStores) {
+        resolve(false)
+      } else {
         resolve(true)
       }
-    }    
+    }
   })
 }
 
-function revokeSession(){
+function revokeSession() {
   firebase.auth().signOut().then(function () {
     const req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
     req.onsuccess = function () {
@@ -245,47 +249,47 @@ function revokeSession(){
 
 
 function startApp() {
-  
-  fisrebase.auth().onAuthStateChanged(function (auth) {
 
-    if(!auth) {
+  firebase.auth().onAuthStateChanged(function (auth) {
+
+    if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
 
     document.getElementById("main-layout-app").style.display = 'block'
-
-    checkIndexedDbSanitization().then(init)
+    init(auth);
+    // checkIndexedDbSanitization().then(init)
 
   })
 }
 
 
 
-function init(idbSanitized){
+function init(auth) {
 
-  if(!idbSanitized) {
-    revokeSession()
-    return
-  }
+  // if(!idbSanitized) {
+  //   revokeSession()
+  //   return
+  // }
 
   /** When app has been initialzied before 
    * render list view first, then perform app sync and mange location
-  */
-  
+   */
+
   if (localStorage.getItem('dbexist')) {
     listView(true)
-    requestCreator('now',native.getInfo())
+    requestCreator('now', native.getInfo())
     manageLocation()
     return
   }
-  
+
   /** when app initializes for the first time */
   document.getElementById('app-current-panel').appendChild(loader('init-loader'))
+
   localStorage.setItem('dbexist', auth.uid)
-  requestCreator('now',native.getInfo())
+  requestCreator('now', native.getInfo())
   return
 
 }
-

@@ -1,35 +1,95 @@
 firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
+  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
+});
+
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  var errorJS = {
+    message: {
+      msg: msg,
+      url: url,
+      lineNo: lineNo,
+      columnNo: columnNo,
+      error: error
+    }
+  };
+
+  requestCreator('instant', JSON.stringify(errorJS));
+};
+
+// initialize smooth scrolling
+window.scrollBy({
+  top: 100,
+  left: 0,
+  behavior: 'smooth'
 });
 
 window.addEventListener('load', function () {
-  window.onerror = function (msg, url, lineNo, columnNo, error) {
-    var errorJS = {
-      message: {
-        msg: msg,
-        url: url,
-        lineNo: lineNo,
-        columnNo: columnNo,
-        error: error
+  if (!window.Worker && !window.indexedDB) {
+    var title = 'Device Incompatibility';
+    var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
+    var messageData = {
+      title: title,
+      message: message,
+      cancelable: false,
+      button: {
+        text: '',
+        show: false
       }
     };
+    Android.notification(JSON.stringify(messageData));
+    return;
+  }
 
-    requestCreator('instant', JSON.stringify(errorJS));
-  };
+  moment.locale('en', {
+    calendar: {
+      lastDay: '[yesterday]',
+      sameDay: 'LT',
+      nextDay: '[Tomorrow at] LT',
+      lastWeek: 'dddd',
+      nextWeek: 'dddd [at] LT',
+      sameElse: 'L'
+    },
+
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+  });
+
+  layoutGrid();
 
   startApp();
 });
+
+window.onpopstate = function (event) {
+
+  if (!event.state) return;
+
+  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
+    var req = indexedDB.open(localStorage.getItem('dbexist'));
+    req.onsuccess = function () {
+      var db = req.result;
+      window[event.state[0]](event.state[1], db, false);
+    };
+  } else if (event.state[0] === 'listView') {
+    window[event.state[0]](true);
+  } else {
+    window[event.state[0]](event.state[1], false);
+  }
+};
+
+function backNav() {
+  history.back();
+}
 
 function firebaseUiConfig(value) {
 
   return {
     'callbacks': {
-      'signInSuccess': function signInSuccess(user, credential, redirectUrl) {
+      'signInSuccess': function signInSuccess(user) {
         if (value) {
           updateEmail(user, value);
           return;
@@ -121,51 +181,60 @@ function imageViewDialog() {
   document.body.appendChild(aside);
 }
 
-moment.locale('en', {
-  calendar: {
-    lastDay: '[yesterday]',
-    sameDay: 'LT',
-    nextDay: '[Tomorrow at] LT',
-    lastWeek: 'dddd',
-    nextWeek: 'dddd [at] LT',
-    sameElse: 'L'
-  },
+var native = function () {
+  return {
+    setName: function setName(device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function getName() {
+      return localStorage.getItem('deviceType');
+    },
+    setIosInfo: function setIosInfo(iosDeviceInfo) {
+      localStorage.setItem('iosUUID', iosDeviceInfo);
+    },
+    getIosInfo: function getIosInfo() {
+      return localStorage.getItem('iosUUID');
+    },
+    getInfo: function getInfo() {
+      if (this.getName() === 'Android') {
+        return AndroidId.getDeviceId();
+      }
+      return this.getIosInfo();
+    }
+  };
+}();
 
-  months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-});
+function checkIndexedDbSanitization() {
+  return new Promise(function (resolve) {
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var totalObjectStores = 9;
+      var db = req.result;
+      if (Object.keys(db.objectStoreNames).length < totalObjectStores) {
+        resolve(false);
+      } else {
+        resolve(true);
+      }
+    };
+  });
+}
 
-// initialize smooth scrolling
-window.scrollBy({
-  top: 100,
-  left: 0,
-  behavior: 'smooth'
-});
+function revokeSession() {
+  firebase.auth().signOut().then(function () {
+    var req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      localStorage.removeItem('dbexist');
+    };
+    req.onerror = function () {
+      instant(createLog(error));
+    };
+  }, function (error) {
+    instant(createLog(error));
+  });
+}
 
 function startApp() {
-  if (localStorage.getItem('iosUUID')) {
-    localStorage.setItem('deviceType', 'Ios');
-  } else {
-    localStorage.setItem('deviceType', 'Android');
-  }
-
-  layoutGrid();
-  if (!window.Worker && !window.indexedDB) {
-    var device = '';
-    if (localStorage.getItem('deviceType') === 'Android') {
-      device = AndroidId.getDeviceId();
-    } else {
-      device = localStorage.getItem('iosUUID');
-    }
-    handleUncompatibility(device);
-    return;
-  }
-
-  if (localStorage.getItem('deviceType') === 'Android') {
-    if (parseInt(AndroidId.getDeviceId().split("&")[3]) <= 5) {
-      handleUncompatibility(AndroidId.getDeviceId());
-      return;
-    }
-  }
 
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -175,68 +244,34 @@ function startApp() {
       return;
     }
 
-    console.log(auth);
     document.getElementById("main-layout-app").style.display = 'block';
-    if (localStorage.getItem('dbexist')) {
-      listView(true);
-      if (localStorage.getItem('deviceType') === 'Android') {
-
-        requestCreator('now', AndroidId.getDeviceId());
-        manageLocation();
-        return;
-      }
-      requestCreator('now', localStorage.getItem('iosUUID'));
-      manageLocation();
-      return;
-    }
-
-    console.log(auth);
-    document.getElementById('app-current-panel').appendChild(loader('init-loader'));
-    localStorage.setItem('dbexist', auth.uid);
-
-    if (localStorage.getItem('deviceType') === 'Android') {
-      requestCreator('now', AndroidId.getDeviceId());
-    } else {
-      requestCreator('now', localStorage.getItem('iosUUID'));
-    }
-    return;
+    init(auth);
+    // checkIndexedDbSanitization().then(init)
   });
 }
 
-function extractVersion(device) {
-  return device.split("&")[3];
-}
+function init(auth) {
 
-function handleUncompatibility(device) {
-  var dialogMsg = '';
-  localStorage.getItem('deviceType') === 'Ios' ? dialogMsg = 'Please upgrade your Ios version to use GrowthfileNew' : dialogMsg = "Please upgrade your Android version from " + extractVersion(device) + " to 6.0 use GrowthfileNew";
-  console.log(dialogMsg);
+  // if(!idbSanitized) {
+  //   revokeSession()
+  //   return
+  // }
 
-  commonDialog(dialogMsg);
-}
+  /** When app has been initialzied before 
+   * render list view first, then perform app sync and mange location
+   */
 
-window.onpopstate = function (event) {
-
-  if (!event.state) return;
-
-  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
-    var req = indexedDB.open(localStorage.getItem('dbexist'));
-    req.onsuccess = function () {
-      var db = req.result;
-      window[event.state[0]](event.state[1], db, false);
-    };
-  } else if (event.state[0] === 'listView') {
-    window[event.state[0]](true);
-  } else {
-    window[event.state[0]](event.state[1], false);
+  if (localStorage.getItem('dbexist')) {
+    listView(true);
+    requestCreator('now', native.getInfo());
+    manageLocation();
+    return;
   }
-};
 
-function backNav() {
+  /** when app initializes for the first time */
+  document.getElementById('app-current-panel').appendChild(loader('init-loader'));
 
-  history.back();
-}
-
-function UserCanExitApp() {
-  FetchHistory.stateView(true);
+  localStorage.setItem('dbexist', auth.uid);
+  requestCreator('now', native.getInfo());
+  return;
 }

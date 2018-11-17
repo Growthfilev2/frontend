@@ -34,7 +34,6 @@ function listView(pushState) {
 
 function fetchDataForActivityList(db) {
   var activityDom = '';
-  var ul = document.getElementById('activty--list');
   var activityStoreTx = db.transaction('activity');
   var activityObjectStore = activityStoreTx.objectStore('activity');
   var activityVisibleIndex = activityObjectStore.index('timestamp');
@@ -47,7 +46,7 @@ function fetchDataForActivityList(db) {
         appendActivityListToDom(activityDom, true);
         createActivityIcon(db);
         scrollToActivity(yOffset);
-      }, 2000);
+      }, 1000);
       return;
     }
 
@@ -338,7 +337,7 @@ function scrollToActivity(yOffset) {
     return;
   }
 
-  if (yOffset == 0) {
+  if (yOffset === 0) {
     localStorage.removeItem('clickedActivity');
     window.scrollTo(0, 0);
     return;
@@ -833,18 +832,6 @@ function header(contentStart, contentEnd, headerType) {
   } else {
     document.getElementById('header').innerHTML = header.outerHTML;
   }
-}
-
-function backIconHeader(id) {
-  var backSpan = document.createElement('span');
-  backSpan.id = id;
-  var backIcon = document.createElement('i');
-  backIcon.className = 'material-icons';
-
-  backIcon.textContent = 'arrow_back';
-  backSpan.appendChild(backIcon);
-
-  header(backSpan.outerHTML);
 }
 
 function createInputForProfile(key, type, classtype) {

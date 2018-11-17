@@ -121,20 +121,39 @@ function http(method, url, data) {
 }
 
 function fetchServerTime(deviceInfo) {
-  console.log(deviceInfo)
-  console.log(typeof deviceInfo)
   
+  const parsedDeviceInfo = JSON.parse(deviceInfo);
+  
+
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now?deviceId=${deviceInfo.id}&appVersion=${deviceInfo.appVersion}&os=${deviceInfo.baseOs}`
+      `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}`
     ).then(function (response) {
       console.log(response)
       if(response.updateClient) {
         // handle client udpation of android code
-        const title = 'New Version of Growthfile has launched';
-        const message = 'Please update Growthfile to continue further'
-        requestHandlerResponse('update-app',200,{title:title,message:message},'')
+        console.log("please update device")
+        const title = 'Message';
+        const message = 'There is anew version of your app available';
+
+        const button = {  
+          text:'Update',
+          show:true,
+          clickAction: {
+            redirection: {
+              text:'com.growthfile.growthfileNew',
+              value:true
+            },
+            enableGps:{
+              value:false
+            }
+          }
+        }
+       
+        const alertData = JSON.stringify({title:title,message:message,cancelable:false,button:button})
+        
+        requestHandlerResponse('update-app',200,alertData,'')
         return
       }
   
@@ -288,7 +307,7 @@ function initializeIDB(serverTime) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
-        resolve(auth.uid)
+        resolve({dbName:auth.uid,swipe:'false'})
       }
 
     }
@@ -304,7 +323,7 @@ function comment(body) {
       JSON.stringify(body)
     ).then(function () {
       // requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
-      resolve(firebase.auth().currentUser.uid)
+      resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
     }).catch(function (error) {
 
       instant(createLog(error.message))
@@ -330,7 +349,7 @@ function statusChange(body) {
         requestHandlerResponse('notification', 200, 'status changed successfully', dbName)
 
         resolve(
-          firebase.auth().currentUser.uid
+          {dbName:firebase.auth().currentUser.uid,swipe:'false'}
         )
       }).catch(function (error) {
         instant(createLog(error.message))
@@ -356,7 +375,7 @@ function share(body) {
         instantUpdateDB(dbName, body, 'share')
         requestHandlerResponse('notification', 200, 'assignne added successfully', dbName)
         resolve(
-          firebase.auth().currentUser.uid
+          {dbName:firebase.auth().currentUser.uid,swipe:'false'}
         )
       })
       .catch(function (error) {
@@ -368,7 +387,7 @@ function share(body) {
 
 
 function Null(swipe) {
-
+  console.log(swipe)
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
@@ -380,7 +399,7 @@ function Null(swipe) {
       requestHandlerResponse('reset-offset')
     }
     console.log("Null Ran")
-    resolve(user.uid)
+    resolve({dbName:user.uid,swipe:swipe})
   })
 }
 
@@ -398,7 +417,7 @@ function update(body) {
         instantUpdateDB(dbName, body, 'update')
         requestHandlerResponse('notification', 200, 'activity update successfully', dbName)
 
-        resolve(firebase.auth().currentUser.uid)
+        resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
       })
       .catch(function (error) {
         instant(createLog(error.message, body))
@@ -419,7 +438,7 @@ function create(body) {
         requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
 
         requestHandlerResponse('redirect-to-list', 200, 'activity created successfully', firebase.auth().currentUser.uid)
-        resolve(firebase.auth().currentUser.uid)
+        resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
       })
       .catch(function (error) {
         instant(createLog(error.message, body))
@@ -489,28 +508,7 @@ function instantUpdateDB(dbName, data, type) {
   }
 }
 
-function resetInstantDB(resetBody) {
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const objStore = db.transaction('activity', 'readwrite').objectStore('activity')
-    // const objStore = objStoreTx.objectStore('activity')
-    //
-    console.log(resetBody)
-    objStore.get(resetBody.activityId).onsuccess = function (event) {
-      let record = event.target.result
-      console.log(record)
-      record = resetBody
-      console.log(record)
-      objStore.put(record)
-      requestHandlerResponse('updateIDB', 200, 'activity updated to default state', dbName)
-    }
 
-    // objStoreTx.oncomplete = function(){
-    // }
-  }
-}
 
 function updateMap(db, activity) {
   const mapTx = db.transaction(['map'], 'readwrite')
@@ -524,7 +522,7 @@ function updateMap(db, activity) {
       cursor.continue()
       deleteRecordReq.onerror = errorDeletingRecord
     }
-  }
+ }
 
   mapTx.oncomplete = function () {
     const mapTx = db.transaction(['map'], 'readwrite')
@@ -840,7 +838,7 @@ function updateUserObjectStore(successUrl) {
       }
 
     }).catch(function (error) {
-      instant(createLog(error.message, ''))
+      instant(createLog(error.message))
     })
 }
 
@@ -881,7 +879,7 @@ function updateSubscription(db, subscription) {
 let firstTime = 0;
 
 function successResponse(read,swipeInfo) {
-  console.log('start success')
+  console.log(swipeInfo)
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
@@ -944,24 +942,22 @@ function successResponse(read,swipeInfo) {
       getUniqueOfficeCount(record.fromTime,swipeInfo).then(setUniqueOffice).catch(console.log)
 
       record.fromTime = read.upto
-      
       rootObjectStore.put(record)
+      createUsersApiUrl(db).then(updateUserObjectStore)
+
       if (record.fromTime !== 0) {
         setTimeout(function(){
           requestHandlerResponse('updateIDB', 200,swipeInfo);
-        },2000)
+        },1500)
       }
     }
-    createUsersApiUrl(db).then(updateUserObjectStore, notUpdateUserObjectStore)
+    
   }
 }
 
 
-function notUpdateUserObjectStore(errorUrl) {
-  console.log(errorUrl)
-}
 
-function getUniqueOfficeCount(firstTime) {
+function getUniqueOfficeCount(firstTime,swipeInfo) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
@@ -988,6 +984,7 @@ function getUniqueOfficeCount(firstTime) {
       }
     }
     req.onerror = function (event) {
+      console.log("error in 1007 bitch")
       reject(event.error)
     }
   })
@@ -999,7 +996,7 @@ function setUniqueOffice(data) {
     'hasMultipleOffice': '',
     'allOffices': data.allOffices
   }
-  
+  console.log(db)
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
@@ -1024,23 +1021,23 @@ function setUniqueOffice(data) {
   }
 }
 
-function updateIDB(dbName,swipeInfo) {
-  console.log(dbName)
+function updateIDB(param) {
 
-  const req = indexedDB.open(dbName)
+  const req = indexedDB.open(param.dbName)
 
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
-
-    rootObjectStore.get(dbName).onsuccess = function (root) {
+    console.log(rootObjectStore)
+    rootObjectStore.get(param.dbName).onsuccess = function (root) {
+      console.log(root)
       http(
           'GET',
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
           console.log(response)
-          successResponse(response,swipeInfo)
+          successResponse(response,param.swipe)
         })
         .catch(function (error) {
           instant(createLog(error.message, root.target.result.fromTime));
