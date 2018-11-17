@@ -32,6 +32,7 @@ function loader(nameClass) {
   return div
 }
 
+
 function successDialog() {
 
   const aside = document.createElement('aside')
@@ -64,27 +65,7 @@ function successDialog() {
   }, 1200)
 }
 
-function commonDialog(messageString) {
-  const aside = document.createElement('aside')
-    aside.className = 'mdc-dialog mdc-dialog--open'
-    aside.id = 'common-dialog'
 
-    const surface = document.createElement('div')
-    surface.className = 'mdc-dialog__surface'
-    surface.style.width = '90%'
-    surface.style.height = 'auto'
-
-    const section = document.createElement('section')
-    section.className = 'mdc-dialog__body mock-main-body'
-    section.textContent = messageString
-    section.style.paddingBottom = '20px'
-
-    surface.appendChild(section)
-    aside.appendChild(surface)
-    document.body.appendChild(aside)
-    const commonDialog = new mdc.dialog.MDCDialog(document.querySelector('#common-dialog'))
-    commonDialog.show()
-}
 
 function enableGps(messageString) {
   if (!document.getElementById('enable-gps')) {
@@ -240,19 +221,19 @@ function manageLocation() {
   let geoFetchPromise;
   let navigatorFetchPromise;
 
-  if(localStorage.getItem('deviceType') === 'Android') {
-    // try {
-
-    //   CelllarJson = Towers.getCellularData()
-    // } catch (e) {
-    //   requestCreator('instant', {
-    //     message: e.message
-    //   })
-    // }  
+  if(native.getName() === 'Android'){
+    try {
+      CelllarJson = Towers.getCellularData()
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }))
+    }
+  }
+  else {
+   CelllarJson = false
 }
-else {
-  CelllarJson = false
-}
+  
 const removeFalseData = []
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -298,9 +279,9 @@ const removeFalseData = []
           updateLocationInRoot(mostAccurate)
 
         }).catch(function (error) {
-          requestCreator('instant', {
+          requestCreator('instant', JSON.stringify({
             message: error
-          })
+          }))
         })
 
       })
@@ -462,26 +443,21 @@ function requestCreator(requestType, requestBody) {
 
   var apiHandler = new Worker('src/js/apiHandler.js')
 
-  
-  console.log(apiHandler)
   const requestGenerator = {
     type: requestType,
     body: ''
   }
 
-  if (!requestBody) {
-    apiHandler.postMessage(requestGenerator)
-  } else if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    if (requestBody) {
-      requestGenerator.body = JSON.stringify(requestBody)
-    }
-    
-    apiHandler.postMessage(requestGenerator)
-  } else {
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') { 
+    requestGenerator.body = requestBody;
+  } 
+  else {
+  
     if (offset) {
       clearTimeout(offset)
       offset = null
     }
+
     const dbName = firebase.auth().currentUser.uid
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
@@ -522,15 +498,25 @@ function requestCreator(requestType, requestBody) {
 
 function loadViewFromRoot(response) {
 
+  if(respons.data.type === 'update-app') {
+    if(native.getName() === 'Android') {
+      updateApp.notification(response.data.message)
+      return
+    }
+    webkit.messageHandlers.updateApp.postMessage(response.data.message);
+    return
+  }
+
+  if(response.data.type === 'revoke-session'){
+    revokeSession()
+    return
+  }
+
   if (response.data.type === 'notification') {
     successDialog()
     return
   }
 
-  if (response.data.type === 'removeLocalStorage') {
-    localStorage.removeItem('dbexist')
-    return
-  }
   if (response.data.type === 'manageLocation') {
     manageLocation()
     return
@@ -600,24 +586,33 @@ function loadViewFromRoot(response) {
 
     // updateIDB
 
+    if(response.data.type === 'updateIDB') {
+      if(response.data.message === 'true'){
+        if(native.getName() === 'Android'){
+          Android.setRefreshing('false')
+        }
+        else {
+          webkit.messageHandlers.setRefreshing.postMessage('false')
+        }
+    }
+    
     if (!history.state) {
-      window["listView"](true)
-      return
-    }
-
-
-
-    if (history.state[0] === 'updateCreateActivity') {
-      toggleActionables(history.state[1].activityId)
+        window["listView"](true)
+        return
+      }
+      
+      if (history.state[0] === 'updateCreateActivity') {
+        toggleActionables(history.state[1].activityId)
+        handleTimeout()
+        return
+      }
+      
+      if(history.state[0] === 'profileView') return
+      
+      
+      window[history.state[0]](history.state[1], false) 
       handleTimeout()
-      return
     }
-
-    if(history.state[0] === 'profileView') return
-
-    console.log("running view in state")
-    window[history.state[0]](history.state[1], false) 
-    handleTimeout()
   }
 }
 
@@ -631,7 +626,7 @@ function onErrorMessage(error) {
     }
 }
 
-  requestCreator('instant', logs)
+  requestCreator('instant', JSON.stringify(logs))
 
   console.table({
     'line-number': error.lineno,
@@ -644,7 +639,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
 
   offset = setTimeout(function () {
-    requestCreator('Null')
+    requestCreator('Null','false')
     manageLocation();
   }, 30000)
 

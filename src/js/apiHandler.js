@@ -21,7 +21,6 @@ function getTime() {
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
 const requestFunctionCaller = {
-  initializeIDB: initializeIDB,
   comment: comment,
   statusChange: statusChange,
   share: share,
@@ -46,7 +45,7 @@ function createLog(message, body) {
     message: message,
     body: body
   }
-  return logs
+  return JSON.stringify(logs)
 }
 
 firebase.initializeApp({
@@ -123,46 +122,36 @@ function http(method, url, data) {
 
 function fetchServerTime(deviceInfo) {
   console.log(deviceInfo)
-  deviceInfo = JSON.parse(deviceInfo).split("&")
+  console.log(typeof deviceInfo)
   
-  const deviceObject = {
-    deviceId: deviceInfo[0],
-    brand: deviceInfo[1],
-    model: deviceInfo[2],
-    os: deviceInfo[3]
-  }
-
-
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now?deviceId=${deviceObject.deviceId}`
+      `${apiUrl}now?deviceId=${deviceInfo.id}&appVersion=${deviceInfo.appVersion}&os=${deviceInfo.baseOs}`
     ).then(function (response) {
       console.log(response)
-      if (response.revokeSession) {
-        firebase.auth().signOut().then(function () {
-          const req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
-          req.onsuccess = function () {
-            requestHandlerResponse('removeLocalStorage')
-          }
-          req.onerror = function () {
-            instant(createLog(error))
-          }
-        }, function (error) {
-          instant(createLog(error))
-        })
+      if(response.updateClient) {
+        // handle client udpation of android code
+        const title = 'New Version of Growthfile has launched';
+        const message = 'Please update Growthfile to continue further'
+        requestHandlerResponse('update-app',200,{title:title,message:message},'')
         return
       }
-      console.log("continue")
+  
+      if (response.revokeSession) {
+        requestHandlerResponse('revoke-session',200);
+        return
+      }
+     
       resolve(response.timestamp)
     }).catch(function (error) {
-      instant(createLog(error.message, deviceObject))
+      instant(createLog(error.message, deviceInfo))
     })
   })
 }
 
 function instant(error) {
-  // console.log(error)
+  console.log(error)
   // http(
   //   'POST',
   //   `${apiUrl}services/logs`,
@@ -176,6 +165,7 @@ function instant(error) {
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
+
 
 function fetchRecord(dbName, id) {
   return new Promise(function (resolve) {
@@ -378,13 +368,14 @@ function share(body) {
 
 
 function Null(swipe) {
+
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
       reject(null)
       return
     }
-    if (swipe && swipe === "true") {
+    if (swipe === "true") {
       console.log(JSON.parse(swipe))
       requestHandlerResponse('reset-offset')
     }
@@ -889,7 +880,7 @@ function updateSubscription(db, subscription) {
 
 let firstTime = 0;
 
-function successResponse(read) {
+function successResponse(read,swipeInfo) {
   console.log('start success')
   const user = firebase.auth().currentUser
 
@@ -903,7 +894,6 @@ function successResponse(read) {
     const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-    const activityAndRoot = db.transaction(['activity', 'root'])
     let counter = {}
     firstTime++
     read.addendum.forEach(function (addendum) {
@@ -951,14 +941,14 @@ function successResponse(read) {
     
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
-      getUniqueOfficeCount(record.fromTime).then(setUniqueOffice).catch(console.log)
+      getUniqueOfficeCount(record.fromTime,swipeInfo).then(setUniqueOffice).catch(console.log)
 
       record.fromTime = read.upto
       
       rootObjectStore.put(record)
       if (record.fromTime !== 0) {
         setTimeout(function(){
-          requestHandlerResponse('updateIDB', 200);
+          requestHandlerResponse('updateIDB', 200,swipeInfo);
         },2000)
       }
     }
@@ -987,7 +977,8 @@ function getUniqueOfficeCount(firstTime) {
             dbName: dbName,
             count: officeCount,
             allOffices: offices,
-            firstTime: firstTime
+            firstTime: firstTime,
+            swipe:swipeInfo
           })
           return
         }
@@ -1008,6 +999,7 @@ function setUniqueOffice(data) {
     'hasMultipleOffice': '',
     'allOffices': data.allOffices
   }
+  
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')
@@ -1018,24 +1010,21 @@ function setUniqueOffice(data) {
         record.offices = offices
         rootObjectStore.put(record)
         if (data.firstTime === 0) {
-
-          requestHandlerResponse('updateIDB', 200, 'update successfull')
+          requestHandlerResponse('updateIDB', 200, data.swipe)
         }
-
         return
       }
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
       if (data.firstTime === 0) {
-        requestHandlerResponse('updateIDB', 200, 'update successfull')
+        requestHandlerResponse('updateIDB', 200, data.swipe)
       }
-
     }
   }
 }
 
-function updateIDB(dbName) {
+function updateIDB(dbName,swipeInfo) {
   console.log(dbName)
 
   const req = indexedDB.open(dbName)
@@ -1051,7 +1040,7 @@ function updateIDB(dbName) {
         )
         .then(function (response) {
           console.log(response)
-          successResponse(response)
+          successResponse(response,swipeInfo)
         })
         .catch(function (error) {
           instant(createLog(error.message, root.target.result.fromTime));

@@ -19,7 +19,7 @@ window.addEventListener('load', function () {
       }
     };
 
-    requestCreator('instant', errorJS);
+    requestCreator('instant', JSON.stringify(errorJS));
   };
 
   startApp();

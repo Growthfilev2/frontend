@@ -243,9 +243,9 @@ function manageLocation() {
 
       CelllarJson = Towers.getCellularData()
     } catch (e) {
-      requestCreator('instant', {
+      requestCreator('instant', JSON.stringify({
         message: e.message
-      })
+      }))
     }  
   } else {
     CelllarJson = false;
@@ -292,9 +292,9 @@ function manageLocation() {
 
           updateLocationInRoot(mostAccurate);
         }).catch(function (error) {
-          requestCreator('instant', {
+          requestCreator('instant', JSON.stringify({
             message: error
-          });
+          }));
         });
       });
     };
@@ -602,7 +602,7 @@ function onErrorMessage(error) {
     }
   };
 
-  requestCreator('instant', logs);
+  requestCreator('instant', JSON.stringify(logs));
 
   console.table({
     'line-number': error.lineno,
