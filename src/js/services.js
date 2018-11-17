@@ -12,8 +12,8 @@ function handleImageError(img) {
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
       const record = event.target.result
       if (record.isUpdated == 0) return
-        record.isUpdated = 0
-        usersObjectStore.put(record)
+      record.isUpdated = 0
+      usersObjectStore.put(record)
     }
   }
   return true
@@ -221,7 +221,7 @@ function manageLocation() {
   let geoFetchPromise;
   let navigatorFetchPromise;
 
-  if(native.getName() === 'Android'){
+  if (native.getName() === 'Android') {
     try {
       CelllarJson = Towers.getCellularData()
     } catch (e) {
@@ -229,18 +229,17 @@ function manageLocation() {
         message: e.message
       }))
     }
+  } else {
+    CelllarJson = false
   }
-  else {
-   CelllarJson = false
-}
-  
-const removeFalseData = []
+
+  const removeFalseData = []
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     const rootStore = db.transaction('root', 'readwrite').objectStore('root')
-   
+
     rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
       return new Promise(function (resolve) {
 
@@ -257,19 +256,17 @@ const removeFalseData = []
           }
         }
 
-        navigatorFetchPromise = locationInterval(record.provider)
+        navigatorFetchPromise = locationInterval()
         Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-        
-        geoData.forEach(function(data){
-            if(!data) {
-            let index =   geoData.indexOf(data)
-            geoData.splice(0,index)
-            }
-            else if(data.accuracy == -1 || data.accuracy == 999999) {
+          
+          geoData.forEach(function (data) {
+            if (!data) {
               let index = geoData.indexOf(data)
-              geoData.splice(0,index)
-            }
-            else {
+              geoData.splice(0, index)
+            } else if (data.accuracy == -1 || data.accuracy == 999999) {
+              let index = geoData.indexOf(data)
+              geoData.splice(0, index)
+            } else {
               removeFalseData.push(data)
             }
           })
@@ -291,7 +288,7 @@ const removeFalseData = []
 }
 
 
-function locationInterval(provider) {
+function locationInterval() {
 
   const stabalzied = []
   let count = 0
@@ -299,50 +296,39 @@ function locationInterval(provider) {
     'latitude': '',
     'longitude': '',
     'accuracy': '',
-    'lastLocationTime': ''
+    'lastLocationTime': '',
+    'provider': ''
   }
-  let lowAccuracy;
-  let mockTimeout;
 
   return new Promise(function (resolve, reject) {
-    if (provider === 'Mock') {
-      resolve(undefined)
-      return
+
+    if (native.getName() === 'Android') {
+      if (androidLocation.isMock()) {
+        geo.accuracy = -1;
+        geo.provider = 'Mock';
+        resolve(geo)
+        return
+      }
     }
 
-    if(!mockTimeout && localStorage.getItem('deviceType') === 'Android') {
-        
-      mockTimeout = setTimeout(function () {
-        
-        if (geo.latitude === '' && geo.longitude === '') {
-          clearInterval(myInterval)
-          clearTimeout(mockTimeout)
-          resolve({
-            'latitude': '',
-            'longitude': '',
-            'accuracy': -1,
-            'provider': 'Mock',
-            'lastLocationTime':0
-          })
-          return
-        }
-      }, 20000) 
-    }
 
     let myInterval = setInterval(function () {
-      
+
       navigator.geolocation.getCurrentPosition(function (position) {
-        if (position) {
-          if (stabalzied.length == 0) {
-            stabalzied.push({
-              'latitude': position.coords.latitude,
-              'longitude': position.coords.longitude,
-              'accuracy': position.coords.accuracy,
-              'lastLocationTime': Date.now(),
-              
-            })
-            return
-          }
+        if (!position) {
+          geo.accuracy = -1
+          geo.provider = 'HTML5'
+          resolve(geo)
+          return
+        }
+        if (stabalzied.length == 0) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'lastLocationTime': Date.now(),
+          })
+        } else {
           if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
             ++count
             if (count < 3) {
@@ -355,36 +341,29 @@ function locationInterval(provider) {
             }
             if (count == 3) {
               if (stabalzied[2].accuracy < 350) {
-
-                clearInterval(myInterval);
+                
                 geo.latitude = stabalzied[2].latitude,
                   geo.longitude = stabalzied[2].longitude,
                   geo.accuracy = stabalzied[2].accuracy,
                   geo.provider = 'HTML5',
                   geo.lastLocationTime = stabalzied[2].lastLocationTime
-                resolve(geo)
+                  clearInterval(myInterval);
+                 resolve(geo)
                 return
               }
-            }
-            if (!lowAccuracy) {
-              console.log("time out for low accurate location")
-
-              lowAccuracy = setTimeout(function () {
-
-                const mostAccurate = sortedByAccuracy(stabalzied)
-                geo.latitude = mostAccurate.latitude,
-                  geo.longitude = mostAccurate.longitude,
-                  geo.accuracy = mostAccurate.accuracy
-                geo.provider = 'HTML5'
-                geo.lastLocationTime = mostAccurate.lastLocationTime
-                clearInterval(myInterval);
-                resolve(geo)
-                return
-              }, 2500)
+            } else {
+              const mostAccurate = sortedByAccuracy(stabalzied)
+              geo.latitude = mostAccurate.latitude,
+                geo.longitude = mostAccurate.longitude,
+                geo.accuracy = mostAccurate.accuracy
+              geo.provider = 'HTML5'
+              geo.lastLocationTime = mostAccurate.lastLocationTime
+              clearInterval(myInterval);
+              resolve(geo)
+              return
             }
           }
         }
-
       }, function (error) {
         reject(error)
       })
@@ -407,7 +386,7 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   console.log(finalLocation)
-  if(!finalLocation) return
+
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -426,7 +405,7 @@ function updateLocationInRoot(finalLocation) {
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
-  if(localStorage.getItem('deviceType') === 'Android') {
+  if (localStorage.getItem('deviceType') === 'Android') {
     // Fetchview.startConversation(viewName)
   }
 }
@@ -448,11 +427,10 @@ function requestCreator(requestType, requestBody) {
     body: ''
   }
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') { 
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
     requestGenerator.body = requestBody;
-  } 
-  else {
-  
+  } else {
+
     if (offset) {
       clearTimeout(offset)
       offset = null
@@ -464,26 +442,24 @@ function requestCreator(requestType, requestBody) {
       const db = req.result;
       const rootTx = db.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
- 
+
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
-        if(record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
-            if(record.latitude && record.longitude && record.accuracy) {
-              const geopoints = {
-                'latitude': record.latitude,
-                'longitude': record.longitude,
-                'accuracy': record.accuracy
-              }
-              requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
-              requestBody['geopoint'] = geopoints
-              requestGenerator.body = requestBody
-              apiHandler.postMessage(requestGenerator)       
+        if (record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
+          if (record.latitude && record.longitude && record.accuracy) {
+            const geopoints = {
+              'latitude': record.latitude,
+              'longitude': record.longitude,
+              'accuracy': record.accuracy
             }
-            else {
-              enableGps('Fetching Location Please wait')
-            }
-        }
-        else {
+            requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
+            requestBody['geopoint'] = geopoints
+            requestGenerator.body = requestBody
+            apiHandler.postMessage(requestGenerator)
+          } else {
+            enableGps('Fetching Location Please wait')
+          }
+        } else {
           enableGps('Fetching Location Please wait')
         }
       }
@@ -493,13 +469,13 @@ function requestCreator(requestType, requestBody) {
   // handle the response from apiHandler when operation is completed
   apiHandler.onmessage = loadViewFromRoot
   apiHandler.onerror = onErrorMessage
-  
+
 }
 
 function loadViewFromRoot(response) {
 
-  if(respons.data.type === 'update-app') {
-    if(native.getName() === 'Android') {
+  if (respons.data.type === 'update-app') {
+    if (native.getName() === 'Android') {
       updateApp.notification(response.data.message)
       return
     }
@@ -507,7 +483,7 @@ function loadViewFromRoot(response) {
     return
   }
 
-  if(response.data.type === 'revoke-session'){
+  if (response.data.type === 'revoke-session') {
     revokeSession()
     return
   }
@@ -586,31 +562,30 @@ function loadViewFromRoot(response) {
 
     // updateIDB
 
-    if(response.data.type === 'updateIDB') {
-      if(response.data.message === 'true'){
-        if(native.getName() === 'Android'){
+    if (response.data.type === 'updateIDB') {
+      if (response.data.message === 'true') {
+        if (native.getName() === 'Android') {
           Android.setRefreshing('false')
-        }
-        else {
+        } else {
           webkit.messageHandlers.setRefreshing.postMessage('false')
         }
-    }
-    
-    if (!history.state) {
+      }
+
+      if (!history.state) {
         window["listView"](true)
         return
       }
-      
+
       if (history.state[0] === 'updateCreateActivity') {
         toggleActionables(history.state[1].activityId)
         handleTimeout()
         return
       }
-      
-      if(history.state[0] === 'profileView') return
-      
-      
-      window[history.state[0]](history.state[1], false) 
+
+      if (history.state[0] === 'profileView') return
+
+
+      window[history.state[0]](history.state[1], false)
       handleTimeout()
     }
   }
@@ -624,7 +599,7 @@ function onErrorMessage(error) {
       'line-number': error.lineno,
       'file': error.filename
     }
-}
+  }
 
   requestCreator('instant', JSON.stringify(logs))
 
@@ -639,7 +614,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
 
   offset = setTimeout(function () {
-    requestCreator('Null','false')
+    requestCreator('Null', 'false')
     manageLocation();
   }, 30000)
 

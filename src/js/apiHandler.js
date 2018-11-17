@@ -142,7 +142,7 @@ function fetchServerTime(deviceInfo) {
         requestHandlerResponse('revoke-session',200);
         return
       }
-     
+      
       resolve(response.timestamp)
     }).catch(function (error) {
       instant(createLog(error.message, deviceInfo))
