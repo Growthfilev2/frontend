@@ -421,7 +421,7 @@ function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
-  var apiHandler = new Worker('src/js/apiHandler.js')
+  var apiHandler = new Worker('js/apiHandler.js')
 
   const requestGenerator = {
     type: requestType,

@@ -122,20 +122,20 @@ function http(method, url, data) {
 
 function fetchServerTime(deviceInfo) {
   
-  const parsedDeviceInfo = JSON.parse(deviceInfo);
+  // const parsedDeviceInfo = JSON.parse(deviceInfo);
   
 
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}`
+      `${apiUrl}now?deviceId=${'123345'}&appVersion=${'1.1.0'}&os=${'android'}`
     ).then(function (response) {
       console.log(response)
       if(response.updateClient) {
         // handle client udpation of android code
         console.log("please update device")
         const title = 'Message';
-        const message = 'There is anew version of your app available';
+        const message = 'There is a New version of your app available';
 
         const button = {  
           text:'Update',

@@ -120,7 +120,7 @@ function fetchServerTime(deviceInfo) {
         // handle client udpation of android code
         console.log("please update device");
         var title = 'Message';
-        var message = 'There is anew version of your app available';
+        var message = 'There is a New version of your app available';
 
         var button = {
           text: 'Update',
