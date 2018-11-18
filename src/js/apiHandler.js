@@ -122,13 +122,13 @@ function http(method, url, data) {
 
 function fetchServerTime(deviceInfo) {
   
-  // const parsedDeviceInfo = JSON.parse(deviceInfo);
+  const parsedDeviceInfo = JSON.parse(deviceInfo);
   
 
   return new Promise(function (resolve) {
     http(
       'GET',
-      `${apiUrl}now?deviceId=${'123345'}&appVersion=${'1.1.0'}&os=${'android'}`
+      `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}`
     ).then(function (response) {
       console.log(response)
       if(response.updateClient) {
@@ -205,7 +205,6 @@ function fetchRecord(dbName, id) {
 function initializeIDB(serverTime) {
   console.log("init db")
   // onAuthStateChanged is added because app is reinitialized
-  // let hasFirstView = true
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
 
@@ -217,7 +216,6 @@ function initializeIDB(serverTime) {
 
     request.onupgradeneeded = function () {
       const db = request.result
-      hasFirstView = false
       const activity = db.createObjectStore('activity', {
         keyPath: 'activityId'
       })
@@ -458,11 +456,7 @@ function instantUpdateDB(dbName, data, type) {
       const record = event.target.result
       record.editable = 0
 
-      // if (type === 'remove') {
-      //   const index = record.assignees.indexOf(data.remove)
-      //   record.assignees.splice(index, 1)
-      //   objStore.put(record)
-      // }
+     
       if (type === 'share') {
         record.assignees.push(data.share[0])
         objStore.put(record)
@@ -470,19 +464,21 @@ function instantUpdateDB(dbName, data, type) {
       }
       if (type === 'update') {
 
-        const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-        activityStore.get(data.activityId).onsuccess = function (event) {
-          const record = event.target.result
-          const updateData = data
-
+        // const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
+        // activityStore.get(data.activityId).onsuccess = function (event) {
+        //   const record = event.target.result
+        //   const updateData = data
+        record.schedule = data.schedule;
+        record.attachment = data.attachment
           for (var i = 0; i < record.venue.length; i++) {
             record.venue[i].geopoint = {
               '_latitude': data.venue[i].geopoint['_latitude'],
               '_longitude': data.venue[i].geopoint['_longitude']
             }
           }
-          activityStore.put(record)
-        }
+          
+          objStore.put(record)
+        
       }
       if (type === 'status') {
 

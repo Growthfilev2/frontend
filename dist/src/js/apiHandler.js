@@ -111,11 +111,10 @@ function http(method, url, data) {
 
 function fetchServerTime(deviceInfo) {
 
-  // const parsedDeviceInfo = JSON.parse(deviceInfo);
-
+  var parsedDeviceInfo = JSON.parse(deviceInfo);
 
   return new Promise(function (resolve) {
-    http('GET', apiUrl + 'now?deviceId=' + '123345' + '&appVersion=' + '1.1.0' + '&os=' + 'android').then(function (response) {
+    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
       console.log(response);
       if (response.updateClient) {
         // handle client udpation of android code

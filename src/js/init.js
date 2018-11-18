@@ -209,6 +209,13 @@ let native = function () {
       return localStorage.getItem('iosUUID');
     },
     getInfo: function () {
+      if(!this.getName()) {
+        return JSON.stringify({
+          'id':'123',
+          'appVersion':'1.1.0',
+          'baseOs':'macOs'
+        })
+      }
       if (this.getName() === 'Android') {
         return 'AndroidId.getDeviceId()';
       }
@@ -218,56 +225,26 @@ let native = function () {
 }();
 
 
-function checkIndexedDbSanitization(auth) {
-  document.getElementById('app-current-panel').appendChild(loader('init-loader'))
+
+
+function removeIDBInstance(auth) {
 
   return new Promise(function (resolve, reject) {
-    const dbName = auth.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const totalObjectStores = 9
-      const db = req.result;
-      if (Object.keys(db.objectStoreNames).length < totalObjectStores) {
-        resolve({
-          removeIDB: true,
-          auth: auth
-        })
-      } else {
-        resolve({
-          removeIDB: false,
-          auth: auth
-        })
-      }
-    }
-    req.onerror = function () {
-      reject(req.error)
-    }
-  })
-}
 
-function removeIDBInstance(sanitizationStaus) {
-
-  return new Promise(function (resolve, reject) {
-    if (sanitizationStaus.removeIDB) {
-
-      const req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid)
+      const req = indexedDB.deleteDatabase(auth.uid)
       req.onsuccess = function () {
-        localStorage.removeItem('dbexist')
-        resolve(sanitizationStaus.auth)
+       
+        resolve(true)
       }
       req.onerror = function () {
         reject(req.error)
       }
-      return
-    }
-    localStorage.setItem('dbexist',sanitizationStaus.auth.uid)
-    resolve(sanitizationStaus.auth)
+      
   })
 }
 
 
 function startApp() {
-  native.setName('Android');
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -277,20 +254,8 @@ function startApp() {
     }
 
     document.getElementById("main-layout-app").style.display = 'block'
-
-    checkIndexedDbSanitization(auth).then(function (sanitizationStaus) {
-      removeIDBInstance(sanitizationStaus).then(function (auth) {
-        init(auth)
-      }).catch(function (error) {
-        requestCreator('instant',JSON.stringify({
-          message : error
-        }))
-      })
-    }).catch(function (error) {
-      requestCreator('instant',JSON.stringify({
-        message:error
-      }))
-    })
+    init(auth);
+   
   })
 }
 
@@ -298,22 +263,27 @@ function startApp() {
 
 function init(auth) {
 
-
   /** When app has been initialzied before 
    * render list view first, then perform app sync and mange location
    */
 
   if (localStorage.getItem('dbexist')) {
     listView(true)
+    console.log(native.getInfo())
     requestCreator('now', native.getInfo())
     manageLocation()
     return
   }
-
+  
+  document.getElementById('growthfile').appendChild(loader('init-loader'))
   /** when app initializes for the first time */
-
-  localStorage.setItem('dbexist', auth.uid)
-  requestCreator('now', native.getInfo())
+  console.log("initialzie idb")
+  removeIDBInstance(auth).then(function(isRemoved){
+    if(isRemoved){
+      requestCreator('now', native.getInfo())
+    }
+  }).catch(function(error){
+    console.log(error)
+  })
   return
-
 }

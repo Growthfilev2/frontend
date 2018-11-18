@@ -611,6 +611,11 @@ function filterActivities(type, db, pushState) {
 
   }
 
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db = req.result;
+
+  
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
   const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
@@ -638,6 +643,7 @@ function filterActivities(type, db, pushState) {
     }
     cursor.continue()
   }
+}
 }
 
 function sortByCreator(type, db, pushState) {

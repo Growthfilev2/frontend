@@ -492,7 +492,9 @@ function loadViewFromRoot(response) {
     if (document.querySelector('.undo-delete-loader')) {
       document.querySelector('.undo-delete-loader').style.display = 'block';
     }
-
+    if (document.querySelector('.form-field-status').classList.contains('hidden')) {
+      document.querySelector('.form-field-status').classList.remove('hidden');
+    }
     // requestCreator('instant',{code:response.data.code,msg:response.data.msg})
 
     snacks(response.data.msg);

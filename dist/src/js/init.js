@@ -252,6 +252,7 @@ function removeIDBInstance(sanitizationStaus) {
 }
 
 function startApp() {
+  // native.setName('Android');
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {

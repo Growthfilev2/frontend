@@ -15,7 +15,7 @@ function fetchAddendumForComment(id) {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
     createHeaderContent(db, id)
-    commentPanel(db, id)
+    commentPanel(id)
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
@@ -23,6 +23,7 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
         return
       }
@@ -39,7 +40,7 @@ function fetchAddendumForComment(id) {
 }
 
 
-function commentPanel(db, id) {
+function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
     return
   }
@@ -963,14 +964,18 @@ function sendComment(id) {
       cursor.continue();
     }
     mainUL.appendChild(grp)
-
+    
     dialog['acceptButton_'].onclick = function () {
-      const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-      console.log(radio)
-      const selectedField = JSON.parse(radio.value)
-      console.log(selectedField)
-      document.getElementById('app-current-panel').dataset.view = 'create'
-      createTempRecord(selectedField.office, selectedField.template, data)
+
+    
+        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+        console.log(radio)
+        const selectedField = JSON.parse(radio.value)
+        console.log(selectedField.office)
+        console.log(selectedField.template)
+        document.getElementById('app-current-panel').dataset.view = 'create'
+        createTempRecord(selectedField.office, selectedField.template, data)
+      
     }
   }
 
@@ -1401,7 +1406,7 @@ function sendComment(id) {
       undo.onclick = function () {
         document.querySelector('.undo-deleted').style.display = 'none'
             listItem.appendChild(loader('undo-delete-loader'));
-      reqForUndoDeleted(data.id)
+            reqForUndoDeleted(data.id)
         
       }
       listItem.appendChild(undo)
@@ -1412,10 +1417,10 @@ function sendComment(id) {
 
   function reqForUndoDeleted(id){
    
-            requestCreator('statusChange', {
-                activityId: id,
-                status: 'PENDING'
-            })
+    requestCreator('statusChange', {
+      activityId: id,
+      status: 'PENDING'
+    })
   }
 
   function createGroupList(office, template) {
@@ -2054,15 +2059,18 @@ function sendComment(id) {
     }
   }
 
-  function checkRadioInput(inherit, value) {
+  function checkRadioInput(inherit, value) {  
+    [...document.querySelectorAll('.radio-selected')].forEach(function(input){
+       input.classList.remove('radio-selected');
+    });
     const parent = inherit
     const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
     radio['root_'].classList.add('radio-selected')
-    radio.checked = true
-    console.log(value)
+   
     document.querySelector('.selector-send span').textContent = 'send'
     document.querySelector('.selector-send').dataset.clicktype = ''
     radio.value = JSON.stringify(value)
+    console.log(value)
   }
 
 
@@ -2702,7 +2710,10 @@ function sendComment(id) {
 
         if (document.querySelector('.loader')) {
           document.querySelector('.loader').remove()
-          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
+          if( document.querySelector('.add--assignee-loader .add--assignee-icon')){
+
+            document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
+          }
         }
         if (document.querySelector('.progress--update')) {
           document.querySelector('.progress--update').remove()
