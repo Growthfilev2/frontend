@@ -1,4 +1,5 @@
 var offset = '';
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -400,8 +401,7 @@ function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
-  var apiHandler = new Worker('src/js/apiHandler.js');
-
+  console.log(apiHandler);
   var requestGenerator = {
     type: requestType,
     body: ''

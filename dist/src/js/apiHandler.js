@@ -111,10 +111,11 @@ function http(method, url, data) {
 
 function fetchServerTime(deviceInfo) {
 
-  var parsedDeviceInfo = JSON.parse(deviceInfo);
+  // const parsedDeviceInfo = JSON.parse(deviceInfo);
+
 
   return new Promise(function (resolve) {
-    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
+    http('GET', apiUrl + 'now?deviceId=' + '123345' + '&appVersion=' + '1.1.0' + '&os=' + 'android').then(function (response) {
       console.log(response);
       if (response.updateClient) {
         // handle client udpation of android code
@@ -726,7 +727,6 @@ function createUsersApiUrl(db) {
         }
         return;
       }
-      console.log(cursor.value.mobile);
       var assigneeFormat = '%2B' + cursor.value.mobile + '&q=';
       assigneeString += '' + assigneeFormat.replace('+', '');
       cursor.continue();
@@ -914,7 +914,6 @@ function setUniqueOffice(data) {
     'hasMultipleOffice': '',
     'allOffices': data.allOffices
   };
-  console.log(db);
   req.onsuccess = function () {
     var db = req.result;
     var rootObjectStore = db.transaction('root', 'readwrite').objectStore('root');

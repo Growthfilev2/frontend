@@ -794,7 +794,6 @@ function createUsersApiUrl(db) {
         }
         return
       }
-      console.log(cursor.value.mobile)
       const assigneeFormat = `%2B${cursor.value.mobile}&q=`
       assigneeString += `${assigneeFormat.replace('+', '')}`
       cursor.continue()
@@ -996,7 +995,6 @@ function setUniqueOffice(data) {
     'hasMultipleOffice': '',
     'allOffices': data.allOffices
   }
-  console.log(db)
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readwrite').objectStore('root')

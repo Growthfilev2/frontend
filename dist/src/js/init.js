@@ -204,38 +204,54 @@ var native = function () {
   };
 }();
 
-function checkIndexedDbSanitization() {
-  return new Promise(function (resolve) {
-    var dbName = firebase.auth().currentUser.uid;
+function checkIndexedDbSanitization(auth) {
+  document.getElementById('app-current-panel').appendChild(loader('init-loader'));
+
+  return new Promise(function (resolve, reject) {
+    var dbName = auth.uid;
     var req = indexedDB.open(dbName);
     req.onsuccess = function () {
       var totalObjectStores = 9;
       var db = req.result;
       if (Object.keys(db.objectStoreNames).length < totalObjectStores) {
-        resolve(false);
+        resolve({
+          removeIDB: true,
+          auth: auth
+        });
       } else {
-        resolve(true);
+        resolve({
+          removeIDB: false,
+          auth: auth
+        });
       }
+    };
+    req.onerror = function () {
+      reject(req.error);
     };
   });
 }
 
-function revokeSession() {
-  firebase.auth().signOut().then(function () {
-    var req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      localStorage.removeItem('dbexist');
-    };
-    req.onerror = function () {
-      instant(createLog(error));
-    };
-  }, function (error) {
-    instant(createLog(error));
+function removeIDBInstance(sanitizationStaus) {
+
+  return new Promise(function (resolve, reject) {
+    if (sanitizationStaus.removeIDB) {
+
+      var req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid);
+      req.onsuccess = function () {
+        localStorage.removeItem('dbexist');
+        resolve(sanitizationStaus.auth);
+      };
+      req.onerror = function () {
+        reject(req.error);
+      };
+      return;
+    }
+    localStorage.setItem('dbexist', sanitizationStaus.auth.uid);
+    resolve(sanitizationStaus.auth);
   });
 }
 
 function startApp() {
-
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -245,17 +261,24 @@ function startApp() {
     }
 
     document.getElementById("main-layout-app").style.display = 'block';
-    init(auth);
-    // checkIndexedDbSanitization().then(init)
+
+    checkIndexedDbSanitization(auth).then(function (sanitizationStaus) {
+      removeIDBInstance(sanitizationStaus).then(function (auth) {
+        init(auth);
+      }).catch(function (error) {
+        requestCreator('instant', JSON.stringify({
+          message: error
+        }));
+      });
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }));
+    });
   });
 }
 
 function init(auth) {
-
-  // if(!idbSanitized) {
-  //   revokeSession()
-  //   return
-  // }
 
   /** When app has been initialzied before 
    * render list view first, then perform app sync and mange location
@@ -269,7 +292,6 @@ function init(auth) {
   }
 
   /** when app initializes for the first time */
-  document.getElementById('app-current-panel').appendChild(loader('init-loader'));
 
   localStorage.setItem('dbexist', auth.uid);
   requestCreator('now', native.getInfo());

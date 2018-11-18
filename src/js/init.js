@@ -214,7 +214,7 @@ let native = function () {
       }
       return this.getIosInfo();
     }
-  }
+  } 
 }();
 
 function checkIndexedDbSanitization(auth) {
@@ -239,7 +239,7 @@ function checkIndexedDbSanitization(auth) {
       }
     }
     req.onerror = function () {
-      reject(this.error)
+      reject(req.error)
     }
   })
 }
@@ -255,8 +255,7 @@ function removeIDBInstance(sanitizationStaus) {
         resolve(sanitizationStaus.auth)
       }
       req.onerror = function () {
-        instant(createLog(error))
-        reject(sanitizationStaus.auth)
+        reject(req.error)
       }
       return
     }
@@ -267,7 +266,6 @@ function removeIDBInstance(sanitizationStaus) {
 
 
 function startApp() {
-  
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -282,10 +280,14 @@ function startApp() {
       removeIDBInstance(sanitizationStaus).then(function (auth) {
         init(auth)
       }).catch(function (error) {
-        console.log(error)
+        requestCreator('instant',JSON.stringify({
+          message : error
+        }))
       })
     }).catch(function (error) {
-      console.log(error)
+      requestCreator('instant',JSON.stringify({
+        message:error
+      }))
     })
   })
 }
@@ -301,8 +303,8 @@ function init(auth) {
 
   if (localStorage.getItem('dbexist')) {
     listView(true)
-    // requestCreator('now', native.getInfo())
-    // manageLocation()
+    requestCreator('now', native.getInfo())
+    manageLocation()
     return
   }
 
