@@ -210,12 +210,13 @@ let native = function () {
     },
     getInfo: function () {
       if (this.getName() === 'Android') {
-        return AndroidId.getDeviceId();
+        return 'AndroidId.getDeviceId()';
       }
       return this.getIosInfo();
     }
   } 
 }();
+
 
 function checkIndexedDbSanitization(auth) {
   document.getElementById('app-current-panel').appendChild(loader('init-loader'))
@@ -266,6 +267,7 @@ function removeIDBInstance(sanitizationStaus) {
 
 
 function startApp() {
+  native.setName('Android');
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {

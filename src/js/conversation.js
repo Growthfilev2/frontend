@@ -1399,7 +1399,8 @@ function sendComment(id) {
       undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
       undo.textContent = 'Undo'
       undo.onclick = function () {
-       
+        document.querySelector('.undo-deleted').style.display = 'none'
+            listItem.appendChild(loader('undo-delete-loader'));
       reqForUndoDeleted(data.id)
         
       }
@@ -1410,8 +1411,7 @@ function sendComment(id) {
   }
 
   function reqForUndoDeleted(id){
-    document.querySelector('.undo-deleted').style.display = 'none'
-            listItem.appendChild(loader('undo-delete-loader'));
+   
             requestCreator('statusChange', {
                 activityId: id,
                 status: 'PENDING'

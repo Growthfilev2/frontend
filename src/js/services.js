@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('src/js/apiHandler.js')
+var apiHandler = new Worker('js/apiHandler.js')
 
 function handleImageError(img) {
   img.onerror = null;
@@ -223,17 +223,17 @@ function manageLocation() {
   let geoFetchPromise;
   let navigatorFetchPromise;
 
-  if (native.getName() === 'Android') {
-    try {
-      CelllarJson = Towers.getCellularData()
-    } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: e.message
-      }))
-    }
-  } else {
+  // if (native.getName() === 'Android') {
+  //   try {
+  //     CelllarJson = Towers.getCellularData()
+  //   } catch (e) {
+  //     requestCreator('instant', JSON.stringify({
+  //       message: e.message
+  //     }))
+  //   }
+  // } else {
     CelllarJson = false
-  }
+  // }
 
   const removeFalseData = []
 
@@ -305,12 +305,12 @@ function locationInterval() {
   return new Promise(function (resolve, reject) {
 
     if (native.getName() === 'Android') {
-      if (androidLocation.isMock()) {
-        geo.accuracy = -1;
-        geo.provider = 'Mock';
-        resolve(geo)
-        return
-      }
+      // if (androidLocation.isMock()) {
+      //   geo.accuracy = -1;
+      //   geo.provider = 'Mock';
+      //   resolve(geo)
+      //   return
+      // }
     }
 
 
@@ -514,7 +514,9 @@ function loadViewFromRoot(response) {
     if (document.querySelector('.undo-delete-loader')) {
       document.querySelector('.undo-delete-loader').style.display = 'block';
     }
-
+    if(document.querySelector('.form-field-status').classList.contains('hidden')){
+      document.querySelector('.form-field-status').classList.remove('hidden');
+    }
     // requestCreator('instant',{code:response.data.code,msg:response.data.msg})
 
     snacks(response.data.msg)
@@ -643,7 +645,7 @@ function checkGpsAvail(){
 function handleTimeout() {
 
   offset = setTimeout(function () {
-    checkGpsAvail()
+    // checkGpsAvail()
     requestCreator('Null', 'false')
     manageLocation();
   }, 30000)
