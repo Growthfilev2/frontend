@@ -1,3 +1,5 @@
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function conversation(id, pushState) {
 
   if (pushState) {
@@ -15,7 +17,7 @@ function fetchAddendumForComment(id) {
     var db = req.result;
     var addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId');
     createHeaderContent(db, id);
-    commentPanel(db, id);
+    commentPanel(id);
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation');
     reinitCount(db, id);
@@ -23,6 +25,7 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
         return;
       }
@@ -38,7 +41,7 @@ function fetchAddendumForComment(id) {
   };
 }
 
-function commentPanel(db, id) {
+function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
     return;
   }
@@ -915,10 +918,12 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
   mainUL.appendChild(grp);
 
   dialog['acceptButton_'].onclick = function () {
+
     var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
     console.log(radio);
     var selectedField = JSON.parse(radio.value);
-    console.log(selectedField);
+    console.log(selectedField.office);
+    console.log(selectedField.template);
     document.getElementById('app-current-panel').dataset.view = 'create';
     createTempRecord(selectedField.office, selectedField.template, data);
   };
@@ -1948,14 +1953,17 @@ function checkCheckboxInput(evt, record) {
 }
 
 function checkRadioInput(inherit, value) {
+  [].concat(_toConsumableArray(document.querySelectorAll('.radio-selected'))).forEach(function (input) {
+    input.classList.remove('radio-selected');
+  });
   var parent = inherit;
   var radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'));
   radio['root_'].classList.add('radio-selected');
-  radio.checked = true;
-  console.log(value);
+
   document.querySelector('.selector-send span').textContent = 'send';
   document.querySelector('.selector-send').dataset.clicktype = '';
   radio.value = JSON.stringify(value);
+  console.log(value);
 }
 
 function setFilePath(str, key, show) {
@@ -2561,7 +2569,10 @@ function toggleActionables(id) {
 
       if (document.querySelector('.loader')) {
         document.querySelector('.loader').remove();
-        document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block';
+        if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
+
+          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block';
+        }
       }
       if (document.querySelector('.progress--update')) {
         document.querySelector('.progress--update').remove();

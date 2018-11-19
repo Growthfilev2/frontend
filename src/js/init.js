@@ -203,21 +203,31 @@ let native = function () {
       return localStorage.getItem('deviceType');
     },
     setIosInfo: function (iosDeviceInfo) {
-      localStorage.setItem('iosUUID', iosDeviceInfo)
+      const splitByName = iosDeviceInfo.split("&")
+      const deviceInfo = {
+        baseOs:splitByName[0],
+        deviceBrand:splitByName[1],
+        deviceModel:splitByName[2],
+        appVersion:splitByName[3],
+        osVersion:splitByName[4],
+        id:splitByName[5]
+      }
+      
+      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
       return localStorage.getItem('iosUUID');
     },
     getInfo: function () {
-      if(!this.getName()) {
-        return JSON.stringify({
-          'id':'123',
-          'appVersion':'1.1.0',
-          'baseOs':'macOs'
-        })
-      }
+      // if(!this.getName()) {
+      //   return JSON.stringify({
+      //     'id':'123',
+      //     'appVersion':'1.1.0',
+      //     'baseOs':'macOs'
+      //   })
+      // }
       if (this.getName() === 'Android') {
-        return 'AndroidId.getDeviceId()';
+        return AndroidId.getDeviceId();
       }
       return this.getIosInfo();
     }
@@ -228,6 +238,7 @@ let native = function () {
 
 
 function removeIDBInstance(auth) {
+
 
   return new Promise(function (resolve, reject) {
 
@@ -269,7 +280,6 @@ function init(auth) {
 
   if (localStorage.getItem('dbexist')) {
     listView(true)
-    console.log(native.getInfo())
     requestCreator('now', native.getInfo())
     manageLocation()
     return

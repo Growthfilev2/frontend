@@ -190,12 +190,29 @@ var native = function () {
       return localStorage.getItem('deviceType');
     },
     setIosInfo: function setIosInfo(iosDeviceInfo) {
-      localStorage.setItem('iosUUID', iosDeviceInfo);
+      var splitByName = iosDeviceInfo.split("&");
+      var deviceInfo = {
+        baseOs: splitByName[0],
+        deviceBrand: splitByName[1],
+        deviceModel: splitByName[2],
+        appVersion: splitByName[3],
+        osVersion: splitByName[4],
+        id: splitByName[5]
+      };
+
+      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo));
     },
     getIosInfo: function getIosInfo() {
       return localStorage.getItem('iosUUID');
     },
     getInfo: function getInfo() {
+      // if(!this.getName()) {
+      //   return JSON.stringify({
+      //     'id':'123',
+      //     'appVersion':'1.1.0',
+      //     'baseOs':'macOs'
+      //   })
+      // }
       if (this.getName() === 'Android') {
         return AndroidId.getDeviceId();
       }
@@ -204,26 +221,14 @@ var native = function () {
   };
 }();
 
-function checkIndexedDbSanitization(auth) {
-  document.getElementById('app-current-panel').appendChild(loader('init-loader'));
+function removeIDBInstance(auth) {
 
   return new Promise(function (resolve, reject) {
-    var dbName = auth.uid;
-    var req = indexedDB.open(dbName);
+
+    var req = indexedDB.deleteDatabase(auth.uid);
     req.onsuccess = function () {
-      var totalObjectStores = 9;
-      var db = req.result;
-      if (Object.keys(db.objectStoreNames).length < totalObjectStores) {
-        resolve({
-          removeIDB: true,
-          auth: auth
-        });
-      } else {
-        resolve({
-          removeIDB: false,
-          auth: auth
-        });
-      }
+
+      resolve(true);
     };
     req.onerror = function () {
       reject(req.error);
@@ -231,28 +236,7 @@ function checkIndexedDbSanitization(auth) {
   });
 }
 
-function removeIDBInstance(sanitizationStaus) {
-
-  return new Promise(function (resolve, reject) {
-    if (sanitizationStaus.removeIDB) {
-
-      var req = indexedDB.deleteDatabase(firebase.auth().currentUser.uid);
-      req.onsuccess = function () {
-        localStorage.removeItem('dbexist');
-        resolve(sanitizationStaus.auth);
-      };
-      req.onerror = function () {
-        reject(req.error);
-      };
-      return;
-    }
-    localStorage.setItem('dbexist', sanitizationStaus.auth.uid);
-    resolve(sanitizationStaus.auth);
-  });
-}
-
 function startApp() {
-  // native.setName('Android');
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -262,20 +246,7 @@ function startApp() {
     }
 
     document.getElementById("main-layout-app").style.display = 'block';
-
-    checkIndexedDbSanitization(auth).then(function (sanitizationStaus) {
-      removeIDBInstance(sanitizationStaus).then(function (auth) {
-        init(auth);
-      }).catch(function (error) {
-        requestCreator('instant', JSON.stringify({
-          message: error
-        }));
-      });
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify({
-        message: error
-      }));
-    });
+    init(auth);
   });
 }
 
@@ -292,9 +263,15 @@ function init(auth) {
     return;
   }
 
+  document.getElementById('growthfile').appendChild(loader('init-loader'));
   /** when app initializes for the first time */
-
-  localStorage.setItem('dbexist', auth.uid);
-  requestCreator('now', native.getInfo());
+  console.log("initialzie idb");
+  removeIDBInstance(auth).then(function (isRemoved) {
+    if (isRemoved) {
+      requestCreator('now', native.getInfo());
+    }
+  }).catch(function (error) {
+    console.log(error);
+  });
   return;
 }

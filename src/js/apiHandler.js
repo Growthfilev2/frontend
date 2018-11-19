@@ -96,13 +96,10 @@ function http(method, url, data) {
           if (xhr.readyState === 4) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
-              if (xhr.status === 400 || xhr.status === 500) {
-                return reject(JSON.parse(xhr.response))
-              } else {
-                requestHandlerResponse('error', errorObject.code, errorObject.message)
-
-              }
-
+          
+              
+              requestHandlerResponse('error', errorObject.code, errorObject.message)
+              
               return reject(JSON.parse(xhr.response))
               // return reject(xhr)
             }
@@ -132,7 +129,6 @@ function fetchServerTime(deviceInfo) {
     ).then(function (response) {
       console.log(response)
       if(response.updateClient) {
-        // handle client udpation of android code
         console.log("please update device")
         const title = 'Message';
         const message = 'There is a New version of your app available';
@@ -152,7 +148,6 @@ function fetchServerTime(deviceInfo) {
         }
        
         const alertData = JSON.stringify({title:title,message:message,cancelable:false,button:button})
-        
         requestHandlerResponse('update-app',200,alertData,'')
         return
       }
@@ -171,13 +166,13 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error)
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -418,6 +413,7 @@ function update(body) {
         resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
       })
       .catch(function (error) {
+
         instant(createLog(error.message, body))
       })
   })
@@ -476,7 +472,6 @@ function instantUpdateDB(dbName, data, type) {
               '_longitude': data.venue[i].geopoint['_longitude']
             }
           }
-          
           objStore.put(record)
         
       }

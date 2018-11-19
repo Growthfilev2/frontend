@@ -86,11 +86,8 @@ function http(method, url, data) {
         if (xhr.readyState === 4) {
           if (xhr.status > 226) {
             var errorObject = JSON.parse(xhr.response);
-            if (xhr.status === 400 || xhr.status === 500) {
-              return reject(JSON.parse(xhr.response));
-            } else {
-              requestHandlerResponse('error', errorObject.code, errorObject.message);
-            }
+
+            requestHandlerResponse('error', errorObject.code, errorObject.message);
 
             return reject(JSON.parse(xhr.response));
             // return reject(xhr)
@@ -117,7 +114,6 @@ function fetchServerTime(deviceInfo) {
     http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
       console.log(response);
       if (response.updateClient) {
-        // handle client udpation of android code
         console.log("please update device");
         var title = 'Message';
         var message = 'There is a New version of your app available';
@@ -137,7 +133,6 @@ function fetchServerTime(deviceInfo) {
         };
 
         var alertData = JSON.stringify({ title: title, message: message, cancelable: false, button: button });
-
         requestHandlerResponse('update-app', 200, alertData, '');
         return;
       }
@@ -156,13 +151,9 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error);
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
 
 /**
@@ -187,7 +178,6 @@ function fetchRecord(dbName, id) {
 function initializeIDB(serverTime) {
   console.log("init db");
   // onAuthStateChanged is added because app is reinitialized
-  // let hasFirstView = true
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser;
 
@@ -199,7 +189,6 @@ function initializeIDB(serverTime) {
 
     request.onupgradeneeded = function () {
       var db = request.result;
-      hasFirstView = false;
       var activity = db.createObjectStore('activity', {
         keyPath: 'activityId'
       });
@@ -370,6 +359,7 @@ function update(body) {
 
       resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
     }).catch(function (error) {
+
       instant(createLog(error.message, body));
     });
   });
@@ -400,11 +390,6 @@ function instantUpdateDB(dbName, data, type) {
       var record = event.target.result;
       record.editable = 0;
 
-      // if (type === 'remove') {
-      //   const index = record.assignees.indexOf(data.remove)
-      //   record.assignees.splice(index, 1)
-      //   objStore.put(record)
-      // }
       if (type === 'share') {
         record.assignees.push(data.share[0]);
         objStore.put(record);
@@ -412,19 +397,19 @@ function instantUpdateDB(dbName, data, type) {
       }
       if (type === 'update') {
 
-        var activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
-        activityStore.get(data.activityId).onsuccess = function (event) {
-          var record = event.target.result;
-          var updateData = data;
-
-          for (var i = 0; i < record.venue.length; i++) {
-            record.venue[i].geopoint = {
-              '_latitude': data.venue[i].geopoint['_latitude'],
-              '_longitude': data.venue[i].geopoint['_longitude']
-            };
-          }
-          activityStore.put(record);
-        };
+        // const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
+        // activityStore.get(data.activityId).onsuccess = function (event) {
+        //   const record = event.target.result
+        //   const updateData = data
+        record.schedule = data.schedule;
+        record.attachment = data.attachment;
+        for (var i = 0; i < record.venue.length; i++) {
+          record.venue[i].geopoint = {
+            '_latitude': data.venue[i].geopoint['_latitude'],
+            '_longitude': data.venue[i].geopoint['_longitude']
+          };
+        }
+        objStore.put(record);
       }
       if (type === 'status') {
 

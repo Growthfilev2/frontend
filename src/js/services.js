@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('js/apiHandler.js')
+var apiHandler = new Worker('src/js/apiHandler.js')
 
 function handleImageError(img) {
   img.onerror = null;
@@ -477,11 +477,12 @@ function requestCreator(requestType, requestBody) {
 function loadViewFromRoot(response) {
 
   if (response.data.type === 'update-app') {
+    
     if (native.getName() === 'Android') {
       Android.notification(response.data.msg)
       return
     }
-    webkit.messageHandlers.updateApp.postMessage(response.data.message);
+    webkit.messageHandlers.updateApp.postMessage();
     return
   }
 
@@ -647,7 +648,7 @@ function checkGpsAvail(){
 function handleTimeout() {
 
   offset = setTimeout(function () {
-    // checkGpsAvail()
+    checkGpsAvail()
     requestCreator('Null', 'false')
     manageLocation();
   }, 30000)
