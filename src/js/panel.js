@@ -1,6 +1,6 @@
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
-
+  
   if(document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
@@ -35,7 +35,6 @@ function listView(pushState) {
 
 function fetchDataForActivityList(db) {
   let activityDom = ''
-  const ul = document.getElementById('activty--list')
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityVisibleIndex = activityObjectStore.index('timestamp')
@@ -48,7 +47,7 @@ function fetchDataForActivityList(db) {
               appendActivityListToDom(activityDom, true)
               createActivityIcon(db)
               scrollToActivity(yOffset)
-           },2000)
+           },1000)
       return
     }
 
@@ -186,7 +185,8 @@ function activityListUI(data, metaData,append) {
   if (metaData.commentUser) {
 
     lastComment.textContent = `${metaData.commentUser} : ${metaData.comment}`
-  } else {
+  } 
+  else {
     lastComment.textContent = `${metaData.comment}`
   }
 
@@ -357,7 +357,7 @@ function scrollToActivity(yOffset){
     return
   }
   
-  if(yOffset == 0) {
+  if(yOffset === 0) {
     localStorage.removeItem('clickedActivity')
     window.scrollTo(0,0)
     return
@@ -611,6 +611,11 @@ function filterActivities(type, db, pushState) {
 
   }
 
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db = req.result;
+
+  
 
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
   const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
@@ -631,13 +636,14 @@ function filterActivities(type, db, pushState) {
 
 
     if (cursor.value.status === type.toUpperCase() && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value,).then(function (li) {
+      createActivityList(db, cursor.value).then(function (li) {
 
         activityDom += li
       })
     }
     cursor.continue()
   }
+}
 }
 
 function sortByCreator(type, db, pushState) {
@@ -890,20 +896,6 @@ function header(contentStart, contentEnd, headerType) {
     document.getElementById('header').innerHTML = header.outerHTML
   }
 }
-
-function backIconHeader(id) {
-  const backSpan = document.createElement('span')
-  backSpan.id = id
-  const backIcon = document.createElement('i')
-  backIcon.className = 'material-icons'
-
-  backIcon.textContent = 'arrow_back'
-  backSpan.appendChild(backIcon)
-
-  header(backSpan.outerHTML)
-}
-
-
 
 function createInputForProfile(key, type, classtype) {
   const mainTextField = document.createElement('div')

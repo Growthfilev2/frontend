@@ -1,4 +1,5 @@
 var offset = '';
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -61,28 +62,6 @@ function successDialog() {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
-}
-
-function commonDialog(messageString) {
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open';
-  aside.id = 'common-dialog';
-
-  var surface = document.createElement('div');
-  surface.className = 'mdc-dialog__surface';
-  surface.style.width = '90%';
-  surface.style.height = 'auto';
-
-  var section = document.createElement('section');
-  section.className = 'mdc-dialog__body mock-main-body';
-  section.textContent = messageString;
-  section.style.paddingBottom = '20px';
-
-  surface.appendChild(section);
-  aside.appendChild(surface);
-  document.body.appendChild(aside);
-  var commonDialog = new mdc.dialog.MDCDialog(document.querySelector('#common-dialog'));
-  commonDialog.show();
 }
 
 function enableGps(messageString) {
@@ -233,23 +212,24 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ';
+
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = void 0;
   var geoFetchPromise = void 0;
   var navigatorFetchPromise = void 0;
 
-  if (localStorage.getItem('deviceType') === 'Android') {
-    // try {
-
-    //   CelllarJson = Towers.getCellularData()
-    // } catch (e) {
-    //   requestCreator('instant', {
-    //     message: e.message
-    //   })
-    // }  
+  if (native.getName() === 'Android') {
+    try {
+      CelllarJson = Towers.getCellularData();
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }));
+    }
   } else {
     CelllarJson = false;
   }
+
   var removeFalseData = [];
 
   var req = indexedDB.open(firebase.auth().currentUser.uid);
@@ -273,7 +253,7 @@ function manageLocation() {
           };
         }
 
-        navigatorFetchPromise = locationInterval(record.provider);
+        navigatorFetchPromise = locationInterval();
         Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
 
           geoData.forEach(function (data) {
@@ -292,16 +272,16 @@ function manageLocation() {
 
           updateLocationInRoot(mostAccurate);
         }).catch(function (error) {
-          requestCreator('instant', {
+          requestCreator('instant', JSON.stringify({
             message: error
-          });
+          }));
         });
       });
     };
   };
 }
 
-function locationInterval(provider) {
+function locationInterval() {
 
   var stabalzied = [];
   var count = 0;
@@ -309,50 +289,38 @@ function locationInterval(provider) {
     'latitude': '',
     'longitude': '',
     'accuracy': '',
-    'lastLocationTime': ''
+    'lastLocationTime': '',
+    'provider': ''
   };
-  var lowAccuracy = void 0;
-  var mockTimeout = void 0;
 
   return new Promise(function (resolve, reject) {
-    if (provider === 'Mock') {
-      resolve(undefined);
-      return;
-    }
 
-    if (!mockTimeout && localStorage.getItem('deviceType') === 'Android') {
-
-      mockTimeout = setTimeout(function () {
-
-        if (geo.latitude === '' && geo.longitude === '') {
-          clearInterval(myInterval);
-          clearTimeout(mockTimeout);
-          resolve({
-            'latitude': '',
-            'longitude': '',
-            'accuracy': -1,
-            'provider': 'Mock',
-            'lastLocationTime': 0
-          });
-          return;
-        }
-      }, 20000);
+    if (native.getName() === 'Android') {
+      if (androidLocation.isMock()) {
+        geo.accuracy = -1;
+        geo.provider = 'Mock';
+        resolve(geo);
+        return;
+      }
     }
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-        if (position) {
-          if (stabalzied.length == 0) {
-            stabalzied.push({
-              'latitude': position.coords.latitude,
-              'longitude': position.coords.longitude,
-              'accuracy': position.coords.accuracy,
-              'lastLocationTime': Date.now()
-
-            });
-            return;
-          }
+        if (!position) {
+          geo.accuracy = -1;
+          geo.provider = 'HTML5';
+          resolve(geo);
+          return;
+        }
+        if (stabalzied.length == 0) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'lastLocationTime': Date.now()
+          });
+        } else {
           if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
             ++count;
             if (count < 3) {
@@ -366,25 +334,19 @@ function locationInterval(provider) {
             if (count == 3) {
               if (stabalzied[2].accuracy < 350) {
 
-                clearInterval(myInterval);
                 geo.latitude = stabalzied[2].latitude, geo.longitude = stabalzied[2].longitude, geo.accuracy = stabalzied[2].accuracy, geo.provider = 'HTML5', geo.lastLocationTime = stabalzied[2].lastLocationTime;
+                clearInterval(myInterval);
                 resolve(geo);
                 return;
               }
-            }
-            if (!lowAccuracy) {
-              console.log("time out for low accurate location");
-
-              lowAccuracy = setTimeout(function () {
-
-                var mostAccurate = sortedByAccuracy(stabalzied);
-                geo.latitude = mostAccurate.latitude, geo.longitude = mostAccurate.longitude, geo.accuracy = mostAccurate.accuracy;
-                geo.provider = 'HTML5';
-                geo.lastLocationTime = mostAccurate.lastLocationTime;
-                clearInterval(myInterval);
-                resolve(geo);
-                return;
-              }, 2500);
+            } else {
+              var mostAccurate = sortedByAccuracy(stabalzied);
+              geo.latitude = mostAccurate.latitude, geo.longitude = mostAccurate.longitude, geo.accuracy = mostAccurate.accuracy;
+              geo.provider = 'HTML5';
+              geo.lastLocationTime = mostAccurate.lastLocationTime;
+              clearInterval(myInterval);
+              resolve(geo);
+              return;
             }
           }
         }
@@ -406,7 +368,7 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   console.log(finalLocation);
-  if (!finalLocation) return;
+
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
   req.onsuccess = function () {
@@ -426,7 +388,7 @@ function updateLocationInRoot(finalLocation) {
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (localStorage.getItem('deviceType') === 'Android') {
-    // Fetchview.startConversation(viewName)
+    Fetchview.startConversation(viewName);
   }
 }
 
@@ -439,27 +401,22 @@ function requestCreator(requestType, requestBody) {
   // A request generator body with type of request to perform and the body/data to send to the api handler.
   // spawn a new worker called apiHandler.
 
-  var apiHandler = new Worker('src/js/apiHandler.js');
-
   console.log(apiHandler);
   var requestGenerator = {
     type: requestType,
     body: ''
   };
 
-  if (!requestBody) {
-    apiHandler.postMessage(requestGenerator);
-  } else if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    if (requestBody) {
-      requestGenerator.body = JSON.stringify(requestBody);
-    }
-
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
+    requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {
+
     if (offset) {
       clearTimeout(offset);
       offset = null;
     }
+
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
     req.onsuccess = function () {
@@ -497,16 +454,28 @@ function requestCreator(requestType, requestBody) {
 
 function loadViewFromRoot(response) {
 
+  if (response.data.type === 'update-app') {
+
+    if (native.getName() === 'Android') {
+      Android.notification(response.data.msg);
+      return;
+    }
+    webkit.messageHandlers.updateApp.postMessage();
+    return;
+  }
+
+  if (response.data.type === 'revoke-session') {
+    revokeSession();
+    return;
+  }
+
   if (response.data.type === 'notification') {
     successDialog();
     return;
   }
 
-  if (response.data.type === 'removeLocalStorage') {
-    localStorage.removeItem('dbexist');
-    return;
-  }
   if (response.data.type === 'manageLocation') {
+    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
     manageLocation();
     return;
   }
@@ -525,8 +494,11 @@ function loadViewFromRoot(response) {
     if (document.querySelector('.undo-delete-loader')) {
       document.querySelector('.undo-delete-loader').style.display = 'block';
     }
-
-    // requestCreator('instant',{code:response.data.code,msg:response.data.msg})
+    if (document.querySelector('.form-field-status')) {
+      if (document.querySelector('.form-field-status').classList.contains('hidden')) {
+        document.querySelector('.form-field-status').classList.remove('hidden');
+      }
+    }
 
     snacks(response.data.msg);
     return;
@@ -573,22 +545,32 @@ function loadViewFromRoot(response) {
 
     // updateIDB
 
-    if (!history.state) {
-      window["listView"](true);
-      return;
-    }
+    if (response.data.type === 'updateIDB') {
+      if (response.data.msg === 'true') {
+        if (native.getName() === 'Android') {
+          console.log("send signal to android to stop refreshing");
+          AndroidRefreshing.stopRefreshing(true);
+        } else {
+          webkit.messageHandlers.setRefreshing.postMessage('false');
+        }
+      }
 
-    if (history.state[0] === 'updateCreateActivity') {
-      toggleActionables(history.state[1].activityId);
+      if (!history.state) {
+        window["listView"](true);
+        return;
+      }
+
+      if (history.state[0] === 'updateCreateActivity') {
+        toggleActionables(history.state[1].activityId);
+        handleTimeout();
+        return;
+      }
+
+      if (history.state[0] === 'profileView') return;
+
+      window[history.state[0]](history.state[1], false);
       handleTimeout();
-      return;
     }
-
-    if (history.state[0] === 'profileView') return;
-
-    console.log("running view in state");
-    window[history.state[0]](history.state[1], false);
-    handleTimeout();
   };
 }
 
@@ -602,7 +584,7 @@ function onErrorMessage(error) {
     }
   };
 
-  requestCreator('instant', logs);
+  requestCreator('instant', JSON.stringify(logs));
 
   console.table({
     'line-number': error.lineno,
@@ -611,10 +593,37 @@ function onErrorMessage(error) {
   });
 }
 
+function checkGpsAvail() {
+  if (native.getName() === 'Android') {
+    if (!gps.isEnabled()) {
+      var messageData = {
+        title: 'Cannot determine Location',
+        message: 'Please Turn On Gps, To Use Growthfile',
+        cancelable: true,
+        button: {
+          text: 'Okay',
+          show: true,
+          clickAction: {
+            redirection: {
+              text: '',
+              value: false
+            },
+            enableGps: {
+              value: true
+            }
+          }
+        }
+      };
+      Android.notification(JSON.stringify(messageData));
+    }
+  }
+}
+
 function handleTimeout() {
 
   offset = setTimeout(function () {
-    requestCreator('Null');
+    checkGpsAvail();
+    requestCreator('Null', 'false');
     manageLocation();
   }, 30000);
 }

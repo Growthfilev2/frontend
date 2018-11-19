@@ -1,39 +1,103 @@
 firebase.initializeApp({
-  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
-    authDomain: "growthfilev2-0.firebaseapp.com",
-    databaseURL: "https://growthfilev2-0.firebaseio.com",
-    projectId: "growthfilev2-0",
-    storageBucket: "growthfilev2-0.appspot.com",
-    messagingSenderId: "1011478688238"
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
 })
 
-window.addEventListener('load', function() {
-  window.onerror = function(msg,url,lineNo,columnNo,error){
-  const errorJS  = {
-    message : {
-      msg : msg,
-      url :url,
-      lineNo:lineNo,
-      columnNo :columnNo,
-      error:error
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  const errorJS = {
+    message: {
+      msg: msg,
+      url: url,
+      lineNo: lineNo,
+      columnNo: columnNo,
+      error: error
     }
   }
-  
-    requestCreator('instant',errorJS)
-  }
 
-	
-   startApp()
- 
+  requestCreator('instant', JSON.stringify(errorJS))
+}
+
+
+// initialize smooth scrolling
+window.scrollBy({
+  top: 100,
+  left: 0,
+  behavior: 'smooth'
 })
 
 
+
+window.addEventListener('load', function () {
+  if (!window.Worker && !window.indexedDB) {
+    const title = 'Device Incompatibility'
+    const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
+    const messageData = {
+      title: title,
+      message: message,
+      cancelable: false,
+      button: {
+        text: '',
+        show: false
+      }
+    }
+    Android.notification(JSON.stringify(messageData))
+    return
+  }
+
+  moment.locale('en', {
+    calendar: {
+      lastDay: '[yesterday]',
+      sameDay: 'LT',
+      nextDay: '[Tomorrow at] LT',
+      lastWeek: 'dddd',
+      nextWeek: 'dddd [at] LT',
+      sameElse: 'L'
+    },
+
+    months: [
+      'January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December'
+    ]
+
+  })
+
+  layoutGrid()
+
+  startApp()
+
+})
+
+window.onpopstate = function (event) {
+
+  if (!event.state) return;
+
+  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
+    const req = indexedDB.open(localStorage.getItem('dbexist'))
+    req.onsuccess = function () {
+      const db = req.result
+      window[event.state[0]](event.state[1], db, false);
+    }
+  } else if (event.state[0] === 'listView') {
+    window[event.state[0]](true)
+  } else {
+    window[event.state[0]](event.state[1], false)
+  }
+
+}
+
+function backNav() {
+  history.back();
+}
 
 function firebaseUiConfig(value) {
 
   return {
     'callbacks': {
-      'signInSuccess': function (user, credential, redirectUrl) {
+      'signInSuccess': function (user) {
         if (value) {
           updateEmail(user, value)
           return
@@ -130,143 +194,106 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-
-moment.locale('en', {
-  calendar: {
-    lastDay: '[yesterday]',
-    sameDay: 'LT',
-    nextDay: '[Tomorrow at] LT',
-    lastWeek: 'dddd',
-    nextWeek: 'dddd [at] LT',
-    sameElse: 'L'
-  },
-
-  months: [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July',
-    'August', 'September', 'October', 'November', 'December'
-  ]
-})
-
-// initialize smooth scrolling
-window.scrollBy({
-  top: 100,
-  left: 0,
-  behavior: 'smooth'
-})
-
-
-
-function startApp() {
-  // if(localStorage.getItem('iosUUID')) {
-  //   localStorage.setItem('deviceType', 'Ios')
-  // }
-  // else {
-    localStorage.setItem('deviceType','Web')
-  // }
-
-  layoutGrid()
-  if (!window.Worker && !window.indexedDB) {
-    let device  =''
-    if(localStorage.getItem('deviceType') === 'Android') {
-      device = AndroidId.getDeviceId()
+let native = function () {
+  return {
+    setName: function (device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function () {
+      return localStorage.getItem('deviceType');
+    },
+    setIosInfo: function (iosDeviceInfo) {
+      const splitByName = iosDeviceInfo.split("&")
+      const deviceInfo = {
+        baseOs:splitByName[0],
+        deviceBrand:splitByName[1],
+        deviceModel:splitByName[2],
+        appVersion:splitByName[3],
+        osVersion:splitByName[4],
+        id:splitByName[5]
+      }
+      
+      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
+    },
+    getIosInfo: function () {
+      return localStorage.getItem('iosUUID');
+    },
+    getInfo: function () {
+      // if(!this.getName()) {
+      //   return JSON.stringify({
+      //     'id':'123',
+      //     'appVersion':'1.1.0',
+      //     'baseOs':'macOs'
+      //   })
+      // }
+      if (this.getName() === 'Android') {
+        return AndroidId.getDeviceId();
+      }
+      return this.getIosInfo();
     }
-    else {
-      device = localStorage.getItem('iosUUID')
-    }
+  } 
+}();
 
-    handleUncompatibility(device)
-    return
+
+
+
+function removeIDBInstance(auth) {
+
+
+  return new Promise(function (resolve, reject) {
+
+      const req = indexedDB.deleteDatabase(auth.uid)
+      req.onsuccess = function () {
+       
+        resolve(true)
+      }
+      req.onerror = function () {
+        reject(req.error)
+      }
+      
+  })
 }
 
 
-// if(localStorage.getItem('deviceType') === 'Android') {
-//     if(parseInt(AndroidId.getDeviceId().split("&")[3]) <= 5) {
-//       handleUncompatibility(AndroidId.getDeviceId())
-//       return
-//     }
-// }
-
-
-
- 
+function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
-    if(!auth) {
+    if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
-    
-    console.log(auth)
-    document.getElementById("main-layout-app").style.display = 'block'
-    if (localStorage.getItem('dbexist')) {
-      listView(true)
-      if(localStorage.getItem('deviceType') === 'Web') {
-       
-        requestCreator('now','AndroidId.getDeviceId()')
-        manageLocation()
-        return
-      }
-      requestCreator('now',localStorage.getItem('iosUUID'))
-      manageLocation()
-      return
-    }
-    
-    console.log(auth)
-    document.getElementById('app-current-panel').appendChild(loader('init-loader'))
-    localStorage.setItem('dbexist', auth.uid)
 
-    if(localStorage.getItem('deviceType') === 'Web') {
-      requestCreator('now','AndroidId.getDeviceId()')
-    }
-    else {
-      requestCreator('now',localStorage.getItem('iosUUID'))
-    }
-    return
+    document.getElementById("main-layout-app").style.display = 'block'
+    init(auth);
+   
   })
 }
 
-function extractVersion(device){
-  return device.split("&")[3];
-}
 
-function handleUncompatibility(device){
-  let dialogMsg = '';
-  localStorage.getItem('deviceType') === 'Ios' ? dialogMsg = 'Please upgrade your Ios version to use GrowthfileNew' : dialogMsg = `Please upgrade your Android version from ${extractVersion(device)} to 6.0 use GrowthfileNew`
-  console.log(dialogMsg)
+
+function init(auth) {
+
+  /** When app has been initialzied before 
+   * render list view first, then perform app sync and mange location
+   */
+
+  if (localStorage.getItem('dbexist')) {
+    listView(true)
+    requestCreator('now', native.getInfo())
+    manageLocation()
+    return
+  }
   
-  commonDialog(dialogMsg)
- 
-}
-
-
-window.onpopstate = function (event) {
-  
-  if (!event.state) return;
-
-  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
-    const req = indexedDB.open(localStorage.getItem('dbexist'))
-    req.onsuccess = function () {
-      const db = req.result
-      window[event.state[0]](event.state[1], db, false);
+  document.getElementById('growthfile').appendChild(loader('init-loader'))
+  /** when app initializes for the first time */
+  console.log("initialzie idb")
+  removeIDBInstance(auth).then(function(isRemoved){
+    if(isRemoved){
+      requestCreator('now', native.getInfo())
     }
-  } 
-  
-  else if (event.state[0] === 'listView') {
-    window[event.state[0]](true)
-  }
-  
-  else {
-    window[event.state[0]](event.state[1], false)
-  }
-
-}
-
-function backNav() {
-
-  history.back();
-}
-
-function UserCanExitApp() {
-  FetchHistory.stateView(true)
+  }).catch(function(error){
+    console.log(error)
+  })
+  return
 }

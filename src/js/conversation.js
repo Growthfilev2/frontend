@@ -15,7 +15,7 @@ function fetchAddendumForComment(id) {
     const db = req.result
     const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
     createHeaderContent(db, id)
-    commentPanel(db, id)
+    commentPanel(id)
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
@@ -23,6 +23,7 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
         return
       }
@@ -39,7 +40,7 @@ function fetchAddendumForComment(id) {
 }
 
 
-function commentPanel(db, id) {
+function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
     return
   }
@@ -108,22 +109,8 @@ function commentPanel(db, id) {
 
   document.getElementById('send-chat--input').onclick = function () {
 
-    if (localStorage.getItem('deviceType') === 'Android') {
-
-      try {
-
-        if (!IsGpsEnabled.gpsEnabled()) {
-          enableGps('Please turn on GPS to use this application')
-          return
-        }
-        sendComment(id)
-      } catch (e) {
-        console.log(e)
-      }
-      return
-    }
     sendComment(id)   
-  
+    
   }
 }
 
@@ -210,25 +197,6 @@ function sendComment(id) {
 
       document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      // if (localStorage.getItem('deviceType') === 'Android') {
-      //   try {
-
-      //     if (!IsGpsEnabled.gpsEnabled()) {
-      //       enableGps()
-      //       resetStatusConfirmation(switchControl,record)
-      //       return
-      //     }
-      //     changeStatusRequest(switchControl,record)
-      //   } catch (e) {
-      //     console.log(e)
-      //   }
-      //   return
-
-      // }
      changeStatusRequest(switchControl,record)
     }
   }
@@ -371,7 +339,7 @@ function sendComment(id) {
 
     const map = new google.maps.Map(selector, {
       zoom: 16,
-      center: location,
+      center: location, 
       disableDefaultUI: true
     });
 
@@ -445,8 +413,6 @@ function sendComment(id) {
 
       const record = event.target.result
       getImageFromNumber(db, record.creator).then(function (uri) {
-
-        console.log(uri)
 
         const creatorImg = document.createElement("img")
         creatorImg.className = 'header--icon-creator'
@@ -728,26 +694,6 @@ function sendComment(id) {
           return
         }
 
-
-
-        // if(!Internet.isNetwork()) {
-        //   snacks('Please Check your internet Connection')
-        //   return
-        // }
-        if(localStorage.getItem('deviceType') === 'Android') {
-
-          try {
-            
-            if (!IsGpsEnabled.gpsEnabled()) {
-              enableGps()
-              return
-            }
-            shareReq(data)
-          } catch (e) {
-            console.log(e)
-          }
-         return 
-        }
         shareReq(data)
 
       }
@@ -841,26 +787,7 @@ function sendComment(id) {
             removeDialog()
             return
           }
-
-          // if(!Internet.isNetwork()) {
-          //   snacks('Please Check your internet Connection')
-          //   return
-          // }
-          if(localStorage.getItem('deviceType') === 'Android') {
-
-            try {
-              
-              if (!IsGpsEnabled.gpsEnabled()) {
-                enableGps()
-                return
-              }
-              newNumberReq(data,formattedNumber)
-            }
-            catch (e) {
-              console.log(e)
-            }
-           return 
-          }  
+ 
           newNumberReq(data,formattedNumber)
         })
 
@@ -1037,14 +964,18 @@ function sendComment(id) {
       cursor.continue();
     }
     mainUL.appendChild(grp)
-
+    
     dialog['acceptButton_'].onclick = function () {
-      const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-      console.log(radio)
-      const selectedField = JSON.parse(radio.value)
-      console.log(selectedField)
-      document.getElementById('app-current-panel').dataset.view = 'create'
-      createTempRecord(selectedField.office, selectedField.template, data)
+
+    
+        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+        console.log(radio)
+        const selectedField = JSON.parse(radio.value)
+        console.log(selectedField.office)
+        console.log(selectedField.template)
+        document.getElementById('app-current-panel').dataset.view = 'create'
+        createTempRecord(selectedField.office, selectedField.template, data)
+      
     }
   }
 
@@ -1473,32 +1404,10 @@ function sendComment(id) {
       undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
       undo.textContent = 'Undo'
       undo.onclick = function () {
-        // if(!Internet.isNetwork()) {
-        //   snacks('Please Check your internet Connection')
-        //   return
-        // }
-        if(localStorage.getItem('deviceType') === 'Android'){
-
-          try {
-            
-            if (!IsGpsEnabled.gpsEnabled()) {
-              enableGps()
-              
-            }
-            else {
-              reqForUndoDeleted(data.id)
-            }
-          }
-          
-          catch (exception) {
-            console.log(exception)
-          }
-
-        }
-        else {
-          //IOS
-          reqForUndoDeleted(data.id)
-        }
+        document.querySelector('.undo-deleted').style.display = 'none'
+            listItem.appendChild(loader('undo-delete-loader'));
+            reqForUndoDeleted(data.id)
+        
       }
       listItem.appendChild(undo)
     }
@@ -1507,12 +1416,11 @@ function sendComment(id) {
   }
 
   function reqForUndoDeleted(id){
-    document.querySelector('.undo-deleted').style.display = 'none'
-            listItem.appendChild(loader('undo-delete-loader'));
-            requestCreator('statusChange', {
-                activityId: id,
-                status: 'PENDING'
-            })
+   
+    requestCreator('statusChange', {
+      activityId: id,
+      status: 'PENDING'
+    })
   }
 
   function createGroupList(office, template) {
@@ -2151,15 +2059,18 @@ function sendComment(id) {
     }
   }
 
-  function checkRadioInput(inherit, value) {
+  function checkRadioInput(inherit, value) {  
+    [...document.querySelectorAll('.radio-selected')].forEach(function(input){
+       input.classList.remove('radio-selected');
+    });
     const parent = inherit
     const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
     radio['root_'].classList.add('radio-selected')
-    radio.checked = true
-    console.log(value)
+   
     document.querySelector('.selector-send span').textContent = 'send'
     document.querySelector('.selector-send').dataset.clicktype = ''
     radio.value = JSON.stringify(value)
+    console.log(value)
   }
 
 
@@ -2265,28 +2176,8 @@ function sendComment(id) {
 
       document.getElementById('delete-allow').onclick = function () {
 
-        // if(!Internet.isNetwork()) {
-        //   snacks('Please Check your internet Connection')
-        //   return
-        // }
-        if(localStorage.getItem('deviceType') === 'Android') {
-
-          try {
-            
-            if (!IsGpsEnabled.gpsEnabled()) {
-              enableGps()
-              
-            }
-            else {
-              deleteActivityReq(record.activityId)
-            }
-          } catch (e) {
-            console.log(e)
-          }
-        }
-        else {
-          deleteActivityReq(record.activityId)
-        }
+      deleteActivityReq(record.activityId)
+        
       }
 
       dialog.listen('MDCDialog:cancel', function () {
@@ -2467,25 +2358,7 @@ function sendComment(id) {
       attachment: record.attachment
     }
 
-    // if(!Internet.isNetwork()) {
-    //   snacks('Please Check your internet Connection')
-    //   return
-    // }
-    if(localStorage.getItem('deviceType') === 'Android') {
-
-      try {
-        
-        if (!IsGpsEnabled.gpsEnabled()) {
-          enableGps()
-          return
-        }
-        sendUpdateReq(requiredObject,record)
-        
-      } catch (e) {
-        console.log(e)
-      }
-      return
-    }
+   
     sendUpdateReq(requiredObject,record)
   }
 
@@ -2837,7 +2710,10 @@ function sendComment(id) {
 
         if (document.querySelector('.loader')) {
           document.querySelector('.loader').remove()
-          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
+          if( document.querySelector('.add--assignee-loader .add--assignee-icon')){
+
+            document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
+          }
         }
         if (document.querySelector('.progress--update')) {
           document.querySelector('.progress--update').remove()

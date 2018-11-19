@@ -1,3 +1,5 @@
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 function conversation(id, pushState) {
 
   if (pushState) {
@@ -15,7 +17,7 @@ function fetchAddendumForComment(id) {
     var db = req.result;
     var addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId');
     createHeaderContent(db, id);
-    commentPanel(db, id);
+    commentPanel(id);
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation');
     reinitCount(db, id);
@@ -23,6 +25,7 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
         return;
       }
@@ -38,7 +41,7 @@ function fetchAddendumForComment(id) {
   };
 }
 
-function commentPanel(db, id) {
+function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) {
     return;
   }
@@ -104,22 +107,7 @@ function commentPanel(db, id) {
 
   document.getElementById('send-chat--input').onclick = function () {
 
-    if (localStorage.getItem('deviceType') === 'Android') {
-
-      try {
-
-        if (!IsGpsEnabled.gpsEnabled()) {
-          enableGps('Please turn on GPS to use this application');
-          return;
-        }
-        sendComment(id);
-      } catch (e) {
-        console.log(e);
-      }
-      return;
-    }
     sendComment(id);
-    // IOS
   };
 }
 
@@ -197,24 +185,6 @@ function statusChange(db, id) {
 
       document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      // if (localStorage.getItem('deviceType') === 'Android') {
-      //   try {
-
-      //     if (!IsGpsEnabled.gpsEnabled()) {
-      //       enableGps()
-      //       resetStatusConfirmation(switchControl,record)
-      //       return
-      //     }
-      //     changeStatusRequest(switchControl,record)
-      //   } catch (e) {
-      //     console.log(e)
-      //   }
-      //   return
-      // }
       changeStatusRequest(switchControl, record);
     };
   };
@@ -424,8 +394,6 @@ function createHeaderContent(db, id) {
 
     var record = event.target.result;
     getImageFromNumber(db, record.creator).then(function (uri) {
-
-      console.log(uri);
 
       var creatorImg = document.createElement("img");
       creatorImg.className = 'header--icon-creator';
@@ -693,24 +661,6 @@ function fillUsersInSelector(data, dialog) {
         return;
       }
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-            return;
-          }
-          shareReq(data);
-        } catch (e) {
-          console.log(e);
-        }
-        return;
-      }
       shareReq(data);
     };
   };
@@ -799,24 +749,6 @@ function addNewNumber(data) {
           return;
         }
 
-        // if(!Internet.isNetwork()) {
-        //   snacks('Please Check your internet Connection')
-        //   return
-        // }
-        if (localStorage.getItem('deviceType') === 'Android') {
-
-          try {
-
-            if (!IsGpsEnabled.gpsEnabled()) {
-              enableGps();
-              return;
-            }
-            newNumberReq(data, formattedNumber);
-          } catch (e) {
-            console.log(e);
-          }
-          return;
-        }
         newNumberReq(data, formattedNumber);
       });
     } else {
@@ -986,10 +918,12 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
   mainUL.appendChild(grp);
 
   dialog['acceptButton_'].onclick = function () {
+
     var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
     console.log(radio);
     var selectedField = JSON.parse(radio.value);
-    console.log(selectedField);
+    console.log(selectedField.office);
+    console.log(selectedField.template);
     document.getElementById('app-current-panel').dataset.view = 'create';
     createTempRecord(selectedField.office, selectedField.template, data);
   };
@@ -1398,26 +1332,9 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted';
     undo.textContent = 'Undo';
     undo.onclick = function () {
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-          } else {
-            reqForUndoDeleted(data.id);
-          }
-        } catch (exception) {
-          console.log(exception);
-        }
-      } else {
-        //IOS
-        reqForUndoDeleted(data.id);
-      }
+      document.querySelector('.undo-deleted').style.display = 'none';
+      listItem.appendChild(loader('undo-delete-loader'));
+      reqForUndoDeleted(data.id);
     };
     listItem.appendChild(undo);
   }
@@ -1426,8 +1343,7 @@ function createSimpleLi(key, data) {
 }
 
 function reqForUndoDeleted(id) {
-  document.querySelector('.undo-deleted').style.display = 'none';
-  listItem.appendChild(loader('undo-delete-loader'));
+
   requestCreator('statusChange', {
     activityId: id,
     status: 'PENDING'
@@ -2037,14 +1953,17 @@ function checkCheckboxInput(evt, record) {
 }
 
 function checkRadioInput(inherit, value) {
+  [].concat(_toConsumableArray(document.querySelectorAll('.radio-selected'))).forEach(function (input) {
+    input.classList.remove('radio-selected');
+  });
   var parent = inherit;
   var radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'));
   radio['root_'].classList.add('radio-selected');
-  radio.checked = true;
-  console.log(value);
+
   document.querySelector('.selector-send span').textContent = 'send';
   document.querySelector('.selector-send').dataset.clicktype = '';
   radio.value = JSON.stringify(value);
+  console.log(value);
 }
 
 function setFilePath(str, key, show) {
@@ -2143,25 +2062,7 @@ function createActivityCancellation(record) {
 
     document.getElementById('delete-allow').onclick = function () {
 
-      // if(!Internet.isNetwork()) {
-      //   snacks('Please Check your internet Connection')
-      //   return
-      // }
-      if (localStorage.getItem('deviceType') === 'Android') {
-
-        try {
-
-          if (!IsGpsEnabled.gpsEnabled()) {
-            enableGps();
-          } else {
-            deleteActivityReq(record.activityId);
-          }
-        } catch (e) {
-          console.log(e);
-        }
-      } else {
-        deleteActivityReq(record.activityId);
-      }
+      deleteActivityReq(record.activityId);
     };
 
     dialog.listen('MDCDialog:cancel', function () {
@@ -2330,25 +2231,8 @@ function insertInputsIntoActivity(record, activityStore) {
     venue: record.venue,
     schedule: record.schedule,
     attachment: record.attachment
+  };
 
-    // if(!Internet.isNetwork()) {
-    //   snacks('Please Check your internet Connection')
-    //   return
-    // }
-  };if (localStorage.getItem('deviceType') === 'Android') {
-
-    try {
-
-      if (!IsGpsEnabled.gpsEnabled()) {
-        enableGps();
-        return;
-      }
-      sendUpdateReq(requiredObject, record);
-    } catch (e) {
-      console.log(e);
-    }
-    return;
-  }
   sendUpdateReq(requiredObject, record);
 }
 
@@ -2685,7 +2569,10 @@ function toggleActionables(id) {
 
       if (document.querySelector('.loader')) {
         document.querySelector('.loader').remove();
-        document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block';
+        if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
+
+          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block';
+        }
       }
       if (document.querySelector('.progress--update')) {
         document.querySelector('.progress--update').remove();

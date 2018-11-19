@@ -34,7 +34,6 @@ function listView(pushState) {
 
 function fetchDataForActivityList(db) {
   var activityDom = '';
-  var ul = document.getElementById('activty--list');
   var activityStoreTx = db.transaction('activity');
   var activityObjectStore = activityStoreTx.objectStore('activity');
   var activityVisibleIndex = activityObjectStore.index('timestamp');
@@ -47,7 +46,7 @@ function fetchDataForActivityList(db) {
         appendActivityListToDom(activityDom, true);
         createActivityIcon(db);
         scrollToActivity(yOffset);
-      }, 2000);
+      }, 1000);
       return;
     }
 
@@ -338,7 +337,7 @@ function scrollToActivity(yOffset) {
     return;
   }
 
-  if (yOffset == 0) {
+  if (yOffset === 0) {
     localStorage.removeItem('clickedActivity');
     window.scrollTo(0, 0);
     return;
@@ -575,30 +574,35 @@ function filterActivities(type, db, pushState) {
     history.replaceState(["filterActivities", type], null, null);
   }
 
-  var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
-  var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
 
-  var activityDom = '';
-  activityStore.openCursor(null, 'prev').onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) {
-      var yOffset = window.pageYOffset;
-      setTimeout(function () {
+    var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
+    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
 
-        appendActivityListToDom(activityDom, false, type);
-        createActivityIcon(db);
-        scrollToActivity(yOffset);
-      }, 300);
-      return;
-    }
+    var activityDom = '';
+    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) {
+        var yOffset = window.pageYOffset;
+        setTimeout(function () {
 
-    if (cursor.value.status === type.toUpperCase() && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value).then(function (li) {
+          appendActivityListToDom(activityDom, false, type);
+          createActivityIcon(db);
+          scrollToActivity(yOffset);
+        }, 300);
+        return;
+      }
 
-        activityDom += li;
-      });
-    }
-    cursor.continue();
+      if (cursor.value.status === type.toUpperCase() && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        createActivityList(db, cursor.value).then(function (li) {
+
+          activityDom += li;
+        });
+      }
+      cursor.continue();
+    };
   };
 }
 
@@ -833,18 +837,6 @@ function header(contentStart, contentEnd, headerType) {
   } else {
     document.getElementById('header').innerHTML = header.outerHTML;
   }
-}
-
-function backIconHeader(id) {
-  var backSpan = document.createElement('span');
-  backSpan.id = id;
-  var backIcon = document.createElement('i');
-  backIcon.className = 'material-icons';
-
-  backIcon.textContent = 'arrow_back';
-  backSpan.appendChild(backIcon);
-
-  header(backSpan.outerHTML);
 }
 
 function createInputForProfile(key, type, classtype) {

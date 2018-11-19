@@ -280,7 +280,7 @@ function profileView(pushState) {
       const log = {
         message : error
       }
-      requestCreator('instant',log)
+      requestCreator('instant',JSON.stringify(log))
     }
   
     function storageSuccessHandler() {
