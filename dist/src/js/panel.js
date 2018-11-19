@@ -760,7 +760,7 @@ function sortByLocation(type, db, pushState) {
     history.replaceState(['sortByLocation', type], null, null);
   }
   var dbName = firebase.auth().currentUser.uid;
-  var nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js');
+  var nearestLocationHandler = new Worker('js/nearestLocationHandler.js');
 
   nearestLocationHandler.postMessage({
 
