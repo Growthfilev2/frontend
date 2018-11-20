@@ -108,9 +108,10 @@ function commentPanel(id) {
   }
 
   document.getElementById('send-chat--input').onclick = function () {
-
-    sendComment(id)   
-    
+   
+    if(isLocationVerified()){
+      sendComment(id)   
+    }    
   }
 }
 
@@ -193,11 +194,14 @@ function sendComment(id) {
 
     document.querySelector('.mdc-checkbox').onclick = function () {
 
-      document.querySelector('.form-field-status').classList.add('hidden');
-
-      document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
-
-     changeStatusRequest(switchControl,record)
+    
+      if(isLocationVerified()){
+        changeStatusRequest(switchControl,record)
+      }
+      else {
+        resetStatusConfirmation(switchControl,record);
+      }
+     
     }
   }
 }
@@ -214,6 +218,10 @@ function sendComment(id) {
   }
 
   function changeStatusRequest(switchControl,record) {
+    document.querySelector('.form-field-status').classList.add('hidden');
+
+    document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+    
     if (switchControl.checked) {
       requestCreator('statusChange', {
         activityId: record.activityId,
@@ -693,8 +701,10 @@ function sendComment(id) {
           })
           return
         }
+        if(isLocationVerified()){
 
-        shareReq(data)
+          shareReq(data)
+        }
 
       }
     }
@@ -787,8 +797,10 @@ function sendComment(id) {
             removeDialog()
             return
           }
- 
-          newNumberReq(data,formattedNumber)
+          if(isLocationVerified()){
+
+            newNumberReq(data,formattedNumber)
+          }
         })
 
       } else {
@@ -1301,7 +1313,9 @@ function sendComment(id) {
 
       if (document.getElementById('send-activity')) {
         document.getElementById('send-activity').addEventListener('click', function () {
-          sendActivity(record)
+          if(isLocationVerified()){
+            sendActivity(record)
+          }
         })
       }
 
@@ -1404,9 +1418,12 @@ function sendComment(id) {
       undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
       undo.textContent = 'Undo'
       undo.onclick = function () {
-        document.querySelector('.undo-deleted').style.display = 'none'
+        
+          if(isLocationVerified()){
+            document.querySelector('.undo-deleted').style.display = 'none'
             listItem.appendChild(loader('undo-delete-loader'));
             reqForUndoDeleted(data.id)
+          }
         
       }
       listItem.appendChild(undo)
@@ -1416,6 +1433,7 @@ function sendComment(id) {
   }
 
   function reqForUndoDeleted(id){
+   
    
     requestCreator('statusChange', {
       activityId: id,
@@ -2175,8 +2193,10 @@ function sendComment(id) {
       var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
 
       document.getElementById('delete-allow').onclick = function () {
+        if(isLocationVerified()) {
 
-      deleteActivityReq(record.activityId)
+          deleteActivityReq(record.activityId)
+        }
         
       }
 
@@ -2358,14 +2378,17 @@ function sendComment(id) {
       attachment: record.attachment
     }
 
-   
-    sendUpdateReq(requiredObject,record)
+    
+      sendUpdateReq(requiredObject,record)
   }
 
   function sendUpdateReq(requiredObject,record){
     if (!record.hasOwnProperty('create')) {
-      requiredObject.activityId = record.activityId
-      document.querySelector('header').appendChild(progressBar())
+
+      
+
+        requiredObject.activityId = record.activityId
+        document.querySelector('header').appendChild(progressBar())
       document.querySelector('#send-activity').classList.add('hidden')
 
       requestCreator('update', requiredObject)

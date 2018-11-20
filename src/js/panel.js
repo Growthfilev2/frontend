@@ -22,13 +22,13 @@ function listView(pushState) {
     const rootStore = rootTx.objectStore('root')
     rootStore.get(dbName).onsuccess = function (event) {
       const officeRecord = event.target.result
-      
-      if (!document.querySelector('.mdc-drawer--temporary')) {
-        initMenu(db, officeRecord.offices)
-      }
-
-      creatListHeader('Recent')
-      fetchDataForActivityList(db)
+ 
+        if (!document.querySelector('.mdc-drawer--temporary')) {
+          initMenu(db, officeRecord.offices)
+        }
+        creatListHeader('Recent')
+        fetchDataForActivityList(db)
+    
     }
   }
 }
@@ -47,7 +47,7 @@ function fetchDataForActivityList(db) {
               appendActivityListToDom(activityDom, true)
               createActivityIcon(db)
               scrollToActivity(yOffset)
-           },2000)
+           },1500)
       return
     }
 
@@ -457,8 +457,13 @@ function initMenu(db, officeRecord) {
     changeOfficeIon.textContent = 'arrow_drop_down'
     changeOfficeIon.onclick = function () {
       if(document.querySelector('.office-selection-lists')) return;
+      const rootStore = db.transaction('root').objectStore('root')
+      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+        const rootData = event.target.result
+        const officeData = rootData.offices.allOffices;
+        createOfficeSelectionUI(officeData, db)
+      }
 
-      createOfficeSelectionUI(officeRecord.allOffices, db)
     }
   }
 
@@ -814,7 +819,7 @@ function sortByLocation(type, db, pushState) {
     history.replaceState(['sortByLocation',type],null,null)
   }
   const dbName = firebase.auth().currentUser.uid
-  const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
+  const nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js')
 
     nearestLocationHandler.postMessage({
     

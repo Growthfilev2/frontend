@@ -107,7 +107,9 @@ function commentPanel(id) {
 
   document.getElementById('send-chat--input').onclick = function () {
 
-    sendComment(id);
+    if (isLocationVerified()) {
+      sendComment(id);
+    }
   };
 }
 
@@ -181,11 +183,11 @@ function statusChange(db, id) {
 
     document.querySelector('.mdc-checkbox').onclick = function () {
 
-      document.querySelector('.form-field-status').classList.add('hidden');
-
-      document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
-
-      changeStatusRequest(switchControl, record);
+      if (isLocationVerified()) {
+        changeStatusRequest(switchControl, record);
+      } else {
+        resetStatusConfirmation(switchControl, record);
+      }
     };
   };
 }
@@ -202,6 +204,10 @@ function resetStatusConfirmation(switchControl, record) {
 }
 
 function changeStatusRequest(switchControl, record) {
+  document.querySelector('.form-field-status').classList.add('hidden');
+
+  document.querySelector('.status--change-cont').appendChild(loader('status-loader'));
+
   if (switchControl.checked) {
     requestCreator('statusChange', {
       activityId: record.activityId,
@@ -660,8 +666,10 @@ function fillUsersInSelector(data, dialog) {
         });
         return;
       }
+      if (isLocationVerified()) {
 
-      shareReq(data);
+        shareReq(data);
+      }
     };
   };
 }
@@ -748,8 +756,10 @@ function addNewNumber(data) {
           removeDialog();
           return;
         }
+        if (isLocationVerified()) {
 
-        newNumberReq(data, formattedNumber);
+          newNumberReq(data, formattedNumber);
+        }
       });
     } else {
       document.querySelector('.message-field').classList.add('error-message');
@@ -1234,7 +1244,9 @@ function updateCreateActivity(record, pushState) {
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        sendActivity(record);
+        if (isLocationVerified()) {
+          sendActivity(record);
+        }
       });
     }
 
@@ -1332,9 +1344,12 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted';
     undo.textContent = 'Undo';
     undo.onclick = function () {
-      document.querySelector('.undo-deleted').style.display = 'none';
-      listItem.appendChild(loader('undo-delete-loader'));
-      reqForUndoDeleted(data.id);
+
+      if (isLocationVerified()) {
+        document.querySelector('.undo-deleted').style.display = 'none';
+        listItem.appendChild(loader('undo-delete-loader'));
+        reqForUndoDeleted(data.id);
+      }
     };
     listItem.appendChild(undo);
   }
@@ -2061,8 +2076,10 @@ function createActivityCancellation(record) {
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
 
     document.getElementById('delete-allow').onclick = function () {
+      if (isLocationVerified()) {
 
-      deleteActivityReq(record.activityId);
+        deleteActivityReq(record.activityId);
+      }
     };
 
     dialog.listen('MDCDialog:cancel', function () {
@@ -2238,6 +2255,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
 function sendUpdateReq(requiredObject, record) {
   if (!record.hasOwnProperty('create')) {
+
     requiredObject.activityId = record.activityId;
     document.querySelector('header').appendChild(progressBar());
     document.querySelector('#send-activity').classList.add('hidden');

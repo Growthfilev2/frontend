@@ -49,7 +49,7 @@ function createLog(message, body) {
 }
 
 firebase.initializeApp({
-  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
   authDomain: "growthfilev2-0.firebaseapp.com",
   databaseURL: "https://growthfilev2-0.firebaseio.com",
   projectId: "growthfilev2-0",
@@ -121,7 +121,7 @@ function fetchServerTime(deviceInfo) {
   
   const parsedDeviceInfo = JSON.parse(deviceInfo);
   
-
+  console.log(typeof parsedDeviceInfo.appVersion)
   return new Promise(function (resolve) {
     http(
       'GET',
@@ -140,9 +140,6 @@ function fetchServerTime(deviceInfo) {
             redirection: {
               text:'com.growthfile.growthfileNew',
               value:true
-            },
-            enableGps:{
-              value:false
             }
           }
         }

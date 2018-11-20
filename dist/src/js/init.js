@@ -1,5 +1,5 @@
 firebase.initializeApp({
-  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
   authDomain: "growthfilev2-0.firebaseapp.com",
   databaseURL: "https://growthfilev2-0.firebaseio.com",
   projectId: "growthfilev2-0",
@@ -38,7 +38,13 @@ window.addEventListener('load', function () {
       cancelable: false,
       button: {
         text: '',
-        show: false
+        show: false,
+        clickAction: {
+          redirection: {
+            value: false,
+            text: ''
+          }
+        }
       }
     };
     Android.notification(JSON.stringify(messageData));
@@ -195,7 +201,7 @@ var native = function () {
         baseOs: splitByName[0],
         deviceBrand: splitByName[1],
         deviceModel: splitByName[2],
-        appVersion: splitByName[3],
+        appVersion: Number(splitByName[3]),
         osVersion: splitByName[4],
         id: splitByName[5]
       };
