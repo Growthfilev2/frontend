@@ -217,7 +217,7 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  
+
   const apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w'
   let CelllarJson;
   let geoFetchPromise;
@@ -235,37 +235,36 @@ function manageLocation() {
     CelllarJson = false
   }
 
-  const removeFalseData = []
 
-        // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
-        if (CelllarJson) {
+  // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
+  if (CelllarJson) {
 
-          geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson)
-        } else {
-          geoFetchPromise = {
-            'latitude': '',
-            'longitude': '',
-            'accuracy': 999999,
-          }
-        }
+    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson)
+  } else {
+    geoFetchPromise = {
+      'latitude': '',
+      'longitude': '',
+      'accuracy': null,
+    }
+  }
 
-        navigatorFetchPromise = locationInterval()
-        Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-          console.log(geoData)
-          removeFalseData = geoData.filter(function(geo){
-            return geo.accuracy != 99999
-          })
+  navigatorFetchPromise = locationInterval()
+  Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
+    console.log(geoData)
+    const removeFalseData = geoData.filter(function (geo) {
+      return geo.accuracy != null
+    })
 
-          console.log(removeFalseData)
+    console.log(removeFalseData)
 
-          const mostAccurate = sortedByAccuracy(removeFalseData)
+    const mostAccurate = sortedByAccuracy(removeFalseData)
 
-          updateLocationInRoot(mostAccurate)
+    updateLocationInRoot(mostAccurate)
 
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: error
-          }))
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }))
   })
 }
 
@@ -286,7 +285,7 @@ function locationInterval() {
 
     if (native.getName() === 'Android') {
       if (androidLocation.isMock()) {
-        geo.accuracy = 999999;
+        geo.accuracy = null;
         geo.provider = 'Mock';
         resolve(geo)
         return
@@ -297,57 +296,48 @@ function locationInterval() {
     let myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-      
-        if (stabalzied.length == 0) {
+        if (!stabalzied.length) {
+
           stabalzied.push({
             'latitude': position.coords.latitude,
             'longitude': position.coords.longitude,
             'accuracy': position.coords.accuracy,
             'lastLocationTime': Date.now(),
           })
-        } else {
-          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            ++count
-            if (count < 3) {
-              stabalzied.push({
-                'latitude': position.coords.latitude,
-                'longitude': position.coords.longitude,
-                'accuracy': position.coords.accuracy,
-                'lastLocationTime': Date.now()
-              })
-            }
-            if (count == 3) {
-              if (stabalzied[2].accuracy < 350) {
-                
-                geo.latitude = stabalzied[2].latitude,
-                  geo.longitude = stabalzied[2].longitude,
-                  geo.accuracy = stabalzied[2].accuracy,
-                  geo.provider = 'HTML5',
-                  geo.lastLocationTime = stabalzied[2].lastLocationTime
-                  clearInterval(myInterval);
-                 resolve(geo)
-                return
-              }
-            } else {
-              const mostAccurate = sortedByAccuracy(stabalzied)
-              geo.latitude = mostAccurate.latitude,
-                geo.longitude = mostAccurate.longitude,
-                geo.accuracy = mostAccurate.accuracy
-              geo.provider = 'HTML5'
-              geo.lastLocationTime = mostAccurate.lastLocationTime
-              clearInterval(myInterval);
-              resolve(geo)
-              return
-            }
+          return
+        }
+
+
+        if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+          ++count
+          if (count == 3) {
+            clearInterval(myInterval)
+            const bestGeoLocation = sortedByAccuracy(stabalzied);
+            resolve(bestGeoLocation)
+            return
+          } 
+          else {
+            stabalzied.push({
+              'latitude': position.coords.latitude,
+              'longitude': position.coords.longitude,
+              'accuracy': position.coords.accuracy,
+              'lastLocationTime': Date.now()
+            })
+            return;
+          }
+        }
+        else {
+          if(count >= 10) {
+            const bestGeoLocation = sortedByAccuracy(stabalzied);
+            resolve(bestGeoLocation)
           }
         }
       }, function (error) {
         reject(error)
       })
-
     }, 500)
 
-
+  
   }).catch(function (error) {
     return error
   })
@@ -452,7 +442,7 @@ function requestCreator(requestType, requestBody) {
 function loadViewFromRoot(response) {
 
   if (response.data.type === 'update-app') {
-    
+
     if (native.getName() === 'Android') {
       Android.notification(response.data.msg)
       return
@@ -472,7 +462,7 @@ function loadViewFromRoot(response) {
   }
 
   if (response.data.type === 'manageLocation') {
-    localStorage.setItem('dbexist',firebase.auth().currentUser.uid);
+    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
     manageLocation()
     return
   }
@@ -491,9 +481,9 @@ function loadViewFromRoot(response) {
     if (document.querySelector('.undo-delete-loader')) {
       document.querySelector('.undo-delete-loader').style.display = 'block';
     }
-    if(document.querySelector('.form-field-status')){
-      if(document.querySelector('.form-field-status').classList.contains('hidden')){
-        document.querySelector('.form-field-status').classList.remove('hidden');        
+    if (document.querySelector('.form-field-status')) {
+      if (document.querySelector('.form-field-status').classList.contains('hidden')) {
+        document.querySelector('.form-field-status').classList.remove('hidden');
       }
     }
 
@@ -594,23 +584,23 @@ function onErrorMessage(error) {
 
 }
 
-function checkGpsAvail(){
-  if(native.getName() === 'Android'){
-    if(!gps.isEnabled()) {
+function checkGpsAvail() {
+  if (native.getName() === 'Android') {
+    if (!gps.isEnabled()) {
       const messageData = {
-        title:'Cannot determine Location',
-        message:'Please Turn On Gps, To Use Growthfile',
-        cancelable:true,
-        button:{
-          text:'Okay',
-          show:true,
-          clickAction:{
+        title: 'Cannot determine Location',
+        message: 'Please Turn On Gps, To Use Growthfile',
+        cancelable: true,
+        button: {
+          text: 'Okay',
+          show: true,
+          clickAction: {
             redirection: {
-              text:'',
-              value:false
+              text: '',
+              value: false
             },
-            enableGps:{
-              value:true
+            enableGps: {
+              value: true
             }
           }
         }

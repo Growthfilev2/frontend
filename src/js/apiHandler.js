@@ -285,7 +285,11 @@ function initializeIDB(serverTime) {
       root.put({
         uid: auth.uid,
         fromTime: 0,
-        provider: ''
+        provider: '',
+        latitude:'',
+        longitude:'',
+        accuracy:'',
+        lastLocationTime:''
       })
       requestHandlerResponse('manageLocation')
     }
