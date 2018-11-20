@@ -1,5 +1,5 @@
 self.onmessage = function (event) {
-
+  console.log(firebase.auth().currentUser.uid);
   var req = indexedDB.open(event.data.dbName);
 
   var distanceArr = [];

@@ -47,7 +47,7 @@ function fetchDataForActivityList(db) {
               appendActivityListToDom(activityDom, true)
               createActivityIcon(db)
               scrollToActivity(yOffset)
-           },1000)
+           },2000)
       return
     }
 
@@ -370,7 +370,7 @@ function scrollToActivity(yOffset){
 }
 
 function initMenu(db, officeRecord) {
-
+  console.log(officeRecord)
   const filters = [{
       type: 'Incoming',
       icon: 'call_received'
@@ -553,25 +553,27 @@ function createOfficeSelectionUI(allOffices, db) {
   document.querySelector('.mdc-drawer__drawer').appendChild(navContent)
 
   allOffices.forEach(function (office) {
-    if (office === document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) return
-    if(document.querySelector('.different-office-link')) return;
-    const a = document.createElement('div')
-    a.className = 'mdc-list-item mdc-list-item--activated different-office-link'
-    const textSpan = document.createElement('span')
-    textSpan.textContent = office
-    a.appendChild(textSpan)
-    a.onclick = function () {
-      document.querySelector('.filter-sort--list').classList.remove('hidden');
-      navContent.remove()
-      const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
-      drawer['root_'].dataset.currentOffice = office
-      document.querySelector('.current--office-name').textContent = office
-      listView()
-      drawer.open = false;
-    }
-    navContent.appendChild(a)
-  })
-}
+    console.log(office)
+    if (office !== document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) {
+
+      const a = document.createElement('div')
+      a.className = 'mdc-list-item mdc-list-item--activated different-office-link'
+      const textSpan = document.createElement('span')
+      textSpan.textContent = office
+      a.appendChild(textSpan)
+      a.onclick = function () {
+        document.querySelector('.filter-sort--list').classList.remove('hidden');
+        navContent.remove()
+        const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
+        drawer['root_'].dataset.currentOffice = office
+        document.querySelector('.current--office-name').textContent = office;
+        listView()
+        drawer.open = false;
+      }
+      navContent.appendChild(a)
+      }
+    })
+  }
 
 
 
@@ -812,7 +814,7 @@ function sortByLocation(type, db, pushState) {
     history.replaceState(['sortByLocation',type],null,null)
   }
   const dbName = firebase.auth().currentUser.uid
-  const nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js')
+  const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
 
     nearestLocationHandler.postMessage({
     

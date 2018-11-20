@@ -1,10 +1,10 @@
 firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
+  apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
 });
 
 window.onerror = function (msg, url, lineNo, columnNo, error) {
@@ -206,13 +206,13 @@ var native = function () {
       return localStorage.getItem('iosUUID');
     },
     getInfo: function getInfo() {
-      // if(!this.getName()) {
-      //   return JSON.stringify({
-      //     'id':'123',
-      //     'appVersion':'1.1.0',
-      //     'baseOs':'macOs'
-      //   })
-      // }
+      if (!this.getName()) {
+        return JSON.stringify({
+          'id': '123',
+          'appVersion': '1.1.0',
+          'baseOs': 'macOs'
+        });
+      }
       if (this.getName() === 'Android') {
         return AndroidId.getDeviceId();
       }

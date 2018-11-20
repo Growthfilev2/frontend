@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('src/js/apiHandler.js')
+var apiHandler = new Worker('js/apiHandler.js')
 
 function handleImageError(img) {
   img.onerror = null;
@@ -218,7 +218,7 @@ function geolocationApi(method, url, data) {
 
 function manageLocation() {
   
-  const apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
+  const apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w'
   let CelllarJson;
   let geoFetchPromise;
   let navigatorFetchPromise;
@@ -237,15 +237,6 @@ function manageLocation() {
 
   const removeFalseData = []
 
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const rootStore = db.transaction('root', 'readwrite').objectStore('root')
-
-    rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-      return new Promise(function (resolve) {
-
-        const record = event.target.result
         // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
         if (CelllarJson) {
 
@@ -260,19 +251,13 @@ function manageLocation() {
 
         navigatorFetchPromise = locationInterval()
         Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-          
-          geoData.forEach(function (data) {
-            if (!data) {
-              let index = geoData.indexOf(data)
-              geoData.splice(0, index)
-            } else if (data.accuracy == -1 || data.accuracy == 999999) {
-              let index = geoData.indexOf(data)
-              geoData.splice(0, index)
-            } else {
-              removeFalseData.push(data)
-            }
+          console.log(geoData)
+          removeFalseData = geoData.filter(function(geo){
+            return geo.accuracy != 99999
           })
+
           console.log(removeFalseData)
+
           const mostAccurate = sortedByAccuracy(removeFalseData)
 
           updateLocationInRoot(mostAccurate)
@@ -281,12 +266,7 @@ function manageLocation() {
           requestCreator('instant', JSON.stringify({
             message: error
           }))
-        })
-
-      })
-    }
-
-  }
+  })
 }
 
 
@@ -306,7 +286,7 @@ function locationInterval() {
 
     if (native.getName() === 'Android') {
       if (androidLocation.isMock()) {
-        geo.accuracy = -1;
+        geo.accuracy = 999999;
         geo.provider = 'Mock';
         resolve(geo)
         return
@@ -317,12 +297,7 @@ function locationInterval() {
     let myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-        if (!position) {
-          geo.accuracy = -1
-          geo.provider = 'HTML5'
-          resolve(geo)
-          return
-        }
+      
         if (stabalzied.length == 0) {
           stabalzied.push({
             'latitude': position.coords.latitude,

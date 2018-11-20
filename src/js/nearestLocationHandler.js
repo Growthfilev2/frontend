@@ -1,5 +1,4 @@
 self.onmessage = function(event) {
-  
   const req = indexedDB.open(event.data.dbName)
 
   let distanceArr = []
