@@ -245,6 +245,8 @@ function manageLocation() {
       'latitude': '',
       'longitude': '',
       'accuracy': null,
+      'provider':'',
+      'lastLocationTime':Date.now()
     }
   }
 
@@ -303,6 +305,7 @@ function locationInterval() {
             'longitude': position.coords.longitude,
             'accuracy': position.coords.accuracy,
             'lastLocationTime': Date.now(),
+            'provider':'HTML5'
           })
           return
         }
@@ -321,7 +324,8 @@ function locationInterval() {
               'latitude': position.coords.latitude,
               'longitude': position.coords.longitude,
               'accuracy': position.coords.accuracy,
-              'lastLocationTime': Date.now()
+              'lastLocationTime': Date.now(),
+              'provider':'HTML5'
             })
             return;
           }
@@ -365,7 +369,7 @@ function updateLocationInRoot(finalLocation) {
       record.longitude = finalLocation.longitude
       record.accuracy = finalLocation.accuracy
       record.provider = finalLocation.provider
-      record.lastLocationTime = finalLocation.timestamp
+      record.lastLocationTime = finalLocation.lastLocationTime
       rootStore.put(record)
     }
   }
@@ -412,7 +416,6 @@ function requestCreator(requestType, requestBody) {
 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
-        if (record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
           if (record.latitude && record.longitude && record.accuracy) {
             const geopoints = {
               'latitude': record.latitude,
@@ -426,9 +429,7 @@ function requestCreator(requestType, requestBody) {
           } else {
             enableGps('Fetching Location Please wait')
           }
-        } else {
-          enableGps('Fetching Location Please wait')
-        }
+       
       }
     }
   }
