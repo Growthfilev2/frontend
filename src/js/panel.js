@@ -22,13 +22,13 @@ function listView(pushState) {
     const rootStore = rootTx.objectStore('root')
     rootStore.get(dbName).onsuccess = function (event) {
       const officeRecord = event.target.result
-      
-      if (!document.querySelector('.mdc-drawer--temporary')) {
-        initMenu(db, officeRecord.offices)
-      }
-
-      creatListHeader('Recent')
-      fetchDataForActivityList(db)
+ 
+        if (!document.querySelector('.mdc-drawer--temporary')) {
+          initMenu(db, officeRecord.offices)
+        }
+        creatListHeader('Recent')
+        fetchDataForActivityList(db)
+    
     }
   }
 }
@@ -47,7 +47,7 @@ function fetchDataForActivityList(db) {
               appendActivityListToDom(activityDom, true)
               createActivityIcon(db)
               scrollToActivity(yOffset)
-           },1000)
+           },1500)
       return
     }
 
@@ -370,7 +370,7 @@ function scrollToActivity(yOffset){
 }
 
 function initMenu(db, officeRecord) {
-
+  console.log(officeRecord)
   const filters = [{
       type: 'Incoming',
       icon: 'call_received'
@@ -457,8 +457,13 @@ function initMenu(db, officeRecord) {
     changeOfficeIon.textContent = 'arrow_drop_down'
     changeOfficeIon.onclick = function () {
       if(document.querySelector('.office-selection-lists')) return;
+      const rootStore = db.transaction('root').objectStore('root')
+      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+        const rootData = event.target.result
+        const officeData = rootData.offices.allOffices;
+        createOfficeSelectionUI(officeData, db)
+      }
 
-      createOfficeSelectionUI(officeRecord.allOffices, db)
     }
   }
 
@@ -553,25 +558,27 @@ function createOfficeSelectionUI(allOffices, db) {
   document.querySelector('.mdc-drawer__drawer').appendChild(navContent)
 
   allOffices.forEach(function (office) {
-    if (office === document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) return
-    if(document.querySelector('.different-office-link')) return;
-    const a = document.createElement('div')
-    a.className = 'mdc-list-item mdc-list-item--activated different-office-link'
-    const textSpan = document.createElement('span')
-    textSpan.textContent = office
-    a.appendChild(textSpan)
-    a.onclick = function () {
-      document.querySelector('.filter-sort--list').classList.remove('hidden');
-      navContent.remove()
-      const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
-      drawer['root_'].dataset.currentOffice = office
-      document.querySelector('.current--office-name').textContent = office
-      listView()
-      drawer.open = false;
-    }
-    navContent.appendChild(a)
-  })
-}
+    console.log(office)
+    if (office !== document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) {
+
+      const a = document.createElement('div')
+      a.className = 'mdc-list-item mdc-list-item--activated different-office-link'
+      const textSpan = document.createElement('span')
+      textSpan.textContent = office
+      a.appendChild(textSpan)
+      a.onclick = function () {
+        document.querySelector('.filter-sort--list').classList.remove('hidden');
+        navContent.remove()
+        const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
+        drawer['root_'].dataset.currentOffice = office
+        document.querySelector('.current--office-name').textContent = office;
+        listView()
+        drawer.open = false;
+      }
+      navContent.appendChild(a)
+      }
+    })
+  }
 
 
 

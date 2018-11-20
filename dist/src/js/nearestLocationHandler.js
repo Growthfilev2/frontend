@@ -1,5 +1,4 @@
 self.onmessage = function (event) {
-
   var req = indexedDB.open(event.data.dbName);
 
   var distanceArr = [];

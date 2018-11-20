@@ -1,6 +1,6 @@
 var offset = ''
 var apiHandler = new Worker('src/js/apiHandler.js')
-
+var html5Location;
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
@@ -87,15 +87,6 @@ function enableGps(messageString) {
     const footer = document.createElement('footer')
     footer.className = 'mdc-dialog__footer mock-footer'
 
-    const ok = document.createElement('button')
-    ok.type = 'button'
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
-    ok.textContent = 'Ok'
-    ok.id = ''
-    ok.style.backgroundColor = '#3498db'
-
-    footer.appendChild(ok)
-
     surface.appendChild(section)
     surface.appendChild(footer)
     aside.appendChild(surface)
@@ -105,6 +96,7 @@ function enableGps(messageString) {
   const gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'))
   gpsDialog.show()
 }
+
 
 function progressBar() {
   const div = document.createElement('div')
@@ -217,7 +209,7 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  
+
   const apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
   let CelllarJson;
   let geoFetchPromise;
@@ -235,58 +227,39 @@ function manageLocation() {
     CelllarJson = false
   }
 
-  const removeFalseData = []
 
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const rootStore = db.transaction('root', 'readwrite').objectStore('root')
+  // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
+  if (CelllarJson) {
 
-    rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-      return new Promise(function (resolve) {
-
-        const record = event.target.result
-        // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
-        if (CelllarJson) {
-
-          geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson)
-        } else {
-          geoFetchPromise = {
-            'latitude': '',
-            'longitude': '',
-            'accuracy': 999999,
-          }
-        }
-
-        navigatorFetchPromise = locationInterval()
-        Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-          
-          geoData.forEach(function (data) {
-            if (!data) {
-              let index = geoData.indexOf(data)
-              geoData.splice(0, index)
-            } else if (data.accuracy == -1 || data.accuracy == 999999) {
-              let index = geoData.indexOf(data)
-              geoData.splice(0, index)
-            } else {
-              removeFalseData.push(data)
-            }
-          })
-          console.log(removeFalseData)
-          const mostAccurate = sortedByAccuracy(removeFalseData)
-
-          updateLocationInRoot(mostAccurate)
-
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: error
-          }))
-        })
-
-      })
+    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson)
+  } else {
+    geoFetchPromise = {
+      'latitude': '',
+      'longitude': '',
+      'accuracy': null,
+      'provider': '',
+      'lastLocationTime': Date.now()
     }
-
   }
+
+  navigatorFetchPromise = locationInterval()
+  Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
+    console.log(geoData)
+    const removeFalseData = geoData.filter(function (geo) {
+      return geo.accuracy != null
+    })
+
+    console.log(removeFalseData)
+
+    const mostAccurate = sortedByAccuracy(removeFalseData)
+
+    updateLocationInRoot(mostAccurate)
+
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }))
+  })
 }
 
 
@@ -306,7 +279,7 @@ function locationInterval() {
 
     if (native.getName() === 'Android') {
       if (androidLocation.isMock()) {
-        geo.accuracy = -1;
+        geo.accuracy = null;
         geo.provider = 'Mock';
         resolve(geo)
         return
@@ -316,65 +289,49 @@ function locationInterval() {
 
     let myInterval = setInterval(function () {
 
-      navigator.geolocation.getCurrentPosition(function (position) {
-        if (!position) {
-          geo.accuracy = -1
-          geo.provider = 'HTML5'
-          resolve(geo)
-          return
-        }
-        if (stabalzied.length == 0) {
+     navigator.geolocation.watchPosition(function (position) {
+       
+        if (!stabalzied.length) {
+
           stabalzied.push({
             'latitude': position.coords.latitude,
             'longitude': position.coords.longitude,
             'accuracy': position.coords.accuracy,
             'lastLocationTime': Date.now(),
+            'provider': 'HTML5'
           })
+          return
+        }
+
+
+        if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+          ++count
+          if (count == 3) {
+            clearInterval(myInterval)
+            const bestGeoLocation = sortedByAccuracy(stabalzied);
+            resolve(bestGeoLocation)
+            return
+          } else {
+            stabalzied.push({
+              'latitude': position.coords.latitude,
+              'longitude': position.coords.longitude,
+              'accuracy': position.coords.accuracy,
+              'lastLocationTime': Date.now(),
+              'provider': 'HTML5'
+            })
+            return;
+          }
         } else {
-          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            ++count
-            if (count < 3) {
-              stabalzied.push({
-                'latitude': position.coords.latitude,
-                'longitude': position.coords.longitude,
-                'accuracy': position.coords.accuracy,
-                'lastLocationTime': Date.now()
-              })
-            }
-            if (count == 3) {
-              if (stabalzied[2].accuracy < 350) {
-                
-                geo.latitude = stabalzied[2].latitude,
-                  geo.longitude = stabalzied[2].longitude,
-                  geo.accuracy = stabalzied[2].accuracy,
-                  geo.provider = 'HTML5',
-                  geo.lastLocationTime = stabalzied[2].lastLocationTime
-                  clearInterval(myInterval);
-                 resolve(geo)
-                return
-              }
-            } else {
-              const mostAccurate = sortedByAccuracy(stabalzied)
-              geo.latitude = mostAccurate.latitude,
-                geo.longitude = mostAccurate.longitude,
-                geo.accuracy = mostAccurate.accuracy
-              geo.provider = 'HTML5'
-              geo.lastLocationTime = mostAccurate.lastLocationTime
-              clearInterval(myInterval);
-              resolve(geo)
-              return
-            }
+          if (count >= 10) {
+            const bestGeoLocation = sortedByAccuracy(stabalzied);
+            resolve(bestGeoLocation)
           }
         }
       }, function (error) {
+        console.log(error)
         reject(error)
       })
-
     }, 500)
-
-
-  }).catch(function (error) {
-    return error
   })
 }
 
@@ -400,7 +357,7 @@ function updateLocationInRoot(finalLocation) {
       record.longitude = finalLocation.longitude
       record.accuracy = finalLocation.accuracy
       record.provider = finalLocation.provider
-      record.lastLocationTime = finalLocation.timestamp
+      record.lastLocationTime = finalLocation.lastLocationTime
       rootStore.put(record)
     }
   }
@@ -416,6 +373,74 @@ function inputFile(selector) {
   return document.getElementById(selector)
 }
 
+function getNonLocationmessageString(name) {
+  if (name === 'gps') {
+    return 'Please Enable GPS to use Growthfile'
+  }
+  return 'Please Allow Location services To Use Growthfile'
+}
+
+function isLocationVerified(){
+  if (native.getName() === 'Android') {
+
+    const locationStatus = JSON.parse(gps.isEnabled());
+    if (!locationStatus.active) {
+      
+      const title = 'Message'
+      const messageData = {
+        title: title,
+        message: getNonLocationmessageString(locationStatus.name),
+        cancelable:true,
+        button:{
+          text:'Okay',
+          show:true,
+          clickAction: {
+            redirection: {
+              text:'',
+              value:false
+            }
+          }
+        }
+      }
+      Android.notification(JSON.stringify(messageData))
+      return false;
+    }
+    return true
+  }
+  return true
+}
+
+function checkLocationInRoot(){
+  return new Promise(function(resolve){
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function(){
+      const db = req.result;
+      const root = db.transaction('root').objectStore('root')
+      root.get(dbName).onsuccess = function(event){
+        const record = event.target.result;
+        if(record.latitude && record.longitude && record.accuracy) {
+          resolve(true)
+        }
+        else {
+          resolve(false)
+        }
+      }
+    }
+  })
+}
+
+function createBodyForRequestGenerator(record,requestBody,requestGenerator){
+  const geopoints = {
+    'latitude': record.latitude,
+    'longitude': record.longitude,
+    'accuracy': record.accuracy
+  }
+  requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
+  requestBody['geopoint'] = geopoints
+  requestGenerator.body = requestBody
+  return requestGenerator
+}
 
 function requestCreator(requestType, requestBody) {
 
@@ -427,12 +452,14 @@ function requestCreator(requestType, requestBody) {
     type: requestType,
     body: ''
   }
+  
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
     requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {
 
+  
     if (offset) {
       clearTimeout(offset)
       offset = null
@@ -447,23 +474,28 @@ function requestCreator(requestType, requestBody) {
 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result
-        if (record.hasOwnProperty('latitude') && record.hasOwnProperty('longitude') && record.hasOwnProperty('accuracy')) {
-          if (record.latitude && record.longitude && record.accuracy) {
-            const geopoints = {
-              'latitude': record.latitude,
-              'longitude': record.longitude,
-              'accuracy': record.accuracy
-            }
-            requestBody['timestamp'] = fetchCurrentTime(record.serverTime)
-            requestBody['geopoint'] = geopoints
-            requestGenerator.body = requestBody
-            apiHandler.postMessage(requestGenerator)
-          } else {
-            enableGps('Fetching Location Please wait')
-          }
+        if (record.latitude && record.longitude && record.accuracy) {
+          apiHandler.postMessage(createBodyForRequestGenerator(record,requestBody,requestGenerator))
         } else {
+
           enableGps('Fetching Location Please wait')
+
+         let waitingForLocation =  setInterval(function(){
+           console.log("waiting for loc")
+       
+
+          checkLocationInRoot().then(function(rootHasLocation){
+            console.log(rootHasLocation)
+            if(rootHasLocation){
+              
+              clearInterval(waitingForLocation)
+              document.getElementById('enable-gps').remove()
+              apiHandler.postMessage(createBodyForRequestGenerator(record,requestBody,requestGenerator))
+            }
+          })
+         },2000)
         }
+
       }
     }
   }
@@ -474,15 +506,17 @@ function requestCreator(requestType, requestBody) {
 
 }
 
+
 function loadViewFromRoot(response) {
 
   if (response.data.type === 'update-app') {
-    
+
     if (native.getName() === 'Android') {
+      console.log("update App")
       Android.notification(response.data.msg)
       return
     }
-    webkit.messageHandlers.updateApp.postMessage();
+    webkit.messageHandlers.updateApp.postMessage('');
     return
   }
 
@@ -497,7 +531,7 @@ function loadViewFromRoot(response) {
   }
 
   if (response.data.type === 'manageLocation') {
-    localStorage.setItem('dbexist',firebase.auth().currentUser.uid);
+    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
     manageLocation()
     return
   }
@@ -516,9 +550,9 @@ function loadViewFromRoot(response) {
     if (document.querySelector('.undo-delete-loader')) {
       document.querySelector('.undo-delete-loader').style.display = 'block';
     }
-    if(document.querySelector('.form-field-status')){
-      if(document.querySelector('.form-field-status').classList.contains('hidden')){
-        document.querySelector('.form-field-status').classList.remove('hidden');        
+    if (document.querySelector('.form-field-status')) {
+      if (document.querySelector('.form-field-status').classList.contains('hidden')) {
+        document.querySelector('.form-field-status').classList.remove('hidden');
       }
     }
 
@@ -620,23 +654,20 @@ function onErrorMessage(error) {
 
 }
 
-function checkGpsAvail(){
-  if(native.getName() === 'Android'){
-    if(!gps.isEnabled()) {
+function checkGpsAvail() {
+  if (native.getName() === 'Android') {
+    if (!gps.isEnabled()) {
       const messageData = {
-        title:'Cannot determine Location',
-        message:'Please Turn On Gps, To Use Growthfile',
-        cancelable:true,
-        button:{
-          text:'Okay',
-          show:true,
-          clickAction:{
+        title: 'Cannot determine Location',
+        message: 'Please Turn On Gps, To Use Growthfile',
+        cancelable: true,
+        button: {
+          text: 'Okay',
+          show: true,
+          clickAction: {
             redirection: {
-              text:'',
-              value:false
-            },
-            enableGps:{
-              value:true
+              text: '',
+              value: false
             }
           }
         }
@@ -649,7 +680,7 @@ function checkGpsAvail(){
 function handleTimeout() {
 
   offset = setTimeout(function () {
-    checkGpsAvail()
+
     requestCreator('Null', 'false')
     manageLocation();
   }, 30000)

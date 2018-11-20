@@ -38,7 +38,13 @@ window.addEventListener('load', function () {
       cancelable: false,
       button: {
         text: '',
-        show: false
+        show: false,
+        clickAction: {
+          redirection: {
+            value: false,
+            text: ''
+          }
+        }
       }
     };
     Android.notification(JSON.stringify(messageData));
@@ -195,7 +201,7 @@ var native = function () {
         baseOs: splitByName[0],
         deviceBrand: splitByName[1],
         deviceModel: splitByName[2],
-        appVersion: splitByName[3],
+        appVersion: Number(splitByName[3]),
         osVersion: splitByName[4],
         id: splitByName[5]
       };
@@ -206,13 +212,13 @@ var native = function () {
       return localStorage.getItem('iosUUID');
     },
     getInfo: function getInfo() {
-      // if(!this.getName()) {
-      //   return JSON.stringify({
-      //     'id':'123',
-      //     'appVersion':'1.1.0',
-      //     'baseOs':'macOs'
-      //   })
-      // }
+      if (!this.getName()) {
+        return JSON.stringify({
+          'id': '123',
+          'appVersion': '1.1.0',
+          'baseOs': 'macOs'
+        });
+      }
       if (this.getName() === 'Android') {
         return AndroidId.getDeviceId();
       }

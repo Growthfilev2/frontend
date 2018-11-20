@@ -121,7 +121,7 @@ function fetchServerTime(deviceInfo) {
   
   const parsedDeviceInfo = JSON.parse(deviceInfo);
   
-
+  console.log(typeof parsedDeviceInfo.appVersion)
   return new Promise(function (resolve) {
     http(
       'GET',
@@ -140,9 +140,6 @@ function fetchServerTime(deviceInfo) {
             redirection: {
               text:'com.growthfile.growthfileNew',
               value:true
-            },
-            enableGps:{
-              value:false
             }
           }
         }
@@ -165,14 +162,14 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  console.log(error)
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // console.log(error)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -285,7 +282,11 @@ function initializeIDB(serverTime) {
       root.put({
         uid: auth.uid,
         fromTime: 0,
-        provider: ''
+        provider: '',
+        latitude:'',
+        longitude:'',
+        accuracy:'',
+        lastLocationTime:''
       })
       requestHandlerResponse('manageLocation')
     }
@@ -936,9 +937,9 @@ function successResponse(read,swipeInfo) {
       createUsersApiUrl(db).then(updateUserObjectStore)
 
       if (record.fromTime !== 0) {
-        setTimeout(function(){
+        // setTimeout(function(){
           requestHandlerResponse('updateIDB', 200,swipeInfo);
-        },1500)
+        // },)
       }
     }
     
