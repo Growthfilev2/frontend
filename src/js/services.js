@@ -16,6 +16,7 @@ function handleImageError(img) {
       if (record.isUpdated == 0) return
       record.isUpdated = 0
       usersObjectStore.put(record)
+    
     }
   }
   return true

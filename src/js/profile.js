@@ -82,9 +82,8 @@ function profileView(pushState) {
   
     const profileImg = document.createElement('img')
   
-    profileImg.src = firebase.auth().currentUser.photoURL;
+    profileImg.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
     profileImg.id = 'user-profile--image'
-    profileImg.setAttribute('onerror','handleImageError(this)');
   
     const overlay = document.createElement('div')
     overlay.className = 'insert-overlay'

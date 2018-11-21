@@ -428,7 +428,6 @@ function initMenu(db, officeRecord) {
   headerIcon.className = 'drawer-header-icon'
 
   headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-  headerIcon.setAttribute('onerror','handleImageError(this)');
 
   const headerDetails = document.createElement('div')
   headerDetails.className = 'header--details'
