@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('js/apiHandler.js')
+var apiHandler = new Worker('src/js/apiHandler.js')
 var html5Location;
 function handleImageError(img) {
   img.onerror = null;
@@ -227,7 +227,7 @@ function geolocationApi(method, url, data) {
 
 function manageLocation() {
 
-  const apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w'
+  const apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
   let CelllarJson;
   let geoFetchPromise;
   let navigatorFetchPromise;

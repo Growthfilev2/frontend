@@ -220,7 +220,7 @@ function geolocationApi(method, url, data) {
 
 function manageLocation() {
 
-  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = void 0;
   var geoFetchPromise = void 0;
   var navigatorFetchPromise = void 0;
@@ -295,7 +295,7 @@ function locationInterval() {
 
     var myInterval = setInterval(function () {
 
-      navigator.geolocation.watchPosition(function (position) {
+      navigator.geolocation.getCurrentPosition(function (position) {
         console.log(position.coords.latitude);
         if (!stabalzied.length) {
 
