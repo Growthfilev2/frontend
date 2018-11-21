@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('src/js/apiHandler.js')
+var apiHandler = new Worker('js/apiHandler.js')
 var html5Location;
 function handleImageError(img) {
   img.onerror = null;
@@ -11,6 +11,7 @@ function handleImageError(img) {
     const usersObjectStoreTx = db.transaction('users', 'readwrite')
     const usersObjectStore = usersObjectStoreTx.objectStore('users')
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
+      
       const record = event.target.result
       if (record.isUpdated == 0) return
       record.isUpdated = 0
@@ -185,6 +186,8 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           const result = JSON.parse(xhr.responseText)
+          console.log(result.location.lat)
+          console.log(result.location.lng)
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -193,6 +196,7 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now()
           })
         } else {
+          console.log(xhr)
           reject(xhr.statusText)
         }
       }
@@ -286,11 +290,10 @@ function locationInterval() {
       }
     }
 
-
     let myInterval = setInterval(function () {
 
      navigator.geolocation.watchPosition(function (position) {
-       
+        console.log(position.coords.latitude)
         if (!stabalzied.length) {
 
           stabalzied.push({
@@ -322,9 +325,18 @@ function locationInterval() {
             return;
           }
         } else {
-          if (count >= 10) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'lastLocationTime': Date.now(),
+            'provider': 'HTML5'
+          })
+          if (count >= 5) {
+            clearInterval(myInterval)
             const bestGeoLocation = sortedByAccuracy(stabalzied);
             resolve(bestGeoLocation)
+            return;
           }
         }
       }, function (error) {
@@ -345,7 +357,7 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   console.log(finalLocation)
-
+  if(!finalLocation) return
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -487,7 +499,6 @@ function requestCreator(requestType, requestBody) {
           checkLocationInRoot().then(function(rootHasLocation){
             console.log(rootHasLocation)
             if(rootHasLocation){
-              
               clearInterval(waitingForLocation)
               document.getElementById('enable-gps').remove()
               apiHandler.postMessage(createBodyForRequestGenerator(record,requestBody,requestGenerator))
@@ -682,7 +693,7 @@ function handleTimeout() {
 
     requestCreator('Null', 'false')
     manageLocation();
-  }, 30000)
+  }, 2000)
 
 }
 

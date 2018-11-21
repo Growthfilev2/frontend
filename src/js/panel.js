@@ -257,7 +257,9 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
     listPanel()
     creatListHeader(headerName, !hasHeaderAndCard)
   }
-  document.getElementById('activity--list').innerHTML = activityDom
+  if(document.getElementById('activity--list')) {
+    document.getElementById('activity--list').innerHTML = activityDom
+  }
 
 }
 

@@ -179,6 +179,8 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
+          console.log(result.location.lat);
+          console.log(result.location.lng);
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -187,6 +189,7 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now()
           });
         } else {
+          console.log(xhr);
           reject(xhr.statusText);
         }
       }
@@ -280,7 +283,7 @@ function locationInterval() {
     var myInterval = setInterval(function () {
 
       navigator.geolocation.watchPosition(function (position) {
-
+        console.log(position.coords.latitude);
         if (!stabalzied.length) {
 
           stabalzied.push({
@@ -311,9 +314,18 @@ function locationInterval() {
             return;
           }
         } else {
-          if (count >= 10) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'lastLocationTime': Date.now(),
+            'provider': 'HTML5'
+          });
+          if (count >= 5) {
+            clearInterval(myInterval);
             var _bestGeoLocation = sortedByAccuracy(stabalzied);
             resolve(_bestGeoLocation);
+            return;
           }
         }
       }, function (error) {
@@ -333,7 +345,7 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   console.log(finalLocation);
-
+  if (!finalLocation) return;
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
   req.onsuccess = function () {
@@ -471,7 +483,6 @@ function requestCreator(requestType, requestBody) {
             checkLocationInRoot().then(function (rootHasLocation) {
               console.log(rootHasLocation);
               if (rootHasLocation) {
-
                 clearInterval(waitingForLocation);
                 document.getElementById('enable-gps').remove();
                 apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
