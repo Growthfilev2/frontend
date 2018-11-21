@@ -504,7 +504,7 @@ function requestCreator(requestType, requestBody) {
           apiHandler.postMessage(createBodyForRequestGenerator(record,requestBody,requestGenerator))
         } else {
 
-          enableGps('Fetching Location Please wait')
+          enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.')
         }
 
       }
