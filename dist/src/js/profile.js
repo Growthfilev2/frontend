@@ -83,9 +83,8 @@ function createProfilePanel() {
 
   var profileImg = document.createElement('img');
 
-  profileImg.src = firebase.auth().currentUser.photoURL;
+  profileImg.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
   profileImg.id = 'user-profile--image';
-  profileImg.setAttribute('onerror', 'handleImageError(this)');
 
   var overlay = document.createElement('div');
   overlay.className = 'insert-overlay';
@@ -302,9 +301,8 @@ function removeLoader(url) {
 }
 
 function showProfilePicture(url) {
-  var user = firebase.auth().currentUser;
-  document.getElementById('user-profile--image').src = url || '../img/empty-user.jpg';
-  document.querySelector('.drawer-header-icon').src = url || '../img/empty-user.jpg';
+  document.getElementById('user-profile--image').src = url || './img/empty-user.jpg';
+  document.querySelector('.drawer-header-icon').src = url || './img/empty-user.jpg';
 }
 
 function authUpdatedError(error) {

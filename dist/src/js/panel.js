@@ -128,7 +128,10 @@ function getCreatorDetails(db, meta) {
   return new Promise(function (resolve) {
 
     if (meta.creator === firebase.auth().currentUser.phoneNumber) {
-      meta.creator = { photo: firebase.auth().currentUser.photoURL || './img/empty-user.jpg', number: meta.creator };
+      meta.creator = {
+        photo: firebase.auth().currentUser.photoURL || './img/empty-user.jpg',
+        number: meta.creator
+      };
       resolve(meta);
     } else {
 
@@ -138,9 +141,15 @@ function getCreatorDetails(db, meta) {
         var record = userstore.target.result;
 
         if (record && record.hasOwnProperty('photoURL')) {
-          meta.creator = { photo: userstore.target.result.photoURL || './img/empty-user.jpg', number: meta.creator };
+          meta.creator = {
+            photo: userstore.target.result.photoURL || './img/empty-user.jpg',
+            number: meta.creator
+          };
         } else {
-          meta.creator = { photo: './img/empty-user.jpg', number: meta.creator };
+          meta.creator = {
+            photo: './img/empty-user.jpg',
+            number: meta.creator
+          };
         }
 
         resolve(meta);
@@ -242,7 +251,9 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
     listPanel();
     creatListHeader(headerName, !hasHeaderAndCard);
   }
-  document.getElementById('activity--list').innerHTML = activityDom;
+  if (document.getElementById('activity--list')) {
+    document.getElementById('activity--list').innerHTML = activityDom;
+  }
 }
 
 function createActivityIcon(db) {
@@ -257,13 +268,15 @@ function createActivityIcon(db) {
       span.className = 'mdc-fab_icon material-icons';
       span.textContent = 'add';
       fab.appendChild(span);
-      document.getElementById('activity--list').appendChild(fab);
-      document.querySelector('.create-activity').addEventListener('click', function (evt) {
-        selectorUI(evt, {
-          record: '',
-          store: 'subscriptions'
+      if (document.getElementById('activity--list')) {
+        document.getElementById('activity--list').appendChild(fab);
+        document.querySelector('.create-activity').addEventListener('click', function (evt) {
+          selectorUI(evt, {
+            record: '',
+            store: 'subscriptions'
+          });
         });
-      });
+      }
     }
   };
 }
@@ -331,8 +344,15 @@ function creatListHeader(headerName, backIcon) {
 
 function scrollToActivity(yOffset) {
   if (localStorage.getItem('clickedActivity')) {
-    document.querySelector('[data-id="' + localStorage.getItem('clickedActivity') + '"]').scrollIntoView({ behavior: "instant", block: "center", "inline": "center" });
-    localStorage.removeItem('clickedActivity');
+    if (document.querySelector('[data-id="' + localStorage.getItem('clickedActivity') + '"]')) {
+
+      document.querySelector('[data-id="' + localStorage.getItem('clickedActivity') + '"]').scrollIntoView({
+        behavior: "instant",
+        block: "center",
+        "inline": "center"
+      });
+      localStorage.removeItem('clickedActivity');
+    }
     return;
   }
 
@@ -398,7 +418,6 @@ function initMenu(db, officeRecord) {
   headerIcon.className = 'drawer-header-icon';
 
   headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-  headerIcon.setAttribute('onerror', 'handleImageError(this)');
 
   var headerDetails = document.createElement('div');
   headerDetails.className = 'header--details';
@@ -428,12 +447,8 @@ function initMenu(db, officeRecord) {
     changeOfficeIon.textContent = 'arrow_drop_down';
     changeOfficeIon.onclick = function () {
       if (document.querySelector('.office-selection-lists')) return;
-      var rootStore = db.transaction('root').objectStore('root');
-      rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-        var rootData = event.target.result;
-        var officeData = rootData.offices.allOffices;
-        createOfficeSelectionUI(officeData, db);
-      };
+
+      createOfficeSelectionUI(officeRecord.allOffices, db);
     };
   }
 
@@ -458,8 +473,7 @@ function initMenu(db, officeRecord) {
     textSpan.textContent = 'All offices';
     all.onclick = function () {
       var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      allOffices('All Offices', db, true);
-
+      allOffices('All Offices', true);
       drawer.open = false;
     };
     all.appendChild(i);
@@ -485,16 +499,16 @@ function initMenu(db, officeRecord) {
 
       window.scrollTo(0, 0);
       if (filter.type === 'Pending' || filter.type === 'Cancelled') {
-        filterActivities(filter.type, db, true);
+        filterActivities(filter.type, true);
       }
       if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, db, true);
+        sortByCreator(filter.type, true);
       }
       if (filter.type === 'Urgent') {
-        sortByDates(filter.type, db, true);
+        sortByDates(filter.type, true);
       }
       if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, db, true);
+        sortByLocation(filter.type, true);
       }
       if (filter.type === 'Recent') {
         listView();
@@ -514,7 +528,7 @@ function initMenu(db, officeRecord) {
   document.body.appendChild(aside);
 }
 
-function createOfficeSelectionUI(allOffices, db) {
+function createOfficeSelectionUI(allOffices) {
 
   document.querySelector('.filter-sort--list').classList.add('hidden');
   var navContent = document.createElement('nav');
@@ -545,33 +559,37 @@ function createOfficeSelectionUI(allOffices, db) {
   });
 }
 
-function allOffices(type, db, pushState) {
+function allOffices(type, pushState) {
   if (pushState) {
 
     history.pushState(["allOffices", type], null, null);
   }
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
 
-  var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
-  var activityDom = '';
-  activityStore.openCursor(null, 'prev').onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) {
-      appendActivityListToDom(activityDom, false, type);
-      createActivityIcon(db);
-      return;
-    }
+    var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
+    var activityDom = '';
+    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) {
+        appendActivityListToDom(activityDom, false, type);
+        createActivityIcon(db);
+        return;
+      }
 
-    if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-      createActivityList(db, cursor.value).then(function (li) {
+      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+        createActivityList(db, cursor.value).then(function (li) {
 
-        activityDom += li;
-      });
-    }
-    cursor.continue();
+          activityDom += li;
+        });
+      }
+      cursor.continue();
+    };
   };
 }
 
-function filterActivities(type, db, pushState) {
+function filterActivities(type, pushState) {
   if (pushState) {
 
     history.pushState(["filterActivities", type], null, null);
@@ -582,7 +600,6 @@ function filterActivities(type, db, pushState) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-
     var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
     var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
 
@@ -611,87 +628,96 @@ function filterActivities(type, db, pushState) {
   };
 }
 
-function sortByCreator(type, db, pushState) {
+function sortByCreator(type, pushState) {
 
   if (pushState) {
     history.pushState(["sortByCreator", type], null, null);
   } else {
     history.replaceState(["sortByCreator", type], null, null);
   }
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
 
-  var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
-  var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+    var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
+    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
 
-  var activityDom = '';
-  var me = firebase.auth().currentUser.phoneNumber;
-  activityStore.openCursor(null, 'prev').onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) {
-      var yOffset = window.pageYOffset;
-      setTimeout(function () {
+    var activityDom = '';
+    var me = firebase.auth().currentUser.phoneNumber;
+    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) {
+        var yOffset = window.pageYOffset;
+        setTimeout(function () {
 
-        appendActivityListToDom(activityDom, false, type);
-        createActivityIcon(db);
-        scrollToActivity(yOffset);
-      }, 200);
-      return;
-    }
-    if (type === 'Incoming') {
-      if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
-
-          activityDom += li;
-        });
+          appendActivityListToDom(activityDom, false, type);
+          createActivityIcon(db);
+          scrollToActivity(yOffset);
+        }, 200);
+        return;
       }
-    }
-    if (type === 'Outgoing') {
-      if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
-          activityDom += li;
-        });
-      }
-    }
+      if (type === 'Incoming') {
+        if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+          createActivityList(db, cursor.value).then(function (li) {
 
-    cursor.continue();
+            activityDom += li;
+          });
+        }
+      }
+      if (type === 'Outgoing') {
+        if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
+          createActivityList(db, cursor.value).then(function (li) {
+            activityDom += li;
+          });
+        }
+      }
+
+      cursor.continue();
+    };
   };
 }
 
-function sortByDates(type, db, pushState) {
+function sortByDates(type, pushState) {
   if (pushState) {
     history.pushState(["sortByDates", type], null, null);
   } else {
     history.replaceState(["sortByDates", type], null, null);
   }
-  var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
 
-  var today = moment().format('YYYY-MM-DD');
-  var sortingOrder = {
-    HIGH: [],
-    LOW: []
-  };
-  var calendar = db.transaction('calendar').objectStore('calendar').index('range');
-  calendar.openCursor().onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) {
-      sortingOrder['HIGH'].sort(function (a, b) {
-        return moment(b.start).valueOf() - moment(a.start).valueOf();
-      });
+    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
 
-      sortingOrder['LOW'].sort(function (a, b) {
-        return moment(b.end).valueOf() - moment(a.end).valueOf();
-      });
+    var today = moment().format('YYYY-MM-DD');
+    var sortingOrder = {
+      HIGH: [],
+      LOW: []
+    };
+    var calendar = db.transaction('calendar').objectStore('calendar').index('range');
+    calendar.openCursor().onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) {
+        sortingOrder['HIGH'].sort(function (a, b) {
+          return moment(b.start).valueOf() - moment(a.start).valueOf();
+        });
 
-      generateActivitiesByDate(sortBykeys(sortingOrder));
-      return;
-    }
+        sortingOrder['LOW'].sort(function (a, b) {
+          return moment(b.end).valueOf() - moment(a.end).valueOf();
+        });
 
-    if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice) {
-      sortingOrder['HIGH'].push(cursor.value);
-    } else {
-      sortingOrder['LOW'].push(cursor.value);
-    }
+        generateActivitiesByDate(sortBykeys(sortingOrder));
+        return;
+      }
 
-    cursor.continue();
+      if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice) {
+        sortingOrder['HIGH'].push(cursor.value);
+      } else {
+        sortingOrder['LOW'].push(cursor.value);
+      }
+
+      cursor.continue();
+    };
   };
 }
 
@@ -758,7 +784,7 @@ function sortBykeys(data) {
   return holder;
 }
 
-function sortByLocation(type, db, pushState) {
+function sortByLocation(type, pushState) {
   if (pushState) {
     history.pushState(['sortByLocation', type], null, null);
   } else {
@@ -773,33 +799,38 @@ function sortByLocation(type, db, pushState) {
   });
 
   nearestLocationHandler.onmessage = function (records) {
-    sortActivitiesByLocation(db, records.data);
+    sortActivitiesByLocation(records.data);
   };
   nearestLocationHandler.onerror = locationSortError;
 }
 
-function sortActivitiesByLocation(db, distanceArr) {
-  var activityDom = '';
-  var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+function sortActivitiesByLocation(distanceArr) {
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
 
-  var activityObjectStore = db.transaction('activity').objectStore('activity');
-  for (var i = 0; i < distanceArr.length; i++) {
+    var activityDom = '';
+    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
 
-    activityObjectStore.get(distanceArr[i].activityId).onsuccess = function (event) {
-      if (event.target.result.office === Curroffice && event.target.result !== 'CANCELLED') {
+    var activityObjectStore = db.transaction('activity').objectStore('activity');
+    for (var i = 0; i < distanceArr.length; i++) {
 
-        createActivityList(db, event.target.result).then(function (li) {
-          activityDom += li;
-        });
-      }
-    };
-  }
-  setTimeout(function () {
-    var yOffset = window.pageYOffset;
-    appendActivityListToDom(activityDom, false, 'Nearby');
-    createActivityIcon(db);
-    scrollToActivity(yOffset);
-  }, 500);
+      activityObjectStore.get(distanceArr[i].activityId).onsuccess = function (event) {
+        if (event.target.result.office === Curroffice && event.target.result !== 'CANCELLED') {
+
+          createActivityList(db, event.target.result).then(function (li) {
+            activityDom += li;
+          });
+        }
+      };
+    }
+    setTimeout(function () {
+      var yOffset = window.pageYOffset;
+      appendActivityListToDom(activityDom, false, 'Nearby');
+      createActivityIcon(db);
+      scrollToActivity(yOffset);
+    }, 500);
+  };
 }
 
 function locationSortError(error) {

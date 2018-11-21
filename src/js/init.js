@@ -80,6 +80,10 @@ window.addEventListener('load', function () {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
+  if (event.state[0] === 'listView') {
+    window[event.state[0]](true)
+    return;
+  }
 
   if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
     const req = indexedDB.open(localStorage.getItem('dbexist'))
@@ -87,12 +91,10 @@ window.onpopstate = function (event) {
       const db = req.result
       window[event.state[0]](event.state[1], db, false);
     }
-  } else if (event.state[0] === 'listView') {
-    window[event.state[0]](true)
-  } else {
-    window[event.state[0]](event.state[1], false)
-  }
-
+    return;
+  } 
+  
+  window[event.state[0]](event.state[1], false)
 }
 
 function backNav() {
@@ -228,7 +230,7 @@ let native = function () {
       if(!this.getName()) {
         return JSON.stringify({
           'id':'123',
-          'appVersion':'1.1.0',
+          'appVersion':2,
           'baseOs':'macOs'
         })
       }

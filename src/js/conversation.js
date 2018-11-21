@@ -23,14 +23,17 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
-        console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
-        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
+        if(document.querySelector('.activity--chat-card-container')){
+          console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
+          document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
+        }
         return
       }
       if (!document.getElementById(cursor.value.addendumId)) {
-
         createComment(db, cursor.value, user).then(function (comment) {
-          document.getElementById('chat-container').appendChild(comment)
+          if(document.getElementById('chat-container')){
+            document.getElementById('chat-container').appendChild(comment)
+          }
         })
       }
 
@@ -181,8 +184,9 @@ function sendComment(id) {
 
       div.appendChild(checkbox)
 
-
-      document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+      if(document.querySelector('.status--change-cont')){
+        document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+      }
     }
 
 
@@ -1946,7 +1950,7 @@ function sendComment(id) {
     assigneeLi.dataset.value = userRecord.mobile
     const photoGraphic = document.createElement('img')
     photoGraphic.classList.add('mdc-list-item__graphic')
-
+    photoGraphic.dataset.number = userRecord.mobile
     if (userRecord.mobile === firebase.auth().currentUser.phoneNumber) {
       photoGraphic.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     } else {
@@ -2108,6 +2112,7 @@ function sendComment(id) {
     img.className = 'profile-container--main mdc-image-list__image '
     img.id = 'attachment-picture'
     img.dataset.photoKey = key
+    
     img.setAttribute('onerror', 'handleImageErrorAttachment(this)')
     if (!str) {
       img.src = './img/placeholder.png'

@@ -6,12 +6,9 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
 // Backend API Url
-const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
 
 /** reinitialize the firebase app */
-
-
-
 
 // get Device time
 function getTime() {
@@ -162,14 +159,14 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  // console.log(error)
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  console.log(error)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -650,7 +647,6 @@ function putAssignessInStore(db, assigneeArray) {
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
       const cursor = event.target.result
       if (cursor) return
-
       usersObjectStore.add({
         mobile: assignee,
         isUpdated: 0,
@@ -816,7 +812,8 @@ function updateUserObjectStore(successUrl) {
           // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
-
+        if(!userProfile.hasOwnProperty(cursor.primaryKey)) return
+        
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL

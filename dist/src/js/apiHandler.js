@@ -149,15 +149,11 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  console.log(error);
+  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
-
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
@@ -585,7 +581,6 @@ function putAssignessInStore(db, assigneeArray) {
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
       var cursor = event.target.result;
       if (cursor) return;
-
       usersObjectStore.add({
         mobile: assignee,
         isUpdated: 0,
@@ -743,6 +738,7 @@ function updateUserObjectStore(successUrl) {
         // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
         return;
       }
+      if (!userProfile.hasOwnProperty(cursor.primaryKey)) return;
 
       if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
         var record = cursor.value;
