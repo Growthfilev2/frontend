@@ -148,8 +148,7 @@ function fetchServerTime(deviceInfo) {
   });
 }
 
-function instant(error) {}
-// console.log(error)
+function instant(error) {
 http(
   'POST',
   `${apiUrl}services/logs`,
@@ -157,6 +156,7 @@ http(
 ).then(function (response) {
   console.log(response)
 }).catch(console.log)
+}
 
 
 /**
