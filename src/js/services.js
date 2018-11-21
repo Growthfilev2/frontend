@@ -596,7 +596,7 @@ function loadViewFromRoot(response) {
   req.onsuccess = function () {
     const db = req.result
 
-    if (response.data.type === 'updateAssigneesList') {
+    if (response.data.type === 'updateAssigneesList') { 
       console.log("only update assingee list")
       const activityObjectStore = db.transaction('activity').objectStore('activity')
       //here dbName is activityId
@@ -643,6 +643,7 @@ function loadViewFromRoot(response) {
 
       if (history.state[0] === 'profileView') return
 
+      
 
       window[history.state[0]](history.state[1], false)
       handleTimeout()
