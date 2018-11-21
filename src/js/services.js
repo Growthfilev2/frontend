@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('src/js/apiHandler.js')
+var apiHandler = new Worker('js/apiHandler.js')
 var html5Location;
 function handleImageError(img) {
   img.onerror = null;
@@ -13,6 +13,10 @@ function handleImageError(img) {
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
 
       const record = event.target.result
+      if(!record) {
+        return
+      }
+
       if (record.isUpdated == 0) return
       record.isUpdated = 0
       usersObjectStore.put(record)
@@ -695,7 +699,7 @@ function handleTimeout() {
 
   requestCreator('Null', 'false')
     manageLocation();
-  }, 2000)
+  }, 5000)
 
 }
 

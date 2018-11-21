@@ -356,8 +356,11 @@ function creatListHeader(headerName, backIcon) {
 
 function scrollToActivity(yOffset){
   if (localStorage.getItem('clickedActivity')) {
-    document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
-    localStorage.removeItem('clickedActivity')
+    if(document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`)){
+
+      document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({behavior:"instant",block:"center","inline":"center"})
+      localStorage.removeItem('clickedActivity')
+    }
     return
   }
   
@@ -819,7 +822,7 @@ function sortByLocation(type, db, pushState) {
     history.replaceState(['sortByLocation',type],null,null)
   }
   const dbName = firebase.auth().currentUser.uid
-  const nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js')
+  const nearestLocationHandler = new Worker('js/nearestLocationHandler.js')
 
     nearestLocationHandler.postMessage({
     

@@ -160,13 +160,13 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error)
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -647,7 +647,6 @@ function putAssignessInStore(db, assigneeArray) {
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
       const cursor = event.target.result
       if (cursor) return
-
       usersObjectStore.add({
         mobile: assignee,
         isUpdated: 0,
@@ -813,7 +812,8 @@ function updateUserObjectStore(successUrl) {
           // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
-
+        if(!userProfile.hasOwnProperty(cursor.primaryKey)) return
+        
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL

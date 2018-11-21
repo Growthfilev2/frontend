@@ -259,13 +259,15 @@ function createActivityIcon(db) {
       span.className = 'mdc-fab_icon material-icons';
       span.textContent = 'add';
       fab.appendChild(span);
-      document.getElementById('activity--list').appendChild(fab);
-      document.querySelector('.create-activity').addEventListener('click', function (evt) {
-        selectorUI(evt, {
-          record: '',
-          store: 'subscriptions'
+      if (document.getElementById('activity--list')) {
+        document.getElementById('activity--list').appendChild(fab);
+        document.querySelector('.create-activity').addEventListener('click', function (evt) {
+          selectorUI(evt, {
+            record: '',
+            store: 'subscriptions'
+          });
         });
-      });
+      }
     }
   };
 }
@@ -333,8 +335,11 @@ function creatListHeader(headerName, backIcon) {
 
 function scrollToActivity(yOffset) {
   if (localStorage.getItem('clickedActivity')) {
-    document.querySelector('[data-id="' + localStorage.getItem('clickedActivity') + '"]').scrollIntoView({ behavior: "instant", block: "center", "inline": "center" });
-    localStorage.removeItem('clickedActivity');
+    if (document.querySelector('[data-id="' + localStorage.getItem('clickedActivity') + '"]')) {
+
+      document.querySelector('[data-id="' + localStorage.getItem('clickedActivity') + '"]').scrollIntoView({ behavior: "instant", block: "center", "inline": "center" });
+      localStorage.removeItem('clickedActivity');
+    }
     return;
   }
 

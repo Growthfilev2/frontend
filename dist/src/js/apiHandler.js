@@ -150,9 +150,13 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error);
-  http('POST', apiUrl + 'services/logs', error).then(function (response) {
-    console.log(response);
-  }).catch(console.log);
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**
@@ -739,7 +743,6 @@ function updateUserObjectStore(successUrl) {
         // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
         return;
       }
-
       if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
         var record = cursor.value;
         record.photoURL = userProfile[cursor.primaryKey].photoURL;
