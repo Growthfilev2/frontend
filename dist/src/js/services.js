@@ -11,6 +11,7 @@ function handleImageError(img) {
     var usersObjectStoreTx = db.transaction('users', 'readwrite');
     var usersObjectStore = usersObjectStoreTx.objectStore('users');
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
+
       var record = event.target.result;
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
@@ -670,7 +671,7 @@ function handleTimeout() {
 
     requestCreator('Null', 'false');
     manageLocation();
-  }, 30000);
+  }, 2000);
 }
 
 function getInputText(selector) {

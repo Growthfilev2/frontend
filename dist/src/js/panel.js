@@ -242,7 +242,9 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
     listPanel();
     creatListHeader(headerName, !hasHeaderAndCard);
   }
-  document.getElementById('activity--list').innerHTML = activityDom;
+  if (document.getElementById('activity--list')) {
+    document.getElementById('activity--list').innerHTML = activityDom;
+  }
 }
 
 function createActivityIcon(db) {
@@ -398,7 +400,6 @@ function initMenu(db, officeRecord) {
   headerIcon.className = 'drawer-header-icon';
 
   headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-  headerIcon.setAttribute('onerror', 'handleImageError(this)');
 
   var headerDetails = document.createElement('div');
   headerDetails.className = 'header--details';
@@ -582,7 +583,6 @@ function filterActivities(type, db, pushState) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-
     var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
     var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
 

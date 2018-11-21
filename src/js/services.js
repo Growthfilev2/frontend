@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('js/apiHandler.js')
+var apiHandler = new Worker('src/js/apiHandler.js')
 var html5Location;
 function handleImageError(img) {
   img.onerror = null;
@@ -11,7 +11,7 @@ function handleImageError(img) {
     const usersObjectStoreTx = db.transaction('users', 'readwrite')
     const usersObjectStore = usersObjectStoreTx.objectStore('users')
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-      
+
       const record = event.target.result
       if (record.isUpdated == 0) return
       record.isUpdated = 0
@@ -307,6 +307,7 @@ function locationInterval() {
           return
         }
 
+        
 
         if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
           ++count
@@ -692,7 +693,7 @@ function handleTimeout() {
 
   offset = setTimeout(function () {
 
-    requestCreator('Null', 'false')
+  requestCreator('Null', 'false')
     manageLocation();
   }, 2000)
 

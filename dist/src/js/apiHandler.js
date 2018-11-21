@@ -148,16 +148,12 @@ function fetchServerTime(deviceInfo) {
   });
 }
 
-function instant(error) {}
-// console.log(error)
-// http(
-//   'POST',
-//   `${apiUrl}services/logs`,
-//   error
-// ).then(function (response) {
-//   console.log(response)
-// }).catch(console.log)
-
+function instant(error) {
+  console.log(error);
+  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
+}
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.

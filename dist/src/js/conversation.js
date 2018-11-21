@@ -1847,7 +1847,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   assigneeLi.dataset.value = userRecord.mobile;
   var photoGraphic = document.createElement('img');
   photoGraphic.classList.add('mdc-list-item__graphic');
-
+  photoGraphic.dataset.number = userRecord.mobile;
   if (userRecord.mobile === firebase.auth().currentUser.phoneNumber) {
     photoGraphic.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
   } else {
@@ -1997,6 +1997,7 @@ function setFilePath(str, key, show) {
   img.className = 'profile-container--main mdc-image-list__image ';
   img.id = 'attachment-picture';
   img.dataset.photoKey = key;
+
   img.setAttribute('onerror', 'handleImageErrorAttachment(this)');
   if (!str) {
     img.src = './img/placeholder.png';

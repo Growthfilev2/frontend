@@ -275,13 +275,15 @@ function createActivityIcon(db) {
       span.className = 'mdc-fab_icon material-icons'
       span.textContent = 'add'
       fab.appendChild(span)
-      document.getElementById('activity--list').appendChild(fab)
-      document.querySelector('.create-activity').addEventListener('click', function (evt) {
-        selectorUI(evt, {
-          record: '',
-          store: 'subscriptions',
+      if(document.getElementById('activity--list')){
+        document.getElementById('activity--list').appendChild(fab)
+        document.querySelector('.create-activity').addEventListener('click', function (evt) {
+          selectorUI(evt, {
+            record: '',
+            store: 'subscriptions',
+          })
         })
-      })
+      }
     }
   }
 }
@@ -621,10 +623,7 @@ function filterActivities(type, db, pushState) {
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function(){
-    const db = req.result;
-
-  
-
+    const db = req.result
   const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
   const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
 

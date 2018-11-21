@@ -10,9 +10,6 @@ const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 /** reinitialize the firebase app */
 
-
-
-
 // get Device time
 function getTime() {
   return Date.now()
@@ -162,14 +159,14 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-  // console.log(error)
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  console.log(error)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
