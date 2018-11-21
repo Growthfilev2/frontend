@@ -585,7 +585,6 @@ function putAssignessInStore(db, assigneeArray) {
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
       var cursor = event.target.result;
       if (cursor) return;
-
       usersObjectStore.add({
         mobile: assignee,
         isUpdated: 0,
@@ -743,6 +742,8 @@ function updateUserObjectStore(successUrl) {
         // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
         return;
       }
+      if (!userProfile.hasOwnProperty(cursor.primaryKey)) return;
+
       if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
         var record = cursor.value;
         record.photoURL = userProfile[cursor.primaryKey].photoURL;

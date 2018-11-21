@@ -305,7 +305,7 @@ function locationInterval() {
 
     let myInterval = setInterval(function () {
 
-     navigator.geolocation.watchPosition(function (position) {
+     navigator.geolocation.getCurrentPosition(function (position) {
         console.log(position.coords.latitude)
         if (!stabalzied.length) {
 
@@ -693,7 +693,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
   requestCreator('Null', 'false')
     manageLocation();
-  }, 5000)
+  }, 10000)
 }
 
 function getInputText(selector) {

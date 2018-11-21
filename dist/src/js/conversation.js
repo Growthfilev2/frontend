@@ -25,14 +25,17 @@ function fetchAddendumForComment(id) {
     addendumIndex.openCursor(id).onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) {
-        console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
-        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
+        if (document.querySelector('.activity--chat-card-container')) {
+          console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
+          document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
+        }
         return;
       }
       if (!document.getElementById(cursor.value.addendumId)) {
-
         createComment(db, cursor.value, user).then(function (comment) {
-          document.getElementById('chat-container').appendChild(comment);
+          if (document.getElementById('chat-container')) {
+            document.getElementById('chat-container').appendChild(comment);
+          }
         });
       }
 
@@ -172,7 +175,9 @@ function statusChange(db, id) {
 
       div.appendChild(checkbox);
 
-      document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML;
+      if (document.querySelector('.status--change-cont')) {
+        document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML;
+      }
     }
 
     var switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));

@@ -13,6 +13,10 @@ function handleImageError(img) {
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
 
       var record = event.target.result;
+      if (!record) {
+        return;
+      }
+
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
       usersObjectStore.put(record);
@@ -83,6 +87,14 @@ function enableGps(messageString) {
 
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer mock-footer';
+
+    var ok = document.createElement('button');
+    ok.type = 'button';
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    ok.textContent = 'Ok';
+    ok.style.backgroundColor = '#3498db';
+
+    footer.appendChild(ok);
 
     surface.appendChild(section);
     surface.appendChild(footer);
@@ -477,19 +489,6 @@ function requestCreator(requestType, requestBody) {
         } else {
 
           enableGps('Fetching Location Please wait');
-
-          var waitingForLocation = setInterval(function () {
-            console.log("waiting for loc");
-
-            checkLocationInRoot().then(function (rootHasLocation) {
-              console.log(rootHasLocation);
-              if (rootHasLocation) {
-                clearInterval(waitingForLocation);
-                document.getElementById('enable-gps').remove();
-                apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
-              }
-            });
-          }, 2000);
         }
       };
     };
@@ -668,10 +667,9 @@ function checkGpsAvail() {
 function handleTimeout() {
 
   offset = setTimeout(function () {
-
     requestCreator('Null', 'false');
     manageLocation();
-  }, 2000);
+  }, 10000);
 }
 
 function getInputText(selector) {
