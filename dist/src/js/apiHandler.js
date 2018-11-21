@@ -7,7 +7,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
-var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
+var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
 
 /** reinitialize the firebase app */
 
@@ -149,13 +149,13 @@ function fetchServerTime(deviceInfo) {
 }
 
 function instant(error) {
-http(
-  'POST',
-  `${apiUrl}services/logs`,
-  error
-).then(function (response) {
-  console.log(response)
-}).catch(console.log)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
