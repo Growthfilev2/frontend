@@ -93,6 +93,14 @@ function enableGps(messageString) {
     const footer = document.createElement('footer')
     footer.className = 'mdc-dialog__footer mock-footer'
 
+    const ok = document.createElement('button')
+    ok.type = 'button'
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel'
+    ok.textContent = 'Ok'
+    ok.style.backgroundColor = '#3498db'
+
+    footer.appendChild(ok)
+
     surface.appendChild(section)
     surface.appendChild(footer)
     aside.appendChild(surface)
@@ -497,20 +505,6 @@ function requestCreator(requestType, requestBody) {
         } else {
 
           enableGps('Fetching Location Please wait')
-
-         let waitingForLocation =  setInterval(function(){
-           console.log("waiting for loc")
-       
-
-          checkLocationInRoot().then(function(rootHasLocation){
-            console.log(rootHasLocation)
-            if(rootHasLocation){
-              clearInterval(waitingForLocation)
-              document.getElementById('enable-gps').remove()
-              apiHandler.postMessage(createBodyForRequestGenerator(record,requestBody,requestGenerator))
-            }
-          })
-         },2000)
         }
 
       }
@@ -643,7 +637,7 @@ function loadViewFromRoot(response) {
 
       if (history.state[0] === 'profileView') return
 
-      
+
 
       window[history.state[0]](history.state[1], false)
       handleTimeout()
@@ -697,11 +691,9 @@ function checkGpsAvail() {
 function handleTimeout() {
 
   offset = setTimeout(function () {
-
   requestCreator('Null', 'false')
     manageLocation();
   }, 5000)
-
 }
 
 function getInputText(selector) {
