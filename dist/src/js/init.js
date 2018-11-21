@@ -277,7 +277,9 @@ function init(auth) {
       requestCreator('now', native.getInfo());
     }
   }).catch(function (error) {
-    console.log(error);
+    const message = 'A Problem occured with opening Growthfile. Try again later'
+    snacks(message)
+    requestCreator('instant',JSON.stringify({message:error}))
   });
   return;
 }
