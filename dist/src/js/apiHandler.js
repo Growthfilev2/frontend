@@ -738,7 +738,9 @@ function updateUserObjectStore(successUrl) {
         // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
         return;
       }
-      if (!userProfile.hasOwnProperty(cursor.primaryKey)) return;
+      if(!userProfile.hasOwnProperty(cursor.primaryKey)) return;
+      if(!userProfile[cursor.primaryKey].hasOwnProperty('displayName')) return;
+      if(!userProfile[cursor.primaryKey].hasOwnProperty('photoURL')) return;
 
       if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
         var record = cursor.value;
