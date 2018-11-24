@@ -544,7 +544,7 @@ function loadViewFromRoot(response) {
       Android.notification(response.data.msg)
       return
     }
-    webkit.messageHandlers.updateApp.postMessage('');
+    webkit.messageHandlers.updateApp.postMessage();
     return
   }
 
