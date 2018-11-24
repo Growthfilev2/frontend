@@ -1,6 +1,4 @@
-
 // import firebase app script because there is no native support of firebase inside web workers
-
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
@@ -90,19 +88,20 @@ function http(method, url, data) {
         xhr.setRequestHeader('Authorization', `Bearer ${idToken}`)
 
         xhr.onreadystatechange = function () {
+          console.log(xhr.status)
           if (xhr.readyState === 4) {
-            if (xhr.status > 226) {
-              const errorObject = JSON.parse(xhr.response)
-          
-              
-              requestHandlerResponse('error', errorObject.code, errorObject.message)
-              
-              return reject(JSON.parse(xhr.response))
-              // return reject(xhr)
+            console.log(xhr.status)
+            if(!xhr.status) {
+               requestHandlerResponse('android-stop-refreshing',400,'true')
+              return;
             }
 
-            if (!xhr.responseText) return resolve('success')
-            resolve(JSON.parse(xhr.responseText))
+            if (xhr.status > 226) {
+              const errorObject = JSON.parse(xhr.response)
+              requestHandlerResponse('error', errorObject.code, errorObject.message)
+              return reject(JSON.parse(xhr.response))
+            }
+            xhr.responseText ?  resolve(JSON.parse(xhr.responseText)) : resolve('success')
           }
         }
 
@@ -153,6 +152,7 @@ function fetchServerTime(deviceInfo) {
       
       resolve(response.timestamp)
     }).catch(function (error) {
+
       instant(createLog(error.message, deviceInfo))
     })
   })
@@ -433,6 +433,7 @@ function create(body) {
         resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
       })
       .catch(function (error) {
+        console.log(error)
         instant(createLog(error.message, body))
       })
   })
@@ -994,7 +995,9 @@ function setUniqueOffice(data) {
         record.offices = offices
         rootObjectStore.put(record)
         if (data.firstTime === 0) {
-          requestHandlerResponse('updateIDB', 200, data.swipe)
+          setTimeout(function(){
+            requestHandlerResponse('updateIDB', 200, data.swipe)
+          },1000)
         }
         return
       }
@@ -1002,7 +1005,9 @@ function setUniqueOffice(data) {
       record.offices = offices
       rootObjectStore.put(record)
       if (data.firstTime === 0) {
-        requestHandlerResponse('updateIDB', 200, data.swipe)
+        setTimeout(function(){
+          requestHandlerResponse('updateIDB', 200, data.swipe)
+        },1000)
       }
     }
   }
@@ -1023,10 +1028,11 @@ function updateIDB(param) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          console.log(response)
+          if(!response) return;
           successResponse(response,param.swipe)
         })
         .catch(function (error) {
+         
           instant(createLog(error.message, root.target.result.fromTime));
         })
     }

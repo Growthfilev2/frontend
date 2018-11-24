@@ -198,9 +198,6 @@ function statusChange(db, id) {
 }
 
 function resetStatusConfirmation(switchControl, record) {
-  document.querySelector('.form-field-status').classList.remove('hidden');
-
-  document.querySelector('.status--change-cont .status-loader').remove();
   if (record.status === 'CONFIRMED') {
     switchControl.checked = true;
   } else {
@@ -1086,7 +1083,9 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       document.getElementById(convertKeyToId(attr.key)).querySelector('[data-primary]').textContent = data.primary;
       document.getElementById(convertKeyToId(attr.key)).querySelector('[data-secondary]').textContent = data.secondary.address;
-      document.getElementById('send-activity').classList.remove('hidden');
+      if (!document.getElementById('send-activity').dataset.progress) {
+        document.getElementById('send-activity').classList.remove('hidden');
+      }
 
       if (!activityRecord.hasOwnProperty('create')) {
         activityStore.put(updatedActivity);
@@ -1120,7 +1119,9 @@ function updateDomFromIDB(activityRecord, attr, data) {
     if (data.hasOwnProperty('secondary')) {
       document.getElementById(convertKeyToId(attr.key)).querySelector('[data-secondary]').textContent = data.secondary.address;
     }
-    document.getElementById('send-activity').classList.remove('hidden');
+    if (!document.getElementById('send-activity').dataset.progress) {
+      document.getElementById('send-activity').classList.remove('hidden');
+    }
   };
 }
 
@@ -1250,6 +1251,7 @@ function updateCreateActivity(record, pushState) {
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
         if (isLocationVerified()) {
+          this.dataset.progress = true;
           sendActivity(record);
         }
       });
@@ -1263,8 +1265,11 @@ function updateCreateActivity(record, pushState) {
     var inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
       inputFields[i].addEventListener('input', function (e) {
-        if (document.getElementById('send-activity').classList.contains('hidden')) {
-          document.getElementById('send-activity').classList.remove('hidden');
+        if (!document.getElementById('send-activity').dataset.progress) {
+
+          if (document.getElementById('send-activity').classList.contains('hidden')) {
+            document.getElementById('send-activity').classList.remove('hidden');
+          }
         }
       });
     }
@@ -1279,8 +1284,11 @@ function updateCreateActivity(record, pushState) {
         }, {
           primary: select.value
         });
-        if (document.getElementById('send-activity').classList.contains('hidden')) {
-          document.getElementById('send-activity').classList.remove('hidden');
+        if (!document.getElementById('send-activity').dataset.progress) {
+
+          if (document.getElementById('send-activity').classList.contains('hidden')) {
+            document.getElementById('send-activity').classList.remove('hidden');
+          }
         }
       });
     }
@@ -1990,7 +1998,9 @@ function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
     document.getElementById('attachment-picture').src = 'data:image/jpeg;base64,' + str;
-    document.getElementById('send-activity').classList.remove('hidden');
+    if (!document.getElementById('send-activity').dataset.progress) {
+      document.getElementById('send-activity').classList.remove('hidden');
+    }
     return;
   }
   var li = document.createElement('li');
@@ -2245,8 +2255,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   for (var i = 0; i < record.venue.length; i++) {
     record.venue[i].geopoint = {
-      latitude: record.venue[i].geopoint['_latitude'],
-      longitude: record.venue[i].geopoint['_longitude']
+      latitude: record.venue[i].geopoint['_latitude'] || "",
+      longitude: record.venue[i].geopoint['_longitude'] || ""
     };
   }
 
@@ -2260,20 +2270,19 @@ function insertInputsIntoActivity(record, activityStore) {
 }
 
 function sendUpdateReq(requiredObject, record) {
-  if (!record.hasOwnProperty('create')) {
 
+  if (!record.hasOwnProperty('create')) {
     requiredObject.activityId = record.activityId;
     document.querySelector('header').appendChild(progressBar());
     document.querySelector('#send-activity').classList.add('hidden');
-
     requestCreator('update', requiredObject);
-
     return;
   }
 
   requiredObject.office = record.office;
   requiredObject.template = record.template;
   requiredObject.share = record.assignees;
+
   document.querySelector('header').appendChild(progressBar());
   document.querySelector('#send-activity').classList.add('hidden');
   requestCreator('create', requiredObject);

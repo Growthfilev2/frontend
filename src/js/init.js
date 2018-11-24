@@ -218,7 +218,8 @@ let native = function () {
         deviceModel:splitByName[2],
         appVersion:Number(splitByName[3]),
         osVersion:splitByName[4],
-        id:splitByName[5]
+        id:splitByName[5],
+        initConnection:splitByName[6]
       }
       
       localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
@@ -262,7 +263,6 @@ function removeIDBInstance(auth) {
   })
 }
 
-
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -274,11 +274,8 @@ function startApp() {
 
     document.getElementById("main-layout-app").style.display = 'block'
     init(auth);
-   
   })
 }
-
-
 
 function init(auth) {
 
@@ -296,6 +293,9 @@ function init(auth) {
   document.getElementById('growthfile').appendChild(loader('init-loader'))
   /** when app initializes for the first time */
   console.log("initialzie idb")
+  const deviceInfo = JSON.parse(native.getInfo());
+
+ 
   removeIDBInstance(auth).then(function(isRemoved){
     if(isRemoved){
       requestCreator('now', native.getInfo())
@@ -305,3 +305,4 @@ function init(auth) {
   })
   return
 }
+
