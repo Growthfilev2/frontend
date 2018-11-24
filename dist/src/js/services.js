@@ -1,6 +1,7 @@
 var offset = '';
 var apiHandler = new Worker('src/js/apiHandler.js');
 var html5Location;
+
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
@@ -161,15 +162,7 @@ function snacks(message, type) {
     message: message,
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
-    actionHandler: function actionHandler() {
-
-      if (type) {
-        requestCreator('statusChange', {
-          activityId: type.id,
-          status: 'PENDING'
-        });
-      }
-    }
+    actionHandler: function actionHandler() {}
   };
 
   var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));
@@ -178,6 +171,9 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
+  if (!serverTime) {
+    debugger;
+  }
   return Date.now() + serverTime;
 }
 
@@ -192,8 +188,7 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
-          console.log(result.location.lat);
-          console.log(result.location.lng);
+
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -208,7 +203,7 @@ function geolocationApi(method, url, data) {
       }
     };
     if (!data) {
-      resolve(undefined);
+      resolve(null);
     } else {
       console.log(data);
       xhr.send(data);
@@ -230,14 +225,19 @@ function manageLocation() {
       CelllarJson = Towers.getCellularData();
     } catch (e) {
       requestCreator('instant', JSON.stringify({
-        message: e.message
+        message: {
+          error: e.message,
+          file: 'services.js',
+          lineNo: 239,
+          device: JSON.parse(native.getInfo()),
+          help: 'Problem in calling method for fetching cellular towers'
+        }
       }));
     }
   } else {
     CelllarJson = false;
   }
 
-  // if(moment(record.lastLocationTime - Date.now()).format('m') < 30) return
   if (CelllarJson) {
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
@@ -257,11 +257,8 @@ function manageLocation() {
     var removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null;
     });
-
     console.log(removeFalseData);
-
     var mostAccurate = sortedByAccuracy(removeFalseData);
-
     updateLocationInRoot(mostAccurate);
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -295,7 +292,7 @@ function locationInterval() {
 
     var myInterval = setInterval(function () {
 
-      navigator.geolocation.watchPosition(function (position) {
+      navigator.geolocation.getCurrentPosition(function (position) {
         console.log(position.coords.latitude);
         if (!stabalzied.length) {
 
@@ -314,6 +311,8 @@ function locationInterval() {
           if (count == 3) {
             clearInterval(myInterval);
             var bestGeoLocation = sortedByAccuracy(stabalzied);
+            console.log(bestGeoLocation.latitude);
+            console.log(bestGeoLocation.longitude);
             resolve(bestGeoLocation);
             return;
           } else {
@@ -342,7 +341,6 @@ function locationInterval() {
           }
         }
       }, function (error) {
-        console.log(error);
         reject(error);
       });
     }, 500);
@@ -393,53 +391,76 @@ function getNonLocationmessageString(name) {
   return 'Please Allow Location services To Use Growthfile';
 }
 
-function isLocationVerified() {
+function isLocationVerified(reqType) {
   if (native.getName() === 'Android') {
-
-    var locationStatus = JSON.parse(gps.isEnabled());
-    if (!locationStatus.active) {
-
-      var title = 'Message';
-      var messageData = {
-        title: title,
-        message: getNonLocationmessageString(locationStatus.name),
-        cancelable: true,
-        button: {
-          text: 'Okay',
-          show: true,
-          clickAction: {
-            redirection: {
-              text: '',
-              value: false
-            }
+    var title = 'Message';
+    var messageData = {
+      title: title,
+      message: '',
+      cancelable: true,
+      button: {
+        text: 'Okay',
+        show: true,
+        clickAction: {
+          redirection: {
+            text: '',
+            value: false
           }
         }
-      };
+      }
+    };
+
+    if (!Internet.isConnectionActive()) {
+      messageData.message = 'Please Check Your Internet Connection';
+      Android.notification(JSON.stringify(messageData));
+      return false;
+    }
+
+    var locationStatus = JSON.parse(gps.isEnabled());
+
+    if (!locationStatus.active) {
+      messageData.message = getNonLocationmessageString(locationStatus.name);
       Android.notification(JSON.stringify(messageData));
       return false;
     }
     return true;
   }
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
-function checkLocationInRoot() {
-  return new Promise(function (resolve) {
-    var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName);
-    req.onsuccess = function () {
-      var db = req.result;
-      var root = db.transaction('root').objectStore('root');
-      root.get(dbName).onsuccess = function (event) {
-        var record = event.target.result;
-        if (record.latitude && record.longitude && record.accuracy) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      };
-    };
-  });
+function iosConnectivity(connectivity) {
+  // for future implementation
+  if (!connectivity.connected) {
+    // resetLoaders()
+  }
+}
+
+function resetLoaders() {
+  if (native.getName() === 'Android') {
+
+    if (document.getElementById('send-activity')) {
+      document.getElementById('send-activity').style.display = 'block';
+    }
+  }
+
+  if (document.querySelector('header .mdc-linear-progress')) {
+    document.querySelector('header .mdc-linear-progress').remove();
+  }
+  if (document.querySelector('.loader')) {
+    document.querySelector('.loader').remove();
+  }
+  if (document.querySelector('.delete-activity')) {
+    document.querySelector('.delete-activity').style.display = 'block';
+  }
+  if (document.querySelector('.undo-delete-loader')) {
+    document.querySelector('.undo-delete-loader').style.display = 'block';
+  }
+  if (document.querySelector('.form-field-status')) {
+    if (document.querySelector('.form-field-status').classList.contains('hidden')) {
+      document.querySelector('.form-field-status').classList.remove('hidden');
+    }
+  }
 }
 
 function createBodyForRequestGenerator(record, requestBody, requestGenerator) {
@@ -448,16 +469,15 @@ function createBodyForRequestGenerator(record, requestBody, requestGenerator) {
     'longitude': record.longitude,
     'accuracy': record.accuracy
   };
+
   requestBody['timestamp'] = fetchCurrentTime(record.serverTime);
   requestBody['geopoint'] = geopoints;
   requestGenerator.body = requestBody;
+
   return requestGenerator;
 }
 
 function requestCreator(requestType, requestBody) {
-
-  // A request generator body with type of request to perform and the body/data to send to the api handler.
-  // spawn a new worker called apiHandler.
 
   console.log(apiHandler);
   var requestGenerator = {
@@ -485,10 +505,11 @@ function requestCreator(requestType, requestBody) {
       rootObjectStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
         if (record.latitude && record.longitude && record.accuracy) {
+
           apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
         } else {
 
-          enableGps('Fetching Location Please wait');
+          enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
         }
       };
     };
@@ -530,30 +551,8 @@ function loadViewFromRoot(response) {
 
   // only for development
   if (response.data.type === 'error') {
-    if (document.querySelector('header .mdc-linear-progress')) {
-      document.querySelector('header .mdc-linear-progress').remove();
-    }
-    if (document.querySelector('.loader')) {
-      document.querySelector('.loader').remove();
-    }
-    if (document.querySelector('.delete-activity')) {
-      document.querySelector('.delete-activity').style.display = 'block';
-    }
-    if (document.querySelector('.undo-delete-loader')) {
-      document.querySelector('.undo-delete-loader').style.display = 'block';
-    }
-    if (document.querySelector('.form-field-status')) {
-      if (document.querySelector('.form-field-status').classList.contains('hidden')) {
-        document.querySelector('.form-field-status').classList.remove('hidden');
-      }
-    }
-
+    resetLoaders();
     snacks(response.data.msg);
-    return;
-  }
-
-  if (response.data.type === 'create-success') {
-    listView();
     return;
   }
 
@@ -588,6 +587,11 @@ function loadViewFromRoot(response) {
 
     if (response.data.type === 'redirect-to-list') {
       history.pushState(['listView'], null, null);
+      return;
+    }
+
+    if (response.data.type === 'android-stop-refreshing') {
+      AndroidRefreshing.stopRefreshing(true);
       return;
     }
 
@@ -641,31 +645,7 @@ function onErrorMessage(error) {
   });
 }
 
-function checkGpsAvail() {
-  if (native.getName() === 'Android') {
-    if (!gps.isEnabled()) {
-      var messageData = {
-        title: 'Cannot determine Location',
-        message: 'Please Turn On Gps, To Use Growthfile',
-        cancelable: true,
-        button: {
-          text: 'Okay',
-          show: true,
-          clickAction: {
-            redirection: {
-              text: '',
-              value: false
-            }
-          }
-        }
-      };
-      Android.notification(JSON.stringify(messageData));
-    }
-  }
-}
-
 function handleTimeout() {
-
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();

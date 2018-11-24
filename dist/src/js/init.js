@@ -206,7 +206,8 @@ var native = function () {
         deviceModel: splitByName[2],
         appVersion: Number(splitByName[3]),
         osVersion: splitByName[4],
-        id: splitByName[5]
+        id: splitByName[5],
+        initConnection: splitByName[6]
       };
 
       localStorage.setItem('iosUUID', JSON.stringify(deviceInfo));
@@ -275,6 +276,8 @@ function init(auth) {
   document.getElementById('growthfile').appendChild(loader('init-loader'));
   /** when app initializes for the first time */
   console.log("initialzie idb");
+  var deviceInfo = JSON.parse(native.getInfo());
+
   removeIDBInstance(auth).then(function (isRemoved) {
     if (isRemoved) {
       requestCreator('now', native.getInfo());
