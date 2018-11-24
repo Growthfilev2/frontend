@@ -529,7 +529,7 @@ function loadViewFromRoot(response) {
       Android.notification(response.data.msg);
       return;
     }
-    webkit.messageHandlers.updateApp.postMessage('');
+    webkit.messageHandlers.updateApp.postMessage('update-app');
     return;
   }
 
@@ -602,7 +602,9 @@ function loadViewFromRoot(response) {
         if (native.getName() === 'Android') {
           console.log("send signal to android to stop refreshing");
           AndroidRefreshing.stopRefreshing(true);
-        } 
+        } else {
+          webkit.messageHandlers.setRefreshing.postMessage('false');
+        }
       }
 
       if (!history.state) {
