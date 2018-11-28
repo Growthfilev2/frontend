@@ -643,7 +643,6 @@ function loadViewFromRoot(response) {
       handleTimeout();
     }
   };
-  // }
 }
 
 function onErrorMessage(error) {
