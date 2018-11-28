@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -171,9 +171,7 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
-  if (!serverTime) {
-    debugger;
-  }
+  console.log(serverTime)
   return Date.now() + serverTime;
 }
 
@@ -204,8 +202,15 @@ function geolocationApi(method, url, data) {
         }
       }
     };
-    if (!data) {
-      resolve(null);
+    if (!data || !JSON.parse(Object.keys(data).length)) {
+      resolve({
+        'latitude':'',
+        'longitude':'',
+        'accuracy':null,
+        'provider':'Cellular',
+        'lastLocationTime':Date.now()
+      });
+      reject({msg:"cellular tower information returned empty data"})
     }
      else {
       xhr.send(data);
@@ -237,7 +242,7 @@ function manageLocation() {
   } else {
     CelllarJson = false;
   }
- 
+  
   if (CelllarJson) {
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
@@ -253,12 +258,9 @@ function manageLocation() {
 
   navigatorFetchPromise = locationInterval();
   Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-    console.log(geoData);
     var removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null;
     });
-    console.log(removeFalseData.latitude);
-    console.log(removeFalseData.longitude);
     var mostAccurate = sortedByAccuracy(removeFalseData);
     updateLocationInRoot(mostAccurate);
   }).catch(function (error) {
@@ -619,7 +621,7 @@ function loadViewFromRoot(response) {
           console.log("send signal to android to stop refreshing");
           AndroidRefreshing.stopRefreshing(true);
         } else {
-          webkit.messageHandlers.setRefreshing.postMessage('false');
+          // webkit.messageHandlers.setRefreshing.postMessage('false');
         }
       }
 

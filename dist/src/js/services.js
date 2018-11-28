@@ -188,9 +188,7 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
-          console.log(result.location.lat);
-          console.log(result.location.lng);
-          console.log(result.accuracy);
+          
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -199,18 +197,18 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now()
           });
         } else {
-          const result = JSON.parse(xhr.responseText)
-          reject({code:result.error.code,msg:result.error.message});
+          var _result = JSON.parse(xhr.responseText);
+          reject({ code: _result.error.code, msg: _result.error.message, cellular: data, phoneProp: native.getInfo() });
         }
       }
     };
     if (!data) {
       resolve(null);
-    }
-     else {
+    } else {
+      console.log(data)
       xhr.send(data);
     }
-  })
+  });
 }
 
 function manageLocation() {
@@ -237,7 +235,7 @@ function manageLocation() {
   } else {
     CelllarJson = false;
   }
- 
+
   if (CelllarJson) {
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
@@ -357,7 +355,7 @@ function locationInterval() {
             console.log("An unknown error occurred.");
             break;
         }
-        reject(error);
+        reject(error.message);
       });
     }, 500);
   });
