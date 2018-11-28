@@ -171,9 +171,7 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
-  if (!serverTime) {
-    debugger;
-  }
+  console.log(serverTime);
   return Date.now() + serverTime;
 }
 
@@ -188,7 +186,9 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
-
+          console.log(result.location.lat);
+          console.log(result.location.lng);
+          console.log(result.accuracy);
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -197,19 +197,23 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now()
           });
         } else {
-          console.log(xhr);
-          reject(xhr.statusText);
+          var _result = JSON.parse(xhr.responseText);
+          reject({ code: _result.error.code, msg: _result.error.message, cellular: data, phoneProp: native.getInfo() });
         }
       }
     };
-    if (!data) {
-      resolve(null);
+    if (!data || !JSON.parse(Object.keys(data).length)) {
+      resolve({
+        'latitude': '',
+        'longitude': '',
+        'accuracy': null,
+        'provider': 'Cellular',
+        'lastLocationTime': Date.now()
+      });
+      reject({ msg: "cellular tower information returned empty data" });
     } else {
-      console.log(data);
       xhr.send(data);
     }
-  }).catch(function (error) {
-    return error;
   });
 }
 
@@ -253,14 +257,13 @@ function manageLocation() {
 
   navigatorFetchPromise = locationInterval();
   Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-    console.log(geoData);
     var removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null;
     });
-    console.log(removeFalseData);
     var mostAccurate = sortedByAccuracy(removeFalseData);
     updateLocationInRoot(mostAccurate);
   }).catch(function (error) {
+    console.log(error);
     requestCreator('instant', JSON.stringify({
       message: error
     }));
@@ -341,7 +344,21 @@ function locationInterval() {
           }
         }
       }, function (error) {
-        reject(error);
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            console.log("User denied the request for Geolocation.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            console.log("Location information is unavailable.");
+            break;
+          case error.TIMEOUT:
+            console.log("The request to get user location timed out.");
+            break;
+          case error.UNKNOWN_ERROR:
+            console.log("An unknown error occurred.");
+            break;
+        }
+        reject(error.message);
       });
     }, 500);
   });
@@ -425,7 +442,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -605,7 +622,7 @@ function loadViewFromRoot(response) {
           console.log("send signal to android to stop refreshing");
           AndroidRefreshing.stopRefreshing(true);
         } else {
-          webkit.messageHandlers.setRefreshing.postMessage('false');
+          // webkit.messageHandlers.setRefreshing.postMessage('false');
         }
       }
 

@@ -948,6 +948,7 @@ function insertTemplateByOffice(offices) {
     'employee': '',
     'subscription': ''
   };
+
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   var frag = document.createDocumentFragment();
   req.onsuccess = function () {
@@ -1140,11 +1141,14 @@ function updateVenue(updatedActivity, attr, data) {
 }
 
 function convertKeyToId(key) {
-  return key.replace(/\s/g, '-');
+  var str = key.replace(/-/g, '--');
+  return str.replace(/\s/g, '-');
 }
 
 function convertIdToKey(id) {
-  return id.replace(/-/g, ' ');
+  // let str =  id.replace(/--/g, '-')
+  var str = id.replace(/-/g, ' ');
+  return str.replace('  ', '-');
 }
 
 function updateCreateContainer(record) {
@@ -2191,6 +2195,8 @@ function insertInputsIntoActivity(record, activityStore) {
       snacks('Please provide an input for the field “Name” ');
       return;
     }
+    console.log(convertIdToKey(allStringTypes[i].id));
+
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue;
   }
 

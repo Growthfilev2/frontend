@@ -1000,6 +1000,7 @@ function sendComment(id) {
       'employee': '',
       'subscription': '',
     }
+
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     const frag = document.createDocumentFragment()
     req.onsuccess = function () {
@@ -1029,7 +1030,6 @@ function sendComment(id) {
 
         cursor.continue()
       }
-
     }
   }
 
@@ -1204,11 +1204,14 @@ function sendComment(id) {
   }
 
   function convertKeyToId(key) {
-    return key.replace(/\s/g, '-')
+    let str = key.replace(/-/g,'--')
+    return str.replace(/\s/g, '-')
   }
 
   function convertIdToKey(id) {
-    return id.replace(/-/g, ' ')
+    // let str =  id.replace(/--/g, '-')
+    let str = id.replace(/-/g,' ')
+    return str.replace('  ','-')
   }
 
   function updateCreateContainer(record) {
@@ -2315,6 +2318,8 @@ function sendComment(id) {
         snacks('Please provide an input for the field “Name” ')
         return;
       }
+      console.log(convertIdToKey(allStringTypes[i].id));
+      
       record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
     }
 
@@ -2335,8 +2340,6 @@ function sendComment(id) {
       let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
       record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
     }
-
-
 
     const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
     for (let i = 0; i < imagesInAttachments.length; i++) {
