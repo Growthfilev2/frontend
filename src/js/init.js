@@ -231,7 +231,7 @@ let native = function () {
       if(!this.getName()) {
         return JSON.stringify({
           'id':'123',
-          'appVersion':2,
+          'appVersion':3,
           'baseOs':'macOs'
         })
       }

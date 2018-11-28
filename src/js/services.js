@@ -1,5 +1,5 @@
 var offset = ''
-var apiHandler = new Worker('src/js/apiHandler.js')
+var apiHandler = new Worker('js/apiHandler.js')
 var html5Location;
 
 function handleImageError(img) {
@@ -353,6 +353,20 @@ function locationInterval() {
           }
         }
       }, function (error) {
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            console.log("User denied the request for Geolocation.")
+              break;
+          case error.POSITION_UNAVAILABLE:
+             console.log("Location information is unavailable.")
+              break;
+          case error.TIMEOUT:
+              console.log("The request to get user location timed out.")
+              break;
+          case error.UNKNOWN_ERROR:
+             console.log("An unknown error occurred.")
+              break;
+      }
         reject(error)
       })
     }, 500)

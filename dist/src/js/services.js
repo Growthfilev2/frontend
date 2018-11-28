@@ -199,22 +199,18 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now()
           });
         } else {
-          console.log(xhr.statusText);
-          reject(xhr.statusText);
+          const result = JSON.parse(xhr.responseText)
+          reject({code:result.error.code,msg:result.error.message});
         }
       }
     };
     if (!data) {
-      console.log("no data");
       resolve(null);
-    } else {
-      console.log(data);
+    }
+     else {
       xhr.send(data);
     }
-  }).catch(function (error) {
-    console.log(error);
-    return error;
-  });
+  })
 }
 
 function manageLocation() {
@@ -241,7 +237,7 @@ function manageLocation() {
   } else {
     CelllarJson = false;
   }
-
+ 
   if (CelllarJson) {
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
@@ -266,6 +262,7 @@ function manageLocation() {
     var mostAccurate = sortedByAccuracy(removeFalseData);
     updateLocationInRoot(mostAccurate);
   }).catch(function (error) {
+    console.log(error);
     requestCreator('instant', JSON.stringify({
       message: error
     }));
@@ -346,6 +343,20 @@ function locationInterval() {
           }
         }
       }, function (error) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            console.log("User denied the request for Geolocation.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            console.log("Location information is unavailable.");
+            break;
+          case error.TIMEOUT:
+            console.log("The request to get user location timed out.");
+            break;
+          case error.UNKNOWN_ERROR:
+            console.log("An unknown error occurred.");
+            break;
+        }
         reject(error);
       });
     }, 500);
@@ -430,7 +441,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -534,7 +545,7 @@ function loadViewFromRoot(response) {
       Android.notification(response.data.msg);
       return;
     }
-    webkit.messageHandlers.updateApp.postMessage();
+    // webkit.messageHandlers.updateApp.postMessage();
     return;
   }
 
