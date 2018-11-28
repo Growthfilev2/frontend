@@ -442,7 +442,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
