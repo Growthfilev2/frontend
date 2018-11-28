@@ -171,9 +171,7 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
-  if (!serverTime) {
-    debugger;
-  }
+  console.log(serverTime);
   return Date.now() + serverTime;
 }
 
@@ -188,7 +186,9 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
-          
+          console.log(result.location.lat);
+          console.log(result.location.lng);
+          console.log(result.accuracy);
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -202,10 +202,16 @@ function geolocationApi(method, url, data) {
         }
       }
     };
-    if (!data) {
-      resolve(null);
+    if (!data || !JSON.parse(Object.keys(data).length)) {
+      resolve({
+        'latitude': '',
+        'longitude': '',
+        'accuracy': null,
+        'provider': 'Cellular',
+        'lastLocationTime': Date.now()
+      });
+      reject({ msg: "cellular tower information returned empty data" });
     } else {
-      console.log(data)
       xhr.send(data);
     }
   });
@@ -213,7 +219,7 @@ function geolocationApi(method, url, data) {
 
 function manageLocation() {
 
-  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = void 0;
   var geoFetchPromise = void 0;
   var navigatorFetchPromise = void 0;
@@ -251,12 +257,9 @@ function manageLocation() {
 
   navigatorFetchPromise = locationInterval();
   Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-    console.log(geoData);
     var removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null;
     });
-    console.log(removeFalseData.latitude);
-    console.log(removeFalseData.longitude);
     var mostAccurate = sortedByAccuracy(removeFalseData);
     updateLocationInRoot(mostAccurate);
   }).catch(function (error) {
@@ -617,7 +620,7 @@ function loadViewFromRoot(response) {
           console.log("send signal to android to stop refreshing");
           AndroidRefreshing.stopRefreshing(true);
         } else {
-          webkit.messageHandlers.setRefreshing.postMessage('false');
+          // webkit.messageHandlers.setRefreshing.postMessage('false');
         }
       }
 

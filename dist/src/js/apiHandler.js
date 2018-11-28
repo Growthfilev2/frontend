@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
-var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
+var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
 
 /** reinitialize the firebase app */
 
@@ -45,12 +45,12 @@ function createLog(message, body) {
 }
 
 firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
 });
 
 // when worker receives the request body from the main thread
@@ -152,13 +152,9 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error);
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
 
 /**
