@@ -194,7 +194,9 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           const result = JSON.parse(xhr.responseText)
-          
+          console.log(result.location.lat)
+          console.log(result.location.lng)
+          console.log(result.accuracy)
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -203,18 +205,20 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now()
           })
         } else {
-          console.log(xhr)
+          console.log(xhr.statusText)
           reject(xhr.statusText)
         }
       }
     }
     if (!data) {
+      console.log("no data")
       resolve(null)
     } else {
       console.log(data)
       xhr.send(data)
     }
   }).catch(function (error) {
+    console.log(error)
     return error
   })
 }
@@ -263,7 +267,8 @@ function manageLocation() {
     const removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null
     })
-    console.log(removeFalseData)
+    console.log(removeFalseData.latitude)
+    console.log(removeFalseData.longitude)
     const mostAccurate = sortedByAccuracy(removeFalseData)
     updateLocationInRoot(mostAccurate)
   }).catch(function (error) {
