@@ -171,9 +171,7 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
-  if (!serverTime) {
-    debugger;
-  }
+  console.log(serverTime);
   return Date.now() + serverTime;
 }
 
@@ -188,7 +186,9 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
-          
+          console.log(result.location.lat);
+          console.log(result.location.lng);
+          console.log(result.accuracy);
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -202,10 +202,16 @@ function geolocationApi(method, url, data) {
         }
       }
     };
-    if (!data) {
-      resolve(null);
+    if (!data || !JSON.parse(Object.keys(data).length)) {
+      resolve({
+        'latitude': '',
+        'longitude': '',
+        'accuracy': null,
+        'provider': 'Cellular',
+        'lastLocationTime': Date.now()
+      });
+      reject({ msg: "cellular tower information returned empty data" });
     } else {
-      console.log(data)
       xhr.send(data);
     }
   });
@@ -222,6 +228,7 @@ function manageLocation() {
     try {
       CelllarJson = Towers.getCellularData();
     } catch (e) {
+      CelllarJson = false;
       requestCreator('instant', JSON.stringify({
         message: {
           error: e.message,
@@ -250,13 +257,10 @@ function manageLocation() {
   }
 
   navigatorFetchPromise = locationInterval();
-  Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
-    console.log(geoData);
+  Promise.all([navigatorFetchPromise]).then(function (geoData) {
     var removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null;
     });
-    console.log(removeFalseData.latitude);
-    console.log(removeFalseData.longitude);
     var mostAccurate = sortedByAccuracy(removeFalseData);
     updateLocationInRoot(mostAccurate);
   }).catch(function (error) {
@@ -278,22 +282,29 @@ function locationInterval() {
     'lastLocationTime': '',
     'provider': ''
   };
+  var mockTimer = null;
 
   return new Promise(function (resolve, reject) {
 
-    if (native.getName() === 'Android') {
-      if (androidLocation.isMock()) {
+    mockTimer = setTimeout(function () {
+      if (!geo.latitude || !geo.longitude) {
         geo.accuracy = null;
-        geo.provider = 'Mock';
+        geo.lastLocationTime = Date.now();
+        geo.provider = 'MOCK';
+        clearTimeout(mockTimer);
+        mockTimer = null;
+        alert("mock location timer ran");
         resolve(geo);
-        return;
+      } else {
+        clearTimeout(mockTimer);
+        mockTimer = null;
       }
-    }
+    }, 3000);
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-        console.log(position.coords.latitude);
+        alert(position.coords.latitude);
         if (!stabalzied.length) {
 
           stabalzied.push({
@@ -369,7 +380,11 @@ function sortedByAccuracy(geoData) {
 }
 
 function updateLocationInRoot(finalLocation) {
-  console.log(finalLocation);
+  console.log(finalLocation.latitude);
+  console.log(finalLocation.longitude);
+  console.log(finalLocation.accuracy);
+  console.log(finalLocation.provider);
+
   if (!finalLocation) return;
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
@@ -617,7 +632,7 @@ function loadViewFromRoot(response) {
           console.log("send signal to android to stop refreshing");
           AndroidRefreshing.stopRefreshing(true);
         } else {
-          webkit.messageHandlers.setRefreshing.postMessage('false');
+          // webkit.messageHandlers.setRefreshing.postMessage('false');
         }
       }
 

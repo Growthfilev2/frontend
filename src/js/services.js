@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -229,6 +229,7 @@ function manageLocation() {
     try {
       CelllarJson = Towers.getCellularData();
     } catch (e) {
+      CelllarJson = false;
       requestCreator('instant', JSON.stringify({
         message: {
           error: e.message,
@@ -257,7 +258,7 @@ function manageLocation() {
   }
 
   navigatorFetchPromise = locationInterval();
-  Promise.all([geoFetchPromise, navigatorFetchPromise]).then(function (geoData) {
+  Promise.all([navigatorFetchPromise]).then(function (geoData) {
     var removeFalseData = geoData.filter(function (geo) {
       return geo.accuracy != null;
     });
@@ -282,22 +283,31 @@ function locationInterval() {
     'lastLocationTime': '',
     'provider': ''
   };
+  let mockTimer = null;
+
 
   return new Promise(function (resolve, reject) {
 
-    if (native.getName() === 'Android') {
-      if (androidLocation.isMock()) {
+    mockTimer = setTimeout(function(){
+      if(!geo.latitude || !geo.longitude){
         geo.accuracy = null;
-        geo.provider = 'Mock';
-        resolve(geo);
-        return;
+        geo.lastLocationTime = Date.now()
+        geo.provider = 'MOCK'
+        clearTimeout(mockTimer)
+        mockTimer = null
+        alert("mock location timer ran");
+        resolve(geo)
       }
-    }
+      else {
+        clearTimeout(mockTimer)
+        mockTimer = null;
+      }
+    },3000)
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-        console.log(position.coords.latitude);
+       alert(position.coords.latitude);
         if (!stabalzied.length) {
 
           stabalzied.push({
@@ -373,7 +383,13 @@ function sortedByAccuracy(geoData) {
 }
 
 function updateLocationInRoot(finalLocation) {
-  console.log(finalLocation);
+  console.log(finalLocation.latitude);
+  console.log(finalLocation.longitude);
+  console.log(finalLocation.accuracy);
+  console.log(finalLocation.provider);
+  
+  
+
   if (!finalLocation) return;
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
