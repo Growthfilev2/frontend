@@ -88,9 +88,9 @@ function http(method, url, data) {
         xhr.setRequestHeader('Authorization', `Bearer ${idToken}`)
 
         xhr.onreadystatechange = function () {
-          console.log(xhr.status)
+          // console.log(xhr.status)
           if (xhr.readyState === 4) {
-            console.log(xhr.status)
+            // console.log(xhr.status)
             if(!xhr.status) {
              requestHandlerResponse('android-stop-refreshing',400,'true')
               return;

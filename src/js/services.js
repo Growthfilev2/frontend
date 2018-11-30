@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -175,6 +175,37 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
+
+
+Promise.startCalculations = function(promises){
+//  process only those  promises that have reject in them.
+  if(!promises.length){
+    return this.reject('Both Location Promises are empty')
+  }
+// create an array  of promises , where its catch function returns the index of them in the promises array
+  let createPromiseMap = promises.map(function(prom,index){
+        return prom.catch(function(){
+          throw index
+        })
+  })
+
+  // return Promise race catch . the catch till give the index of the promise
+  return Promise.race(createPromiseMap).catch(function(index){
+      let rejected = promises.splice(index,1)[0]
+      rejected.catch(function(rejection){
+        requestCreator('instant',JSON.stringify(sendLocationServiceCrashRequest(rejection)))
+      })
+      // re run  until all rejections are handlerd
+      return Promise.startCalculations(promises)
+  })
+}
+
+function sendLocationServiceCrashRequest(rejection){
+  return {
+    'message': rejection,
+  }
+}
+ 
 function geolocationApi(method, url, data) {
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
@@ -221,94 +252,64 @@ function geolocationApi(method, url, data) {
 function manageLocation() {
 
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
-  var CelllarJson = void 0;
-  var geoFetchPromise = void 0;
-  var navigatorFetchPromise = void 0;
+  var CelllarJson = false;
+  var geoFetchPromise = false;
+  var navigatorFetchPromise;
+
+  navigatorFetchPromise = locationInterval();
+  var locationPromises = [navigatorFetchPromise]
 
   if (native.getName() === 'Android') {
     try {
       CelllarJson = Towers.getCellularData();
+      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+      locationPromises.push(geoFetchPromise)
     } catch (e) {
-      CelllarJson = false;
       requestCreator('instant', JSON.stringify({
         message: {
-          error: e.message,
-          file: 'services.js',
-          lineNo: 239,
-          device: JSON.parse(native.getInfo()),
-          help: 'Problem in calling method for fetching cellular towers'
-        }
-      }));
-    }
-  } else {
-    CelllarJson = false;
-  }
-  
-  if (CelllarJson) {
-
-    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
-  } else {
-    geoFetchPromise = {
-      'latitude': '',
-      'longitude': '',
-      'accuracy': null,
-      'provider': '',
-      'lastLocationTime': Date.now()
-    };
-  }
-
-  navigatorFetchPromise = locationInterval();
-  Promise.all([navigatorFetchPromise]).then(function (geoData) {
-    var removeFalseData = geoData.filter(function (geo) {
-      return geo.accuracy != null;
-    });
-    var mostAccurate = sortedByAccuracy(removeFalseData);
-    updateLocationInRoot(mostAccurate);
-  }).catch(function (error) {
-    console.log(error);
-    requestCreator('instant', JSON.stringify({
-      message: error
+        error: e.message,
+        file: 'services.js',
+        lineNo: 271,
+        device: JSON.parse(native.getInfo()),
+        help: 'Problem in calling method for fetching cellular towers.'
+      }
     }));
-  });
+  }
+}
+
+Promise.startCalculations(locationPromises).then(function(geoData){
+    updateLocationInRoot(geoData).then(locationUpdationSuccess,locationUpdationError)
+  }).catch(function(err){
+    requestCreator('instant',JSON.stringify({
+      'message':err
+    }))
+  })
+}
+
+function locationUpdationSuccess(message){
+  console.log(message);
+}
+
+function locationUpdationError(error){
+  requestCreator('instant',JSON.stringify({
+    'message':error
+  }))
 }
 
 function locationInterval() {
 
   var stabalzied = [];
+  var totalcount = 0;
   var count = 0;
-  var geo = {
-    'latitude': '',
-    'longitude': '',
-    'accuracy': '',
-    'lastLocationTime': '',
-    'provider': ''
-  };
-  let mockTimer = null;
-
-
   return new Promise(function (resolve, reject) {
-
-    mockTimer = setTimeout(function(){
-      if(!geo.latitude || !geo.longitude){
-        geo.accuracy = null;
-        geo.lastLocationTime = Date.now()
-        geo.provider = 'MOCK'
-        clearTimeout(mockTimer)
-        mockTimer = null
-        alert("mock location timer ran");
-        resolve(geo)
-      }
-      else {
-        clearTimeout(mockTimer)
-        mockTimer = null;
-      }
-    },3000)
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-       alert(position.coords.latitude);
-        if (!stabalzied.length) {
+     
+        
+        ++totalcount;
+        if(totalcount !== 1){
 
           stabalzied.push({
             'latitude': position.coords.latitude,
@@ -317,43 +318,23 @@ function locationInterval() {
             'lastLocationTime': Date.now(),
             'provider': 'HTML5'
           });
-          return;
-        }
-
-        if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-          ++count;
-          if (count == 3) {
-            clearInterval(myInterval);
-            var bestGeoLocation = sortedByAccuracy(stabalzied);
-            console.log(bestGeoLocation.latitude);
-            console.log(bestGeoLocation.longitude);
-            resolve(bestGeoLocation);
-            return;
-          } else {
-            stabalzied.push({
-              'latitude': position.coords.latitude,
-              'longitude': position.coords.longitude,
-              'accuracy': position.coords.accuracy,
-              'lastLocationTime': Date.now(),
-              'provider': 'HTML5'
-            });
-            return;
+          
+          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+            ++count;
+            
+            if (count == 3) {
+              clearInterval(myInterval);
+              resolve(stabalzied[0]);
+              return;
+            } 
           }
-        } else {
-          stabalzied.push({
-            'latitude': position.coords.latitude,
-            'longitude': position.coords.longitude,
-            'accuracy': position.coords.accuracy,
-            'lastLocationTime': Date.now(),
-            'provider': 'HTML5'
-          });
-          if (count >= 5) {
+          if (totalcount >= 5) {
             clearInterval(myInterval);
             var _bestGeoLocation = sortedByAccuracy(stabalzied);
             resolve(_bestGeoLocation);
             return;
           }
-        }
+        } 
       }, function (error) {
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -383,19 +364,14 @@ function sortedByAccuracy(geoData) {
 }
 
 function updateLocationInRoot(finalLocation) {
-  console.log(finalLocation.latitude);
-  console.log(finalLocation.longitude);
-  console.log(finalLocation.accuracy);
-  console.log(finalLocation.provider);
-  
-  
-
-  if (!finalLocation) return;
+if (!finalLocation) return;
+return new Promise(function(resolve,reject){
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
   req.onsuccess = function () {
     var db = req.result;
-    var rootStore = db.transaction('root', 'readwrite').objectStore('root');
+    var tx = db.transaction(['root'], 'readwrite');
+    var rootStore = tx.objectStore('root');
     rootStore.get(dbName).onsuccess = function (event) {
       var record = event.target.result;
       record.latitude = finalLocation.latitude;
@@ -405,7 +381,14 @@ function updateLocationInRoot(finalLocation) {
       record.lastLocationTime = finalLocation.lastLocationTime;
       rootStore.put(record);
     };
+    tx.oncomplete = function(){
+      resolve('Location Updated Successfully')
+    }
   };
+  req.onerror = function(error){
+    reject(error)
+  }
+})
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
@@ -683,7 +666,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();
-  }, 10000);
+  }, 30000);
 }
 
 function getInputText(selector) {
