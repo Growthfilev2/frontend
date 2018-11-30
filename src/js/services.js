@@ -179,9 +179,6 @@ function fetchCurrentTime(serverTime) {
 
 Promise.startCalculations = function(promises){
 //  process only those  promises that have reject in them.
-  if(!promises.length){
-    return this.reject('Both Location Promises are empty')
-  }
 // create an array  of promises , where its catch function returns the index of them in the promises array
   let createPromiseMap = promises.map(function(prom,index){
         return prom.catch(function(){
@@ -193,7 +190,8 @@ Promise.startCalculations = function(promises){
   return Promise.race(createPromiseMap).catch(function(index){
       let rejected = promises.splice(index,1)[0]
       rejected.catch(function(rejection){
-        requestCreator('instant',JSON.stringify(sendLocationServiceCrashRequest(rejection)))
+        // requestCreator('instant',sendLocationServiceCrashRequest(rejection))
+        console.log(rejection)
       })
       // re run  until all rejections are handlerd
       return Promise.startCalculations(promises)
@@ -203,6 +201,7 @@ Promise.startCalculations = function(promises){
 function sendLocationServiceCrashRequest(rejection){
   return {
     'message': rejection,
+    'phoneProp':native.getInfo()
   }
 }
  
@@ -218,34 +217,23 @@ function geolocationApi(method, url, data) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
           console.log(result.location.lat);
-          console.log(result.location.lng);
-          console.log(result.accuracy);
-          resolve({
-            'latitude': result.location.lat,
-            'longitude': result.location.lng,
-            'accuracy': result.accuracy,
-            'provider': 'Cellular',
-            'lastLocationTime': Date.now()
-          });
+         
+            resolve({
+              'latitude': result.location.lat,
+              'longitude': result.location.lng,
+              'accuracy': result.accuracy,
+              'provider': 'Cellular',
+              'lastLocationTime': Date.now()
+            })
+         
         } else {
           const result = JSON.parse(xhr.responseText)
-          reject({code:result.error.code,msg:result.error.message,cellular:data,phoneProp:native.getInfo()});
+          reject({msg:result.error.message,cellular:data});
         }
       }
     };
-    if (!data || !JSON.parse(Object.keys(data).length)) {
-      resolve({
-        'latitude':'',
-        'longitude':'',
-        'accuracy':null,
-        'provider':'Cellular',
-        'lastLocationTime':Date.now()
-      });
-      reject({msg:"cellular tower information returned empty data"})
-    }
-     else {
-      xhr.send(data);
-    }
+    
+    xhr.send(data);
   })
 }
 
@@ -259,23 +247,26 @@ function manageLocation() {
   navigatorFetchPromise = locationInterval();
   var locationPromises = [navigatorFetchPromise]
 
-  if (native.getName() === 'Android') {
-    try {
-      CelllarJson = Towers.getCellularData();
-      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+  let tesingData = {}
+
+  // if (native.getName() === 'Android') {
+  //   try {
+  //     CelllarJson = Towers.getCellularData();
+      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, JSON.stringify(tesingData));
       locationPromises.push(geoFetchPromise)
-    } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: {
-        error: e.message,
-        file: 'services.js',
-        lineNo: 271,
-        device: JSON.parse(native.getInfo()),
-        help: 'Problem in calling method for fetching cellular towers.'
-      }
-    }));
-  }
-}
+
+  //   } catch (e) {
+  //     requestCreator('instant', JSON.stringify({
+  //       message: {
+  //       error: e.message,
+  //       file: 'services.js',
+  //       lineNo: 271,
+  //       device: JSON.parse(native.getInfo()),
+  //       help: 'Problem in calling method for fetching cellular towers.'
+  //     }
+  //   }));
+  // }
+// }
 
 Promise.startCalculations(locationPromises).then(function(geoData){
     updateLocationInRoot(geoData).then(locationUpdationSuccess,locationUpdationError)
@@ -336,21 +327,11 @@ function locationInterval() {
           }
         } 
       }, function (error) {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            console.log("User denied the request for Geolocation.");
-            break;
-          case error.POSITION_UNAVAILABLE:
-            console.log("Location information is unavailable.");
-            break;
-          case error.TIMEOUT:
-            console.log("The request to get user location timed out.");
-            break;
-          case error.UNKNOWN_ERROR:
-            console.log("An unknown error occurred.");
-            break;
-        }
-        reject(error.message);
+        // console.log(error)
+        // setTimeout(() => {
+          clearInterval(myInterval)
+          reject(error.message);
+        // }, 1000);
       });
     }, 500);
   });
