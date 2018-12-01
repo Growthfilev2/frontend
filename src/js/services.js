@@ -589,7 +589,9 @@ function loadViewFromRoot(response) {
     }
 
     if (response.data.type === 'android-stop-refreshing') {
-      AndroidRefreshing.stopRefreshing(true);
+      if(native.getName() === 'Android'){
+        AndroidRefreshing.stopRefreshing(true);
+      }
       return;
     }
 
