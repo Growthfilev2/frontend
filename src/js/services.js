@@ -232,7 +232,21 @@ function manageLocation() {
       })
 
     } catch (e) {
-      initLocationInterval({succes:false,message:e}) 
+      requestCreator('instant', JSON.stringify({
+        message: {
+          error: locationStatus.message,
+          file: 'services.js',
+          lineNo: 231,
+          device: JSON.parse(native.getInfo()),
+          help: 'Problem in calling method for fetching cellular towers.'
+        }
+      }));
+    
+      locationInterval().then(function(navigatorData){
+        updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
+      }).catch(function(error){
+        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+      })
     }
     return
   }
@@ -254,15 +268,7 @@ function initLocationInterval(locationStatus) {
       bestLocation = sortedByAccuracy(singletonSuccess)
     }
     else {
-      requestCreator('instant', JSON.stringify({
-        message: {
-          error: locationStatus.message,
-          file: 'services.js',
-          lineNo: 231,
-          device: JSON.parse(native.getInfo()),
-          help: 'Problem in calling method for fetching cellular towers.'
-        }
-      }));
+      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
       bestLocation = navigatorData
     }
     updateLocationInRoot(bestLocation).then(locationUpdationSuccess, locationUpdationError);
@@ -276,8 +282,6 @@ function initLocationInterval(locationStatus) {
       requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
 }
-
-
 
 function locationUpdationSuccess(message) {
   console.log(message);
