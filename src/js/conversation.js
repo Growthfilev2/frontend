@@ -1,13 +1,50 @@
 function conversation(id, pushState) {
+console.log(id)
+  checkIfRecordExists('activity',id).then(function(id){
+    console.log(id)
+    if(id){
+      if (pushState) {
+        history.pushState(['conversation', id], null, null)
+      }
+      fetchAddendumForComment(id)
+    }
+    else {
+      listView(true)
+    }
+  }).catch(function(error){
+    requestCreator('instant',JSON.stringify({
+      message:error
+    }))
+  })
+}
 
-  if (pushState) {
-    history.pushState(['conversation', id], null, null)
-  }
+function checkIfRecordExists(store,id){
+  return new Promise(function(resolve,reject){
+    const user = firebase.auth().currentUser
+    const req = window.indexedDB.open(user.uid)
+    
+    req.onsuccess = function () {
+      const db = req.result;
+      const objectStore = db.transaction(store).objectStore(store)
+      objectStore.get(id).onsuccess = function(event){
+        const record = event.target.result;
+        if(record){
+          resolve(id)
+        }
+        else {
+          resolve(false)
+        }
+      }
+    }
+    req.onerror = function(){
+      reject(req.error)
+    }
+  })
 
-  fetchAddendumForComment(id)
 }
 
 function fetchAddendumForComment(id) {
+  if(!id) return;
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
 
@@ -450,7 +487,19 @@ function sendComment(id) {
         })
 
         document.querySelector('.comment-header-primary').addEventListener('click', function () {
-          updateCreateActivity(record, true)
+          checkIfRecordExists('activity',record.activityId).then(function(id){
+            // alert(id)
+            if(id){
+              updateCreateActivity(record, true)
+            }
+            else {
+              listView(true)
+            }
+          }).catch(function(error){
+            requestCreator('instant',JSON.stringify({
+              message:error
+            }))
+          })
         })
       })
     }
@@ -2743,6 +2792,10 @@ function sendComment(id) {
       const activityStore = db.transaction('activity').objectStore('activity')
       activityStore.get(id).onsuccess = function (event) {
         const record = event.target.result
+        if(!record){
+          listView(true)
+          return
+        }
         const actions = document.querySelectorAll('.mdc-fab')
         if (!record.editable) return
 

@@ -583,7 +583,8 @@ function loadViewFromRoot(response) {
     }
 
     if (response.data.type === 'redirect-to-list') {
-      history.pushState(['listView'], null, null);
+       
+      history.pushState(['listView'], null, null);      
       return;
     }
 
