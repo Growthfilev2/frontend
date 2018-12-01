@@ -96,7 +96,7 @@ function http(method, url, data) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
               requestHandlerResponse('error', errorObject.code, errorObject.message)
-              return reject({res:JSON.parse(xhr.response),url:url,data:data})
+              return reject({res:JSON.parse(xhr.response),url:url,data:data,device:currentDevice})
             }
             xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
           }
