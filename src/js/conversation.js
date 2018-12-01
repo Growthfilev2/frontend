@@ -1750,7 +1750,7 @@ function sendComment(id) {
 
   function createAttachmentContainer(data) {
 
-    const ordering = ['Name', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
+    const ordering = ['Name','Number', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
 
     ordering.forEach(function (order) {
       const group = document.createElement("div")
@@ -1783,18 +1783,18 @@ function sendComment(id) {
       label.className = 'label--text'
       label.textContent = key
 
-      if (key === 'Name') {
+      if (key === 'Name' || key === 'Number') {
         div.appendChild(label)
         const required = true
         div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key, required))
       }
-
-      if (data.attachment[key].type === 'string' && key !== 'Name') {
-
-        div.appendChild(label)
-        div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
-
+      else {
+        if (data.attachment[key].type === 'string') {
+          div.appendChild(label)
+          div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+        }
       }
+
 
       if (data.attachment[key].type === 'number') {
         div.appendChild(label)

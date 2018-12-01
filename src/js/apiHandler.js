@@ -885,6 +885,9 @@ function successResponse(read, swipeInfo) {
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
     let counter = {}
     firstTime++
+  
+    //testing
+
 
     read.addendum.forEach(function (addendum) {
       if(addendum.unassign){
@@ -898,12 +901,11 @@ function successResponse(read, swipeInfo) {
           })
         }
       }
-
       let key = addendum.activityId
       counter[key] = (counter[key] || 0) + 1
       addendumObjectStore.add(addendum)
     })
-    
+
     removeActivityFromDB(db, removeActivitiesForUser);
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers);
 
