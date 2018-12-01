@@ -194,8 +194,6 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         if (xhr.status === 200) {
           var result = JSON.parse(xhr.responseText);
-          console.log(result.location.lat);
-          // setTimeout(() => {
           resolve({
             'latitude': result.location.lat,
             'longitude': result.location.lng,
@@ -204,21 +202,17 @@ function geolocationApi(method, url, data) {
             'lastLocationTime': Date.now(),
             'success': true
           })
-          // }, 200);
         } else {
           const result = JSON.parse(xhr.responseText)
-          // setTimeout(() => {
 
           reject({
-            msg: result.error.message,
+            message: result.error.message,
             cellular: data,
             success: false
           });
-          // }, 200);
         }
       }
     };
-
     xhr.send(data);
   })
 }
@@ -227,56 +221,63 @@ function manageLocation() {
 
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   var CelllarJson = false;
-  var geoFetchPromise = false;
-  // var navigatorFetchPromise;
+  if (native.getName() === 'Android') {
+    try {
+      CelllarJson = Towers.getCellularData();
+      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, JSON.stringify(CelllarJson));
+      geoFetchPromise.then(function (geoData) {
+        initLocationInterval(geoData)
+      }).catch(function (error) {
+        initLocationInterval(error)
+      })
 
-  // navigatorFetchPromise = locationInterval();
-  // var locationPromises = [navigatorFetchPromise]
+    } catch (e) {
+      initLocationInterval({succes:false,message:e}) 
+    }
+    return
+  }
 
-  let tesingData = {}
-
-  // if (native.getName() === 'Android') {
-  //   try {
-  //     CelllarJson = Towers.getCellularData();
-  geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, JSON.stringify(tesingData));
-  // locationPromises.push(geoFetchPromise)
-
-  //   } catch (e) {
-  //     requestCreator('instant', JSON.stringify({
-  //       message: {
-  //       error: e.message,
-  //       file: 'services.js',
-  //       lineNo: 271,
-  //       device: JSON.parse(native.getInfo()),
-  //       help: 'Problem in calling method for fetching cellular towers.'
-  //     }
-  //   }));
-  // }
-  // }
-
-
-  geoFetchPromise.then(function (geoData) {
-    initLocationInterval(geoData)
-  }).catch(function (error) {
-    initLocationInterval(error)
+  locationInterval().then(function(navigatorData){
+    updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
+  }).catch(function(error){
+    requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
+
 }
 
 function initLocationInterval(locationStatus) {
   const singletonSuccess = []
+  let bestLocation;
   locationInterval().then(function (navigatorData) {
-    locationStatus.success ? singletonSuccess.push(locationStatus,navigatorData) : singletonSuccess.push(navigatorData); requestCreator('instant',JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
-    const bestLocation = sortedByAccuracy(singletonSuccess)
-    console.log(bestLocation);
-    updateLocationInRoot(bestLocation).then(locationUpdationSuccess,locationUpdationError);
+    if(locationStatus.success){
+      singletonSuccess.push(locationStatus,navigatorData)
+      bestLocation = sortedByAccuracy(singletonSuccess)
+    }
+    else {
+      requestCreator('instant', JSON.stringify({
+        message: {
+          error: locationStatus.message,
+          file: 'services.js',
+          lineNo: 231,
+          device: JSON.parse(native.getInfo()),
+          help: 'Problem in calling method for fetching cellular towers.'
+        }
+      }));
+      bestLocation = navigatorData
+    }
+    updateLocationInRoot(bestLocation).then(locationUpdationSuccess, locationUpdationError);
 
   }).catch(function (error) {
-    console.log(locationStatus)
-    console.log(error)
-    locationStatus.success ?  updateLocationInRoot(locationStatus).then(locationUpdationSuccess,locationUpdationError) : requestCreator('instant',JSON.stringify(sendLocationServiceCrashRequest(error)));
-  
+      if (locationStatus.success) {
+        updateLocationInRoot(locationStatus).then(locationUpdationSuccess, locationUpdationError)
+      } else {
+        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
+      }
+      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
 }
+
+
 
 function locationUpdationSuccess(message) {
   console.log(message);
