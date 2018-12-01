@@ -526,7 +526,7 @@ function loadViewFromRoot(response) {
       Android.notification(response.data.msg);
       return;
     }
-    // webkit.messageHandlers.updateApp.postMessage();
+    webkit.messageHandlers.updateApp.postMessage();
     return;
   }
 
@@ -589,22 +589,15 @@ function loadViewFromRoot(response) {
     }
 
     if (response.data.type === 'android-stop-refreshing') {
-      if(native.getName() === 'Android'){
-        AndroidRefreshing.stopRefreshing(true);
-      }
+      androidStopRefreshing()
       return;
     }
 
     // updateIDB
 
     if (response.data.type === 'updateIDB') {
-      if (response.data.msg === 'true') {
-        if (native.getName() === 'Android') {
-          console.log("send signal to android to stop refreshing");
-          AndroidRefreshing.stopRefreshing(true);
-        } else {
-          // webkit.messageHandlers.setRefreshing.postMessage('false');
-        }
+        if (response.data.msg === 'true') {
+       androidStopRefreshing()
       }
 
       if (!history.state) {
@@ -624,6 +617,12 @@ function loadViewFromRoot(response) {
       handleTimeout();
     }
   };
+}
+
+function androidStopRefreshing(){
+  if(native.getName() === 'Android'){
+    AndroidRefreshing.stopRefreshing(true);
+  }
 }
 
 function onErrorMessage(error) {

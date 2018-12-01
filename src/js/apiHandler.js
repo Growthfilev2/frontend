@@ -5,7 +5,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
 // Backend API Url
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
-
+let deviceInfo;
 /** reinitialize the firebase app */
 
 // get Device time
@@ -35,12 +35,9 @@ function requestHandlerResponse(type, code, message, params) {
   })
 }
 
-function createLog(message, body) {
-  const logs = {
-    message: message,
-    body: body
-  }
-  return JSON.stringify(logs)
+function createLog(body) {
+  
+  return JSON.stringify(body)
 }
 
 firebase.initializeApp({
@@ -99,7 +96,7 @@ function http(method, url, data) {
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
               requestHandlerResponse('error', errorObject.code, errorObject.message)
-              return reject(JSON.parse(xhr.response))
+              return reject({res:JSON.parse(xhr.response),url:url,data:data})
             }
             xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
           }
@@ -107,14 +104,14 @@ function http(method, url, data) {
 
         xhr.send(data || null)
       }).catch(function (error) {
-        console.log(error.message)
-        instant(createLog(error.message))
+        
+        instant(createLog(error))
       })
   })
 }
 
 function fetchServerTime(deviceInfo) {
-
+  currentDevice = deviceInfo;
   const parsedDeviceInfo = JSON.parse(deviceInfo);
 
   console.log(typeof parsedDeviceInfo.appVersion)
@@ -157,8 +154,7 @@ function fetchServerTime(deviceInfo) {
 
       resolve(response.timestamp)
     }).catch(function (error) {
-
-      instant(createLog(error.message, deviceInfo))
+      instant(createLog(error))
     })
   })
 }
@@ -328,7 +324,7 @@ function comment(body) {
       })
     }).catch(function (error) {
 
-      instant(createLog(error.message))
+      instant(createLog(error))
 
     })
   })
@@ -355,7 +351,7 @@ function statusChange(body) {
           swipe: 'false'
         })
       }).catch(function (error) {
-        instant(createLog(error.message))
+        instant(createLog(error))
 
       })
     })
@@ -383,7 +379,7 @@ function share(body) {
         })
       })
       .catch(function (error) {
-        instant(createLog(error.message, body))
+        instant(createLog(error))
       })
 
   })
@@ -431,7 +427,7 @@ function update(body) {
       })
       .catch(function (error) {
 
-        instant(createLog(error.message, body))
+        instant(createLog(error))
       })
   })
 
@@ -456,7 +452,7 @@ function create(body) {
       })
       .catch(function (error) {
         console.log(error)
-        instant(createLog(error.message, body))
+        instant(createLog(error))
       })
   })
 }
@@ -828,7 +824,7 @@ function updateUserObjectStore(successUrl) {
       }
 
     }).catch(function (error) {
-      instant(createLog(error.message))
+      instant(createLog(error))
     })
 }
 
@@ -1053,7 +1049,7 @@ function updateIDB(param) {
         })
         .catch(function (error) {
 
-          instant(createLog(error.message, root.target.result.fromTime));
+          instant(createLog(error));
         })
     }
   }
