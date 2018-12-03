@@ -219,7 +219,7 @@ function geolocationApi(method, url, data) {
 
 function manageLocation() {
 
-  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
     try {
