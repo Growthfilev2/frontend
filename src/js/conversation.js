@@ -2378,7 +2378,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   const allNumberTypes = document.querySelectorAll('.number')
   for (var i = 0; i < allNumberTypes.length; i++) {
-    let inputValue = allNumberTypes[i].querySelector('.mdc-text-field__input').value
+    let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
     record.attachment[convertIdToKey(allNumberTypes[i].id)].value = inputValue
   }
 
