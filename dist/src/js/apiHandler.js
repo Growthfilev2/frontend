@@ -7,7 +7,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
-
+var currentDevice = void 0;
 /** reinitialize the firebase app */
 
 // get Device time
@@ -36,12 +36,9 @@ function requestHandlerResponse(type, code, message, params) {
   });
 }
 
-function createLog(message, body) {
-  var logs = {
-    message: message,
-    body: body
-  };
-  return JSON.stringify(logs);
+function createLog(body) {
+
+  return JSON.stringify(body);
 }
 
 firebase.initializeApp({
@@ -83,9 +80,9 @@ function http(method, url, data) {
       xhr.setRequestHeader('Authorization', 'Bearer ' + idToken);
 
       xhr.onreadystatechange = function () {
-        console.log(xhr.status);
+        // console.log(xhr.status)
         if (xhr.readyState === 4) {
-          console.log(xhr.status);
+          // console.log(xhr.status)
           if (!xhr.status) {
             requestHandlerResponse('android-stop-refreshing', 400, 'true');
             return;
@@ -94,7 +91,7 @@ function http(method, url, data) {
           if (xhr.status > 226) {
             var errorObject = JSON.parse(xhr.response);
             requestHandlerResponse('error', errorObject.code, errorObject.message);
-            return reject(JSON.parse(xhr.response));
+            return reject({ res: JSON.parse(xhr.response), url: url, data: data, device: currentDevice });
           }
           xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
         }
@@ -102,14 +99,14 @@ function http(method, url, data) {
 
       xhr.send(data || null);
     }).catch(function (error) {
-      console.log(error.message);
-      instant(createLog(error.message));
+
+      instant(createLog(error));
     });
   });
 }
 
 function fetchServerTime(deviceInfo) {
-
+  currentDevice = deviceInfo;
   var parsedDeviceInfo = JSON.parse(deviceInfo);
 
   console.log(_typeof(parsedDeviceInfo.appVersion));
@@ -132,7 +129,12 @@ function fetchServerTime(deviceInfo) {
           }
         };
 
-        var alertData = JSON.stringify({ title: title, message: message, cancelable: false, button: button });
+        var alertData = JSON.stringify({
+          title: title,
+          message: message,
+          cancelable: false,
+          button: button
+        });
         requestHandlerResponse('update-app', 200, alertData, '');
         return;
       }
@@ -144,8 +146,7 @@ function fetchServerTime(deviceInfo) {
 
       resolve(response.timestamp);
     }).catch(function (error) {
-
-      instant(createLog(error.message, deviceInfo));
+      instant(createLog(error));
     });
   });
 }
@@ -283,7 +284,10 @@ function initializeIDB(serverTime) {
         rootObjectStore.put(record);
       };
       rootTx.oncomplete = function () {
-        resolve({ dbName: auth.uid, swipe: 'false' });
+        resolve({
+          dbName: auth.uid,
+          swipe: 'false'
+        });
       };
     };
   });
@@ -294,10 +298,13 @@ function comment(body) {
   return new Promise(function (resolve, reject) {
     http('POST', apiUrl + 'activities/comment', JSON.stringify(body)).then(function () {
       // requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
-      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
+      resolve({
+        dbName: firebase.auth().currentUser.uid,
+        swipe: 'false'
+      });
     }).catch(function (error) {
 
-      instant(createLog(error.message));
+      instant(createLog(error));
     });
   });
 }
@@ -313,9 +320,12 @@ function statusChange(body) {
 
         requestHandlerResponse('notification', 200, 'status changed successfully', dbName);
 
-        resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
+        resolve({
+          dbName: firebase.auth().currentUser.uid,
+          swipe: 'false'
+        });
       }).catch(function (error) {
-        instant(createLog(error.message));
+        instant(createLog(error));
       });
     });
   });
@@ -329,9 +339,12 @@ function share(body) {
     http('PATCH', apiUrl + 'activities/share', JSON.stringify(body)).then(function (success) {
       instantUpdateDB(dbName, body, 'share');
       requestHandlerResponse('notification', 200, 'assignne added successfully', dbName);
-      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
+      resolve({
+        dbName: firebase.auth().currentUser.uid,
+        swipe: 'false'
+      });
     }).catch(function (error) {
-      instant(createLog(error.message, body));
+      instant(createLog(error));
     });
   });
 }
@@ -341,6 +354,7 @@ function Null(swipe) {
   return new Promise(function (resolve, reject) {
     var user = firebase.auth().currentUser;
     if (!user) {
+      requestHandlerResponse('android-stop-refreshing');
       reject(null);
       return;
     }
@@ -349,7 +363,10 @@ function Null(swipe) {
       requestHandlerResponse('reset-offset');
     }
     console.log("Null Ran");
-    resolve({ dbName: user.uid, swipe: swipe });
+    resolve({
+      dbName: user.uid,
+      swipe: swipe
+    });
   });
 }
 
@@ -362,10 +379,13 @@ function update(body) {
       instantUpdateDB(dbName, body, 'update');
       requestHandlerResponse('notification', 200, 'activity update successfully', dbName);
 
-      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
+      resolve({
+        dbName: firebase.auth().currentUser.uid,
+        swipe: 'false'
+      });
     }).catch(function (error) {
 
-      instant(createLog(error.message, body));
+      instant(createLog(error));
     });
   });
 }
@@ -376,11 +396,14 @@ function create(body) {
     http('POST', apiUrl + 'activities/create', JSON.stringify(body)).then(function (success) {
       requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid);
 
-      requestHandlerResponse('redirect-to-list', 200, 'activity created successfully', firebase.auth().currentUser.uid);
-      resolve({ dbName: firebase.auth().currentUser.uid, swipe: 'false' });
+      requestHandlerResponse('redirect-to-list', 200, '', firebase.auth().currentUser.uid);
+      resolve({
+        dbName: firebase.auth().currentUser.uid,
+        swipe: 'false'
+      });
     }).catch(function (error) {
       console.log(error);
-      instant(createLog(error.message, body));
+      instant(createLog(error));
     });
   });
 }
@@ -426,7 +449,7 @@ function instantUpdateDB(dbName, data, type) {
     objStoreTx.oncomplete = function () {
 
       if (type === 'status' || type === 'update') {
-        requestHandlerResponse('redirect-to-list', 200, 'activity status changed');
+        requestHandlerResponse('redirect-to-list', 200, '');
       }
       if (type === 'share') {
 
@@ -506,11 +529,6 @@ function updateCalendar(db, activity) {
       var startTime = moment(schedule.startTime).toDate();
       var endTime = moment(schedule.endTime).toDate();
 
-      // isUpdated: 0,
-      // date: {
-      //   start: startTime,
-      //   end: endTime
-      // },
       calendarObjectStore.add({
         activityId: activity.activityId,
         scheduleName: schedule.name,
@@ -521,37 +539,6 @@ function updateCalendar(db, activity) {
         end: moment(endTime).format('YYYY-MM-DD')
       });
     });
-
-    //calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
-    //   const cursor = event.target.result
-    //
-    //   if (!cursor) return
-    //
-    //   let record = cursor.value
-    //
-    //   for (let currentDate = record.date.start; currentDate <= record.date.end; currentDate.setDate(currentDate.getDate() + 1)) {
-    //     calendarObjectStore.add({
-    //       isUpdated: 1,
-    //       activityId: record.activityId,
-    //       scheduleName: record.scheduleName,
-    //       timestamp: record.timestamp,
-    //       date: moment(currentDate).format('YYYY-MM-DD'),
-    //       template: record.template,
-    //       hidden: record.hidden
-    //     })
-    //   }
-    //   cursor.continue()
-    // }
-
-    // calendarIsUpdatedIndex.openCursor(0).onsuccess = function(event) {
-    //   const cursor = event.target.result
-    //
-    //   if (cursor) {
-    //     let deleteRecordReq = cursor.delete()
-    //     deleteRecordReq.onerror = errorDeletingRecord
-    //     cursor.continue()
-    //   }
-    // }
   };
 
   calendarTx.onerror = transactionError;
@@ -575,10 +562,7 @@ function putAttachment(db, activity) {
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
 function putAssignessInStore(db, assigneeArray) {
-  if (assigneeArray.indexOf(firebase.auth().currentUser.phoneNumber) == -1) {
-    removeActivityFromDB(db);
-    return;
-  }
+
   assigneeArray.forEach(function (assignee) {
     var usersObjectStore = db.transaction('users', 'readwrite').objectStore('users');
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
@@ -593,102 +577,112 @@ function putAssignessInStore(db, assigneeArray) {
   });
 }
 
-function removeActivityFromDB(db) {
-  var activitiesToRemove = [];
-  var activityObjectStore = db.transaction('activity', 'readwrite').objectStore('activity');
-  var myNumber = firebase.auth().currentUser.phoneNumber;
-  activityObjectStore.openCursor().onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) {
-      removeActivityFromKeyPath(activitiesToRemove, 'activityCount');
-      return;
-    }
-
-    if (cursor.value.assignees.indexOf(myNumber) == -1) {
-      activitiesToRemove.push(cursor.value.activityId);
-      cursor.delete();
-    }
-    cursor.continue();
-  };
-}
-
-function removeActivityFromKeyPath(activitiesToRemove, store) {
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var objectStore = db.transaction(store, 'readwrite').objectStore(store);
-    activitiesToRemove.forEach(function (id) {
-      objectStore.delete(id);
-    });
-
-    if (store === 'activityCount') {
-      removeActivityFromCalendar(activitiesToRemove, db);
-    }
-  };
-}
-
-function removeActivityFromCalendar(activitiesToRemove, db) {
-  var calendarObjectStore = db.transaction('calendar', 'readwrite').objectStore('calendar').index('activityId');
-  var count = 0;
-  activitiesToRemove.forEach(function (id) {
-    count++;
-    calendarObjectStore.openCursor(id).onsuccess = function (event) {
-      var cursor = event.target.result;
-      if (!cursor) {
-        if (count === activitiesToRemove.length) {
-          removeActivityFromMap(activitiesToRemove);
-          return;
-        }
+function removeUserFromAssigneeInActivity(db, userActivityId) {
+  if (!userActivityId.length) return;
+  var activityTx = db.transaction('activity', 'readwrite');
+  var activityObjectStore = activityTx.objectStore('activity');
+  userActivityId.forEach(function (data) {
+    activityObjectStore.get(data.id).onsuccess = function (event) {
+      var record = event.target.result;
+      if (!record) {
+        console.log('acitvity does not exist');
         return;
+      } else {
+        var indexOfUser = record.assignees.indexOf(data.user);
+        if (indexOfUser > -1) {
+          record.assignees.splice(indexOfUser, 1);
+        }
+        activityObjectStore.put(record);
       }
-      cursor.delete();
-      cursor.continue();
     };
   });
+  activityTx.oncomplete = function () {
+    console.log('user removed from assignee in activity where he once was if that activity existed');
+  };
 }
 
-function removeActivityFromMap(activitiesToRemove) {
+function removeActivityFromDB(db, myActivities) {
+  if (!myActivities.length) return;
+  var activityTx = db.transaction('activity', 'readwrite');
+  var activityObjectStore = activityTx.objectStore('activity');
+  var deleteReq = void 0;
+  myActivities.forEach(function (id) {
+    deleteReq = activityObjectStore.delete(id);
+    deleteReq.onsuccess = function (event) {
+      console.log(event);
+      console.log('record removed');
+    };
+  });
+
+  activityTx.oncomplete = function () {
+    console.log('all activities removed');
+    removeActivityFromKeyPath(myActivities);
+  };
+}
+
+function removeActivityFromKeyPath(activitiesToRemove) {
+
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
-  var count = 0;
+  var countDeleteReq = void 0;
+  var childrenDeleteReq = void 0;
   req.onsuccess = function () {
     var db = req.result;
-    var mapObjectStore = db.transaction('map', 'readwrite').objectStore('map').index('activityId');
+    var tx = db.transaction(['activityCount', 'children'], 'readwrite');
+    var activityCountObjectStore = tx.objectStore('activityCount');
+    var chidlrenObjectStore = tx.objectStore('children');
+
     activitiesToRemove.forEach(function (id) {
-      count++;
-      mapObjectStore.openCursor(id).onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) {
-          if (count === activitiesToRemove.length) {
-            removeActivityFromKeyPath(activitiesToRemove, 'children');
-            removeActivityFromAddendum(activitiesToRemove);
-            return;
-          }
-          return;
-        }
-        cursor.delete();
-        cursor.continue();
-      };
+      activityCountObjectStore.delete(id);
+      chidlrenObjectStore.delete(id);
+    });
+
+    tx.oncomplete = function () {
+      mapAndCalendarRemovalRequest(activitiesToRemove);
+    };
+  };
+}
+
+function mapAndCalendarRemovalRequest(activitiesToRemove) {
+
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
+
+    var tx = db.transaction(['calendar', 'map'], 'readwrite');
+    var calendarObjectStore = tx.objectStore('calendar').index('activityId');
+    var mapObjectStore = tx.objectStore('map').index('activityId');
+
+    var calendarRemoval = deleteByIndex(calendarObjectStore, activitiesToRemove);
+    var mapRemoval = deleteByIndex(mapObjectStore, activitiesToRemove);
+
+    Promise.all([calendarRemoval, mapRemoval]).then(function (message) {}).catch(function (error) {
+      instant(JSON.stringify({
+        message: error
+      }));
     });
   };
 }
 
-function removeActivityFromAddendum(activitiesToRemove) {
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum').index('activityId');
-    activitiesToRemove.forEach(function (id) {
-      addendumObjectStore.openCursor(id).onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) return;
+function deleteByIndex(store, activitiesToRemove) {
+  return new Promise(function (resolve, reject) {
+    store.openCursor().onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) {
+        resolve('all records removed');
+        return;
+      }
+
+      if (activitiesToRemove.indexOf(cursor.key) > -1) {
         cursor.delete();
-        cursor.continue();
-      };
-    });
-  };
+      }
+      cursor.continue();
+    };
+
+    store.onerror = function (event) {
+      reject(event);
+    };
+  });
 }
 
 function createUsersApiUrl(db) {
@@ -754,7 +748,7 @@ function updateUserObjectStore(successUrl) {
       cursor.continue();
     };
   }).catch(function (error) {
-    instant(createLog(error.message));
+    instant(createLog(error));
   });
 }
 
@@ -795,7 +789,8 @@ function successResponse(read, swipeInfo) {
   var user = firebase.auth().currentUser;
 
   var request = indexedDB.open(user.uid);
-
+  var removeActivitiesForUser = [];
+  var removeActivitiesForOthers = [];
   request.onsuccess = function () {
     var db = request.result;
     var addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum');
@@ -806,11 +801,29 @@ function successResponse(read, swipeInfo) {
     var activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
     var counter = {};
     firstTime++;
+
+    //testing
+
+
     read.addendum.forEach(function (addendum) {
+      if (addendum.unassign) {
+
+        if (addendum.user == firebase.auth().currentUser.phoneNumber) {
+          removeActivitiesForUser.push(addendum.activityId);
+        } else {
+          removeActivitiesForOthers.push({
+            id: addendum.activityId,
+            user: addendum.user
+          });
+        }
+      }
       var key = addendum.activityId;
       counter[key] = (counter[key] || 0) + 1;
       addendumObjectStore.add(addendum);
     });
+
+    removeActivityFromDB(db, removeActivitiesForUser);
+    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers);
 
     Object.keys(counter).forEach(function (count) {
       activityCount.put({
@@ -935,6 +948,8 @@ function setUniqueOffice(data) {
 function updateIDB(param) {
 
   var req = indexedDB.open(param.dbName);
+  console.log(param.dbName);
+  console.log(param.swipe);
 
   req.onsuccess = function () {
     var db = req.result;
@@ -947,7 +962,7 @@ function updateIDB(param) {
         successResponse(response, param.swipe);
       }).catch(function (error) {
 
-        instant(createLog(error.message, root.target.result.fromTime));
+        instant(createLog(error));
       });
     };
   };

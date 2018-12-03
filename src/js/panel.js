@@ -51,7 +51,6 @@ function fetchDataForActivityList(db) {
       return
     }
 
-
     if (currOffice === 'all') {
       if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
         createActivityList(db, cursor.value).then(function (li) {

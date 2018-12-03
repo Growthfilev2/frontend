@@ -1,15 +1,49 @@
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function conversation(id, pushState) {
+  console.log(id);
+  checkIfRecordExists('activity', id).then(function (id) {
+    console.log(id);
+    if (id) {
+      if (pushState) {
+        history.pushState(['conversation', id], null, null);
+      }
+      fetchAddendumForComment(id);
+    } else {
+      listView(true);
+    }
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
+  });
+}
 
-  if (pushState) {
-    history.pushState(['conversation', id], null, null);
-  }
+function checkIfRecordExists(store, id) {
+  return new Promise(function (resolve, reject) {
+    var user = firebase.auth().currentUser;
+    var req = window.indexedDB.open(user.uid);
 
-  fetchAddendumForComment(id);
+    req.onsuccess = function () {
+      var db = req.result;
+      var objectStore = db.transaction(store).objectStore(store);
+      objectStore.get(id).onsuccess = function (event) {
+        var record = event.target.result;
+        if (record) {
+          resolve(id);
+        } else {
+          resolve(false);
+        }
+      };
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
 }
 
 function fetchAddendumForComment(id) {
+  if (!id) return;
   var user = firebase.auth().currentUser;
   var req = window.indexedDB.open(user.uid);
 
@@ -95,16 +129,10 @@ function commentPanel(id) {
   document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML;
 
   document.querySelector('.comment-field').oninput = function (evt) {
-    if (!evt.target.value || evt.target.value === ' ') {
-      document.getElementById('send-chat--input').classList.add('hidden');
-      document.getElementById('write--comment').style.width = '100%';
-      document.getElementById('write--comment').style.transition = '0.3s ease';
-      document.querySelector('.status--change-cont').style.transition = '0.3s ease';
-      document.querySelector('.status--change-cont').style.opacity = '1';
+    if (!evt.target.value || !evt.target.value.replace(/\s/g, '').length) {
+      hideSendCommentButton();
     } else {
-      document.getElementById('send-chat--input').classList.remove('hidden');
-      document.getElementById('write--comment').style.width = '80%';
-      document.querySelector('.status--change-cont').style.opacity = '0';
+      showSendCommentButton();
     }
   };
 
@@ -117,14 +145,30 @@ function commentPanel(id) {
 }
 
 function sendComment(id) {
+  var comment = document.querySelector('.comment-field').value;
   var reqBody = {
     'activityId': id,
-    'comment': document.querySelector('.comment-field').value
+    'comment': comment
   };
 
   requestCreator('comment', reqBody);
+
   document.querySelector('.comment-field').value = '';
+  hideSendCommentButton();
+}
+
+function hideSendCommentButton() {
+  document.getElementById('send-chat--input').classList.add('hidden');
+  document.getElementById('write--comment').style.width = '100%';
+  document.getElementById('write--comment').style.transition = '0.3s ease';
+  document.querySelector('.status--change-cont').style.transition = '0.3s ease';
   document.querySelector('.status--change-cont').style.opacity = '1';
+}
+
+function showSendCommentButton() {
+  document.getElementById('send-chat--input').classList.remove('hidden');
+  document.getElementById('write--comment').style.width = '80%';
+  document.querySelector('.status--change-cont').style.opacity = '0';
 }
 
 function statusChange(db, id) {
@@ -429,7 +473,18 @@ function createHeaderContent(db, id) {
       });
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {
-        updateCreateActivity(record, true);
+        checkIfRecordExists('activity', record.activityId).then(function (id) {
+          // alert(id)
+          if (id) {
+            updateCreateActivity(record, true);
+          } else {
+            listView(true);
+          }
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify({
+            message: error
+          }));
+        });
       });
     });
   };
@@ -675,6 +730,7 @@ function fillUsersInSelector(data, dialog) {
     };
   };
 }
+
 function shareReq(data) {
   document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
   document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none';
@@ -1619,7 +1675,7 @@ function createScheduleTable(data) {
 
 function createAttachmentContainer(data) {
 
-  var ordering = ['Name', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string'];
+  var ordering = ['Name', 'Number', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string'];
 
   ordering.forEach(function (order) {
     var group = document.createElement("div");
@@ -1651,16 +1707,15 @@ function createAttachmentContainer(data) {
     label.className = 'label--text';
     label.textContent = key;
 
-    if (key === 'Name') {
+    if (key === 'Name' || key === 'Number') {
       div.appendChild(label);
       var required = true;
       div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key, required));
-    }
-
-    if (data.attachment[key].type === 'string' && key !== 'Name') {
-
-      div.appendChild(label);
-      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key));
+    } else {
+      if (data.attachment[key].type === 'string') {
+        div.appendChild(label);
+        div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key));
+      }
     }
 
     if (data.attachment[key].type === 'number') {
@@ -2202,7 +2257,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   var allNumberTypes = document.querySelectorAll('.number');
   for (var i = 0; i < allNumberTypes.length; i++) {
-    var _inputValue = allNumberTypes[i].querySelector('.mdc-text-field__input').value;
+    var _inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value);
     record.attachment[convertIdToKey(allNumberTypes[i].id)].value = _inputValue;
   }
 
@@ -2603,6 +2658,10 @@ function toggleActionables(id) {
     var activityStore = db.transaction('activity').objectStore('activity');
     activityStore.get(id).onsuccess = function (event) {
       var record = event.target.result;
+      if (!record) {
+        listView(true);
+        return;
+      }
       var actions = document.querySelectorAll('.mdc-fab');
       if (!record.editable) return;
 

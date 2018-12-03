@@ -5,7 +5,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
 // Backend API Url
 const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
-
+let deviceInfo;
 /** reinitialize the firebase app */
 
 // get Device time
@@ -35,12 +35,9 @@ function requestHandlerResponse(type, code, message, params) {
   })
 }
 
-function createLog(message, body) {
-  const logs = {
-    message: message,
-    body: body
-  }
-  return JSON.stringify(logs)
+function createLog(body) {
+  
+  return JSON.stringify(body)
 }
 
 firebase.initializeApp({
@@ -55,7 +52,7 @@ firebase.initializeApp({
 
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
-  firebase.auth().onAuthStateChanged(function(auth){
+  firebase.auth().onAuthStateChanged(function (auth) {
 
     if (event.data.type === 'now') {
       fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
@@ -88,35 +85,35 @@ function http(method, url, data) {
         xhr.setRequestHeader('Authorization', `Bearer ${idToken}`)
 
         xhr.onreadystatechange = function () {
-          console.log(xhr.status)
+          // console.log(xhr.status)
           if (xhr.readyState === 4) {
-            console.log(xhr.status)
-            if(!xhr.status) {
-               requestHandlerResponse('android-stop-refreshing',400,'true')
+            // console.log(xhr.status)
+            if (!xhr.status) {
+              requestHandlerResponse('android-stop-refreshing', 400, 'true')
               return;
             }
 
             if (xhr.status > 226) {
               const errorObject = JSON.parse(xhr.response)
               requestHandlerResponse('error', errorObject.code, errorObject.message)
-              return reject(JSON.parse(xhr.response))
+              return reject({res:JSON.parse(xhr.response),url:url,data:data,device:currentDevice})
             }
-            xhr.responseText ?  resolve(JSON.parse(xhr.responseText)) : resolve('success')
+            xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
           }
         }
 
         xhr.send(data || null)
       }).catch(function (error) {
-        console.log(error.message)
-        instant(createLog(error.message))
+        
+        instant(createLog(error))
       })
   })
 }
 
 function fetchServerTime(deviceInfo) {
-  
+  currentDevice = deviceInfo;
   const parsedDeviceInfo = JSON.parse(deviceInfo);
-  
+
   console.log(typeof parsedDeviceInfo.appVersion)
   return new Promise(function (resolve) {
     http(
@@ -124,36 +121,40 @@ function fetchServerTime(deviceInfo) {
       `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}`
     ).then(function (response) {
       console.log(response)
-      if(response.updateClient) {
+      if (response.updateClient) {
         console.log("please update device")
         const title = 'Message';
         const message = 'There is a New version of your app available';
 
-        const button = {  
-          text:'Update',
-          show:true,
+        const button = {
+          text: 'Update',
+          show: true,
           clickAction: {
             redirection: {
-              text:'com.growthfile.growthfileNew',
-              value:true
+              text: 'com.growthfile.growthfileNew',
+              value: true
             }
           }
         }
-       
-        const alertData = JSON.stringify({title:title,message:message,cancelable:false,button:button})
-        requestHandlerResponse('update-app',200,alertData,'')
+
+        const alertData = JSON.stringify({
+          title: title,
+          message: message,
+          cancelable: false,
+          button: button
+        })
+        requestHandlerResponse('update-app', 200, alertData, '')
         return
       }
-  
+
       if (response.revokeSession) {
-        requestHandlerResponse('revoke-session',200);
+        requestHandlerResponse('revoke-session', 200);
         return
       }
-      
+
       resolve(response.timestamp)
     }).catch(function (error) {
-
-      instant(createLog(error.message, deviceInfo))
+      instant(createLog(error))
     })
   })
 }
@@ -259,7 +260,7 @@ function initializeIDB(serverTime) {
       })
       map.createIndex('activityId', 'activityId')
       map.createIndex('location', 'location')
-   
+
       map.createIndex('latitude', 'latitude')
       map.createIndex('longitude', 'longitude')
       map.createIndex('range', ['latitude', 'longitude'])
@@ -280,10 +281,10 @@ function initializeIDB(serverTime) {
         uid: auth.uid,
         fromTime: 0,
         provider: '',
-        latitude:'',
-        longitude:'',
-        accuracy:'',
-        lastLocationTime:''
+        latitude: '',
+        longitude: '',
+        accuracy: '',
+        lastLocationTime: ''
       })
       requestHandlerResponse('manageLocation')
     }
@@ -298,7 +299,10 @@ function initializeIDB(serverTime) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
-        resolve({dbName:auth.uid,swipe:'false'})
+        resolve({
+          dbName: auth.uid,
+          swipe: 'false'
+        })
       }
 
     }
@@ -314,10 +318,13 @@ function comment(body) {
       JSON.stringify(body)
     ).then(function () {
       // requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
-      resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
+      resolve({
+        dbName: firebase.auth().currentUser.uid,
+        swipe: 'false'
+      })
     }).catch(function (error) {
 
-      instant(createLog(error.message))
+      instant(createLog(error))
 
     })
   })
@@ -339,11 +346,12 @@ function statusChange(body) {
 
         requestHandlerResponse('notification', 200, 'status changed successfully', dbName)
 
-        resolve(
-          {dbName:firebase.auth().currentUser.uid,swipe:'false'}
-        )
+        resolve({
+          dbName: firebase.auth().currentUser.uid,
+          swipe: 'false'
+        })
       }).catch(function (error) {
-        instant(createLog(error.message))
+        instant(createLog(error))
 
       })
     })
@@ -365,12 +373,13 @@ function share(body) {
       .then(function (success) {
         instantUpdateDB(dbName, body, 'share')
         requestHandlerResponse('notification', 200, 'assignne added successfully', dbName)
-        resolve(
-          {dbName:firebase.auth().currentUser.uid,swipe:'false'}
-        )
+        resolve({
+          dbName: firebase.auth().currentUser.uid,
+          swipe: 'false'
+        })
       })
       .catch(function (error) {
-        instant(createLog(error.message, body))
+        instant(createLog(error))
       })
 
   })
@@ -382,6 +391,7 @@ function Null(swipe) {
   return new Promise(function (resolve, reject) {
     const user = firebase.auth().currentUser
     if (!user) {
+      requestHandlerResponse('android-stop-refreshing')
       reject(null)
       return
     }
@@ -390,7 +400,10 @@ function Null(swipe) {
       requestHandlerResponse('reset-offset')
     }
     console.log("Null Ran")
-    resolve({dbName:user.uid,swipe:swipe})
+    resolve({
+      dbName: user.uid,
+      swipe: swipe
+    })
   })
 }
 
@@ -408,11 +421,14 @@ function update(body) {
         instantUpdateDB(dbName, body, 'update')
         requestHandlerResponse('notification', 200, 'activity update successfully', dbName)
 
-        resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
+        resolve({
+          dbName: firebase.auth().currentUser.uid,
+          swipe: 'false'
+        })
       })
       .catch(function (error) {
 
-        instant(createLog(error.message, body))
+        instant(createLog(error))
       })
   })
 
@@ -429,12 +445,15 @@ function create(body) {
       .then(function (success) {
         requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid)
 
-        requestHandlerResponse('redirect-to-list', 200, 'activity created successfully', firebase.auth().currentUser.uid)
-        resolve({dbName:firebase.auth().currentUser.uid,swipe:'false'})
+        requestHandlerResponse('redirect-to-list', 200, '', firebase.auth().currentUser.uid)
+        resolve({
+          dbName: firebase.auth().currentUser.uid,
+          swipe: 'false'
+        })
       })
       .catch(function (error) {
         console.log(error)
-        instant(createLog(error.message, body))
+        instant(createLog(error))
       })
   })
 }
@@ -451,7 +470,7 @@ function instantUpdateDB(dbName, data, type) {
       const record = event.target.result
       record.editable = 0
 
-     
+
       if (type === 'share') {
         record.assignees.push(data.share[0])
         objStore.put(record)
@@ -465,14 +484,14 @@ function instantUpdateDB(dbName, data, type) {
         //   const updateData = data
         record.schedule = data.schedule;
         record.attachment = data.attachment
-          for (var i = 0; i < record.venue.length; i++) {
-            record.venue[i].geopoint = {
-              '_latitude': data.venue[i].geopoint['_latitude'],
-              '_longitude': data.venue[i].geopoint['_longitude']
-            }
+        for (var i = 0; i < record.venue.length; i++) {
+          record.venue[i].geopoint = {
+            '_latitude': data.venue[i].geopoint['_latitude'],
+            '_longitude': data.venue[i].geopoint['_longitude']
           }
-          objStore.put(record)
-        
+        }
+        objStore.put(record)
+
       }
       if (type === 'status') {
 
@@ -484,7 +503,7 @@ function instantUpdateDB(dbName, data, type) {
     objStoreTx.oncomplete = function () {
 
       if (type === 'status' || type === 'update') {
-        requestHandlerResponse('redirect-to-list', 200, 'activity status changed')
+        requestHandlerResponse('redirect-to-list', 200, '')
       }
       if (type === 'share') {
 
@@ -512,7 +531,7 @@ function updateMap(db, activity) {
       cursor.continue()
       deleteRecordReq.onerror = errorDeletingRecord
     }
- }
+  }
 
   mapTx.oncomplete = function () {
     const mapTx = db.transaction(['map'], 'readwrite')
@@ -569,11 +588,6 @@ function updateCalendar(db, activity) {
       const startTime = moment(schedule.startTime).toDate()
       const endTime = moment(schedule.endTime).toDate()
 
-      // isUpdated: 0,
-      // date: {
-      //   start: startTime,
-      //   end: endTime
-      // },
       calendarObjectStore.add({
         activityId: activity.activityId,
         scheduleName: schedule.name,
@@ -585,36 +599,6 @@ function updateCalendar(db, activity) {
       })
     })
 
-    //calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
-    //   const cursor = event.target.result
-    //
-    //   if (!cursor) return
-    //
-    //   let record = cursor.value
-    //
-    //   for (let currentDate = record.date.start; currentDate <= record.date.end; currentDate.setDate(currentDate.getDate() + 1)) {
-    //     calendarObjectStore.add({
-    //       isUpdated: 1,
-    //       activityId: record.activityId,
-    //       scheduleName: record.scheduleName,
-    //       timestamp: record.timestamp,
-    //       date: moment(currentDate).format('YYYY-MM-DD'),
-    //       template: record.template,
-    //       hidden: record.hidden
-    //     })
-    //   }
-    //   cursor.continue()
-    // }
-
-    // calendarIsUpdatedIndex.openCursor(0).onsuccess = function(event) {
-    //   const cursor = event.target.result
-    //
-    //   if (cursor) {
-    //     let deleteRecordReq = cursor.delete()
-    //     deleteRecordReq.onerror = errorDeletingRecord
-    //     cursor.continue()
-    //   }
-    // }
 
   }
 
@@ -639,10 +623,7 @@ function putAttachment(db, activity) {
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
 function putAssignessInStore(db, assigneeArray) {
-  if (assigneeArray.indexOf(firebase.auth().currentUser.phoneNumber) == -1) {
-    removeActivityFromDB(db)
-    return
-  }
+
   assigneeArray.forEach(function (assignee) {
     const usersObjectStore = db.transaction('users', 'readwrite').objectStore('users')
     usersObjectStore.openCursor(assignee).onsuccess = function (event) {
@@ -657,104 +638,121 @@ function putAssignessInStore(db, assigneeArray) {
   })
 }
 
-function removeActivityFromDB(db) {
-  const activitiesToRemove = []
-  const activityObjectStore = db.transaction('activity','readwrite').objectStore('activity')
-  const myNumber = firebase.auth().currentUser.phoneNumber
-  activityObjectStore.openCursor().onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) {
-      removeActivityFromKeyPath(activitiesToRemove, 'activityCount')
-      return
+function removeUserFromAssigneeInActivity(db, userActivityId) {
+  if(!userActivityId.length) return;
+  const activityTx = db.transaction('activity', 'readwrite')
+  const activityObjectStore = activityTx.objectStore('activity')
+  userActivityId.forEach(function (data) {
+    activityObjectStore.get(data.id).onsuccess = function (event) {
+      const record = event.target.result;
+      if (!record) {
+        console.log('acitvity does not exist')
+        return;
+      } else {
+        const indexOfUser = record.assignees.indexOf(data.user)
+        if (indexOfUser > -1) {
+          record.assignees.splice(indexOfUser, 1)
+        }
+        activityObjectStore.put(record)
+      }
     }
+  })
+  activityTx.oncomplete = function () {
+    console.log('user removed from assignee in activity where he once was if that activity existed')
+  }
+}
 
-    if (cursor.value.assignees.indexOf(myNumber) == -1) {
-      activitiesToRemove.push(cursor.value.activityId)
-      cursor.delete()
+function removeActivityFromDB(db, myActivities) {
+  if(!myActivities.length) return;
+  const activityTx = db.transaction('activity', 'readwrite')
+  const activityObjectStore = activityTx.objectStore('activity')
+  let deleteReq;
+  myActivities.forEach(function (id) {
+    deleteReq = activityObjectStore.delete(id)
+    deleteReq.onsuccess = function (event) {
+      console.log(event)
+      console.log('record removed')
     }
-    cursor.continue()
+  })
+
+  activityTx.oncomplete = function () {
+    console.log('all activities removed')
+    removeActivityFromKeyPath(myActivities)
   }
 
 }
 
-function removeActivityFromKeyPath(activitiesToRemove, store) {
+function removeActivityFromKeyPath(activitiesToRemove) {
+
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
+  let countDeleteReq;
+  let childrenDeleteReq;
   req.onsuccess = function () {
     const db = req.result
-    const objectStore = db.transaction(store,'readwrite').objectStore(store)
+    const tx = db.transaction(['activityCount', 'children'], 'readwrite')
+    const activityCountObjectStore = tx.objectStore('activityCount');
+    const chidlrenObjectStore = tx.objectStore('children');
+
     activitiesToRemove.forEach(function (id) {
-      objectStore.delete(id)
+      activityCountObjectStore.delete(id);
+      chidlrenObjectStore.delete(id);
     })
 
-    if (store === 'activityCount') {
-      removeActivityFromCalendar(activitiesToRemove, db)
+    tx.oncomplete = function () {
+      mapAndCalendarRemovalRequest(activitiesToRemove)
     }
   }
 }
 
-function removeActivityFromCalendar(activitiesToRemove, db) {
-  const calendarObjectStore = db.transaction('calendar','readwrite').objectStore('calendar').index('activityId')
-  let count = 0
-  activitiesToRemove.forEach(function (id) {
-    count++
-    calendarObjectStore.openCursor(id).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) {
-        if (count === activitiesToRemove.length) {
-          removeActivityFromMap(activitiesToRemove)
-          return
-        }
+function mapAndCalendarRemovalRequest(activitiesToRemove) {
+
+
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
+    const db = req.result;
+
+    const tx = db.transaction(['calendar', 'map'], 'readwrite')
+    const calendarObjectStore = tx.objectStore('calendar').index('activityId')
+    const mapObjectStore = tx.objectStore('map').index('activityId')
+
+    const calendarRemoval = deleteByIndex(calendarObjectStore, activitiesToRemove)
+    const mapRemoval = deleteByIndex(mapObjectStore, activitiesToRemove)
+
+    Promise.all([calendarRemoval, mapRemoval]).then(function (message) {
+    }).catch(function (error) {
+      instant(JSON.stringify({
+        message: error
+      }))
+    })
+  }
+}
+
+
+function deleteByIndex(store, activitiesToRemove) {
+  return new Promise(function (resolve, reject) {
+    store.openCursor().onsuccess = function (event) {
+      const cursor = event.target.result;
+      if(!cursor) {
+        resolve('all records removed')
         return
       }
-      cursor.delete()
-      cursor.continue()
+
+        if (activitiesToRemove.indexOf(cursor.key) > -1) {
+          cursor.delete()
+        }
+        cursor.continue()
+      }
+    
+
+    store.onerror = function (event) {
+      reject(event)
     }
+    
   })
 }
 
-function removeActivityFromMap(activitiesToRemove) {
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  let count = 0
-  req.onsuccess = function () {
-    const db = req.result
-    const mapObjectStore = db.transaction('map','readwrite').objectStore('map').index('activityId')
-    activitiesToRemove.forEach(function (id) {
-      count++
-      mapObjectStore.openCursor(id).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) {
-          if (count === activitiesToRemove.length) {
-            removeActivityFromKeyPath(activitiesToRemove, 'children')
-            removeActivityFromAddendum(activitiesToRemove)
-            return
-          }
-          return
-        }
-        cursor.delete()
-        cursor.continue()
-      }
-    })
-  }
-}
 
-function removeActivityFromAddendum(activitiesToRemove) {
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const addendumObjectStore = db.transaction('addendum','readwrite').objectStore('addendum').index('activityId')
-    activitiesToRemove.forEach(function (id) {
-      addendumObjectStore.openCursor(id).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return
-        cursor.delete()
-        cursor.continue()
-      }
-    })
-  }
-}
 
 
 function createUsersApiUrl(db) {
@@ -800,7 +798,7 @@ function updateUserObjectStore(successUrl) {
     )
     .then(function (userProfile) {
       console.log(userProfile)
-      if(!Object.keys(userProfile).length) return
+      if (!Object.keys(userProfile).length) return
       const usersObjectStore = successUrl.db.transaction('users', 'readwrite').objectStore('users')
       const isUpdatedIndex = usersObjectStore.index('isUpdated')
       const USER_NOT_UPDATED = 0
@@ -813,8 +811,8 @@ function updateUserObjectStore(successUrl) {
           // requestHandlerResponse('notification', 200, 'user object store modified', successUrl.db.name)
           return
         }
-        if(!userProfile.hasOwnProperty(cursor.primaryKey)) return
-        
+        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
+
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL
@@ -827,7 +825,7 @@ function updateUserObjectStore(successUrl) {
       }
 
     }).catch(function (error) {
-      instant(createLog(error.message))
+      instant(createLog(error))
     })
 }
 
@@ -867,12 +865,13 @@ function updateSubscription(db, subscription) {
 
 let firstTime = 0;
 
-function successResponse(read,swipeInfo) {
+function successResponse(read, swipeInfo) {
   console.log(swipeInfo)
   const user = firebase.auth().currentUser
 
   const request = indexedDB.open(user.uid)
-
+  const removeActivitiesForUser = []
+  const removeActivitiesForOthers = []
   request.onsuccess = function () {
     const db = request.result
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
@@ -883,11 +882,29 @@ function successResponse(read,swipeInfo) {
     const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
     let counter = {}
     firstTime++
+  
+    //testing
+
+
     read.addendum.forEach(function (addendum) {
+      if(addendum.unassign){
+
+        if ( addendum.user == firebase.auth().currentUser.phoneNumber) {
+          removeActivitiesForUser.push(addendum.activityId)
+        } else {
+          removeActivitiesForOthers.push({
+            id: addendum.activityId,
+            user: addendum.user
+          })
+        }
+      }
       let key = addendum.activityId
       counter[key] = (counter[key] || 0) + 1
       addendumObjectStore.add(addendum)
     })
+
+    removeActivityFromDB(db, removeActivitiesForUser);
+    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers);
 
     Object.keys(counter).forEach(function (count) {
       activityCount.put({
@@ -925,10 +942,10 @@ function successResponse(read,swipeInfo) {
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
     })
-    
+
     rootObjectStore.get(user.uid).onsuccess = function (event) {
       const record = event.target.result
-      getUniqueOfficeCount(record.fromTime,swipeInfo).then(setUniqueOffice).catch(console.log)
+      getUniqueOfficeCount(record.fromTime, swipeInfo).then(setUniqueOffice).catch(console.log)
 
       record.fromTime = read.upto
       rootObjectStore.put(record)
@@ -936,17 +953,17 @@ function successResponse(read,swipeInfo) {
 
       if (record.fromTime !== 0) {
         // setTimeout(function(){
-          requestHandlerResponse('updateIDB', 200,swipeInfo);
+        requestHandlerResponse('updateIDB', 200, swipeInfo);
         // },)
       }
     }
-    
+
   }
 }
 
 
 
-function getUniqueOfficeCount(firstTime,swipeInfo) {
+function getUniqueOfficeCount(firstTime, swipeInfo) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
@@ -963,7 +980,7 @@ function getUniqueOfficeCount(firstTime,swipeInfo) {
             count: officeCount,
             allOffices: offices,
             firstTime: firstTime,
-            swipe:swipeInfo
+            swipe: swipeInfo
           })
           return
         }
@@ -995,9 +1012,9 @@ function setUniqueOffice(data) {
         record.offices = offices
         rootObjectStore.put(record)
         if (data.firstTime === 0) {
-          setTimeout(function(){
+          setTimeout(function () {
             requestHandlerResponse('updateIDB', 200, data.swipe)
-          },1000)
+          }, 1000)
         }
         return
       }
@@ -1005,9 +1022,9 @@ function setUniqueOffice(data) {
       record.offices = offices
       rootObjectStore.put(record)
       if (data.firstTime === 0) {
-        setTimeout(function(){
+        setTimeout(function () {
           requestHandlerResponse('updateIDB', 200, data.swipe)
-        },1000)
+        }, 1000)
       }
     }
   }
@@ -1016,7 +1033,10 @@ function setUniqueOffice(data) {
 function updateIDB(param) {
 
   const req = indexedDB.open(param.dbName)
-
+  console.log(param.dbName);
+  console.log(param.swipe);
+  
+  
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
@@ -1028,12 +1048,12 @@ function updateIDB(param) {
           `${apiUrl}read?from=${root.target.result.fromTime}`
         )
         .then(function (response) {
-          if(!response) return;
-          successResponse(response,param.swipe)
+          if (!response) return;
+          successResponse(response, param.swipe)
         })
         .catch(function (error) {
-         
-          instant(createLog(error.message, root.target.result.fromTime));
+
+          instant(createLog(error));
         })
     }
   }
