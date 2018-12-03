@@ -1033,7 +1033,10 @@ function setUniqueOffice(data) {
 function updateIDB(param) {
 
   const req = indexedDB.open(param.dbName)
-
+  console.log(param.dbName);
+  console.log(param.swipe);
+  
+  
   req.onsuccess = function () {
     const db = req.result
     const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')

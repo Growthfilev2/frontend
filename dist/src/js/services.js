@@ -223,7 +223,7 @@ function manageLocation() {
   if (native.getName() === 'Android') {
     try {
       CelllarJson = Towers.getCellularData();
-      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, JSON.stringify(CelllarJson));
+      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
       geoFetchPromise.then(function (geoData) {
         initLocationInterval(geoData);
       }).catch(function (error) {

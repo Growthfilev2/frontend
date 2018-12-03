@@ -153,9 +153,9 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error);
-  http('POST', apiUrl + 'services/logs', error).then(function (response) {
-    console.log(response);
-  }).catch(console.log);
+  // http('POST', apiUrl + 'services/logs', error).then(function (response) {
+  //   console.log(response);
+  // }).catch(console.log);
 }
 
 /**
@@ -948,7 +948,8 @@ function setUniqueOffice(data) {
 function updateIDB(param) {
 
   var req = indexedDB.open(param.dbName);
-
+  console.log(param.dbName)
+  console.log(param.swipe)
   req.onsuccess = function () {
     var db = req.result;
     var rootObjectStore = db.transaction('root', 'readonly').objectStore('root');

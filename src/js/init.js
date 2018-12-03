@@ -295,7 +295,6 @@ function init(auth) {
   console.log("initialzie idb")
   const deviceInfo = JSON.parse(native.getInfo());
 
- 
   removeIDBInstance(auth).then(function(isRemoved){
     if(isRemoved){
       requestCreator('now', native.getInfo())
