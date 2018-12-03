@@ -558,11 +558,11 @@ function loadViewFromRoot(response) {
     }
     return;
   }
+
   if (response.data.type === 'android-stop-refreshing') {
     androidStopRefreshing();
     return;
   }
-
 
   var req = window.indexedDB.open(firebase.auth().currentUser.uid);
 
@@ -590,7 +590,6 @@ function loadViewFromRoot(response) {
       return;
     }
 
-   
     // updateIDB
 
     if (response.data.type === 'updateIDB') {
