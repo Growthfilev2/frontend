@@ -716,8 +716,8 @@ function mapAndCalendarRemovalRequest(activitiesToRemove) {
     const calendarObjectStore = tx.objectStore('calendar').index('activityId')
     const mapObjectStore = tx.objectStore('map').index('activityId')
 
-    const calendarRemoval = deleteByIndex(tx, calendarObjectStore, activitiesToRemove)
-    const mapRemoval = deleteByIndex(tx, mapObjectStore, activitiesToRemove)
+    const calendarRemoval = deleteByIndex(calendarObjectStore, activitiesToRemove)
+    const mapRemoval = deleteByIndex(mapObjectStore, activitiesToRemove)
 
     Promise.all([calendarRemoval, mapRemoval]).then(function (message) {
     }).catch(function (error) {
@@ -729,7 +729,7 @@ function mapAndCalendarRemovalRequest(activitiesToRemove) {
 }
 
 
-function deleteByIndex(tx, store, activitiesToRemove) {
+function deleteByIndex(store, activitiesToRemove) {
   return new Promise(function (resolve, reject) {
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result;
