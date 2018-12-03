@@ -652,7 +652,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();
-  }, 30000);
+  }, 10000);
 }
 
 function getInputText(selector) {
