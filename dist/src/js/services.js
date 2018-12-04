@@ -232,7 +232,7 @@ function manageLocation() {
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: {
-          error: locationStatus.message,
+          error: e.message,
           file: 'services.js',
           lineNo: 231,
           device: JSON.parse(native.getInfo()),
