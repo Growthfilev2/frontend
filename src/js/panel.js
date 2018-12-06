@@ -268,19 +268,20 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
 }
 
 function createActivityIcon(db) {
+  if(document.getElementById('create-activity')) return;
   const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
   const subscriptionCount = subscriptionObjectStore.count()
   subscriptionCount.onsuccess = function () {
     if (subscriptionCount.result) {
       const fab = document.createElement('button')
       fab.className = 'mdc-fab create-activity'
+      fab.id = 'create-activity'
       fab.setAttribute('aria-label', 'Add')
       const span = document.createElement('span')
       span.className = 'mdc-fab_icon material-icons'
       span.textContent = 'add'
       fab.appendChild(span)
-      if (document.getElementById('activity--list')) {
-        document.getElementById('activity--list').appendChild(fab)
+        document.getElementById('activity-list-main').appendChild(fab)
         document.querySelector('.create-activity').addEventListener('click', function (evt) {
           selectorUI(evt, {
             record: '',
@@ -288,7 +289,7 @@ function createActivityIcon(db) {
           })
         })
       }
-    }
+    
   }
 }
 
