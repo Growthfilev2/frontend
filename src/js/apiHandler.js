@@ -161,13 +161,13 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error)
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -200,11 +200,14 @@ function initializeIDB(serverTime) {
 
     const request = indexedDB.open(auth.uid)
 
+
     request.onerror = function (event) {
       reject(event.error)
     }
+    
 
-    request.onupgradeneeded = function () {
+    request.onupgradeneeded = function (evt) {
+      console.log(evt)
       const db = request.result
       const activity = db.createObjectStore('activity', {
         keyPath: 'activityId'
@@ -254,6 +257,7 @@ function initializeIDB(serverTime) {
       calendar.createIndex('start', 'start')
       calendar.createIndex('end', 'end')
       calendar.createIndex('range', ['start', 'end'])
+      calendar.createIndex('status','PENDING')
 
       const map = db.createObjectStore('map', {
         autoIncrement: true
@@ -277,6 +281,7 @@ function initializeIDB(serverTime) {
         keyPath: 'uid'
       })
 
+     
       root.put({
         uid: auth.uid,
         fromTime: 0,
@@ -290,7 +295,7 @@ function initializeIDB(serverTime) {
     }
 
     request.onsuccess = function () {
-
+   
       const rootTx = request.result.transaction('root', 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
       rootObjectStore.get(auth.uid).onsuccess = function (event) {
@@ -547,7 +552,6 @@ function updateMap(db, activity) {
         template: activity.template,
         address: newVenue.address.toLowerCase(),
         venueDescriptor: newVenue.venueDescriptor,
-
       })
     })
 
@@ -957,10 +961,8 @@ function successResponse(read, swipeInfo) {
         // },)
       }
     }
-
   }
 }
-
 
 
 function getUniqueOfficeCount(firstTime, swipeInfo) {

@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -241,7 +241,7 @@ function manageLocation() {
           help: 'Problem in calling method for fetching cellular towers.'
         }
       }));
-    
+
       locationInterval().then(function(navigatorData){
         updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
       }).catch(function(error){
@@ -349,6 +349,7 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   if (!finalLocation) return;
+
   return new Promise(function (resolve, reject) {
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
@@ -357,6 +358,7 @@ function updateLocationInRoot(finalLocation) {
       var tx = db.transaction(['root'], 'readwrite');
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
+
         var record = event.target.result;
         record.latitude = finalLocation.latitude;
         record.longitude = finalLocation.longitude;
@@ -373,6 +375,29 @@ function updateLocationInRoot(finalLocation) {
       reject(error)
     }
   })
+}
+
+function isNewLocationMoreThanThreshold(){
+  const THRESHOLD = 500;
+  var R = 6371; // km
+  
+  const dLat = toRad(userCoords.lat - otherLocations['latitude']);
+  const dLon = toRad(userCoords.lng - otherLocations['longitude']);
+  const lat1 = toRad(userCoords.lat);
+  const lat2 = toRad(otherLocations['latitude']);
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+
+  const record  = {
+    activityId : otherLocations.activityId,
+    distance: distance
+  }
+
+  return record
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
@@ -594,12 +619,12 @@ function loadViewFromRoot(response) {
     }
 
     if (response.data.type === 'redirect-to-list') {
-       
-      history.pushState(['listView'], null, null);      
+
+      history.pushState(['listView'], null, null);
       return;
     }
 
-    
+
 
     // updateIDB
 

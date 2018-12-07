@@ -7,7 +7,7 @@ firebase.initializeApp({
   messagingSenderId: "1011478688238"
 })
 
-window.onerror = function (msg, url, lineNo, columnNo, error) {
+window.onerror = function(msg, url, lineNo, columnNo, error) {
   const errorJS = {
     message: {
       msg: msg,
@@ -31,7 +31,7 @@ window.scrollBy({
 
 
 
-window.addEventListener('load', function () {
+window.addEventListener('load', function() {
   if (!window.Worker && !window.indexedDB) {
     const title = 'Device Incompatibility'
     const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
@@ -42,10 +42,10 @@ window.addEventListener('load', function () {
       button: {
         text: '',
         show: false,
-        clickAction:{
-          redirection:{
-            value:false,
-            text:''
+        clickAction: {
+          redirection: {
+            value: false,
+            text: ''
           }
         }
       }
@@ -77,7 +77,7 @@ window.addEventListener('load', function () {
 
 })
 
-window.onpopstate = function (event) {
+window.onpopstate = function(event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
@@ -87,13 +87,13 @@ window.onpopstate = function (event) {
 
   if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
     const req = indexedDB.open(localStorage.getItem('dbexist'))
-    req.onsuccess = function () {
+    req.onsuccess = function() {
       const db = req.result
       window[event.state[0]](event.state[1], db, false);
     }
     return;
-  } 
-  
+  }
+
   window[event.state[0]](event.state[1], false)
 }
 
@@ -105,7 +105,7 @@ function firebaseUiConfig(value) {
 
   return {
     'callbacks': {
-      'signInSuccess': function (user) {
+      'signInSuccess': function(user) {
         if (value) {
           updateEmail(user, value)
           return
@@ -114,7 +114,7 @@ function firebaseUiConfig(value) {
         // no redirect
         return false
       },
-      'signInFailure': function (error) {
+      'signInFailure': function(error) {
         return handleUIError(error)
       }
     },
@@ -202,37 +202,37 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-let native = function () {
+let native = function() {
   return {
-    setName: function (device) {
+    setName: function(device) {
       localStorage.setItem('deviceType', device);
     },
-    getName: function () {
+    getName: function() {
       return localStorage.getItem('deviceType');
     },
-    setIosInfo: function (iosDeviceInfo) {
+    setIosInfo: function(iosDeviceInfo) {
       const splitByName = iosDeviceInfo.split("&")
       const deviceInfo = {
-        baseOs:splitByName[0],
-        deviceBrand:splitByName[1],
-        deviceModel:splitByName[2],
-        appVersion:Number(splitByName[3]),
-        osVersion:splitByName[4],
-        id:splitByName[5],
-        initConnection:splitByName[6]
+        baseOs: splitByName[0],
+        deviceBrand: splitByName[1],
+        deviceModel: splitByName[2],
+        appVersion: Number(splitByName[3]),
+        osVersion: splitByName[4],
+        id: splitByName[5],
+        initConnection: splitByName[6]
       }
-      
+
       localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
     },
-    getIosInfo: function () {
+    getIosInfo: function() {
       return localStorage.getItem('iosUUID');
     },
-    getInfo: function () {
-      if(!this.getName()) {
+    getInfo: function() {
+      if (!this.getName()) {
         return JSON.stringify({
-          'id':'123',
-          'appVersion':3,
-          'baseOs':'macOs'
+          'id': '123',
+          'appVersion': 4,
+          'baseOs': 'macOs'
         })
       }
       if (this.getName() === 'Android') {
@@ -240,7 +240,7 @@ let native = function () {
       }
       return this.getIosInfo();
     }
-  } 
+  }
 }();
 
 
@@ -249,22 +249,22 @@ let native = function () {
 function removeIDBInstance(auth) {
 
 
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
 
-      const req = indexedDB.deleteDatabase(auth.uid)
-      req.onsuccess = function () {
-       
-        resolve(true)
-      }
-      req.onerror = function () {
-        reject(req.error)
-      }
-      
+    const req = indexedDB.deleteDatabase(auth.uid)
+    req.onsuccess = function() {
+
+      resolve(true)
+    }
+    req.onerror = function() {
+      reject(req.error)
+    }
+
   })
 }
 
 function startApp() {
-  firebase.auth().onAuthStateChanged(function (auth) {
+  firebase.auth().onAuthStateChanged(function(auth) {
 
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
@@ -276,32 +276,52 @@ function startApp() {
     init(auth);
   })
 }
+// new day suggest
+// if location changes
+let app = function() {
+    return {
+      today : function (){
+        return moment().format("DD/MM/YYYY");
+      },
+      setDay : function(){
+        localStorage.setItem("today",{this.today()})
+      },
+      getDay : function(){
+        localStorage.getItem('today')
+      },
+      isNewDay : function() {
+        if(!this.getDay().hasOwnProperty(this.today())) {
+          this.setDay();
+          return true;
+        }
+      },
+    }
+}();
 
 function init(auth) {
 
-  /** When app has been initialzied before 
+  /** When app has been initialzied before
    * render list view first, then perform app sync and mange location
    */
 
   if (localStorage.getItem('dbexist')) {
     listView(true)
     requestCreator('now', native.getInfo())
-    manageLocation()
+    manageLocation();
+    app.isNewDay() ? suggestCheckIn() : '';
     return
   }
-  
+
   document.getElementById('growthfile').appendChild(loader('init-loader'))
   /** when app initializes for the first time */
-  console.log("initialzie idb")
   const deviceInfo = JSON.parse(native.getInfo());
 
-  removeIDBInstance(auth).then(function(isRemoved){
-    if(isRemoved){
+  removeIDBInstance(auth).then(function(isRemoved) {
+    if (isRemoved) {
       requestCreator('now', native.getInfo())
     }
-  }).catch(function(error){
+  }).catch(function(error) {
     console.log(error)
   })
   return
 }
-
