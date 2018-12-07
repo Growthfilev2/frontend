@@ -289,7 +289,7 @@ function createActivityIcon(db) {
           })
         })
       }
-    
+
   }
 }
 
@@ -946,4 +946,9 @@ function createInputForProfile(key, type, classtype) {
   mainTextField.appendChild(mainInput)
   mainTextField.appendChild(ripple)
   return mainTextField
+}
+
+
+function suggestCheckIn() {
+  console.log("dikhao")
 }

@@ -283,8 +283,10 @@ function initLocationInterval(locationStatus) {
   })
 }
 
-function locationUpdationSuccess(message) {
-  console.log(message);
+function locationUpdationSuccess(location) {
+
+  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
+   isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn()  : ''
 }
 
 function locationUpdationError(error) {
@@ -350,6 +352,7 @@ function sortedByAccuracy(geoData) {
 function updateLocationInRoot(finalLocation) {
   if (!finalLocation) return;
 
+  let previousLocation;
   return new Promise(function (resolve, reject) {
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
@@ -360,6 +363,14 @@ function updateLocationInRoot(finalLocation) {
       rootStore.get(dbName).onsuccess = function (event) {
 
         var record = event.target.result;
+        previousLocation = {
+          latitude : record.latitude,
+          longitude : record.longitude,
+          accuracy : record.accuracy,
+          provider : record.provider,
+          localStorage : record.lastLocationTime
+        };
+
         record.latitude = finalLocation.latitude;
         record.longitude = finalLocation.longitude;
         record.accuracy = finalLocation.accuracy;
@@ -368,7 +379,7 @@ function updateLocationInRoot(finalLocation) {
         rootStore.put(record);
       };
       tx.oncomplete = function () {
-        resolve('Location Updated Successfully')
+        resolve({prev:previousLocation,new:finalLocation})
       }
     };
     req.onerror = function (error) {
@@ -377,28 +388,33 @@ function updateLocationInRoot(finalLocation) {
   })
 }
 
-function isNewLocationMoreThanThreshold(){
-  const THRESHOLD = 500;
+function toRad(value) {
+    return value * Math.PI / 180;
+}
+
+function calculateDistanceBetweenTwoPoints(oldLocation,newLocation){
   var R = 6371; // km
-  
-  const dLat = toRad(userCoords.lat - otherLocations['latitude']);
-  const dLon = toRad(userCoords.lng - otherLocations['longitude']);
-  const lat1 = toRad(userCoords.lat);
-  const lat2 = toRad(otherLocations['latitude']);
+
+  const dLat = toRad(newLocation.latitude - oldLocation.latitude);
+  const dLon = toRad(newLocation.longitude - oldLocation.longitude);
+  const lat1 = toRad(newLocation.longitude);
+  const lat2 = toRad(oldLocation.latitude);
 
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
+  return distance
 
-  const record  = {
-    activityId : otherLocations.activityId,
-    distance: distance
-  }
-
-  return record
 }
+
+function isNewLocationMoreThanThreshold(distance){
+  const THRESHOLD = 0.5; //km
+  if (distance >= THRESHOLD) return true;
+  return false;
+}
+
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (localStorage.getItem('deviceType') === 'Android') {

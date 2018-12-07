@@ -284,17 +284,17 @@ let app = function() {
         return moment().format("DD/MM/YYYY");
       },
       setDay : function(){
-        localStorage.setItem("today",{this.today()})
+        localStorage.setItem('today',this.today())
       },
       getDay : function(){
         localStorage.getItem('today')
       },
       isNewDay : function() {
-        if(!this.getDay().hasOwnProperty(this.today())) {
+        if(this.getDay() !== this.today()) {
           this.setDay();
           return true;
         }
-      },
+      }
     }
 }();
 
