@@ -286,7 +286,8 @@ function initLocationInterval(locationStatus) {
 function locationUpdationSuccess(location) {
 
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
-   isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn()  : ''
+  console.log(distanceBetweenBoth)
+  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn(true) : ''
 }
 
 function locationUpdationError(error) {
@@ -375,7 +376,8 @@ function updateLocationInRoot(finalLocation) {
         record.longitude = finalLocation.longitude;
         record.accuracy = finalLocation.accuracy;
         record.provider = finalLocation.provider;
-        record.lastLocationTime = finalLocation.lastLocationTime;
+        record.lastLocationTime = finalLocation.lastLocationTime,
+
         rootStore.put(record);
       };
       tx.oncomplete = function () {
@@ -397,7 +399,7 @@ function calculateDistanceBetweenTwoPoints(oldLocation,newLocation){
 
   const dLat = toRad(newLocation.latitude - oldLocation.latitude);
   const dLon = toRad(newLocation.longitude - oldLocation.longitude);
-  const lat1 = toRad(newLocation.longitude);
+  const lat1 = toRad(newLocation.latitude);
   const lat2 = toRad(oldLocation.latitude);
 
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -417,7 +419,7 @@ function isNewLocationMoreThanThreshold(distance){
 
 
 function sendCurrentViewNameToAndroid(viewName) {
-  if (localStorage.getItem('deviceType') === 'Android') {
+  if (native.getName() === 'Android') {
     Fetchview.startConversation(viewName);
   }
 }

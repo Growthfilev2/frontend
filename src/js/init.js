@@ -287,13 +287,14 @@ let app = function() {
         localStorage.setItem('today',this.today())
       },
       getDay : function(){
-        localStorage.getItem('today')
+        return localStorage.getItem('today')
       },
       isNewDay : function() {
         if(this.getDay() !== this.today()) {
           this.setDay();
           return true;
         }
+        return false;
       }
     }
 }();
@@ -308,7 +309,8 @@ function init(auth) {
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
-    app.isNewDay() ? suggestCheckIn() : '';
+    app.isNewDay() ? suggestCheckIn(true) : ''
+  
     return
   }
 

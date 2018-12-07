@@ -12,55 +12,72 @@ function listView(pushState) {
 
   listPanel()
 
-  const dbName = localStorage.getItem('dbexist');
-
-  const req = indexedDB.open(dbName)
-
-  req.onsuccess = function () {
-    const db = req.result;
-    const rootTx = db.transaction(['root'], 'readwrite')
-    const rootStore = rootTx.objectStore('root')
-    rootStore.get(dbName).onsuccess = function (event) {
-      const officeRecord = event.target.result
-
-      if (!document.querySelector('.mdc-drawer--temporary')) {
-        initMenu(db, officeRecord.offices)
-      }
-      creatListHeader('Recent')
-      fetchDataForActivityList(db)
-
+  getRootRecord().then(function(rootRecord) {
+    localStorage.setItem('selectedOffice',rootRecord.offices.allOffices[0]);
+    if (!document.querySelector('.mdc-drawer--temporary')) {
+      initMenu(rootRecord.offices)
     }
-  }
+    creatListHeader('Recent')
+
+  })
+
+  createActivityIcon();
+  fetchDataForActivityList()
+
 }
 
-function fetchDataForActivityList(db) {
+function getRootRecord() {
+  return new Promise(function(resolve, reject) {
+    let record;
+    const dbName = localStorage.getItem('dbexist');
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function() {
+      const db = req.result;
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(dbName).onsuccess = function(event) {
+        const data = event.target.result;
+        data ? record = data : record = null;
+      }
+      rootTx.oncomplete = function() {
+        resolve(record)
+      }
+    }
+    req.onerror = function() {
+      reject(req.error)
+    }
+  })
+}
+
+function fetchDataForActivityList() {
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+    const db =req.result
   let activityDom = ''
   const activityStoreTx = db.transaction('activity')
   const activityObjectStore = activityStoreTx.objectStore('activity')
   const activityVisibleIndex = activityObjectStore.index('timestamp')
-  const currOffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
-  activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
+  const currOffice = localStorage.getItem('selectedOffice')
+  activityVisibleIndex.openCursor(null, 'prev').onsuccess = function(event) {
     let cursor = event.target.result
     if (!cursor) {
       let yOffset = window.pageYOffset
-      setTimeout(function () {
+      setTimeout(function() {
         appendActivityListToDom(activityDom, true)
-        createActivityIcon(db)
         scrollToActivity(yOffset)
       }, 1500)
       return
     }
 
-
     if (currOffice === 'all') {
       if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
+        createActivityList(db, cursor.value).then(function(li) {
           activityDom += li
         })
       }
     } else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice) {
 
-      createActivityList(db, cursor.value).then(function (li) {
+      createActivityList(db, cursor.value).then(function(li) {
 
         activityDom += li
       })
@@ -69,12 +86,13 @@ function fetchDataForActivityList(db) {
     cursor.continue()
   }
 }
+}
 
 function createActivityList(db, data, append) {
-  return new Promise(function (resolve) {
-    getCount(db, data.activityId).then(function (count) {
-      getCommentUndUser(db, data.activityId, data.creator).then(function (meta) {
-        getCreatorDetails(db, meta).then(function (metaWiwthData) {
+  return new Promise(function(resolve) {
+    getCount(db, data.activityId).then(function(count) {
+      getCommentUndUser(db, data.activityId, data.creator).then(function(meta) {
+        getCreatorDetails(db, meta).then(function(metaWiwthData) {
           metaWiwthData.count = count
           resolve(activityListUI(data, metaWiwthData, append))
         })
@@ -84,9 +102,9 @@ function createActivityList(db, data, append) {
 }
 
 function getCount(db, id) {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
-    activityCount.get(id).onsuccess = function (event) {
+    activityCount.get(id).onsuccess = function(event) {
       const record = event.target.result
       if (!record) {
         resolve(0)
@@ -104,17 +122,17 @@ function getCommentUndUser(db, id, creator) {
     commentUser: ''
   }
 
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
 
     const addendumObjStore = db.transaction('addendum').objectStore('addendum').index('activityId')
 
-    addendumObjStore.openCursor(id, 'prev').onsuccess = function (addendumstore) {
+    addendumObjStore.openCursor(id, 'prev').onsuccess = function(addendumstore) {
       const addendumCursor = addendumstore.target.result;
       if (!addendumCursor) {
         resolve(meta)
       } else if (addendumCursor.value.isComment) {
         meta.comment = addendumCursor.value.comment
-        readNameFromNumber(db, addendumCursor.value.user).then(function (nameOrNum) {
+        readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
           meta.commentUser = nameOrNum
           resolve(meta)
         })
@@ -130,7 +148,7 @@ function getCommentUndUser(db, id, creator) {
 
 function getCreatorDetails(db, meta) {
 
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
 
     if (meta.creator === firebase.auth().currentUser.phoneNumber) {
       meta.creator = {
@@ -143,7 +161,7 @@ function getCreatorDetails(db, meta) {
 
       const userObjStore = db.transaction('users').objectStore('users')
 
-      userObjStore.get(meta.creator).onsuccess = function (userstore) {
+      userObjStore.get(meta.creator).onsuccess = function(userstore) {
         const record = userstore.target.result
 
         if (record && record.hasOwnProperty('photoURL')) {
@@ -267,30 +285,88 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
 
 }
 
-function createActivityIcon(db) {
-  if(document.getElementById('create-activity')) return;
-  const subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions')
-  const subscriptionCount = subscriptionObjectStore.count()
-  subscriptionCount.onsuccess = function () {
-    if (subscriptionCount.result) {
-      const fab = document.createElement('button')
-      fab.className = 'mdc-fab create-activity'
-      fab.id = 'create-activity'
-      fab.setAttribute('aria-label', 'Add')
-      const span = document.createElement('span')
-      span.className = 'mdc-fab_icon material-icons'
-      span.textContent = 'add'
-      fab.appendChild(span)
-        document.getElementById('activity-list-main').appendChild(fab)
-        document.querySelector('.create-activity').addEventListener('click', function (evt) {
-          selectorUI(evt, {
-            record: '',
-            store: 'subscriptions',
-          })
-        })
+function createActivityIcon() {
+
+  if (document.getElementById('create-activity')) return;
+  getCountOfTemplates().then(function(officeTemplateObject) {
+    if (Object.keys(officeTemplateObject).length){
+      createActivityIconDom(officeTemplateObject)
+      return;
+    }
+  }).catch(console.log)
+}
+
+
+function getCountOfTemplates() {
+
+  return new Promise(function(resolve, reject) {
+    let count=0;
+    const officeByTemplate = {}
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function() {
+      const db = req.result;
+      const tx = db.transaction(['subscriptions'], 'readonly');
+      const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
+      subscriptionObjectStore.openCursor(null,'nextunique').onsuccess = function(event){
+        const cursor = event.target.result;
+
+        if(!cursor) return;
+        count++
+        officeByTemplate[cursor.value.office] = count;
+        cursor.continue();
       }
 
-  }
+      tx.oncomplete = function() {
+        resolve(officeByTemplate)
+      }
+    }
+    req.onerror = function(){
+      reject(req.error);
+    }
+  })
+}
+
+
+function createActivityIconDom(officeTemplateCombo) {
+  const fab = document.createElement('button')
+  fab.className = 'mdc-fab create-activity'
+  fab.id = 'create-activity'
+  fab.setAttribute('aria-label', 'Add')
+  const span = document.createElement('span')
+  span.className = 'mdc-fab_icon material-icons'
+  span.id = 'activity-create--icon'
+  span.textContent = 'add'
+  fab.appendChild(span)
+  document.getElementById('activity-list-main').appendChild(fab)
+  document.querySelector('.create-activity').addEventListener('click', function(evt) {
+  const keysArray = Object.keys(officeTemplateCombo);
+
+      getRootRecord().then(function(record) {
+        console.log(record.suggestCheckIn);
+        if(record.suggestCheckIn){
+          if (keysArray.length === 1) {
+            createTempRecord(keysArray[0], 'check-in')
+          }
+          else {
+            callSubscriptionSelectorUI(evt,record.suggestCheckIn)
+
+          }
+          suggestCheckIn(false);
+          return;
+        }
+
+        callSubscriptionSelectorUI(evt)
+      }).catch(console.log)
+
+  })
+}
+
+function callSubscriptionSelectorUI(evt,suggestCheckIn) {
+  selectorUI(evt, {
+    record: '',
+    store: 'subscriptions',
+    suggestCheckIn : suggestCheckIn
+  })
 }
 
 function listPanel() {
@@ -346,7 +422,7 @@ function creatListHeader(headerName, backIcon) {
 
   let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
 
-  document.getElementById('menu--panel').addEventListener('click', function () {
+  document.getElementById('menu--panel').addEventListener('click', function() {
     if (backIcon) {
       backNav()
       return
@@ -385,7 +461,7 @@ function scrollToActivity(yOffset) {
 
 }
 
-function initMenu(db, officeRecord) {
+function initMenu(officeRecord) {
   console.log(officeRecord)
   const filters = [{
       type: 'Incoming',
@@ -433,7 +509,7 @@ function initMenu(db, officeRecord) {
 
   const ImageDiv = document.createElement('div')
   ImageDiv.className = 'drawer--header-div'
-  ImageDiv.onclick = function () {
+  ImageDiv.onclick = function() {
     profileView(true)
 
   }
@@ -469,10 +545,10 @@ function initMenu(db, officeRecord) {
     changeOfficeIon.className = 'material-icons'
     changeOfficeIon.style.float = 'right'
     changeOfficeIon.textContent = 'arrow_drop_down'
-    changeOfficeIon.onclick = function () {
+    changeOfficeIon.onclick = function() {
       if (document.querySelector('.office-selection-lists')) return;
 
-      createOfficeSelectionUI(officeRecord.allOffices, db)
+      createOfficeSelectionUI(officeRecord.allOffices)
 
     }
   }
@@ -496,7 +572,7 @@ function initMenu(db, officeRecord) {
     i.textContent = 'all_inbox'
     const textSpan = document.createElement('span')
     textSpan.textContent = 'All offices'
-    all.onclick = function () {
+    all.onclick = function() {
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       allOffices('All Offices', true)
       drawer.open = false
@@ -506,7 +582,7 @@ function initMenu(db, officeRecord) {
     navContent.appendChild(all)
   }
 
-  filters.forEach(function (filter) {
+  filters.forEach(function(filter) {
 
     const a = document.createElement('div')
     a.className = 'mdc-list-item mdc-list-item--activated'
@@ -520,7 +596,7 @@ function initMenu(db, officeRecord) {
 
     a.appendChild(i)
     a.appendChild(textSpan)
-    a.onclick = function () {
+    a.onclick = function() {
 
       window.scrollTo(0, 0)
       if (filter.type === 'Pending' || filter.type === 'Cancelled') {
@@ -539,11 +615,11 @@ function initMenu(db, officeRecord) {
       if (filter.type === 'Recent') {
         listView()
       }
-
+      createActivityIcon()
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       drawer.open = false
       sendCurrentViewNameToAndroid('listView')
-      document.querySelector('.current--selcted-filter').textContent = filter.type
+      document.querySelector('.current--selcted-filter').textContent = filter.type;
 
     }
 
@@ -566,7 +642,7 @@ function createOfficeSelectionUI(allOffices) {
   navContent.className = 'mdc-drawer__content mdc-list office-selection-lists'
   document.querySelector('.mdc-drawer__drawer').appendChild(navContent)
 
-  allOffices.forEach(function (office) {
+  allOffices.forEach(function(office) {
     console.log(office)
     if (office !== document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) {
 
@@ -575,7 +651,7 @@ function createOfficeSelectionUI(allOffices) {
       const textSpan = document.createElement('span')
       textSpan.textContent = office
       a.appendChild(textSpan)
-      a.onclick = function () {
+      a.onclick = function() {
         document.querySelector('.filter-sort--list').classList.remove('hidden');
         navContent.remove()
         const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
@@ -597,22 +673,21 @@ function allOffices(type, pushState) {
     history.pushState(["allOffices", type], null, null)
   }
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result;
 
 
     const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
     let activityDom = ''
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+    activityStore.openCursor(null, 'prev').onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) {
         appendActivityListToDom(activityDom, false, type)
-        createActivityIcon(db)
         return
       }
 
       if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
+        createActivityList(db, cursor.value).then(function(li) {
 
           activityDom += li
         })
@@ -632,20 +707,19 @@ function filterActivities(type, pushState) {
   }
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
     const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
 
     let activityDom = ''
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+    activityStore.openCursor(null, 'prev').onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) {
         let yOffset = window.pageYOffset
-        setTimeout(function () {
+        setTimeout(function() {
 
           appendActivityListToDom(activityDom, false, type)
-          createActivityIcon(db)
           scrollToActivity(yOffset)
         }, 300)
         return
@@ -653,7 +727,7 @@ function filterActivities(type, pushState) {
 
 
       if (cursor.value.status === type.toUpperCase() && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
+        createActivityList(db, cursor.value).then(function(li) {
 
           activityDom += li
         })
@@ -671,7 +745,7 @@ function sortByCreator(type, pushState) {
     history.replaceState(["sortByCreator", type], null, null)
   }
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
 
     const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
@@ -679,21 +753,20 @@ function sortByCreator(type, pushState) {
 
     let activityDom = ''
     const me = firebase.auth().currentUser.phoneNumber
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+    activityStore.openCursor(null, 'prev').onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) {
         let yOffset = window.pageYOffset
-        setTimeout(function () {
+        setTimeout(function() {
 
           appendActivityListToDom(activityDom, false, type)
-          createActivityIcon(db)
           scrollToActivity(yOffset)
         }, 200)
         return
       }
       if (type === 'Incoming') {
         if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-          createActivityList(db, cursor.value).then(function (li) {
+          createActivityList(db, cursor.value).then(function(li) {
 
             activityDom += li
           })
@@ -701,7 +774,7 @@ function sortByCreator(type, pushState) {
       }
       if (type === 'Outgoing') {
         if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-          createActivityList(db, cursor.value).then(function (li) {
+          createActivityList(db, cursor.value).then(function(li) {
             activityDom += li
           })
         }
@@ -719,7 +792,7 @@ function sortByDates(type, pushState) {
     history.replaceState(["sortByDates", type], null, null)
   }
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
 
     const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
@@ -731,14 +804,14 @@ function sortByDates(type, pushState) {
       LOW: []
     }
     const calendar = db.transaction('calendar').objectStore('calendar').index('range')
-    calendar.openCursor().onsuccess = function (event) {
+    calendar.openCursor().onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) {
-        sortingOrder['HIGH'].sort(function (a, b) {
+        sortingOrder['HIGH'].sort(function(a, b) {
           return moment(b.start).valueOf() - moment(a.start).valueOf()
         })
 
-        sortingOrder['LOW'].sort(function (a, b) {
+        sortingOrder['LOW'].sort(function(a, b) {
           return moment(b.end).valueOf() - moment(a.end).valueOf()
         })
 
@@ -761,32 +834,31 @@ function generateActivitiesByDate(sortingOrder) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let activityDom = ''
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const activityObjectStore = db.transaction('activity').objectStore('activity')
 
-    Object.keys(sortingOrder['HIGH']).forEach(function (key) {
-      activityObjectStore.get(key).onsuccess = function (event) {
+    Object.keys(sortingOrder['HIGH']).forEach(function(key) {
+      activityObjectStore.get(key).onsuccess = function(event) {
         const activity = event.target.result
-        createActivityList(db, activity).then(function (li) {
+        createActivityList(db, activity).then(function(li) {
 
           activityDom += li
         })
       }
     })
-    Object.keys(sortingOrder['LOW']).forEach(function (key) {
-      activityObjectStore.get(key).onsuccess = function (event) {
+    Object.keys(sortingOrder['LOW']).forEach(function(key) {
+      activityObjectStore.get(key).onsuccess = function(event) {
         const activity = event.target.result
-        createActivityList(db, activity).then(function (li) {
+        createActivityList(db, activity).then(function(li) {
           activityDom += li
         })
       }
     })
 
-    setTimeout(function () {
+    setTimeout(function() {
       let yOffset = window.pageYOffset
       appendActivityListToDom(activityDom, false, 'Urgent')
-      createActivityIcon(db)
       scrollToActivity(yOffset)
     }, 600)
 
@@ -840,7 +912,7 @@ function sortByLocation(type, pushState) {
     dbName: dbName
   })
 
-  nearestLocationHandler.onmessage = function (records) {
+  nearestLocationHandler.onmessage = function(records) {
     sortActivitiesByLocation(records.data)
   }
   nearestLocationHandler.onerror = locationSortError
@@ -850,7 +922,7 @@ function sortByLocation(type, pushState) {
 
 function sortActivitiesByLocation(distanceArr) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result;
 
     let activityDom = ''
@@ -859,20 +931,19 @@ function sortActivitiesByLocation(distanceArr) {
     const activityObjectStore = db.transaction('activity').objectStore('activity')
     for (var i = 0; i < distanceArr.length; i++) {
 
-      activityObjectStore.get(distanceArr[i].activityId).onsuccess = function (event) {
+      activityObjectStore.get(distanceArr[i].activityId).onsuccess = function(event) {
         if (event.target.result.office === Curroffice && event.target.result !== 'CANCELLED') {
 
-          createActivityList(db, event.target.result).then(function (li) {
+          createActivityList(db, event.target.result).then(function(li) {
             activityDom += li
           })
         }
       }
 
     }
-    setTimeout(function () {
+    setTimeout(function() {
       let yOffset = window.pageYOffset
       appendActivityListToDom(activityDom, false, 'Nearby')
-      createActivityIcon(db)
       scrollToActivity(yOffset)
 
     }, 500)
@@ -949,6 +1020,30 @@ function createInputForProfile(key, type, classtype) {
 }
 
 
-function suggestCheckIn() {
-  console.log("dikhao")
+function suggestCheckIn(suggest) {
+    const states = {
+      'listView':true,
+      'filterActivities':true,
+      'sortByCreator':true,
+      'sortByDates':true,
+      'sortByLocation':true,
+
+    }
+    getRootRecord().then(function(record){
+        const req = indexedDB.open(firebase.auth().currentUser.uid)
+        req.onsuccess = function(){
+          const db =req.result;
+          const tx = db.transaction(['root'],'readwrite')
+          const store = tx.objectStore('root')
+          record.suggestCheckIn = suggest;
+          store.put(record)
+
+          tx.oncomplete = function(){
+            if(states[history.state[0]] && suggest){
+                const iconEl = document.getElementById('activity-create--icon')
+                iconEl.textContent = 'add_alert'
+            }
+          }
+        }
+    }).catch(console.log())
 }

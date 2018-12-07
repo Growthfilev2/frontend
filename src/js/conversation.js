@@ -657,15 +657,6 @@ function initializeSelectorWithData(evt, data) {
 
       })
 
-      // if (data.record.create) {
-      //   fillUsersInSelector(data, dialog)
-      //   return
-      // }
-      // const activityStore = db.transaction('activity').objectStore('activity');
-      // activityStore.get(activityRecord.activityId).onsuccess = function (event) {
-      //   const record = event.target.result
-      //   fillUsersInSelector(record, dialog)
-      // }
     }
 
     if (data.store === 'children') {
@@ -1098,11 +1089,15 @@ function createTempRecord(office, template, data) {
     const range = IDBKeyRange.only([office, template])
     officeTemplateCombo.get(range).onsuccess = function (event) {
       const selectedCombo = event.target.result
+      if(!selectedCombo){
+        console.log("no such combo")
+        return;
+      }
       const bareBonesVenue = {}
       const bareBonesVenueArray = []
 
       const bareBonesScheduleArray = []
-      selectedCombo.venue.forEach(function (venue) {
+        selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
 
         bareBonesVenue.venueDescriptor = venue
