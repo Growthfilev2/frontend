@@ -993,6 +993,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 
 
 function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+  console.log(data);
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
@@ -1002,7 +1003,7 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     const cursor = event.target.result
 
     if (!cursor) {
-      insertTemplateByOffice(offices)
+      insertTemplateByOffice(offices,data.suggestCheckIn)
       return;
     }
 
@@ -1039,21 +1040,16 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
 }
 
 
-function insertTemplateByOffice(offices) {
-  const avoid = {
-    'admin': '',
-    'recipient': '',
-    'employee': '',
-    'subscription': '',
-  }
+function insertTemplateByOffice(offices,showCheckInFirst) {
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   const frag = document.createDocumentFragment()
+  const checkInTemplate = []
   req.onsuccess = function () {
     const db = req.result
-    const subscriotions = db.transaction('subscriptions').objectStore('subscriptions').index('office')
-
-    subscriotions.openCursor().onsuccess = function (event) {
+    const tx = db.transaction(['subscriptions'],'readonly');
+    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
+    subscriptionObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
         return
@@ -1063,18 +1059,22 @@ function insertTemplateByOffice(offices) {
         cursor.continue()
         return
       }
-      if (avoid.hasOwnProperty(cursor.value.template)) {
-        cursor.continue()
-        return
-      }
+
       if (document.querySelector(`[data-selection="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)) {
         cursor.continue()
         return
       }
+      if(showCheckInFirst &&  cursor.value.template === 'check-in') {
+        checkInTemplate.push(createGroupList(cursor.value.office, cursor.value.template))
+        cursor.continue();
+        return;
+      }
       document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
-      console.log(cursor.value)
 
       cursor.continue()
+    }
+    tx.oncomplete = function(){
+      console.log(checkInTemplate);
     }
   }
 }

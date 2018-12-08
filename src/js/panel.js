@@ -23,7 +23,6 @@ function listView(pushState) {
 
   createActivityIcon();
   fetchDataForActivityList()
-
 }
 
 function getRootRecord() {
