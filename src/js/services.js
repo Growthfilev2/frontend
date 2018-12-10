@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -287,7 +287,7 @@ function locationUpdationSuccess(location) {
 
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
   console.log(distanceBetweenBoth)
-  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn(true) : ''
+  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestAlertAndNotification({alert:true}) : ''
 }
 
 function locationUpdationError(error) {
@@ -652,7 +652,9 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
+        setTimeout(function(){
         window["listView"](true);
+        },5000)
         return;
       }
 
@@ -699,7 +701,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();
-  }, 1000000);
+  }, 10000);
 }
 
 function getInputText(selector) {

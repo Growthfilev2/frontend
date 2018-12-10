@@ -557,7 +557,7 @@ function updateMapWithNoStatus(db, activity) {
     mapTx.oncomplete = function() {
       const activityTx = db.transaction(['activity'], 'readwrite');
       const activityStore = activityTx.objectStore('activity');
-      console.log(resultsWithoutStatus);
+
       resultsWithoutStatus.forEach(function(data) {
         activityStore.get(data.activityId).onsuccess = function(event) {
           const record = event.target.result;
@@ -656,7 +656,7 @@ function updateCalendarWithNoStatus(db, activity) {
     calTx.oncomplete = function() {
       const activityTx = db.transaction(['activity'], 'readwrite');
       const activityStore = activityTx.objectStore('activity');
-      console.log(resultsWithoutStatus);
+  
       resultsWithoutStatus.forEach(function(data) {
         activityStore.get(data.activityId).onsuccess = function(event) {
           const record = event.target.result;
@@ -1088,23 +1088,18 @@ function successResponse(read, swipeInfo) {
 
     rootObjectStore.get(user.uid).onsuccess = function(event) {
       const record = event.target.result
-      getUniqueOfficeCount(record.fromTime, swipeInfo).then(setUniqueOffice).catch(console.log)
-
+      getUniqueOfficeCount().then(setUniqueOffice).catch(console.log)
+      createUsersApiUrl(db).then(updateUserObjectStore)
       record.fromTime = read.upto
       rootObjectStore.put(record)
-      createUsersApiUrl(db).then(updateUserObjectStore)
+      requestHandlerResponse('updateIDB', 200, swipeInfo);
 
-      if (record.fromTime !== 0) {
-        // setTimeout(function(){
-        requestHandlerResponse('updateIDB', 200, swipeInfo);
-        // },)
-      }
     }
   }
 }
 
 
-function getUniqueOfficeCount(firstTime, swipeInfo) {
+function getUniqueOfficeCount() {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let officeCount = 0
@@ -1119,9 +1114,7 @@ function getUniqueOfficeCount(firstTime, swipeInfo) {
           resolve({
             dbName: dbName,
             count: officeCount,
-            allOffices: offices,
-            firstTime: firstTime,
-            swipe: swipeInfo
+            allOffices: offices
           })
           return
         }
@@ -1152,23 +1145,15 @@ function setUniqueOffice(data) {
         offices.hasMultipleOffice = 0
         record.offices = offices
         rootObjectStore.put(record)
-        if (data.firstTime === 0) {
-          setTimeout(function() {
-            requestHandlerResponse('updateIDB', 200, data.swipe)
-          }, 1000)
-        }
         return
       }
+
       offices.hasMultipleOffice = 1
       record.offices = offices
       rootObjectStore.put(record)
-      if (data.firstTime === 0) {
-        setTimeout(function() {
-          requestHandlerResponse('updateIDB', 200, data.swipe)
-        }, 1000)
-      }
-    }
+
   }
+}
 }
 
 function updateIDB(param) {

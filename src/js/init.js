@@ -161,9 +161,15 @@ function layoutGrid() {
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
-  imageViewDialog()
+  imageViewDialog();
+  drawerDom();
 }
 
+function drawerDom (){
+  const div = document.createElement('div')
+  div.id = 'drawer-parent';
+  document.body.appendChild(div);
+}
 function imageViewDialog() {
 
   const aside = document.createElement('aside')
@@ -297,10 +303,11 @@ function init(auth) {
    */
 
   if (localStorage.getItem('dbexist')) {
+    localStorage.removeItem('selectedOffice');
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
-    app.isNewDay() ? suggestAlertAndNotification(true,true) : ''
+    app.isNewDay() ? suggestAlertAndNotification({alert:true,notifyUrgent:true,notifyNearby:true}) : ''
 
     return
   }

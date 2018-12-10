@@ -1578,17 +1578,10 @@ input[type="datetime-local"] {
   .notification {
 
     background-color: red;
-    color: white;
-    border-radius: 15px;
-    padding: 0px 5px 0px 5px;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 500;
-    height: 20px;
-    line-height: 20px;
-    min-width: 9px;
-    vertical-align: top;
-    margin-right: 32px;
-    vertical-align: top;
-  
+      color: white;
+      border-radius: 15px;
+      padding: 3px 6px 3px 7px;
+      text-align: center;
+      font-size: 14px;
+
   }

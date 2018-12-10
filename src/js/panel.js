@@ -1,4 +1,4 @@
-const notification = new Worker('js/notification.js')
+const notification = new Worker('src/js/notification.js')
 
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
@@ -14,39 +14,40 @@ function listView(pushState) {
 
   listPanel()
 
-  getRootRecord().then(function (rootRecord) {
-    if(!localStorage.getItem('selectedOffice')) {
-      localStorage.setItem('selectedOffice', rootRecord.offices.allOffices[0]);
+  getRootRecord().then(function(rootRecord) {
+    if (!localStorage.getItem('selectedOffice')) {
+      if(rootRecord.offices){
+        localStorage.setItem('selectedOffice', rootRecord.offices.allOffices[0]);
+      }
     }
-    if (!document.querySelector('.mdc-drawer--temporary')) {
-      initMenu(rootRecord.offices,rootRecord.showNotification)
-    }
-    creatListHeader('Recent')
+      creatListHeader('Recent')
+      fetchDataForActivityList();
+      createActivityIcon();
+
 
   })
 
-  createActivityIcon();
-  fetchDataForActivityList()
+
 }
 
 function getRootRecord() {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     let record;
     const dbName = localStorage.getItem('dbexist');
     const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
+    req.onsuccess = function() {
       const db = req.result;
       const rootTx = db.transaction(['root'], 'readwrite')
       const rootStore = rootTx.objectStore('root')
-      rootStore.get(dbName).onsuccess = function (event) {
+      rootStore.get(dbName).onsuccess = function(event) {
         const data = event.target.result;
         data ? record = data : record = null;
       }
-      rootTx.oncomplete = function () {
+      rootTx.oncomplete = function() {
         resolve(record)
       }
     }
-    req.onerror = function () {
+    req.onerror = function() {
       reject(req.error)
     }
   })
@@ -54,23 +55,22 @@ function getRootRecord() {
 
 function fetchDataForActivityList() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     let results = [];
     const activityStoreTx = db.transaction('activity')
     const activityObjectStore = activityStoreTx.objectStore('activity')
     const activityVisibleIndex = activityObjectStore.index('timestamp')
     const currOffice = localStorage.getItem('selectedOffice')
-    activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
+    activityVisibleIndex.openCursor(null, 'prev').onsuccess = function(event) {
       let cursor = event.target.result
       if (!cursor) return
 
-      if (currOffice !== 'all') {
         if (cursor.value.office !== currOffice) {
           cursor.continue();
           return;
         }
-      }
+
 
       if (cursor.value.hidden) {
         cursor.continue();
@@ -81,34 +81,39 @@ function fetchDataForActivityList() {
       cursor.continue()
     }
 
-    activityStoreTx.oncomplete = function () {
-      convertResultsToList(db,results,true)
+    activityStoreTx.oncomplete = function() {
+      convertResultsToList(db, results, true)
     }
   }
 }
 
-function convertResultsToList(db,results,initPanel,type){
+function convertResultsToList(db, results, initPanel, type) {
   let activityDom = ''
   let yOffset = window.pageYOffset
-  let promiseMap = results.map(function (data) {
-    return createActivityList(db, data).then(function (li) {
+  if(!results.length) {
+    appendActivityListToDom(activityDom, initPanel, type)
+    scrollToActivity(yOffset)
+    return;
+  }
+  let promiseMap = results.map(function(data) {
+    return createActivityList(db, data).then(function(li) {
       return li
     })
   });
-  Promise.all(promiseMap).then(function (results) {
-    results.forEach(function(li){
+  Promise.all(promiseMap).then(function(results) {
+    results.forEach(function(li) {
       activityDom += li
     })
-    appendActivityListToDom(activityDom, initPanel,type)
+    appendActivityListToDom(activityDom, initPanel, type)
     scrollToActivity(yOffset)
   })
 }
 
 function createActivityList(db, data, append) {
-  return new Promise(function (resolve) {
-    getCount(db, data.activityId).then(function (count) {
-      getCommentUndUser(db, data.activityId, data.creator).then(function (meta) {
-        getCreatorDetails(db, meta).then(function (metaWiwthData) {
+  return new Promise(function(resolve) {
+    getCount(db, data.activityId).then(function(count) {
+      getCommentUndUser(db, data.activityId, data.creator).then(function(meta) {
+        getCreatorDetails(db, meta).then(function(metaWiwthData) {
           metaWiwthData.count = count
           resolve(activityListUI(data, metaWiwthData, append))
         })
@@ -118,9 +123,9 @@ function createActivityList(db, data, append) {
 }
 
 function getCount(db, id) {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
-    activityCount.get(id).onsuccess = function (event) {
+    activityCount.get(id).onsuccess = function(event) {
       const record = event.target.result
       if (!record) {
         resolve(0)
@@ -138,17 +143,17 @@ function getCommentUndUser(db, id, creator) {
     commentUser: ''
   }
 
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
 
     const addendumObjStore = db.transaction('addendum').objectStore('addendum').index('activityId')
 
-    addendumObjStore.openCursor(id, 'prev').onsuccess = function (addendumstore) {
+    addendumObjStore.openCursor(id, 'prev').onsuccess = function(addendumstore) {
       const addendumCursor = addendumstore.target.result;
       if (!addendumCursor) {
         resolve(meta)
       } else if (addendumCursor.value.isComment) {
         meta.comment = addendumCursor.value.comment
-        readNameFromNumber(db, addendumCursor.value.user).then(function (nameOrNum) {
+        readNameFromNumber(db, addendumCursor.value.user).then(function(nameOrNum) {
           meta.commentUser = nameOrNum
           resolve(meta)
         })
@@ -164,7 +169,7 @@ function getCommentUndUser(db, id, creator) {
 
 function getCreatorDetails(db, meta) {
 
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
 
     if (meta.creator === firebase.auth().currentUser.phoneNumber) {
       meta.creator = {
@@ -177,7 +182,7 @@ function getCreatorDetails(db, meta) {
 
       const userObjStore = db.transaction('users').objectStore('users')
 
-      userObjStore.get(meta.creator).onsuccess = function (userstore) {
+      userObjStore.get(meta.creator).onsuccess = function(userstore) {
         const record = userstore.target.result
 
         if (record && record.hasOwnProperty('photoURL')) {
@@ -304,7 +309,7 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
 function createActivityIcon() {
 
   if (document.getElementById('create-activity')) return;
-  getCountOfTemplates().then(function (officeTemplateObject) {
+  getCountOfTemplates().then(function(officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
       createActivityIconDom(officeTemplateObject)
       return;
@@ -315,15 +320,15 @@ function createActivityIcon() {
 
 function getCountOfTemplates() {
 
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     let count = 0;
     const officeByTemplate = {}
     const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
+    req.onsuccess = function() {
       const db = req.result;
       const tx = db.transaction(['subscriptions'], 'readonly');
       const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
-      subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+      subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function(event) {
         const cursor = event.target.result;
 
         if (!cursor) return;
@@ -332,11 +337,11 @@ function getCountOfTemplates() {
         cursor.continue();
       }
 
-      tx.oncomplete = function () {
+      tx.oncomplete = function() {
         resolve(officeByTemplate)
       }
     }
-    req.onerror = function () {
+    req.onerror = function() {
       reject(req.error);
     }
   })
@@ -354,10 +359,10 @@ function createActivityIconDom(officeTemplateCombo) {
   span.textContent = 'add'
   fab.appendChild(span)
   document.getElementById('activity-list-main').appendChild(fab)
-  document.querySelector('.create-activity').addEventListener('click', function (evt) {
+  document.querySelector('.create-activity').addEventListener('click', function(evt) {
     const keysArray = Object.keys(officeTemplateCombo);
 
-    getRootRecord().then(function (record) {
+    getRootRecord().then(function(record) {
       console.log(record.suggestCheckIn);
       if (record.suggestCheckIn) {
         if (keysArray.length === 1) {
@@ -366,7 +371,9 @@ function createActivityIconDom(officeTemplateCombo) {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn)
 
         }
-        suggestAlertAndNotification(false,false);
+        suggestAlertAndNotification({
+          alert: false
+        });
         return;
       }
 
@@ -400,7 +407,7 @@ function listPanel() {
 
 }
 
-function creatListHeader(headerName, backIcon,) {
+function creatListHeader(headerName, backIcon) {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -433,19 +440,18 @@ function creatListHeader(headerName, backIcon,) {
 
 
   header(parentIconDiv.outerHTML, '', 'list')
-  let drawer;
-  if(document.querySelector('.mdc-drawer--temporary')){
-   drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  }
 
-  document.getElementById('menu--panel').addEventListener('click', function () {
+
+  document.getElementById('menu--panel').addEventListener('click', function() {
     if (backIcon) {
       backNav()
       return
     }
-    if(drawer){
-    drawer.open  = true;
-  }
+
+    getRootRecord().then(function(record){
+      initMenu(record.offices,{Urgent:record.notifyUrgent,Nearby:record.notifyNearby});
+    })
+
     sendCurrentViewNameToAndroid('drawer')
 
   })
@@ -478,41 +484,41 @@ function scrollToActivity(yOffset) {
 
 }
 
-function notificationWorker(type,count){
-  return new Promise(function(resolve,reject){
+function notificationWorker(type, count) {
+  return new Promise(function(resolve, reject) {
 
-  notification.postMessage({
-    dbName: firebase.auth().currentUser.uid,
-    office:localStorage.getItem('selectedOffice'),
-    type:type,
-    count:count
-  })
+    notification.postMessage({
+      dbName: firebase.auth().currentUser.uid,
+      office: localStorage.getItem('selectedOffice'),
+      type: type,
+      count: count
+    })
 
-  notification.onmessage = function (message) {
-    resolve(message.data);
-  }
-  notification.onerror = function(error){
-    reject(error)
+    notification.onmessage = function(message) {
+      resolve(message.data);
+    }
+    notification.onerror = function(error) {
+      reject(error)
     }
   })
 }
 
-let appNotification = function(){
+let appNotification = function() {
   return {
-      urgent:function(count){
-        return new Promise(function(resolve){
+    urgent: function(count) {
+      return new Promise(function(resolve) {
 
-        const urgentNotification = notificationWorker('urgent',count);
-        urgentNotification.then(function(res){
+        const urgentNotification = notificationWorker('urgent', count);
+        urgentNotification.then(function(res) {
           resolve(res)
         });
       })
-      },
-      nearBy:function(count){
-        return new Promise(function(resolve){
+    },
+    nearBy: function(count) {
+      return new Promise(function(resolve) {
 
-        const nearByNotification = notificationWorker('nearBy',count);
-        nearByNotification.then(function(res){
+        const nearByNotification = notificationWorker('nearBy', count);
+        nearByNotification.then(function(res) {
           resolve(res)
         });
       });
@@ -521,8 +527,11 @@ let appNotification = function(){
 }();
 
 
-function initMenu(officeRecord,showNotification) {
+function initMenu(officeRecord, notify) {
   console.log(officeRecord)
+  console.log(notify)
+  removeChildNodes(document.getElementById('drawer-parent'));
+
   const filters = [{
       type: 'Incoming',
       icon: 'call_received'
@@ -551,20 +560,14 @@ function initMenu(officeRecord,showNotification) {
 
 
 
-  appNotification.urgent(true).then(function(urgentCount){
-    appNotification.nearBy(true).then(function(nearByCount){
+  appNotification.urgent(true).then(function(urgentCount) {
+    appNotification.nearBy(true).then(function(nearByCount) {
       const count = {
-        'Urgent':urgentCount,
-        'Nearby':nearByCount
+        'Urgent': urgentCount,
+        'Nearby': nearByCount
       }
       const aside = document.createElement('aside')
       aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
-      if (officeRecord) {
-        aside.dataset.currentOffice = officeRecord.allOffices[0]
-
-      } else {
-        aside.dataset.currentOffice = 'all'
-      }
 
       const nav = document.createElement('nav')
       nav.className = 'mdc-drawer__drawer'
@@ -577,7 +580,7 @@ function initMenu(officeRecord,showNotification) {
 
       const ImageDiv = document.createElement('div')
       ImageDiv.className = 'drawer--header-div'
-      ImageDiv.onclick = function () {
+      ImageDiv.onclick = function() {
         profileView(true)
 
       }
@@ -598,7 +601,7 @@ function initMenu(officeRecord,showNotification) {
       if (!officeRecord) {
         officeName.textContent = ''
       } else {
-        officeName.textContent = officeRecord.allOffices[0]
+        officeName.textContent = localStorage.getItem('selectedOffice')
       }
 
       officeName.className = 'mdc-typography--caption current--office-name'
@@ -613,7 +616,7 @@ function initMenu(officeRecord,showNotification) {
         changeOfficeIon.className = 'material-icons'
         changeOfficeIon.style.float = 'right'
         changeOfficeIon.textContent = 'arrow_drop_down'
-        changeOfficeIon.onclick = function () {
+        changeOfficeIon.onclick = function() {
           if (document.querySelector('.office-selection-lists')) return;
 
           createOfficeSelectionUI(officeRecord.allOffices)
@@ -640,7 +643,7 @@ function initMenu(officeRecord,showNotification) {
         i.textContent = 'all_inbox'
         const textSpan = document.createElement('span')
         textSpan.textContent = 'All offices'
-        all.onclick = function () {
+        all.onclick = function() {
           let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
           allOffices('All Offices', true)
           drawer.open = false
@@ -650,7 +653,7 @@ function initMenu(officeRecord,showNotification) {
         navContent.appendChild(all)
       }
 
-      filters.forEach(function (filter) {
+      filters.forEach(function(filter) {
 
         const a = document.createElement('div')
         a.className = 'mdc-list-item mdc-list-item--activated'
@@ -662,35 +665,35 @@ function initMenu(officeRecord,showNotification) {
         const textSpan = document.createElement('span')
         filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type
 
-        if(showNotification){
-          if(filter.type === 'Urgent' || filter.type ==='Nearby'){
 
-          const countDom = document.createElement('span')
-          countDom.className = 'mdc-list-item__meta';
+          if (filter.type === 'Urgent' || filter.type === 'Nearby') {
+            if(notify[filter.type]) {
 
-          const countName = document.createElement("span")
-          countName.className = 'notification'
-          countName.textContent = count[filter.type];
+            const countDom = document.createElement('span')
+            countDom.className = 'mdc-list-item__meta';
 
-          textSpan.textContent  = filter.type;
+            const countName = document.createElement("span")
+            countName.className = 'notification'
+            countName.textContent = count[filter.type];
 
-          a.appendChild(i)
-          a.appendChild(textSpan)
-          countDom.appendChild(countName)
-          a.appendChild(countDom)
-          }
-        else {
-          a.appendChild(i)
+            textSpan.textContent = filter.type;
+
+            a.appendChild(i)
             a.appendChild(textSpan)
-        }
-      }
-      else {
-        a.appendChild(i)
-          a.appendChild(textSpan)
-      }
+            countDom.appendChild(countName)
+            a.appendChild(countDom)
+            }
+            else {
+              a.appendChild(i)
+              a.appendChild(textSpan)
+            }
+          } else {
+            a.appendChild(i)
+            a.appendChild(textSpan)
+          }
 
 
-        a.onclick = function () {
+        a.onclick = function() {
 
           window.scrollTo(0, 0)
           if (filter.type === 'Pending' || filter.type === 'Cancelled') {
@@ -721,8 +724,9 @@ function initMenu(officeRecord,showNotification) {
       nav.appendChild(header)
       nav.appendChild(navContent)
       aside.appendChild(nav)
-      document.body.appendChild(aside)
-
+      document.getElementById('drawer-parent').appendChild(aside)
+      let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+      drawer.open = true;
     })
   })
 
@@ -739,7 +743,7 @@ function createOfficeSelectionUI(allOffices) {
   navContent.className = 'mdc-drawer__content mdc-list office-selection-lists'
   document.querySelector('.mdc-drawer__drawer').appendChild(navContent)
 
-  allOffices.forEach(function (office) {
+  allOffices.forEach(function(office) {
     console.log(office)
     if (office !== document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) {
 
@@ -748,16 +752,17 @@ function createOfficeSelectionUI(allOffices) {
       const textSpan = document.createElement('span')
       textSpan.textContent = office
       a.appendChild(textSpan)
-      a.onclick = function () {
+      a.onclick = function() {
         document.querySelector('.filter-sort--list').classList.remove('hidden');
         navContent.remove()
         const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
         drawer['root_'].dataset.currentOffice = office
         document.querySelector('.current--office-name').textContent = office;
-        listView()
-        localStorage.setItem('selectedOffice',office);
+        localStorage.setItem('selectedOffice', office);
         console.log(localStorage.getItem('selectedOffice'))
         drawer.open = false;
+        listView(true);
+
       }
       navContent.appendChild(a)
     }
@@ -772,29 +777,29 @@ function allOffices(type, pushState) {
     history.pushState(["allOffices", type], null, null)
   }
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result;
 
 
-    const tx = db.transaction(['activity'],'readonly')
+    const tx = db.transaction(['activity'], 'readonly')
     const activityStore = tx.objectStore('activity').index('timestamp');
 
     let results = [];
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+    activityStore.openCursor(null, 'prev').onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) return;
 
-      if(cursor.value.hidden){
+      if (cursor.value.hidden) {
         cursor.continue();
         return;
       }
       results.push(cursor.value)
 
       cursor.continue()
-      }
+    }
 
-    tx.oncomplete = function(){
-      convertResultsToList(db,results,false,type);
+    tx.oncomplete = function() {
+      convertResultsToList(db, results, false, type);
     }
   }
 }
@@ -809,27 +814,27 @@ function filterActivities(type, pushState) {
   }
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
-    const tx = db.transaction(['activity'],'readonly');
-    const activityStore =tx.objectStore('activity').index('timestamp');
+    const tx = db.transaction(['activity'], 'readonly');
+    const activityStore = tx.objectStore('activity').index('timestamp');
     const curroffice = localStorage.getItem('selectedOffice')
 
     let results = [];
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+    activityStore.openCursor(null, 'prev').onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) return;
 
-      if(cursor.value.office !== curroffice){
+      if (cursor.value.office !== curroffice) {
         cursor.continue();
         return;
       }
-      if(cursor.value.hidden) {
+      if (cursor.value.hidden) {
         cursor.continue();
         return;
       }
 
-      if(cursor.value.status !== type.toUpperCase()) {
+      if (cursor.value.status !== type.toUpperCase()) {
         cursor.continue();
         return;
       }
@@ -839,8 +844,8 @@ function filterActivities(type, pushState) {
       cursor.continue()
 
     }
-    tx.oncomplete = function(){
-      convertResultsToList(db,results,false,type);
+    tx.oncomplete = function() {
+      convertResultsToList(db, results, false, type);
     }
   }
 }
@@ -853,24 +858,24 @@ function sortByCreator(type, pushState) {
     history.replaceState(["sortByCreator", type], null, null)
   }
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
 
-    const tx = db.transaction(['activity'],'readonly');
+    const tx = db.transaction(['activity'], 'readonly');
     const activityStore = tx.objectStore('activity').index('timestamp')
     const currOffice = localStorage.getItem('selectedOffice')
 
-    let  results = []
+    let results = []
     const me = firebase.auth().currentUser.phoneNumber
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
+    activityStore.openCursor(null, 'prev').onsuccess = function(event) {
       const cursor = event.target.result
       if (!cursor) return;
 
-      if(cursor.value.office !== currOffice) {
+      if (cursor.value.office !== currOffice) {
         cursor.continue();
         return;
       }
-      if(cursor.value.hidden){
+      if (cursor.value.hidden) {
         cursor.continue();
         return;
       }
@@ -889,8 +894,8 @@ function sortByCreator(type, pushState) {
 
       cursor.continue()
     }
-    tx.oncomplete = function(){
-      convertResultsToList(db,results,false,type);
+    tx.oncomplete = function() {
+      convertResultsToList(db, results, false, type);
     }
   }
 }
@@ -902,13 +907,14 @@ function sortByDates(type, pushState) {
   } else {
     history.replaceState(["sortByDates", type], null, null)
   }
+  suggestAlertAndNotification({
+    notifyUrgent: false
+  });
 
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  const office = localStorage.getItem('selectedOffice');
-  req.onsuccess = function () {
+  appNotification.urgent(false).then(function(record) {
+    generateActivitiesByDate(record)
+  });
 
-  }
 }
 
 
@@ -916,57 +922,25 @@ function generateActivitiesByDate(activities) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let results = [];
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result
     const tx = db.transaction(['activity']);
     const activityObjectStore = tx.objectStore('activity');
 
-    activities.forEach(function(data){
-      activityObjectStore.get(data.activityId).onsuccess = function(event){
+    activities.forEach(function(data) {
+      activityObjectStore.get(data.activityId).onsuccess = function(event) {
         const record = event.target.result;
-        if(record){
+        if (record) {
           results.push(record);
         }
       }
     })
 
-    tx.oncomplete = function(){
-      convertResultsToList(db,results,false,'Urgent');
+    tx.oncomplete = function() {
+      convertResultsToList(db, results, false, 'Urgent');
     }
   }
 }
-
-function sortBykeys(data) {
-  console.log(data)
-  const lowerOrder = data['LOW']
-  const higherOrder = data['HIGH']
-  const holder = {
-    'LOW': {},
-    'HIGH': {}
-  }
-
-
-
-  let lowerOrderLength = lowerOrder.length
-  for (let iterator = 0; iterator < lowerOrderLength; iterator++) {
-    key = lowerOrder[iterator]
-    if (!holder['LOW'].hasOwnProperty(key.activityId)) {
-      holder['LOW'][key.activityId] = key
-    }
-  }
-
-
-  let higherOrderLength = higherOrder.length
-  for (let iterator = 0; iterator < higherOrderLength; iterator++) {
-    key = higherOrder[iterator]
-    if (!holder['HIGH'].hasOwnProperty(key.activityId)) {
-      holder['HIGH'][key.activityId] = key
-    }
-  }
-
-  return holder
-}
-
 
 function sortByLocation(type, pushState) {
   if (pushState) {
@@ -974,25 +948,16 @@ function sortByLocation(type, pushState) {
   } else {
     history.replaceState(['sortByLocation', type], null, null)
   }
-  const dbName = firebase.auth().currentUser.uid
-  const office = localStorage.getItem('selectedOffice');
-  console.log(office);
-  notification.postMessage({
-    dbName: dbName,
-    office:office,
+  suggestAlertAndNotification({notifyNearby:false})
+  appNotification.nearBy(false).then(function(record) {
+    sortActivitiesByLocation(record);
   })
-
-  notification.onmessage = function (records) {
-    console.log(records);
-    sortActivitiesByLocation(records.data)
-  }
-  notification.onerror = locationSortError
 
 }
 
 function sortActivitiesByLocation(nearBy) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
+  req.onsuccess = function() {
     const db = req.result;
 
     let results = [];
@@ -1002,14 +967,14 @@ function sortActivitiesByLocation(nearBy) {
     const tx = db.transaction(['activity']);
     const activityObjectStore = tx.objectStore('activity');
 
-    nearBy.forEach(function(data){
-      activityObjectStore.get(data.activityId).onsuccess = function (event) {
+    nearBy.forEach(function(data) {
+      activityObjectStore.get(data.activityId).onsuccess = function(event) {
         const record = event.target.result;
         results.push(record);
       }
     })
-    tx.oncomplete = function(){
-      convertResultsToList(db,results,false,'NearBy');
+    tx.oncomplete = function() {
+      convertResultsToList(db, results, false, 'NearBy');
     }
   }
 }
@@ -1082,7 +1047,7 @@ function createInputForProfile(key, type, classtype) {
 }
 
 
-function suggestAlertAndNotification(alert,notification) {
+function suggestAlertAndNotification(show) {
   const states = {
     'listView': true,
     'filterActivities': true,
@@ -1091,22 +1056,42 @@ function suggestAlertAndNotification(alert,notification) {
     'sortByLocation': true,
 
   }
-  getRootRecord().then(function (record) {
+  getRootRecord().then(function(record) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
+    req.onsuccess = function() {
       const db = req.result;
       const tx = db.transaction(['root'], 'readwrite')
       const store = tx.objectStore('root')
-      record.suggestCheckIn = alert;
-      record.showNotification = notification;
+
+      if (show.hasOwnProperty('alert')) {
+        record.suggestCheckIn = show.alert;
+      }
+
+      if (show.hasOwnProperty('notifyUrgent')) {
+        record.notifyUrgent = show.notifyUrgent;
+      }
+      if(show.hasOwnProperty('notifyNearby')){
+        record.notifyNearby = show.notifyNearby
+      }
+
       store.put(record)
 
-      tx.oncomplete = function () {
-        if (states[history.state[0]] && alert) {
+      tx.oncomplete = function() {
+        if(!history.state) return;
+        if(!show.alert) return;
+        if (states[history.state[0]]) {
           const iconEl = document.getElementById('activity-create--icon')
-          iconEl.textContent = 'add_alert'
+          if(iconEl){
+            iconEl.textContent = 'add_alert'
+          }
         }
       }
     }
   }).catch(console.log())
+}
+
+function removeChildNodes(parent){
+  while(parent.firstChild){
+    parent.removeChild(parent.firstChild);
+  }
 }
