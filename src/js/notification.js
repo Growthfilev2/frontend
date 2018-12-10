@@ -1,3 +1,5 @@
+importScripts("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js");
+
 self.onmessage = function(event) {
   const dbName = event.data.dbName;
   const office = event.data.office;
@@ -6,52 +8,97 @@ self.onmessage = function(event) {
   let distanceArr = []
   req.onsuccess = function() {
     const db = req.result
-    const rootTx = db.transaction(['root']);
-    const rootStore = rootTx.objectStore('root');
+    // nearBy(db,dbName);
+    urgent(db,dbName);
+}
 
-    rootStore.get(dbName).onsuccess = function(event) {
-      const record = event.target.result;
-
-      userCoords = {
-        'latitude': record.latitude,
-        'longitude': record.longitude
-      }
+function urgent(db){
+  const calTx = db.transaction(['calendar']);
+  const calendarObjectStore = calTx.objectStore('calendar');
+  const results = [];
+  const today = moment().format("YYYY-MM-DD");
+  const yesterday = moment().subtract(1,'days');
+  const tomorrow = moment().add(1,'days');
+  calendarObjectStore.openCursor().onsuccess = function(event){
+    const cursor = event.target.result;
+    if(!cursor) return;
+    if(cursor.value.office !== office){
+      cursor.continue();
+      return;
+    }
+    if(cursor.value.hidden) {
+      cursor.continue();
+      return;
+    }
+    if(cursor.value.status !== 'PENDING'){
+      cursor.continue();
+      return;
     }
 
-    rootTx.oncomplete = function() {
-      console.log(userCoords);
-
-      const mapTx = db.transaction(['map'], 'readwrite');
-
-      const mapObjectStore = mapTx.objectStore('map');
-      mapObjectStore.openCursor().onsuccess = function(curEvent) {
-        const cursor = curEvent.target.result
-        if (!cursor) return;
-        if(cursor.value.office !== office){
-          cursor.continue();
-          return;
-        }
-        if(cursor.value.status !== 'PENDING'){
-          cursor.continue();
-          return;
-        }
-        if(cursor.value.hidden){
-          cursor.continue();
-          return;
-        }
-
-        distanceArr.push(calculateDistance(userCoords, cursor.value))
-        cursor.continue()
-      }
-      mapTx.oncomplete = function() {
-        const filtered =   distanceArr.filter(function(record){
-          return record !== null;
-        })
-        self.postMessage(filtered);
-      }
+    if(yesterday.isBefore(cursor.value.start) || tomorrow.isAfter(cursor.value.end)) {
+      results.push(cursor.value);
     }
-
+    cursor.continue();
   }
+  calTx.oncomplete = function(){
+  const sorted = sortDatesInAscendingOrder(results);
+  self.postMessage(sorted);
+  }
+}
+
+function sortDatesInAscendingOrder(results){
+  const ascending = results.sort(function(a,b){
+      return moment(b.end).valueOf() - moment(a.end).valueOf();
+  })
+  return ascending;
+}
+
+function nearBy(db){
+  const rootTx = db.transaction(['root']);
+  const rootStore = rootTx.objectStore('root');
+  rootStore.get(dbName).onsuccess = function(event) {
+    const record = event.target.result;
+
+    userCoords = {
+      'latitude': record.latitude,
+      'longitude': record.longitude
+    }
+  }
+
+  rootTx.oncomplete = function() {
+    console.log(userCoords);
+
+    const mapTx = db.transaction(['map'], 'readwrite');
+
+    const mapObjectStore = mapTx.objectStore('map');
+    mapObjectStore.openCursor().onsuccess = function(curEvent) {
+      const cursor = curEvent.target.result
+      if (!cursor) return;
+      if(cursor.value.office !== office){
+        cursor.continue();
+        return;
+      }
+      if(cursor.value.status !== 'PENDING'){
+        cursor.continue();
+        return;
+      }
+      if(cursor.value.hidden){
+        cursor.continue();
+        return;
+      }
+
+      distanceArr.push(calculateDistance(userCoords, cursor.value))
+      cursor.continue()
+    }
+    mapTx.oncomplete = function() {
+      const filtered =   distanceArr.filter(function(record){
+        return record !== null;
+      })
+      self.postMessage(filtered);
+    }
+  }
+
+}
 
 }
 function calculateDistance(userCoords, otherLocations) {

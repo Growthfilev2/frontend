@@ -84,16 +84,7 @@ window.onpopstate = function(event) {
     window[event.state[0]](true)
     return;
   }
-
-  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
-    const req = indexedDB.open(localStorage.getItem('dbexist'))
-    req.onsuccess = function() {
-      const db = req.result
-      window[event.state[0]](event.state[1], db, false);
-    }
-    return;
-  }
-
+  
   window[event.state[0]](event.state[1], false)
 }
 
@@ -310,7 +301,7 @@ function init(auth) {
     requestCreator('now', native.getInfo())
     manageLocation();
     app.isNewDay() ? suggestCheckIn(true) : ''
-  
+
     return
   }
 

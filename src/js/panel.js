@@ -820,80 +820,46 @@ function sortByDates(type, pushState) {
   } else {
     history.replaceState(["sortByDates", type], null, null)
   }
-
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  const office = localStorage.getItem('selectedOffice');
   req.onsuccess = function () {
-    const db = req.result
+    notification.postMessage({
+      dbName: dbName,
+      office:office,
+    })
 
-    const currOffice = localStorage.getItem('selectedOffice');
-
-    const today = moment().format('YYYY-MM-DD')
-
-    const sortingOrder = {
-      HIGH: [],
-      LOW: []
+    notification.onmessage = function (records) {
+      console.log(records);
+      generateActivitiesByDate(records.data);
     }
-
-    const calendar = db.transaction('calendar').objectStore('calendar').index('range')
-    calendar.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) {
-        sortingOrder['HIGH'].sort(function (a, b) {
-          return moment(b.start).valueOf() - moment(a.start).valueOf()
-        })
-
-        sortingOrder['LOW'].sort(function (a, b) {
-          return moment(b.end).valueOf() - moment(a.end).valueOf()
-        })
-
-        generateActivitiesByDate(sortBykeys(sortingOrder))
-        return
-      }
-
-      if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice) {
-        sortingOrder['HIGH'].push(cursor.value)
-      } else {
-        sortingOrder['LOW'].push(cursor.value)
-      }
-
-      cursor.continue()
-    }
+    notification.onerror = locationSortError
   }
 }
 
-function generateActivitiesByDate(sortingOrder) {
+
+function generateActivitiesByDate(activities) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  let activityDom = ''
+  let results = [];
   req.onsuccess = function () {
     const db = req.result
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
+    const tx = db.transaction(['activity']);
+    const activityObjectStore = tx.objectStore('activity');
 
-    Object.keys(sortingOrder['HIGH']).forEach(function (key) {
-      activityObjectStore.get(key).onsuccess = function (event) {
-        const activity = event.target.result
-        createActivityList(db, activity).then(function (li) {
-
-          activityDom += li
-        })
-      }
-    })
-    Object.keys(sortingOrder['LOW']).forEach(function (key) {
-      activityObjectStore.get(key).onsuccess = function (event) {
-        const activity = event.target.result
-        createActivityList(db, activity).then(function (li) {
-          activityDom += li
-        })
+    activities.forEach(function(data){
+      activityObjectStore.get(data.activityId).onsuccess = function(event){
+        const record = event.target.result;
+        if(record){
+          results.push(record);
+        }
       }
     })
 
-    setTimeout(function () {
-      let yOffset = window.pageYOffset
-      appendActivityListToDom(activityDom, false, 'Urgent')
-      scrollToActivity(yOffset)
-    }, 600)
-
-
+    tx.oncomplete = function(){
+      convertResultsToList(db,results,false,'Urgent');
+    }
   }
 }
 

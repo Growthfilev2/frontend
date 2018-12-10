@@ -632,12 +632,13 @@ function transactionError(event) {
 function updateCalendarWithNoStatus(db, activity) {
   return new Promise(function(resolve, reject) {
     const calTx = db.transaction(['calendar'], 'readwrite')
-    const calendarObjectStore = calTx.objectStore('map')
+    const calendarObjectStore = calTx.objectStore('calendar')
 
     const resultsWithoutStatus = []
     calendarObjectStore.openCursor().onsuccess = function(event) {
       const cursor = event.target.result;
       if (!cursor) return;
+
       if (cursor.value.status) {
         cursor.continue();
         return;
@@ -646,12 +647,13 @@ function updateCalendarWithNoStatus(db, activity) {
         cursor.continue();
         return;
       }
+
       resultsWithoutStatus.push(cursor.value);
       cursor.delete();
       cursor.continue();
     }
 
-    calendarObjectStore.oncomplete = function() {
+    calTx.oncomplete = function() {
       const activityTx = db.transaction(['activity'], 'readwrite');
       const activityStore = activityTx.objectStore('activity');
       console.log(resultsWithoutStatus);
@@ -660,7 +662,7 @@ function updateCalendarWithNoStatus(db, activity) {
           const record = event.target.result;
           if (record) {
             const transaction = db.transaction(['calendar'], 'readwrite');
-            const calendarStore = transaction.objectStore('map');
+            const calendarStore = transaction.objectStore('calendar');
             data.status = record.status;
             data.office = record.office;
             calendarStore.put(data);
@@ -676,46 +678,46 @@ function updateCalendarWithNoStatus(db, activity) {
 
 function updateCalendar(db, activity) {
   updateCalendarWithNoStatus(db, activity).then(function() {
-      const req = indexedDB.open(firebase.auth().currentUser.uid);
-      req.onsuccess = function() {
-        const db = req.result;
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function() {
+      const db = req.result;
+      const calendarTx = db.transaction(['calendar'], 'readwrite')
+      const calendarObjectStore = calendarTx.objectStore('calendar')
+      const calendarActivityIndex = calendarObjectStore.index('activityId')
+
+      calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
+        // console.log(activity.activityId)
+        const cursor = event.target.result
+        if (cursor) {
+          let recordDeleteReq = cursor.delete()
+          recordDeleteReq.onerror = errorDeletingRecord
+          cursor.continue()
+        }
+      }
+      calendarTx.oncomplete = function() {
         const calendarTx = db.transaction(['calendar'], 'readwrite')
         const calendarObjectStore = calendarTx.objectStore('calendar')
-        const calendarActivityIndex = calendarObjectStore.index('activityId')
 
-        calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
-          // console.log(activity.activityId)
-          const cursor = event.target.result
-          if (cursor) {
-            let recordDeleteReq = cursor.delete()
-            recordDeleteReq.onerror = errorDeletingRecord
-            cursor.continue()
-          }
-        }
-        calendarTx.oncomplete = function() {
-          const calendarTx = db.transaction(['calendar'], 'readwrite')
-          const calendarObjectStore = calendarTx.objectStore('calendar')
+        activity.schedule.forEach(function(schedule) {
+          const startTime = moment(schedule.startTime).toDate()
+          const endTime = moment(schedule.endTime).toDate()
 
-          activity.schedule.forEach(function(schedule) {
-            const startTime = moment(schedule.startTime).toDate()
-            const endTime = moment(schedule.endTime).toDate()
-
-            calendarObjectStore.add({
-              activityId: activity.activityId,
-              scheduleName: schedule.name,
-              timestamp: activity.timestamp,
-              template: activity.template,
-              hidden: activity.hidden,
-              start: moment(startTime).format('YYYY-MM-DD'),
-              end: moment(endTime).format('YYYY-MM-DD'),
-              status: activity.status,
-              office: activity.office
-            })
+          calendarObjectStore.add({
+            activityId: activity.activityId,
+            scheduleName: schedule.name,
+            timestamp: activity.timestamp,
+            template: activity.template,
+            hidden: activity.hidden,
+            start: moment(startTime).format('YYYY-MM-DD'),
+            end: moment(endTime).format('YYYY-MM-DD'),
+            status: activity.status,
+            office: activity.office
           })
-          calendarTx.onerror = transactionError
-        }
-  }
-}).catch(console.log)
+        })
+        calendarTx.onerror = transactionError
+      }
+    }
+  }).catch(console.log)
 }
 
 // create attachment record with status,template and office values from activity
