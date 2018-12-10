@@ -1563,3 +1563,15 @@ input[type="datetime-local"] {
     color: #0399f4 !important; 
   font-size: 30px;}
 
+
+  .suggest-checkin--view {
+    padding: 5px 16px;
+    background-color: #eeeeee;
+  }
+  .suggestion-icon {
+    vertical-align: bottom;
+    color: #0399f4;
+  }
+  .suggest-checkin--text {
+    margin-left: 10px;
+  }

@@ -699,7 +699,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();
-  }, 10000);
+  }, 1000000);
 }
 
 function getInputText(selector) {
