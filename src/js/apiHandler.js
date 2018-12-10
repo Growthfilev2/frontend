@@ -527,41 +527,98 @@ function instantUpdateDB(dbName, data, type) {
   }
 }
 
-
-
-function updateMap(db, activity) {
-  const mapTx = db.transaction(['map'], 'readwrite')
-  const mapObjectStore = mapTx.objectStore('map')
-  const mapActivityIdIndex = mapObjectStore.index('activityId')
-
-  mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function(event) {
-    const cursor = event.target.result
-    if (cursor) {
-      let deleteRecordReq = cursor.delete()
-      cursor.continue()
-      deleteRecordReq.onerror = errorDeletingRecord
-    }
-  }
-
-  mapTx.oncomplete = function() {
+function updateMapWithNoStatus(db, activity) {
+  return new Promise(function(resolve, reject) {
     const mapTx = db.transaction(['map'], 'readwrite')
     const mapObjectStore = mapTx.objectStore('map')
 
+    const resultsWithoutStatus = []
+    mapObjectStore.openCursor().onsuccess = function(event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.status) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.office) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.hidden) {
+        cursor.continue();
+        return;
+      }
 
-    activity.venue.forEach(function(newVenue) {
-      mapObjectStore.add({
-        activityId: activity.activityId,
-        latitude: newVenue.geopoint['_latitude'],
-        longitude: newVenue.geopoint['_longitude'],
-        location: newVenue.location.toLowerCase(),
-        template: activity.template,
-        address: newVenue.address.toLowerCase(),
-        venueDescriptor: newVenue.venueDescriptor,
-      })
-    })
+      resultsWithoutStatus.push(cursor.value);
+      cursor.delete();
+      cursor.continue();
+    }
 
-  }
-  mapTx.onerror = errorDeletingRecord
+    mapTx.oncomplete = function() {
+      const activityTx = db.transaction(['activity'], 'readwrite');
+      const activityStore = activityTx.objectStore('activity');
+      console.log(resultsWithoutStatus);
+      resultsWithoutStatus.forEach(function(data) {
+        activityStore.get(data.activityId).onsuccess = function(event) {
+          const record = event.target.result;
+          if (record) {
+            const transaction = db.transaction(['map'], 'readwrite');
+            const mapObjectStore = transaction.objectStore('map');
+            data.status = record.status;
+            data.hidden = record.hidden;
+            data.office = record.office;
+            mapObjectStore.put(data);
+          }
+        }
+      });
+      activityTx.oncomplete = function() {
+        resolve(true)
+      }
+    }
+  })
+}
+
+
+function updateMap(db, activity) {
+  updateMapWithNoStatus(db, activity).then(function() {
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function() {
+      const db = req.result;
+      const mapTx = db.transaction(['map'], 'readwrite')
+      const mapObjectStore = mapTx.objectStore('map')
+      const mapActivityIdIndex = mapObjectStore.index('activityId')
+      mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function(event) {
+        const cursor = event.target.result
+        if (cursor) {
+
+          let deleteRecordReq = cursor.delete()
+          cursor.continue()
+          deleteRecordReq.onerror = errorDeletingRecord
+        }
+      }
+
+      mapTx.oncomplete = function() {
+        const mapTx = db.transaction(['map'], 'readwrite')
+        const mapObjectStore = mapTx.objectStore('map')
+
+        activity.venue.forEach(function(newVenue) {
+          mapObjectStore.add({
+            activityId: activity.activityId,
+            latitude: newVenue.geopoint['_latitude'],
+            longitude: newVenue.geopoint['_longitude'],
+            location: newVenue.location.toLowerCase(),
+            template: activity.template,
+            address: newVenue.address.toLowerCase(),
+            venueDescriptor: newVenue.venueDescriptor,
+            status: activity.status,
+            office: activity.office,
+            hidden: activity.hidden
+          })
+        })
+      }
+      mapTx.onerror = errorDeletingRecord
+    }
+  }).catch(console.log)
 }
 
 function errorDeletingRecord(event) {
@@ -572,46 +629,93 @@ function transactionError(event) {
   console.log(event.target.error)
 }
 
-function updateCalendar(db, activity) {
-  const calendarTx = db.transaction(['calendar'], 'readwrite')
-  const calendarObjectStore = calendarTx.objectStore('calendar')
-  const calendarActivityIndex = calendarObjectStore.index('activityId')
+function updateCalendarWithNoStatus(db, activity) {
+  return new Promise(function(resolve, reject) {
+    const calTx = db.transaction(['calendar'], 'readwrite')
+    const calendarObjectStore = calTx.objectStore('map')
 
-  calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
-    // console.log(activity.activityId)
-    const cursor = event.target.result
-    if (cursor) {
-      let recordDeleteReq = cursor.delete()
-      recordDeleteReq.onerror = errorDeletingRecord
-      cursor.continue()
+    const resultsWithoutStatus = []
+    calendarObjectStore.openCursor().onsuccess = function(event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.status) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.office) {
+        cursor.continue();
+        return;
+      }
+      resultsWithoutStatus.push(cursor.value);
+      cursor.delete();
+      cursor.continue();
     }
+
+    calendarObjectStore.oncomplete = function() {
+      const activityTx = db.transaction(['activity'], 'readwrite');
+      const activityStore = activityTx.objectStore('activity');
+      console.log(resultsWithoutStatus);
+      resultsWithoutStatus.forEach(function(data) {
+        activityStore.get(data.activityId).onsuccess = function(event) {
+          const record = event.target.result;
+          if (record) {
+            const transaction = db.transaction(['calendar'], 'readwrite');
+            const calendarStore = transaction.objectStore('map');
+            data.status = record.status;
+            data.office = record.office;
+            calendarStore.put(data);
+          }
+        }
+      });
+      activityTx.oncomplete = function() {
+        resolve(true)
+      }
+    }
+  })
+}
+
+function updateCalendar(db, activity) {
+  updateCalendarWithNoStatus(db, activity).then(function() {
+      const req = indexedDB.open(firebase.auth().currentUser.uid);
+      req.onsuccess = function() {
+        const db = req.result;
+        const calendarTx = db.transaction(['calendar'], 'readwrite')
+        const calendarObjectStore = calendarTx.objectStore('calendar')
+        const calendarActivityIndex = calendarObjectStore.index('activityId')
+
+        calendarActivityIndex.openCursor(activity.activityId).onsuccess = function(event) {
+          // console.log(activity.activityId)
+          const cursor = event.target.result
+          if (cursor) {
+            let recordDeleteReq = cursor.delete()
+            recordDeleteReq.onerror = errorDeletingRecord
+            cursor.continue()
+          }
+        }
+        calendarTx.oncomplete = function() {
+          const calendarTx = db.transaction(['calendar'], 'readwrite')
+          const calendarObjectStore = calendarTx.objectStore('calendar')
+
+          activity.schedule.forEach(function(schedule) {
+            const startTime = moment(schedule.startTime).toDate()
+            const endTime = moment(schedule.endTime).toDate()
+
+            calendarObjectStore.add({
+              activityId: activity.activityId,
+              scheduleName: schedule.name,
+              timestamp: activity.timestamp,
+              template: activity.template,
+              hidden: activity.hidden,
+              start: moment(startTime).format('YYYY-MM-DD'),
+              end: moment(endTime).format('YYYY-MM-DD'),
+              status: activity.status,
+              office: activity.office
+            })
+          })
+          calendarTx.onerror = transactionError
+        }
   }
-
-  calendarTx.oncomplete = function() {
-    const calendarTx = db.transaction(['calendar'], 'readwrite')
-    const calendarObjectStore = calendarTx.objectStore('calendar')
-    // const calendarActivityIndex = calendarObjectStore.index('activityId')
-    // const calendarIsUpdatedIndex = calendarObjectStore.index('isUpdated')
-
-    activity.schedule.forEach(function(schedule) {
-      const startTime = moment(schedule.startTime).toDate()
-      const endTime = moment(schedule.endTime).toDate()
-
-      calendarObjectStore.add({
-        activityId: activity.activityId,
-        scheduleName: schedule.name,
-        timestamp: activity.timestamp,
-        template: activity.template,
-        hidden: activity.hidden,
-        start: moment(startTime).format('YYYY-MM-DD'),
-        end: moment(endTime).format('YYYY-MM-DD')
-      })
-    })
-
-
-  }
-
-  calendarTx.onerror = transactionError
+}).catch(console.log)
 }
 
 // create attachment record with status,template and office values from activity

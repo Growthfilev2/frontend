@@ -1,3 +1,5 @@
+const notification = new Worker('js/notification.js')
+
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
 
@@ -13,7 +15,9 @@ function listView(pushState) {
   listPanel()
 
   getRootRecord().then(function (rootRecord) {
-    localStorage.setItem('selectedOffice', rootRecord.offices.allOffices[0]);
+    if(!localStorage.getItem('selectedOffice')) {
+      localStorage.setItem('selectedOffice', rootRecord.offices.allOffices[0]);
+    }
     if (!document.querySelector('.mdc-drawer--temporary')) {
       initMenu(rootRecord.offices)
     }
@@ -78,7 +82,7 @@ function fetchDataForActivityList() {
     }
 
     activityStoreTx.oncomplete = function () {
-      convertResultsToList(db,results,false)
+      convertResultsToList(db,results,true)
     }
   }
 }
@@ -669,6 +673,8 @@ function createOfficeSelectionUI(allOffices) {
         drawer['root_'].dataset.currentOffice = office
         document.querySelector('.current--office-name').textContent = office;
         listView()
+        localStorage.setItem('selectedOffice',office);
+        console.log(localStorage.getItem('selectedOffice'))
         drawer.open = false;
       }
       navContent.appendChild(a)
@@ -688,22 +694,25 @@ function allOffices(type, pushState) {
     const db = req.result;
 
 
-    const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
-    let activityDom = ''
+    const tx = db.transaction(['activity'],'readonly')
+    const activityStore = tx.objectStore('activity').index('timestamp');
+
+    let results = [];
     activityStore.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-        appendActivityListToDom(activityDom, false, type)
-        return
-      }
+      if (!cursor) return;
 
-      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
-
-          activityDom += li
-        })
+      if(cursor.value.hidden){
+        cursor.continue();
+        return;
       }
+      results.push(cursor.value)
+
       cursor.continue()
+      }
+
+    tx.oncomplete = function(){
+      convertResultsToList(db,results,false,type);
     }
   }
 }
@@ -724,13 +733,10 @@ function filterActivities(type, pushState) {
     const activityStore =tx.objectStore('activity').index('timestamp');
     const curroffice = localStorage.getItem('selectedOffice')
 
-    let results = ''
+    let results = [];
     activityStore.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-     
-        return
-      }
+      if (!cursor) return;
 
       if(cursor.value.office !== curroffice){
         cursor.continue();
@@ -747,7 +753,7 @@ function filterActivities(type, pushState) {
       }
 
       results.push(cursor.value)
-      
+
       cursor.continue()
 
     }
@@ -768,42 +774,45 @@ function sortByCreator(type, pushState) {
   req.onsuccess = function () {
     const db = req.result
 
-    const activityStore = db.transaction('activity').objectStore('activity').index('timestamp')
-    const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
+    const tx = db.transaction(['activity'],'readonly');
+    const activityStore = tx.objectStore('activity').index('timestamp')
+    const currOffice = localStorage.getItem('selectedOffice')
 
-    let activityDom = ''
+    let  results = []
     const me = firebase.auth().currentUser.phoneNumber
     activityStore.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-        let yOffset = window.pageYOffset
-        setTimeout(function () {
+      if (!cursor) return;
 
-          appendActivityListToDom(activityDom, false, type)
-          scrollToActivity(yOffset)
-        }, 200)
-        return
+      if(cursor.value.office !== currOffice) {
+        cursor.continue();
+        return;
       }
-      if (type === 'Incoming') {
-        if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-          createActivityList(db, cursor.value).then(function (li) {
+      if(cursor.value.hidden){
+        cursor.continue();
+        return;
+      }
 
-            activityDom += li
-          })
+
+      if (type === 'Incoming') {
+        if (cursor.value.creator !== me) {
+          results.push(cursor.value);
         }
       }
       if (type === 'Outgoing') {
-        if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-          createActivityList(db, cursor.value).then(function (li) {
-            activityDom += li
-          })
+        if (cursor.value.creator === me) {
+          results.push(cursor.value)
         }
       }
 
       cursor.continue()
     }
+    tx.oncomplete = function(){
+      convertResultsToList(db,results,false,type);
+    }
   }
 }
+
 
 function sortByDates(type, pushState) {
   if (pushState) {
@@ -811,18 +820,20 @@ function sortByDates(type, pushState) {
   } else {
     history.replaceState(["sortByDates", type], null, null)
   }
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
 
-    const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
-
+    const currOffice = localStorage.getItem('selectedOffice');
 
     const today = moment().format('YYYY-MM-DD')
+
     const sortingOrder = {
       HIGH: [],
       LOW: []
     }
+
     const calendar = db.transaction('calendar').objectStore('calendar').index('range')
     calendar.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
@@ -925,56 +936,48 @@ function sortByLocation(type, pushState) {
     history.replaceState(['sortByLocation', type], null, null)
   }
   const dbName = firebase.auth().currentUser.uid
-  const nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js')
-
-  nearestLocationHandler.postMessage({
-
-    dbName: dbName
+  const office = localStorage.getItem('selectedOffice');
+  console.log(office);
+  notification.postMessage({
+    dbName: dbName,
+    office:office,
   })
 
-  nearestLocationHandler.onmessage = function (records) {
+  notification.onmessage = function (records) {
+    console.log(records);
     sortActivitiesByLocation(records.data)
   }
-  nearestLocationHandler.onerror = locationSortError
-
+  notification.onerror = locationSortError
 
 }
 
-function sortActivitiesByLocation(distanceArr) {
+function sortActivitiesByLocation(nearBy) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
 
-    let activityDom = ''
-    const Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice
+    let results = [];
 
-    const activityObjectStore = db.transaction('activity').objectStore('activity')
-    for (var i = 0; i < distanceArr.length; i++) {
+    const curroffice = localStorage.getItem('selectedOffice');
 
-      activityObjectStore.get(distanceArr[i].activityId).onsuccess = function (event) {
-        if (event.target.result.office === Curroffice && event.target.result !== 'CANCELLED') {
+    const tx = db.transaction(['activity']);
+    const activityObjectStore = tx.objectStore('activity');
 
-          createActivityList(db, event.target.result).then(function (li) {
-            activityDom += li
-          })
-        }
+    nearBy.forEach(function(data){
+      activityObjectStore.get(data.activityId).onsuccess = function (event) {
+        const record = event.target.result;
+        results.push(record);
       }
-
+    })
+    tx.oncomplete = function(){
+      convertResultsToList(db,results,false,'NearBy');
     }
-    setTimeout(function () {
-      let yOffset = window.pageYOffset
-      appendActivityListToDom(activityDom, false, 'Nearby')
-      scrollToActivity(yOffset)
-
-    }, 500)
   }
 }
 
 function locationSortError(error) {
   console.log(error)
 }
-
-
 
 function header(contentStart, contentEnd, headerType) {
 
