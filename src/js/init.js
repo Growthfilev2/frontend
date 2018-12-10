@@ -84,7 +84,7 @@ window.onpopstate = function(event) {
     window[event.state[0]](true)
     return;
   }
-  
+
   window[event.state[0]](event.state[1], false)
 }
 
@@ -300,7 +300,7 @@ function init(auth) {
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
-    app.isNewDay() ? suggestCheckIn(true) : ''
+    app.isNewDay() ? suggestAlertAndNotification(true,true) : ''
 
     return
   }

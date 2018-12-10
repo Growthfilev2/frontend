@@ -19,7 +19,7 @@ function listView(pushState) {
       localStorage.setItem('selectedOffice', rootRecord.offices.allOffices[0]);
     }
     if (!document.querySelector('.mdc-drawer--temporary')) {
-      initMenu(rootRecord.offices)
+      initMenu(rootRecord.offices,rootRecord.showNotification)
     }
     creatListHeader('Recent')
 
@@ -366,7 +366,7 @@ function createActivityIconDom(officeTemplateCombo) {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn)
 
         }
-        suggestCheckIn(false);
+        suggestAlertAndNotification(false,false);
         return;
       }
 
@@ -400,7 +400,7 @@ function listPanel() {
 
 }
 
-function creatListHeader(headerName, backIcon) {
+function creatListHeader(headerName, backIcon,) {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -433,17 +433,19 @@ function creatListHeader(headerName, backIcon) {
 
 
   header(parentIconDiv.outerHTML, '', 'list')
-
-
-  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+  let drawer;
+  if(document.querySelector('.mdc-drawer--temporary')){
+   drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+  }
 
   document.getElementById('menu--panel').addEventListener('click', function () {
     if (backIcon) {
       backNav()
       return
     }
-
-    drawer.open = true
+    if(drawer){
+    drawer.open  = true;
+  }
     sendCurrentViewNameToAndroid('drawer')
 
   })
@@ -476,7 +478,50 @@ function scrollToActivity(yOffset) {
 
 }
 
-function initMenu(officeRecord) {
+function notificationWorker(type,count){
+  return new Promise(function(resolve,reject){
+
+  notification.postMessage({
+    dbName: firebase.auth().currentUser.uid,
+    office:localStorage.getItem('selectedOffice'),
+    type:type,
+    count:count
+  })
+
+  notification.onmessage = function (message) {
+    resolve(message.data);
+  }
+  notification.onerror = function(error){
+    reject(error)
+    }
+  })
+}
+
+let appNotification = function(){
+  return {
+      urgent:function(count){
+        return new Promise(function(resolve){
+
+        const urgentNotification = notificationWorker('urgent',count);
+        urgentNotification.then(function(res){
+          resolve(res)
+        });
+      })
+      },
+      nearBy:function(count){
+        return new Promise(function(resolve){
+
+        const nearByNotification = notificationWorker('nearBy',count);
+        nearByNotification.then(function(res){
+          resolve(res)
+        });
+      });
+    }
+  }
+}();
+
+
+function initMenu(officeRecord,showNotification) {
   console.log(officeRecord)
   const filters = [{
       type: 'Incoming',
@@ -504,146 +549,183 @@ function initMenu(officeRecord) {
     }
   ]
 
-  const aside = document.createElement('aside')
-  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
-  if (officeRecord) {
-    aside.dataset.currentOffice = officeRecord.allOffices[0]
-
-  } else {
-    aside.dataset.currentOffice = 'all'
-  }
-
-  const nav = document.createElement('nav')
-  nav.className = 'mdc-drawer__drawer'
-
-  const header = document.createElement('header')
-  header.className = 'mdc-drawer__header drawer--header'
-
-  const headerContent = document.createElement('div')
-  headerContent.className = 'mdc-drawer__header-content'
-
-  const ImageDiv = document.createElement('div')
-  ImageDiv.className = 'drawer--header-div'
-  ImageDiv.onclick = function () {
-    profileView(true)
-
-  }
-  const headerIcon = document.createElement('img')
-  headerIcon.className = 'drawer-header-icon'
-
-  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-
-  const headerDetails = document.createElement('div')
-  headerDetails.className = 'header--details'
-
-  const name = document.createElement('div')
-  name.className = 'mdc-typography--subtitle'
-  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
 
 
-  const officeName = document.createElement('div')
-  if (!officeRecord) {
-    officeName.textContent = ''
-  } else {
-    officeName.textContent = officeRecord.allOffices[0]
-  }
+  appNotification.urgent(true).then(function(urgentCount){
+    appNotification.nearBy(true).then(function(nearByCount){
+      const count = {
+        'Urgent':urgentCount,
+        'Nearby':nearByCount
+      }
+      const aside = document.createElement('aside')
+      aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
+      if (officeRecord) {
+        aside.dataset.currentOffice = officeRecord.allOffices[0]
 
-  officeName.className = 'mdc-typography--caption current--office-name'
+      } else {
+        aside.dataset.currentOffice = 'all'
+      }
 
-  const changeOfficeIon = document.createElement('div')
-  headerDetails.appendChild(changeOfficeIon)
+      const nav = document.createElement('nav')
+      nav.className = 'mdc-drawer__drawer'
 
-  headerDetails.appendChild(name)
-  headerDetails.appendChild(officeName)
+      const header = document.createElement('header')
+      header.className = 'mdc-drawer__header drawer--header'
 
-  if (officeRecord && officeRecord.hasMultipleOffice) {
-    changeOfficeIon.className = 'material-icons'
-    changeOfficeIon.style.float = 'right'
-    changeOfficeIon.textContent = 'arrow_drop_down'
-    changeOfficeIon.onclick = function () {
-      if (document.querySelector('.office-selection-lists')) return;
+      const headerContent = document.createElement('div')
+      headerContent.className = 'mdc-drawer__header-content'
 
-      createOfficeSelectionUI(officeRecord.allOffices)
-
-    }
-  }
-
-  ImageDiv.appendChild(headerIcon)
-  headerContent.appendChild(ImageDiv)
-  headerContent.appendChild(headerDetails)
-  header.appendChild(headerContent)
-
-  const navContent = document.createElement('nav')
-
-  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
-
-  if (officeRecord && officeRecord.hasMultipleOffice) {
-    const all = document.createElement('div')
-    all.className = 'mdc-list-item mdc-list-item--activated'
-
-    const i = document.createElement('i')
-    i.className = 'material-icons mdc-list-item__graphic drawer--icons'
-    i.setAttribute('aria-hidden', 'true')
-    i.textContent = 'all_inbox'
-    const textSpan = document.createElement('span')
-    textSpan.textContent = 'All offices'
-    all.onclick = function () {
-      let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      allOffices('All Offices', true)
-      drawer.open = false
-    }
-    all.appendChild(i)
-    all.appendChild(textSpan)
-    navContent.appendChild(all)
-  }
-
-  filters.forEach(function (filter) {
-
-    const a = document.createElement('div')
-    a.className = 'mdc-list-item mdc-list-item--activated'
-
-    const i = document.createElement('i')
-    i.className = 'material-icons mdc-list-item__graphic drawer--icons'
-    i.setAttribute('aria-hidden', 'true')
-    i.textContent = filter.icon
-    const textSpan = document.createElement('span')
-    filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type
-
-    a.appendChild(i)
-    a.appendChild(textSpan)
-    a.onclick = function () {
-
-      window.scrollTo(0, 0)
-      if (filter.type === 'Pending' || filter.type === 'Cancelled') {
-        filterActivities(filter.type, true)
+      const ImageDiv = document.createElement('div')
+      ImageDiv.className = 'drawer--header-div'
+      ImageDiv.onclick = function () {
+        profileView(true)
 
       }
-      if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, true)
-      }
-      if (filter.type === 'Urgent') {
-        sortByDates(filter.type, true)
-      }
-      if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, true)
-      }
-      if (filter.type === 'Recent') {
-        listView()
-      }
-      createActivityIcon()
-      let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      drawer.open = false
-      sendCurrentViewNameToAndroid('listView')
-      document.querySelector('.current--selcted-filter').textContent = filter.type;
+      const headerIcon = document.createElement('img')
+      headerIcon.className = 'drawer-header-icon'
 
-    }
+      headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
 
-    navContent.appendChild(a)
+      const headerDetails = document.createElement('div')
+      headerDetails.className = 'header--details'
+
+      const name = document.createElement('div')
+      name.className = 'mdc-typography--subtitle'
+      name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
+
+
+      const officeName = document.createElement('div')
+      if (!officeRecord) {
+        officeName.textContent = ''
+      } else {
+        officeName.textContent = officeRecord.allOffices[0]
+      }
+
+      officeName.className = 'mdc-typography--caption current--office-name'
+
+      const changeOfficeIon = document.createElement('div')
+      headerDetails.appendChild(changeOfficeIon)
+
+      headerDetails.appendChild(name)
+      headerDetails.appendChild(officeName)
+
+      if (officeRecord && officeRecord.hasMultipleOffice) {
+        changeOfficeIon.className = 'material-icons'
+        changeOfficeIon.style.float = 'right'
+        changeOfficeIon.textContent = 'arrow_drop_down'
+        changeOfficeIon.onclick = function () {
+          if (document.querySelector('.office-selection-lists')) return;
+
+          createOfficeSelectionUI(officeRecord.allOffices)
+
+        }
+      }
+
+      ImageDiv.appendChild(headerIcon)
+      headerContent.appendChild(ImageDiv)
+      headerContent.appendChild(headerDetails)
+      header.appendChild(headerContent)
+
+      const navContent = document.createElement('nav')
+
+      navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
+
+      if (officeRecord && officeRecord.hasMultipleOffice) {
+        const all = document.createElement('div')
+        all.className = 'mdc-list-item mdc-list-item--activated'
+
+        const i = document.createElement('i')
+        i.className = 'material-icons mdc-list-item__graphic drawer--icons'
+        i.setAttribute('aria-hidden', 'true')
+        i.textContent = 'all_inbox'
+        const textSpan = document.createElement('span')
+        textSpan.textContent = 'All offices'
+        all.onclick = function () {
+          let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+          allOffices('All Offices', true)
+          drawer.open = false
+        }
+        all.appendChild(i)
+        all.appendChild(textSpan)
+        navContent.appendChild(all)
+      }
+
+      filters.forEach(function (filter) {
+
+        const a = document.createElement('div')
+        a.className = 'mdc-list-item mdc-list-item--activated'
+
+        const i = document.createElement('i')
+        i.className = 'material-icons mdc-list-item__graphic drawer--icons'
+        i.setAttribute('aria-hidden', 'true')
+        i.textContent = filter.icon
+        const textSpan = document.createElement('span')
+        filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type
+
+        if(showNotification){
+          if(filter.type === 'Urgent' || filter.type ==='Nearby'){
+
+          const countDom = document.createElement('span')
+          countDom.className = 'mdc-list-item__meta';
+
+          const countName = document.createElement("span")
+          countName.className = 'notification'
+          countName.textContent = count[filter.type];
+
+          textSpan.textContent  = filter.type;
+
+          a.appendChild(i)
+          a.appendChild(textSpan)
+          countDom.appendChild(countName)
+          a.appendChild(countDom)
+          }
+        else {
+          a.appendChild(i)
+            a.appendChild(textSpan)
+        }
+      }
+      else {
+        a.appendChild(i)
+          a.appendChild(textSpan)
+      }
+
+
+        a.onclick = function () {
+
+          window.scrollTo(0, 0)
+          if (filter.type === 'Pending' || filter.type === 'Cancelled') {
+            filterActivities(filter.type, true)
+
+          }
+          if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
+            sortByCreator(filter.type, true)
+          }
+          if (filter.type === 'Urgent') {
+            sortByDates(filter.type, true)
+          }
+          if (filter.type === 'Nearby') {
+            sortByLocation(filter.type, true)
+          }
+          if (filter.type === 'Recent') {
+            listView()
+          }
+          createActivityIcon()
+          let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+          drawer.open = false
+          sendCurrentViewNameToAndroid('listView')
+          document.querySelector('.current--selcted-filter').textContent = filter.type;
+        }
+
+        navContent.appendChild(a)
+      })
+      nav.appendChild(header)
+      nav.appendChild(navContent)
+      aside.appendChild(nav)
+      document.body.appendChild(aside)
+
+    })
   })
-  nav.appendChild(header)
-  nav.appendChild(navContent)
-  aside.appendChild(nav)
-  document.body.appendChild(aside)
+
 
 }
 
@@ -820,21 +902,12 @@ function sortByDates(type, pushState) {
   } else {
     history.replaceState(["sortByDates", type], null, null)
   }
-  
+
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   const office = localStorage.getItem('selectedOffice');
   req.onsuccess = function () {
-    notification.postMessage({
-      dbName: dbName,
-      office:office,
-    })
 
-    notification.onmessage = function (records) {
-      console.log(records);
-      generateActivitiesByDate(records.data);
-    }
-    notification.onerror = locationSortError
   }
 }
 
@@ -1009,7 +1082,7 @@ function createInputForProfile(key, type, classtype) {
 }
 
 
-function suggestCheckIn(suggest) {
+function suggestAlertAndNotification(alert,notification) {
   const states = {
     'listView': true,
     'filterActivities': true,
@@ -1024,11 +1097,12 @@ function suggestCheckIn(suggest) {
       const db = req.result;
       const tx = db.transaction(['root'], 'readwrite')
       const store = tx.objectStore('root')
-      record.suggestCheckIn = suggest;
+      record.suggestCheckIn = alert;
+      record.showNotification = notification;
       store.put(record)
 
       tx.oncomplete = function () {
-        if (states[history.state[0]] && suggest) {
+        if (states[history.state[0]] && alert) {
           const iconEl = document.getElementById('activity-create--icon')
           iconEl.textContent = 'add_alert'
         }

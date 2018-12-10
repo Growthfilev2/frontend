@@ -68,14 +68,14 @@ body {
 
 .comment-box .talktext .user-name--comment {
   font-weight: 500;
- 
+
     margin-top: 0px;
     margin-bottom: 0px;
 }
 
 .comment-box .talktext .comment {
       word-break: break-word;
-     
+
       margin-bottom: 0px;
       margin-top: 0px;
       font-weight: normal;
@@ -1121,7 +1121,7 @@ input[type="datetime-local"] {
     padding-bottom: 0px;
   }
 
-  
+
   .search--cont {
     width: 100%
   }
@@ -1198,7 +1198,7 @@ input[type="datetime-local"] {
   .success--check {
     color: #ffffff;
     animation: checking 1s ease both;
-  
+
     border: solid 12px white;
     width: 60px;
     height: 60px;
@@ -1216,7 +1216,7 @@ input[type="datetime-local"] {
       width: 0;
       height: 0;
     }
-    
+
     50% {
       opacity: 1;
       width: 0;
@@ -1291,7 +1291,7 @@ input[type="datetime-local"] {
   .update-create--activity {
     margin-bottom: 80px;
   }
-  
+
   .update-create--activity .mdc-list {
     background-color:white;
     margin-top:30px;
@@ -1302,7 +1302,7 @@ input[type="datetime-local"] {
   .update-create--activity .mdc-list:nth-child(1) {
     margin-top: 10px;
   }
- 
+
   .attachment--divider {
     opacity: 0.5
   }
@@ -1560,7 +1560,7 @@ input[type="datetime-local"] {
 .mdc-top-app-bar {
   color: black !important; }
   .mdc-top-app-bar .material-icons {
-    color: #0399f4 !important; 
+    color: #0399f4 !important;
   font-size: 30px;}
 
 
@@ -1574,4 +1574,21 @@ input[type="datetime-local"] {
   }
   .suggest-checkin--text {
     margin-left: 10px;
+  }
+  .notification {
+
+    background-color: red;
+    color: white;
+    border-radius: 15px;
+    padding: 0px 5px 0px 5px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    height: 20px;
+    line-height: 20px;
+    min-width: 9px;
+    vertical-align: top;
+    margin-right: 32px;
+    vertical-align: top;
+  
   }
