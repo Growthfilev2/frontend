@@ -1,4 +1,4 @@
-const notification = new Worker('src/js/notification.js')
+const notification = new Worker('js/notification.js')
 
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
@@ -16,18 +16,12 @@ function listView(pushState) {
 
   getRootRecord().then(function(rootRecord) {
     if (!localStorage.getItem('selectedOffice')) {
-      if(rootRecord.offices){
-        localStorage.setItem('selectedOffice', rootRecord.offices.allOffices[0]);
-      }
+      localStorage.setItem('selectedOffice', rootRecord.offices[0]);
     }
-      creatListHeader('Recent')
       fetchDataForActivityList();
-      createActivityIcon();
-
-
-  })
-
-
+    })
+    creatListHeader('Recent')
+    createActivityIcon();
 }
 
 function getRootRecord() {
@@ -612,14 +606,14 @@ function initMenu(officeRecord, notify) {
       headerDetails.appendChild(name)
       headerDetails.appendChild(officeName)
 
-      if (officeRecord && officeRecord.hasMultipleOffice) {
+      if (officeRecord) {
         changeOfficeIon.className = 'material-icons'
         changeOfficeIon.style.float = 'right'
         changeOfficeIon.textContent = 'arrow_drop_down'
         changeOfficeIon.onclick = function() {
           if (document.querySelector('.office-selection-lists')) return;
 
-          createOfficeSelectionUI(officeRecord.allOffices)
+          createOfficeSelectionUI(officeRecord)
 
         }
       }
@@ -633,7 +627,7 @@ function initMenu(officeRecord, notify) {
 
       navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
 
-      if (officeRecord && officeRecord.hasMultipleOffice) {
+      if (officeRecord) {
         const all = document.createElement('div')
         all.className = 'mdc-list-item mdc-list-item--activated'
 

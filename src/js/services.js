@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -652,9 +652,7 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
-        setTimeout(function(){
-        window["listView"](true);
-        },5000)
+        window["listView"](true);      
         return;
       }
 
