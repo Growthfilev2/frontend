@@ -165,11 +165,12 @@ function layoutGrid() {
   drawerDom();
 }
 
-function drawerDom (){
+function drawerDom() {
   const div = document.createElement('div')
   div.id = 'drawer-parent';
   document.body.appendChild(div);
 }
+
 function imageViewDialog() {
 
   const aside = document.createElement('aside')
@@ -276,24 +277,26 @@ function startApp() {
 // new day suggest
 // if location changes
 let app = function() {
-    return {
-      today : function (){
-        return moment().format("DD/MM/YYYY");
-      },
-      setDay : function(){
-        localStorage.setItem('today',this.today())
-      },
-      getDay : function(){
-        return localStorage.getItem('today')
-      },
-      isNewDay : function() {
-        if(this.getDay() !== this.today()) {
-          this.setDay();
-          return true;
-        }
+  return {
+    today: function() {
+      return moment().format("DD/MM/YYYY");
+    },
+    setDay: function() {
+      localStorage.setItem('today', this.today())
+    },
+    getDay: function() {
+      return localStorage.getItem('today')
+    },
+    isNewDay: function() {
+      console.log(this.getDay())
+      console.log(this.today())
+      if (this.getDay() !== this.today()) {
+        return true;
+      } else {
         return false;
       }
     }
+  }
 }();
 
 function init(auth) {
@@ -304,10 +307,24 @@ function init(auth) {
 
   if (localStorage.getItem('dbexist')) {
     localStorage.removeItem('selectedOffice');
+
+
+    if (app.isNewDay()) {
+      app.setDay();
+      suggestAlertAndNotification({
+        alert: true,
+        notification: true
+      })
+    } else {
+      suggestAlertAndNotification({
+        alert: false
+      });
+      disableNotification();
+    }
+
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
-    app.isNewDay() ? suggestAlertAndNotification({alert:true,notification:true}) : disableNotification();
 
     return
   }

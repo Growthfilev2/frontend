@@ -1092,7 +1092,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
       cursor.continue()
     }
     tx.oncomplete = function () {
-      
+
       checkInTemplate.forEach(function (li) {
         const keys = Object.keys(li);
         keys.forEach(function (key) {

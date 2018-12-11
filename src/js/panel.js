@@ -521,7 +521,7 @@ let appNotification = function () {
 
 
 function initMenu(officeRecord, notification) {
- 
+
   removeChildNodes(document.getElementById('drawer-parent'));
 
   const filters = [{
@@ -551,7 +551,7 @@ function initMenu(officeRecord, notification) {
   ]
   appNotification.urgent(true).then(function (urgentCount) {
     appNotification.nearBy(true).then(function (nearByCount) {
-      
+
       const count = {
         'Urgent': urgentCount,
         'Nearby': nearByCount
@@ -663,13 +663,13 @@ function initMenu(officeRecord, notification) {
 
               const countDom = document.createElement('span')
               countDom.className = 'mdc-list-item__meta';
-              
+
               const countName = document.createElement("span")
               countName.className = 'notification'
               countName.textContent = count[filter.type];
-              
+
               textSpan.textContent = filter.type;
-              
+
               a.appendChild(i)
               a.appendChild(textSpan)
               countDom.appendChild(countName)
@@ -677,7 +677,7 @@ function initMenu(officeRecord, notification) {
             }
             else {
               a.appendChild(i)
-              a.appendChild(textSpan)  
+              a.appendChild(textSpan)
             }
           } else {
             a.appendChild(i)
@@ -1055,7 +1055,6 @@ function disableNotification(prop){
       const store = tx.objectStore('root')
       if(!prop) {
         record.offices.forEach(function(office){
-
           record.notification[office] = {Urgent:false,Nearby:false}
         })
         store.put(record)
@@ -1067,7 +1066,7 @@ function disableNotification(prop){
       const valueKey = Object.keys(value)[0];
 
       record.notification[office][valueKey] = value[valueKey];
-      
+
       store.put(record)
       }
       tx.oncomplete = function () {

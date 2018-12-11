@@ -652,7 +652,7 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
-        window["listView"](true);      
+        window["listView"](true);
         return;
       }
 
