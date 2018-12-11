@@ -648,7 +648,7 @@ function loadViewFromRoot(response) {
 
     if (response.data.type === 'updateIDB') {
         if (response.data.msg === 'true') {
-       androidStopRefreshing()
+         androidStopRefreshing()
       }
 
       if (!history.state) {

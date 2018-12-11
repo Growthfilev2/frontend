@@ -307,7 +307,7 @@ function init(auth) {
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
-    app.isNewDay() ? suggestAlertAndNotification({alert:true,notifyUrgent:true,notifyNearby:true}) : ''
+    app.isNewDay() ? suggestAlertAndNotification({alert:true,notification:true}) : disableNotification();
 
     return
   }
