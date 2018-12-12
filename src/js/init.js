@@ -1,10 +1,10 @@
 firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
 })
 
 window.onerror = function(msg, url, lineNo, columnNo, error) {
@@ -285,13 +285,14 @@ let app = function() {
       localStorage.setItem('today', this.today())
     },
     getDay: function() {
-      return localStorage.getItem('today')
+      return localStorage.getItem('today');
     },
     isNewDay: function() {
       if (this.getDay() !== this.today()) {
         return true;
       } else {
         return false;
+       
       }
     }
   }
@@ -302,28 +303,32 @@ function init(auth) {
   /** When app has been initialzied before
    * render list view first, then perform app sync and mange location
    */
-  app.setDay();
-  if (localStorage.getItem('dbexist')) {
-    localStorage.removeItem('selectedOffice');
+  
 
+  if (localStorage.getItem('dbexist')) {
+    
+    localStorage.removeItem('selectedOffice');
+    
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
 
       if (app.isNewDay()) {
-        
+        console.log("new day")
+
         suggestAlertAndNotification({
           alert: true,
           notification: true
         })
-      } else {
+        app.setDay();
+      }
+       else {
+         console.log("not a new day")
         suggestAlertAndNotification({
           alert: false
         });
         disableNotification();
       }
- 
-
     return
   }
 

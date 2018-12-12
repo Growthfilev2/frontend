@@ -22,7 +22,6 @@ function listView(pushState) {
     fetchDataForActivityList();
   });
   creatListHeader('Recent');
-  createActivityIcon();
 }
 
 function getRootRecord() {
@@ -98,6 +97,7 @@ function convertResultsToList(db, results, initPanel, type) {
     results.forEach(function (li) {
       activityDom += li;
     });
+    createActivityIcon();
     appendActivityListToDom(activityDom, initPanel, type);
     scrollToActivity(yOffset);
   });
@@ -294,7 +294,6 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
 
 function createActivityIcon() {
 
-  if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
       createActivityIconDom(officeTemplateObject);
@@ -333,20 +332,28 @@ function getCountOfTemplates() {
 }
 
 function createActivityIconDom(officeTemplateCombo) {
-  var fab = document.createElement('button');
-  fab.className = 'mdc-fab create-activity';
-  fab.id = 'create-activity';
-  fab.setAttribute('aria-label', 'Add');
-  var span = document.createElement('span');
-  span.className = 'mdc-fab_icon material-icons';
-  span.id = 'activity-create--icon';
-  span.textContent = 'add';
-  fab.appendChild(span);
-  document.getElementById('activity-list-main').appendChild(fab);
-  document.querySelector('.create-activity').addEventListener('click', function (evt) {
-    var keysArray = Object.keys(officeTemplateCombo);
+  var parent = document.getElementById('create-activity--parent');
 
-    getRootRecord().then(function (record) {
+  getRootRecord().then(function (record) {
+    var fab = document.createElement('button');
+    fab.className = 'mdc-fab create-activity';
+    fab.id = 'create-activity';
+    fab.setAttribute('aria-label', 'Add');
+    var span = document.createElement('span');
+    span.className = 'mdc-fab_icon material-icons';
+    span.id = 'activity-create--icon';
+    console.log(record);
+    if (record.suggestCheckIn) {
+      span.textContent = 'add_alert';
+    } else {
+      span.textContent = 'add';
+    }
+
+    fab.appendChild(span);
+    parent.innerHTML = fab.outerHTML;
+
+    document.querySelector('.create-activity').addEventListener('click', function (evt) {
+      var keysArray = Object.keys(officeTemplateCombo);
       console.log(record.suggestCheckIn);
       if (record.suggestCheckIn) {
         if (keysArray.length === 1) {
@@ -354,6 +361,7 @@ function createActivityIconDom(officeTemplateCombo) {
         } else {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn);
         }
+        document.getElementById('activity-create--icon').textContent = 'add';
         suggestAlertAndNotification({
           alert: false
         });
@@ -361,8 +369,8 @@ function createActivityIconDom(officeTemplateCombo) {
       }
 
       callSubscriptionSelectorUI(evt);
-    }).catch(console.log);
-  });
+    });
+  }).catch(console.log);
 }
 
 function callSubscriptionSelectorUI(evt, suggestCheckIn) {
@@ -384,6 +392,10 @@ function listPanel() {
   listUl.id = 'activity--list';
 
   listCard.appendChild(listUl);
+
+  var fabParent = document.createElement('div');
+  fabParent.id = 'create-activity--parent';
+  listCard.appendChild(fabParent);
 
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML;
 }
@@ -1066,14 +1078,10 @@ function suggestAlertAndNotification(show) {
       store.put(record);
 
       tx.oncomplete = function () {
-        if (!history.state) return;
-        if (!show.alert) return;
-        if (states[history.state[0]]) {
-          var iconEl = document.getElementById('activity-create--icon');
-          if (iconEl) {
-            iconEl.textContent = 'add_alert';
-          }
+        if (show.hasOwnProperty('alert')) {
+          createActivityIcon();
         }
+        console.log("done");
       };
     };
   }).catch(console.log);

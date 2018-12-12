@@ -353,6 +353,7 @@ function createActivityIconDom(officeTemplateCombo) {
   const span = document.createElement('span')
   span.className = 'mdc-fab_icon material-icons'
   span.id = 'activity-create--icon'
+  console.log(record)
     if(record.suggestCheckIn) {
       span.textContent = 'add_alert'
     }
@@ -1123,6 +1124,9 @@ function suggestAlertAndNotification(show) {
       store.put(record)
 
       tx.oncomplete = function () {
+        if(show.hasOwnProperty('alert')) {
+          createActivityIcon()
+        }
         console.log("done");
       }
     }

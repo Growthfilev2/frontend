@@ -928,7 +928,12 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return;
 
     if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && data.attachment.status != 'CANCELLED') {
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value));
+      if (cursor.value.attachment.Name) {
+        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value));
+      }
+      if (cursor.value.attachment.Number) {
+        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value));
+      }
     }
     cursor.continue();
   };

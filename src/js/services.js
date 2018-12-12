@@ -219,7 +219,7 @@ function geolocationApi(method, url, data) {
 
 function manageLocation() {
 
-  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
     try {
@@ -234,7 +234,7 @@ function manageLocation() {
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: {
-          error: locationStatus.message,
+          error: e.message,
           file: 'services.js',
           lineNo: 231,
           device: JSON.parse(native.getInfo()),
@@ -616,9 +616,7 @@ function loadViewFromRoot(response) {
     androidStopRefreshing()
     return;
   }
-
-
-
+  
   var req = window.indexedDB.open(firebase.auth().currentUser.uid);
 
   req.onsuccess = function () {
@@ -646,7 +644,6 @@ function loadViewFromRoot(response) {
     }
 
 
-
     // updateIDB
 
     if (response.data.type === 'updateIDB') {
@@ -656,6 +653,7 @@ function loadViewFromRoot(response) {
 
       if (!history.state) {
         suggestAlertAndNotification({alert:true,notification:true});
+        app.setDay();
         window["listView"](true);
         return;
       }
