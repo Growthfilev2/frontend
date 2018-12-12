@@ -1,3 +1,7 @@
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var notification = new Worker('src/js/notification.js');
+
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
 
@@ -11,60 +15,92 @@ function listView(pushState) {
 
   listPanel();
 
-  var dbName = localStorage.getItem('dbexist');
+  getRootRecord().then(function (rootRecord) {
+    if (!localStorage.getItem('selectedOffice')) {
+      localStorage.setItem('selectedOffice', rootRecord.offices[0]);
+    }
+    fetchDataForActivityList();
+  });
+  creatListHeader('Recent');
+}
 
-  var req = indexedDB.open(dbName);
+function getRootRecord() {
+  return new Promise(function (resolve, reject) {
+    var record = void 0;
+    var dbName = localStorage.getItem('dbexist');
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var rootTx = db.transaction(['root'], 'readwrite');
+      var rootStore = rootTx.objectStore('root');
+      rootStore.get(dbName).onsuccess = function (event) {
+        var data = event.target.result;
+        data ? record = data : record = null;
+      };
+      rootTx.oncomplete = function () {
+        resolve(record);
+      };
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
 
+function fetchDataForActivityList() {
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-    var rootTx = db.transaction(['root'], 'readwrite');
-    var rootStore = rootTx.objectStore('root');
-    rootStore.get(dbName).onsuccess = function (event) {
-      var officeRecord = event.target.result;
+    var results = [];
+    var activityStoreTx = db.transaction('activity');
+    var activityObjectStore = activityStoreTx.objectStore('activity');
+    var activityVisibleIndex = activityObjectStore.index('timestamp');
+    var currOffice = localStorage.getItem('selectedOffice');
+    activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) return;
 
-      if (!document.querySelector('.mdc-drawer--temporary')) {
-        initMenu(db, officeRecord.offices);
+      if (cursor.value.office !== currOffice) {
+        cursor.continue();
+        return;
       }
-      creatListHeader('Recent');
-      fetchDataForActivityList(db);
+
+      if (cursor.value.hidden) {
+        cursor.continue();
+        return;
+      }
+
+      results.push(cursor.value);
+      cursor.continue();
+    };
+
+    activityStoreTx.oncomplete = function () {
+      convertResultsToList(db, results, true);
     };
   };
 }
 
-function fetchDataForActivityList(db) {
+function convertResultsToList(db, results, initPanel, type) {
   var activityDom = '';
-  var activityStoreTx = db.transaction('activity');
-  var activityObjectStore = activityStoreTx.objectStore('activity');
-  var activityVisibleIndex = activityObjectStore.index('timestamp');
-  var currOffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
-  activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) {
-      var yOffset = window.pageYOffset;
-      setTimeout(function () {
-        appendActivityListToDom(activityDom, true);
-        createActivityIcon(db);
-        scrollToActivity(yOffset);
-      }, 1500);
-      return;
-    }
-
-    if (currOffice === 'all') {
-      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
-          activityDom += li;
-        });
-      }
-    } else if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0 && cursor.value.office === currOffice) {
-
-      createActivityList(db, cursor.value).then(function (li) {
-
-        activityDom += li;
-      });
-    }
-
-    cursor.continue();
-  };
+  var yOffset = window.pageYOffset;
+  if (!results.length) {
+    appendActivityListToDom(activityDom, initPanel, type);
+    scrollToActivity(yOffset);
+    return;
+  }
+  var promiseMap = results.map(function (data) {
+    return createActivityList(db, data).then(function (li) {
+      return li;
+    });
+  });
+  Promise.all(promiseMap).then(function (results) {
+    results.forEach(function (li) {
+      activityDom += li;
+    });
+    createActivityIcon();
+    appendActivityListToDom(activityDom, initPanel, type);
+    scrollToActivity(yOffset);
+  });
 }
 
 function createActivityList(db, data, append) {
@@ -256,29 +292,93 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
   }
 }
 
-function createActivityIcon(db) {
-  var subscriptionObjectStore = db.transaction(['subscriptions']).objectStore('subscriptions');
-  var subscriptionCount = subscriptionObjectStore.count();
-  subscriptionCount.onsuccess = function () {
-    if (subscriptionCount.result) {
-      var fab = document.createElement('button');
-      fab.className = 'mdc-fab create-activity';
-      fab.setAttribute('aria-label', 'Add');
-      var span = document.createElement('span');
-      span.className = 'mdc-fab_icon material-icons';
-      span.textContent = 'add';
-      fab.appendChild(span);
-      if (document.getElementById('activity--list')) {
-        document.getElementById('activity--list').appendChild(fab);
-        document.querySelector('.create-activity').addEventListener('click', function (evt) {
-          selectorUI(evt, {
-            record: '',
-            store: 'subscriptions'
-          });
-        });
-      }
+function createActivityIcon() {
+
+  getCountOfTemplates().then(function (officeTemplateObject) {
+    if (Object.keys(officeTemplateObject).length) {
+      createActivityIconDom(officeTemplateObject);
+      return;
     }
-  };
+  }).catch(console.log);
+}
+
+function getCountOfTemplates() {
+
+  return new Promise(function (resolve, reject) {
+    var count = 0;
+    var officeByTemplate = {};
+    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['subscriptions'], 'readonly');
+      var subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+      subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+        var cursor = event.target.result;
+
+        if (!cursor) return;
+        count++;
+        officeByTemplate[cursor.value.office] = count;
+        cursor.continue();
+      };
+
+      tx.oncomplete = function () {
+        resolve(officeByTemplate);
+      };
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
+
+function createActivityIconDom(officeTemplateCombo) {
+  var parent = document.getElementById('create-activity--parent');
+
+  getRootRecord().then(function (record) {
+    var fab = document.createElement('button');
+    fab.className = 'mdc-fab create-activity';
+    fab.id = 'create-activity';
+    fab.setAttribute('aria-label', 'Add');
+    var span = document.createElement('span');
+    span.className = 'mdc-fab_icon material-icons';
+    span.id = 'activity-create--icon';
+    console.log(record);
+    if (record.suggestCheckIn) {
+      span.textContent = 'add_alert';
+    } else {
+      span.textContent = 'add';
+    }
+
+    fab.appendChild(span);
+    parent.innerHTML = fab.outerHTML;
+
+    document.querySelector('.create-activity').addEventListener('click', function (evt) {
+      var keysArray = Object.keys(officeTemplateCombo);
+      console.log(record.suggestCheckIn);
+      if (record.suggestCheckIn) {
+        if (keysArray.length === 1) {
+          createTempRecord(keysArray[0], 'check-in');
+        } else {
+          callSubscriptionSelectorUI(evt, record.suggestCheckIn);
+        }
+        document.getElementById('activity-create--icon').textContent = 'add';
+        suggestAlertAndNotification({
+          alert: false
+        });
+        return;
+      }
+
+      callSubscriptionSelectorUI(evt);
+    });
+  }).catch(console.log);
+}
+
+function callSubscriptionSelectorUI(evt, suggestCheckIn) {
+  selectorUI(evt, {
+    record: '',
+    store: 'subscriptions',
+    suggestCheckIn: suggestCheckIn
+  });
 }
 
 function listPanel() {
@@ -292,6 +392,10 @@ function listPanel() {
   listUl.id = 'activity--list';
 
   listCard.appendChild(listUl);
+
+  var fabParent = document.createElement('div');
+  fabParent.id = 'create-activity--parent';
+  listCard.appendChild(fabParent);
 
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML;
 }
@@ -329,15 +433,16 @@ function creatListHeader(headerName, backIcon) {
 
   header(parentIconDiv.outerHTML, '', 'list');
 
-  var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-
   document.getElementById('menu--panel').addEventListener('click', function () {
     if (backIcon) {
       backNav();
       return;
     }
 
-    drawer.open = true;
+    getRootRecord().then(function (record) {
+      initMenu(record.offices, record.notification);
+    });
+
     sendCurrentViewNameToAndroid('drawer');
   });
 }
@@ -367,8 +472,52 @@ function scrollToActivity(yOffset) {
   }
 }
 
-function initMenu(db, officeRecord) {
-  console.log(officeRecord);
+function notificationWorker(type, count) {
+  return new Promise(function (resolve, reject) {
+
+    notification.postMessage({
+      dbName: firebase.auth().currentUser.uid,
+      office: localStorage.getItem('selectedOffice'),
+      type: type,
+      count: count
+    });
+
+    notification.onmessage = function (message) {
+      resolve(message.data);
+    };
+    notification.onerror = function (error) {
+      reject(error);
+    };
+  });
+}
+
+var appNotification = function () {
+  return {
+    urgent: function urgent(count) {
+      return new Promise(function (resolve) {
+
+        var urgentNotification = notificationWorker('urgent', count);
+        urgentNotification.then(function (res) {
+          resolve(res);
+        });
+      });
+    },
+    nearBy: function nearBy(count) {
+      return new Promise(function (resolve) {
+
+        var nearByNotification = notificationWorker('nearBy', count);
+        nearByNotification.then(function (res) {
+          resolve(res);
+        });
+      });
+    }
+  };
+}();
+
+function initMenu(officeRecord, notification) {
+
+  removeChildNodes(document.getElementById('drawer-parent'));
+
   var filters = [{
     type: 'Incoming',
     icon: 'call_received'
@@ -391,141 +540,175 @@ function initMenu(db, officeRecord) {
     type: 'Cancelled',
     icon: 'delete'
   }];
+  appNotification.urgent(true).then(function (urgentCount) {
+    appNotification.nearBy(true).then(function (nearByCount) {
 
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography';
-  if (officeRecord) {
-    aside.dataset.currentOffice = officeRecord.allOffices[0];
-  } else {
-    aside.dataset.currentOffice = 'all';
-  }
+      var count = {
+        'Urgent': urgentCount,
+        'Nearby': nearByCount
+      };
 
-  var nav = document.createElement('nav');
-  nav.className = 'mdc-drawer__drawer';
+      var aside = document.createElement('aside');
+      aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography';
 
-  var header = document.createElement('header');
-  header.className = 'mdc-drawer__header drawer--header';
+      var nav = document.createElement('nav');
+      nav.className = 'mdc-drawer__drawer';
 
-  var headerContent = document.createElement('div');
-  headerContent.className = 'mdc-drawer__header-content';
+      var header = document.createElement('header');
+      header.className = 'mdc-drawer__header drawer--header';
 
-  var ImageDiv = document.createElement('div');
-  ImageDiv.className = 'drawer--header-div';
-  ImageDiv.onclick = function () {
-    profileView(true);
-  };
-  var headerIcon = document.createElement('img');
-  headerIcon.className = 'drawer-header-icon';
+      var headerContent = document.createElement('div');
+      headerContent.className = 'mdc-drawer__header-content';
 
-  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
+      var ImageDiv = document.createElement('div');
+      ImageDiv.className = 'drawer--header-div';
+      ImageDiv.onclick = function () {
+        profileView(true);
+      };
+      var headerIcon = document.createElement('img');
+      headerIcon.className = 'drawer-header-icon';
 
-  var headerDetails = document.createElement('div');
-  headerDetails.className = 'header--details';
+      headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
 
-  var name = document.createElement('div');
-  name.className = 'mdc-typography--subtitle';
-  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
+      var headerDetails = document.createElement('div');
+      headerDetails.className = 'header--details';
 
-  var officeName = document.createElement('div');
-  if (!officeRecord) {
-    officeName.textContent = '';
-  } else {
-    officeName.textContent = officeRecord.allOffices[0];
-  }
+      var name = document.createElement('div');
+      name.className = 'mdc-typography--subtitle';
+      name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
 
-  officeName.className = 'mdc-typography--caption current--office-name';
+      var officeName = document.createElement('div');
+      if (!officeRecord) {
+        officeName.textContent = '';
+      } else {
+        officeName.textContent = localStorage.getItem('selectedOffice');
+      }
 
-  var changeOfficeIon = document.createElement('div');
-  headerDetails.appendChild(changeOfficeIon);
+      officeName.className = 'mdc-typography--caption current--office-name';
 
-  headerDetails.appendChild(name);
-  headerDetails.appendChild(officeName);
+      var changeOfficeIon = document.createElement('div');
+      headerDetails.appendChild(changeOfficeIon);
 
-  if (officeRecord && officeRecord.hasMultipleOffice) {
-    changeOfficeIon.className = 'material-icons';
-    changeOfficeIon.style.float = 'right';
-    changeOfficeIon.textContent = 'arrow_drop_down';
-    changeOfficeIon.onclick = function () {
-      if (document.querySelector('.office-selection-lists')) return;
+      headerDetails.appendChild(name);
+      headerDetails.appendChild(officeName);
 
-      createOfficeSelectionUI(officeRecord.allOffices, db);
-    };
-  }
+      if (officeRecord.length > 1) {
+        changeOfficeIon.className = 'material-icons';
+        changeOfficeIon.style.float = 'right';
+        changeOfficeIon.textContent = 'arrow_drop_down';
+        changeOfficeIon.onclick = function () {
+          if (document.querySelector('.office-selection-lists')) return;
 
-  ImageDiv.appendChild(headerIcon);
-  headerContent.appendChild(ImageDiv);
-  headerContent.appendChild(headerDetails);
-  header.appendChild(headerContent);
+          createOfficeSelectionUI(officeRecord);
+        };
+      }
 
-  var navContent = document.createElement('nav');
+      ImageDiv.appendChild(headerIcon);
+      headerContent.appendChild(ImageDiv);
+      headerContent.appendChild(headerDetails);
+      header.appendChild(headerContent);
 
-  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list';
+      var navContent = document.createElement('nav');
 
-  if (officeRecord && officeRecord.hasMultipleOffice) {
-    var all = document.createElement('div');
-    all.className = 'mdc-list-item mdc-list-item--activated';
+      navContent.className = 'mdc-drawer__content mdc-list filter-sort--list';
 
-    var i = document.createElement('i');
-    i.className = 'material-icons mdc-list-item__graphic drawer--icons';
-    i.setAttribute('aria-hidden', 'true');
-    i.textContent = 'all_inbox';
-    var textSpan = document.createElement('span');
-    textSpan.textContent = 'All offices';
-    all.onclick = function () {
+      if (officeRecord.length > 1) {
+        var all = document.createElement('div');
+        all.className = 'mdc-list-item mdc-list-item--activated';
+
+        var i = document.createElement('i');
+        i.className = 'material-icons mdc-list-item__graphic drawer--icons';
+        i.setAttribute('aria-hidden', 'true');
+        i.textContent = 'all_inbox';
+        var textSpan = document.createElement('span');
+        textSpan.textContent = 'All offices';
+        all.onclick = function () {
+          var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+          allOffices('All Offices', true);
+          drawer.open = false;
+        };
+        all.appendChild(i);
+        all.appendChild(textSpan);
+        navContent.appendChild(all);
+      }
+
+      filters.forEach(function (filter) {
+
+        var a = document.createElement('div');
+        a.className = 'mdc-list-item mdc-list-item--activated';
+
+        var i = document.createElement('i');
+        i.className = 'material-icons mdc-list-item__graphic drawer--icons';
+        i.setAttribute('aria-hidden', 'true');
+        i.textContent = filter.icon;
+        var textSpan = document.createElement('span');
+        filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type;
+
+        if (filter.type === 'Urgent' || filter.type === 'Nearby') {
+          if (notification[localStorage.getItem('selectedOffice')][filter.type]) {
+            if (count[filter.type]) {
+
+              var countDom = document.createElement('span');
+              countDom.className = 'mdc-list-item__meta';
+
+              var countName = document.createElement("span");
+              countName.className = 'notification';
+              countName.textContent = count[filter.type];
+
+              textSpan.textContent = filter.type;
+
+              a.appendChild(i);
+              a.appendChild(textSpan);
+              countDom.appendChild(countName);
+              a.appendChild(countDom);
+            } else {
+              a.appendChild(i);
+              a.appendChild(textSpan);
+            }
+          } else {
+            a.appendChild(i);
+            a.appendChild(textSpan);
+          }
+        } else {
+          a.appendChild(i);
+          a.appendChild(textSpan);
+        }
+
+        a.onclick = function () {
+
+          window.scrollTo(0, 0);
+          if (filter.type === 'Pending' || filter.type === 'Cancelled') {
+            filterActivities(filter.type, true);
+          }
+          if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
+            sortByCreator(filter.type, true);
+          }
+          if (filter.type === 'Urgent') {
+            sortByDates(filter.type, true);
+          }
+          if (filter.type === 'Nearby') {
+            sortByLocation(filter.type, true);
+          }
+          if (filter.type === 'Recent') {
+            listView();
+          }
+          createActivityIcon();
+          var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+          drawer.open = false;
+          sendCurrentViewNameToAndroid('listView');
+          document.querySelector('.current--selcted-filter').textContent = filter.type;
+        };
+
+        navContent.appendChild(a);
+      });
+      nav.appendChild(header);
+      nav.appendChild(navContent);
+      aside.appendChild(nav);
+      document.getElementById('drawer-parent').appendChild(aside);
       var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      allOffices('All Offices', true);
-      drawer.open = false;
-    };
-    all.appendChild(i);
-    all.appendChild(textSpan);
-    navContent.appendChild(all);
-  }
-
-  filters.forEach(function (filter) {
-
-    var a = document.createElement('div');
-    a.className = 'mdc-list-item mdc-list-item--activated';
-
-    var i = document.createElement('i');
-    i.className = 'material-icons mdc-list-item__graphic drawer--icons';
-    i.setAttribute('aria-hidden', 'true');
-    i.textContent = filter.icon;
-    var textSpan = document.createElement('span');
-    filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type;
-
-    a.appendChild(i);
-    a.appendChild(textSpan);
-    a.onclick = function () {
-
-      window.scrollTo(0, 0);
-      if (filter.type === 'Pending' || filter.type === 'Cancelled') {
-        filterActivities(filter.type, true);
-      }
-      if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-        sortByCreator(filter.type, true);
-      }
-      if (filter.type === 'Urgent') {
-        sortByDates(filter.type, true);
-      }
-      if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, true);
-      }
-      if (filter.type === 'Recent') {
-        listView();
-      }
-
-      var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      drawer.open = false;
-      sendCurrentViewNameToAndroid('listView');
-      document.querySelector('.current--selcted-filter').textContent = filter.type;
-    };
-
-    navContent.appendChild(a);
+      drawer.open = true;
+    });
   });
-  nav.appendChild(header);
-  nav.appendChild(navContent);
-  aside.appendChild(nav);
-  document.body.appendChild(aside);
 }
 
 function createOfficeSelectionUI(allOffices) {
@@ -551,8 +734,10 @@ function createOfficeSelectionUI(allOffices) {
         var drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'));
         drawer['root_'].dataset.currentOffice = office;
         document.querySelector('.current--office-name').textContent = office;
-        listView();
+        localStorage.setItem('selectedOffice', office);
+        console.log(localStorage.getItem('selectedOffice'));
         drawer.open = false;
+        listView(true);
       };
       navContent.appendChild(a);
     }
@@ -568,23 +753,25 @@ function allOffices(type, pushState) {
   req.onsuccess = function () {
     var db = req.result;
 
-    var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
-    var activityDom = '';
+    var tx = db.transaction(['activity'], 'readonly');
+    var activityStore = tx.objectStore('activity').index('timestamp');
+
+    var results = [];
     activityStore.openCursor(null, 'prev').onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) {
-        appendActivityListToDom(activityDom, false, type);
-        createActivityIcon(db);
+      if (!cursor) return;
+
+      if (cursor.value.hidden) {
+        cursor.continue();
         return;
       }
+      results.push(cursor.value);
 
-      if (cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
-
-          activityDom += li;
-        });
-      }
       cursor.continue();
+    };
+
+    tx.oncomplete = function () {
+      convertResultsToList(db, results, false, type);
     };
   };
 }
@@ -600,30 +787,35 @@ function filterActivities(type, pushState) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-    var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
-    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+    var tx = db.transaction(['activity'], 'readonly');
+    var activityStore = tx.objectStore('activity').index('timestamp');
+    var curroffice = localStorage.getItem('selectedOffice');
 
-    var activityDom = '';
+    var results = [];
     activityStore.openCursor(null, 'prev').onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) {
-        var yOffset = window.pageYOffset;
-        setTimeout(function () {
+      if (!cursor) return;
 
-          appendActivityListToDom(activityDom, false, type);
-          createActivityIcon(db);
-          scrollToActivity(yOffset);
-        }, 300);
+      if (cursor.value.office !== curroffice) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.hidden) {
+        cursor.continue();
         return;
       }
 
-      if (cursor.value.status === type.toUpperCase() && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-        createActivityList(db, cursor.value).then(function (li) {
-
-          activityDom += li;
-        });
+      if (cursor.value.status !== type.toUpperCase()) {
+        cursor.continue();
+        return;
       }
+
+      results.push(cursor.value);
+
       cursor.continue();
+    };
+    tx.oncomplete = function () {
+      convertResultsToList(db, results, false, type);
     };
   };
 }
@@ -639,40 +831,40 @@ function sortByCreator(type, pushState) {
   req.onsuccess = function () {
     var db = req.result;
 
-    var activityStore = db.transaction('activity').objectStore('activity').index('timestamp');
-    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+    var tx = db.transaction(['activity'], 'readonly');
+    var activityStore = tx.objectStore('activity').index('timestamp');
+    var currOffice = localStorage.getItem('selectedOffice');
 
-    var activityDom = '';
+    var results = [];
     var me = firebase.auth().currentUser.phoneNumber;
     activityStore.openCursor(null, 'prev').onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) {
-        var yOffset = window.pageYOffset;
-        setTimeout(function () {
+      if (!cursor) return;
 
-          appendActivityListToDom(activityDom, false, type);
-          createActivityIcon(db);
-          scrollToActivity(yOffset);
-        }, 200);
+      if (cursor.value.office !== currOffice) {
+        cursor.continue();
         return;
       }
-      if (type === 'Incoming') {
-        if (cursor.value.creator !== me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-          createActivityList(db, cursor.value).then(function (li) {
+      if (cursor.value.hidden) {
+        cursor.continue();
+        return;
+      }
 
-            activityDom += li;
-          });
+      if (type === 'Incoming') {
+        if (cursor.value.creator !== me) {
+          results.push(cursor.value);
         }
       }
       if (type === 'Outgoing') {
-        if (cursor.value.creator === me && cursor.value.office === Curroffice && cursor.value.template !== 'subscription' && cursor.value.hidden === 0) {
-          createActivityList(db, cursor.value).then(function (li) {
-            activityDom += li;
-          });
+        if (cursor.value.creator === me) {
+          results.push(cursor.value);
         }
       }
 
       cursor.continue();
+    };
+    tx.oncomplete = function () {
+      convertResultsToList(db, results, false, type);
     };
   };
 }
@@ -683,105 +875,38 @@ function sortByDates(type, pushState) {
   } else {
     history.replaceState(["sortByDates", type], null, null);
   }
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
 
-    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+  var office = localStorage.getItem('selectedOffice');
+  var prop = _defineProperty({}, office, { Urgent: false });
+  disableNotification(prop);
 
-    var today = moment().format('YYYY-MM-DD');
-    var sortingOrder = {
-      HIGH: [],
-      LOW: []
-    };
-    var calendar = db.transaction('calendar').objectStore('calendar').index('range');
-    calendar.openCursor().onsuccess = function (event) {
-      var cursor = event.target.result;
-      if (!cursor) {
-        sortingOrder['HIGH'].sort(function (a, b) {
-          return moment(b.start).valueOf() - moment(a.start).valueOf();
-        });
-
-        sortingOrder['LOW'].sort(function (a, b) {
-          return moment(b.end).valueOf() - moment(a.end).valueOf();
-        });
-
-        generateActivitiesByDate(sortBykeys(sortingOrder));
-        return;
-      }
-
-      if (today >= cursor.value.start && today <= cursor.value.end && cursor.value.office === Curroffice) {
-        sortingOrder['HIGH'].push(cursor.value);
-      } else {
-        sortingOrder['LOW'].push(cursor.value);
-      }
-
-      cursor.continue();
-    };
-  };
+  appNotification.urgent(false).then(function (record) {
+    generateActivitiesByDate(record);
+  });
 }
 
-function generateActivitiesByDate(sortingOrder) {
+function generateActivitiesByDate(activities) {
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
-  var activityDom = '';
+  var results = [];
   req.onsuccess = function () {
     var db = req.result;
-    var activityObjectStore = db.transaction('activity').objectStore('activity');
+    var tx = db.transaction(['activity']);
+    var activityObjectStore = tx.objectStore('activity');
 
-    Object.keys(sortingOrder['HIGH']).forEach(function (key) {
-      activityObjectStore.get(key).onsuccess = function (event) {
-        var activity = event.target.result;
-        createActivityList(db, activity).then(function (li) {
-
-          activityDom += li;
-        });
-      };
-    });
-    Object.keys(sortingOrder['LOW']).forEach(function (key) {
-      activityObjectStore.get(key).onsuccess = function (event) {
-        var activity = event.target.result;
-        createActivityList(db, activity).then(function (li) {
-          activityDom += li;
-        });
+    activities.forEach(function (data) {
+      activityObjectStore.get(data.activityId).onsuccess = function (event) {
+        var record = event.target.result;
+        if (record) {
+          results.push(record);
+        }
       };
     });
 
-    setTimeout(function () {
-      var yOffset = window.pageYOffset;
-      appendActivityListToDom(activityDom, false, 'Urgent');
-      createActivityIcon(db);
-      scrollToActivity(yOffset);
-    }, 600);
+    tx.oncomplete = function () {
+      convertResultsToList(db, results, false, 'Urgent');
+    };
   };
-}
-
-function sortBykeys(data) {
-  console.log(data);
-  var lowerOrder = data['LOW'];
-  var higherOrder = data['HIGH'];
-  var holder = {
-    'LOW': {},
-    'HIGH': {}
-  };
-
-  var lowerOrderLength = lowerOrder.length;
-  for (var iterator = 0; iterator < lowerOrderLength; iterator++) {
-    key = lowerOrder[iterator];
-    if (!holder['LOW'].hasOwnProperty(key.activityId)) {
-      holder['LOW'][key.activityId] = key;
-    }
-  }
-
-  var higherOrderLength = higherOrder.length;
-  for (var _iterator = 0; _iterator < higherOrderLength; _iterator++) {
-    key = higherOrder[_iterator];
-    if (!holder['HIGH'].hasOwnProperty(key.activityId)) {
-      holder['HIGH'][key.activityId] = key;
-    }
-  }
-
-  return holder;
 }
 
 function sortByLocation(type, pushState) {
@@ -790,46 +915,36 @@ function sortByLocation(type, pushState) {
   } else {
     history.replaceState(['sortByLocation', type], null, null);
   }
-  var dbName = firebase.auth().currentUser.uid;
-  var nearestLocationHandler = new Worker('src/js/nearestLocationHandler.js');
+  var office = localStorage.getItem('selectedOffice');
+  var prop = _defineProperty({}, office, { Nearby: false });
+  disableNotification(prop);
 
-  nearestLocationHandler.postMessage({
-
-    dbName: dbName
+  appNotification.nearBy(false).then(function (record) {
+    sortActivitiesByLocation(record);
   });
-
-  nearestLocationHandler.onmessage = function (records) {
-    sortActivitiesByLocation(records.data);
-  };
-  nearestLocationHandler.onerror = locationSortError;
 }
 
-function sortActivitiesByLocation(distanceArr) {
+function sortActivitiesByLocation(nearBy) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
 
-    var activityDom = '';
-    var Curroffice = document.querySelector('.mdc-drawer--temporary').dataset.currentOffice;
+    var results = [];
 
-    var activityObjectStore = db.transaction('activity').objectStore('activity');
-    for (var i = 0; i < distanceArr.length; i++) {
+    var curroffice = localStorage.getItem('selectedOffice');
 
-      activityObjectStore.get(distanceArr[i].activityId).onsuccess = function (event) {
-        if (event.target.result.office === Curroffice && event.target.result !== 'CANCELLED') {
+    var tx = db.transaction(['activity']);
+    var activityObjectStore = tx.objectStore('activity');
 
-          createActivityList(db, event.target.result).then(function (li) {
-            activityDom += li;
-          });
-        }
+    nearBy.forEach(function (data) {
+      activityObjectStore.get(data.activityId).onsuccess = function (event) {
+        var record = event.target.result;
+        results.push(record);
       };
-    }
-    setTimeout(function () {
-      var yOffset = window.pageYOffset;
-      appendActivityListToDom(activityDom, false, 'Nearby');
-      createActivityIcon(db);
-      scrollToActivity(yOffset);
-    }, 500);
+    });
+    tx.oncomplete = function () {
+      convertResultsToList(db, results, false, 'NearBy');
+    };
   };
 }
 
@@ -898,4 +1013,82 @@ function createInputForProfile(key, type, classtype) {
   mainTextField.appendChild(mainInput);
   mainTextField.appendChild(ripple);
   return mainTextField;
+}
+
+function disableNotification(prop) {
+  getRootRecord().then(function (record) {
+    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var store = tx.objectStore('root');
+      if (!prop) {
+        record.offices.forEach(function (office) {
+          record.notification[office] = { Urgent: false, Nearby: false };
+        });
+        store.put(record);
+      } else {
+
+        var office = Object.keys(prop)[0];
+        var value = prop[office];
+        var valueKey = Object.keys(value)[0];
+
+        record.notification[office][valueKey] = value[valueKey];
+
+        store.put(record);
+      }
+      tx.oncomplete = function () {
+        console.log("done");
+      };
+    };
+  }).catch(console.log());
+}
+
+function suggestAlertAndNotification(show) {
+  var states = {
+    'listView': true,
+    'filterActivities': true,
+    'sortByCreator': true,
+    'sortByDates': true,
+    'sortByLocation': true
+
+  };
+  getRootRecord().then(function (record) {
+    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var store = tx.objectStore('root');
+
+      if (show.hasOwnProperty('alert')) {
+        record.suggestCheckIn = show.alert;
+      }
+
+      if (show.hasOwnProperty('notification')) {
+        var officeByCount = {};
+        record.offices.forEach(function (office) {
+          officeByCount[office] = {
+            'Urgent': true,
+            'Nearby': true
+          };
+        });
+        record.notification = officeByCount;
+      };
+
+      store.put(record);
+
+      tx.oncomplete = function () {
+        if (show.hasOwnProperty('alert')) {
+          createActivityIcon();
+        }
+        console.log("done");
+      };
+    };
+  }).catch(console.log);
+}
+
+function removeChildNodes(parent) {
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  }
 }

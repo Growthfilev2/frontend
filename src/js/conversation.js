@@ -657,15 +657,6 @@ function initializeSelectorWithData(evt, data) {
 
       })
 
-      // if (data.record.create) {
-      //   fillUsersInSelector(data, dialog)
-      //   return
-      // }
-      // const activityStore = db.transaction('activity').objectStore('activity');
-      // activityStore.get(activityRecord.activityId).onsuccess = function (event) {
-      //   const record = event.target.result
-      //   fillUsersInSelector(record, dialog)
-      // }
     }
 
     if (data.store === 'children') {
@@ -980,7 +971,12 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return;
 
     if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && data.attachment.status != 'CANCELLED') {
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
+      if(cursor.value.attachment.Name) {
+        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
+      }
+      if(cursor.value.attachment.Number){
+        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
+      }
     }
     cursor.continue()
   }
@@ -1002,6 +998,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 
 
 function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+  console.log(data);
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
@@ -1011,7 +1008,23 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     const cursor = event.target.result
 
     if (!cursor) {
-      insertTemplateByOffice(offices)
+      if(data.suggestCheckIn) {
+        const parent = document.getElementById('data-list--container')
+        const suggestion = document.createElement('div')
+        suggestion.className = 'suggest-checkin--view'
+        const icon = document.createElement('span')
+        icon.className = 'material-icons suggestion-icon'
+        icon.textContent = 'add_alert'
+        suggestion.appendChild(icon)
+
+        const text = document.createElement('span')
+        text.textContent = 'Check-In ?'
+        text.className = 'suggest-checkin--text'
+        suggestion.appendChild(icon)
+        suggestion.appendChild(text)
+        parent.insertBefore(suggestion,parent.childNodes[0]);
+      }
+      insertTemplateByOffice(offices, data.suggestCheckIn)
       return;
     }
 
@@ -1048,21 +1061,16 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
 }
 
 
-function insertTemplateByOffice(offices) {
-  const avoid = {
-    'admin': '',
-    'recipient': '',
-    'employee': '',
-    'subscription': '',
-  }
+function insertTemplateByOffice(offices, showCheckInFirst) {
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   const frag = document.createDocumentFragment()
+  const checkInTemplate = []
   req.onsuccess = function () {
     const db = req.result
-    const subscriotions = db.transaction('subscriptions').objectStore('subscriptions').index('office')
-
-    subscriotions.openCursor().onsuccess = function (event) {
+    const tx = db.transaction(['subscriptions'], 'readonly');
+    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
+    subscriptionObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
         return
@@ -1072,18 +1080,31 @@ function insertTemplateByOffice(offices) {
         cursor.continue()
         return
       }
-      if (avoid.hasOwnProperty(cursor.value.template)) {
-        cursor.continue()
-        return
-      }
+
       if (document.querySelector(`[data-selection="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)) {
         cursor.continue()
         return
       }
+      if (showCheckInFirst && cursor.value.template === 'check-in') {
+        checkInTemplate.push({
+          [cursor.value.office]: createGroupList(cursor.value.office, cursor.value.template)
+        })
+        cursor.continue();
+        return;
+      }
       document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
-      console.log(cursor.value)
 
       cursor.continue()
+    }
+    tx.oncomplete = function () {
+
+      checkInTemplate.forEach(function (li) {
+        const keys = Object.keys(li);
+        keys.forEach(function (key) {
+          const el =  document.querySelector(`[data-selection="${key}"]`);
+          el.insertBefore(li[key],el.childNodes[0])
+        })
+      })
     }
   }
 }
@@ -1098,6 +1119,10 @@ function createTempRecord(office, template, data) {
     const range = IDBKeyRange.only([office, template])
     officeTemplateCombo.get(range).onsuccess = function (event) {
       const selectedCombo = event.target.result
+      if (!selectedCombo) {
+        console.log("no such combo")
+        return;
+      }
       const bareBonesVenue = {}
       const bareBonesVenueArray = []
 

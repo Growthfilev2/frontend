@@ -241,7 +241,7 @@ function manageLocation() {
           help: 'Problem in calling method for fetching cellular towers.'
         }
       }));
-    
+
       locationInterval().then(function(navigatorData){
         updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
       }).catch(function(error){
@@ -283,8 +283,13 @@ function initLocationInterval(locationStatus) {
   })
 }
 
-function locationUpdationSuccess(message) {
-  console.log(message);
+function locationUpdationSuccess(location) {
+  if(!location.prev.latitude) return;
+  if(!location.prev.longitude) return;
+
+  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
+  console.log(distanceBetweenBoth)
+  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestAlertAndNotification({alert:true}) : ''
 }
 
 function locationUpdationError(error) {
@@ -349,6 +354,8 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   if (!finalLocation) return;
+
+  let previousLocation;
   return new Promise(function (resolve, reject) {
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
@@ -357,16 +364,27 @@ function updateLocationInRoot(finalLocation) {
       var tx = db.transaction(['root'], 'readwrite');
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
+
         var record = event.target.result;
+        previousLocation = {
+          latitude : record.latitude,
+          longitude : record.longitude,
+          accuracy : record.accuracy,
+          provider : record.provider,
+          localStorage : record.lastLocationTime
+        };
+
         record.latitude = finalLocation.latitude;
         record.longitude = finalLocation.longitude;
         record.accuracy = finalLocation.accuracy;
         record.provider = finalLocation.provider;
-        record.lastLocationTime = finalLocation.lastLocationTime;
+        record.lastLocationTime = finalLocation.lastLocationTime,
+
         rootStore.put(record);
       };
       tx.oncomplete = function () {
-        resolve('Location Updated Successfully')
+        
+        resolve({prev:previousLocation,new:finalLocation})
       }
     };
     req.onerror = function (error) {
@@ -375,8 +393,36 @@ function updateLocationInRoot(finalLocation) {
   })
 }
 
+function toRad(value) {
+    return value * Math.PI / 180;
+}
+
+function calculateDistanceBetweenTwoPoints(oldLocation,newLocation){
+  var R = 6371; // km
+
+  const dLat = toRad(newLocation.latitude - oldLocation.latitude);
+  const dLon = toRad(newLocation.longitude - oldLocation.longitude);
+  const lat1 = toRad(newLocation.latitude);
+  const lat2 = toRad(oldLocation.latitude);
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  return distance
+
+}
+
+function isNewLocationMoreThanThreshold(distance){
+  const THRESHOLD = 0.5; //km
+  if (distance >= THRESHOLD) return true;
+  return false;
+}
+
+
 function sendCurrentViewNameToAndroid(viewName) {
-  if (localStorage.getItem('deviceType') === 'Android') {
+  if (native.getName() === 'Android') {
     Fetchview.startConversation(viewName);
   }
 }
@@ -570,9 +616,7 @@ function loadViewFromRoot(response) {
     androidStopRefreshing()
     return;
   }
-
-
-
+  
   var req = window.indexedDB.open(firebase.auth().currentUser.uid);
 
   req.onsuccess = function () {
@@ -594,21 +638,22 @@ function loadViewFromRoot(response) {
     }
 
     if (response.data.type === 'redirect-to-list') {
-       
-      history.pushState(['listView'], null, null);      
+
+      history.pushState(['listView'], null, null);
       return;
     }
 
-    
 
     // updateIDB
 
     if (response.data.type === 'updateIDB') {
         if (response.data.msg === 'true') {
-       androidStopRefreshing()
+         androidStopRefreshing()
       }
 
       if (!history.state) {
+        suggestAlertAndNotification({alert:true,notification:true});
+        app.setDay();
         window["listView"](true);
         return;
       }
