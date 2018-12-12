@@ -306,7 +306,6 @@ function init(auth) {
       });
       disableNotification();
     }
-
     return;
   }
 

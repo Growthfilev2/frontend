@@ -232,9 +232,9 @@ function manageLocation() {
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: {
-          error: locationStatus.message,
+          error: e.message,
           file: 'services.js',
-          lineNo: 231,
+          lineNo: 226,
           device: JSON.parse(native.getInfo()),
           help: 'Problem in calling method for fetching cellular towers.'
         }

@@ -7,7 +7,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
-var currentDevice = void 0;
+var deviceInfo = void 0;
 /** reinitialize the firebase app */
 
 // get Device time
