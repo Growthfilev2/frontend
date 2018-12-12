@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -284,6 +284,8 @@ function initLocationInterval(locationStatus) {
 }
 
 function locationUpdationSuccess(location) {
+  if(!location.prev.latitude) return;
+  if(!location.prev.longitude) return;
 
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
   console.log(distanceBetweenBoth)
@@ -381,6 +383,7 @@ function updateLocationInRoot(finalLocation) {
         rootStore.put(record);
       };
       tx.oncomplete = function () {
+        
         resolve({prev:previousLocation,new:finalLocation})
       }
     };
@@ -469,7 +472,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -652,6 +655,7 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
+        suggestAlertAndNotification({alert:true,notification:true});
         window["listView"](true);
         return;
       }

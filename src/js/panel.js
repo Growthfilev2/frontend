@@ -1,4 +1,4 @@
-const notification = new Worker('js/notification.js')
+const notification = new Worker('src/js/notification.js')
 
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
@@ -19,9 +19,10 @@ function listView(pushState) {
       localStorage.setItem('selectedOffice', rootRecord.offices[0]);
     }
     fetchDataForActivityList();
+
   })
   creatListHeader('Recent')
-  createActivityIcon();
+ 
 }
 
 function getRootRecord() {
@@ -97,6 +98,7 @@ function convertResultsToList(db, results, initPanel, type) {
     results.forEach(function (li) {
       activityDom += li
     })
+    createActivityIcon()
     appendActivityListToDom(activityDom, initPanel, type)
     scrollToActivity(yOffset)
   })
@@ -301,7 +303,6 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
 
 function createActivityIcon() {
 
-  if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
       createActivityIconDom(officeTemplateObject)
@@ -342,6 +343,9 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom(officeTemplateCombo) {
+  const parent = document.getElementById('create-activity--parent')
+ 
+  getRootRecord().then(function (record) {
   const fab = document.createElement('button')
   fab.className = 'mdc-fab create-activity'
   fab.id = 'create-activity'
@@ -349,13 +353,18 @@ function createActivityIconDom(officeTemplateCombo) {
   const span = document.createElement('span')
   span.className = 'mdc-fab_icon material-icons'
   span.id = 'activity-create--icon'
-  span.textContent = 'add'
+    if(record.suggestCheckIn) {
+      span.textContent = 'add_alert'
+    }
+    else {
+      span.textContent = 'add'
+    }
+  
   fab.appendChild(span)
-  document.getElementById('activity-list-main').appendChild(fab)
+  parent.innerHTML  = fab.outerHTML;
+
   document.querySelector('.create-activity').addEventListener('click', function (evt) {
     const keysArray = Object.keys(officeTemplateCombo);
-
-    getRootRecord().then(function (record) {
       console.log(record.suggestCheckIn);
       if (record.suggestCheckIn) {
         if (keysArray.length === 1) {
@@ -364,6 +373,7 @@ function createActivityIconDom(officeTemplateCombo) {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn)
 
         }
+        document.getElementById('activity-create--icon').textContent = 'add'
         suggestAlertAndNotification({
           alert: false
         });
@@ -371,9 +381,8 @@ function createActivityIconDom(officeTemplateCombo) {
       }
 
       callSubscriptionSelectorUI(evt)
-    }).catch(console.log)
-
-  })
+    })
+  }).catch(console.log)
 }
 
 function callSubscriptionSelectorUI(evt, suggestCheckIn) {
@@ -395,6 +404,10 @@ function listPanel() {
   listUl.id = 'activity--list'
 
   listCard.appendChild(listUl)
+
+  const fabParent = document.createElement('div')
+  fabParent.id = 'create-activity--parent'
+  listCard.appendChild(fabParent);
 
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 
@@ -1110,14 +1123,7 @@ function suggestAlertAndNotification(show) {
       store.put(record)
 
       tx.oncomplete = function () {
-        if (!history.state) return;
-        if (!show.alert) return;
-        if (states[history.state[0]]) {
-          const iconEl = document.getElementById('activity-create--icon')
-          if (iconEl) {
-            iconEl.textContent = 'add_alert'
-          }
-        }
+        console.log("done");
       }
     }
   }).catch(console.log)

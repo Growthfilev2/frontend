@@ -153,8 +153,6 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-  const drawerDiv = document.createElement('div')
-  drawerDiv.className = 'drawer--cont'
 
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
@@ -170,6 +168,8 @@ function drawerDom() {
   div.id = 'drawer-parent';
   document.body.appendChild(div);
 }
+
+
 
 function imageViewDialog() {
 
@@ -288,8 +288,6 @@ let app = function() {
       return localStorage.getItem('today')
     },
     isNewDay: function() {
-      console.log(this.getDay())
-      console.log(this.today())
       if (this.getDay() !== this.today()) {
         return true;
       } else {
@@ -304,27 +302,27 @@ function init(auth) {
   /** When app has been initialzied before
    * render list view first, then perform app sync and mange location
    */
-
+  app.setDay();
   if (localStorage.getItem('dbexist')) {
     localStorage.removeItem('selectedOffice');
-
-
-    if (app.isNewDay()) {
-      app.setDay();
-      suggestAlertAndNotification({
-        alert: true,
-        notification: true
-      })
-    } else {
-      suggestAlertAndNotification({
-        alert: false
-      });
-      disableNotification();
-    }
 
     listView(true)
     requestCreator('now', native.getInfo())
     manageLocation();
+
+      if (app.isNewDay()) {
+        
+        suggestAlertAndNotification({
+          alert: true,
+          notification: true
+        })
+      } else {
+        suggestAlertAndNotification({
+          alert: false
+        });
+        disableNotification();
+      }
+ 
 
     return
   }

@@ -1,5 +1,7 @@
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function conversation(id, pushState) {
   console.log(id);
   checkIfRecordExists('activity', id).then(function (id) {
@@ -626,16 +628,6 @@ function initializeSelectorWithData(evt, data) {
 
         fillUsersInSelector(data, dialog);
       });
-
-      // if (data.record.create) {
-      //   fillUsersInSelector(data, dialog)
-      //   return
-      // }
-      // const activityStore = db.transaction('activity').objectStore('activity');
-      // activityStore.get(activityRecord.activityId).onsuccess = function (event) {
-      //   const record = event.target.result
-      //   fillUsersInSelector(record, dialog)
-      // }
     }
 
     if (data.store === 'children') {
@@ -955,6 +947,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 }
 
 function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+  console.log(data);
   var mainUL = document.getElementById('data-list--container');
   var grp = document.createElement('div');
   grp.className = 'mdc-list-group';
@@ -964,7 +957,23 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     var cursor = event.target.result;
 
     if (!cursor) {
-      insertTemplateByOffice(offices);
+      if (data.suggestCheckIn) {
+        var parent = document.getElementById('data-list--container');
+        var suggestion = document.createElement('div');
+        suggestion.className = 'suggest-checkin--view';
+        var icon = document.createElement('span');
+        icon.className = 'material-icons suggestion-icon';
+        icon.textContent = 'add_alert';
+        suggestion.appendChild(icon);
+
+        var text = document.createElement('span');
+        text.textContent = 'Check-In ?';
+        text.className = 'suggest-checkin--text';
+        suggestion.appendChild(icon);
+        suggestion.appendChild(text);
+        parent.insertBefore(suggestion, parent.childNodes[0]);
+      }
+      insertTemplateByOffice(offices, data.suggestCheckIn);
       return;
     }
 
@@ -997,21 +1006,16 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
   };
 }
 
-function insertTemplateByOffice(offices) {
-  var avoid = {
-    'admin': '',
-    'recipient': '',
-    'employee': '',
-    'subscription': ''
-  };
+function insertTemplateByOffice(offices, showCheckInFirst) {
 
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   var frag = document.createDocumentFragment();
+  var checkInTemplate = [];
   req.onsuccess = function () {
     var db = req.result;
-    var subscriotions = db.transaction('subscriptions').objectStore('subscriptions').index('office');
-
-    subscriotions.openCursor().onsuccess = function (event) {
+    var tx = db.transaction(['subscriptions'], 'readonly');
+    var subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+    subscriptionObjectStore.openCursor().onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) {
         return;
@@ -1021,18 +1025,29 @@ function insertTemplateByOffice(offices) {
         cursor.continue();
         return;
       }
-      if (avoid.hasOwnProperty(cursor.value.template)) {
-        cursor.continue();
-        return;
-      }
+
       if (document.querySelector('[data-selection="' + cursor.value.office + '"] [data-template="' + cursor.value.template + '"]')) {
         cursor.continue();
         return;
       }
+      if (showCheckInFirst && cursor.value.template === 'check-in') {
+        checkInTemplate.push(_defineProperty({}, cursor.value.office, createGroupList(cursor.value.office, cursor.value.template)));
+        cursor.continue();
+        return;
+      }
       document.querySelector('[data-selection="' + cursor.value.office + '"]').appendChild(createGroupList(cursor.value.office, cursor.value.template));
-      console.log(cursor.value);
 
       cursor.continue();
+    };
+    tx.oncomplete = function () {
+
+      checkInTemplate.forEach(function (li) {
+        var keys = Object.keys(li);
+        keys.forEach(function (key) {
+          var el = document.querySelector('[data-selection="' + key + '"]');
+          el.insertBefore(li[key], el.childNodes[0]);
+        });
+      });
     };
   };
 }
@@ -1047,6 +1062,10 @@ function createTempRecord(office, template, data) {
     var range = IDBKeyRange.only([office, template]);
     officeTemplateCombo.get(range).onsuccess = function (event) {
       var selectedCombo = event.target.result;
+      if (!selectedCombo) {
+        console.log("no such combo");
+        return;
+      }
       var bareBonesVenue = {};
       var bareBonesVenueArray = [];
 
@@ -2257,7 +2276,7 @@ function insertInputsIntoActivity(record, activityStore) {
 
   var allNumberTypes = document.querySelectorAll('.number');
   for (var i = 0; i < allNumberTypes.length; i++) {
-    var _inputValue = allNumberTypes[i].querySelector('.mdc-text-field__input').value;
+    var _inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value);
     record.attachment[convertIdToKey(allNumberTypes[i].id)].value = _inputValue;
   }
 

@@ -78,15 +78,6 @@ window.onpopstate = function (event) {
     return;
   }
 
-  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
-    var req = indexedDB.open(localStorage.getItem('dbexist'));
-    req.onsuccess = function () {
-      var db = req.result;
-      window[event.state[0]](event.state[1], db, false);
-    };
-    return;
-  }
-
   window[event.state[0]](event.state[1], false);
 };
 
@@ -159,6 +150,13 @@ function layoutGrid() {
   layout.appendChild(layoutInner);
   document.body.innerHTML = layout.outerHTML;
   imageViewDialog();
+  drawerDom();
+}
+
+function drawerDom() {
+  var div = document.createElement('div');
+  div.id = 'drawer-parent';
+  document.body.appendChild(div);
 }
 
 function imageViewDialog() {
@@ -219,7 +217,7 @@ var native = function () {
       if (!this.getName()) {
         return JSON.stringify({
           'id': '123',
-          'appVersion': 3,
+          'appVersion': 4,
           'baseOs': 'macOs'
         });
       }
@@ -259,23 +257,62 @@ function startApp() {
     init(auth);
   });
 }
+// new day suggest
+// if location changes
+var app = function () {
+  return {
+    today: function today() {
+      return moment().format("DD/MM/YYYY");
+    },
+    setDay: function setDay() {
+      localStorage.setItem('today', this.today());
+    },
+    getDay: function getDay() {
+      return localStorage.getItem('today');
+    },
+    isNewDay: function isNewDay() {
+      console.log(this.getDay());
+      console.log(this.today());
+      if (this.getDay() !== this.today()) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+}();
 
 function init(auth) {
 
-  /** When app has been initialzied before 
+  /** When app has been initialzied before
    * render list view first, then perform app sync and mange location
    */
 
   if (localStorage.getItem('dbexist')) {
+    localStorage.removeItem('selectedOffice');
+
+    if (app.isNewDay()) {
+      app.setDay();
+      suggestAlertAndNotification({
+        alert: true,
+        notification: true
+      });
+    } else {
+      suggestAlertAndNotification({
+        alert: false
+      });
+      disableNotification();
+    }
+
     listView(true);
     requestCreator('now', native.getInfo());
     manageLocation();
+
     return;
   }
 
   document.getElementById('growthfile').appendChild(loader('init-loader'));
   /** when app initializes for the first time */
-  console.log("initialzie idb");
   var deviceInfo = JSON.parse(native.getInfo());
 
   removeIDBInstance(auth).then(function (isRemoved) {
