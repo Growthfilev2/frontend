@@ -973,13 +973,10 @@ function successResponse(read, swipeInfo) {
       updateMap(activity)
 
       updateCalendar(activity)
-
       // put each assignee (number) in the users object store
 
       putAssignessInStore(db, activity.assignees)
-
       // put attachemnt in the attachment object store
-
       putAttachment(db, activity)
     })
 
