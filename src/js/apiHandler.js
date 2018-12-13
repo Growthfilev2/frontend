@@ -527,59 +527,8 @@ function instantUpdateDB(dbName, data, type) {
   }
 }
 
-// function updateMapWithNoStatus(db, activity) {
-//   return new Promise(function (resolve, reject) {
-//     const mapTx = db.transaction(['map'], 'readwrite')
-//     const mapObjectStore = mapTx.objectStore('map')
 
-//     const resultsWithoutStatus = []
-//     mapObjectStore.openCursor().onsuccess = function (event) {
-//       const cursor = event.target.result;
-//       if (!cursor) return;
-//       if (cursor.value.status) {
-//         cursor.continue();
-//         return;
-//       }
-//       if (cursor.value.office) {
-//         cursor.continue();
-//         return;
-//       }
-//       if (cursor.value.hidden) {
-//         cursor.continue();
-//         return;
-//       }
-
-//       resultsWithoutStatus.push(cursor.value);
-//       cursor.delete();
-//       cursor.continue();
-//     }
-
-//     mapTx.oncomplete = function () {
-//       const activityTx = db.transaction(['activity'], 'readwrite');
-//       const activityStore = activityTx.objectStore('activity');
-
-//       resultsWithoutStatus.forEach(function (data) {
-//         activityStore.get(data.activityId).onsuccess = function (event) {
-//           const record = event.target.result;
-//           if (record) {
-//             const transaction = db.transaction(['map'], 'readwrite');
-//             const mapObjectStore = transaction.objectStore('map');
-//             data.status = record.status;
-//             data.hidden = record.hidden;
-//             data.office = record.office;
-//             mapObjectStore.put(data);
-//           }
-//         }
-//       });
-//       activityTx.oncomplete = function () {
-//         resolve(true)
-//       }
-//     }
-//   })
-// }
-
-
-function updateMap(db, activity) {
+function updateMap(activity) {
  
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
@@ -628,54 +577,8 @@ function transactionError(event) {
   console.log(event.target.error)
 }
 
-function updateCalendarWithNoStatus(db, activity) {
-  return new Promise(function (resolve, reject) {
-    const calTx = db.transaction(['calendar'], 'readwrite')
-    const calendarObjectStore = calTx.objectStore('calendar')
 
-    const resultsWithoutStatus = []
-    calendarObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-
-      if (cursor.value.status) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.office) {
-        cursor.continue();
-        return;
-      }
-
-      resultsWithoutStatus.push(cursor.value);
-      cursor.delete();
-      cursor.continue();
-    }
-
-    calTx.oncomplete = function () {
-      const activityTx = db.transaction(['activity'], 'readwrite');
-      const activityStore = activityTx.objectStore('activity');
-
-      resultsWithoutStatus.forEach(function (data) {
-        activityStore.get(data.activityId).onsuccess = function (event) {
-          const record = event.target.result;
-          if (record) {
-            const transaction = db.transaction(['calendar'], 'readwrite');
-            const calendarStore = transaction.objectStore('calendar');
-            data.status = record.status;
-            data.office = record.office;
-            calendarStore.put(data);
-          }
-        }
-      });
-      activityTx.oncomplete = function () {
-        resolve(true)
-      }
-    }
-  })
-}
-
-function updateCalendar(db, activity) {
+function updateCalendar(activity) {
 
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
@@ -1067,9 +970,9 @@ function successResponse(read, swipeInfo) {
 
       activityPar.push(activity.activityId)
 
-      updateMap(db, activity)
+      updateMap(activity)
 
-      updateCalendar(db, activity)
+      updateCalendar(activity)
 
       // put each assignee (number) in the users object store
 
