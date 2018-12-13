@@ -527,60 +527,60 @@ function instantUpdateDB(dbName, data, type) {
   }
 }
 
-function updateMapWithNoStatus(db, activity) {
-  return new Promise(function (resolve, reject) {
-    const mapTx = db.transaction(['map'], 'readwrite')
-    const mapObjectStore = mapTx.objectStore('map')
+// function updateMapWithNoStatus(db, activity) {
+//   return new Promise(function (resolve, reject) {
+//     const mapTx = db.transaction(['map'], 'readwrite')
+//     const mapObjectStore = mapTx.objectStore('map')
 
-    const resultsWithoutStatus = []
-    mapObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.office) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return;
-      }
+//     const resultsWithoutStatus = []
+//     mapObjectStore.openCursor().onsuccess = function (event) {
+//       const cursor = event.target.result;
+//       if (!cursor) return;
+//       if (cursor.value.status) {
+//         cursor.continue();
+//         return;
+//       }
+//       if (cursor.value.office) {
+//         cursor.continue();
+//         return;
+//       }
+//       if (cursor.value.hidden) {
+//         cursor.continue();
+//         return;
+//       }
 
-      resultsWithoutStatus.push(cursor.value);
-      cursor.delete();
-      cursor.continue();
-    }
+//       resultsWithoutStatus.push(cursor.value);
+//       cursor.delete();
+//       cursor.continue();
+//     }
 
-    mapTx.oncomplete = function () {
-      const activityTx = db.transaction(['activity'], 'readwrite');
-      const activityStore = activityTx.objectStore('activity');
+//     mapTx.oncomplete = function () {
+//       const activityTx = db.transaction(['activity'], 'readwrite');
+//       const activityStore = activityTx.objectStore('activity');
 
-      resultsWithoutStatus.forEach(function (data) {
-        activityStore.get(data.activityId).onsuccess = function (event) {
-          const record = event.target.result;
-          if (record) {
-            const transaction = db.transaction(['map'], 'readwrite');
-            const mapObjectStore = transaction.objectStore('map');
-            data.status = record.status;
-            data.hidden = record.hidden;
-            data.office = record.office;
-            mapObjectStore.put(data);
-          }
-        }
-      });
-      activityTx.oncomplete = function () {
-        resolve(true)
-      }
-    }
-  })
-}
+//       resultsWithoutStatus.forEach(function (data) {
+//         activityStore.get(data.activityId).onsuccess = function (event) {
+//           const record = event.target.result;
+//           if (record) {
+//             const transaction = db.transaction(['map'], 'readwrite');
+//             const mapObjectStore = transaction.objectStore('map');
+//             data.status = record.status;
+//             data.hidden = record.hidden;
+//             data.office = record.office;
+//             mapObjectStore.put(data);
+//           }
+//         }
+//       });
+//       activityTx.oncomplete = function () {
+//         resolve(true)
+//       }
+//     }
+//   })
+// }
 
 
 function updateMap(db, activity) {
-  updateMapWithNoStatus(db, activity).then(function () {
+ 
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -618,7 +618,6 @@ function updateMap(db, activity) {
       }
       mapTx.onerror = errorDeletingRecord
     }
-  }).catch(console.log)
 }
 
 function errorDeletingRecord(event) {
@@ -677,7 +676,7 @@ function updateCalendarWithNoStatus(db, activity) {
 }
 
 function updateCalendar(db, activity) {
-  updateCalendarWithNoStatus(db, activity).then(function () {
+
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -717,7 +716,7 @@ function updateCalendar(db, activity) {
         calendarTx.onerror = transactionError
       }
     }
-  }).catch(console.log)
+
 }
 
 // create attachment record with status,template and office values from activity
