@@ -279,6 +279,8 @@ function initLocationInterval(locationStatus) {
 }
 
 function locationUpdationSuccess(location) {
+  if (!location.prev.latitude) return;
+  if (!location.prev.longitude) return;
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   console.log(distanceBetweenBoth);
@@ -372,6 +374,7 @@ function updateLocationInRoot(finalLocation) {
         record.lastLocationTime = finalLocation.lastLocationTime, rootStore.put(record);
       };
       tx.oncomplete = function () {
+
         resolve({ prev: previousLocation, new: finalLocation });
       };
     };
@@ -636,6 +639,8 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
+        app.setDay();
+        suggestAlertAndNotification({ alert: true, notification: true });
         window["listView"](true);
         return;
       }
@@ -683,7 +688,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();
-  }, 10000);
+  }, 5000);
 }
 
 function getInputText(selector) {

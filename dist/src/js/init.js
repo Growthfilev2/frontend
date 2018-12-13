@@ -141,9 +141,6 @@ function layoutGrid() {
   var snackbar = document.createElement('div');
   snackbar.id = 'snackbar-container';
 
-  var drawerDiv = document.createElement('div');
-  drawerDiv.className = 'drawer--cont';
-
   layoutInner.appendChild(headerDiv);
   layoutInner.appendChild(currentPanel);
   layoutInner.appendChild(snackbar);
@@ -271,8 +268,6 @@ var app = function () {
       return localStorage.getItem('today');
     },
     isNewDay: function isNewDay() {
-      console.log(this.getDay());
-      console.log(this.today());
       if (this.getDay() !== this.today()) {
         return true;
       } else {
@@ -291,22 +286,23 @@ function init(auth) {
   if (localStorage.getItem('dbexist')) {
     localStorage.removeItem('selectedOffice');
 
+    listView(true);
+    requestCreator('now', native.getInfo());
+    manageLocation();
+
     if (app.isNewDay()) {
-      app.setDay();
+
       suggestAlertAndNotification({
         alert: true,
         notification: true
       });
+      app.setDay();
     } else {
       suggestAlertAndNotification({
         alert: false
       });
       disableNotification();
     }
-
-    listView(true);
-    requestCreator('now', native.getInfo());
-    manageLocation();
 
     return;
   }
