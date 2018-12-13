@@ -1111,12 +1111,23 @@ function suggestAlertAndNotification(show) {
 
       if (show.hasOwnProperty('notification')) {
         let officeByCount = {};
-        record.offices.forEach(function(office){
-          officeByCount[office] = {
-            'Urgent':true,
-            'Nearby':true
-          }
-        })
+        if(Array.isArray(record.offices)) {
+
+          record.offices.forEach(function(office){
+            officeByCount[office] = {
+              'Urgent':true,
+              'Nearby':true
+            }
+          })
+        }
+        else {
+          Object.keys(record.offices).forEach(function(office){
+            officeByCount[office] = {
+              'Urgent':true,
+              'Nearby':true
+            }
+          })
+        }
         record.notification = officeByCount;
       };
 
