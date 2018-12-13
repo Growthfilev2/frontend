@@ -15,7 +15,7 @@ function listView(pushState) {
   listPanel()
 
   getRootRecord().then(function (rootRecord) {
-    if (!localStorage.getItem('selectedOffice')) {
+    if (!localStorage.getItem('selectedOffice') || localStorage.getItem('selectedOffice') === "undefined") {
       localStorage.setItem('selectedOffice', rootRecord.offices[0]);
     }
     fetchDataForActivityList();
