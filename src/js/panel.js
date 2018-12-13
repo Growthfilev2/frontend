@@ -1121,7 +1121,7 @@ function suggestAlertAndNotification(show) {
           })
         }
         else {
-          Object.keys(record.offices).forEach(function(office){
+          Object.keys(record.offices.allOffices).forEach(function(office){
             officeByCount[office] = {
               'Urgent':true,
               'Nearby':true
