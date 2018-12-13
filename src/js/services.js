@@ -703,7 +703,7 @@ function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
     manageLocation();
-  }, 10000);
+  }, 5000);
 }
 
 function getInputText(selector) {
