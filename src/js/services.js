@@ -655,6 +655,7 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
+        app.setDay();
         suggestAlertAndNotification({alert:true,notification:true});
         window["listView"](true);
         return;

@@ -343,9 +343,10 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom(officeTemplateCombo) {
-  const parent = document.getElementById('create-activity--parent')
  
   getRootRecord().then(function (record) {
+    const parent = document.getElementById('create-activity--parent')
+
   const fab = document.createElement('button')
   fab.className = 'mdc-fab create-activity'
   fab.id = 'create-activity'
@@ -1135,6 +1136,9 @@ function suggestAlertAndNotification(show) {
 
       tx.oncomplete = function () {
         console.log("done");
+        if(states[history.state[0]] && show.hasOwnProperty('alert')){
+          createActivityIcon()
+        }
       }
     }
   }).catch(console.log)
