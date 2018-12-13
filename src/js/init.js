@@ -302,7 +302,7 @@ function init(auth) {
   /** When app has been initialzied before
    * render list view first, then perform app sync and mange location
    */
-  app.setDay();
+ 
   if (localStorage.getItem('dbexist')) {
     localStorage.removeItem('selectedOffice');
 
@@ -316,6 +316,7 @@ function init(auth) {
           alert: true,
           notification: true
         })
+        app.setDay();
       } else {
         suggestAlertAndNotification({
           alert: false
