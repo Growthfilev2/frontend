@@ -1,4 +1,4 @@
-const notification = new Worker('src/js/notification.js')
+const notification = new Worker('js/notification.js')
 
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'
@@ -1068,9 +1068,24 @@ function disableNotification(prop){
       const tx = db.transaction(['root'], 'readwrite')
       const store = tx.objectStore('root')
       if(!prop) {
-        record.offices.forEach(function(office){
-          record.notification[office] = {Urgent:false,Nearby:false}
-        })
+        if(Array.isArray(record.offices)) {
+
+          record.offices.forEach(function(office){
+            record.notification[office] = {Urgent:false,Nearby:false}
+          })
+        }
+        else {
+          record.offices.allOffices.forEach(function(office){
+            if(record.notification){
+              record.notification[office] = {Urgent:false,Nearby:false}
+            }
+            else {
+              const tempNotification = {}
+              tempNotification[office] = {Urgent:false,Nearby:false};
+              record.notification = tempNotification;
+            }
+          })
+        }
         store.put(record)
       }
       else {
