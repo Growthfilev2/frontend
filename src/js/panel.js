@@ -1,4 +1,4 @@
-const notification = new Worker('js/notification.js')
+const notification = new Worker('src/js/notification.js')
 
 function listView(pushState) {
   // document.body.style.backgroundColor = 'white'

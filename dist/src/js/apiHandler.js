@@ -158,13 +158,13 @@ function fetchServerTime(deviceInfo) {
 
 function instant(error) {
   console.log(error);
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**
@@ -473,97 +473,45 @@ function instantUpdateDB(dbName, data, type) {
   };
 }
 
-function updateMapWithNoStatus(db, activity) {
-  return new Promise(function (resolve, reject) {
+function updateMap(activity) {
+
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
     var mapTx = db.transaction(['map'], 'readwrite');
     var mapObjectStore = mapTx.objectStore('map');
-
-    var resultsWithoutStatus = [];
-    mapObjectStore.openCursor().onsuccess = function (event) {
+    var mapActivityIdIndex = mapObjectStore.index('activityId');
+    mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.status) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.office) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return;
-      }
+      if (cursor) {
 
-      resultsWithoutStatus.push(cursor.value);
-      cursor.delete();
-      cursor.continue();
+        var deleteRecordReq = cursor.delete();
+        cursor.continue();
+        deleteRecordReq.onerror = errorDeletingRecord;
+      }
     };
 
     mapTx.oncomplete = function () {
-      var activityTx = db.transaction(['activity'], 'readwrite');
-      var activityStore = activityTx.objectStore('activity');
-
-      resultsWithoutStatus.forEach(function (data) {
-        activityStore.get(data.activityId).onsuccess = function (event) {
-          var record = event.target.result;
-          if (record) {
-            var transaction = db.transaction(['map'], 'readwrite');
-            var _mapObjectStore = transaction.objectStore('map');
-            data.status = record.status;
-            data.hidden = record.hidden;
-            data.office = record.office;
-            _mapObjectStore.put(data);
-          }
-        };
-      });
-      activityTx.oncomplete = function () {
-        resolve(true);
-      };
-    };
-  });
-}
-
-function updateMap(db, activity) {
-  updateMapWithNoStatus(db, activity).then(function () {
-    var req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      var db = req.result;
       var mapTx = db.transaction(['map'], 'readwrite');
       var mapObjectStore = mapTx.objectStore('map');
-      var mapActivityIdIndex = mapObjectStore.index('activityId');
-      mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (cursor) {
 
-          var deleteRecordReq = cursor.delete();
-          cursor.continue();
-          deleteRecordReq.onerror = errorDeletingRecord;
-        }
-      };
-
-      mapTx.oncomplete = function () {
-        var mapTx = db.transaction(['map'], 'readwrite');
-        var mapObjectStore = mapTx.objectStore('map');
-
-        activity.venue.forEach(function (newVenue) {
-          mapObjectStore.add({
-            activityId: activity.activityId,
-            latitude: newVenue.geopoint['_latitude'],
-            longitude: newVenue.geopoint['_longitude'],
-            location: newVenue.location.toLowerCase(),
-            template: activity.template,
-            address: newVenue.address.toLowerCase(),
-            venueDescriptor: newVenue.venueDescriptor,
-            status: activity.status,
-            office: activity.office,
-            hidden: activity.hidden
-          });
+      activity.venue.forEach(function (newVenue) {
+        mapObjectStore.add({
+          activityId: activity.activityId,
+          latitude: newVenue.geopoint['_latitude'],
+          longitude: newVenue.geopoint['_longitude'],
+          location: newVenue.location.toLowerCase(),
+          template: activity.template,
+          address: newVenue.address.toLowerCase(),
+          venueDescriptor: newVenue.venueDescriptor,
+          status: activity.status,
+          office: activity.office,
+          hidden: activity.hidden
         });
-      };
-      mapTx.onerror = errorDeletingRecord;
+      });
     };
-  }).catch(console.log);
+    mapTx.onerror = errorDeletingRecord;
+  };
 }
 
 function errorDeletingRecord(event) {
@@ -574,95 +522,47 @@ function transactionError(event) {
   console.log(event.target.error);
 }
 
-function updateCalendarWithNoStatus(db, activity) {
-  return new Promise(function (resolve, reject) {
-    var calTx = db.transaction(['calendar'], 'readwrite');
-    var calendarObjectStore = calTx.objectStore('calendar');
+function updateCalendar(activity) {
 
-    var resultsWithoutStatus = [];
-    calendarObjectStore.openCursor().onsuccess = function (event) {
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
+    var calendarTx = db.transaction(['calendar'], 'readwrite');
+    var calendarObjectStore = calendarTx.objectStore('calendar');
+    var calendarActivityIndex = calendarObjectStore.index('activityId');
+
+    calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+      // console.log(activity.activityId)
       var cursor = event.target.result;
-      if (!cursor) return;
-
-      if (cursor.value.status) {
+      if (cursor) {
+        var recordDeleteReq = cursor.delete();
+        recordDeleteReq.onerror = errorDeletingRecord;
         cursor.continue();
-        return;
       }
-      if (cursor.value.office) {
-        cursor.continue();
-        return;
-      }
-
-      resultsWithoutStatus.push(cursor.value);
-      cursor.delete();
-      cursor.continue();
     };
-
-    calTx.oncomplete = function () {
-      var activityTx = db.transaction(['activity'], 'readwrite');
-      var activityStore = activityTx.objectStore('activity');
-
-      resultsWithoutStatus.forEach(function (data) {
-        activityStore.get(data.activityId).onsuccess = function (event) {
-          var record = event.target.result;
-          if (record) {
-            var transaction = db.transaction(['calendar'], 'readwrite');
-            var calendarStore = transaction.objectStore('calendar');
-            data.status = record.status;
-            data.office = record.office;
-            calendarStore.put(data);
-          }
-        };
-      });
-      activityTx.oncomplete = function () {
-        resolve(true);
-      };
-    };
-  });
-}
-
-function updateCalendar(db, activity) {
-  updateCalendarWithNoStatus(db, activity).then(function () {
-    var req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      var db = req.result;
+    calendarTx.oncomplete = function () {
       var calendarTx = db.transaction(['calendar'], 'readwrite');
       var calendarObjectStore = calendarTx.objectStore('calendar');
-      var calendarActivityIndex = calendarObjectStore.index('activityId');
 
-      calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
-        // console.log(activity.activityId)
-        var cursor = event.target.result;
-        if (cursor) {
-          var recordDeleteReq = cursor.delete();
-          recordDeleteReq.onerror = errorDeletingRecord;
-          cursor.continue();
-        }
-      };
-      calendarTx.oncomplete = function () {
-        var calendarTx = db.transaction(['calendar'], 'readwrite');
-        var calendarObjectStore = calendarTx.objectStore('calendar');
+      activity.schedule.forEach(function (schedule) {
+        var startTime = moment(schedule.startTime).toDate();
+        var endTime = moment(schedule.endTime).toDate();
 
-        activity.schedule.forEach(function (schedule) {
-          var startTime = moment(schedule.startTime).toDate();
-          var endTime = moment(schedule.endTime).toDate();
-
-          calendarObjectStore.add({
-            activityId: activity.activityId,
-            scheduleName: schedule.name,
-            timestamp: activity.timestamp,
-            template: activity.template,
-            hidden: activity.hidden,
-            start: moment(startTime).format('YYYY-MM-DD'),
-            end: moment(endTime).format('YYYY-MM-DD'),
-            status: activity.status,
-            office: activity.office
-          });
+        calendarObjectStore.add({
+          activityId: activity.activityId,
+          scheduleName: schedule.name,
+          timestamp: activity.timestamp,
+          template: activity.template,
+          hidden: activity.hidden,
+          start: moment(startTime).format('YYYY-MM-DD'),
+          end: moment(endTime).format('YYYY-MM-DD'),
+          status: activity.status,
+          office: activity.office
         });
-        calendarTx.onerror = transactionError;
-      };
+      });
+      calendarTx.onerror = transactionError;
     };
-  }).catch(console.log);
+  };
 }
 
 // create attachment record with status,template and office values from activity
@@ -994,16 +894,13 @@ function successResponse(read, swipeInfo) {
 
       activityPar.push(activity.activityId);
 
-      updateMap(db, activity);
+      updateMap(activity);
 
-      updateCalendar(db, activity);
-
+      updateCalendar(activity);
       // put each assignee (number) in the users object store
 
       putAssignessInStore(db, activity.assignees);
-
       // put attachemnt in the attachment object store
-
       putAttachment(db, activity);
     });
 

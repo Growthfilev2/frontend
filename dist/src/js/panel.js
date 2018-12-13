@@ -1023,9 +1023,22 @@ function disableNotification(prop) {
       var tx = db.transaction(['root'], 'readwrite');
       var store = tx.objectStore('root');
       if (!prop) {
-        record.offices.forEach(function (office) {
-          record.notification[office] = { Urgent: false, Nearby: false };
-        });
+        if (Array.isArray(record.offices)) {
+
+          record.offices.forEach(function (office) {
+            record.notification[office] = { Urgent: false, Nearby: false };
+          });
+        } else {
+          record.offices.allOffices.forEach(function (office) {
+            if (record.notification) {
+              record.notification[office] = { Urgent: false, Nearby: false };
+            } else {
+              var tempNotification = {};
+              tempNotification[office] = { Urgent: false, Nearby: false };
+              record.notification = tempNotification;
+            }
+          });
+        }
         store.put(record);
       } else {
 
