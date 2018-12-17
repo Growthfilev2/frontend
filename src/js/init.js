@@ -336,7 +336,7 @@ function init(auth) {
         if(suggestionAdded) {
           listView(true);
         }
-      })
+      }).catch(console.log)
     }
     else {
       listView(true)

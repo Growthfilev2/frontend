@@ -1069,7 +1069,6 @@ function createInputForProfile(key, type, classtype) {
 
 function suggestCheckIn(value) {
   return new Promise(function (resolve, reject) {
-
     getRootRecord().then(function (record) {
       const req = indexedDB.open(firebase.auth().currentUser.uid)
       req.onsuccess = function () {
@@ -1083,8 +1082,16 @@ function suggestCheckIn(value) {
           resolve(true)
           console.log("done");
         }
+        tx.onerror = function(){
+          reject(tx.error)
+        }
       }
-    }).catch(console.log)
+      req.onerror = function(){
+        reject(req.error);
+      }
+    }).catch(function(error){
+      reject(error)
+    })
   })
 }
 
