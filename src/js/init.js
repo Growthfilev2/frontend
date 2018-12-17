@@ -381,7 +381,6 @@ function startInitializatioOfList(auth) {
         device: native.getInfo(),
         from: ''
       })
-      manageLocation();
     }).catch(console.log);
   }).catch(console.log)
 }
