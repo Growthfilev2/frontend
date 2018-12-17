@@ -35,6 +35,7 @@ function getRootRecord() {
         const data = event.target.result;
         data ? record = data : record = null;
       }
+
       rootTx.oncomplete = function () {
         if(record) {
           resolve(record)
@@ -91,6 +92,7 @@ function convertResultsToList(db, results, initPanel, type) {
     scrollToActivity(yOffset)
     return;
   }
+
   let promiseMap = results.map(function (data) {
     return createActivityList(db, data).then(function (li) {
       return li
