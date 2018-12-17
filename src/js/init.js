@@ -342,9 +342,7 @@ function init(auth) {
     const deviceInfo = JSON.parse(native.getInfo());
     
     removeIDBInstance(auth).then(function(isRemoved) {
-      if (isRemoved) {
-        requestCreator('now', native.getInfo())
-      }
+      requestCreator('now', native.getInfo())
     }).catch(function(error) {
       console.log(error)
     })
@@ -355,12 +353,11 @@ function init(auth) {
   idbVersionLessThan2(auth).then(function(lessThanTwo){
     
     if(lessThanTwo) {
-      localStorage.removeItem('dbexist');
-      history.state = null;
+     
        removeIDBInstance(auth).then(function(isRemoved) {
-      if (isRemoved) {
+        localStorage.removeItem('dbexist');
+        history.state = null;  
         requestCreator('now', native.getInfo())
-      }
      }).catch(function(error) {
        console.log(error)
      })
