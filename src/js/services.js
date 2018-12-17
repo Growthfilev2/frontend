@@ -17,7 +17,7 @@ function handleImageError(img) {
       if (!record) {
         return;
       };
-      
+
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
       usersObjectStore.put(record);
@@ -222,38 +222,52 @@ function manageLocation() {
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
-    try {
-      CelllarJson = Towers.getCellularData();
-      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
-      geoFetchPromise.then(function (geoData) {
-        initLocationInterval(geoData)
-      }).catch(function (error) {
-        initLocationInterval(error)
-      })
+    getRootRecord().then(function (rootRecord) {
+      try {
+        CelllarJson = Towers.getCellularData();
+        geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
-    } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: {
-          error: locationStatus.message,
-          file: 'services.js',
-          lineNo: 231,
-          device: JSON.parse(native.getInfo()),
-          help: 'Problem in calling method for fetching cellular towers.'
+        if (rootRecord.location.provider === 'MOCK') {
+          geoFetchPromise.then(function (geoData) {
+            updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+          }).catch(function (error) {
+            requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+          })
+          return;
         }
-      }));
 
-      locationInterval().then(function(navigatorData){
-        updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-      }).catch(function(error){
-        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-      })
-    }
-    return
+        geoFetchPromise.then(function (geoData) {
+          initLocationInterval(geoData)
+        }).catch(function (error) {
+          initLocationInterval(error)
+        })
+
+      } catch (e) {
+        requestCreator('instant', JSON.stringify({
+          message: {
+            error: e.message,
+            file: 'services.js',
+            lineNo: 231,
+            device: JSON.parse(native.getInfo()),
+            help: 'Problem in calling method for fetching cellular towers.'
+          }
+        }));
+
+        if(rootRecord.location.provider === 'MOCK') return;
+        
+        locationInterval().then(function (navigatorData) {
+          updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+        })
+      }
+    });
+    return;
   }
 
-  locationInterval().then(function(navigatorData){
+  locationInterval().then(function (navigatorData) {
     updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-  }).catch(function(error){
+  }).catch(function (error) {
     requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
 
@@ -263,31 +277,30 @@ function initLocationInterval(locationStatus) {
   const singletonSuccess = []
   let bestLocation;
   locationInterval().then(function (navigatorData) {
-    if(locationStatus.success){
-      singletonSuccess.push(locationStatus,navigatorData)
+    if (locationStatus.success) {
+      singletonSuccess.push(locationStatus, navigatorData)
       bestLocation = sortedByAccuracy(singletonSuccess)
-    }
-    else {
+    } else {
       requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
       bestLocation = navigatorData
     }
     updateLocationInRoot(bestLocation).then(locationUpdationSuccess, locationUpdationError);
 
   }).catch(function (error) {
-      if (locationStatus.success) {
-        updateLocationInRoot(locationStatus).then(locationUpdationSuccess, locationUpdationError)
-      } else {
-        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
-      }
-      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+    if (locationStatus.success) {
+      updateLocationInRoot(locationStatus).then(locationUpdationSuccess, locationUpdationError)
+    } else {
+      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
+    }
+    requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
 }
 
 function locationUpdationSuccess(location) {
-  if(!location.prev.latitude) return;
-  if(!location.prev.longitude) return;
+  if (!location.prev.latitude) return;
+  if (!location.prev.longitude) return;
 
-  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
+  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new)
   console.log(distanceBetweenBoth)
   isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn(true) : ''
 }
@@ -303,12 +316,29 @@ function locationInterval() {
   var stabalzied = [];
   var totalcount = 0;
   var count = 0;
+  let mockTimeout;
   return new Promise(function (resolve, reject) {
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
 
+        if (native.getName === 'Android') {
+
+          mockTimeout = setTimeout(function () {
+            if (myInterval) {
+              clearTimeout(mockTimeout)
+              clearInterval(myInterval);
+              resolve({
+                'latitude': '',
+                'longitude': '',
+                'accuracy': '',
+                'lastLocationTime': Date.now(),
+                'provider': 'Mock'
+              })
+            }
+          }, 8000)
+        }
 
         ++totalcount;
         if (totalcount !== 1) {
@@ -367,24 +397,20 @@ function updateLocationInRoot(finalLocation) {
 
         var record = event.target.result;
         previousLocation = {
-          latitude : record.latitude,
-          longitude : record.longitude,
-          accuracy : record.accuracy,
-          provider : record.provider,
-          localStorage : record.lastLocationTime
+          latitude: record.location.latitude,
+          longitude: record.location.longitude,
+          accuracy: record.location.accuracy,
+          provider: record.location.provider,
+          localStorage: record.location.lastLocationTime
         };
-
-        record.latitude = finalLocation.latitude;
-        record.longitude = finalLocation.longitude;
-        record.accuracy = finalLocation.accuracy;
-        record.provider = finalLocation.provider;
-        record.lastLocationTime = finalLocation.lastLocationTime,
-
+        record.location = finalLocation;
         rootStore.put(record);
       };
       tx.oncomplete = function () {
-        
-        resolve({prev:previousLocation,new:finalLocation})
+        resolve({
+          prev: previousLocation,
+          new: finalLocation
+        })
       }
     };
     req.onerror = function (error) {
@@ -394,10 +420,10 @@ function updateLocationInRoot(finalLocation) {
 }
 
 function toRad(value) {
-    return value * Math.PI / 180;
+  return value * Math.PI / 180;
 }
 
-function calculateDistanceBetweenTwoPoints(oldLocation,newLocation){
+function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   var R = 6371; // km
 
   const dLat = toRad(newLocation.latitude - oldLocation.latitude);
@@ -414,7 +440,7 @@ function calculateDistanceBetweenTwoPoints(oldLocation,newLocation){
 
 }
 
-function isNewLocationMoreThanThreshold(distance){
+function isNewLocationMoreThanThreshold(distance) {
   const THRESHOLD = 0.5; //km
   if (distance >= THRESHOLD) return true;
   return false;
@@ -650,12 +676,12 @@ function loadViewFromRoot(response) {
     // updateIDB
 
     if (response.data.type === 'updateIDB') {
-        if (response.data.msg === 'true') {
-         androidStopRefreshing()
+      if (response.data.msg === 'true') {
+        androidStopRefreshing()
       }
 
       if (!history.state) {
-        suggestCheckIn(true).then(function(){
+        suggestCheckIn(true).then(function () {
           window["listView"]();
           handleTimeout();
         }).catch(console.log)
@@ -676,8 +702,8 @@ function loadViewFromRoot(response) {
   };
 }
 
-function androidStopRefreshing(){
-  if(native.getName() === 'Android'){
+function androidStopRefreshing() {
+  if (native.getName() === 'Android') {
     AndroidRefreshing.stopRefreshing(true);
   }
 }
