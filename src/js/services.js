@@ -289,7 +289,7 @@ function locationUpdationSuccess(location) {
 
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev,location.new)
   console.log(distanceBetweenBoth)
-  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestAlertAndNotification({alert:true}) : ''
+  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn(true) : ''
 }
 
 function locationUpdationError(error) {

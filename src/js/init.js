@@ -383,7 +383,11 @@ function startInitializatioOfList(auth){
       }).catch(console.log);
     }
     else {
-      listView(true)
+      suggestCheckIn(false).then(function(suggestionAdded){
+        if(suggestionAdded) {
+          listView(true);
+        }
+      }).catch(console.log);
     }
     requestCreator('now', native.getInfo())
     manageLocation();
