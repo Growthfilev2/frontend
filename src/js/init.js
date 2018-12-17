@@ -343,7 +343,7 @@ function init(auth) {
   return
 }
 
-function resetApp(){
+function resetApp(auth){
   removeIDBInstance(auth).then(function() {
     localStorage.removeItem('dbexist');
     history.state = null;  
