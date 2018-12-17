@@ -281,18 +281,30 @@ let app = function() {
     today: function() {
       return moment().format("DD/MM/YYYY");
     },
-    setDay: function() {
-      localStorage.setItem('today', this.today())
+    tomorrow : function(){
+      return this.today().subtract(1,'day');
     },
-    getDay: function() {
-      return localStorage.getItem('today')
+    getLastLocationTime : function(){
+      return new Promise(function(resolve,reject){ 
+        getRootRecord().then(function(rootRecord){
+          resolve(rootRecord.lastLocationTime);
+        }).catch(function(error){
+          reject(error)
+        })
+    })
     },
     isNewDay: function() {
-      if (this.getDay() !== this.today()) {
-        return true;
-      } else {
-        return false;
-      }
+      return new Promise(function(resolve,reject){
+        this.getLastLocationTime().then(function(time){
+          if (moment(this.tomorrow()).isAfter(moment(time))) {
+             resolve(true);
+          } else {
+            resolve(false);
+          }
+        }).catch(function(error){
+          reject(error)
+        })
+      })
     }
   }
 }();
@@ -302,42 +314,36 @@ function init(auth) {
   /** When app has been initialzied before
    * render list view first, then perform app sync and mange location
    */
- 
-  if (localStorage.getItem('dbexist')) {
-    localStorage.removeItem('selectedOffice');
 
-    listView(true)
+   if(!localStorage.getItem('dbexist')) {
+    document.getElementById('growthfile').appendChild(loader('init-loader'))
+    /** when app initializes for the first time */
+    const deviceInfo = JSON.parse(native.getInfo());
+  
+    removeIDBInstance(auth).then(function(isRemoved) {
+      if (isRemoved) {
+        requestCreator('now', native.getInfo())
+      }
+    }).catch(function(error) {
+      console.log(error)
+    })
+    return
+   }
+
+  app.isNewDay(auth).then(function(newDay){
+    if(newDay){
+      suggestCheckIn(true).then(function(suggestionAdded){
+        if(suggestionAdded) {
+          listView(true);
+        }
+      })
+    }
+    else {
+      listView(true)
+    }
     requestCreator('now', native.getInfo())
     manageLocation();
+  }).catch(console.log)
 
-      if (app.isNewDay()) {
-        
-        suggestAlertAndNotification({
-          alert: true,
-          notification: true
-        })
-        app.setDay();
-      } else {
-        suggestAlertAndNotification({
-          alert: false
-        });
-        disableNotification();
-      }
- 
-
-    return
-  }
-
-  document.getElementById('growthfile').appendChild(loader('init-loader'))
-  /** when app initializes for the first time */
-  const deviceInfo = JSON.parse(native.getInfo());
-
-  removeIDBInstance(auth).then(function(isRemoved) {
-    if (isRemoved) {
-      requestCreator('now', native.getInfo())
-    }
-  }).catch(function(error) {
-    console.log(error)
-  })
   return
 }

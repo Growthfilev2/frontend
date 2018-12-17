@@ -22,7 +22,7 @@ function listView(pushState) {
 
   })
   creatListHeader('Recent')
- 
+
 }
 
 function getRootRecord() {
@@ -343,29 +343,28 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom(officeTemplateCombo) {
- 
+
   getRootRecord().then(function (record) {
     const parent = document.getElementById('create-activity--parent')
 
-  const fab = document.createElement('button')
-  fab.className = 'mdc-fab create-activity'
-  fab.id = 'create-activity'
-  fab.setAttribute('aria-label', 'Add')
-  const span = document.createElement('span')
-  span.className = 'mdc-fab_icon material-icons'
-  span.id = 'activity-create--icon'
-    if(record.suggestCheckIn) {
+    const fab = document.createElement('button')
+    fab.className = 'mdc-fab create-activity'
+    fab.id = 'create-activity'
+    fab.setAttribute('aria-label', 'Add')
+    const span = document.createElement('span')
+    span.className = 'mdc-fab_icon material-icons'
+    span.id = 'activity-create--icon'
+    if (record.suggestCheckIn) {
       span.textContent = 'add_alert'
-    }
-    else {
+    } else {
       span.textContent = 'add'
     }
-  
-  fab.appendChild(span)
-  parent.innerHTML  = fab.outerHTML;
 
-  document.querySelector('.create-activity').addEventListener('click', function (evt) {
-    const keysArray = Object.keys(officeTemplateCombo);
+    fab.appendChild(span)
+    parent.innerHTML = fab.outerHTML;
+
+    document.querySelector('.create-activity').addEventListener('click', function (evt) {
+      const keysArray = Object.keys(officeTemplateCombo);
       console.log(record.suggestCheckIn);
       if (record.suggestCheckIn) {
         if (keysArray.length === 1) {
@@ -456,7 +455,7 @@ function creatListHeader(headerName, backIcon) {
     }
 
     getRootRecord().then(function (record) {
-      initMenu(record.offices,record.notification);
+      initMenu(record.offices, record.notification);
     })
 
     sendCurrentViewNameToAndroid('drawer')
@@ -673,7 +672,7 @@ function initMenu(officeRecord, notification) {
 
         if (filter.type === 'Urgent' || filter.type === 'Nearby') {
           if (notification[localStorage.getItem('selectedOffice')][filter.type]) {
-            if(count[filter.type]) {
+            if (count[filter.type]) {
 
               const countDom = document.createElement('span')
               countDom.className = 'mdc-list-item__meta';
@@ -688,8 +687,7 @@ function initMenu(officeRecord, notification) {
               a.appendChild(textSpan)
               countDom.appendChild(countName)
               a.appendChild(countDom)
-            }
-            else {
+            } else {
               a.appendChild(i)
               a.appendChild(textSpan)
             }
@@ -919,7 +917,11 @@ function sortByDates(type, pushState) {
   }
 
   const office = localStorage.getItem('selectedOffice')
-  const prop = {[office]:{Urgent:false}}
+  const prop = {
+    [office]: {
+      Urgent: false
+    }
+  }
   disableNotification(prop)
 
   appNotification.urgent(false).then(function (record) {
@@ -960,7 +962,11 @@ function sortByLocation(type, pushState) {
     history.replaceState(['sortByLocation', type], null, null)
   }
   const office = localStorage.getItem('selectedOffice')
-  const prop = {[office]:{Nearby:false}}
+  const prop = {
+    [office]: {
+      Nearby: false
+    }
+  }
   disableNotification(prop)
 
   appNotification.nearBy(false).then(function (record) {
@@ -1060,103 +1066,26 @@ function createInputForProfile(key, type, classtype) {
   return mainTextField
 }
 
-function disableNotification(prop){
-  getRootRecord().then(function (record) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['root'], 'readwrite')
-      const store = tx.objectStore('root')
-      if(!prop) {
-        if(Array.isArray(record.offices)) {
 
-          record.offices.forEach(function(office){
-            record.notification[office] = {Urgent:false,Nearby:false}
-          })
-        }
-        else {
-          record.offices.allOffices.forEach(function(office){
-            if(record.notification){
-              record.notification[office] = {Urgent:false,Nearby:false}
-            }
-            else {
-              const tempNotification = {}
-              tempNotification[office] = {Urgent:false,Nearby:false};
-              record.notification = tempNotification;
-            }
-          })
-        }
+function suggestCheckIn(value) {
+  return new Promise(function (resolve, reject) {
+
+    getRootRecord().then(function (record) {
+      const req = indexedDB.open(firebase.auth().currentUser.uid)
+      req.onsuccess = function () {
+        const db = req.result;
+        const tx = db.transaction(['root'], 'readwrite')
+        const store = tx.objectStore('root')
+        record.suggestCheckIn = value;
         store.put(record)
-      }
-      else {
 
-      const office = Object.keys(prop)[0]
-      const value = prop[office]
-      const valueKey = Object.keys(value)[0];
-
-      record.notification[office][valueKey] = value[valueKey];
-
-      store.put(record)
-      }
-      tx.oncomplete = function () {
-        console.log("done")
-      }
-    }
-  }).catch(console.log())
-}
-
-function suggestAlertAndNotification(show) {
-  const states = {
-    'listView': true,
-    'filterActivities': true,
-    'sortByCreator': true,
-    'sortByDates': true,
-    'sortByLocation': true,
-
-  }
-  getRootRecord().then(function (record) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['root'], 'readwrite')
-      const store = tx.objectStore('root')
-
-      if (show.hasOwnProperty('alert')) {
-        record.suggestCheckIn = show.alert;
-      }
-
-      if (show.hasOwnProperty('notification')) {
-        let officeByCount = {};
-        if(Array.isArray(record.offices)) {
-
-          record.offices.forEach(function(office){
-            officeByCount[office] = {
-              'Urgent':true,
-              'Nearby':true
-            }
-          })
-        }
-        else {
-        record.offices.allOffices.forEach(function(office){
-            officeByCount[office] = {
-              'Urgent':true,
-              'Nearby':true
-            }
-          })
-        }
-        record.notification = officeByCount;
-      };
-
-      store.put(record)
-
-      tx.oncomplete = function () {
-        console.log("done");
-        if(states[history.state[0]] && show.hasOwnProperty('alert')){
-          createActivityIcon()
+        tx.oncomplete = function () {
+          resolve(true)
+          console.log("done");
         }
       }
-    }
-  }).catch(console.log)
+    }).catch(console.log)
+  })
 }
 
 function removeChildNodes(parent) {
