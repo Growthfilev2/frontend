@@ -253,6 +253,9 @@ function removeIDBInstance(auth) {
 
       resolve(true)
     }
+    req.onblocked = function(){
+      reject("db is busy")
+    }
     req.onerror = function() {
       reject(req.error)
     }
