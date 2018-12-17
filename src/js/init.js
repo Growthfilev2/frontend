@@ -322,11 +322,8 @@ function removeIDBInstance(auth) {
       message:'Please Restart The App',
       error:''
     }
-    let db;
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function() {
-      db = req.result;
-      db.close();
       resolve(true)
     }
     req.onblocked = function(){
