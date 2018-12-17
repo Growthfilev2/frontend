@@ -156,8 +156,8 @@ function fetchServerTime(info) {
         requestHandlerResponse('revoke-session', 200);
         return
       };
-
-      resolve(response.timestamp, info.from)
+      
+      resolve({ts:response.timestamp,fromTime:info.from})
     }).catch(function (error) {
       instant(createLog(error))
     })
@@ -197,7 +197,7 @@ function fetchRecord(dbName, id) {
 }
 
 
-function initializeIDB(serverTime, fromTime) {
+function initializeIDB(data) {
   console.log("init db")
   console.log(fromTime);
   // onAuthStateChanged is added because app is reinitialized
@@ -214,7 +214,7 @@ function initializeIDB(serverTime, fromTime) {
 
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      createObjectStores(request, auth,fromTime);
+      createObjectStores(request, auth,data.fromTime);
     }
 
     request.onsuccess = function () {
@@ -222,7 +222,7 @@ function initializeIDB(serverTime, fromTime) {
       const rootObjectStore = rootTx.objectStore('root')
       rootObjectStore.get(auth.uid).onsuccess = function (event) {
         const record = event.target.result
-        record.serverTime = serverTime - Date.now()
+        record.serverTime = data.ts - Date.now()
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
