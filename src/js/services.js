@@ -582,9 +582,26 @@ function requestCreator(requestType, requestBody) {
 
       rootObjectStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
-        if (record.latitude && record.longitude && record.accuracy) {
-
-          apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
+      
+      
+        if (record.location.latitude && record.location.longitude && record.location.accuracy) {
+          const currentTime = moment().valueOf();
+          const lastLocationTime = record.location.lastLocationTime
+          const duration  = moment.duration(currentTime.diff(lastLocationTime));
+          let waiting;
+          const difference = duration.asSeconds();
+          if(difference > 5) {
+           waiting = setTimeout(function(){
+              apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
+            },5000)
+          } 
+          else {
+            if(waiting) {
+              clearTimeout(waiting);
+              waiting = null;
+            }
+            apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
+          }
         } else {
 
           enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
