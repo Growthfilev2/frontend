@@ -206,25 +206,13 @@ function initializeIDB(serverTime) {
     const request = indexedDB.open(auth.uid,2)
 
 
-    request.onerror = function (event) {
-      reject(event.error)
+    request.onerror = function () {
+      console.log(request.error)
+      reject(request.error)
     }
   
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      if(evt.oldVersion === 1) {
-        let deleteReq = indexedDB.deleteDatabase(auth.uid,1);
-        deleteReq.onerror = function(){
-          console.log("cannot delete db")
-        }
-        deleteReq.onblocked = function(){
-          console.log("Db is blocked")
-        }
-        deleteReq.onsuccess = function(){
-          createObjectStores(request)
-        }
-        return;
-      }
       createObjectStores(request);
     }
       

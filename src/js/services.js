@@ -16,7 +16,7 @@ function handleImageError(img) {
       var record = event.target.result;
       if (!record) {
         return;
-      }
+      };
       
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
