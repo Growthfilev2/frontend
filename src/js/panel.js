@@ -371,12 +371,8 @@ function createActivityIconDom(officeTemplateCombo) {
           createTempRecord(keysArray[0], 'check-in')
         } else {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn)
-
         }
-        document.getElementById('activity-create--icon').textContent = 'add'
-        suggestAlertAndNotification({
-          alert: false
-        });
+        suggestCheckIn(false);
         return;
       }
 

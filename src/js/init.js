@@ -311,14 +311,18 @@ let app = function() {
 
 function idbVersionLessThan2 (auth) {
   return new Promise(function(resolve,reject){
+    let lessThanTwo = false;
     const req = indexedDB.open(auth.uid,2);
     req.onupgradeneeded = function(evt){
       if(evt.oldVersion === 1) {
-        resolve(true)
+       lessThanTwo = true
       }
       else {
-        resolve(false)
+        lessThanTwo = false
       }
+    }
+    req.onsuccess = function(){
+      resolve(lessThanTwo)
     }
     req.onerror = function(){
       reject(req.error)
@@ -331,9 +335,8 @@ function init(auth) {
    * render list view first, then perform app sync and mange location
    */
 
-  
-  
   if(!localStorage.getItem('dbexist')) {
+    history.state = null //testing;
     document.getElementById('growthfile').appendChild(loader('init-loader'))
     /** when app initializes for the first time */
     const deviceInfo = JSON.parse(native.getInfo());
@@ -354,24 +357,23 @@ function init(auth) {
     if(lessThanTwo) {
       localStorage.removeItem('dbexist');
       history.state = null;
-      
-     removeIDBInstance(auth).then(function(isRemoved) {
-       if (isRemoved) {
-         requestCreator('now', native.getInfo())
-       }
+       removeIDBInstance(auth).then(function(isRemoved) {
+      if (isRemoved) {
+        requestCreator('now', native.getInfo())
+      }
      }).catch(function(error) {
        console.log(error)
      })
      return;
     };
 
-    startInitializatioOfList();
+    startInitializatioOfList(auth);
   })
 
   return
 }
 
-function startInitializatioOfList(){
+function startInitializatioOfList(auth){
   app.isNewDay(auth).then(function(newDay){
     if(newDay){
       suggestCheckIn(true).then(function(suggestionAdded){
@@ -379,7 +381,6 @@ function startInitializatioOfList(){
           listView(true);
         }
       }).catch(console.log);
-
     }
     else {
       listView(true)

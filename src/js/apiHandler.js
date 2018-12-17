@@ -213,7 +213,7 @@ function initializeIDB(serverTime) {
   
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      createObjectStores(request);
+      createObjectStores(request,auth);
     }
       
     request.onsuccess = function () {
@@ -235,7 +235,7 @@ function initializeIDB(serverTime) {
   })
 }
 
-function createObjectStores(request){
+function createObjectStores(request,auth){
   
   const db = request.result;
 

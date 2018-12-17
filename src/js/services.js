@@ -655,9 +655,9 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
-        app.setDay();
-        suggestAlertAndNotification({alert:true,notification:true});
-        window["listView"](true);
+        suggestCheckIn(true).then(function(){
+          window["listView"](true);
+        }).catch(console.log)
         return;
       }
 
