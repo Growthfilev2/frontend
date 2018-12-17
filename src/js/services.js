@@ -585,7 +585,7 @@ function requestCreator(requestType, requestBody) {
       
       
         if (record.location.latitude && record.location.longitude && record.location.accuracy) {
-          const currentTime = moment().valueOf();
+          const currentTime = moment(moment().valueOf());
           const lastLocationTime = record.location.lastLocationTime
           const duration  = moment.duration(currentTime.diff(lastLocationTime));
           let waiting;
