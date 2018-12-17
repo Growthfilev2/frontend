@@ -245,12 +245,10 @@ let native = function() {
 
 function removeIDBInstance(auth) {
 
-
   return new Promise(function(resolve, reject) {
 
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function() {
-
       resolve(true)
     }
     req.onblocked = function(){
@@ -315,7 +313,9 @@ function idbVersionLessThan2 (auth) {
   return new Promise(function(resolve,reject){
     let lessThanTwo = false;
     const req = indexedDB.open(auth.uid,2);
+    let db;
     req.onupgradeneeded = function(evt){
+
       if(evt.oldVersion === 1) {
        lessThanTwo = true
       }
@@ -324,6 +324,8 @@ function idbVersionLessThan2 (auth) {
       }
     }
     req.onsuccess = function(){
+      db = req.result;
+      db.close();
       resolve(lessThanTwo)
     }
     req.onerror = function(){
@@ -341,7 +343,7 @@ function init(auth) {
       return;
     };
     startInitializatioOfList(auth);
-  })
+  }).catch(console.log)
 
   return
 }
