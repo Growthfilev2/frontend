@@ -81,10 +81,9 @@ window.onpopstate = function(event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
-    window[event.state[0]](true)
+    window[event.state[0]]()
     return;
   }
-
   window[event.state[0]](event.state[1], false)
 }
 
@@ -329,11 +328,8 @@ function idbVersionLessThan2 (auth) {
     }
   })
 }
-function init(auth) {
 
-  /** When app has been initialzied before
-   * render list view first, then perform app sync and mange location
-   */
+function init(auth) {
 
   idbVersionLessThan2(auth).then(function(lessThanTwo){
 
