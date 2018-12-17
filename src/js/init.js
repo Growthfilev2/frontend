@@ -246,16 +246,21 @@ let native = function() {
 function removeIDBInstance(auth) {
 
   return new Promise(function(resolve, reject) {
-
+    const failure = {
+      message:'Please Restart The App',
+      error:''
+    }
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function() {
       resolve(true)
     }
     req.onblocked = function(){
-      reject("db is busy")
+      failure.error = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
+      reject(failure)
     }
     req.onerror = function() {
-      reject(req.error)
+      failure.error = req.error
+      reject(failure)
     }
 
   })
@@ -313,9 +318,7 @@ function idbVersionLessThan2 (auth) {
   return new Promise(function(resolve,reject){
     let lessThanTwo = false;
     const req = indexedDB.open(auth.uid,2);
-    let db;
     req.onupgradeneeded = function(evt){
-
       if(evt.oldVersion === 1) {
        lessThanTwo = true
       }
@@ -324,8 +327,6 @@ function idbVersionLessThan2 (auth) {
       }
     }
     req.onsuccess = function(){
-      db = req.result;
-      db.close();
       resolve(lessThanTwo)
     }
     req.onerror = function(){
@@ -355,7 +356,8 @@ function resetApp(auth){
     document.getElementById('growthfile').appendChild(loader('init-loader'))
     requestCreator('now', native.getInfo())
  }).catch(function(error) {
-   console.log(error)
+    snacks(error.message);
+    console.log(error);
  })
 }
 
