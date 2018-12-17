@@ -657,7 +657,7 @@ function loadViewFromRoot(response) {
       if (!history.state) {
         suggestCheckIn(true).then(function(){
           window["listView"]();
-          
+          handleTimeout();
         }).catch(console.log)
         return;
       }
