@@ -295,7 +295,7 @@ function idbVersionLessThan2 (auth) {
   return new Promise(function(resolve,reject){
     let lessThanTwo = false;
     const req = indexedDB.open(auth.uid,2);
-    // let db;
+    let db;
     req.onupgradeneeded = function(evt){
       if(evt.oldVersion === 1) {
        lessThanTwo = true
@@ -305,8 +305,8 @@ function idbVersionLessThan2 (auth) {
       }
     }
     req.onsuccess = function(){
-      // db = req.result;
-      // db.close();
+      db = req.result;
+      db.close();
       resolve(lessThanTwo)
     }
     req.onerror = function(){
@@ -322,10 +322,11 @@ function removeIDBInstance(auth) {
       message:'Please Restart The App',
       error:''
     }
-   
+    let db;
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function() {
-     
+      db = req.result;
+      db.close();
       resolve(true)
     }
     req.onblocked = function(){
@@ -357,7 +358,7 @@ function resetApp(auth){
   removeIDBInstance(auth).then(function() {
     localStorage.removeItem('dbexist');
     history.state = null;  
-    document.getElementById('growthfile').appendChild(loader('init-loader'))
+    document.getElementById('growthfile').appendChild(loader('init-loader'))  
     requestCreator('now', native.getInfo())
  }).catch(function(error) {
     snacks(error.message);
