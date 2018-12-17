@@ -335,58 +335,35 @@ function init(auth) {
    * render list view first, then perform app sync and mange location
    */
 
-  if(!localStorage.getItem('dbexist')) {
-    history.state = null //testing;
-    document.getElementById('growthfile').appendChild(loader('init-loader'))
-    /** when app initializes for the first time */
-    const deviceInfo = JSON.parse(native.getInfo());
-    
-    removeIDBInstance(auth).then(function(isRemoved) {
-      requestCreator('now', native.getInfo())
-    }).catch(function(error) {
-      console.log(error)
-    })
-    return
-  };
-
-
   idbVersionLessThan2(auth).then(function(lessThanTwo){
-    
-    if(lessThanTwo) {
-     
-       removeIDBInstance(auth).then(function(isRemoved) {
-        localStorage.removeItem('dbexist');
-        history.state = null;  
-        requestCreator('now', native.getInfo())
-     }).catch(function(error) {
-       console.log(error)
-     })
-     return;
-    };
 
+    if(lessThanTwo || !localStorage.getItem('dbexist')) {
+      resetApp(auth)
+      return;
+    };
     startInitializatioOfList(auth);
   })
 
   return
 }
 
-function startInitializatioOfList(auth){
-  app.isNewDay(auth).then(function(newDay){
-    if(newDay){
-      suggestCheckIn(true).then(function(suggestionAdded){
-        if(suggestionAdded) {
-          listView(true);
-        }
-      }).catch(console.log);
-    }
-    else {
-      suggestCheckIn(false).then(function(suggestionAdded){
-        if(suggestionAdded) {
-          listView(true);
-        }
-      }).catch(console.log);
-    }
+function resetApp(){
+  removeIDBInstance(auth).then(function() {
+    localStorage.removeItem('dbexist');
+    history.state = null;  
+    document.getElementById('growthfile').appendChild(loader('init-loader'))
     requestCreator('now', native.getInfo())
-    manageLocation();
+ }).catch(function(error) {
+   console.log(error)
+ })
+}
+
+function startInitializatioOfList(auth){
+  app.isNewDay(auth).then(function(isnewDay){
+    suggestCheckIn(isnewDay).then(function(){
+        listView();
+        requestCreator('now', native.getInfo())
+        manageLocation();
+    }).catch(console.log);
   }).catch(console.log)
 }

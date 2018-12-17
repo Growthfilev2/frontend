@@ -1,6 +1,6 @@
 const notification = new Worker('js/notification.js')
 
-function listView(pushState) {
+function listView() {
   // document.body.style.backgroundColor = 'white'
 
   if (document.querySelector('.init-loader')) {
@@ -8,9 +8,9 @@ function listView(pushState) {
   }
 
 
-  if (pushState) {
-    history.pushState(['listView'], null, null)
-  }
+
+  history.pushState(['listView'], null, null)
+  
 
   listPanel()
 
