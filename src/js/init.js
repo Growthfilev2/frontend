@@ -295,7 +295,7 @@ function idbVersionLessThan2 (auth) {
   return new Promise(function(resolve,reject){
     let lessThanTwo = false;
     const req = indexedDB.open(auth.uid,2);
-    let db;
+    // let db;
     req.onupgradeneeded = function(evt){
       if(evt.oldVersion === 1) {
        lessThanTwo = true
@@ -305,8 +305,8 @@ function idbVersionLessThan2 (auth) {
       }
     }
     req.onsuccess = function(){
-      db = req.result;
-      db.close();
+      // db = req.result;
+      // db.close();
       resolve(lessThanTwo)
     }
     req.onerror = function(){
