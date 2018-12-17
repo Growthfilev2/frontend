@@ -115,8 +115,8 @@ function http(method, url, data) {
   })
 }
 
-function fetchServerTime(deviceInfo) {
-  currentDevice = deviceInfo;
+function fetchServerTime(info) {
+  currentDevice = info.device;
   const parsedDeviceInfo = JSON.parse(deviceInfo);
 
   console.log(typeof parsedDeviceInfo.appVersion)
@@ -157,7 +157,7 @@ function fetchServerTime(deviceInfo) {
         return
       }
 
-      resolve(response.timestamp)
+      resolve(response.timestamp, info.from)
     }).catch(function (error) {
       instant(createLog(error))
     })
@@ -197,25 +197,25 @@ function fetchRecord(dbName, id) {
 }
 
 
-function initializeIDB(serverTime) {
+function initializeIDB(serverTime, fromTime) {
   console.log("init db")
   // onAuthStateChanged is added because app is reinitialized
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
 
-    const request = indexedDB.open(auth.uid,2)
+    const request = indexedDB.open(auth.uid, 2)
 
 
     request.onerror = function () {
       console.log(request.error)
       reject(request.error)
     }
-  
+
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      createObjectStores(request,auth);
+      createObjectStores(request, auth);
     }
-      
+
     request.onsuccess = function () {
 
       const rootTx = request.result.transaction(['root'], 'readwrite')
@@ -235,8 +235,8 @@ function initializeIDB(serverTime) {
   })
 }
 
-function createObjectStores(request,auth){
-  
+function createObjectStores(request, auth) {
+
   const db = request.result;
 
   const activity = db.createObjectStore('activity', {
@@ -307,11 +307,13 @@ function createObjectStores(request,auth){
     keyPath: 'uid'
   })
 
+
   root.put({
     uid: auth.uid,
-    fromTime: 0,
-    location :''
+    fromTime: fromTime,
+    location: ''
   })
+
   requestHandlerResponse('manageLocation');
 
 }
@@ -526,44 +528,44 @@ function instantUpdateDB(dbName, data, type) {
 
 
 function updateMap(activity) {
- 
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const db = req.result;
+
+  const req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    const db = req.result;
+    const mapTx = db.transaction(['map'], 'readwrite')
+    const mapObjectStore = mapTx.objectStore('map')
+    const mapActivityIdIndex = mapObjectStore.index('activityId')
+    mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+      const cursor = event.target.result
+      if (cursor) {
+
+        let deleteRecordReq = cursor.delete()
+        cursor.continue()
+        deleteRecordReq.onerror = errorDeletingRecord
+      }
+    }
+
+    mapTx.oncomplete = function () {
       const mapTx = db.transaction(['map'], 'readwrite')
       const mapObjectStore = mapTx.objectStore('map')
-      const mapActivityIdIndex = mapObjectStore.index('activityId')
-      mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (cursor) {
 
-          let deleteRecordReq = cursor.delete()
-          cursor.continue()
-          deleteRecordReq.onerror = errorDeletingRecord
-        }
-      }
-
-      mapTx.oncomplete = function () {
-        const mapTx = db.transaction(['map'], 'readwrite')
-        const mapObjectStore = mapTx.objectStore('map')
-
-        activity.venue.forEach(function (newVenue) {
-          mapObjectStore.add({
-            activityId: activity.activityId,
-            latitude: newVenue.geopoint['_latitude'],
-            longitude: newVenue.geopoint['_longitude'],
-            location: newVenue.location.toLowerCase(),
-            template: activity.template,
-            address: newVenue.address.toLowerCase(),
-            venueDescriptor: newVenue.venueDescriptor,
-            status: activity.status,
-            office: activity.office,
-            hidden: activity.hidden
-          })
+      activity.venue.forEach(function (newVenue) {
+        mapObjectStore.add({
+          activityId: activity.activityId,
+          latitude: newVenue.geopoint['_latitude'],
+          longitude: newVenue.geopoint['_longitude'],
+          location: newVenue.location.toLowerCase(),
+          template: activity.template,
+          address: newVenue.address.toLowerCase(),
+          venueDescriptor: newVenue.venueDescriptor,
+          status: activity.status,
+          office: activity.office,
+          hidden: activity.hidden
         })
-      }
-      mapTx.onerror = errorDeletingRecord
+      })
     }
+    mapTx.onerror = errorDeletingRecord
+  }
 }
 
 function errorDeletingRecord(event) {
@@ -577,45 +579,45 @@ function transactionError(event) {
 
 function updateCalendar(activity) {
 
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const calendarTx = db.transaction(['calendar'], 'readwrite')
-      const calendarObjectStore = calendarTx.objectStore('calendar')
-      const calendarActivityIndex = calendarObjectStore.index('activityId')
+  const req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    const db = req.result;
+    const calendarTx = db.transaction(['calendar'], 'readwrite')
+    const calendarObjectStore = calendarTx.objectStore('calendar')
+    const calendarActivityIndex = calendarObjectStore.index('activityId')
 
-      calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
-        // console.log(activity.activityId)
-        const cursor = event.target.result
-        if (cursor) {
-          let recordDeleteReq = cursor.delete()
-          recordDeleteReq.onerror = errorDeletingRecord
-          cursor.continue()
-        }
-      }
-      calendarTx.oncomplete = function () {
-        const calendarTx = db.transaction(['calendar'], 'readwrite')
-        const calendarObjectStore = calendarTx.objectStore('calendar')
-
-        activity.schedule.forEach(function (schedule) {
-          const startTime = moment(schedule.startTime).toDate()
-          const endTime = moment(schedule.endTime).toDate()
-
-          calendarObjectStore.add({
-            activityId: activity.activityId,
-            scheduleName: schedule.name,
-            timestamp: activity.timestamp,
-            template: activity.template,
-            hidden: activity.hidden,
-            start: moment(startTime).format('YYYY-MM-DD'),
-            end: moment(endTime).format('YYYY-MM-DD'),
-            status: activity.status,
-            office: activity.office
-          })
-        })
-        calendarTx.onerror = transactionError
+    calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+      // console.log(activity.activityId)
+      const cursor = event.target.result
+      if (cursor) {
+        let recordDeleteReq = cursor.delete()
+        recordDeleteReq.onerror = errorDeletingRecord
+        cursor.continue()
       }
     }
+    calendarTx.oncomplete = function () {
+      const calendarTx = db.transaction(['calendar'], 'readwrite')
+      const calendarObjectStore = calendarTx.objectStore('calendar')
+
+      activity.schedule.forEach(function (schedule) {
+        const startTime = moment(schedule.startTime).toDate()
+        const endTime = moment(schedule.endTime).toDate()
+
+        calendarObjectStore.add({
+          activityId: activity.activityId,
+          scheduleName: schedule.name,
+          timestamp: activity.timestamp,
+          template: activity.template,
+          hidden: activity.hidden,
+          start: moment(startTime).format('YYYY-MM-DD'),
+          end: moment(endTime).format('YYYY-MM-DD'),
+          status: activity.status,
+          office: activity.office
+        })
+      })
+      calendarTx.onerror = transactionError
+    }
+  }
 
 }
 
@@ -1010,7 +1012,10 @@ function getUniqueOfficeCount(swipeInfo) {
         cursor.continue()
       }
       tx.oncomplete = function () {
-        resolve({offices:offices,swipe:swipeInfo});
+        resolve({
+          offices: offices,
+          swipe: swipeInfo
+        });
       }
       req.onerror = function (event) {
         console.log("error in 1007 bitch")

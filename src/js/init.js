@@ -7,7 +7,7 @@ firebase.initializeApp({
   messagingSenderId: "1011478688238"
 })
 
-window.onerror = function(msg, url, lineNo, columnNo, error) {
+window.onerror = function (msg, url, lineNo, columnNo, error) {
   const errorJS = {
     message: {
       msg: msg,
@@ -31,7 +31,7 @@ window.scrollBy({
 
 
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
   if (!window.Worker && !window.indexedDB) {
     const title = 'Device Incompatibility'
     const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
@@ -77,7 +77,7 @@ window.addEventListener('load', function() {
 
 })
 
-window.onpopstate = function(event) {
+window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
@@ -95,7 +95,7 @@ function firebaseUiConfig(value) {
 
   return {
     'callbacks': {
-      'signInSuccess': function(user) {
+      'signInSuccess': function (user) {
         if (value) {
           updateEmail(user, value)
           return
@@ -104,7 +104,7 @@ function firebaseUiConfig(value) {
         // no redirect
         return false
       },
-      'signInFailure': function(error) {
+      'signInFailure': function (error) {
         return handleUIError(error)
       }
     },
@@ -199,15 +199,15 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-let native = function() {
+let native = function () {
   return {
-    setName: function(device) {
+    setName: function (device) {
       localStorage.setItem('deviceType', device);
     },
-    getName: function() {
+    getName: function () {
       return localStorage.getItem('deviceType');
     },
-    setIosInfo: function(iosDeviceInfo) {
+    setIosInfo: function (iosDeviceInfo) {
       const splitByName = iosDeviceInfo.split("&")
       const deviceInfo = {
         baseOs: splitByName[0],
@@ -221,10 +221,10 @@ let native = function() {
 
       localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
     },
-    getIosInfo: function() {
+    getIosInfo: function () {
       return localStorage.getItem('iosUUID');
     },
-    getInfo: function() {
+    getInfo: function () {
       if (!this.getName()) {
         return JSON.stringify({
           'id': '123',
@@ -243,7 +243,7 @@ let native = function() {
 
 
 function startApp() {
-  firebase.auth().onAuthStateChanged(function(auth) {
+  firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
@@ -257,32 +257,32 @@ function startApp() {
 }
 // new day suggest
 // if location changes
-let app = function() {
+let app = function () {
   return {
-    today: function() {
+    today: function () {
       return moment().format("DD/MM/YYYY");
     },
-    tomorrow : function(){
-      return moment(this.today()).subtract(1,'day');
+    tomorrow: function () {
+      return moment(this.today()).subtract(1, 'day');
     },
-    getLastLocationTime : function(){
-      return new Promise(function(resolve,reject){ 
-        getRootRecord().then(function(rootRecord){
+    getLastLocationTime: function () {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
           resolve(rootRecord.lastLocationTime);
-        }).catch(function(error){
+        }).catch(function (error) {
           reject(error)
         })
-    })
+      })
     },
-    isNewDay: function() {
-      return new Promise(function(resolve,reject){
-        app.getLastLocationTime().then(function(time){
+    isNewDay: function () {
+      return new Promise(function (resolve, reject) {
+        app.getLastLocationTime().then(function (time) {
           if (moment(app.tomorrow()).isAfter(moment(time))) {
-             resolve(true);
+            resolve(true);
           } else {
             resolve(false);
           }
-        }).catch(function(error){
+        }).catch(function (error) {
           reject(error)
         })
       })
@@ -291,25 +291,24 @@ let app = function() {
 }();
 
 
-function idbVersionLessThan2 (auth) {
-  return new Promise(function(resolve,reject){
-    let lessThanTwo = false;
-    const req = indexedDB.open(auth.uid,2);
+function idbVersionLessThan2(auth) {
+  return new Promise(function (resolve, reject) {
+    let value = false;
+    const req = indexedDB.open(auth.uid, 2);
     let db;
-    req.onupgradeneeded = function(evt){
-      if(evt.oldVersion === 1) {
-       lessThanTwo = true
-      }
-      else {
-        lessThanTwo = false
+    req.onupgradeneeded = function (evt) {
+      if (evt.oldVersion === 1) {
+        value = true
+      } else {
+        value = false;
       }
     }
-    req.onsuccess = function(){
+    req.onsuccess = function () {
       db = req.result;
       db.close();
-      resolve(lessThanTwo)
+      resolve(value)
     }
-    req.onerror = function(){
+    req.onerror = function () {
       reject(req.error)
     }
   })
@@ -317,20 +316,20 @@ function idbVersionLessThan2 (auth) {
 
 function removeIDBInstance(auth) {
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     const failure = {
-      message:'Please Restart The App',
-      error:''
+      message: 'Please Restart The App',
+      error: ''
     }
     const req = indexedDB.deleteDatabase(auth.uid)
-    req.onsuccess = function() {
+    req.onsuccess = function () {
       resolve(true)
     }
-    req.onblocked = function(){
+    req.onblocked = function () {
       failure.error = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
       reject(failure)
     }
-    req.onerror = function() {
+    req.onerror = function () {
       failure.error = req.error
       reject(failure)
     }
@@ -339,36 +338,50 @@ function removeIDBInstance(auth) {
 
 function init(auth) {
 
-  idbVersionLessThan2(auth).then(function(lessThanTwo){
+  idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
-    if(lessThanTwo || !localStorage.getItem('dbexist')) {
-      resetApp(auth)
+
+    if (localStorage.getItem('dbexist')) {
+      from = 1;
+      if (lessThanTwo) {
+        resetApp(auth, from);
+      } else {
+        startInitializatioOfList(auth);
+      }
       return;
-    };
-    startInitializatioOfList(auth);
+    }
+
+    resetApp(auth, 0)
+
   }).catch(console.log)
 
   return
 }
 
-function resetApp(auth){
-  removeIDBInstance(auth).then(function() {
+function resetApp(auth, from) {
+  removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
-    history.state = null;  
-    document.getElementById('growthfile').appendChild(loader('init-loader'))  
-    requestCreator('now', native.getInfo())
- }).catch(function(error) {
+    history.state = null;
+    document.getElementById('growthfile').appendChild(loader('init-loader'))
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: from
+    })
+  }).catch(function (error) {
     snacks(error.message);
     console.log(error);
- })
+  })
 }
 
-function startInitializatioOfList(auth){
-  app.isNewDay(auth).then(function(isnewDay){
-    suggestCheckIn(isnewDay).then(function(){
-        listView();
-        requestCreator('now', native.getInfo())
-        manageLocation();
+function startInitializatioOfList(auth) {
+  app.isNewDay(auth).then(function (isnewDay) {
+    suggestCheckIn(isnewDay).then(function () {
+      listView();
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: ''
+      })
+      manageLocation();
     }).catch(console.log);
   }).catch(console.log)
 }
