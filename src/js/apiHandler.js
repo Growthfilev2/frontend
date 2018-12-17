@@ -199,7 +199,6 @@ function fetchRecord(dbName, id) {
 
 function initializeIDB(data) {
   console.log("init db")
-  console.log(fromTime);
   // onAuthStateChanged is added because app is reinitialized
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
