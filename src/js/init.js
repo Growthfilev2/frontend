@@ -282,7 +282,7 @@ let app = function() {
       return moment().format("DD/MM/YYYY");
     },
     tomorrow : function(){
-      return this.today().subtract(1,'day');
+      return moment(this.today()).subtract(1,'day');
     },
     getLastLocationTime : function(){
       return new Promise(function(resolve,reject){ 
@@ -295,8 +295,8 @@ let app = function() {
     },
     isNewDay: function() {
       return new Promise(function(resolve,reject){
-        this.getLastLocationTime().then(function(time){
-          if (moment(this.tomorrow()).isAfter(moment(time))) {
+        app.getLastLocationTime().then(function(time){
+          if (moment(app.tomorrow()).isAfter(moment(time))) {
              resolve(true);
           } else {
             resolve(false);

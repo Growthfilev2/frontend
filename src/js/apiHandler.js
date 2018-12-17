@@ -203,105 +203,34 @@ function initializeIDB(serverTime) {
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
 
-    const request = indexedDB.open(auth.uid)
+    const request = indexedDB.open(auth.uid,2)
 
 
     request.onerror = function (event) {
       reject(event.error)
     }
-
-
+  
     request.onupgradeneeded = function (evt) {
-      console.log(evt)
-      const db = request.result
-      const activity = db.createObjectStore('activity', {
-        keyPath: 'activityId'
-      })
-
-      activity.createIndex('timestamp', 'timestamp')
-      activity.createIndex('office', 'office')
-
-      activity.createIndex('hidden', 'hidden')
-
-      const users = db.createObjectStore('users', {
-        keyPath: 'mobile'
-      })
-
-      users.createIndex('displayName', 'displayName')
-      users.createIndex('isUpdated', 'isUpdated')
-      users.createIndex('count', 'count')
-
-      const addendum = db.createObjectStore('addendum', {
-        autoIncrement: true
-      })
-
-      addendum.createIndex('activityId', 'activityId')
-      // addendum.createIndex('timestamp', 'timestamp')
-
-      const activityCount = db.createObjectStore('activityCount', {
-        keyPath: 'activityId'
-      })
-      activityCount.createIndex('count', 'count')
-
-      const subscriptions = db.createObjectStore('subscriptions', {
-        autoIncrement: true
-      })
-
-      subscriptions.createIndex('office', 'office')
-      subscriptions.createIndex('template', 'template')
-      subscriptions.createIndex('officeTemplate', ['office', 'template'])
-
-      const calendar = db.createObjectStore('calendar', {
-        autoIncrement: true
-      })
-
-      // calendar.createIndex('date', 'date')
-      calendar.createIndex('activityId', 'activityId')
-      // calendar.createIndex('isUpdated', 'isUpdated')
-      calendar.createIndex('timestamp', 'timestamp')
-      calendar.createIndex('start', 'start')
-      calendar.createIndex('end', 'end')
-      calendar.createIndex('range', ['start', 'end'])
-      calendar.createIndex('status', 'PENDING')
-
-      const map = db.createObjectStore('map', {
-        autoIncrement: true
-      })
-      map.createIndex('activityId', 'activityId')
-      map.createIndex('location', 'location')
-
-      map.createIndex('latitude', 'latitude')
-      map.createIndex('longitude', 'longitude')
-      map.createIndex('range', ['latitude', 'longitude'])
-      map.createIndex('distance', 'distance')
-
-      const children = db.createObjectStore('children', {
-        keyPath: 'activityId'
-      })
-
-      children.createIndex('template', 'template')
-      children.createIndex('office', 'office')
-
-      const root = db.createObjectStore('root', {
-        keyPath: 'uid'
-      })
-
-
-      root.put({
-        uid: auth.uid,
-        fromTime: 0,
-        provider: '',
-        latitude: '',
-        longitude: '',
-        accuracy: '',
-        lastLocationTime: ''
-      })
-      requestHandlerResponse('manageLocation')
+      console.log(evt);
+      if(evt.oldVersion === 1) {
+        let deleteReq = indexedDB.deleteDatabase(auth.uid,1);
+        deleteReq.onerror = function(){
+          console.log("cannot delete db")
+        }
+        deleteReq.onblocked = function(){
+          console.log("Db is blocked")
+        }
+        deleteReq.onsuccess = function(){
+          createObjectStores(request)
+        }
+        return;
+      }
+      createObjectStores(request);
     }
-
+      
     request.onsuccess = function () {
 
-      const rootTx = request.result.transaction('root', 'readwrite')
+      const rootTx = request.result.transaction(['root'], 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
       rootObjectStore.get(auth.uid).onsuccess = function (event) {
         const record = event.target.result
@@ -314,9 +243,89 @@ function initializeIDB(serverTime) {
           swipe: 'false'
         })
       }
-
     }
   })
+}
+
+function createObjectStores(request){
+  
+  const db = request.result;
+
+  const activity = db.createObjectStore('activity', {
+    keyPath: 'activityId'
+  })
+
+  activity.createIndex('timestamp', 'timestamp')
+  activity.createIndex('office', 'office')
+  activity.createIndex('hidden', 'hidden')
+
+  const users = db.createObjectStore('users', {
+    keyPath: 'mobile'
+  })
+
+  users.createIndex('displayName', 'displayName')
+  users.createIndex('isUpdated', 'isUpdated')
+  users.createIndex('count', 'count')
+
+  const addendum = db.createObjectStore('addendum', {
+    autoIncrement: true
+  })
+
+  addendum.createIndex('activityId', 'activityId')
+  // addendum.createIndex('timestamp', 'timestamp')
+
+  const activityCount = db.createObjectStore('activityCount', {
+    keyPath: 'activityId'
+  })
+  activityCount.createIndex('count', 'count')
+
+  const subscriptions = db.createObjectStore('subscriptions', {
+    autoIncrement: true
+  })
+
+  subscriptions.createIndex('office', 'office')
+  subscriptions.createIndex('template', 'template')
+  subscriptions.createIndex('officeTemplate', ['office', 'template'])
+
+  const calendar = db.createObjectStore('calendar', {
+    autoIncrement: true
+  })
+
+  calendar.createIndex('activityId', 'activityId')
+
+  calendar.createIndex('timestamp', 'timestamp')
+  calendar.createIndex('start', 'start')
+  calendar.createIndex('end', 'end')
+
+  calendar.createIndex('status', 'PENDING')
+
+  const map = db.createObjectStore('map', {
+    autoIncrement: true
+  })
+  map.createIndex('activityId', 'activityId')
+  map.createIndex('location', 'location')
+  map.createIndex('latitude', 'latitude')
+  map.createIndex('longitude', 'longitude')
+
+
+  const children = db.createObjectStore('children', {
+    keyPath: 'activityId'
+  })
+
+  children.createIndex('template', 'template');
+  children.createIndex('office', 'office');
+
+  const root = db.createObjectStore('root', {
+    keyPath: 'uid'
+  })
+
+  root.put({
+    uid: auth.uid,
+    fromTime: 0,
+    location :''
+  })
+  requestHandlerResponse('manageLocation');
+
 }
 
 function comment(body) {
@@ -1035,7 +1044,8 @@ function setUniqueOffice(data) {
       const record = event.target.result
       record.offices = data.offices
       rootObjectStore.put(record)
-    }
+    };
+
     tx.oncomplete = function () {
       requestHandlerResponse('updateIDB', 200, data.swipe);
     }
