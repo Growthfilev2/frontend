@@ -155,7 +155,7 @@ function fetchServerTime(info) {
       if (response.revokeSession) {
         requestHandlerResponse('revoke-session', 200);
         return
-      }
+      };
 
       resolve(response.timestamp, info.from)
     }).catch(function (error) {
@@ -213,11 +213,10 @@ function initializeIDB(serverTime, fromTime) {
 
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      createObjectStores(request, auth);
+      createObjectStores(request, auth,fromTime);
     }
 
     request.onsuccess = function () {
-
       const rootTx = request.result.transaction(['root'], 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
       rootObjectStore.get(auth.uid).onsuccess = function (event) {
@@ -226,6 +225,7 @@ function initializeIDB(serverTime, fromTime) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
+        requestHandlerResponse('manageLocation');
         resolve({
           dbName: auth.uid,
           swipe: 'false'
@@ -235,7 +235,7 @@ function initializeIDB(serverTime, fromTime) {
   })
 }
 
-function createObjectStores(request, auth) {
+function createObjectStores(request, auth,fromTime) {
 
   const db = request.result;
 
@@ -307,14 +307,11 @@ function createObjectStores(request, auth) {
     keyPath: 'uid'
   })
 
-
   root.put({
     uid: auth.uid,
     fromTime: fromTime,
     location: ''
   })
-
-  requestHandlerResponse('manageLocation');
 
 }
 
