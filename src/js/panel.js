@@ -7,11 +7,8 @@ function listView() {
     document.querySelector('.init-loader').remove()
   }
 
-
-
   history.pushState(['listView'], null, null)
   
-
   listPanel()
 
   getRootRecord().then(function (rootRecord) {
@@ -39,7 +36,12 @@ function getRootRecord() {
         data ? record = data : record = null;
       }
       rootTx.oncomplete = function () {
-        resolve(record)
+        if(record) {
+          resolve(record)
+        }
+        else {
+          reject('No root record found');
+        }
       }
     }
     req.onerror = function () {
