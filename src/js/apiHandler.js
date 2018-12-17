@@ -199,6 +199,7 @@ function fetchRecord(dbName, id) {
 
 function initializeIDB(serverTime, fromTime) {
   console.log("init db")
+  console.log(fromTime);
   // onAuthStateChanged is added because app is reinitialized
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
@@ -236,7 +237,7 @@ function initializeIDB(serverTime, fromTime) {
 }
 
 function createObjectStores(request, auth,fromTime) {
-
+  console.log(fromTime)
   const db = request.result;
 
   const activity = db.createObjectStore('activity', {
