@@ -254,7 +254,7 @@ function manageLocation() {
         }));
 
         if(rootRecord.location.provider === 'MOCK') return;
-        
+
         locationInterval().then(function (navigatorData) {
           updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
         }).catch(function (error) {
@@ -270,7 +270,6 @@ function manageLocation() {
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
-
 }
 
 function initLocationInterval(locationStatus) {
@@ -318,27 +317,28 @@ function locationInterval() {
   var count = 0;
   let mockTimeout;
   return new Promise(function (resolve, reject) {
+     // if (native.getName === 'Android') {
+
+      mockTimeout = setTimeout(function () {
+        if (myInterval) {
+          clearTimeout(mockTimeout)
+          clearInterval(myInterval);
+          resolve({
+            'latitude': '',
+            'longitude': '',
+            'accuracy': '',
+            'lastLocationTime': Date.now(),
+            'provider': 'Mock'
+          })
+        }
+      }, 8000)
+    // }
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
 
-        if (native.getName === 'Android') {
-
-          mockTimeout = setTimeout(function () {
-            if (myInterval) {
-              clearTimeout(mockTimeout)
-              clearInterval(myInterval);
-              resolve({
-                'latitude': '',
-                'longitude': '',
-                'accuracy': '',
-                'lastLocationTime': Date.now(),
-                'provider': 'Mock'
-              })
-            }
-          }, 8000)
-        }
+   
 
         ++totalcount;
         if (totalcount !== 1) {
@@ -356,11 +356,14 @@ function locationInterval() {
 
             if (count == 3) {
               clearInterval(myInterval)
+              myInterval = null;
               return resolve(stabalzied[0])
             }
           }
           if (totalcount >= 5) {
             clearInterval(myInterval)
+            myInterval = null;
+
             const bestInNavigator = sortedByAccuracy(stabalzied)
             return resolve(bestInNavigator)
           }
@@ -368,6 +371,8 @@ function locationInterval() {
       }, function (error) {
 
         clearInterval(myInterval)
+        myInterval = null;
+
         reject(error.message);
       });
     }, 500);
