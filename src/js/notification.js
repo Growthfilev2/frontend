@@ -17,29 +17,24 @@ self.onmessage = function (event) {
   }
 
   
-  function urgent(db, count) {
+  function urgent(db) {
     const calTx = db.transaction(['calendar']);
     const calendarObjectStore = calTx.objectStore('calendar');
     const results = [];
-    const today = moment().format("YYYY-MM-DD");
     const yesterday = moment().subtract(1, 'days');
     const tomorrow = moment().add(1, 'days');
     calendarObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
- 
       if (yesterday.isSameOrBefore(cursor.value.start) || tomorrow.isSameOrAfter(cursor.value.end)) {
         results.push(cursor.value);
       }
       cursor.continue();
     }
+
     calTx.oncomplete = function () {
       const sorted = sortDatesInDescindingOrder(results);
-      if (count) {
-        self.postMessage(sorted.length)
-      } else {
         self.postMessage(sorted)
-      }
     }
 
   }
@@ -51,7 +46,7 @@ self.onmessage = function (event) {
     return ascending;
   }
 
-  function nearBy(db, dbName, count) {
+  function nearBy(db, dbName) {
 
     const rootTx = db.transaction(['root']);
     const rootStore = rootTx.objectStore('root');
@@ -80,11 +75,7 @@ self.onmessage = function (event) {
         const filtered = distanceArr.filter(function (record) {
           return record !== null;
         })
-        if (count) {
-          self.postMessage(filtered.length);
-        } else {
-          self.postMessage(filtered)
-        }
+        self.postMessage(filtered)
       }
     }
   }
