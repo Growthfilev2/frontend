@@ -64,16 +64,11 @@ function fetchDataForActivityList() {
       let cursor = event.target.result
       if (!cursor) return
 
-      if (cursor.value.office !== currOffice) {
-        cursor.continue();
-        return;
-      }
-
       if (cursor.value.hidden) {
         cursor.continue();
         return
       }
-
+      
       results.push(cursor.value);
       cursor.continue()
     }
@@ -537,39 +532,17 @@ function initMenu(officeRecord, notification) {
 
   removeChildNodes(document.getElementById('drawer-parent'));
 
-  const filters = [{
-      type: 'Incoming',
-      icon: 'call_received'
-    }, {
-      type: 'Outgoing',
-      icon: 'call_made'
-    },
+  const filters = [
     {
       type: 'Urgent',
       icon: 'star_rate'
     }, {
-      type: 'Recent',
-      icon: 'watch_later'
-    }, {
       type: 'Nearby',
       icon: 'near_me'
-    },
-    {
-      type: 'Pending',
-      icon: ''
-    }, {
-      type: 'Cancelled',
-      icon: 'delete'
     }
   ]
-  appNotification.urgent(true).then(function (urgentCount) {
-    appNotification.nearBy(true).then(function (nearByCount) {
 
-      const count = {
-        'Urgent': urgentCount,
-        'Nearby': nearByCount
-      }
-
+ 
       const aside = document.createElement('aside')
       aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
 
@@ -637,25 +610,7 @@ function initMenu(officeRecord, notification) {
 
       navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
 
-      if (officeRecord.length > 1) {
-        const all = document.createElement('div')
-        all.className = 'mdc-list-item mdc-list-item--activated'
-
-        const i = document.createElement('i')
-        i.className = 'material-icons mdc-list-item__graphic drawer--icons'
-        i.setAttribute('aria-hidden', 'true')
-        i.textContent = 'all_inbox'
-        const textSpan = document.createElement('span')
-        textSpan.textContent = 'All offices'
-        all.onclick = function () {
-          let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-          allOffices('All Offices', true)
-          drawer.open = false
-        }
-        all.appendChild(i)
-        all.appendChild(textSpan)
-        navContent.appendChild(all)
-      }
+    
 
       filters.forEach(function (filter) {
 
@@ -669,64 +624,27 @@ function initMenu(officeRecord, notification) {
         const textSpan = document.createElement('span')
         filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type
 
-
-        if (filter.type === 'Urgent' || filter.type === 'Nearby') {
-          if (notification[localStorage.getItem('selectedOffice')][filter.type]) {
-            if (count[filter.type]) {
-
-              const countDom = document.createElement('span')
-              countDom.className = 'mdc-list-item__meta';
-
-              const countName = document.createElement("span")
-              countName.className = 'notification'
-              countName.textContent = count[filter.type];
-
-              textSpan.textContent = filter.type;
-
-              a.appendChild(i)
-              a.appendChild(textSpan)
-              countDom.appendChild(countName)
-              a.appendChild(countDom)
-            } else {
-              a.appendChild(i)
-              a.appendChild(textSpan)
-            }
-          } else {
-            a.appendChild(i)
-            a.appendChild(textSpan)
-          }
-        } else {
           a.appendChild(i)
           a.appendChild(textSpan)
-        }
+        
 
 
         a.onclick = function () {
 
-          window.scrollTo(0, 0)
-          if (filter.type === 'Pending' || filter.type === 'Cancelled') {
-            filterActivities(filter.type, true)
-
-          }
-          if (filter.type === 'Incoming' || filter.type === 'Outgoing') {
-            sortByCreator(filter.type, true)
-          }
+          window.scrollTo(0, 0) 
           if (filter.type === 'Urgent') {
             sortByDates(filter.type, true)
           }
           if (filter.type === 'Nearby') {
             sortByLocation(filter.type, true)
           }
-          if (filter.type === 'Recent') {
-            listView()
-          }
-          createActivityIcon()
+        
+          // createActivityIcon()
           let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
           drawer.open = false
           sendCurrentViewNameToAndroid('listView')
           document.querySelector('.current--selcted-filter').textContent = filter.type;
         }
-
         navContent.appendChild(a)
       })
       nav.appendChild(header)
@@ -735,177 +653,7 @@ function initMenu(officeRecord, notification) {
       document.getElementById('drawer-parent').appendChild(aside)
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       drawer.open = true;
-    })
-  })
-
-
-}
-
-
-
-function createOfficeSelectionUI(allOffices) {
-
-  document.querySelector('.filter-sort--list').classList.add('hidden');
-  const navContent = document.createElement('nav')
-
-  navContent.className = 'mdc-drawer__content mdc-list office-selection-lists'
-  document.querySelector('.mdc-drawer__drawer').appendChild(navContent)
-
-  allOffices.forEach(function (office) {
-    console.log(office)
-    if (office !== document.querySelector(".mdc-drawer--temporary").dataset.currentOffice) {
-
-      const a = document.createElement('div')
-      a.className = 'mdc-list-item mdc-list-item--activated different-office-link'
-      const textSpan = document.createElement('span')
-      textSpan.textContent = office
-      a.appendChild(textSpan)
-      a.onclick = function () {
-        document.querySelector('.filter-sort--list').classList.remove('hidden');
-        navContent.remove()
-        const drawer = new mdc.drawer.MDCTemporaryDrawer.attachTo(document.querySelector('.mdc-drawer--temporary'))
-        drawer['root_'].dataset.currentOffice = office
-        document.querySelector('.current--office-name').textContent = office;
-        localStorage.setItem('selectedOffice', office);
-        console.log(localStorage.getItem('selectedOffice'))
-        drawer.open = false;
-        listView(true);
-
-      }
-      navContent.appendChild(a)
-    }
-  })
-}
-
-
-
-function allOffices(type, pushState) {
-  if (pushState) {
-
-    history.pushState(["allOffices", type], null, null)
-  }
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result;
-
-
-    const tx = db.transaction(['activity'], 'readonly')
-    const activityStore = tx.objectStore('activity').index('timestamp');
-
-    let results = [];
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return;
-
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return;
-      }
-      results.push(cursor.value)
-
-      cursor.continue()
-    }
-
-    tx.oncomplete = function () {
-      convertResultsToList(db, results, false, type);
-    }
-  }
-}
-
-function filterActivities(type, pushState) {
-  if (pushState) {
-
-    history.pushState(["filterActivities", type], null, null)
-  } else {
-    history.replaceState(["filterActivities", type], null, null)
-
-  }
-
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['activity'], 'readonly');
-    const activityStore = tx.objectStore('activity').index('timestamp');
-    const curroffice = localStorage.getItem('selectedOffice')
-
-    let results = [];
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return;
-
-      if (cursor.value.office !== curroffice) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return;
-      }
-
-      if (cursor.value.status !== type.toUpperCase()) {
-        cursor.continue();
-        return;
-      }
-
-      results.push(cursor.value)
-
-      cursor.continue()
-
-    }
-    tx.oncomplete = function () {
-      convertResultsToList(db, results, false, type);
-    }
-  }
-}
-
-function sortByCreator(type, pushState) {
-
-  if (pushState) {
-    history.pushState(["sortByCreator", type], null, null)
-  } else {
-    history.replaceState(["sortByCreator", type], null, null)
-  }
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-
-    const tx = db.transaction(['activity'], 'readonly');
-    const activityStore = tx.objectStore('activity').index('timestamp')
-    const currOffice = localStorage.getItem('selectedOffice')
-
-    let results = []
-    const me = firebase.auth().currentUser.phoneNumber
-    activityStore.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return;
-
-      if (cursor.value.office !== currOffice) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return;
-      }
-
-
-      if (type === 'Incoming') {
-        if (cursor.value.creator !== me) {
-          results.push(cursor.value);
-        }
-      }
-      if (type === 'Outgoing') {
-        if (cursor.value.creator === me) {
-          results.push(cursor.value)
-        }
-      }
-
-      cursor.continue()
-    }
-    tx.oncomplete = function () {
-      convertResultsToList(db, results, false, type);
-    }
-  }
+ 
 }
 
 
