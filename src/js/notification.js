@@ -16,7 +16,7 @@ self.onmessage = function (event) {
     handler[type](db, dbName);
   }
 
-
+  
   function urgent(db, count) {
     const calTx = db.transaction(['calendar']);
     const calendarObjectStore = calTx.objectStore('calendar');
@@ -27,19 +27,7 @@ self.onmessage = function (event) {
     calendarObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (cursor.value.office !== office) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.status !== 'PENDING') {
-        cursor.continue();
-        return;
-      }
-
+ 
       if (yesterday.isSameOrBefore(cursor.value.start) || tomorrow.isSameOrAfter(cursor.value.end)) {
         results.push(cursor.value);
       }
@@ -84,19 +72,7 @@ self.onmessage = function (event) {
       mapObjectStore.openCursor().onsuccess = function (curEvent) {
         const cursor = curEvent.target.result
         if (!cursor) return;
-        if (cursor.value.office !== office) {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.status !== 'PENDING') {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.hidden) {
-          cursor.continue();
-          return;
-        }
-
+    
         distanceArr.push(calculateDistance(userCoords, cursor.value))
         cursor.continue()
       }
