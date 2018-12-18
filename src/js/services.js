@@ -568,7 +568,7 @@ function requestCreator(requestType, requestBody) {
     getRootRecord().then(function(rootRecord){
       
       const location = rootRecord.location
-      const isLocationOld =  isLastLocationOlderThanThreshold(location.lastLocationTime,5);
+      const isLocationOld =  isLastLocationOlderThanThreshold(location.lastLocationTime,1);
     
 
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
@@ -601,7 +601,7 @@ function requestCreator(requestType, requestBody) {
 function handleWaitForLocation(requestBody,requestGenerator){
   
 
-  window.addEventListener('location',function(e){
+ window.addEventListener('location',function _listener(e){
     const data = e.detail;
     var geopoints = {
       'latitude': data.latitude,
@@ -612,11 +612,16 @@ function handleWaitForLocation(requestBody,requestGenerator){
     requestBody['geopoint'] = geopoints;
     requestGenerator.body = requestBody;
     sendRequest(geopoints,requestGenerator);
-  })
+    window.removeEventListener('location',_listener,true);
+  },true);
+
 }
 
 function sendRequest(location,requestGenerator){
+
+
   if (location.latitude && location.longitude && location.accuracy) {
+
     apiHandler.postMessage(requestGenerator);
   }
   else {
@@ -630,11 +635,13 @@ function isLastLocationOlderThanThreshold(test,threshold){
   const lastLocationTime = test
   const duration  = moment.duration(currentTime.diff(lastLocationTime));
   const difference = duration.asSeconds();
+  console.log(difference);
   if(difference > threshold) {
     return true
   }
   return false;
 }
+
 function loadViewFromRoot(response) {
 
   if (response.data.type === 'update-app') {
@@ -654,6 +661,7 @@ function loadViewFromRoot(response) {
   }
 
   if (response.data.type === 'notification') {
+   
     successDialog();
     return;
   }
@@ -723,6 +731,9 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
+        setInterval(function(){
+          manageLocation();
+        },5000);
         suggestCheckIn(true).then(function () {
           window["listView"]();
           handleTimeout();
@@ -772,8 +783,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-    manageLocation();
-  }, 5000);
+  }, 50000);
 }
 
 function getInputText(selector) {

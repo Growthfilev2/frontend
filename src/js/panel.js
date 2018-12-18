@@ -68,7 +68,7 @@ function fetchDataForActivityList() {
         cursor.continue();
         return
       }
-      
+
       results.push(cursor.value);
       cursor.continue()
     }
@@ -450,7 +450,7 @@ function creatListHeader(headerName, backIcon) {
     }
 
     getRootRecord().then(function (record) {
-      initMenu(record.offices, record.notification);
+      initMenu();
     })
 
     sendCurrentViewNameToAndroid('drawer')
@@ -528,14 +528,13 @@ let appNotification = function () {
 }();
 
 
-function initMenu(officeRecord, notification) {
+function initMenu() {
 
-  removeChildNodes(document.getElementById('drawer-parent'));
 
   const filters = [
     {
       type: 'Urgent',
-      icon: 'star_rate'
+      icon: 'alarm'
     }, {
       type: 'Nearby',
       icon: 'near_me'
@@ -573,34 +572,8 @@ function initMenu(officeRecord, notification) {
       name.className = 'mdc-typography--subtitle'
       name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
 
-
-      const officeName = document.createElement('div')
-      if (!officeRecord) {
-        officeName.textContent = ''
-      } else {
-        officeName.textContent = localStorage.getItem('selectedOffice')
-      }
-
-      officeName.className = 'mdc-typography--caption current--office-name'
-
-      const changeOfficeIon = document.createElement('div')
-      headerDetails.appendChild(changeOfficeIon)
-
       headerDetails.appendChild(name)
-      headerDetails.appendChild(officeName)
-
-      if (officeRecord.length > 1) {
-        changeOfficeIon.className = 'material-icons'
-        changeOfficeIon.style.float = 'right'
-        changeOfficeIon.textContent = 'arrow_drop_down'
-        changeOfficeIon.onclick = function () {
-          if (document.querySelector('.office-selection-lists')) return;
-
-          createOfficeSelectionUI(officeRecord)
-
-        }
-      }
-
+    
       ImageDiv.appendChild(headerIcon)
       headerContent.appendChild(ImageDiv)
       headerContent.appendChild(headerDetails)
@@ -622,13 +595,10 @@ function initMenu(officeRecord, notification) {
         i.setAttribute('aria-hidden', 'true')
         i.textContent = filter.icon
         const textSpan = document.createElement('span')
-        filter.type === 'Cancelled' ? textSpan.textContent = 'Trash' : textSpan.textContent = filter.type
-
-          a.appendChild(i)
-          a.appendChild(textSpan)
+        textSpan.textContent = filter.type
+        a.appendChild(i)
+        a.appendChild(textSpan)
         
-
-
         a.onclick = function () {
 
           window.scrollTo(0, 0) 
@@ -638,8 +608,7 @@ function initMenu(officeRecord, notification) {
           if (filter.type === 'Nearby') {
             sortByLocation(filter.type, true)
           }
-        
-          // createActivityIcon()
+
           let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
           drawer.open = false
           sendCurrentViewNameToAndroid('listView')
@@ -653,7 +622,6 @@ function initMenu(officeRecord, notification) {
       document.getElementById('drawer-parent').appendChild(aside)
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
       drawer.open = true;
- 
 }
 
 
@@ -670,7 +638,6 @@ function sortByDates(type, pushState) {
       Urgent: false
     }
   }
-  disableNotification(prop)
 
   appNotification.urgent(false).then(function (record) {
     generateActivitiesByDate(record)
@@ -709,13 +676,6 @@ function sortByLocation(type, pushState) {
   } else {
     history.replaceState(['sortByLocation', type], null, null)
   }
-  const office = localStorage.getItem('selectedOffice')
-  const prop = {
-    [office]: {
-      Nearby: false
-    }
-  }
-  disableNotification(prop)
 
   appNotification.nearBy(false).then(function (record) {
     sortActivitiesByLocation(record);
@@ -730,7 +690,6 @@ function sortActivitiesByLocation(nearBy) {
 
     let results = [];
 
-    const curroffice = localStorage.getItem('selectedOffice');
 
     const tx = db.transaction(['activity']);
     const activityObjectStore = tx.objectStore('activity');
@@ -841,10 +800,4 @@ function suggestCheckIn(value) {
       reject(error)
     })
   })
-}
-
-function removeChildNodes(parent) {
-  while (parent.firstChild) {
-    parent.removeChild(parent.firstChild);
-  }
 }

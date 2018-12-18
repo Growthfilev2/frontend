@@ -375,6 +375,11 @@ function resetApp(auth, from) {
 }
 
 function startInitializatioOfList(auth) {
+  
+  setInterval(function(){
+    manageLocation();
+  },5000);
+
   app.isNewDay(auth).then(function (isnewDay) {
     suggestCheckIn(isnewDay).then(function () {
       listView();

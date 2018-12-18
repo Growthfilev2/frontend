@@ -156,8 +156,11 @@ function fetchServerTime(info) {
         requestHandlerResponse('revoke-session', 200);
         return
       };
-      
-      resolve({ts:response.timestamp,fromTime:info.from})
+
+      resolve({
+        ts: response.timestamp,
+        fromTime: info.from
+      })
     }).catch(function (error) {
       instant(createLog(error))
     })
@@ -213,7 +216,7 @@ function initializeIDB(data) {
 
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      createObjectStores(request, auth,data.fromTime);
+      createObjectStores(request, auth, data.fromTime);
     }
 
     request.onsuccess = function () {
@@ -235,7 +238,7 @@ function initializeIDB(data) {
   })
 }
 
-function createObjectStores(request, auth,fromTime) {
+function createObjectStores(request, auth, fromTime) {
   console.log(fromTime)
   const db = request.result;
 
@@ -246,6 +249,13 @@ function createObjectStores(request, auth,fromTime) {
   activity.createIndex('timestamp', 'timestamp')
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
+
+  const list = db.createObjectStore('list', {
+    keyPath: 'activityId'
+  })
+  list.createIndex('timestamp','timestamp');
+  list.createIndex('status','status');
+
 
   const users = db.createObjectStore('users', {
     keyPath: 'mobile'
@@ -897,14 +907,58 @@ function updateSubscription(db, subscription) {
 
 }
 
-// after getting the responseText from the read api , insert addendum into the
-// corresponding object store. for each activity present inside the activities
-// array in response perform the put operations. for each template present
-// inside the templates array in response perform the updat subscription logic.
-// after every operation is done, update the root object sotre's from time value
-// with the uptoTime received from response.
+function createListStore(db, activity) {
+  const transaction = db.transaction(['list'], 'readwrite');
+  const store = transaction.objectStore('list');
 
-let firstTime = 0;
+  const requiredData = {
+    'activityId': activity.activityId,
+    'status': activity.status,
+    'secondLine': '',
+    'count': '',
+    'timestamp':activity.timestamp
+  }
+  store.put(requiredData);
+
+  transaction.oncomplete = function(){
+    console.log("done")
+  }
+
+}
+
+function updateListStoreWithCount(counter){
+  return new Promise(function(resolve,reject){
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function(){
+      const db = req.result
+      const transaction = db.transaction(['list'],'readwrite')
+      const store = transaction.objectStore('list');
+      
+      console.log(counter)
+      Object.keys(counter).forEach(function (id) {
+        store.get(id).onsuccess = function(event){
+          const record = event.target.result;
+          if(!record) {
+            console.log (" no record found")
+          }
+          else {
+            record.count = counter[id];
+            store.put(record);
+          }
+        }
+        
+      })
+      
+      transaction.oncomplete = function(){
+        resolve(true);
+      }
+      
+      transaction.onerror = function(){
+        reject(transaction.error);
+      }
+    }
+  })
+}
 
 function successResponse(read, swipeInfo) {
   console.log(swipeInfo)
@@ -920,13 +974,13 @@ function successResponse(read, swipeInfo) {
     const rootObjectStore = rootObjectStoreTx.objectStore('root')
     const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
-    const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
+    // const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
+    const listStoreTx = db.transaction(['list'],'readwrite');
+  
     let counter = {}
-    firstTime++
+
 
     //testing
-
-
     read.addendum.forEach(function (addendum) {
       if (addendum.unassign) {
 
@@ -947,15 +1001,11 @@ function successResponse(read, swipeInfo) {
     removeActivityFromDB(db, removeActivitiesForUser);
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers);
 
-    Object.keys(counter).forEach(function (count) {
-      activityCount.put({
-        activityId: count,
-        count: counter[count]
-      })
-    })
-    const activityPar = []
+  
+
     read.activities.forEach(function (activity) {
       // put activity in activity object store
+
       if (activity.canEdit) {
         activity.editable = 1
         activityObjectStore.put(activity)
@@ -964,7 +1014,7 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity)
       }
 
-      activityPar.push(activity.activityId)
+      createListStore(db,activity)
 
       updateMap(activity)
 
@@ -976,7 +1026,7 @@ function successResponse(read, swipeInfo) {
       putAttachment(db, activity)
     })
 
-
+   
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription)
     })
@@ -986,13 +1036,17 @@ function successResponse(read, swipeInfo) {
       createUsersApiUrl(db).then(updateUserObjectStore)
       record.fromTime = read.upto
       rootObjectStore.put(record)
-      getUniqueOfficeCount(swipeInfo).then(setUniqueOffice).catch(console.log)
+      getUniqueOfficeCount().then(setUniqueOffice).catch(console.log);
+      updateListStoreWithCount(counter).then(function(){
+        console.log(swipeInfo)
+        requestHandlerResponse('updateIDB', 200, swipeInfo);
+      })
     }
   }
 }
 
 
-function getUniqueOfficeCount(swipeInfo) {
+function getUniqueOfficeCount() {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
 
@@ -1009,20 +1063,16 @@ function getUniqueOfficeCount(swipeInfo) {
         cursor.continue()
       }
       tx.oncomplete = function () {
-        resolve({
-          offices: offices,
-          swipe: swipeInfo
-        });
+        resolve(offices);
       }
       req.onerror = function (event) {
-        console.log("error in 1007 bitch")
         reject(event.error)
       }
     }
   })
 }
 
-function setUniqueOffice(data) {
+function setUniqueOffice(offices) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
 
@@ -1032,12 +1082,12 @@ function setUniqueOffice(data) {
     const rootObjectStore = tx.objectStore('root');
     rootObjectStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result
-      record.offices = data.offices
+      record.offices = offices
       rootObjectStore.put(record)
     };
 
     tx.oncomplete = function () {
-      requestHandlerResponse('updateIDB', 200, data.swipe);
+     console.log("all offices are set")
     }
   }
 }
