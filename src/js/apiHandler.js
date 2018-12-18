@@ -1013,8 +1013,9 @@ function successResponse(read, swipeInfo) {
         activity.editable = 0
         activityObjectStore.put(activity)
       }
-
-      createListStore(db,activity)
+      if(!activity.hidden) {
+        createListStore(db,activity)
+      }
 
       updateMap(activity)
 

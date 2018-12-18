@@ -8,54 +8,36 @@ function listView() {
   }
 
   history.pushState(['listView'], null, null)
-  
+
   listPanel()
-
-  getRootRecord().then(function (rootRecord) {
-    if (!localStorage.getItem('selectedOffice') || localStorage.getItem('selectedOffice') === "undefined") {
-      localStorage.setItem('selectedOffice', rootRecord.offices[0]);
-    }
-    fetchDataForActivityList();
-
-  })
+  fetchDataForActivityList();
   creatListHeader('Recent')
 
 }
 
-function getRootRecord() {
-  return new Promise(function (resolve, reject) {
-    let record;
-    const dbName = localStorage.getItem('dbexist');
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result;
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootStore = rootTx.objectStore('root')
-      rootStore.get(dbName).onsuccess = function (event) {
-        const data = event.target.result;
-        data ? record = data : record = null;
-      }
-
-      rootTx.oncomplete = function () {
-        if(record) {
-          resolve(record)
-        }
-        else {
-          reject('No root record found');
-        }
-      }
-    }
-    req.onerror = function () {
-      reject(req.error)
-    }
-  })
-}
 
 function fetchDataForActivityList() {
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     let results = [];
+    let temp = [];
+    const transaction = db.transaction('list')
+    const store = transaction.objectStore('list')
+    const index = store.index('timestamp');
+    index.openCursor(null, 'prev').onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      temp.push(cursor.value)
+      cursor.continue();
+
+    }
+    transaction.oncomplete = function () {
+      console.log(temp)
+    }
+
+
     const activityStoreTx = db.transaction('activity')
     const activityObjectStore = activityStoreTx.objectStore('activity')
     const activityVisibleIndex = activityObjectStore.index('timestamp')
@@ -129,6 +111,7 @@ function getCount(db, id) {
     }
   })
 }
+
 
 function getCommentUndUser(db, id, creator) {
   const meta = {
@@ -289,6 +272,7 @@ function activityListUI(data, metaData, append) {
   return li.outerHTML
 }
 
+
 function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
   if (!hasHeaderAndCard) {
     listPanel()
@@ -299,6 +283,35 @@ function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
   }
 
 }
+
+function getRootRecord() {
+  return new Promise(function (resolve, reject) {
+    let record;
+    const dbName = localStorage.getItem('dbexist');
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result;
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(dbName).onsuccess = function (event) {
+        const data = event.target.result;
+        data ? record = data : record = null;
+      }
+
+      rootTx.oncomplete = function () {
+        if (record) {
+          resolve(record)
+        } else {
+          reject('No root record found');
+        }
+      }
+    }
+    req.onerror = function () {
+      reject(req.error)
+    }
+  })
+}
+
 
 function createActivityIcon() {
 
@@ -504,21 +517,19 @@ function notificationWorker(type, count) {
   })
 }
 
-let appNotification = function () {
+let filter = function () {
   return {
-    urgent: function (count) {
+    urgent: function () {
       return new Promise(function (resolve) {
-
-        const urgentNotification = notificationWorker('urgent', count);
+        const urgentNotification = notificationWorker('urgent');
         urgentNotification.then(function (res) {
           resolve(res)
         });
-      })
+      });
     },
-    nearBy: function (count) {
+    nearBy: function () {
       return new Promise(function (resolve) {
-
-        const nearByNotification = notificationWorker('nearBy', count);
+        const nearByNotification = notificationWorker('nearBy');
         nearByNotification.then(function (res) {
           resolve(res)
         });
@@ -531,97 +542,95 @@ let appNotification = function () {
 function initMenu() {
 
 
-  const filters = [
-    {
-      type: 'Urgent',
-      icon: 'alarm'
-    }, {
-      type: 'Nearby',
-      icon: 'near_me'
-    }
-  ]
+  const filters = [{
+    type: 'Urgent',
+    icon: 'alarm'
+  }, {
+    type: 'Nearby',
+    icon: 'near_me'
+  }]
 
- 
-      const aside = document.createElement('aside')
-      aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
 
-      const nav = document.createElement('nav')
-      nav.className = 'mdc-drawer__drawer'
+  const aside = document.createElement('aside')
+  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
 
-      const header = document.createElement('header')
-      header.className = 'mdc-drawer__header drawer--header'
+  const nav = document.createElement('nav')
+  nav.className = 'mdc-drawer__drawer'
 
-      const headerContent = document.createElement('div')
-      headerContent.className = 'mdc-drawer__header-content'
+  const header = document.createElement('header')
+  header.className = 'mdc-drawer__header drawer--header'
 
-      const ImageDiv = document.createElement('div')
-      ImageDiv.className = 'drawer--header-div'
-      ImageDiv.onclick = function () {
-        profileView(true)
+  const headerContent = document.createElement('div')
+  headerContent.className = 'mdc-drawer__header-content'
 
+  const ImageDiv = document.createElement('div')
+  ImageDiv.className = 'drawer--header-div'
+  ImageDiv.onclick = function () {
+    profileView(true)
+
+  }
+  const headerIcon = document.createElement('img')
+  headerIcon.className = 'drawer-header-icon'
+
+  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
+
+  const headerDetails = document.createElement('div')
+  headerDetails.className = 'header--details'
+
+  const name = document.createElement('div')
+  name.className = 'mdc-typography--subtitle'
+  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
+
+  headerDetails.appendChild(name)
+
+  ImageDiv.appendChild(headerIcon)
+  headerContent.appendChild(ImageDiv)
+  headerContent.appendChild(headerDetails)
+  header.appendChild(headerContent)
+
+  const navContent = document.createElement('nav')
+
+  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
+
+
+
+  filters.forEach(function (filter) {
+
+    const a = document.createElement('div')
+    a.className = 'mdc-list-item mdc-list-item--activated'
+
+    const i = document.createElement('i')
+    i.className = 'material-icons mdc-list-item__graphic drawer--icons'
+    i.setAttribute('aria-hidden', 'true')
+    i.textContent = filter.icon
+    const textSpan = document.createElement('span')
+    textSpan.textContent = filter.type
+    a.appendChild(i)
+    a.appendChild(textSpan)
+
+    a.onclick = function () {
+
+      window.scrollTo(0, 0)
+      if (filter.type === 'Urgent') {
+        sortByDates(filter.type, true)
       }
-      const headerIcon = document.createElement('img')
-      headerIcon.className = 'drawer-header-icon'
+      if (filter.type === 'Nearby') {
+        sortByLocation(filter.type, true)
+      }
 
-      headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-
-      const headerDetails = document.createElement('div')
-      headerDetails.className = 'header--details'
-
-      const name = document.createElement('div')
-      name.className = 'mdc-typography--subtitle'
-      name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
-
-      headerDetails.appendChild(name)
-    
-      ImageDiv.appendChild(headerIcon)
-      headerContent.appendChild(ImageDiv)
-      headerContent.appendChild(headerDetails)
-      header.appendChild(headerContent)
-
-      const navContent = document.createElement('nav')
-
-      navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
-
-    
-
-      filters.forEach(function (filter) {
-
-        const a = document.createElement('div')
-        a.className = 'mdc-list-item mdc-list-item--activated'
-
-        const i = document.createElement('i')
-        i.className = 'material-icons mdc-list-item__graphic drawer--icons'
-        i.setAttribute('aria-hidden', 'true')
-        i.textContent = filter.icon
-        const textSpan = document.createElement('span')
-        textSpan.textContent = filter.type
-        a.appendChild(i)
-        a.appendChild(textSpan)
-        
-        a.onclick = function () {
-
-          window.scrollTo(0, 0) 
-          if (filter.type === 'Urgent') {
-            sortByDates(filter.type, true)
-          }
-          if (filter.type === 'Nearby') {
-            sortByLocation(filter.type, true)
-          }
-
-          let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-          drawer.open = false
-          sendCurrentViewNameToAndroid('listView')
-          document.querySelector('.current--selcted-filter').textContent = filter.type;
-        }
-        navContent.appendChild(a)
-      })
-      nav.appendChild(header)
-      nav.appendChild(navContent)
-      aside.appendChild(nav)
-      document.getElementById('drawer-parent').appendChild(aside)
       let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      drawer.open = true;
+      drawer.open = false
+      sendCurrentViewNameToAndroid('listView')
+      document.querySelector('.current--selcted-filter').textContent = filter.type;
+    }
+    navContent.appendChild(a)
+  })
+  nav.appendChild(header)
+  nav.appendChild(navContent)
+  aside.appendChild(nav)
+  document.getElementById('drawer-parent').appendChild(aside)
+  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+  drawer.open = true;
 }
 
 
@@ -632,14 +641,7 @@ function sortByDates(type, pushState) {
     history.replaceState(["sortByDates", type], null, null)
   }
 
-  const office = localStorage.getItem('selectedOffice')
-  const prop = {
-    [office]: {
-      Urgent: false
-    }
-  }
-
-  appNotification.urgent(false).then(function (record) {
+  filter.urgent().then(function (record) {
     generateActivitiesByDate(record)
   });
 
@@ -677,7 +679,7 @@ function sortByLocation(type, pushState) {
     history.replaceState(['sortByLocation', type], null, null)
   }
 
-  appNotification.nearBy(false).then(function (record) {
+  filter.nearBy().then(function (record) {
     sortActivitiesByLocation(record);
   })
 
@@ -789,14 +791,14 @@ function suggestCheckIn(value) {
           resolve(true)
           console.log("done");
         }
-        tx.onerror = function(){
+        tx.onerror = function () {
           reject(tx.error)
         }
       }
-      req.onerror = function(){
+      req.onerror = function () {
         reject(req.error);
       }
-    }).catch(function(error){
+    }).catch(function (error) {
       reject(error)
     })
   })
