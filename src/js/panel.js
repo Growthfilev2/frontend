@@ -21,7 +21,7 @@ function fetchDataForActivityList() {
   req.onsuccess = function () {
     const db = req.result
     let results = [];
-  
+
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
@@ -34,17 +34,17 @@ function fetchDataForActivityList() {
 
     transaction.oncomplete = function () {
       console.log(results);
-      
-    } 
+      convertResultsToList(results);
+    }
   }
 }
 
-function convertResultsToList(db, results, initPanel, type) {
+function convertResultsToList(results) {
   let activityDom = ''
   let yOffset = window.pageYOffset
 
   let promiseMap = results.map(function (data) {
-    return createActivityList(db, data).then(function (li) {
+    return createActivityList(data).then(function (li) {
       return li
     })
   });
@@ -52,22 +52,15 @@ function convertResultsToList(db, results, initPanel, type) {
     results.forEach(function (li) {
       activityDom += li
     })
-   
-    appendActivityListToDom(activityDom, initPanel, type)
+
+    appendActivityListToDom(activityDom)
     scrollToActivity(yOffset)
   })
 }
 
-function createActivityList(db, data, append) {
+function createActivityList(data) {
   return new Promise(function (resolve) {
-    getCount(db, data.activityId).then(function (count) {
-      getCommentUndUser(db, data.activityId, data.creator).then(function (meta) {
-        getCreatorDetails(db, meta).then(function (metaWiwthData) {
-          metaWiwthData.count = count
-          resolve(activityListUI(data, metaWiwthData, append))
-        })
-      })
-    })
+      resolve(activityListUI(data))    
   })
 }
 
@@ -155,17 +148,18 @@ function getCreatorDetails(db, meta) {
 }
 
 
-function activityListUI(data, metaData, append) {
+function activityListUI(data) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
   li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
+  li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
 
   const creator = document.createElement("img")
-  creator.dataset.number = metaData.creator.number
+  creator.dataset.number = data.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
   creator.setAttribute('onerror', `handleImageError(this)`)
-  creator.src = metaData.creator.photo
+  creator.src = data.creator.photo || './img/empty-user.jpg'
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
@@ -173,44 +167,21 @@ function activityListUI(data, metaData, append) {
 
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
 
-  activityNameText.textContent = data.activityName
-  const lastComment = document.createElement('span')
-  lastComment.className = 'mdc-list-item__secondary-text'
-  if (metaData.commentUser) {
-
-    lastComment.textContent = `${metaData.commentUser} : ${metaData.comment}`
-  } else {
-    lastComment.textContent = `${metaData.comment}`
+  activityNameText.textContent = data.activityName;
+  const secondLine = document.createElement('span')
+  secondLine.className = 'mdc-list-item__secondary-text'
+  if(data.urgent || data.nearby) {
+    secondLine.textContent = data.secondLine;
   }
 
   leftTextContainer.appendChild(activityNameText)
-  leftTextContainer.appendChild(lastComment)
+  leftTextContainer.appendChild(secondLine);
+  // leftTextContainer.appendChild(lastComment)
 
   const metaTextContainer = document.createElement('span')
-  metaTextContainer.classList.add('mdc-list-item__meta')
-  if (metaData.count !== 0) {
-
-    const countDiv = document.createElement('div')
-
-    const countSpan = document.createElement(
-      'span'
-    )
-    countSpan.textContent = metaData.count
-    countSpan.className = 'count mdc-meta__custom-text'
-    countDiv.appendChild(countSpan)
-    li.classList.add('mdc-list-item', 'activity--list-item', 'count-active', 'mdc-elevation--z1')
-    metaTextContainer.appendChild(countDiv)
-  } else {
-
-    const timeCustomText = document.createElement('div')
-    timeCustomText.className = 'mdc-meta__custom-text'
-    timeCustomText.style.width = '80px';
-    timeCustomText.style.fontSize = '14px';
-    timeCustomText.textContent = moment(data.timestamp).calendar()
-    li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1')
-    metaTextContainer.appendChild(timeCustomText)
-  }
-
+  metaTextContainer.classList.add('mdc-list-item__meta');
+  metaTextContainer.appendChild(generateIconByCondition(data,li));
+  
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
   const statusIcon = document.createElement('i')
@@ -233,28 +204,48 @@ function activityListUI(data, metaData, append) {
 
   metaTextContainer.appendChild(metaTextActivityStatus)
 
-  if (append) {
-
-    li.appendChild(creator)
-    li.appendChild(leftTextContainer)
-    li.appendChild(metaTextContainer)
-    return li
-  }
-
   li.innerHTML += creator.outerHTML + leftTextContainer.outerHTML + metaTextContainer.outerHTML
   return li.outerHTML
 }
 
+function generateIconByCondition(data,li){
+  const icon  = document.createElement('i');
+  icon.className = 'material-icons';
+  if(data.urgent) {
+    icon.textContent = 'alarm';
+    
+    return icon;
+  }
+  if(data.nearby) {
+    icon.textContent = 'location_on';
+    return icon;
+  }
+  if(data.count) {
+
+    const countDiv = document.createElement('div')
+    
+    const countSpan = document.createElement('span')
+    countSpan.textContent = data.count
+    countSpan.className = 'count mdc-meta__custom-text'
+    countDiv.appendChild(countSpan)
+    li.classList.add('count-active');
+    return countDiv;
+  }
+  const timeCustomText = document.createElement('div')
+  timeCustomText.className = 'mdc-meta__custom-text'
+  timeCustomText.style.width = '80px';
+  timeCustomText.style.fontSize = '14px';
+  timeCustomText.textContent = moment(data.timestamp).calendar()
+  return timeCustomText;
+
+  
+}
+
 
 function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
-  if (!hasHeaderAndCard) {
-    listPanel()
-    creatListHeader(headerName, !hasHeaderAndCard)
-  }
   if (document.getElementById('activity--list')) {
     document.getElementById('activity--list').innerHTML = activityDom
   }
-
 }
 
 function getRootRecord() {

@@ -788,7 +788,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 50000);
+  }, 2000);
 }
 
 function getInputText(selector) {

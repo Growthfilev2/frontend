@@ -94,11 +94,11 @@ self.onmessage = function (event) {
               record.timestamp = moment().valueOf();
               if(type === 'nearby'){
                 if(!record.urgent) {
-                  record.secondLine = `${data.name}:${data.value}`;
+                  record.secondLine = `${data.name} : ${data.value}`;
                 }
               }
               else {
-                record.secondLine = `${data.name}:${data.value}`;
+                record.secondLine = `${data.name} : ${data.value}`;
               }
               record[type] = true
               store.put(record);
