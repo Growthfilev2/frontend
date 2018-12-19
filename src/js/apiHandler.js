@@ -290,12 +290,10 @@ function createObjectStores(request, auth, fromTime) {
   })
 
   calendar.createIndex('activityId', 'activityId')
-
   calendar.createIndex('timestamp', 'timestamp')
   calendar.createIndex('start', 'start')
   calendar.createIndex('end', 'end')
-
-  calendar.createIndex('status', 'PENDING')
+  calendar.createIndex('urgent', ['status','hidden','end'])
 
   const map = db.createObjectStore('map', {
     autoIncrement: true
@@ -304,7 +302,7 @@ function createObjectStores(request, auth, fromTime) {
   map.createIndex('location', 'location')
   map.createIndex('latitude', 'latitude')
   map.createIndex('longitude', 'longitude')
-
+  map.createIndex('nearby',['status','hidden'])
 
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'
@@ -902,22 +900,34 @@ function updateSubscription(db, subscription) {
     }
 
   }).catch(console.log)
-
-
-
 }
 
-function createListStore(db, activity) {
-  const transaction = db.transaction(['list'], 'readwrite');
-  const store = transaction.objectStore('list');
+function generateSecondLine(activity){
+  const yesterday = moment().subtract(1, 'days');
+  const tomorrow = moment().add(1, 'days');
+  const scheduleResults = {}
+  
+  activity.schedule.forEach(function(period){
+  if(yesterday.isSameOrBefore(period.startTime) || tomorrow.isSameOrAfter(period.endTime)){
+    
+  }
+})
+}
 
+
+function createListStore(db, activity) {
+
+  const transaction = db.transaction(['list','root'], 'readwrite');
+  const store = transaction.objectStore('list');
   const requiredData = {
     'activityId': activity.activityId,
-    'status': activity.status,
     'secondLine': '',
     'count': '',
-    'timestamp':activity.timestamp
+    'timestamp':activity.timestamp,
+    
   }
+ 
+
   store.put(requiredData);
 
   transaction.oncomplete = function(){
@@ -1013,7 +1023,7 @@ function successResponse(read, swipeInfo) {
         activity.editable = 0
         activityObjectStore.put(activity)
       }
-      if(!activity.hidden) {
+      if(activity.hidden === 0) {
         createListStore(db,activity)
       }
 

@@ -17,47 +17,25 @@ function listView() {
 
 
 function fetchDataForActivityList() {
-
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     let results = [];
-    let temp = [];
+  
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      temp.push(cursor.value)
+      results.push(cursor.value)
       cursor.continue();
-
     }
+
     transaction.oncomplete = function () {
-      console.log(temp)
-    }
+      console.log(results);
 
-
-    const activityStoreTx = db.transaction('activity')
-    const activityObjectStore = activityStoreTx.objectStore('activity')
-    const activityVisibleIndex = activityObjectStore.index('timestamp')
-    const currOffice = localStorage.getItem('selectedOffice')
-    activityVisibleIndex.openCursor(null, 'prev').onsuccess = function (event) {
-      let cursor = event.target.result
-      if (!cursor) return
-
-      if (cursor.value.hidden) {
-        cursor.continue();
-        return
-      }
-
-      results.push(cursor.value);
-      cursor.continue()
-    }
-
-    activityStoreTx.oncomplete = function () {
-      convertResultsToList(db, results, true)
-    }
+    } 
   }
 }
 
@@ -503,9 +481,7 @@ function notificationWorker(type, count) {
 
     notification.postMessage({
       dbName: firebase.auth().currentUser.uid,
-      office: localStorage.getItem('selectedOffice'),
       type: type,
-      count: count
     })
 
     notification.onmessage = function (message) {
@@ -517,26 +493,26 @@ function notificationWorker(type, count) {
   })
 }
 
-let filter = function () {
-  return {
-    urgent: function () {
-      return new Promise(function (resolve) {
-        const urgentNotification = notificationWorker('urgent');
-        urgentNotification.then(function (res) {
-          resolve(res)
-        });
-      });
-    },
-    nearBy: function () {
-      return new Promise(function (resolve) {
-        const nearByNotification = notificationWorker('nearBy');
-        nearByNotification.then(function (res) {
-          resolve(res)
-        });
-      });
-    }
-  }
-}();
+// let filter = function () {
+//   return {
+//     urgent: function () {
+//       return new Promise(function (resolve) {
+//         const urgentNotification = notificationWorker('urgent');
+//         urgentNotification.then(function (res) {
+//           resolve(res)
+//         });
+//       });
+//     },
+//     nearBy: function () {
+//       return new Promise(function (resolve) {
+//         const nearByNotification = notificationWorker('nearBy');
+//         nearByNotification.then(function (res) {
+//           resolve(res)
+//         });
+//       });
+//     }
+//   }
+// }();
 
 
 function initMenu() {
