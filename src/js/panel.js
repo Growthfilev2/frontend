@@ -10,10 +10,9 @@ function listView() {
   history.pushState(['listView'], null, null)
 
   listPanel()
-
+  creatListHeader('Recent');
+  createActivityIcon();
   fetchDataForActivityList();
-  creatListHeader('Recent')
-
 }
 
 
@@ -35,6 +34,7 @@ function fetchDataForActivityList() {
 
     transaction.oncomplete = function () {
       console.log(results);
+      
     } 
   }
 }
@@ -42,11 +42,6 @@ function fetchDataForActivityList() {
 function convertResultsToList(db, results, initPanel, type) {
   let activityDom = ''
   let yOffset = window.pageYOffset
-  if (!results.length) {
-    appendActivityListToDom(activityDom, initPanel, type)
-    scrollToActivity(yOffset)
-    return;
-  }
 
   let promiseMap = results.map(function (data) {
     return createActivityList(db, data).then(function (li) {
@@ -57,7 +52,7 @@ function convertResultsToList(db, results, initPanel, type) {
     results.forEach(function (li) {
       activityDom += li
     })
-    createActivityIcon()
+   
     appendActivityListToDom(activityDom, initPanel, type)
     scrollToActivity(yOffset)
   })
