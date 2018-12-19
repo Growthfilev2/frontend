@@ -293,7 +293,7 @@ function createObjectStores(request, auth, fromTime) {
   calendar.createIndex('timestamp', 'timestamp')
   calendar.createIndex('start', 'start')
   calendar.createIndex('end', 'end')
-  calendar.createIndex('urgent', ['status','hidden','end'])
+  calendar.createIndex('urgent', ['status','hidden'])
 
   const map = db.createObjectStore('map', {
     autoIncrement: true

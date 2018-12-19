@@ -734,9 +734,14 @@ function loadViewFromRoot(response) {
         setInterval(function(){
           manageLocation();
         },5000);
+
         suggestCheckIn(true).then(function () {
-          window["listView"]();
-          handleTimeout();
+          notificationWorker('urgent').then(function(res){
+            notificationWorker('nearBy').then(function(req){   
+              window["listView"]();
+              handleTimeout();
+            })  
+          })
         }).catch(console.log)
         return;
       }

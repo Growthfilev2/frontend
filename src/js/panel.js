@@ -10,6 +10,7 @@ function listView() {
   history.pushState(['listView'], null, null)
 
   listPanel()
+
   fetchDataForActivityList();
   creatListHeader('Recent')
 
@@ -34,7 +35,6 @@ function fetchDataForActivityList() {
 
     transaction.oncomplete = function () {
       console.log(results);
-
     } 
   }
 }

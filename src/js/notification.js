@@ -27,9 +27,10 @@ self.onmessage = function (event) {
     const results = [];
 
     const yesterday = moment().subtract(1, 'days');
+  
     const tomorrow = moment().add(1, 'days');
-    const key = IDBKeyRange.bound(['PENDING',0,0],['PENDING',0,moment().format("YYYY-MM-DD")]);
-    index.openCursor(key,'prevunique').onsuccess = function (event) {
+    const key = IDBKeyRange.bound(['PENDING',0],['PENDING',0]);
+    index.openCursor(key).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
       if (yesterday.isSameOrBefore(cursor.value.start) || tomorrow.isSameOrAfter(cursor.value.end)) {
@@ -42,16 +43,41 @@ self.onmessage = function (event) {
       }
       cursor.continue();
     }
+
     calTx.oncomplete = function () {
-      console.log(results)
-      const reversed = results.reverse();
-      updateTimestamp('urgent',reversed).then(function(success){
+   
+      const ascendingDates = sortByNearestEndDate(results);
+     
+      const urgentestDates  = Object.keys(ascendingDates).sort(function(a,b){
+        return moment(ascendingDates[b].value) - moment(ascendingDates[a].value).valueOf();
+      })
+    const output = []
+     urgentestDates.forEach(function(id){
+      output.push(ascendingDates[id])
+     })
+   
+  
+      updateTimestamp('urgent',output.reverse()).then(function(success){
         self.postMessage(success);
       })
     }
 
   }
-
+  function sortByNearestEndDate(results){
+    let holder = {}
+    let arr = []
+    results.forEach(function(rec){
+      if(!holder.hasOwnProperty(rec.activityId)){
+        holder[rec.activityId] = {id:rec.activityId,name:rec.name,value:rec.value}
+      }
+      else {
+        if(moment(holder[rec.activityId].value).valueOf() > moment(rec.value).valueOf()) {
+          holder[rec.activityId] = {id:rec.activityId,name:rec.name,value:rec.value}
+        }
+      }
+    })
+    return holder;
+  }
 
   function updateTimestamp(type,results){
     return new Promise(function(resolve,reject){
@@ -62,14 +88,20 @@ self.onmessage = function (event) {
         const store = transaction.objectStore('list');
         
          results.forEach(function(data){
-          store.get(data.activityId).onsuccess = function(event){
+          store.get(data.id).onsuccess = function(event){
             const record = event.target.result;
             if(record){
-                record.timestamp = moment().valueOf();
-                record.secondLine = `${data.name}:${data.value}`
-                record[type] = true
-                store.put(record)
-            
+              record.timestamp = moment().valueOf();
+              if(type === 'nearby'){
+                if(!record.urgent) {
+                  record.secondLine = `${data.name}:${data.value}`;
+                }
+              }
+              else {
+                record.secondLine = `${data.name}:${data.value}`;
+              }
+              record[type] = true
+              store.put(record);
             }
           }
         })
@@ -133,7 +165,7 @@ self.onmessage = function (event) {
       
     
         const record = {
-          activityId: otherLocations.activityId,
+          id: otherLocations.activityId,
           distance: distance,
           name:otherLocations.venueDescriptor,
           value:otherLocations.location

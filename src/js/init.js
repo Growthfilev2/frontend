@@ -382,12 +382,16 @@ function startInitializatioOfList(auth) {
 
   app.isNewDay(auth).then(function (isnewDay) {
     suggestCheckIn(isnewDay).then(function () {
- 
-      notificationWorker('urgent').then(function(res){
-        notificationWorker('nearBy').then(function(req){
-          listView();
-        })  
-      })
+      if(isnewDay){
+        notificationWorker('urgent').then(function(res){
+          notificationWorker('nearBy').then(function(req){
+            listView();
+          }) 
+        })
+      }
+      else {
+        listView();
+      }
       requestCreator('now', {
         device: native.getInfo(),
         from: ''
