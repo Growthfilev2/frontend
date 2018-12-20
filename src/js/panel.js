@@ -749,7 +749,9 @@ function suggestCheckIn(value) {
 
         tx.oncomplete = function () {
           resolve(true)
-          console.log("done");
+          if(history.state[0] === 'listView'){
+            createActivityIcon();
+          }
         }
         tx.onerror = function () {
           reject(tx.error)

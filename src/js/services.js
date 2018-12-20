@@ -303,10 +303,6 @@ function locationUpdationSuccess(location) {
 
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new)
   if(isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    debugger;
-    console.log(distanceBetweenBoth)
-    console.log(location.prev)
-    console.log(location.new)
     suggestCheckIn(true)
   }
 
