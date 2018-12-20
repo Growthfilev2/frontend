@@ -489,7 +489,7 @@ function createHeaderContent(db, id) {
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav()
-
+        count = count - countOfactivitesToShow();
       })
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {

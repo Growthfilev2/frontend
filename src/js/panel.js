@@ -1,5 +1,6 @@
 const notification = new Worker('js/notification.js')
 let count = 0;
+
 function listView(updateTimestamp) {
   // document.body.style.backgroundColor = 'white'
 
@@ -14,7 +15,7 @@ function listView(updateTimestamp) {
   document.getElementById('activity--list').addEventListener('scroll', function () {
     handleScroll();
   });
-  notificationWorker('urgent',updateTimestamp).then(function(){
+  notificationWorker('urgent', updateTimestamp).then(function () {
     fetchDataForActivityList();
   })
 }
@@ -33,28 +34,30 @@ function fetchDataForActivityList() {
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if(!count) {
-        if(!results) {
+      if (!count) {
+        if (!results) {
           results = [];
-        }
-        results.push(cursor.value)
-        if(results.length < max) {
+        };
+        results.push(cursor.value);
+
+        if (results.length < max) {
           cursor.continue();
         }
+
       }
-      else {
-        if(!results) {
+       else {
+        if (!results) {
           results = [];
-          cursor.advance(count);    
-        }
-        else {
+          cursor.advance(count);
+        } else {
           results.push(cursor.value)
-          if(results.length < max) {
+          if (results.length < max) {
             cursor.continue();
           }
         }
       }
-    }
+    };
+
     transaction.oncomplete = function () {
       convertResultsToList(results);
     }
@@ -63,18 +66,18 @@ function fetchDataForActivityList() {
 
 
 
-function countOfactivitesToShow(){
+function countOfactivitesToShow() {
   const deviceHeight = screen.height;
   const headerHeight = document.getElementById('header').offsetHeight;
   const listHeight = 92;
-  
+
   const defaultCount = Math.round((deviceHeight - headerHeight) / listHeight);
 
   return defaultCount + defaultCount;
 
 }
 
-function handleScroll(){
+function handleScroll() {
   const el = document.getElementById('activity--list')
   if ((el.scrollTop + el.offsetHeight) >= el.scrollHeight) {
     count += countOfactivitesToShow();
@@ -84,15 +87,11 @@ function handleScroll(){
 
 
 function convertResultsToList(results) {
-  // let activityDom = ''
   let yOffset = window.pageYOffset
-
-    results.forEach(function(data){
-      document.getElementById('activity--list').appendChild(activityListUI(data));
-   
-    })
-    scrollToActivity(yOffset)
-  
+  results.forEach(function (data) {
+    document.getElementById('activity--list').appendChild(activityListUI(data));
+  })
+  scrollToActivity(yOffset)
 }
 
 
@@ -119,7 +118,7 @@ function activityListUI(data) {
   activityNameText.textContent = data.activityName;
   const secondLine = document.createElement('span')
   secondLine.className = 'mdc-list-item__secondary-text'
-  if(data.urgent || data.nearby) {
+  if (data.urgent || data.nearby) {
     secondLine.textContent = data.secondLine;
   }
 
@@ -129,8 +128,8 @@ function activityListUI(data) {
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
-  metaTextContainer.appendChild(generateIconByCondition(data,li));
-  
+  metaTextContainer.appendChild(generateIconByCondition(data, li));
+
   const metaTextActivityStatus = document.createElement('span')
   metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
   const statusIcon = document.createElement('i')
@@ -160,22 +159,22 @@ function activityListUI(data) {
   return li;
 }
 
-function generateIconByCondition(data,li){
-  const icon  = document.createElement('i');
+function generateIconByCondition(data, li) {
+  const icon = document.createElement('i');
   icon.className = 'material-icons';
-  if(data.urgent) {
+  if (data.urgent) {
     icon.textContent = 'alarm';
-    
+
     return icon;
   }
-  if(data.nearby) {
+  if (data.nearby) {
     icon.textContent = 'location_on';
     return icon;
   }
-  if(data.count) {
+  if (data.count) {
 
     const countDiv = document.createElement('div')
-    
+
     const countSpan = document.createElement('span')
     countSpan.textContent = data.count
     countSpan.className = 'count mdc-meta__custom-text'
@@ -190,7 +189,7 @@ function generateIconByCondition(data,li){
   timeCustomText.textContent = moment(data.timestamp).calendar()
   return timeCustomText;
 
-  
+
 }
 
 
@@ -301,8 +300,8 @@ function createActivityIconDom(officeTemplateCombo) {
         } else {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn)
         }
-        suggestCheckIn(false).then(function(){
-          console.log("done")
+        suggestCheckIn(false).then(function () {
+          createActivityIcon();
         }).catch(console.log)
         return;
       }
@@ -350,7 +349,7 @@ function creatListHeader(headerName) {
   icon.className = 'material-icons'
 
   icon.textContent = 'menu'
-  
+
 
   const menuSpan = document.createElement('span')
   menuSpan.className = 'current--selcted-filter'
@@ -406,13 +405,13 @@ function scrollToActivity(yOffset) {
 
 }
 
-function notificationWorker(type,updateTimestamp) {
+function notificationWorker(type, updateTimestamp) {
   return new Promise(function (resolve, reject) {
 
     notification.postMessage({
       dbName: firebase.auth().currentUser.uid,
       type: type,
-      updateTimestamp:updateTimestamp
+      updateTimestamp: updateTimestamp
     })
 
     notification.onmessage = function (message) {
@@ -478,84 +477,6 @@ function initMenu() {
   drawer.open = true;
 }
 
-
-function sortByDates(type, pushState) {
-  if (pushState) {
-    history.pushState(["sortByDates", type], null, null)
-  } else {
-    history.replaceState(["sortByDates", type], null, null)
-  }
-
-  filter.urgent().then(function (record) {
-    generateActivitiesByDate(record)
-  });
-
-}
-
-
-function generateActivitiesByDate(activities) {
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  let results = [];
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['activity']);
-    const activityObjectStore = tx.objectStore('activity');
-
-    activities.forEach(function (data) {
-      activityObjectStore.get(data.activityId).onsuccess = function (event) {
-        const record = event.target.result;
-        if (record) {
-          results.push(record);
-        }
-      }
-    })
-
-    tx.oncomplete = function () {
-      convertResultsToList(db, results, false, 'Urgent');
-    }
-  }
-}
-
-function sortByLocation(type, pushState) {
-  if (pushState) {
-    history.pushState(['sortByLocation', type], null, null)
-  } else {
-    history.replaceState(['sortByLocation', type], null, null)
-  }
-
-  filter.nearBy().then(function (record) {
-    sortActivitiesByLocation(record);
-  })
-
-}
-
-function sortActivitiesByLocation(nearBy) {
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result;
-
-    let results = [];
-
-
-    const tx = db.transaction(['activity']);
-    const activityObjectStore = tx.objectStore('activity');
-
-    nearBy.forEach(function (data) {
-      activityObjectStore.get(data.activityId).onsuccess = function (event) {
-        const record = event.target.result;
-        results.push(record);
-      }
-    })
-    tx.oncomplete = function () {
-      convertResultsToList(db, results, false, 'NearBy');
-    }
-  }
-}
-
-function locationSortError(error) {
-  console.log(error)
-}
 
 function header(contentStart, contentEnd, headerType) {
 
