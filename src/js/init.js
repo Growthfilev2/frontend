@@ -381,21 +381,21 @@ function startInitializatioOfList(auth) {
   },5000);
 
   app.isSameDay(auth).then(function (isSame) {
-    suggestCheckIn(isSame).then(function () {
       if(isSame){
         listView();
       }
       else {
+        suggestCheckIn(true).then(function () {
         notificationWorker('urgent').then(function(res){
           notificationWorker('nearBy').then(function(req){
             listView();
           }) 
         })
+      }).catch(console.log);
       }
       requestCreator('now', {
         device: native.getInfo(),
         from: ''
       })
-    }).catch(console.log);
   }).catch(console.log)
 }
