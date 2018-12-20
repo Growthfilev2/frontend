@@ -6,7 +6,6 @@ function listView(updateTimestamp) {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
-
   history.pushState(['listView'], null, null)
 
   listPanel()
@@ -24,7 +23,6 @@ function fetchDataForActivityList() {
     const db = req.result;
     const max = countOfactivitesToShow();
     let results = null;
-    
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
@@ -32,16 +30,25 @@ function fetchDataForActivityList() {
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-
-      if(!results) {
-        results = [];
-        cursor.advance(count);
-      }
-      else {
-        count++
+      if(!count) {
+        if(!results) {
+          results = [];
+        }
         results.push(cursor.value)
         if(results.length < max) {
           cursor.continue();
+        }
+      }
+      else {
+        if(!results) {
+          results = [];
+          cursor.advance(count);    
+        }
+        else {
+          results.push(cursor.value)
+          if(results.length < max) {
+            cursor.continue();
+          }
         }
       }
     }
@@ -62,6 +69,14 @@ function countOfactivitesToShow(){
 
   return defaultCount + defaultCount;
 
+}
+
+function handleScroll(){
+  const el = document.getElementById('activity--list')
+  if ((el.scrollTop + el.offsetHeight) >= el.scrollHeight) {
+    count += countOfactivitesToShow();
+    fetchDataForActivityList();
+  }
 }
 
 
@@ -87,89 +102,6 @@ function convertResultsToList(results) {
 function createActivityList(data) {
   return new Promise(function (resolve) {
       resolve(activityListUI(data))    
-  })
-}
-
-function getCount(db, id) {
-  return new Promise(function (resolve) {
-    const activityCount = db.transaction('activityCount', 'readonly').objectStore('activityCount')
-    activityCount.get(id).onsuccess = function (event) {
-      const record = event.target.result
-      if (!record) {
-        resolve(0)
-      } else {
-        resolve(record.count)
-      }
-    }
-  })
-}
-
-
-function getCommentUndUser(db, id, creator) {
-  const meta = {
-    creator: creator,
-    comment: '',
-    commentUser: ''
-  }
-
-  return new Promise(function (resolve) {
-
-    const addendumObjStore = db.transaction('addendum').objectStore('addendum').index('activityId')
-
-    addendumObjStore.openCursor(id, 'prev').onsuccess = function (addendumstore) {
-      const addendumCursor = addendumstore.target.result;
-      if (!addendumCursor) {
-        resolve(meta)
-      } else if (addendumCursor.value.isComment) {
-        meta.comment = addendumCursor.value.comment
-        readNameFromNumber(db, addendumCursor.value.user).then(function (nameOrNum) {
-          meta.commentUser = nameOrNum
-          resolve(meta)
-        })
-      } else {
-        meta.comment = addendumCursor.value.comment
-        resolve(meta)
-      }
-
-    }
-
-  })
-}
-
-function getCreatorDetails(db, meta) {
-
-  return new Promise(function (resolve) {
-
-    if (meta.creator === firebase.auth().currentUser.phoneNumber) {
-      meta.creator = {
-        photo: firebase.auth().currentUser.photoURL || './img/empty-user.jpg',
-        number: meta.creator
-      }
-      resolve(meta)
-    } else {
-
-
-      const userObjStore = db.transaction('users').objectStore('users')
-
-      userObjStore.get(meta.creator).onsuccess = function (userstore) {
-        const record = userstore.target.result
-
-        if (record && record.hasOwnProperty('photoURL')) {
-          meta.creator = {
-            photo: userstore.target.result.photoURL || './img/empty-user.jpg',
-            number: meta.creator
-          }
-        } else {
-          meta.creator = {
-            photo: './img/empty-user.jpg',
-            number: meta.creator
-          }
-        }
-
-        resolve(meta)
-      }
-
-    }
   })
 }
 
@@ -270,7 +202,8 @@ function generateIconByCondition(data,li){
 
 function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
   if (document.getElementById('activity--list')) {
-    document.getElementById('activity--list').innerHTML = activityDom
+    document.getElementById('activity--list').innerHTML = activityDom;
+    handleScroll();
   }
 }
 
