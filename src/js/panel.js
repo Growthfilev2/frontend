@@ -200,10 +200,13 @@ function generateIconByCondition(data,li){
 }
 
 
-function appendActivityListToDom(activityDom, hasHeaderAndCard, headerName) {
-  if (document.getElementById('activity--list')) {
-    document.getElementById('activity--list').innerHTML = activityDom;
-    handleScroll();
+function appendActivityListToDom(activityDom) {
+  const parent = document.getElementById('activity--list')
+  if (parent) {
+    parent.innerHTML = activityDom;
+    parent.addEventListener('scroll', function () {
+      handleScroll();
+    });
   }
 }
 
