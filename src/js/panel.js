@@ -11,6 +11,9 @@ function listView(updateTimestamp) {
   listPanel()
   creatListHeader('Recent');
   createActivityIcon();
+  document.getElementById('activity--list').addEventListener('scroll', function () {
+    handleScroll();
+  });
   notificationWorker('urgent',updateTimestamp).then(function(){
     fetchDataForActivityList();
   })
@@ -81,29 +84,17 @@ function handleScroll(){
 
 
 function convertResultsToList(results) {
-  let activityDom = ''
+  // let activityDom = ''
   let yOffset = window.pageYOffset
 
-  let promiseMap = results.map(function (data) {
-    return createActivityList(data).then(function (li) {
-      return li
+    results.forEach(function(data){
+      document.getElementById('activity--list').appendChild(activityListUI(data));
+   
     })
-  });
-  Promise.all(promiseMap).then(function (results) {
-    results.forEach(function (li) {
-      activityDom += li
-    })
-
-    appendActivityListToDom(activityDom)
     scrollToActivity(yOffset)
-  })
+  
 }
 
-function createActivityList(data) {
-  return new Promise(function (resolve) {
-      resolve(activityListUI(data))    
-  })
-}
 
 
 function activityListUI(data) {
@@ -162,8 +153,11 @@ function activityListUI(data) {
 
   metaTextContainer.appendChild(metaTextActivityStatus)
 
-  li.innerHTML += creator.outerHTML + leftTextContainer.outerHTML + metaTextContainer.outerHTML
-  return li.outerHTML
+  // li.innerHTML += creator.outerHTML + leftTextContainer.outerHTML + metaTextContainer.outerHTML
+  li.appendChild(creator);
+  li.appendChild(leftTextContainer);
+  li.appendChild(metaTextContainer);
+  return li;
 }
 
 function generateIconByCondition(data,li){
@@ -203,10 +197,7 @@ function generateIconByCondition(data,li){
 function appendActivityListToDom(activityDom) {
   const parent = document.getElementById('activity--list')
   if (parent) {
-    parent.innerHTML = activityDom;
-    parent.addEventListener('scroll', function () {
-      handleScroll();
-    });
+    parent.appendChild(activityDom);
   }
 }
 
