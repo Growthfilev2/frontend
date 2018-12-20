@@ -375,6 +375,7 @@ function resetApp(auth, from) {
 }
 
 function startInitializatioOfList(auth) {
+  localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
 
     requestCreator('now', {

@@ -25,40 +25,27 @@ function fetchDataForActivityList() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
-    const max = countOfactivitesToShow();
-    let results = null;
+    let max = countOfactivitesToShow()
+    
+    let results = [];
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
 
-    index.openCursor(null, 'prev').onsuccess = function (event) {
+    const range = IDBKeyRange.bound(1545287484402,moment().valueOf());
+
+    index.openCursor(range,'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (!count) {
-        if (!results) {
-          results = [];
-        };
+     
         results.push(cursor.value);
-
-        if (results.length < max) {
+        if(results.length < max) {
           cursor.continue();
         }
-
       }
-       else {
-        if (!results) {
-          results = [];
-          cursor.advance(count);
-        } else {
-          results.push(cursor.value)
-          if (results.length < max) {
-            cursor.continue();
-          }
-        }
-      }
-    };
 
     transaction.oncomplete = function () {
+      console.log(results)
       convertResultsToList(results);
     }
   }
@@ -87,11 +74,10 @@ function handleScroll() {
 
 
 function convertResultsToList(results) {
-  let yOffset = window.pageYOffset
   results.forEach(function (data) {
     document.getElementById('activity--list').appendChild(activityListUI(data));
   })
-  scrollToActivity(yOffset)
+  scrollToActivity()
 }
 
 
@@ -379,11 +365,10 @@ function creatListHeader(headerName) {
 
 }
 
-function scrollToActivity(yOffset) {
-  if (localStorage.getItem('clickedActivity')) {
-    if (document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`)) {
-
-      document.querySelector(`[data-id="${localStorage.getItem('clickedActivity')}"]`).scrollIntoView({
+function scrollToActivity() {
+  const clickedActivity = localStorage.getItem('clickedActivity')
+    if (document.querySelector(`[data-id="${clickedActivity}"]`)) {
+      document.querySelector(`[data-id="${clickedActivity}"]`).scrollIntoView({
         behavior: "instant",
         block: "center",
         "inline": "center"
@@ -391,18 +376,6 @@ function scrollToActivity(yOffset) {
       localStorage.removeItem('clickedActivity')
     }
     return
-  }
-
-  if (yOffset === 0) {
-    localStorage.removeItem('clickedActivity')
-    window.scrollTo(0, 0)
-    return
-  }
-
-  if (yOffset > 0) {
-    window.scrollTo(0, yOffset);
-  }
-
 }
 
 function notificationWorker(type, updateTimestamp) {

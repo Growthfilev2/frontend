@@ -398,16 +398,13 @@ function maps(evt, show, id, location) {
   if (!evt) {
     var customControlDiv = document.createElement('div');
     var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-
     customControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
   }
-
   const marker = new google.maps.Marker({
     position: location,
     map: map
   });
-
 }
 
 function MapsCustomControl(customControlDiv, map, lat, lng) {
@@ -488,13 +485,12 @@ function createHeaderContent(db, id) {
       header(leftDiv.outerHTML, '')
 
       document.getElementById('back-conv').addEventListener('click', function () {
-        backNav()
-        count = count - countOfactivitesToShow();
+        backNav();
       })
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
-          // alert(id)
+          
           if (id) {
             updateCreateActivity(record, true)
           } else {
