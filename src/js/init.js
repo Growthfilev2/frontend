@@ -263,21 +263,21 @@ let app = function () {
       return moment().format("DD/MM/YYYY");
     },
     tomorrow: function () {
-      return moment(this.today()).subtract(1, 'day');
+      return moment(this.today()).add(1, 'day');
     },
     getLastLocationTime: function () {
       return new Promise(function (resolve, reject) {
         getRootRecord().then(function (rootRecord) {
-          resolve(rootRecord.lastLocationTime);
+          resolve(rootRecord.location.lastLocationTime);
         }).catch(function (error) {
           reject(error)
         })
       })
     },
-    isNewDay: function () {
+    isSameDay: function () {
       return new Promise(function (resolve, reject) {
         app.getLastLocationTime().then(function (time) {
-          if (moment(app.tomorrow()).isAfter(moment(time))) {
+          if (moment(time).isSame(moment(), 'day')) {
             resolve(true);
           } else {
             resolve(false);
@@ -380,17 +380,17 @@ function startInitializatioOfList(auth) {
     manageLocation();
   },5000);
 
-  app.isNewDay(auth).then(function (isnewDay) {
-    suggestCheckIn(isnewDay).then(function () {
-      if(isnewDay){
+  app.isSameDay(auth).then(function (isSame) {
+    suggestCheckIn(isSame).then(function () {
+      if(isSame){
+        listView();
+      }
+      else {
         notificationWorker('urgent').then(function(res){
           notificationWorker('nearBy').then(function(req){
             listView();
           }) 
         })
-      }
-      else {
-        listView();
       }
       requestCreator('now', {
         device: native.getInfo(),
