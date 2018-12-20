@@ -346,7 +346,9 @@ function createActivityIconDom(officeTemplateCombo) {
         } else {
           callSubscriptionSelectorUI(evt, record.suggestCheckIn)
         }
-        suggestCheckIn(false);
+        suggestCheckIn(false).then(function(){
+          console.log("done")
+        }).catch(console.log)
         return;
       }
 
@@ -502,15 +504,6 @@ function notificationWorker(type, count) {
 function initMenu() {
 
 
-  const filters = [{
-    type: 'Urgent',
-    icon: 'alarm'
-  }, {
-    type: 'Nearby',
-    icon: 'near_me'
-  }]
-
-
   const aside = document.createElement('aside')
   aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
 
@@ -552,39 +545,6 @@ function initMenu() {
 
   navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
 
-
-
-  filters.forEach(function (filter) {
-
-    const a = document.createElement('div')
-    a.className = 'mdc-list-item mdc-list-item--activated'
-
-    const i = document.createElement('i')
-    i.className = 'material-icons mdc-list-item__graphic drawer--icons'
-    i.setAttribute('aria-hidden', 'true')
-    i.textContent = filter.icon
-    const textSpan = document.createElement('span')
-    textSpan.textContent = filter.type
-    a.appendChild(i)
-    a.appendChild(textSpan)
-
-    a.onclick = function () {
-
-      window.scrollTo(0, 0)
-      if (filter.type === 'Urgent') {
-        sortByDates(filter.type, true)
-      }
-      if (filter.type === 'Nearby') {
-        sortByLocation(filter.type, true)
-      }
-
-      let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-      drawer.open = false
-      sendCurrentViewNameToAndroid('listView')
-      document.querySelector('.current--selcted-filter').textContent = filter.type;
-    }
-    navContent.appendChild(a)
-  })
   nav.appendChild(header)
   nav.appendChild(navContent)
   aside.appendChild(nav)
@@ -749,9 +709,6 @@ function suggestCheckIn(value) {
 
         tx.oncomplete = function () {
           resolve(true)
-          if(history.state[0] === 'listView'){
-            createActivityIcon();
-          }
         }
         tx.onerror = function () {
           reject(tx.error)

@@ -301,14 +301,21 @@ function locationUpdationSuccess(location) {
   if(!location.new.latitude) return;
   if(!location.new.longitude) return;
 
-  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new)
+  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  
+  const locationEvent = new CustomEvent("location",{"detail":location.new});
+  window.dispatchEvent(locationEvent);
+
   if(isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true)
+  
+    suggestCheckIn(true).then(function(){
+      notificationWorker('nearBy').then(function(){
+        if(history.state[0] === 'listView'){
+          listView();
+        }        
+      })
+    }).catch(console.log)
   }
-
-    const locationEvent = new CustomEvent("location",{"detail":location.new});
-    window.dispatchEvent(locationEvent);
-
 }
 
 
