@@ -31,9 +31,7 @@ function fetchDataForActivityList() {
       results.push(cursor.value)
       cursor.continue();
     }
-
     transaction.oncomplete = function () {
-      console.log(results);
       convertResultsToList(results);
     }
   }

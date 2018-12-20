@@ -298,10 +298,17 @@ function initLocationInterval(locationStatus) {
 function locationUpdationSuccess(location) {
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
+  if(!location.new.latitude) return;
+  if(!location.new.longitude) return;
 
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new)
-  console.log(distanceBetweenBoth)
-  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestCheckIn(true) : ''
+  if(isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+    debugger;
+    console.log(distanceBetweenBoth)
+    console.log(location.prev)
+    console.log(location.new)
+    suggestCheckIn(true)
+  }
 
     const locationEvent = new CustomEvent("location",{"detail":location.new});
     window.dispatchEvent(locationEvent);
@@ -337,7 +344,8 @@ function locationInterval() {
             'provider': 'Mock'
           })
         }
-      }, 8000)
+      }, 5000);
+
     // }
 
     var myInterval = setInterval(function () {
@@ -363,13 +371,17 @@ function locationInterval() {
             if (count == 3) {
               clearInterval(myInterval)
               myInterval = null;
+              clearTimeout(mockTimeout);
+              mockTimeout = null;
+
               return resolve(stabalzied[0])
             }
           }
           if (totalcount >= 5) {
             clearInterval(myInterval)
             myInterval = null;
-
+              clearTimeout(mockTimeout);
+              mockTimeout = null;
             const bestInNavigator = sortedByAccuracy(stabalzied)
             return resolve(bestInNavigator)
           }
@@ -378,7 +390,8 @@ function locationInterval() {
 
         clearInterval(myInterval)
         myInterval = null;
-
+        clearTimeout(mockTimeout);
+        mockTimeout = null;
         reject(error.message);
       });
     }, 500);
