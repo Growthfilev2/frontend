@@ -307,11 +307,10 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   if(isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-  
     suggestCheckIn(true).then(function(){
-      notificationWorker('nearBy').then(function(){
+      notificationWorker('nearBy',true).then(function(){
         if(history.state[0] === 'listView'){
-          listView();
+          listView(false);
         }        
       })
     }).catch(console.log)
@@ -585,8 +584,7 @@ function requestCreator(requestType, requestBody) {
       
       const location = rootRecord.location
       const isLocationOld =  isLastLocationOlderThanThreshold(location.lastLocationTime,1);
-    
-
+      
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       if(isLocationOld) {
         handleWaitForLocation(requestBody,requestGenerator)

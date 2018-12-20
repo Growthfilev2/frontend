@@ -511,12 +511,17 @@ function createHeaderContent(db, id) {
 }
 
 function reinitCount(db, id) {
-  const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount')
-  activityCount.get(id).onsuccess = function (event) {
+  const transaction = db.transaction(['list'], 'readwrite');
+  const store = transaction.objectStore('list');
+
+  store.get(id).onsuccess = function (event) {
     const record = event.target.result
     if (!record) return;
     record.count = 0
-    activityCount.put(record)
+    store.put(record)
+  }
+  transaction.oncomplete = function(){
+    console.log("done");
   }
 }
 

@@ -1,6 +1,6 @@
 const notification = new Worker('js/notification.js')
 
-function listView() {
+function listView(updateTimestamp) {
   // document.body.style.backgroundColor = 'white'
 
   if (document.querySelector('.init-loader')) {
@@ -12,7 +12,9 @@ function listView() {
   listPanel()
   creatListHeader('Recent');
   createActivityIcon();
-  fetchDataForActivityList();
+  notificationWorker('urgent',updateTimestamp).then(function(){
+    fetchDataForActivityList();
+  })
 }
 
 
@@ -462,12 +464,13 @@ function scrollToActivity(yOffset) {
 
 }
 
-function notificationWorker(type, count) {
+function notificationWorker(type,updateTimestamp) {
   return new Promise(function (resolve, reject) {
 
     notification.postMessage({
       dbName: firebase.auth().currentUser.uid,
       type: type,
+      updateTimestamp:updateTimestamp
     })
 
     notification.onmessage = function (message) {
@@ -479,26 +482,6 @@ function notificationWorker(type, count) {
   })
 }
 
-// let filter = function () {
-//   return {
-//     urgent: function () {
-//       return new Promise(function (resolve) {
-//         const urgentNotification = notificationWorker('urgent');
-//         urgentNotification.then(function (res) {
-//           resolve(res)
-//         });
-//       });
-//     },
-//     nearBy: function () {
-//       return new Promise(function (resolve) {
-//         const nearByNotification = notificationWorker('nearBy');
-//         nearByNotification.then(function (res) {
-//           resolve(res)
-//         });
-//       });
-//     }
-//   }
-// }();
 
 
 function initMenu() {

@@ -3,6 +3,7 @@ importScripts("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js
 self.onmessage = function (event) {
   const dbName = event.data.dbName;
   const type = event.data.type;
+  const tsUpdate = event.data.updateTimestamp
   const handler = {
     urgent: urgent,
     nearBy: nearBy,
@@ -15,11 +16,11 @@ self.onmessage = function (event) {
   let distanceArr = []
   req.onsuccess = function () {
     const db = req.result;
-    handler[type](db, dbName);
+    handler[type](db, tsUpdate,dbName);
   }
 
   
-  function urgent(db) {
+  function urgent(db,tsUpdate) {
   
     const calTx = db.transaction(['calendar']);
     const calendarObjectStore = calTx.objectStore('calendar');
@@ -55,9 +56,8 @@ self.onmessage = function (event) {
      urgentestDates.forEach(function(id){
       output.push(ascendingDates[id])
      })
-   
   
-      updateTimestamp('urgent',output.reverse()).then(function(success){
+      updateTimestamp('urgent',{data:output.reverse(),'tsUpdate':tsUpdate}).then(function(success){
         self.postMessage(success);
       })
     }
@@ -87,11 +87,13 @@ self.onmessage = function (event) {
         const transaction = db.transaction(['list'],'readwrite');
         const store = transaction.objectStore('list');
         
-         results.forEach(function(data){
+         results.data.forEach(function(data){
           store.get(data.id).onsuccess = function(event){
             const record = event.target.result;
             if(record){
-              record.timestamp = moment().valueOf();
+              if(results.tsUpdate){
+                record.timestamp = moment().valueOf();
+              }
               if(type === 'nearby'){
                 if(!record.urgent) {
                   record.secondLine = `${data.name} : ${data.value}`;
@@ -112,7 +114,7 @@ self.onmessage = function (event) {
     })
   }
 
-  function nearBy(db, dbName) {
+  function nearBy(db, tsUpdate,dbName) {
 
     const rootTx = db.transaction(['root']);
     const rootStore = rootTx.objectStore('root');
@@ -142,7 +144,7 @@ self.onmessage = function (event) {
       mapTx.oncomplete = function () {
         const filtered = isDistanceNearBy(distanceArr,0.5);
         const sorted = sortDistance(filtered);
-        updateTimestamp('nearby',sorted.reverse()).then(function(success){
+        updateTimestamp('nearby',{data:sorted.reverse(),'tsUpdate':tsUpdate}).then(function(success){
           self.postMessage(success);
         })
       }

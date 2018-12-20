@@ -274,13 +274,13 @@ let app = function () {
         })
       })
     },
-    isSameDay: function () {
+    isNewDay: function () {
       return new Promise(function (resolve, reject) {
         app.getLastLocationTime().then(function (time) {
           if (moment(time).isSame(moment(), 'day')) {
-            resolve(true);
-          } else {
             resolve(false);
+          } else {
+            resolve(true);
           }
         }).catch(function (error) {
           reject(error)
@@ -375,27 +375,27 @@ function resetApp(auth, from) {
 }
 
 function startInitializatioOfList(auth) {
-  
-  setInterval(function(){
-    manageLocation();
-  },5000);
+  app.isNewDay(auth).then(function (isNew) {
 
-  app.isSameDay(auth).then(function (isSame) {
-      if(isSame){
-        listView();
-      }
-      else {
-        suggestCheckIn(true).then(function () {
-        notificationWorker('urgent').then(function(res){
-          notificationWorker('nearBy').then(function(req){
-            listView();
-          }) 
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: ''
+    })
+
+    suggestCheckIn(isNew).then(function () {
+      if(isNew) {
+        notificationWorker('nearBy', isNew).then(function (req) {
+          listView(isNew);
+          setInterval(function () {
+            manageLocation();
+          }, 5000);
         })
-      }).catch(console.log);
+      return;
       }
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: ''
-      })
+      listView(isNew);
+      setInterval(function () {
+        manageLocation();
+      }, 5000);
+    }).catch(console.log)
   }).catch(console.log)
 }
