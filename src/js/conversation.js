@@ -1048,14 +1048,16 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
 
   dialog['acceptButton_'].onclick = function () {
 
+    if(document.querySelector('.mdc-radio.radio-selected')) {
 
-    const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-    console.log(radio)
-    const selectedField = JSON.parse(radio.value)
-    console.log(selectedField.office)
-    console.log(selectedField.template)
-    document.getElementById('app-current-panel').dataset.view = 'create'
-    createTempRecord(selectedField.office, selectedField.template, data)
+      const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+      console.log(radio)
+      const selectedField = JSON.parse(radio.value)
+      console.log(selectedField.office)
+      console.log(selectedField.template)
+      document.getElementById('app-current-panel').dataset.view = 'create'
+      createTempRecord(selectedField.office, selectedField.template, data)
+    }
 
   }
 }
