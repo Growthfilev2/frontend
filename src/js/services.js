@@ -802,7 +802,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 2000);
+  }, 200000);
 }
 
 function getInputText(selector) {

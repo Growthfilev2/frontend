@@ -1,5 +1,5 @@
 const notification = new Worker('js/notification.js')
-
+let count = 0;
 function listView(updateTimestamp) {
   // document.body.style.backgroundColor = 'white'
 
@@ -21,23 +21,49 @@ function listView(updateTimestamp) {
 function fetchDataForActivityList() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
-    const db = req.result
-    let results = [];
-
+    const db = req.result;
+    const max = countOfactivitesToShow();
+    let results = null;
+    
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
+
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      results.push(cursor.value)
-      cursor.continue();
+
+      if(!results) {
+        results = [];
+        cursor.advance(count);
+      }
+      else {
+        count++
+        results.push(cursor.value)
+        if(results.length < max) {
+          cursor.continue();
+        }
+      }
     }
     transaction.oncomplete = function () {
       convertResultsToList(results);
     }
   }
 }
+
+
+
+function countOfactivitesToShow(){
+  const deviceHeight = screen.height;
+  const headerHeight = document.getElementById('header').offsetHeight;
+  const listHeight = 92;
+  
+  const defaultCount = Math.round((deviceHeight - headerHeight) / listHeight);
+
+  return defaultCount + defaultCount;
+
+}
+
 
 function convertResultsToList(results) {
   let activityDom = ''
@@ -387,7 +413,7 @@ function listPanel() {
 
 }
 
-function creatListHeader(headerName, backIcon) {
+function creatListHeader(headerName) {
   const parentIconDiv = document.createElement('div')
   parentIconDiv.className = 'drawer--icons'
 
@@ -395,12 +421,9 @@ function creatListHeader(headerName, backIcon) {
   menuIcon.id = 'menu--panel'
   const icon = document.createElement('i')
   icon.className = 'material-icons'
-  if (backIcon) {
-    icon.textContent = 'keyboard_backspace'
-  } else {
 
-    icon.textContent = 'menu'
-  }
+  icon.textContent = 'menu'
+  
 
   const menuSpan = document.createElement('span')
   menuSpan.className = 'current--selcted-filter'
@@ -423,15 +446,7 @@ function creatListHeader(headerName, backIcon) {
 
 
   document.getElementById('menu--panel').addEventListener('click', function () {
-    if (backIcon) {
-      backNav()
-      return
-    }
-
-    getRootRecord().then(function (record) {
-      initMenu();
-    })
-
+    initMenu();
     sendCurrentViewNameToAndroid('drawer')
 
   })
