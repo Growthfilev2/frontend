@@ -327,10 +327,9 @@ function locationUpdationError(error) {
 }
 
 function mock() {
-
   return new Promise(function (resolve) {
     setTimeout(function () {
-      console.log("mock ran")
+
       resolve({
         'latitude': '',
         'longitude': '',
@@ -398,18 +397,19 @@ function locationInterval() {
 
   return new Promise(function (resolve, reject) {
     const promiseArray = [navigatorPromise()]
-    // if (native.getName() === 'Android') {
+    if (native.getName() === 'Android') {
       promiseArray.push(mock());
-    // }
+    }
     Promise.race(promiseArray).then(function (location) {
+      if (location.provider === 'MOCK') {
+        alert("mock")
+      }
       resolve(location)
     }).catch(function (error) {
       reject(error)
     })
   });
 }
-
-
 
 function sortedByAccuracy(geoData) {
   var result = geoData.sort(function (a, b) {
