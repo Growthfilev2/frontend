@@ -62,7 +62,9 @@ self.onmessage = function (event) {
       instant(event.data.body)
       return
     }
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(console.log)
+    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function(error){
+      console.log(error)
+    })
   })
 }
 

@@ -768,7 +768,7 @@ function loadViewFromRoot(response) {
 
       if (history.state[0] === 'profileView') return;
 
-      // window[history.state[0]](history.state[1], false);
+      window[history.state[0]](history.state[1], false);
       handleTimeout();
     }
   };
@@ -802,7 +802,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 200000);
+  }, 2000);
 }
 
 function getInputText(selector) {

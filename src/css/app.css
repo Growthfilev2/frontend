@@ -1578,13 +1578,8 @@ input[type="datetime-local"] {
   .suggest-checkin--text {
     margin-left: 10px;
   }
+
+
   .notification {
-
-    background-color: red;
-      color: white;
-      border-radius: 15px;
-      padding: 3px 6px 3px 7px;
-      text-align: center;
-      font-size: 14px;
-
+    color: #ff9800;
   }

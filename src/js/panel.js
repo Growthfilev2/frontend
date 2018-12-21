@@ -12,11 +12,10 @@ function listView(updateTimestamp) {
   listPanel()
   creatListHeader('Recent');
   createActivityIcon();
-  document.getElementById('activity--list').addEventListener('scroll', function () {
-    handleScroll();
-  });
   notificationWorker('urgent', updateTimestamp).then(function () {
-    fetchDataForActivityList();
+    notificationWorker('nearBy', updateTimestamp).then(function (req) {
+      fetchDataForActivityList();
+    })
   })
 }
 
@@ -24,59 +23,32 @@ function listView(updateTimestamp) {
 function fetchDataForActivityList() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
-    const db = req.result;
-    let max = countOfactivitesToShow()
-    
+    const db = req.result;    
     let results = [];
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
 
-    const range = IDBKeyRange.bound(1545287484402,moment().valueOf());
-
-    index.openCursor(range,'prev').onsuccess = function (event) {
+    index.openCursor(null,'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-     
-        results.push(cursor.value);
-        if(results.length < max) {
-          cursor.continue();
-        }
+      results.push(cursor.value);
+      cursor.continue();
       }
 
     transaction.oncomplete = function () {
-      console.log(results)
       convertResultsToList(results);
     }
   }
 }
 
 
-
-function countOfactivitesToShow() {
-  const deviceHeight = screen.height;
-  const headerHeight = document.getElementById('header').offsetHeight;
-  const listHeight = 92;
-
-  const defaultCount = Math.round((deviceHeight - headerHeight) / listHeight);
-
-  return defaultCount + defaultCount;
-
-}
-
-function handleScroll() {
-  const el = document.getElementById('activity--list')
-  if ((el.scrollTop + el.offsetHeight) >= el.scrollHeight) {
-    count += countOfactivitesToShow();
-    fetchDataForActivityList();
-  }
-}
-
-
 function convertResultsToList(results) {
+  let activityDom = ''
   results.forEach(function (data) {
-    document.getElementById('activity--list').appendChild(activityListUI(data));
+    activityDom += activityListUI(data).outerHTML;
   })
+  document.getElementById('activity--list').innerHTML = activityDom;
   scrollToActivity()
 }
 
@@ -138,7 +110,6 @@ function activityListUI(data) {
 
   metaTextContainer.appendChild(metaTextActivityStatus)
 
-  // li.innerHTML += creator.outerHTML + leftTextContainer.outerHTML + metaTextContainer.outerHTML
   li.appendChild(creator);
   li.appendChild(leftTextContainer);
   li.appendChild(metaTextContainer);
@@ -147,7 +118,7 @@ function activityListUI(data) {
 
 function generateIconByCondition(data, li) {
   const icon = document.createElement('i');
-  icon.className = 'material-icons';
+  icon.className = 'material-icons notification'
   if (data.urgent) {
     icon.textContent = 'alarm';
 
@@ -336,7 +307,6 @@ function creatListHeader(headerName) {
 
   icon.textContent = 'menu'
 
-
   const menuSpan = document.createElement('span')
   menuSpan.className = 'current--selcted-filter'
   headerName === 'Cancelled' ? menuSpan.textContent = 'Trash' : menuSpan.textContent = headerName
@@ -352,17 +322,11 @@ function creatListHeader(headerName) {
   sicon.className = 'material-icons'
   sicon.textContent = 'search'
   searchIcon.appendChild(sicon);
-
-
-  header(parentIconDiv.outerHTML, '', 'list')
-
-
+  header(parentIconDiv.outerHTML, '', 'list');
   document.getElementById('menu--panel').addEventListener('click', function () {
     initMenu();
     sendCurrentViewNameToAndroid('drawer')
-
   })
-
 }
 
 function scrollToActivity() {

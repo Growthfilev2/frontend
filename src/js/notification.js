@@ -34,7 +34,8 @@ self.onmessage = function (event) {
     index.openCursor(key).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (yesterday.isSameOrBefore(cursor.value.start) || tomorrow.isSameOrAfter(cursor.value.end)) {
+    
+      if (moment(cursor.value.start).isSameOrAfter(yesterday) && moment(cursor.value.end).isSameOrBefore(tomorrow)) {
         const data = {
           activityId:cursor.value.activityId,
           name:cursor.value.scheduleName,

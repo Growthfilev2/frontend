@@ -377,22 +377,11 @@ function resetApp(auth, from) {
 function startInitializatioOfList(auth) {
   localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
-
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
-    })
-
+    });
     suggestCheckIn(isNew).then(function () {
-      if(isNew) {
-        notificationWorker('nearBy', isNew).then(function (req) {
-          listView(isNew);
-          setInterval(function () {
-            manageLocation();
-          }, 5000);
-        })
-      return;
-      }
       listView(isNew);
       setInterval(function () {
         manageLocation();
