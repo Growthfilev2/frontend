@@ -1,9 +1,8 @@
 const notification = new Worker('js/notification.js')
-let count = 0;
 
-function listView(updateTimestamp) {
+function listView(filter) {
   // document.body.style.backgroundColor = 'white'
-
+  console.log(filter)
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
@@ -12,8 +11,13 @@ function listView(updateTimestamp) {
   listPanel()
   creatListHeader('Recent');
   createActivityIcon();
-  notificationWorker('urgent', updateTimestamp).then(function () {
-    notificationWorker('nearBy', updateTimestamp).then(function (req) {
+  
+  if(!filter) {
+    fetchDataForActivityList();
+    return;
+  }
+  notificationWorker('urgent', filter.urgent).then(function () {
+    notificationWorker('nearBy', filter.nearby).then(function (req) {
       fetchDataForActivityList();
     })
   })

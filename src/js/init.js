@@ -362,7 +362,7 @@ function resetApp(auth, from) {
   console.log(from)
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
-    history.state = null;
+    history.pushState(null,null,null);
     document.getElementById('growthfile').appendChild(loader('init-loader'))
     requestCreator('now', {
       device: native.getInfo(),
@@ -377,15 +377,15 @@ function resetApp(auth, from) {
 function startInitializatioOfList(auth) {
   localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
     });
     suggestCheckIn(isNew).then(function () {
-      listView(isNew);
-      setInterval(function () {
-        manageLocation();
-      }, 5000);
+      listView({urgent:isNew,nearby:isNew});
     }).catch(console.log)
   }).catch(console.log)
 }

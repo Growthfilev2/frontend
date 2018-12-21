@@ -8,7 +8,7 @@ function conversation(id, pushState) {
       }
       fetchAddendumForComment(id)
     } else {
-      listView(true)
+      listView()
     }
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -494,7 +494,7 @@ function createHeaderContent(db, id) {
           if (id) {
             updateCreateActivity(record, true)
           } else {
-            listView(true)
+            listView()
           }
         }).catch(function (error) {
           requestCreator('instant', JSON.stringify({
@@ -2825,7 +2825,7 @@ function toggleActionables(id) {
     activityStore.get(id).onsuccess = function (event) {
       const record = event.target.result
       if (!record) {
-        listView(true)
+        listView()
         return
       }
       const actions = document.querySelectorAll('.mdc-fab')

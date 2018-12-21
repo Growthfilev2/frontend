@@ -253,7 +253,7 @@ function manageLocation() {
           }
         }));
 
-        if(rootRecord.location.provider === 'MOCK') return;
+        if (rootRecord.location.provider === 'MOCK') return;
 
         locationInterval().then(function (navigatorData) {
           updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
@@ -298,21 +298,22 @@ function initLocationInterval(locationStatus) {
 function locationUpdationSuccess(location) {
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
-  if(!location.new.latitude) return;
-  if(!location.new.longitude) return;
-
+  if (!location.new.latitude) return;
+  if (!location.new.longitude) return;
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-  
-  const locationEvent = new CustomEvent("location",{"detail":location.new});
+  const locationEvent = new CustomEvent("location", {
+    "detail": location.new
+  });
   window.dispatchEvent(locationEvent);
 
-  if(isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true).then(function(){
-      notificationWorker('nearBy',true).then(function(){
-        if(history.state[0] === 'listView'){
-          listView(false);
-        }        
-      })
+  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+    suggestCheckIn(true).then(function () {
+      if (history.state[0] === 'listView') {
+        listView({
+          urgent: false,
+          nearby: true
+        });
+      }
     }).catch(console.log)
   }
 }
@@ -325,36 +326,33 @@ function locationUpdationError(error) {
   }))
 }
 
-function locationInterval() {
+function mock() {
 
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      console.log("mock ran")
+      resolve({
+        'latitude': '',
+        'longitude': '',
+        'accuracy': '',
+        'lastLocationTime': Date.now(),
+        'provider': 'Mock'
+      })
+    }, 5000);
+  })
+}
+
+function navigatorPromise() {
   var stabalzied = [];
   var totalcount = 0;
   var count = 0;
-  let mockTimeout;
   return new Promise(function (resolve, reject) {
-     // if (native.getName === 'Android') {
-
-      mockTimeout = setTimeout(function () {
-        if (myInterval) {
-          clearTimeout(mockTimeout)
-          clearInterval(myInterval);
-          resolve({
-            'latitude': '',
-            'longitude': '',
-            'accuracy': '',
-            'lastLocationTime': Date.now(),
-            'provider': 'Mock'
-          })
-        }
-      }, 5000);
-
-    // }
 
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
 
-   
+
 
         ++totalcount;
         if (totalcount !== 1) {
@@ -373,8 +371,6 @@ function locationInterval() {
             if (count == 3) {
               clearInterval(myInterval)
               myInterval = null;
-              clearTimeout(mockTimeout);
-              mockTimeout = null;
 
               return resolve(stabalzied[0])
             }
@@ -382,8 +378,7 @@ function locationInterval() {
           if (totalcount >= 5) {
             clearInterval(myInterval)
             myInterval = null;
-              clearTimeout(mockTimeout);
-              mockTimeout = null;
+
             const bestInNavigator = sortedByAccuracy(stabalzied)
             return resolve(bestInNavigator)
           }
@@ -392,13 +387,28 @@ function locationInterval() {
 
         clearInterval(myInterval)
         myInterval = null;
-        clearTimeout(mockTimeout);
-        mockTimeout = null;
+
         reject(error.message);
       });
     }, 500);
+  })
+}
+
+function locationInterval() {
+
+  return new Promise(function (resolve, reject) {
+    const promiseArray = [navigatorPromise()]
+    // if (native.getName() === 'Android') {
+      promiseArray.push(mock());
+    // }
+    Promise.race(promiseArray).then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    })
   });
 }
+
 
 
 function sortedByAccuracy(geoData) {
@@ -429,6 +439,7 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
+
         record.location = finalLocation;
         rootStore.put(record);
       };
@@ -524,7 +535,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -564,7 +575,7 @@ function resetLoaders() {
 
 function requestCreator(requestType, requestBody) {
 
-  
+
   var requestGenerator = {
     type: requestType,
     body: ''
@@ -580,31 +591,30 @@ function requestCreator(requestType, requestBody) {
       offset = null;
     }
 
-    getRootRecord().then(function(rootRecord){
-      
+    getRootRecord().then(function (rootRecord) {
+
       const location = rootRecord.location
-      const isLocationOld =  isLastLocationOlderThanThreshold(location.lastLocationTime,1);
-      
+      const isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 1);
+
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-      if(isLocationOld) {
-        handleWaitForLocation(requestBody,requestGenerator)
-      }
-      else {
+      if (isLocationOld) {
+        handleWaitForLocation(requestBody, requestGenerator)
+      } else {
         var geopoints = {
           'latitude': location.latitude,
           'longitude': location.longitude,
           'accuracy': location.accuracy
         };
-       
+
         requestBody['geopoint'] = geopoints;
         requestGenerator.body = requestBody;
         console.log(requestGenerator)
-        sendRequest(location,requestGenerator)
+        sendRequest(location, requestGenerator)
       }
     })
   };
 
-    
+
   // handle the response from apiHandler when operation is completed
   apiHandler.onmessage = loadViewFromRoot;
   apiHandler.onerror = onErrorMessage;
@@ -612,45 +622,44 @@ function requestCreator(requestType, requestBody) {
 
 
 
-function handleWaitForLocation(requestBody,requestGenerator){
-  
+function handleWaitForLocation(requestBody, requestGenerator) {
 
- window.addEventListener('location',function _listener(e){
+
+  window.addEventListener('location', function _listener(e) {
     const data = e.detail;
     var geopoints = {
       'latitude': data.latitude,
       'longitude': data.longitude,
       'accuracy': data.accuracy
     };
-  
+
     requestBody['geopoint'] = geopoints;
     requestGenerator.body = requestBody;
-    sendRequest(geopoints,requestGenerator);
-    window.removeEventListener('location',_listener,true);
-  },true);
+    sendRequest(geopoints, requestGenerator);
+    window.removeEventListener('location', _listener, true);
+  }, true);
 
 }
 
-function sendRequest(location,requestGenerator){
+function sendRequest(location, requestGenerator) {
 
 
   if (location.latitude && location.longitude && location.accuracy) {
 
     apiHandler.postMessage(requestGenerator);
-  }
-  else {
+  } else {
     enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
   }
 
 }
 
-function isLastLocationOlderThanThreshold(test,threshold){
+function isLastLocationOlderThanThreshold(test, threshold) {
   const currentTime = moment(moment().valueOf());
   const lastLocationTime = test
-  const duration  = moment.duration(currentTime.diff(lastLocationTime));
+  const duration = moment.duration(currentTime.diff(lastLocationTime));
   const difference = duration.asSeconds();
   console.log(difference);
-  if(difference > threshold) {
+  if (difference > threshold) {
     return true
   }
   return false;
@@ -675,7 +684,7 @@ function loadViewFromRoot(response) {
   }
 
   if (response.data.type === 'notification') {
-   
+
     successDialog();
     return;
   }
@@ -745,17 +754,16 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
-        setInterval(function(){
+        setInterval(function () {
           manageLocation();
-        },5000);
+        }, 5000);
 
         suggestCheckIn(true).then(function () {
-          notificationWorker('urgent').then(function(res){
-            notificationWorker('nearBy').then(function(req){   
-              window["listView"]();
-              handleTimeout();
-            })  
-          })
+          window["listView"]({
+            urgent: true,
+            nearby: true
+          });
+          handleTimeout();
         }).catch(console.log)
         return;
       }
@@ -766,7 +774,19 @@ function loadViewFromRoot(response) {
         return;
       }
 
-      if (history.state[0] === 'profileView') return;
+      if (history.state[0] === 'profileView') {
+        handleTimeout();
+        return;
+      };
+
+      if (history.state[0] === 'listView') {
+        listView({
+          urgent: false,
+          nearBy: false
+        });
+        handleTimeout();
+        return;
+      }
 
       window[history.state[0]](history.state[1], false);
       handleTimeout();

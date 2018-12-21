@@ -165,11 +165,11 @@ self.onmessage = function (event) {
       
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = R * c;
-      
+      const distanceInMeters = distance / 1000
     
         const record = {
           id: otherLocations.activityId,
-          distance: distance,
+          distance: distanceInMeters,
           name:otherLocations.venueDescriptor,
           value:otherLocations.location
         }
