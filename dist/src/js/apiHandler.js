@@ -163,13 +163,13 @@ function fetchServerTime(info) {
 
 function instant(error) {
   console.log(error);
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**

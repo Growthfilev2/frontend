@@ -50,7 +50,9 @@ function convertResultsToList(results) {
   results.forEach(function (data) {
     activityDom += activityListUI(data).outerHTML;
   });
-  document.getElementById('activity--list').innerHTML = activityDom;
+  if(document.getElementById('activity--list')) {
+    document.getElementById('activity--list').innerHTML = activityDom;
+  }
   scrollToActivity();
 }
 

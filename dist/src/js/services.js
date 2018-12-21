@@ -327,11 +327,11 @@ function mock() {
       resolve({
         'latitude': '',
         'longitude': '',
-        'accuracy': 999999999,
+        'accuracy': 99999999,
         'lastLocationTime': Date.now(),
         'provider': 'Mock'
       });
-    }, 5000);
+    }, 6000);
   });
 }
 
