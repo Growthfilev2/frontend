@@ -708,10 +708,7 @@ footer.mdc-dialog__footer {
 #ui-auth {
   padding-top: 20px;
 }
-#activity--list {
-  height: 99vh;
-  overflow-y: auto;
-}
+
 .activity--list-item {
   padding-top: 10px;
   padding-bottom: 10px;
