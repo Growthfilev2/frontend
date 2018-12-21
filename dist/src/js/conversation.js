@@ -12,7 +12,7 @@ function conversation(id, pushState) {
       }
       fetchAddendumForComment(id);
     } else {
-      listView(true);
+      listView();
     }
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -387,11 +387,9 @@ function maps(evt, show, id, location) {
   if (!evt) {
     var customControlDiv = document.createElement('div');
     var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-
     customControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
   }
-
   var marker = new google.maps.Marker({
     position: location,
     map: map
@@ -476,11 +474,11 @@ function createHeaderContent(db, id) {
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
-          // alert(id)
+
           if (id) {
             updateCreateActivity(record, true);
           } else {
-            listView(true);
+            listView();
           }
         }).catch(function (error) {
           requestCreator('instant', JSON.stringify({
@@ -493,12 +491,17 @@ function createHeaderContent(db, id) {
 }
 
 function reinitCount(db, id) {
-  var activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
-  activityCount.get(id).onsuccess = function (event) {
+  var transaction = db.transaction(['list'], 'readwrite');
+  var store = transaction.objectStore('list');
+
+  store.get(id).onsuccess = function (event) {
     var record = event.target.result;
     if (!record) return;
     record.count = 0;
-    activityCount.put(record);
+    store.put(record);
+  };
+  transaction.oncomplete = function () {
+    console.log("done");
   };
 }
 
@@ -1001,13 +1004,16 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
 
   dialog['acceptButton_'].onclick = function () {
 
-    var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
-    console.log(radio);
-    var selectedField = JSON.parse(radio.value);
-    console.log(selectedField.office);
-    console.log(selectedField.template);
-    document.getElementById('app-current-panel').dataset.view = 'create';
-    createTempRecord(selectedField.office, selectedField.template, data);
+    if (document.querySelector('.mdc-radio.radio-selected')) {
+
+      var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+      console.log(radio);
+      var selectedField = JSON.parse(radio.value);
+      console.log(selectedField.office);
+      console.log(selectedField.template);
+      document.getElementById('app-current-panel').dataset.view = 'create';
+      createTempRecord(selectedField.office, selectedField.template, data);
+    }
   };
 }
 
@@ -2683,7 +2689,7 @@ function toggleActionables(id) {
     activityStore.get(id).onsuccess = function (event) {
       var record = event.target.result;
       if (!record) {
-        listView(true);
+        listView();
         return;
       }
       var actions = document.querySelectorAll('.mdc-fab');

@@ -74,10 +74,9 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
-    window[event.state[0]](true);
+    window[event.state[0]]();
     return;
   }
-
   window[event.state[0]](event.state[1], false);
 };
 
@@ -226,21 +225,6 @@ var native = function () {
   };
 }();
 
-function removeIDBInstance(auth) {
-
-  return new Promise(function (resolve, reject) {
-
-    var req = indexedDB.deleteDatabase(auth.uid);
-    req.onsuccess = function () {
-
-      resolve(true);
-    };
-    req.onerror = function () {
-      reject(req.error);
-    };
-  });
-}
-
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -261,62 +245,127 @@ var app = function () {
     today: function today() {
       return moment().format("DD/MM/YYYY");
     },
-    setDay: function setDay() {
-      localStorage.setItem('today', this.today());
+    tomorrow: function tomorrow() {
+      return moment(this.today()).add(1, 'day');
     },
-    getDay: function getDay() {
-      return localStorage.getItem('today');
+    getLastLocationTime: function getLastLocationTime() {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
+          resolve(rootRecord.location.lastLocationTime);
+        }).catch(function (error) {
+          reject(error);
+        });
+      });
     },
     isNewDay: function isNewDay() {
-      if (this.getDay() !== this.today()) {
-        return true;
-      } else {
-        return false;
-      }
+      return new Promise(function (resolve, reject) {
+        app.getLastLocationTime().then(function (time) {
+          if (moment(time).isSame(moment(), 'day')) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        }).catch(function (error) {
+          reject(error);
+        });
+      });
     }
   };
 }();
 
+function idbVersionLessThan2(auth) {
+  return new Promise(function (resolve, reject) {
+    var value = false;
+    var req = indexedDB.open(auth.uid, 2);
+    var db = void 0;
+    req.onupgradeneeded = function (evt) {
+      if (evt.oldVersion === 1) {
+        value = true;
+      } else {
+        value = false;
+      }
+    };
+    req.onsuccess = function () {
+      db = req.result;
+      db.close();
+      resolve(value);
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
+
+function removeIDBInstance(auth) {
+
+  return new Promise(function (resolve, reject) {
+    var failure = {
+      message: 'Please Restart The App',
+      error: ''
+    };
+    var req = indexedDB.deleteDatabase(auth.uid);
+    req.onsuccess = function () {
+      resolve(true);
+    };
+    req.onblocked = function () {
+      failure.error = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
+      reject(failure);
+    };
+    req.onerror = function () {
+      failure.error = req.error;
+      reject(failure);
+    };
+  });
+}
+
 function init(auth) {
 
-  /** When app has been initialzied before
-   * render list view first, then perform app sync and mange location
-   */
+  idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
-  if (localStorage.getItem('dbexist')) {
-    localStorage.removeItem('selectedOffice');
-
-    listView(true);
-    requestCreator('now', native.getInfo());
-    manageLocation();
-
-    if (app.isNewDay()) {
-
-      suggestAlertAndNotification({
-        alert: true,
-        notification: true
-      });
-      app.setDay();
-    } else {
-      suggestAlertAndNotification({
-        alert: false
-      });
-      disableNotification();
+    if (localStorage.getItem('dbexist')) {
+      from = 1;
+      if (lessThanTwo) {
+        resetApp(auth, from);
+      } else {
+        startInitializatioOfList(auth);
+      }
+      return;
     }
 
-    return;
-  }
+    resetApp(auth, 0);
+  }).catch(console.log);
 
-  document.getElementById('growthfile').appendChild(loader('init-loader'));
-  /** when app initializes for the first time */
-  var deviceInfo = JSON.parse(native.getInfo());
+  return;
+}
 
-  removeIDBInstance(auth).then(function (isRemoved) {
-    if (isRemoved) {
-      requestCreator('now', native.getInfo());
-    }
+function resetApp(auth, from) {
+  console.log(from);
+  removeIDBInstance(auth).then(function () {
+    localStorage.removeItem('dbexist');
+    history.pushState(null, null, null);
+    document.getElementById('growthfile').appendChild(loader('init-loader'));
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: from
+    });
   }).catch(function (error) {
+    snacks(error.message);
     console.log(error);
   });
-  return;
+}
+
+function startInitializatioOfList(auth) {
+  localStorage.removeItem('clickedActivity');
+  app.isNewDay(auth).then(function (isNew) {
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: ''
+    });
+    suggestCheckIn(isNew).then(function () {
+      listView({ urgent: isNew, nearby: isNew });
+    }).catch(console.log);
+  }).catch(console.log);
 }

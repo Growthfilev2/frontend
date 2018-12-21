@@ -16,7 +16,7 @@ function handleImageError(img) {
       var record = event.target.result;
       if (!record) {
         return;
-      }
+      };
 
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
@@ -221,31 +221,45 @@ function manageLocation() {
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
-    try {
-      CelllarJson = Towers.getCellularData();
-      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
-      geoFetchPromise.then(function (geoData) {
-        initLocationInterval(geoData);
-      }).catch(function (error) {
-        initLocationInterval(error);
-      });
-    } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: {
-          error: locationStatus.message,
-          file: 'services.js',
-          lineNo: 231,
-          device: JSON.parse(native.getInfo()),
-          help: 'Problem in calling method for fetching cellular towers.'
-        }
-      }));
+    getRootRecord().then(function (rootRecord) {
+      try {
+        CelllarJson = Towers.getCellularData();
+        geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
-      locationInterval().then(function (navigatorData) {
-        updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-      }).catch(function (error) {
-        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-      });
-    }
+        if (rootRecord.location.provider === 'MOCK') {
+          geoFetchPromise.then(function (geoData) {
+            updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+          }).catch(function (error) {
+            requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+          });
+          return;
+        }
+
+        geoFetchPromise.then(function (geoData) {
+          initLocationInterval(geoData);
+        }).catch(function (error) {
+          initLocationInterval(error);
+        });
+      } catch (e) {
+        requestCreator('instant', JSON.stringify({
+          message: {
+            error: e.message,
+            file: 'services.js',
+            lineNo: 231,
+            device: JSON.parse(native.getInfo()),
+            help: 'Problem in calling method for fetching cellular towers.'
+          }
+        }));
+
+        if (rootRecord.location.provider === 'MOCK') return;
+
+        locationInterval().then(function (navigatorData) {
+          updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+        });
+      }
+    });
     return;
   }
 
@@ -281,10 +295,24 @@ function initLocationInterval(locationStatus) {
 function locationUpdationSuccess(location) {
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
-
+  if (!location.new.latitude) return;
+  if (!location.new.longitude) return;
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-  console.log(distanceBetweenBoth);
-  isNewLocationMoreThanThreshold(distanceBetweenBoth) ? suggestAlertAndNotification({ alert: true }) : '';
+  var locationEvent = new CustomEvent("location", {
+    "detail": location.new
+  });
+  window.dispatchEvent(locationEvent);
+
+  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+    suggestCheckIn(true).then(function () {
+      if (history.state[0] === 'listView') {
+        listView({
+          urgent: false,
+          nearby: true
+        });
+      }
+    }).catch(console.log);
+  }
 }
 
 function locationUpdationError(error) {
@@ -293,8 +321,21 @@ function locationUpdationError(error) {
   }));
 }
 
-function locationInterval() {
+function mock() {
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      resolve({
+        'latitude': '',
+        'longitude': '',
+        'accuracy': 999999999,
+        'lastLocationTime': Date.now(),
+        'provider': 'Mock'
+      });
+    }, 5000);
+  });
+}
 
+function navigatorPromise() {
   var stabalzied = [];
   var totalcount = 0;
   var count = 0;
@@ -320,11 +361,15 @@ function locationInterval() {
 
             if (count == 3) {
               clearInterval(myInterval);
+              myInterval = null;
+
               return resolve(stabalzied[0]);
             }
           }
           if (totalcount >= 5) {
             clearInterval(myInterval);
+            myInterval = null;
+
             var bestInNavigator = sortedByAccuracy(stabalzied);
             return resolve(bestInNavigator);
           }
@@ -332,9 +377,29 @@ function locationInterval() {
       }, function (error) {
 
         clearInterval(myInterval);
+        myInterval = null;
+
         reject(error.message);
       });
     }, 500);
+  });
+}
+
+function locationInterval() {
+
+  return new Promise(function (resolve, reject) {
+    var promiseArray = [navigatorPromise()];
+    if (native.getName() === 'Android') {
+      promiseArray.push(mock());
+    }
+    Promise.race(promiseArray).then(function (location) {
+      if (location.provider === 'MOCK') {
+        alert("mock");
+      }
+      resolve(location);
+    }).catch(function (error) {
+      reject(error);
+    });
   });
 }
 
@@ -360,22 +425,22 @@ function updateLocationInRoot(finalLocation) {
 
         var record = event.target.result;
         previousLocation = {
-          latitude: record.latitude,
-          longitude: record.longitude,
-          accuracy: record.accuracy,
-          provider: record.provider,
-          localStorage: record.lastLocationTime
+          latitude: record.location.latitude,
+          longitude: record.location.longitude,
+          accuracy: record.location.accuracy,
+          provider: record.location.provider,
+          localStorage: record.location.lastLocationTime
         };
-
-        record.latitude = finalLocation.latitude;
-        record.longitude = finalLocation.longitude;
-        record.accuracy = finalLocation.accuracy;
-        record.provider = finalLocation.provider;
-        record.lastLocationTime = finalLocation.lastLocationTime, rootStore.put(record);
+        console.log(finalLocation.provider);
+        console.log(finalLocation.latitude);
+        record.location = finalLocation;
+        rootStore.put(record);
       };
       tx.oncomplete = function () {
-
-        resolve({ prev: previousLocation, new: finalLocation });
+        resolve({
+          prev: previousLocation,
+          new: finalLocation
+        });
       };
     };
     req.onerror = function (error) {
@@ -498,23 +563,8 @@ function resetLoaders() {
   }
 }
 
-function createBodyForRequestGenerator(record, requestBody, requestGenerator) {
-  var geopoints = {
-    'latitude': record.latitude,
-    'longitude': record.longitude,
-    'accuracy': record.accuracy
-  };
-
-  requestBody['timestamp'] = fetchCurrentTime(record.serverTime);
-  requestBody['geopoint'] = geopoints;
-  requestGenerator.body = requestBody;
-
-  return requestGenerator;
-}
-
 function requestCreator(requestType, requestBody) {
 
-  console.log(apiHandler);
   var requestGenerator = {
     type: requestType,
     body: ''
@@ -530,29 +580,71 @@ function requestCreator(requestType, requestBody) {
       offset = null;
     }
 
-    var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName);
-    req.onsuccess = function () {
-      var db = req.result;
-      var rootTx = db.transaction('root', 'readwrite');
-      var rootObjectStore = rootTx.objectStore('root');
+    getRootRecord().then(function (rootRecord) {
 
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        var record = event.target.result;
-        if (record.latitude && record.longitude && record.accuracy) {
+      var location = rootRecord.location;
+      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 1);
 
-          apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
-        } else {
+      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+      if (isLocationOld) {
+        handleWaitForLocation(requestBody, requestGenerator);
+      } else {
+        var geopoints = {
+          'latitude': location.latitude,
+          'longitude': location.longitude,
+          'accuracy': location.accuracy
+        };
 
-          enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
-        }
-      };
-    };
-  }
+        requestBody['geopoint'] = geopoints;
+        requestGenerator.body = requestBody;
+        console.log(requestGenerator);
+        sendRequest(location, requestGenerator);
+      }
+    });
+  };
 
   // handle the response from apiHandler when operation is completed
   apiHandler.onmessage = loadViewFromRoot;
   apiHandler.onerror = onErrorMessage;
+}
+
+function handleWaitForLocation(requestBody, requestGenerator) {
+
+  window.addEventListener('location', function _listener(e) {
+    var data = e.detail;
+    var geopoints = {
+      'latitude': data.latitude,
+      'longitude': data.longitude,
+      'accuracy': data.accuracy
+    };
+    alert("Event listener ran");
+    requestBody['geopoint'] = geopoints;
+    requestGenerator.body = requestBody;
+    sendRequest(geopoints, requestGenerator);
+    window.removeEventListener('location', _listener, true);
+  }, true);
+}
+
+function sendRequest(location, requestGenerator) {
+
+  if (location.latitude && location.longitude && location.accuracy) {
+
+    apiHandler.postMessage(requestGenerator);
+  } else {
+    enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
+  }
+}
+
+function isLastLocationOlderThanThreshold(test, threshold) {
+  var currentTime = moment(moment().valueOf());
+  var lastLocationTime = test;
+  var duration = moment.duration(currentTime.diff(lastLocationTime));
+  var difference = duration.asSeconds();
+  console.log(difference);
+  if (difference > threshold) {
+    return true;
+  }
+  return false;
 }
 
 function loadViewFromRoot(response) {
@@ -574,6 +666,7 @@ function loadViewFromRoot(response) {
   }
 
   if (response.data.type === 'notification') {
+
     successDialog();
     return;
   }
@@ -639,9 +732,17 @@ function loadViewFromRoot(response) {
       }
 
       if (!history.state) {
-        app.setDay();
-        suggestAlertAndNotification({ alert: true, notification: true });
-        window["listView"](true);
+        setInterval(function () {
+          manageLocation();
+        }, 5000);
+
+        suggestCheckIn(true).then(function () {
+          window["listView"]({
+            urgent: true,
+            nearby: true
+          });
+          handleTimeout();
+        }).catch(console.log);
         return;
       }
 
@@ -651,7 +752,19 @@ function loadViewFromRoot(response) {
         return;
       }
 
-      if (history.state[0] === 'profileView') return;
+      if (history.state[0] === 'profileView') {
+        handleTimeout();
+        return;
+      };
+
+      if (history.state[0] === 'listView') {
+        listView({
+          urgent: false,
+          nearBy: false
+        });
+        handleTimeout();
+        return;
+      }
 
       window[history.state[0]](history.state[1], false);
       handleTimeout();
@@ -687,8 +800,7 @@ function onErrorMessage(error) {
 function handleTimeout() {
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-    manageLocation();
-  }, 5000);
+  }, 2000);
 }
 
 function getInputText(selector) {

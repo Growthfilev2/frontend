@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 var html5Location;
 
 function handleImageError(img) {
@@ -318,8 +318,6 @@ function locationUpdationSuccess(location) {
   }
 }
 
-
-
 function locationUpdationError(error) {
   requestCreator('instant', JSON.stringify({
     'message': error
@@ -329,15 +327,14 @@ function locationUpdationError(error) {
 function mock() {
   return new Promise(function (resolve) {
     setTimeout(function () {
-
       resolve({
         'latitude': '',
         'longitude': '',
-        'accuracy': '',
+        'accuracy': 99999999,
         'lastLocationTime': Date.now(),
         'provider': 'Mock'
       })
-    }, 5000);
+    }, 6000);
   })
 }
 
@@ -439,7 +436,8 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-
+        console.log(finalLocation.provider);
+        console.log(finalLocation.latitude);
         record.location = finalLocation;
         rootStore.put(record);
       };
@@ -632,7 +630,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       'longitude': data.longitude,
       'accuracy': data.accuracy
     };
-
+    alert("Event listener ran");
     requestBody['geopoint'] = geopoints;
     requestGenerator.body = requestBody;
     sendRequest(geopoints, requestGenerator);

@@ -2,222 +2,154 @@ importScripts("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js
 
 self.onmessage = function (event) {
   var dbName = event.data.dbName;
-  var office = event.data.office;
   var type = event.data.type;
-  var count = event.data.count;
+  var tsUpdate = event.data.updateTimestamp;
   var handler = {
     urgent: urgent,
     nearBy: nearBy
   };
+
+  var curentTimestamp = moment().valueOf();
 
   var req = indexedDB.open(dbName);
   var userCoords = void 0;
   var distanceArr = [];
   req.onsuccess = function () {
     var db = req.result;
-    handler[type](db, dbName, count);
+    handler[type](db, tsUpdate, dbName);
   };
 
-  function updateMapWithNoStatus(db) {
+  function urgent(db, tsUpdate) {
+
+    var calTx = db.transaction(['calendar']);
+    var calendarObjectStore = calTx.objectStore('calendar');
+    var index = calendarObjectStore.index('urgent');
+    var results = [];
+
+    var yesterday = moment().subtract(1, 'days');
+
+    var tomorrow = moment().add(1, 'days');
+    var key = IDBKeyRange.bound(['PENDING', 0], ['PENDING', 0]);
+    index.openCursor(key).onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) return;
+
+      if (moment(cursor.value.start).isSameOrAfter(yesterday) && moment(cursor.value.end).isSameOrBefore(tomorrow)) {
+        var data = {
+          activityId: cursor.value.activityId,
+          name: cursor.value.scheduleName,
+          value: cursor.value.end
+        };
+        results.push(data);
+      }
+      cursor.continue();
+    };
+
+    calTx.oncomplete = function () {
+
+      var ascendingDates = sortByNearestEndDate(results);
+
+      var urgentestDates = Object.keys(ascendingDates).sort(function (a, b) {
+        return moment(ascendingDates[b].value) - moment(ascendingDates[a].value).valueOf();
+      });
+      var output = [];
+      urgentestDates.forEach(function (id) {
+        output.push(ascendingDates[id]);
+      });
+
+      updateTimestamp('urgent', { data: output.reverse(), 'tsUpdate': tsUpdate }).then(function (success) {
+        self.postMessage(success);
+      });
+    };
+  }
+  function sortByNearestEndDate(results) {
+    var holder = {};
+    var arr = [];
+    results.forEach(function (rec) {
+      if (!holder.hasOwnProperty(rec.activityId)) {
+        holder[rec.activityId] = { id: rec.activityId, name: rec.name, value: rec.value };
+      } else {
+        if (moment(holder[rec.activityId].value).valueOf() > moment(rec.value).valueOf()) {
+          holder[rec.activityId] = { id: rec.activityId, name: rec.name, value: rec.value };
+        }
+      }
+    });
+    return holder;
+  }
+
+  function updateTimestamp(type, results) {
     return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(dbName);
+      req.onsuccess = function () {
+        var db = req.result;
+        var transaction = db.transaction(['list'], 'readwrite');
+        var store = transaction.objectStore('list');
+
+        results.data.forEach(function (data) {
+          store.get(data.id).onsuccess = function (event) {
+            var record = event.target.result;
+            if (record) {
+              if (results.tsUpdate) {
+                record.timestamp = moment().valueOf();
+              }
+              if (type === 'nearby') {
+                if (!record.urgent) {
+                  record.secondLine = data.name + ' : ' + data.value;
+                }
+              } else {
+                record.secondLine = data.name + ' : ' + data.value;
+              }
+              record[type] = true;
+              store.put(record);
+            }
+          };
+        });
+        transaction.oncomplete = function () {
+          resolve(type);
+        };
+      };
+    });
+  }
+
+  function nearBy(db, tsUpdate, dbName) {
+
+    var rootTx = db.transaction(['root']);
+    var rootStore = rootTx.objectStore('root');
+    rootStore.get(dbName).onsuccess = function (event) {
+      var record = event.target.result;
+
+      userCoords = {
+        'latitude': record.location.latitude,
+        'longitude': record.location.longitude
+      };
+    };
+
+    rootTx.oncomplete = function () {
+
       var mapTx = db.transaction(['map'], 'readwrite');
+
       var mapObjectStore = mapTx.objectStore('map');
-
-      var resultsWithoutStatus = [];
-      mapObjectStore.openCursor().onsuccess = function (event) {
-        var cursor = event.target.result;
+      var index = mapObjectStore.index('nearby');
+      var range = IDBKeyRange.lowerBound(['PENDING', 0]);
+      index.openCursor(range).onsuccess = function (curEvent) {
+        var cursor = curEvent.target.result;
         if (!cursor) return;
-        if (cursor.value.status) {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.office) {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.hidden) {
-          cursor.continue();
-          return;
-        }
 
-        resultsWithoutStatus.push(cursor.value);
-        cursor.delete();
+        distanceArr.push(calculateDistance(userCoords, cursor.value));
         cursor.continue();
       };
-
       mapTx.oncomplete = function () {
-        var activityTx = db.transaction(['activity'], 'readwrite');
-        var activityStore = activityTx.objectStore('activity');
-
-        resultsWithoutStatus.forEach(function (data) {
-          activityStore.get(data.activityId).onsuccess = function (event) {
-            var record = event.target.result;
-            if (record) {
-              var transaction = db.transaction(['map'], 'readwrite');
-              var _mapObjectStore = transaction.objectStore('map');
-              data.status = record.status;
-              data.hidden = record.hidden;
-              data.office = record.office;
-              _mapObjectStore.put(data);
-            }
-          };
+        var filtered = isDistanceNearBy(distanceArr, 0.5);
+        var sorted = sortDistance(filtered);
+        updateTimestamp('nearby', { data: sorted.reverse(), 'tsUpdate': tsUpdate }).then(function (success) {
+          self.postMessage(success);
         });
-        activityTx.oncomplete = function () {
-          resolve(true);
-        };
       };
-    });
-  }
-
-  function updateCalendarWithNoStatus(db, activity) {
-    return new Promise(function (resolve, reject) {
-      var calTx = db.transaction(['calendar'], 'readwrite');
-      var calendarObjectStore = calTx.objectStore('calendar');
-
-      var resultsWithoutStatus = [];
-      calendarObjectStore.openCursor().onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) return;
-
-        if (cursor.value.status) {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.office) {
-          cursor.continue();
-          return;
-        }
-
-        resultsWithoutStatus.push(cursor.value);
-        cursor.delete();
-        cursor.continue();
-      };
-
-      calTx.oncomplete = function () {
-        var activityTx = db.transaction(['activity'], 'readwrite');
-        var activityStore = activityTx.objectStore('activity');
-
-        resultsWithoutStatus.forEach(function (data) {
-          activityStore.get(data.activityId).onsuccess = function (event) {
-            var record = event.target.result;
-            if (record) {
-              var transaction = db.transaction(['calendar'], 'readwrite');
-              var calendarStore = transaction.objectStore('calendar');
-              data.status = record.status;
-              data.office = record.office;
-              calendarStore.put(data);
-            }
-          };
-        });
-        activityTx.oncomplete = function () {
-          resolve(true);
-        };
-      };
-    });
-  }
-
-  function urgent(db, dbName, count) {
-    updateCalendarWithNoStatus(db).then(function () {
-      var calTx = db.transaction(['calendar']);
-      var calendarObjectStore = calTx.objectStore('calendar');
-      var results = [];
-      var today = moment().format("YYYY-MM-DD");
-      var yesterday = moment().subtract(1, 'days');
-      var tomorrow = moment().add(1, 'days');
-      calendarObjectStore.openCursor().onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.office !== office) {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.hidden) {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.status !== 'PENDING') {
-          cursor.continue();
-          return;
-        }
-
-        if (yesterday.isSameOrBefore(cursor.value.start) || tomorrow.isSameOrAfter(cursor.value.end)) {
-          results.push(cursor.value);
-        }
-        cursor.continue();
-      };
-      calTx.oncomplete = function () {
-        var sorted = sortDatesInDescindingOrder(results);
-        if (count) {
-          self.postMessage(sorted.length);
-        } else {
-          self.postMessage(sorted);
-        }
-      };
-    }).catch(console.log);
-  }
-
-  function sortDatesInDescindingOrder(results) {
-    var ascending = results.sort(function (a, b) {
-      return moment(b.end).valueOf() - moment(a.end).valueOf();
-    });
-    return ascending;
-  }
-
-  function nearBy(db, dbName, count) {
-    updateMapWithNoStatus(db).then(function () {
-      var rootTx = db.transaction(['root']);
-      var rootStore = rootTx.objectStore('root');
-      rootStore.get(dbName).onsuccess = function (event) {
-        var record = event.target.result;
-
-        userCoords = {
-          'latitude': record.latitude,
-          'longitude': record.longitude
-        };
-      };
-
-      rootTx.oncomplete = function () {
-
-        var mapTx = db.transaction(['map'], 'readwrite');
-
-        var mapObjectStore = mapTx.objectStore('map');
-        mapObjectStore.openCursor().onsuccess = function (curEvent) {
-          var cursor = curEvent.target.result;
-          if (!cursor) return;
-          if (cursor.value.office !== office) {
-            cursor.continue();
-            return;
-          }
-          if (cursor.value.status !== 'PENDING') {
-            cursor.continue();
-            return;
-          }
-          if (cursor.value.hidden) {
-            cursor.continue();
-            return;
-          }
-
-          distanceArr.push(calculateDistance(userCoords, cursor.value));
-          cursor.continue();
-        };
-        mapTx.oncomplete = function () {
-          var filtered = distanceArr.filter(function (record) {
-            return record !== null;
-          });
-          if (count) {
-            self.postMessage(filtered.length);
-          } else {
-            self.postMessage(filtered);
-          }
-        };
-      };
-    }).catch(console.log);
+    };
   }
 
   function calculateDistance(userCoords, otherLocations) {
     var R = 6371; // km
-    var THRESHOLD = 0.5; //km
-    if (!otherLocations.latitude || !otherLocations.longitude) return null;
 
     var dLat = toRad(userCoords.latitude - otherLocations.latitude);
     var dLon = toRad(userCoords.longitude - otherLocations.longitude);
@@ -228,15 +160,27 @@ self.onmessage = function (event) {
 
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     var distance = R * c;
+    var distanceInMeters = distance / 1000;
 
-    if (distance <= THRESHOLD) {
-      var record = {
-        activityId: otherLocations.activityId,
-        distance: distance
-      };
-      return record;
-    }
-    return null;
+    var record = {
+      id: otherLocations.activityId,
+      distance: distanceInMeters,
+      name: otherLocations.venueDescriptor,
+      value: otherLocations.location
+    };
+    return record;
+  }
+
+  function isDistanceNearBy(data, thresold) {
+    return data.filter(function (el) {
+      return el.distance <= thresold;
+    });
+  }
+
+  function sortDistance(data) {
+    return data.sort(function (a, b) {
+      return a.distance - b.distance;
+    });
   }
 
   function toRad(value) {
