@@ -334,8 +334,8 @@ function scrollToActivity() {
         "inline": "center"
       })
       localStorage.removeItem('clickedActivity')
+      return
     }
-    return
 }
 
 function notificationWorker(type, updateTimestamp) {

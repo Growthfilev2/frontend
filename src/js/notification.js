@@ -27,15 +27,15 @@ self.onmessage = function (event) {
     const index = calendarObjectStore.index('urgent');
     const results = [];
 
-    const yesterday = moment().subtract(1, 'days');
+    const yesterday = moment().subtract(1, 'days').format("YYYY-MM-DD");
   
-    const tomorrow = moment().add(1, 'days');
+    const tomorrow = moment().add(1, 'days').format("YYYY-MM-DD");
     const key = IDBKeyRange.bound(['PENDING',0],['PENDING',0]);
     index.openCursor(key).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
     
-      if (yesterday.isSameOrBefore(moment(cursor.value.end)) && tomorrow.isSameOrAfter(moment(cursor.value.start))) {
+      if (moment(yesterday).isSameOrBefore(cursor.value.end) && moment(tomorrow).isSameOrAfter(cursor.value.start)) {
         const data = {
           activityId:cursor.value.activityId,
           name:cursor.value.scheduleName,
