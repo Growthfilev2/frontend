@@ -1,4 +1,4 @@
-var notification = new Worker('src/js/notification.js');
+var notification = new Worker('js/notification.js');
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
@@ -27,7 +27,7 @@ function fetchDataForActivityList() {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-    var results = [];
+    var activityDom = '';
     var transaction = db.transaction('list');
     var store = transaction.objectStore('list');
     var index = store.index('timestamp');
@@ -35,24 +35,17 @@ function fetchDataForActivityList() {
     index.openCursor(null, 'prev').onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) return;
-      results.push(cursor.value);
+      activityDom += activityListUI(cursor.value).outerHTML;
       cursor.continue();
     };
 
     transaction.oncomplete = function () {
-      console.log(results);
-      convertResultsToList(results);
+      if (document.getElementById('activity--list')) {
+        document.getElementById('activity--list').innerHTML = activityDom;
+      }
+      scrollToActivity();
     };
   };
-}
-
-function convertResultsToList(results) {
-  var activityDom = '';
-  results.forEach(function (data) {
-    activityDom += activityListUI(data).outerHTML;
-  });
-  document.getElementById('activity--list').innerHTML = activityDom;
-  scrollToActivity();
 }
 
 function activityListUI(data) {
@@ -332,8 +325,8 @@ function scrollToActivity() {
       "inline": "center"
     });
     localStorage.removeItem('clickedActivity');
+    return;
   }
-  return;
 }
 
 function notificationWorker(type, updateTimestamp) {
