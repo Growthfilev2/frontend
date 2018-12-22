@@ -1,6 +1,5 @@
 var offset = '';
 var apiHandler = new Worker('js/apiHandler.js');
-var html5Location;
 
 function handleImageError(img) {
   img.onerror = null;
@@ -218,7 +217,9 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-
+  if(!localStorage.getItem('dbexist')) {
+    localStorage.setItem('dbexist',firebase.auth().currentUser.uid)
+  }
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
@@ -614,7 +615,7 @@ function requestCreator(requestType, requestBody) {
 
 
   // handle the response from apiHandler when operation is completed
-  apiHandler.onmessage = loadViewFromRoot;
+  apiHandler.onmessage = messageReceiver;
   apiHandler.onerror = onErrorMessage;
 }
 
@@ -662,134 +663,107 @@ function isLastLocationOlderThanThreshold(test, threshold) {
   return false;
 }
 
-function loadViewFromRoot(response) {
-
-  if (response.data.type === 'update-app') {
-
-    if (native.getName() === 'Android') {
-      console.log("update App");
-      Android.notification(response.data.msg);
-      return;
-    }
-    webkit.messageHandlers.updateApp.postMessage();
-    return;
-  }
-
-  if (response.data.type === 'revoke-session') {
-    revokeSession();
-    return;
-  }
-
-  if (response.data.type === 'notification') {
-
-    successDialog();
-    return;
-  }
-
-  if (response.data.type === 'manageLocation') {
-    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
-    manageLocation();
-    return;
-  }
-
-  // only for development
-  if (response.data.type === 'error') {
-    resetLoaders();
-    snacks(response.data.msg);
-    return;
-  }
-
-  if (response.data.type === 'reset-offset') {
-    if (offset) {
-      console.log("removing offset");
-      clearTimeout(offset);
-      offset = null;
-    }
-    return;
-  }
-
-  if (response.data.type === 'android-stop-refreshing') {
-    androidStopRefreshing()
-    return;
-  }
-
-
-
-  var req = window.indexedDB.open(firebase.auth().currentUser.uid);
-
-  req.onsuccess = function () {
-    var db = req.result;
-
-    if (response.data.type === 'updateAssigneesList') {
-      console.log("only update assingee list");
-      var activityObjectStore = db.transaction('activity').objectStore('activity');
-      //here dbName is activityId
-
-      activityObjectStore.get(response.data.params.id).onsuccess = function (event) {
-        var record = event.target.result;
-        // toggleActionables(record.editable)
-
-        readNameAndImageFromNumber([response.data.params.number], db);
-      };
-      history.pushState(['listView'], null, null);
-      return;
-    }
-
-    if (response.data.type === 'redirect-to-list') {
-
-      history.pushState(['listView'], null, null);
-      return;
-    }
-
-
-
-    // updateIDB
-
-    if (response.data.type === 'updateIDB') {
-      if (response.data.msg === 'true') {
-        androidStopRefreshing()
-      }
-
-      if (!history.state) {
-        setInterval(function () {
-          manageLocation();
-        }, 5000);
-
-        suggestCheckIn(true).then(function () {
-          window["listView"]({
-            urgent: true,
-            nearby: true
-          });
-          handleTimeout();
-        }).catch(console.log)
-        return;
-      }
-
-      if (history.state[0] === 'updateCreateActivity') {
-        toggleActionables(history.state[1].activityId);
-        handleTimeout();
-        return;
-      }
-
-      if (history.state[0] === 'profileView') {
-        handleTimeout();
-        return;
-      };
-
-      if (history.state[0] === 'listView') {
-        listView({
-          urgent: false,
-          nearBy: false
-        });
-        handleTimeout();
-        return;
-      }
-
-      window[history.state[0]](history.state[1], false);
-      handleTimeout();
-    }
-  };
+const receiverCaller = {
+  'update-app' : updateApp,
+  'revoke-session':revokeSession,
+  'notification' : successDialog,
+  'manageLocation':manageLocation,
+  'error':  resetLoaders,
+  'reset-offset':resetOffset,
+  'android-stop-refreshing':androidStopRefreshing,
+  'updateAssigneesList':updateAssigneesList,
+  'updateIDB':updateIDB,
+  'redirect-to-list':changeState,
 }
+
+function messageReceiver(response){
+  receiverCaller[response.data.type](response.data)  
+  handleTimeout(response.data.type);
+}
+
+
+function updateApp(data){
+  if (native.getName() === 'Android') {
+    console.log("update App");
+    Android.notification(data.msg);
+    return;
+  }
+  webkit.messageHandlers.updateApp.postMessage();
+  
+}
+
+function revokeSession(){
+  firebase.auth().signOut().then(function() {
+    removeIDBInstance(firebase.auth().currentUser).then(function(){
+      console.log("session revoked")
+    }).catch(function(error){
+      const removalError = error;
+      removalError.message = ''
+      requestCreator('instant',JSON.stringify(removalError))  
+    })
+  }, function(error) {
+    requestCreator('instant',JSON.stringify(error))  
+  });
+}
+
+function resetOffset(){
+  if (offset) {
+    clearTimeout(offset);
+    offset = null;
+  }
+}
+
+function changeState(data){
+history.pushState(['listView'],null,null);
+}
+
+function updateAssigneesList(data){
+  const req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function(){
+    const db = req.result;
+    readNameAndImageFromNumber([data.params.number], db);
+    changeState()
+  }
+}
+
+function updateIDB(data){
+  if (data.msg === 'true') {
+    androidStopRefreshing()
+  }
+
+  if (!history.state) {
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
+
+    suggestCheckIn(true).then(function () {
+      window["listView"]({
+        urgent: true,
+        nearby: true
+      });
+    }).catch(console.log)
+    return;
+  }
+
+  if (history.state[0] === 'updateCreateActivity') {
+    toggleActionables(history.state[1].activityId);
+    return;
+  }
+
+  if (history.state[0] === 'profileView') return;
+  
+  if (history.state[0] === 'listView') {
+    listView({
+      urgent: false,
+      nearBy: false
+    });
+    return;
+  }
+
+  window[history.state[0]](history.state[1], false);
+}
+
+
 
 function androidStopRefreshing() {
   if (native.getName() === 'Android') {
@@ -816,10 +790,15 @@ function onErrorMessage(error) {
   });
 }
 
-function handleTimeout() {
+function handleTimeout(type) {
+  const whitelist = ['update-app','revoke-session'];
+  const index = whitelist.indexOf(type);
+  if(index > -1) {
+    return;
+  }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 2000);
+  }, 3000);
 }
 
 function getInputText(selector) {

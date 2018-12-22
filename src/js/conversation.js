@@ -233,16 +233,13 @@ function statusChange(db, id) {
       }
     }
 
+    if(!document.querySelector('.mdc-checkbox')) return;
 
-    const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
-
+    switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
     if (record.status === 'CONFIRMED') {
       switchControl.checked = true
     }
-
     document.querySelector('.mdc-checkbox').onclick = function () {
-
-
       if (isLocationVerified()) {
         changeStatusRequest(switchControl, record)
       } else {
@@ -2026,11 +2023,9 @@ function readNameAndImageFromNumber(assignees, db) {
           displayName: '',
           photoURL: '',
         }
+      }
+      if(document.getElementById('assignees--list')){
         document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
-
-      } else {
-        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
-
       }
     }
   })
