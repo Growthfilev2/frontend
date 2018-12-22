@@ -1,5 +1,7 @@
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function conversation(id, pushState) {
   console.log(id);
   checkIfRecordExists('activity', id).then(function (id) {
@@ -10,7 +12,7 @@ function conversation(id, pushState) {
       }
       fetchAddendumForComment(id);
     } else {
-      listView(true);
+      listView();
     }
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -49,22 +51,18 @@ function fetchAddendumForComment(id) {
 
   req.onsuccess = function () {
     var db = req.result;
-    var addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId');
+    var transaction = db.transaction(['addendum'], 'readonly');
+    var addendumIndex = transaction.objectStore('addendum').index('activityId');
     createHeaderContent(db, id);
     commentPanel(id);
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation');
     reinitCount(db, id);
-    var commentDom = '';
+
     addendumIndex.openCursor(id).onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) {
-        if (document.querySelector('.activity--chat-card-container')) {
-          console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
-          document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
-        }
-        return;
-      }
+      if (!cursor) return;
+
       if (!document.getElementById(cursor.value.addendumId)) {
         createComment(db, cursor.value, user).then(function (comment) {
           if (document.getElementById('chat-container')) {
@@ -74,6 +72,12 @@ function fetchAddendumForComment(id) {
       }
 
       cursor.continue();
+    };
+    transaction.oncomplete = function () {
+      if (document.querySelector('.activity--chat-card-container')) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
+        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
+      }
     };
   };
 }
@@ -224,14 +228,13 @@ function statusChange(db, id) {
       }
     }
 
-    var switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
+    if (!document.querySelector('.mdc-checkbox')) return;
 
+    switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
     if (record.status === 'CONFIRMED') {
       switchControl.checked = true;
     }
-
     document.querySelector('.mdc-checkbox').onclick = function () {
-
       if (isLocationVerified()) {
         changeStatusRequest(switchControl, record);
       } else {
@@ -271,9 +274,6 @@ function createComment(db, addendum, currentUser) {
   // console.log(addendum)
   var showMap = false;
   return new Promise(function (resolve) {
-    if (document.getElementById(addendum.addendumId)) {
-      resolve(document.getElementById(addendum.addendumId).outerHTML);
-    }
 
     var commentBox = document.createElement('div');
 
@@ -385,11 +385,9 @@ function maps(evt, show, id, location) {
   if (!evt) {
     var customControlDiv = document.createElement('div');
     var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-
     customControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
   }
-
   var marker = new google.maps.Marker({
     position: location,
     map: map
@@ -474,11 +472,11 @@ function createHeaderContent(db, id) {
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
-          // alert(id)
+
           if (id) {
             updateCreateActivity(record, true);
           } else {
-            listView(true);
+            listView();
           }
         }).catch(function (error) {
           requestCreator('instant', JSON.stringify({
@@ -491,12 +489,17 @@ function createHeaderContent(db, id) {
 }
 
 function reinitCount(db, id) {
-  var activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
-  activityCount.get(id).onsuccess = function (event) {
+  var transaction = db.transaction(['list'], 'readwrite');
+  var store = transaction.objectStore('list');
+
+  store.get(id).onsuccess = function (event) {
     var record = event.target.result;
     if (!record) return;
     record.count = 0;
-    activityCount.put(record);
+    store.put(record);
+  };
+  transaction.oncomplete = function () {
+    console.log("done");
   };
 }
 
@@ -626,16 +629,6 @@ function initializeSelectorWithData(evt, data) {
 
         fillUsersInSelector(data, dialog);
       });
-
-      // if (data.record.create) {
-      //   fillUsersInSelector(data, dialog)
-      //   return
-      // }
-      // const activityStore = db.transaction('activity').objectStore('activity');
-      // activityStore.get(activityRecord.activityId).onsuccess = function (event) {
-      //   const record = event.target.result
-      //   fillUsersInSelector(record, dialog)
-      // }
     }
 
     if (data.store === 'children') {
@@ -936,7 +929,12 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return;
 
     if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && data.attachment.status != 'CANCELLED') {
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value));
+      if (cursor.value.attachment.Name) {
+        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value));
+      }
+      if (cursor.value.attachment.Number) {
+        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value));
+      }
     }
     cursor.continue();
   };
@@ -955,6 +953,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 }
 
 function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+  console.log(data);
   var mainUL = document.getElementById('data-list--container');
   var grp = document.createElement('div');
   grp.className = 'mdc-list-group';
@@ -964,7 +963,23 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     var cursor = event.target.result;
 
     if (!cursor) {
-      insertTemplateByOffice(offices);
+      if (data.suggestCheckIn) {
+        var parent = document.getElementById('data-list--container');
+        var suggestion = document.createElement('div');
+        suggestion.className = 'suggest-checkin--view';
+        var icon = document.createElement('span');
+        icon.className = 'material-icons suggestion-icon';
+        icon.textContent = 'add_alert';
+        suggestion.appendChild(icon);
+
+        var text = document.createElement('span');
+        text.textContent = 'Check-In ?';
+        text.className = 'suggest-checkin--text';
+        suggestion.appendChild(icon);
+        suggestion.appendChild(text);
+        parent.insertBefore(suggestion, parent.childNodes[0]);
+      }
+      insertTemplateByOffice(offices, data.suggestCheckIn);
       return;
     }
 
@@ -987,31 +1002,29 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
 
   dialog['acceptButton_'].onclick = function () {
 
-    var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
-    console.log(radio);
-    var selectedField = JSON.parse(radio.value);
-    console.log(selectedField.office);
-    console.log(selectedField.template);
-    document.getElementById('app-current-panel').dataset.view = 'create';
-    createTempRecord(selectedField.office, selectedField.template, data);
+    if (document.querySelector('.mdc-radio.radio-selected')) {
+
+      var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+      console.log(radio);
+      var selectedField = JSON.parse(radio.value);
+      console.log(selectedField.office);
+      console.log(selectedField.template);
+      document.getElementById('app-current-panel').dataset.view = 'create';
+      createTempRecord(selectedField.office, selectedField.template, data);
+    }
   };
 }
 
-function insertTemplateByOffice(offices) {
-  var avoid = {
-    'admin': '',
-    'recipient': '',
-    'employee': '',
-    'subscription': ''
-  };
+function insertTemplateByOffice(offices, showCheckInFirst) {
 
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   var frag = document.createDocumentFragment();
+  var checkInTemplate = [];
   req.onsuccess = function () {
     var db = req.result;
-    var subscriotions = db.transaction('subscriptions').objectStore('subscriptions').index('office');
-
-    subscriotions.openCursor().onsuccess = function (event) {
+    var tx = db.transaction(['subscriptions'], 'readonly');
+    var subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+    subscriptionObjectStore.openCursor().onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) {
         return;
@@ -1021,18 +1034,29 @@ function insertTemplateByOffice(offices) {
         cursor.continue();
         return;
       }
-      if (avoid.hasOwnProperty(cursor.value.template)) {
-        cursor.continue();
-        return;
-      }
+
       if (document.querySelector('[data-selection="' + cursor.value.office + '"] [data-template="' + cursor.value.template + '"]')) {
         cursor.continue();
         return;
       }
+      if (showCheckInFirst && cursor.value.template === 'check-in') {
+        checkInTemplate.push(_defineProperty({}, cursor.value.office, createGroupList(cursor.value.office, cursor.value.template)));
+        cursor.continue();
+        return;
+      }
       document.querySelector('[data-selection="' + cursor.value.office + '"]').appendChild(createGroupList(cursor.value.office, cursor.value.template));
-      console.log(cursor.value);
 
       cursor.continue();
+    };
+    tx.oncomplete = function () {
+
+      checkInTemplate.forEach(function (li) {
+        var keys = Object.keys(li);
+        keys.forEach(function (key) {
+          var el = document.querySelector('[data-selection="' + key + '"]');
+          el.insertBefore(li[key], el.childNodes[0]);
+        });
+      });
     };
   };
 }
@@ -1047,6 +1071,10 @@ function createTempRecord(office, template, data) {
     var range = IDBKeyRange.only([office, template]);
     officeTemplateCombo.get(range).onsuccess = function (event) {
       var selectedCombo = event.target.result;
+      if (!selectedCombo) {
+        console.log("no such combo");
+        return;
+      }
       var bareBonesVenue = {};
       var bareBonesVenueArray = [];
 
@@ -1904,8 +1932,8 @@ function readNameAndImageFromNumber(assignees, db) {
           displayName: '',
           photoURL: ''
         };
-        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord));
-      } else {
+      }
+      if (document.getElementById('assignees--list')) {
         document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord));
       }
     };
@@ -2659,7 +2687,7 @@ function toggleActionables(id) {
     activityStore.get(id).onsuccess = function (event) {
       var record = event.target.result;
       if (!record) {
-        listView(true);
+        listView();
         return;
       }
       var actions = document.querySelectorAll('.mdc-fab');

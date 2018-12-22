@@ -1,6 +1,5 @@
 var offset = '';
 var apiHandler = new Worker('src/js/apiHandler.js');
-var html5Location;
 
 function handleImageError(img) {
   img.onerror = null;
@@ -16,7 +15,7 @@ function handleImageError(img) {
       var record = event.target.result;
       if (!record) {
         return;
-      }
+      };
 
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
@@ -217,35 +216,51 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-
+  if (!localStorage.getItem('dbexist')) {
+    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
+  }
   var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
-    try {
-      CelllarJson = Towers.getCellularData();
-      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
-      geoFetchPromise.then(function (geoData) {
-        initLocationInterval(geoData);
-      }).catch(function (error) {
-        initLocationInterval(error);
-      });
-    } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: {
-          error: e.message,
-          file: 'services.js',
-          lineNo: 231,
-          device: JSON.parse(native.getInfo()),
-          help: 'Problem in calling method for fetching cellular towers.'
-        }
-      }));
+    getRootRecord().then(function (rootRecord) {
+      try {
+        CelllarJson = Towers.getCellularData();
+        geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
-      locationInterval().then(function (navigatorData) {
-        updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-      }).catch(function (error) {
-        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-      });
-    }
+        if (rootRecord.location.provider === 'MOCK') {
+          geoFetchPromise.then(function (geoData) {
+            updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+          }).catch(function (error) {
+            requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+          });
+          return;
+        }
+
+        geoFetchPromise.then(function (geoData) {
+          initLocationInterval(geoData);
+        }).catch(function (error) {
+          initLocationInterval(error);
+        });
+      } catch (e) {
+        requestCreator('instant', JSON.stringify({
+          message: {
+            error: e.message,
+            file: 'services.js',
+            lineNo: 231,
+            device: JSON.parse(native.getInfo()),
+            help: 'Problem in calling method for fetching cellular towers.'
+          }
+        }));
+
+        if (rootRecord.location.provider === 'MOCK') return;
+
+        locationInterval().then(function (navigatorData) {
+          updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+        });
+      }
+    });
     return;
   }
 
@@ -278,8 +293,27 @@ function initLocationInterval(locationStatus) {
   });
 }
 
-function locationUpdationSuccess(message) {
-  console.log(message);
+function locationUpdationSuccess(location) {
+  if (!location.prev.latitude) return;
+  if (!location.prev.longitude) return;
+  if (!location.new.latitude) return;
+  if (!location.new.longitude) return;
+  var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  var locationEvent = new CustomEvent("location", {
+    "detail": location.new
+  });
+  window.dispatchEvent(locationEvent);
+
+  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+    suggestCheckIn(true).then(function () {
+      if (history.state[0] === 'listView') {
+        listView({
+          urgent: false,
+          nearby: true
+        });
+      }
+    }).catch(console.log);
+  }
 }
 
 function locationUpdationError(error) {
@@ -288,8 +322,21 @@ function locationUpdationError(error) {
   }));
 }
 
-function locationInterval() {
+function mock() {
+  return new Promise(function (resolve) {
+    setTimeout(function () {
+      resolve({
+        'latitude': '',
+        'longitude': '',
+        'accuracy': 99999999,
+        'lastLocationTime': Date.now(),
+        'provider': 'Mock'
+      });
+    }, 6000);
+  });
+}
 
+function navigatorPromise() {
   var stabalzied = [];
   var totalcount = 0;
   var count = 0;
@@ -315,11 +362,15 @@ function locationInterval() {
 
             if (count == 3) {
               clearInterval(myInterval);
+              myInterval = null;
+
               return resolve(stabalzied[0]);
             }
           }
           if (totalcount >= 5) {
             clearInterval(myInterval);
+            myInterval = null;
+
             var bestInNavigator = sortedByAccuracy(stabalzied);
             return resolve(bestInNavigator);
           }
@@ -327,9 +378,29 @@ function locationInterval() {
       }, function (error) {
 
         clearInterval(myInterval);
+        myInterval = null;
+
         reject(error.message);
       });
     }, 500);
+  });
+}
+
+function locationInterval() {
+
+  return new Promise(function (resolve, reject) {
+    var promiseArray = [navigatorPromise()];
+    if (native.getName() === 'Android') {
+      promiseArray.push(mock());
+    }
+    Promise.race(promiseArray).then(function (location) {
+      if (location.provider === 'MOCK') {
+        alert("mock");
+      }
+      resolve(location);
+    }).catch(function (error) {
+      reject(error);
+    });
   });
 }
 
@@ -342,6 +413,8 @@ function sortedByAccuracy(geoData) {
 
 function updateLocationInRoot(finalLocation) {
   if (!finalLocation) return;
+
+  var previousLocation = void 0;
   return new Promise(function (resolve, reject) {
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
@@ -350,16 +423,25 @@ function updateLocationInRoot(finalLocation) {
       var tx = db.transaction(['root'], 'readwrite');
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
+
         var record = event.target.result;
-        record.latitude = finalLocation.latitude;
-        record.longitude = finalLocation.longitude;
-        record.accuracy = finalLocation.accuracy;
-        record.provider = finalLocation.provider;
-        record.lastLocationTime = finalLocation.lastLocationTime;
+        previousLocation = {
+          latitude: record.location.latitude,
+          longitude: record.location.longitude,
+          accuracy: record.location.accuracy,
+          provider: record.location.provider,
+          localStorage: record.location.lastLocationTime
+        };
+        console.log(finalLocation.provider);
+        console.log(finalLocation.latitude);
+        record.location = finalLocation;
         rootStore.put(record);
       };
       tx.oncomplete = function () {
-        resolve('Location Updated Successfully');
+        resolve({
+          prev: previousLocation,
+          new: finalLocation
+        });
       };
     };
     req.onerror = function (error) {
@@ -368,8 +450,33 @@ function updateLocationInRoot(finalLocation) {
   });
 }
 
+function toRad(value) {
+  return value * Math.PI / 180;
+}
+
+function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
+  var R = 6371; // km
+
+  var dLat = toRad(newLocation.latitude - oldLocation.latitude);
+  var dLon = toRad(newLocation.longitude - oldLocation.longitude);
+  var lat1 = toRad(newLocation.latitude);
+  var lat2 = toRad(oldLocation.latitude);
+
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var distance = R * c;
+  return distance;
+}
+
+function isNewLocationMoreThanThreshold(distance) {
+  var THRESHOLD = 0.5; //km
+  if (distance >= THRESHOLD) return true;
+  return false;
+}
+
 function sendCurrentViewNameToAndroid(viewName) {
-  if (localStorage.getItem('deviceType') === 'Android') {
+  if (native.getName() === 'Android') {
     Fetchview.startConversation(viewName);
   }
 }
@@ -457,23 +564,8 @@ function resetLoaders() {
   }
 }
 
-function createBodyForRequestGenerator(record, requestBody, requestGenerator) {
-  var geopoints = {
-    'latitude': record.latitude,
-    'longitude': record.longitude,
-    'accuracy': record.accuracy
-  };
-
-  requestBody['timestamp'] = fetchCurrentTime(record.serverTime);
-  requestBody['geopoint'] = geopoints;
-  requestGenerator.body = requestBody;
-
-  return requestGenerator;
-}
-
 function requestCreator(requestType, requestBody) {
 
-  console.log(apiHandler);
   var requestGenerator = {
     type: requestType,
     body: ''
@@ -489,131 +581,168 @@ function requestCreator(requestType, requestBody) {
       offset = null;
     }
 
-    var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName);
-    req.onsuccess = function () {
-      var db = req.result;
-      var rootTx = db.transaction('root', 'readwrite');
-      var rootObjectStore = rootTx.objectStore('root');
+    getRootRecord().then(function (rootRecord) {
 
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        var record = event.target.result;
-        if (record.latitude && record.longitude && record.accuracy) {
+      var location = rootRecord.location;
+      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 1);
 
-          apiHandler.postMessage(createBodyForRequestGenerator(record, requestBody, requestGenerator));
-        } else {
+      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+      if (isLocationOld) {
+        handleWaitForLocation(requestBody, requestGenerator);
+      } else {
+        var geopoints = {
+          'latitude': location.latitude,
+          'longitude': location.longitude,
+          'accuracy': location.accuracy
+        };
 
-          enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
-        }
-      };
-    };
-  }
+        requestBody['geopoint'] = geopoints;
+        requestGenerator.body = requestBody;
+        console.log(requestGenerator);
+        sendRequest(location, requestGenerator);
+      }
+    });
+  };
 
   // handle the response from apiHandler when operation is completed
-  apiHandler.onmessage = loadViewFromRoot;
+  apiHandler.onmessage = messageReceiver;
   apiHandler.onerror = onErrorMessage;
 }
 
-function loadViewFromRoot(response) {
+function handleWaitForLocation(requestBody, requestGenerator) {
 
-  if (response.data.type === 'update-app') {
+  window.addEventListener('location', function _listener(e) {
+    var data = e.detail;
+    var geopoints = {
+      'latitude': data.latitude,
+      'longitude': data.longitude,
+      'accuracy': data.accuracy
+    };
+    requestBody['geopoint'] = geopoints;
+    requestGenerator.body = requestBody;
+    sendRequest(geopoints, requestGenerator);
+    window.removeEventListener('location', _listener, true);
+  }, true);
+}
 
-    if (native.getName() === 'Android') {
-      console.log("update App");
-      Android.notification(response.data.msg);
-      return;
-    }
-    webkit.messageHandlers.updateApp.postMessage();
+function sendRequest(location, requestGenerator) {
+
+  if (location.latitude && location.longitude && location.accuracy) {
+
+    apiHandler.postMessage(requestGenerator);
+  } else {
+    enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
+  }
+}
+
+function isLastLocationOlderThanThreshold(test, threshold) {
+  var currentTime = moment(moment().valueOf());
+  var lastLocationTime = test;
+  var duration = moment.duration(currentTime.diff(lastLocationTime));
+  var difference = duration.asSeconds();
+  console.log(difference);
+  if (difference > threshold) {
+    return true;
+  }
+  return false;
+}
+
+var receiverCaller = {
+  'update-app': updateApp,
+  'revoke-session': revokeSession,
+  'notification': successDialog,
+  'manageLocation': manageLocation,
+  'error': resetLoaders,
+  'reset-offset': resetOffset,
+  'android-stop-refreshing': androidStopRefreshing,
+  'updateAssigneesList': updateAssigneesList,
+  'updateIDB': updateIDB,
+  'redirect-to-list': changeState
+};
+
+function messageReceiver(response) {
+  receiverCaller[response.data.type](response.data);
+  handleTimeout(response.data.type);
+}
+
+function updateApp(data) {
+  if (native.getName() === 'Android') {
+    console.log("update App");
+    Android.notification(data.msg);
     return;
   }
+  webkit.messageHandlers.updateApp.postMessage();
+}
 
-  if (response.data.type === 'revoke-session') {
-    revokeSession();
-    return;
+function revokeSession() {
+  firebase.auth().signOut().then(function () {
+    removeIDBInstance(firebase.auth().currentUser).then(function () {
+      console.log("session revoked");
+    }).catch(function (error) {
+      var removalError = error;
+      removalError.message = '';
+      requestCreator('instant', JSON.stringify(removalError));
+    });
+  }, function (error) {
+    requestCreator('instant', JSON.stringify(error));
+  });
+}
+
+function resetOffset() {
+  if (offset) {
+    clearTimeout(offset);
+    offset = null;
   }
+}
 
-  if (response.data.type === 'notification') {
-    successDialog();
-    return;
-  }
+function changeState(data) {
+  history.pushState(['listView'], null, null);
+}
 
-  if (response.data.type === 'manageLocation') {
-    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
-    manageLocation();
-    return;
-  }
-
-  // only for development
-  if (response.data.type === 'error') {
-    resetLoaders();
-    snacks(response.data.msg);
-    return;
-  }
-
-  if (response.data.type === 'reset-offset') {
-    if (offset) {
-      console.log("removing offset");
-      clearTimeout(offset);
-      offset = null;
-    }
-    return;
-  }
-
-  if (response.data.type === 'android-stop-refreshing') {
-    androidStopRefreshing();
-    return;
-  }
-
-  var req = window.indexedDB.open(firebase.auth().currentUser.uid);
-
+function updateAssigneesList(data) {
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-
-    if (response.data.type === 'updateAssigneesList') {
-      console.log("only update assingee list");
-      var activityObjectStore = db.transaction('activity').objectStore('activity');
-      //here dbName is activityId
-
-      activityObjectStore.get(response.data.params.id).onsuccess = function (event) {
-        var record = event.target.result;
-        // toggleActionables(record.editable)
-
-        readNameAndImageFromNumber([response.data.params.number], db);
-      };
-      history.pushState(['listView'], null, null);
-      return;
-    }
-
-    if (response.data.type === 'redirect-to-list') {
-
-      history.pushState(['listView'], null, null);
-      return;
-    }
-
-    // updateIDB
-
-    if (response.data.type === 'updateIDB') {
-      if (response.data.msg === 'true') {
-        androidStopRefreshing();
-      }
-
-      if (!history.state) {
-        window["listView"](true);
-        return;
-      }
-
-      if (history.state[0] === 'updateCreateActivity') {
-        toggleActionables(history.state[1].activityId);
-        handleTimeout();
-        return;
-      }
-
-      if (history.state[0] === 'profileView') return;
-
-      window[history.state[0]](history.state[1], false);
-      handleTimeout();
-    }
+    readNameAndImageFromNumber([data.params.number], db);
+    changeState();
   };
+}
+
+function updateIDB(data) {
+  if (data.msg === 'true') {
+    androidStopRefreshing();
+  }
+
+  if (!history.state) {
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
+
+    suggestCheckIn(true).then(function () {
+      window["listView"]({
+        urgent: true,
+        nearby: true
+      });
+    }).catch(console.log);
+    return;
+  }
+
+  if (history.state[0] === 'updateCreateActivity') {
+    toggleActionables(history.state[1].activityId);
+    return;
+  }
+
+  if (history.state[0] === 'profileView') return;
+
+  if (history.state[0] === 'listView') {
+    listView({
+      urgent: false,
+      nearBy: false
+    });
+    return;
+  }
+
+  window[history.state[0]](history.state[1], false);
 }
 
 function androidStopRefreshing() {
@@ -641,11 +770,15 @@ function onErrorMessage(error) {
   });
 }
 
-function handleTimeout() {
+function handleTimeout(type) {
+  var whitelist = ['update-app', 'revoke-session'];
+  var index = whitelist.indexOf(type);
+  if (index > -1) {
+    return;
+  }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-    manageLocation();
-  }, 10000);
+  }, 5000);
 }
 
 function getInputText(selector) {

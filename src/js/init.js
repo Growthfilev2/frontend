@@ -42,10 +42,10 @@ window.addEventListener('load', function () {
       button: {
         text: '',
         show: false,
-        clickAction:{
-          redirection:{
-            value:false,
-            text:''
+        clickAction: {
+          redirection: {
+            value: false,
+            text: ''
           }
         }
       }
@@ -81,19 +81,9 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
-    window[event.state[0]](true)
+    window[event.state[0]]()
     return;
   }
-
-  if (event.state[0] !== 'listView' && event.state[0] !== 'conversation' && event.state[0] !== 'updateCreateActivity') {
-    const req = indexedDB.open(localStorage.getItem('dbexist'))
-    req.onsuccess = function () {
-      const db = req.result
-      window[event.state[0]](event.state[1], db, false);
-    }
-    return;
-  } 
-  
   window[event.state[0]](event.state[1], false)
 }
 
@@ -162,16 +152,23 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-  const drawerDiv = document.createElement('div')
-  drawerDiv.className = 'drawer--cont'
 
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
-  imageViewDialog()
+  imageViewDialog();
+  drawerDom();
 }
+
+function drawerDom() {
+  const div = document.createElement('div')
+  div.id = 'drawer-parent';
+  document.body.appendChild(div);
+}
+
+
 
 function imageViewDialog() {
 
@@ -213,26 +210,26 @@ let native = function () {
     setIosInfo: function (iosDeviceInfo) {
       const splitByName = iosDeviceInfo.split("&")
       const deviceInfo = {
-        baseOs:splitByName[0],
-        deviceBrand:splitByName[1],
-        deviceModel:splitByName[2],
-        appVersion:Number(splitByName[3]),
-        osVersion:splitByName[4],
-        id:splitByName[5],
-        initConnection:splitByName[6]
+        baseOs: splitByName[0],
+        deviceBrand: splitByName[1],
+        deviceModel: splitByName[2],
+        appVersion: Number(splitByName[3]),
+        osVersion: splitByName[4],
+        id: splitByName[5],
+        initConnection: splitByName[6]
       }
-      
+
       localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
       return localStorage.getItem('iosUUID');
     },
     getInfo: function () {
-      if(!this.getName()) {
+      if (!this.getName()) {
         return JSON.stringify({
-          'id':'123',
-          'appVersion':3,
-          'baseOs':'macOs'
+          'id': '123',
+          'appVersion': 4,
+          'baseOs': 'macOs'
         })
       }
       if (this.getName() === 'Android') {
@@ -240,28 +237,10 @@ let native = function () {
       }
       return this.getIosInfo();
     }
-  } 
+  }
 }();
 
 
-
-
-function removeIDBInstance(auth) {
-
-
-  return new Promise(function (resolve, reject) {
-
-      const req = indexedDB.deleteDatabase(auth.uid)
-      req.onsuccess = function () {
-       
-        resolve(true)
-      }
-      req.onerror = function () {
-        reject(req.error)
-      }
-      
-  })
-}
 
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
@@ -276,32 +255,149 @@ function startApp() {
     init(auth);
   })
 }
+// new day suggest
+// if location changes
+let app = function () {
+  return {
+    today: function () {
+      return moment().format("DD/MM/YYYY");
+    },
+    tomorrow: function () {
+      return moment(this.today()).add(1, 'day');
+    },
+    getLastLocationTime: function () {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
+          resolve(rootRecord.location.lastLocationTime);
+        }).catch(function (error) {
+          reject(error)
+        })
+      })
+    },
+    isNewDay: function () {
+      return new Promise(function (resolve, reject) {
+        app.getLastLocationTime().then(function (time) {
+          if (moment(time).isSame(moment(), 'day')) {
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        }).catch(function (error) {
+          reject(error)
+        })
+      })
+    }
+  }
+}();
+
+
+function idbVersionLessThan2(auth) {
+  return new Promise(function (resolve, reject) {
+    let value = false;
+    const req = indexedDB.open(auth.uid, 2);
+    let db;
+    req.onupgradeneeded = function (evt) {
+      if (evt.oldVersion === 1) {
+        value = true
+      } else {
+        value = false;
+      }
+    }
+    req.onsuccess = function () {
+      db = req.result;
+      db.close();
+      resolve(value)
+    }
+    req.onerror = function () {
+      reject({error:req.error,device:native.getInfo()})
+    }
+  })
+}
+
+function removeIDBInstance(auth) {
+
+  return new Promise(function (resolve, reject) {
+    const failure = {
+      message: 'Please Restart The App',
+      error: '',
+      device:native.getInfo()
+    }
+    const req = indexedDB.deleteDatabase(auth.uid)
+    req.onsuccess = function () {
+      resolve(true)
+    }
+    req.onblocked = function () {
+      failure.error = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
+      reject(failure)
+    }
+    req.onerror = function () {
+      failure.error = req.error
+      reject(failure)
+    }
+  })
+}
 
 function init(auth) {
 
-  /** When app has been initialzied before 
-   * render list view first, then perform app sync and mange location
-   */
+  idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
-  if (localStorage.getItem('dbexist')) {
-    listView(true)
-    requestCreator('now', native.getInfo())
-    manageLocation()
-    return
-  }
-  
-  document.getElementById('growthfile').appendChild(loader('init-loader'))
-  /** when app initializes for the first time */
-  console.log("initialzie idb")
-  const deviceInfo = JSON.parse(native.getInfo());
 
-  removeIDBInstance(auth).then(function(isRemoved){
-    if(isRemoved){
-      requestCreator('now', native.getInfo())
+    if (localStorage.getItem('dbexist')) {
+      from = 1;
+      if (lessThanTwo) {
+        resetApp(auth, from);
+      } else {
+        startInitializatioOfList(auth);
+      }
+      return;
     }
+
+    resetApp(auth, 0)
+
   }).catch(function(error){
-    console.log(error)
+    requestCreator('instant',JSON.stringify({message:error}));
+
   })
+
   return
 }
 
+function resetApp(auth, from) {
+  removeIDBInstance(auth).then(function () {
+    localStorage.removeItem('dbexist');
+    history.pushState(null,null,null);
+    document.getElementById('growthfile').appendChild(loader('init-loader'))
+    
+    setTimeout(function(){
+      snacks('Growthfile is Loading. Please Wait');
+    },1000)
+
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: from
+    })
+  }).catch(function (error) {
+    snacks(error.message);
+    requestCreator('instant',JSON.stringify({message:error}));
+  })
+}
+
+function startInitializatioOfList(auth) {
+  localStorage.removeItem('clickedActivity');
+  app.isNewDay(auth).then(function (isNew) {
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: ''
+    });
+    suggestCheckIn(isNew).then(function () {
+      listView({urgent:isNew,nearby:isNew});
+    }).catch(function(error){
+        requestCreator('instant',JSON.stringify({message:error}))
+    })
+  }).catch(function(error){
+    requestCreator('instant',JSON.stringify({message:error}))
+  })
+}
