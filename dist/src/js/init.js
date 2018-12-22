@@ -1,10 +1,10 @@
 firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
 });
 
 window.onerror = function (msg, url, lineNo, columnNo, error) {
@@ -291,7 +291,7 @@ function idbVersionLessThan2(auth) {
       resolve(value);
     };
     req.onerror = function () {
-      reject(req.error);
+      reject({ error: req.error, device: native.getInfo() });
     };
   });
 }
@@ -301,7 +301,8 @@ function removeIDBInstance(auth) {
   return new Promise(function (resolve, reject) {
     var failure = {
       message: 'Please Restart The App',
-      error: ''
+      error: '',
+      device: native.getInfo()
     };
     var req = indexedDB.deleteDatabase(auth.uid);
     req.onsuccess = function () {
@@ -333,24 +334,30 @@ function init(auth) {
     }
 
     resetApp(auth, 0);
-  }).catch(console.log);
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({ message: error }));
+  });
 
   return;
 }
 
 function resetApp(auth, from) {
-  console.log(from);
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
     history.pushState(null, null, null);
     document.getElementById('growthfile').appendChild(loader('init-loader'));
+
+    setTimeout(function () {
+      snacks('Growthfile is Loading. Please Wait');
+    }, 1000);
+
     requestCreator('now', {
       device: native.getInfo(),
       from: from
     });
   }).catch(function (error) {
     snacks(error.message);
-    console.log(error);
+    requestCreator('instant', JSON.stringify({ message: error }));
   });
 }
 
@@ -366,6 +373,10 @@ function startInitializatioOfList(auth) {
     });
     suggestCheckIn(isNew).then(function () {
       listView({ urgent: isNew, nearby: isNew });
-    }).catch(console.log);
-  }).catch(console.log);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify({ message: error }));
+    });
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({ message: error }));
+  });
 }

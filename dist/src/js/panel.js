@@ -1,4 +1,4 @@
-var notification = new Worker('js/notification.js');
+var notification = new Worker('src/js/notification.js');
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'

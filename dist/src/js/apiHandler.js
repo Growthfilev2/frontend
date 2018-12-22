@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
-var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
+var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
 var deviceInfo = void 0;
 /** reinitialize the firebase app */
 
@@ -42,12 +42,12 @@ function createLog(body) {
 }
 
 firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
 });
 
 // when worker receives the request body from the main thread
@@ -162,19 +162,10 @@ function fetchServerTime(info) {
 }
 
 function instant(error) {
-  console.log(error);
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
-
-/**
- * Initialize the indexedDB with database of currently signed in user's uid.
- */
 
 function fetchRecord(dbName, id) {
   return new Promise(function (resolve) {
@@ -259,12 +250,6 @@ function createObjectStores(request, auth, fromTime) {
   });
 
   addendum.createIndex('activityId', 'activityId');
-  // addendum.createIndex('timestamp', 'timestamp')
-
-  var activityCount = db.createObjectStore('activityCount', {
-    keyPath: 'activityId'
-  });
-  activityCount.createIndex('count', 'count');
 
   var subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
@@ -287,6 +272,7 @@ function createObjectStores(request, auth, fromTime) {
   var map = db.createObjectStore('map', {
     autoIncrement: true
   });
+
   map.createIndex('activityId', 'activityId');
   map.createIndex('location', 'location');
   map.createIndex('latitude', 'latitude');
@@ -607,23 +593,20 @@ function putAssignessInStore(db, assigneeArray) {
 
 function removeUserFromAssigneeInActivity(db, userActivityId) {
   if (!userActivityId.length) return;
-  var activityTx = db.transaction('activity', 'readwrite');
+  var activityTx = db.transaction(['activity'], 'readwrite');
   var activityObjectStore = activityTx.objectStore('activity');
   userActivityId.forEach(function (data) {
     activityObjectStore.get(data.id).onsuccess = function (event) {
       var record = event.target.result;
-      if (!record) {
-        console.log('acitvity does not exist');
-        return;
-      } else {
-        var indexOfUser = record.assignees.indexOf(data.user);
-        if (indexOfUser > -1) {
-          record.assignees.splice(indexOfUser, 1);
-        }
+      if (!record) return;
+      var indexOfUser = record.assignees.indexOf(data.user);
+      if (indexOfUser > -1) {
+        record.assignees.splice(indexOfUser, 1);
         activityObjectStore.put(record);
       }
     };
   });
+
   activityTx.oncomplete = function () {
     console.log('user removed from assignee in activity where he once was if that activity existed');
   };
@@ -631,53 +614,27 @@ function removeUserFromAssigneeInActivity(db, userActivityId) {
 
 function removeActivityFromDB(db, myActivities) {
   if (!myActivities.length) return;
-  var transaction = db.transaction(['activity', 'list'], 'readwrite');
+  var transaction = db.transaction(['activity', 'list', 'children'], 'readwrite');
   var activityObjectStore = transaction.objectStore('activity');
   var listStore = transaction.objectStore('list');
+  var chidlrenObjectStore = transaction.objectStore('children');
   myActivities.forEach(function (id) {
-    var deleteReqMain = activityObjectStore.delete(id);
+    var deleteReqActivity = activityObjectStore.delete(id);
     var deleteReqList = listStore.delete(id);
-
-    deleteReqList.onsuccess = function (event) {
-      console.log(event);
+    var deleteReqChildren = chidlrenObjectStore.delete(id);
+    deleteReqActivity.onerror = function () {
+      instant(createLog(deleteReqActivity.error));
     };
-    deleteReqMain.onsuccess = function (event) {
-      console.log(event);
+    deleteReqList.onerror = function () {
+      instant(createLog(deleteReqList.error));
+    };
+    deleteReqChildren.onerror = function () {
+      instant(createLog(deleteReqChildren.error));
     };
   });
 
   transaction.oncomplete = function () {
-    console.log('all activities removed');
-    removeActivityFromKeyPath(myActivities);
-  };
-}
-
-function removeActivityFromKeyPath(activitiesToRemove) {
-
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  var countDeleteReq = void 0;
-  var childrenDeleteReq = void 0;
-  req.onsuccess = function () {
-    var db = req.result;
-    var tx = db.transaction(['activityCount', 'children'], 'readwrite');
-    var activityCountObjectStore = tx.objectStore('activityCount');
-    var chidlrenObjectStore = tx.objectStore('children');
-
-    activitiesToRemove.forEach(function (id) {
-      countDeleteReq = activityCountObjectStore.delete(id);
-      countDeleteReq.onsuccess = function (event) {
-        console.log(event);
-      };
-      childrenDeleteReq = chidlrenObjectStore.delete(id);
-      childrenDeleteReq.onsuccess = function (event) {
-        console.log(event);
-      };
-    });
-
-    tx.oncomplete = function () {
-      mapAndCalendarRemovalRequest(activitiesToRemove);
-    };
+    mapAndCalendarRemovalRequest(activitiesToRemove);
   };
 }
 
@@ -847,7 +804,10 @@ function createListStore(db, activity) {
     'secondLine': '',
     'count': '',
     'timestamp': activity.timestamp,
-    'creator': { number: activity.creator, photo: '' },
+    'creator': {
+      number: activity.creator,
+      photo: ''
+    },
     'activityName': activity.activityName,
     'status': activity.status
   };
@@ -925,8 +885,6 @@ function successResponse(read, swipeInfo) {
     var rootObjectStore = rootObjectStoreTx.objectStore('root');
     var activitytx = db.transaction(['activity'], 'readwrite');
     var activityObjectStore = activitytx.objectStore('activity');
-    // const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
-    var listStoreTx = db.transaction(['list'], 'readwrite');
 
     var counter = {};
 
