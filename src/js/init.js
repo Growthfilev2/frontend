@@ -359,18 +359,21 @@ function init(auth) {
 }
 
 function resetApp(auth, from) {
-  console.log(from)
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
     history.pushState(null,null,null);
     document.getElementById('growthfile').appendChild(loader('init-loader'))
+    
+    setTimeout(function(){
+      snacks('Growthfile is Loading. Please Wait');
+    },1000)
+
     requestCreator('now', {
       device: native.getInfo(),
       from: from
     })
   }).catch(function (error) {
     snacks(error.message);
-    console.log(error);
   })
 }
 
