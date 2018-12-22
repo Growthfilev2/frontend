@@ -687,54 +687,27 @@ function removeUserFromAssigneeInActivity(db, userActivityId) {
 
 function removeActivityFromDB(db, myActivities) {
   if (!myActivities.length) return;
-  const transaction = db.transaction(['activity','list'], 'readwrite')
+  const transaction = db.transaction(['activity','list','children'], 'readwrite')
   const activityObjectStore = transaction.objectStore('activity');
-  const listStore =  transaction.objectStore('list')
+  const listStore =  transaction.objectStore('list');
+  const chidlrenObjectStore = transaction.objectStore('children');
   myActivities.forEach(function (id) {
-    const deleteReqMain = activityObjectStore.delete(id);
+    const deleteReqActivity = activityObjectStore.delete(id);
     const deleteReqList = listStore.delete(id);
-   
-    deleteReqList.onsuccess = function(event){
-      console.log(event)
+    const deleteReqChildren = chidlrenObjectStore.delete(id);
+    deleteReqActivity.onerror = function () {
+      instant(createLog(deleteReqActivity.error))
     }
-    deleteReqMain.onsuccess = function (event) {
-      console.log(event)
+    deleteReqList.onerror = function(){
+      instant(createLog(deleteReqList.error))
+    }
+    deleteReqChildren.onerror = function(){
+      instant(createLog(deleteReqChildren.error))
     }
   })
-
+  
   transaction.oncomplete = function () {
-    console.log('all activities removed')
-    removeActivityFromKeyPath(myActivities)
-  }
-
-}
-
-function removeActivityFromKeyPath(activitiesToRemove) {
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  let countDeleteReq;
-  let childrenDeleteReq;
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['activityCount', 'children'], 'readwrite')
-    const activityCountObjectStore = tx.objectStore('activityCount');
-    const chidlrenObjectStore = tx.objectStore('children');
-
-    activitiesToRemove.forEach(function (id) {
-      countDeleteReq = activityCountObjectStore.delete(id);
-      countDeleteReq.onsuccess = function(event){
-        console.log(event)
-      }
-      childrenDeleteReq = chidlrenObjectStore.delete(id);
-      childrenDeleteReq.onsuccess = function(event){
-        console.log(event)
-      }
-    })
-
-    tx.oncomplete = function () {
-      mapAndCalendarRemovalRequest(activitiesToRemove)
-    }
+    mapAndCalendarRemovalRequest(activitiesToRemove)
   }
 }
 
