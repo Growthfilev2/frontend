@@ -272,12 +272,6 @@ function createObjectStores(request, auth, fromTime) {
   })
 
   addendum.createIndex('activityId', 'activityId')
-  // addendum.createIndex('timestamp', 'timestamp')
-
-  const activityCount = db.createObjectStore('activityCount', {
-    keyPath: 'activityId'
-  })
-  activityCount.createIndex('count', 'count')
 
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
@@ -300,6 +294,7 @@ function createObjectStores(request, auth, fromTime) {
   const map = db.createObjectStore('map', {
     autoIncrement: true
   })
+
   map.createIndex('activityId', 'activityId')
   map.createIndex('location', 'location')
   map.createIndex('latitude', 'latitude')
@@ -970,8 +965,6 @@ function successResponse(read, swipeInfo) {
     const rootObjectStore = rootObjectStoreTx.objectStore('root')
     const activitytx = db.transaction(['activity'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
-    // const activityCount = db.transaction('activityCount', 'readwrite').objectStore('activityCount');
-    const listStoreTx = db.transaction(['list'], 'readwrite');
 
     let counter = {}
 
