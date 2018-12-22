@@ -48,22 +48,18 @@ function fetchAddendumForComment(id) {
 
   req.onsuccess = function () {
     const db = req.result
-    const addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId')
+    const transaction = db.transaction(['addendum'], 'readonly');
+    const addendumIndex = transaction.objectStore('addendum').index('activityId');
     createHeaderContent(db, id)
     commentPanel(id)
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
-    let commentDom = ''
+   
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-        if (document.querySelector('.activity--chat-card-container')) {
-          console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
-          document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
-        }
-        return
-      }
+      if(!cursor) return;
+
       if (!document.getElementById(cursor.value.addendumId)) {
         createComment(db, cursor.value, user).then(function (comment) {
           if (document.getElementById('chat-container')) {
@@ -73,6 +69,13 @@ function fetchAddendumForComment(id) {
       }
 
       cursor.continue()
+    }
+    transaction.oncomplete = function(){
+      if (document.querySelector('.activity--chat-card-container')) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
+        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
+      }
+  
     }
   }
 }
@@ -233,16 +236,13 @@ function statusChange(db, id) {
       }
     }
 
+    if(!document.querySelector('.mdc-checkbox')) return;
 
-    const switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
-
+    switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
     if (record.status === 'CONFIRMED') {
       switchControl.checked = true
     }
-
     document.querySelector('.mdc-checkbox').onclick = function () {
-
-
       if (isLocationVerified()) {
         changeStatusRequest(switchControl, record)
       } else {
@@ -283,9 +283,6 @@ function createComment(db, addendum, currentUser) {
   // console.log(addendum)
   let showMap = false
   return new Promise(function (resolve) {
-    if (document.getElementById(addendum.addendumId)) {
-      resolve(document.getElementById(addendum.addendumId).outerHTML)
-    }
 
     let commentBox = document.createElement('div')
 
@@ -2026,11 +2023,9 @@ function readNameAndImageFromNumber(assignees, db) {
           displayName: '',
           photoURL: '',
         }
+      }
+      if(document.getElementById('assignees--list')){
         document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
-
-      } else {
-        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
-
       }
     }
   })

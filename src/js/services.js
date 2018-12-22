@@ -692,6 +692,20 @@ function updateApp(data){
   
 }
 
+function revokeSession(){
+  firebase.auth().signOut().then(function() {
+    removeIDBInstance(firebase.auth().currentUser).then(function(){
+      console.log("session revoked")
+    }).catch(function(error){
+      const removalError = error;
+      removalError.message = ''
+      requestCreator('instant',JSON.stringify(removalError))  
+    })
+  }, function(error) {
+    requestCreator('instant',JSON.stringify(error))  
+  });
+}
+
 function resetOffset(){
   if (offset) {
     clearTimeout(offset);
@@ -784,7 +798,7 @@ function handleTimeout(type) {
   }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 3000);
+  }, 5000);
 }
 
 function getInputText(selector) {
