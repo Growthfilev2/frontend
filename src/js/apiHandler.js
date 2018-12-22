@@ -687,18 +687,22 @@ function removeUserFromAssigneeInActivity(db, userActivityId) {
 
 function removeActivityFromDB(db, myActivities) {
   if (!myActivities.length) return;
-  const activityTx = db.transaction('activity', 'readwrite')
-  const activityObjectStore = activityTx.objectStore('activity')
-  let deleteReq;
+  const transaction = db.transaction(['activity','list'], 'readwrite')
+  const activityObjectStore = transaction.objectStore('activity');
+  const listStore =  transaction.objectStore('list')
   myActivities.forEach(function (id) {
-    deleteReq = activityObjectStore.delete(id)
-    deleteReq.onsuccess = function (event) {
+    const deleteReqMain = activityObjectStore.delete(id);
+    const deleteReqList = listStore.delete(id);
+   
+    deleteReqList.onsuccess = function(event){
       console.log(event)
-      console.log('record removed')
+    }
+    deleteReqMain.onsuccess = function (event) {
+      console.log(event)
     }
   })
 
-  activityTx.oncomplete = function () {
+  transaction.oncomplete = function () {
     console.log('all activities removed')
     removeActivityFromKeyPath(myActivities)
   }
@@ -718,8 +722,14 @@ function removeActivityFromKeyPath(activitiesToRemove) {
     const chidlrenObjectStore = tx.objectStore('children');
 
     activitiesToRemove.forEach(function (id) {
-      activityCountObjectStore.delete(id);
-      chidlrenObjectStore.delete(id);
+      countDeleteReq = activityCountObjectStore.delete(id);
+      countDeleteReq.onsuccess = function(event){
+        console.log(event)
+      }
+      childrenDeleteReq = chidlrenObjectStore.delete(id);
+      childrenDeleteReq.onsuccess = function(event){
+        console.log(event)
+      }
     })
 
     tx.oncomplete = function () {
@@ -730,48 +740,39 @@ function removeActivityFromKeyPath(activitiesToRemove) {
 
 function mapAndCalendarRemovalRequest(activitiesToRemove) {
 
-
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
-
     const tx = db.transaction(['calendar', 'map'], 'readwrite')
     const calendarObjectStore = tx.objectStore('calendar').index('activityId')
     const mapObjectStore = tx.objectStore('map').index('activityId')
 
-    const calendarRemoval = deleteByIndex(calendarObjectStore, activitiesToRemove)
-    const mapRemoval = deleteByIndex(mapObjectStore, activitiesToRemove)
-
-    Promise.all([calendarRemoval, mapRemoval]).then(function (message) {}).catch(function (error) {
-      instant(JSON.stringify({
-        message: error
-      }))
-    })
+    deleteByIndex(calendarObjectStore, activitiesToRemove)
+    deleteByIndex(mapObjectStore, activitiesToRemove)
+    tx.oncomplete = function(){
+      console.log("activity is removed from all stores")
+    }
+    tx.onerror = function(){
+      console.log(transaction.error)
+    }
+  
   }
 }
 
 
 function deleteByIndex(store, activitiesToRemove) {
-  return new Promise(function (resolve, reject) {
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result;
-      if (!cursor) {
-        resolve('all records removed')
-        return
-      }
+      if (!cursor) return;
 
       if (activitiesToRemove.indexOf(cursor.key) > -1) {
         cursor.delete()
       }
       cursor.continue()
     }
-
-
-    store.onerror = function (event) {
-      reject(event)
+    store.onerror = function () {
+      instant(createLog(store.error))
     }
-
-  })
 }
 
 

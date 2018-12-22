@@ -50,12 +50,6 @@ function fetchDataForActivityList() {
 }
 
 
-function convertResultsToList(results) {
- 
-}
-
-
-
 function activityListUI(data) {
 
   const li = document.createElement('li')
