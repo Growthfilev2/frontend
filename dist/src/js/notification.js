@@ -34,7 +34,7 @@ self.onmessage = function (event) {
       var cursor = event.target.result;
       if (!cursor) return;
 
-      if (moment(cursor.value.start).isSameOrAfter(yesterday) && moment(cursor.value.end).isSameOrBefore(tomorrow)) {
+      if (yesterday.isSameOrBefore(moment(cursor.value.end)) && tomorrow.isSameOrAfter(moment(cursor.value.start))) {
         var data = {
           activityId: cursor.value.activityId,
           name: cursor.value.scheduleName,

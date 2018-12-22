@@ -525,7 +525,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -617,7 +617,6 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       'longitude': data.longitude,
       'accuracy': data.accuracy
     };
-    alert("Event listener ran");
     requestBody['geopoint'] = geopoints;
     requestGenerator.body = requestBody;
     sendRequest(geopoints, requestGenerator);

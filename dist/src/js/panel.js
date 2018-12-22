@@ -40,6 +40,7 @@ function fetchDataForActivityList() {
     };
 
     transaction.oncomplete = function () {
+      console.log(results);
       convertResultsToList(results);
     };
   };
@@ -50,9 +51,7 @@ function convertResultsToList(results) {
   results.forEach(function (data) {
     activityDom += activityListUI(data).outerHTML;
   });
-  if(document.getElementById('activity--list')) {
-    document.getElementById('activity--list').innerHTML = activityDom;
-  }
+  document.getElementById('activity--list').innerHTML = activityDom;
   scrollToActivity();
 }
 

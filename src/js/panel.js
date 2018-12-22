@@ -28,7 +28,7 @@ function fetchDataForActivityList() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;    
-    let results = [];
+    let activityDom = '' 
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
@@ -36,24 +36,22 @@ function fetchDataForActivityList() {
     index.openCursor(null,'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      results.push(cursor.value);
+      activityDom += activityListUI(cursor.value).outerHTML;
       cursor.continue();
-      }
+    }
 
     transaction.oncomplete = function () {
-      convertResultsToList(results);
+      if(document.getElementById('activity--list')){
+        document.getElementById('activity--list').innerHTML = activityDom;
+      }
+      scrollToActivity()
     }
   }
 }
 
 
 function convertResultsToList(results) {
-  let activityDom = ''
-  results.forEach(function (data) {
-    activityDom += activityListUI(data).outerHTML;
-  })
-  document.getElementById('activity--list').innerHTML = activityDom;
-  scrollToActivity()
+ 
 }
 
 
