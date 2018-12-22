@@ -309,7 +309,7 @@ function idbVersionLessThan2(auth) {
       resolve(value)
     }
     req.onerror = function () {
-      reject(req.error)
+      reject({error:req.error,device:native.getInfo()})
     }
   })
 }
@@ -319,7 +319,8 @@ function removeIDBInstance(auth) {
   return new Promise(function (resolve, reject) {
     const failure = {
       message: 'Please Restart The App',
-      error: ''
+      error: '',
+      device:native.getInfo()
     }
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function () {
@@ -353,7 +354,10 @@ function init(auth) {
 
     resetApp(auth, 0)
 
-  }).catch(console.log)
+  }).catch(function(error){
+    requestCreator('instant',JSON.stringify({message:error}));
+
+  })
 
   return
 }
@@ -374,6 +378,7 @@ function resetApp(auth, from) {
     })
   }).catch(function (error) {
     snacks(error.message);
+    requestCreator('instant',JSON.stringify({message:error}));
   })
 }
 
@@ -389,6 +394,10 @@ function startInitializatioOfList(auth) {
     });
     suggestCheckIn(isNew).then(function () {
       listView({urgent:isNew,nearby:isNew});
-    }).catch(console.log)
-  }).catch(console.log)
+    }).catch(function(error){
+        requestCreator('instant',JSON.stringify({message:error}))
+    })
+  }).catch(function(error){
+    requestCreator('instant',JSON.stringify({message:error}))
+  })
 }
