@@ -9,7 +9,6 @@ self.onmessage = function (event) {
     nearBy: nearBy,
   }
 
-  const curentTimestamp = moment().valueOf();
 
   const req = indexedDB.open(dbName)
   let userCoords;

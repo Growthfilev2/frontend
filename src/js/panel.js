@@ -16,6 +16,7 @@ function listView(filter) {
     fetchDataForActivityList();
     return;
   }
+  
   notificationWorker('urgent', filter.urgent).then(function () {
     notificationWorker('nearBy', filter.nearby).then(function (req) {
       fetchDataForActivityList();

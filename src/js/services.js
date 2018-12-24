@@ -739,7 +739,7 @@ function updateIDB(data){
     suggestCheckIn(true).then(function () {
       window["listView"]({
         urgent: true,
-        nearby: true
+        nearby: false
       });
     }).catch(console.log)
     return;

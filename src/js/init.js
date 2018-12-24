@@ -393,7 +393,7 @@ function startInitializatioOfList(auth) {
       from: ''
     });
     suggestCheckIn(isNew).then(function () {
-      listView({urgent:isNew,nearby:isNew});
+      listView({urgent:isNew,nearby:false});
     }).catch(function(error){
         requestCreator('instant',JSON.stringify({message:error}))
     })
