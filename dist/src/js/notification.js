@@ -8,9 +8,6 @@ self.onmessage = function (event) {
     urgent: urgent,
     nearBy: nearBy
   };
-
-  var curentTimestamp = moment().valueOf();
-
   var req = indexedDB.open(dbName);
   var userCoords = void 0;
   var distanceArr = [];
@@ -77,6 +74,37 @@ self.onmessage = function (event) {
     return holder;
   }
 
+  function resetNearBy() {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(dbName);
+      req.onsuccess = function () {
+        var db = req.result;
+        var transaction = db.transaction(['list'], 'readwrite');
+        var objectStore = transaction.objectStore('list');
+        var index = objectStore.index('status');
+        var cursorReq = index.openCursor('PENDING');
+        cursorReq.onsuccess = function (event) {
+          var cursor = event.target.result;
+          if (!cursor) return;
+          if (cursor.value.nearby) {
+            cursor.value.nearby = false;
+            objectStore.put(cursor.value);
+          }
+          cursor.continue();
+        };
+        transaction.oncomplete = function () {
+          resolve(true);
+        };
+        transaction.onerror = function () {
+          reject(transaction.error);
+        };
+      };
+      req.onerror = function () {
+        reject(req.error);
+      };
+    });
+  }
+
   function updateTimestamp(type, results) {
     return new Promise(function (resolve, reject) {
       var req = indexedDB.open(dbName);
@@ -141,9 +169,11 @@ self.onmessage = function (event) {
       mapTx.oncomplete = function () {
         var filtered = isDistanceNearBy(distanceArr, 0.5);
         var sorted = sortDistance(filtered);
-        updateTimestamp('nearby', { data: sorted.reverse(), 'tsUpdate': tsUpdate }).then(function (success) {
-          self.postMessage(success);
-        });
+        resetNearBy().then(function () {
+          updateTimestamp('nearby', { data: sorted.reverse(), 'tsUpdate': tsUpdate }).then(function (success) {
+            self.postMessage(success);
+          });
+        }).catch(console.log);
       };
     };
   }
@@ -160,7 +190,8 @@ self.onmessage = function (event) {
 
     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     var distance = R * c;
-    var distanceInMeters = distance / 1000;
+
+    var distanceInMeters = distance;
 
     var record = {
       id: otherLocations.activityId,

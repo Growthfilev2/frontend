@@ -217,8 +217,8 @@ function geolocationApi(method, url, data) {
 }
 
 function manageLocation() {
-  if(!localStorage.getItem('dbexist')) {
-    localStorage.setItem('dbexist',firebase.auth().currentUser.uid)
+  if (!localStorage.getItem('dbexist')) {
+    localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
   }
   var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = false;
@@ -437,8 +437,6 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-        console.log(finalLocation.provider);
-        console.log(finalLocation.latitude);
         record.location = finalLocation;
         rootStore.put(record);
       };
@@ -664,69 +662,69 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 const receiverCaller = {
-  'update-app' : updateApp,
-  'revoke-session':revokeSession,
-  'notification' : successDialog,
-  'manageLocation':manageLocation,
-  'error':  resetLoaders,
-  'reset-offset':resetOffset,
-  'android-stop-refreshing':androidStopRefreshing,
-  'updateAssigneesList':updateAssigneesList,
-  'updateIDB':updateIDB,
-  'redirect-to-list':changeState,
+  'update-app': updateApp,
+  'revoke-session': revokeSession,
+  'notification': successDialog,
+  'manageLocation': manageLocation,
+  'error': resetLoaders,
+  'reset-offset': resetOffset,
+  'android-stop-refreshing': androidStopRefreshing,
+  'updateAssigneesList': updateAssigneesList,
+  'updateIDB': updateIDB,
+  'redirect-to-list': changeState,
 }
 
-function messageReceiver(response){
-  receiverCaller[response.data.type](response.data)  
+function messageReceiver(response) {
+  receiverCaller[response.data.type](response.data)
   handleTimeout(response.data.type);
 }
 
 
-function updateApp(data){
+function updateApp(data) {
   if (native.getName() === 'Android') {
     console.log("update App");
     Android.notification(data.msg);
     return;
   }
   webkit.messageHandlers.updateApp.postMessage();
-  
+
 }
 
-function revokeSession(){
-  firebase.auth().signOut().then(function() {
-    removeIDBInstance(firebase.auth().currentUser).then(function(){
+function revokeSession() {
+  firebase.auth().signOut().then(function () {
+    removeIDBInstance(firebase.auth().currentUser).then(function () {
       console.log("session revoked")
-    }).catch(function(error){
+    }).catch(function (error) {
       const removalError = error;
       removalError.message = ''
-      requestCreator('instant',JSON.stringify(removalError))  
+      requestCreator('instant', JSON.stringify(removalError))
     })
-  }, function(error) {
-    requestCreator('instant',JSON.stringify(error))  
+  }, function (error) {
+    requestCreator('instant', JSON.stringify(error))
   });
 }
 
-function resetOffset(){
+function resetOffset() {
   if (offset) {
     clearTimeout(offset);
     offset = null;
   }
 }
 
-function changeState(data){
-history.pushState(['listView'],null,null);
+function changeState(data) {
+  history.pushState(['listView'], null, null);
 }
 
-function updateAssigneesList(data){
+function updateAssigneesList(data) {
   const req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function(){
+  req.onsuccess = function () {
     const db = req.result;
     readNameAndImageFromNumber([data.params.number], db);
     changeState()
   }
 }
 
-function updateIDB(data){
+function updateIDB(data) {
   if (data.msg === 'true') {
     androidStopRefreshing()
   }
@@ -737,21 +735,20 @@ function updateIDB(data){
     }, 5000);
 
     suggestCheckIn(true).then(function () {
-      window["listView"]({
-        urgent: true,
-        nearby: true
-      });
-    }).catch(console.log)
+        window["listView"]({
+          urgent: true,
+          nearby:true
+        });
+    });
     return;
   }
-
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
   }
 
   if (history.state[0] === 'profileView') return;
-  
+
   if (history.state[0] === 'listView') {
     listView({
       urgent: false,
@@ -791,9 +788,9 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout(type) {
-  const whitelist = ['update-app','revoke-session'];
+  const whitelist = ['update-app', 'revoke-session'];
   const index = whitelist.indexOf(type);
-  if(index > -1) {
+  if (index > -1) {
     return;
   }
   offset = setTimeout(function () {

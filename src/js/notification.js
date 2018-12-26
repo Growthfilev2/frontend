@@ -8,9 +8,6 @@ self.onmessage = function (event) {
     urgent: urgent,
     nearBy: nearBy,
   }
-
-  const curentTimestamp = moment().valueOf();
-
   const req = indexedDB.open(dbName)
   let userCoords;
   let distanceArr = []
@@ -80,10 +77,42 @@ self.onmessage = function (event) {
     return holder;
   }
 
+  function resetNearBy(){
+    return new Promise(function(resolve,reject){
+      const req = indexedDB.open(dbName);
+      req.onsuccess = function(){
+        const db = req.result;
+        const transaction = db.transaction(['list'],'readwrite');
+        const objectStore = transaction.objectStore('list');
+        const index = objectStore.index('status');
+        const cursorReq = index.openCursor('PENDING');
+        cursorReq.onsuccess = function(event){
+          const cursor = event.target.result;
+          if(!cursor) return;
+          if(cursor.value.nearby) {
+            cursor.value.nearby = false;
+            objectStore.put(cursor.value)
+          }
+          cursor.continue()
+        }
+        transaction.oncomplete = function(){
+          resolve(true)
+        }
+        transaction.onerror = function(){
+          reject(transaction.error)
+        }
+      }
+      req.onerror = function(){
+        reject(req.error)
+      }
+    })
+  }  
+
   function updateTimestamp(type,results){
     return new Promise(function(resolve,reject){
       const req = indexedDB.open(dbName);
       req.onsuccess = function(){
+      
         const db = req.result;
         const transaction = db.transaction(['list'],'readwrite');
         const store = transaction.objectStore('list');
@@ -143,11 +172,17 @@ self.onmessage = function (event) {
         cursor.continue()
       }
       mapTx.oncomplete = function () {
+        if(!distanceArr) {
+          self.postMessage(true);
+          return;
+        }
         const filtered = isDistanceNearBy(distanceArr,0.5);
         const sorted = sortDistance(filtered);
-        updateTimestamp('nearby',{data:sorted.reverse(),'tsUpdate':tsUpdate}).then(function(success){
-          self.postMessage(success);
-        })
+        resetNearBy().then(function(){
+          updateTimestamp('nearby',{data:sorted.reverse(),'tsUpdate':tsUpdate}).then(function(success){
+            self.postMessage(success);
+          })
+        }).catch(console.log)
       }
     }
   }
@@ -165,7 +200,8 @@ self.onmessage = function (event) {
       
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = R * c;
-      const distanceInMeters = distance / 1000
+    
+      const distanceInMeters = distance
     
         const record = {
           id: otherLocations.activityId,
@@ -189,7 +225,7 @@ self.onmessage = function (event) {
     })
   }
     
-    function toRad(value) {
-      return value * Math.PI / 180;
-    }
+  function toRad(value) {
+    return value * Math.PI / 180;
+  }
 }

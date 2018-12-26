@@ -16,8 +16,9 @@ function listView(filter) {
     fetchDataForActivityList();
     return;
   }
+  
   notificationWorker('urgent', filter.urgent).then(function () {
-    notificationWorker('nearBy', filter.nearby).then(function (req) {
+    notificationWorker('nearBy',filter.nearby).then(function(){
       fetchDataForActivityList();
     })
   })
@@ -320,7 +321,8 @@ function creatListHeader(headerName) {
   searchIcon.appendChild(sicon);
   header(parentIconDiv.outerHTML, '', 'list');
   document.getElementById('menu--panel').addEventListener('click', function () {
-    initMenu();
+    const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+    drawer.open = true;
     sendCurrentViewNameToAndroid('drawer')
   })
 }
@@ -358,57 +360,6 @@ function notificationWorker(type, updateTimestamp) {
 
 
 
-function initMenu() {
-
-
-  const aside = document.createElement('aside')
-  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
-
-  const nav = document.createElement('nav')
-  nav.className = 'mdc-drawer__drawer'
-
-  const header = document.createElement('header')
-  header.className = 'mdc-drawer__header drawer--header'
-
-  const headerContent = document.createElement('div')
-  headerContent.className = 'mdc-drawer__header-content'
-
-  const ImageDiv = document.createElement('div')
-  ImageDiv.className = 'drawer--header-div'
-  ImageDiv.onclick = function () {
-    profileView(true)
-
-  }
-  const headerIcon = document.createElement('img')
-  headerIcon.className = 'drawer-header-icon'
-
-  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-
-  const headerDetails = document.createElement('div')
-  headerDetails.className = 'header--details'
-
-  const name = document.createElement('div')
-  name.className = 'mdc-typography--subtitle'
-  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
-
-  headerDetails.appendChild(name)
-
-  ImageDiv.appendChild(headerIcon)
-  headerContent.appendChild(ImageDiv)
-  headerContent.appendChild(headerDetails)
-  header.appendChild(headerContent)
-
-  const navContent = document.createElement('nav')
-
-  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
-
-  nav.appendChild(header)
-  nav.appendChild(navContent)
-  aside.appendChild(nav)
-  document.getElementById('drawer-parent').appendChild(aside)
-  let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  drawer.open = true;
-}
 
 
 function header(contentStart, contentEnd, headerType) {

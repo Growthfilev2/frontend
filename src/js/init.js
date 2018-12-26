@@ -159,14 +159,62 @@ function layoutGrid() {
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
   imageViewDialog();
-  drawerDom();
 }
 
 function drawerDom() {
   const div = document.createElement('div')
   div.id = 'drawer-parent';
+ 
+  const aside = document.createElement('aside')
+  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography'
+
+  const nav = document.createElement('nav')
+  nav.className = 'mdc-drawer__drawer'
+
+  const header = document.createElement('header')
+  header.className = 'mdc-drawer__header drawer--header'
+
+  const headerContent = document.createElement('div')
+  headerContent.className = 'mdc-drawer__header-content'
+
+  const ImageDiv = document.createElement('div')
+  ImageDiv.className = 'drawer--header-div'
+  ImageDiv.onclick = function () {
+    profileView(true)
+
+  }
+  const headerIcon = document.createElement('img')
+  headerIcon.className = 'drawer-header-icon'
+
+  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
+
+  const headerDetails = document.createElement('div')
+  headerDetails.className = 'header--details'
+
+  const name = document.createElement('div')
+  name.className = 'mdc-typography--subtitle'
+  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber
+
+  headerDetails.appendChild(name)
+
+  ImageDiv.appendChild(headerIcon)
+  headerContent.appendChild(ImageDiv)
+  headerContent.appendChild(headerDetails)
+  header.appendChild(headerContent)
+
+  const navContent = document.createElement('nav')
+
+  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list'
+
+  nav.appendChild(header)
+  nav.appendChild(navContent)
+  aside.appendChild(nav)
+  div.appendChild(aside)
   document.body.appendChild(div);
 }
+
+
+
 
 
 
@@ -250,7 +298,7 @@ function startApp() {
       userSignedOut()
       return
     }
-
+    drawerDom();
     document.getElementById("main-layout-app").style.display = 'block'
     init(auth);
   })
