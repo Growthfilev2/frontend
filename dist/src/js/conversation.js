@@ -51,22 +51,18 @@ function fetchAddendumForComment(id) {
 
   req.onsuccess = function () {
     var db = req.result;
-    var addendumIndex = db.transaction('addendum', 'readonly').objectStore('addendum').index('activityId');
+    var transaction = db.transaction(['addendum'], 'readonly');
+    var addendumIndex = transaction.objectStore('addendum').index('activityId');
     createHeaderContent(db, id);
     commentPanel(id);
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation');
     reinitCount(db, id);
-    var commentDom = '';
+
     addendumIndex.openCursor(id).onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) {
-        if (document.querySelector('.activity--chat-card-container')) {
-          console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
-          document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
-        }
-        return;
-      }
+      if (!cursor) return;
+
       if (!document.getElementById(cursor.value.addendumId)) {
         createComment(db, cursor.value, user).then(function (comment) {
           if (document.getElementById('chat-container')) {
@@ -76,6 +72,12 @@ function fetchAddendumForComment(id) {
       }
 
       cursor.continue();
+    };
+    transaction.oncomplete = function () {
+      if (document.querySelector('.activity--chat-card-container')) {
+        console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
+        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
+      }
     };
   };
 }
@@ -226,14 +228,13 @@ function statusChange(db, id) {
       }
     }
 
-    var switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
+    if (!document.querySelector('.mdc-checkbox')) return;
 
+    switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
     if (record.status === 'CONFIRMED') {
       switchControl.checked = true;
     }
-
     document.querySelector('.mdc-checkbox').onclick = function () {
-
       if (isLocationVerified()) {
         changeStatusRequest(switchControl, record);
       } else {
@@ -273,9 +274,6 @@ function createComment(db, addendum, currentUser) {
   // console.log(addendum)
   var showMap = false;
   return new Promise(function (resolve) {
-    if (document.getElementById(addendum.addendumId)) {
-      resolve(document.getElementById(addendum.addendumId).outerHTML);
-    }
 
     var commentBox = document.createElement('div');
 
@@ -1934,8 +1932,8 @@ function readNameAndImageFromNumber(assignees, db) {
           displayName: '',
           photoURL: ''
         };
-        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord));
-      } else {
+      }
+      if (document.getElementById('assignees--list')) {
         document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord));
       }
     };

@@ -146,12 +146,56 @@ function layoutGrid() {
   layout.appendChild(layoutInner);
   document.body.innerHTML = layout.outerHTML;
   imageViewDialog();
-  drawerDom();
 }
 
 function drawerDom() {
   var div = document.createElement('div');
   div.id = 'drawer-parent';
+
+  var aside = document.createElement('aside');
+  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography';
+
+  var nav = document.createElement('nav');
+  nav.className = 'mdc-drawer__drawer';
+
+  var header = document.createElement('header');
+  header.className = 'mdc-drawer__header drawer--header';
+
+  var headerContent = document.createElement('div');
+  headerContent.className = 'mdc-drawer__header-content';
+
+  var ImageDiv = document.createElement('div');
+  ImageDiv.className = 'drawer--header-div';
+  ImageDiv.onclick = function () {
+    profileView(true);
+  };
+  var headerIcon = document.createElement('img');
+  headerIcon.className = 'drawer-header-icon';
+
+  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
+
+  var headerDetails = document.createElement('div');
+  headerDetails.className = 'header--details';
+
+  var name = document.createElement('div');
+  name.className = 'mdc-typography--subtitle';
+  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
+
+  headerDetails.appendChild(name);
+
+  ImageDiv.appendChild(headerIcon);
+  headerContent.appendChild(ImageDiv);
+  headerContent.appendChild(headerDetails);
+  header.appendChild(headerContent);
+
+  var navContent = document.createElement('nav');
+
+  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list';
+
+  nav.appendChild(header);
+  nav.appendChild(navContent);
+  aside.appendChild(nav);
+  div.appendChild(aside);
   document.body.appendChild(div);
 }
 
@@ -233,7 +277,7 @@ function startApp() {
       userSignedOut();
       return;
     }
-
+    drawerDom();
     document.getElementById("main-layout-app").style.display = 'block';
     init(auth);
   });
@@ -291,7 +335,7 @@ function idbVersionLessThan2(auth) {
       resolve(value);
     };
     req.onerror = function () {
-      reject(req.error);
+      reject({ error: req.error, device: native.getInfo() });
     };
   });
 }
@@ -301,7 +345,8 @@ function removeIDBInstance(auth) {
   return new Promise(function (resolve, reject) {
     var failure = {
       message: 'Please Restart The App',
-      error: ''
+      error: '',
+      device: native.getInfo()
     };
     var req = indexedDB.deleteDatabase(auth.uid);
     req.onsuccess = function () {
@@ -333,24 +378,30 @@ function init(auth) {
     }
 
     resetApp(auth, 0);
-  }).catch(console.log);
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({ message: error }));
+  });
 
   return;
 }
 
 function resetApp(auth, from) {
-  console.log(from);
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
     history.pushState(null, null, null);
     document.getElementById('growthfile').appendChild(loader('init-loader'));
+
+    setTimeout(function () {
+      snacks('Growthfile is Loading. Please Wait');
+    }, 1000);
+
     requestCreator('now', {
       device: native.getInfo(),
       from: from
     });
   }).catch(function (error) {
     snacks(error.message);
-    console.log(error);
+    requestCreator('instant', JSON.stringify({ message: error }));
   });
 }
 
@@ -366,6 +417,10 @@ function startInitializatioOfList(auth) {
     });
     suggestCheckIn(isNew).then(function () {
       listView({ urgent: isNew, nearby: isNew });
-    }).catch(console.log);
-  }).catch(console.log);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify({ message: error }));
+    });
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({ message: error }));
+  });
 }
