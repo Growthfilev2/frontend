@@ -143,7 +143,9 @@ self.onmessage = function (event) {
       }
       mapTx.oncomplete = function () {
         const filtered = isDistanceNearBy(distanceArr,0.5);
+        console.log(filtered)
         const sorted = sortDistance(filtered);
+        console.log(sorted);
         updateTimestamp('nearby',{data:sorted.reverse(),'tsUpdate':tsUpdate}).then(function(success){
           self.postMessage(success);
         })
@@ -164,7 +166,12 @@ self.onmessage = function (event) {
       
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distance = R * c;
-      const distanceInMeters = distance / 1000
+      // if(otherLocations.activityId === "p7svfLaI3abb8anIb4pF") {
+      //   debugger;
+      //   console.log(userCoords);
+      //   console.log(distance);
+      // }
+      const distanceInMeters = distance
     
         const record = {
           id: otherLocations.activityId,
