@@ -437,8 +437,6 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-        console.log(finalLocation.provider);
-        console.log(finalLocation.latitude);
         record.location = finalLocation;
         rootStore.put(record);
       };
