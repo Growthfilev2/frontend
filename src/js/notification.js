@@ -172,10 +172,7 @@ self.onmessage = function (event) {
         cursor.continue()
       }
       mapTx.oncomplete = function () {
-        if(!distanceArr) {
-          self.postMessage(true);
-          return;
-        }
+       
         const filtered = isDistanceNearBy(distanceArr,0.5);
         const sorted = sortDistance(filtered);
         resetNearBy().then(function(){
