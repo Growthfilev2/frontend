@@ -795,7 +795,7 @@ function handleTimeout(type) {
   }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 5000);
+  }, 8000);
 }
 
 function getInputText(selector) {

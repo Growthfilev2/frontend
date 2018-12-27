@@ -109,6 +109,7 @@ self.onmessage = function (event) {
     return new Promise(function (resolve, reject) {
       var req = indexedDB.open(dbName);
       req.onsuccess = function () {
+
         var db = req.result;
         var transaction = db.transaction(['list'], 'readwrite');
         var store = transaction.objectStore('list');
@@ -167,6 +168,10 @@ self.onmessage = function (event) {
         cursor.continue();
       };
       mapTx.oncomplete = function () {
+        if (!distanceArr) {
+          self.postMessage(true);
+          return;
+        }
         var filtered = isDistanceNearBy(distanceArr, 0.5);
         var sorted = sortDistance(filtered);
         resetNearBy().then(function () {
