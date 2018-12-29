@@ -7,19 +7,19 @@ firebase.initializeApp({
   messagingSenderId: "1011478688238"
 })
 
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-  const errorJS = {
-    message: {
-      msg: msg,
-      url: url,
-      lineNo: lineNo,
-      columnNo: columnNo,
-      error: error
-    }
-  }
+// window.onerror = function (msg, url, lineNo, columnNo, error) {
+//   const errorJS = {
+//     message: {
+//       msg: msg,
+//       url: url,
+//       lineNo: lineNo,
+//       columnNo: columnNo,
+//       error: error
+//     }
+//   }
 
-  requestCreator('instant', JSON.stringify(errorJS))
-}
+//   requestCreator('instant', JSON.stringify(errorJS))
+// }
 
 
 // initialize smooth scrolling
@@ -389,7 +389,6 @@ function init(auth) {
 
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
-
     if (localStorage.getItem('dbexist')) {
       from = 1;
       if (lessThanTwo) {
@@ -401,13 +400,9 @@ function init(auth) {
     }
 
     resetApp(auth, 0)
-
   }).catch(function(error){
     requestCreator('instant',JSON.stringify({message:error}));
-
-  })
-
-  return
+  });
 }
 
 function resetApp(auth, from) {
@@ -423,7 +418,8 @@ function resetApp(auth, from) {
     requestCreator('now', {
       device: native.getInfo(),
       from: from
-    })
+    });
+
   }).catch(function (error) {
     snacks(error.message);
     requestCreator('instant',JSON.stringify({message:error}));

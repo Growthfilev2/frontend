@@ -571,8 +571,8 @@ function selectorUI(evt, data) {
 
 
 
-  const accept = document.createElement('button')
-  accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send'
+  const accept = document.createElement('button');
+  accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
   accept.type = 'button'
 
   const acceptIcon = document.createElement('span')
@@ -709,6 +709,7 @@ function fillUsersInSelector(data, dialog) {
     document.getElementById('selector--search').addEventListener('click', function () {
       initSearchForSelectors(db, 'users', data)
     })
+    document.querySelector('.selector-send').classList.remove('hidden');
 
     dialog['acceptButton_'].onclick = function () {
 
@@ -944,6 +945,8 @@ function fillMapInSelector(db, selectorStore, dialog, data) {
     initSearchForSelectors(db, 'map', data)
   })
 
+  document.querySelector('.selector-send').classList.remove('hidden');
+
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
@@ -979,7 +982,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     cursor.continue()
   }
 
-
+document.querySelector('.selector-send').classList.remove('hidden')
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
@@ -1104,7 +1107,9 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
           const el =  document.querySelector(`[data-selection="${key}"]`);
           el.insertBefore(li[key],el.childNodes[0])
         })
-      })
+      });
+      document.querySelector('.selector-send').classList.remove('hidden');
+
     }
   }
 }

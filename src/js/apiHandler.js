@@ -1092,7 +1092,8 @@ function updateIDB(param) {
 
   req.onsuccess = function () {
     const db = req.result
-    const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
+    const rootObjectStore = db.transaction('root', 'readonly').objectStore('root');
+    
     console.log(rootObjectStore)
     rootObjectStore.get(param.dbName).onsuccess = function (root) {
       console.log(root)
@@ -1109,5 +1110,6 @@ function updateIDB(param) {
           instant(createLog(error));
         })
     }
+    
   }
 }
