@@ -19,7 +19,7 @@ firebase.initializeApp({
 //   }
 
 //   requestCreator('instant', JSON.stringify(errorJS))
-// }
+// }  
 
 
 // initialize smooth scrolling
@@ -285,15 +285,15 @@ let native = function () {
           return AndroidId.getDeviceId();
         }
         catch(e){
-          requestCreator('instant',JSON.stringify({message:e}))
-          return {
+          requestCreator('instant',JSON.stringify({message:e.message}))
+          return JSON.stringify({
             baseOs:this.getName(),
             deviceBrand: '',
             deviceModel: '',
             appVersion: 4,
             osVersion: '',
             id: '',
-          }
+          })
         }
       }
       return this.getIosInfo();

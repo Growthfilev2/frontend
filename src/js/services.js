@@ -483,7 +483,12 @@ function isNewLocationMoreThanThreshold(distance) {
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
-    Fetchview.startConversation(viewName);
+    try {
+      Fetchview.startConversation(viewName);
+    }
+    catch(e) {
+      requestCreator('instant',JSON.stringify({message:e.message}))
+    }
   }
 }
 
@@ -770,7 +775,7 @@ function androidStopRefreshing() {
     catch(e){
 
       const instantBody = {
-        message:e,
+        message:e.message,
         device : native.getInfo()
       }
       requestCreator('instant',JSON.stringify(instantBody))
@@ -805,7 +810,7 @@ function handleTimeout(type) {
   }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 5000);
+  }, 5000000);
 }
 
 function getInputText(selector) {
