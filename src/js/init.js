@@ -61,7 +61,9 @@ let native = function () {
   }
 }();
 
+
 window.onerror = function (msg, url, lineNo, columnNo, error) {
+ alert(msg);
   const errorJS = {
     message: {
       msg: error.message,
@@ -108,7 +110,7 @@ window.addEventListener('load', function () {
     return
   }
 
-  moment.locale('en', {
+  moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
       sameDay: 'LT',
@@ -154,8 +156,9 @@ function firebaseUiConfig(value) {
           updateEmail(user, value)
           return
         }
-
-        // no redirect
+        console.log("now start ")
+        
+        init(user);
         return false
       },
       'signInFailure': function (error) {
@@ -185,7 +188,8 @@ function userSignedOut() {
   document.body.appendChild(login)
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
-  ui.start('#login-container', firebaseUiConfig())
+  ui.start('#login-container', firebaseUiConfig());
+
 }
 
 function layoutGrid() {
@@ -309,9 +313,8 @@ function startApp() {
       userSignedOut()
       return
     }
-    drawerDom();
-    document.getElementById("main-layout-app").style.display = 'block'
     init(auth);
+    
   })
 }
 // new day suggest
@@ -398,7 +401,10 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-
+  
+  drawerDom();
+  document.getElementById("main-layout-app").style.display = 'block'
+  
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
     if (localStorage.getItem('dbexist')) {

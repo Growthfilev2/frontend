@@ -731,7 +731,8 @@ function updateAssigneesList(data) {
 
 function updateIDB(data) {
   if (data.msg === 'true') {
-    androidStopRefreshing()
+    androidStopRefreshing();
+  
   }
 
   if (!history.state) {

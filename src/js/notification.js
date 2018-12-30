@@ -1,5 +1,4 @@
-importScripts("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js");
-
+importScripts('../external/js/moment.min.js')
 self.onmessage = function (event) {
   const dbName = event.data.dbName;
   const type = event.data.type;
@@ -31,8 +30,10 @@ self.onmessage = function (event) {
     index.openCursor(key).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-    
-      if (moment(yesterday).isSameOrBefore(cursor.value.end) && moment(tomorrow).isSameOrAfter(cursor.value.start)) {
+
+      const end = moment(cursor.value.end , 'YYYY-MM-DD')
+      const start = moment(cursor.value.start , 'YYYY-MM-DD');
+      if (moment(yesterday).isSameOrBefore(end) && moment(tomorrow).isSameOrAfter(start)) {
         const data = {
           activityId:cursor.value.activityId,
           name:cursor.value.scheduleName,
