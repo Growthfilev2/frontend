@@ -281,7 +281,20 @@ let native = function () {
         })
       }
       if (this.getName() === 'Android') {
-        return AndroidId.getDeviceId();
+        try {
+          return AndroidId.getDeviceId();
+        }
+        catch(e){
+          requestCreator('instant',JSON.stringify({message:e}))
+          return {
+            baseOs:this.getName(),
+            deviceBrand: '',
+            deviceModel: '',
+            appVersion: 4,
+            osVersion: '',
+            id: '',
+          }
+        }
       }
       return this.getIosInfo();
     }
@@ -369,7 +382,8 @@ function removeIDBInstance(auth) {
       message: 'Please Restart The App',
       error: '',
       device:native.getInfo()
-    }
+    };
+
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function () {
       resolve(true)
@@ -432,10 +446,13 @@ function startInitializatioOfList(auth) {
     setInterval(function () {
       manageLocation();
     }, 5000);
+    
+  
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
     });
+  
     suggestCheckIn(isNew).then(function () {
       listView({urgent:isNew,nearby:isNew});
     }).catch(function(error){
