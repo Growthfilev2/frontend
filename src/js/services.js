@@ -764,7 +764,17 @@ function updateIDB(data) {
 
 function androidStopRefreshing() {
   if (native.getName() === 'Android') {
-    AndroidRefreshing.stopRefreshing(true);
+    try {
+      AndroidRefreshing.stopRefreshing(true);
+    }
+    catch(e){
+
+      const instantBody = {
+        message:e,
+        device : native.getInfo()
+      }
+      requestCreator('instant',JSON.stringify(instantBody))
+    }
   }
 }
 
