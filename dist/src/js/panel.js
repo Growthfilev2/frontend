@@ -1,4 +1,4 @@
-var notification = new Worker('js/notification.js');
+var notification = new Worker('src/js/notification.js');
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
@@ -16,8 +16,9 @@ function listView(filter) {
     fetchDataForActivityList();
     return;
   }
+
   notificationWorker('urgent', filter.urgent).then(function () {
-    notificationWorker('nearBy', filter.nearby).then(function (req) {
+    notificationWorker('nearBy', filter.nearby).then(function () {
       fetchDataForActivityList();
     });
   });
@@ -311,8 +312,8 @@ function creatListHeader(headerName) {
   searchIcon.appendChild(sicon);
   header(parentIconDiv.outerHTML, '', 'list');
   document.getElementById('menu--panel').addEventListener('click', function () {
-    initMenu();
-    sendCurrentViewNameToAndroid('drawer');
+    var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+    drawer.open = true;
   });
 }
 
@@ -345,56 +346,6 @@ function notificationWorker(type, updateTimestamp) {
       reject(error);
     };
   });
-}
-
-function initMenu() {
-
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography';
-
-  var nav = document.createElement('nav');
-  nav.className = 'mdc-drawer__drawer';
-
-  var header = document.createElement('header');
-  header.className = 'mdc-drawer__header drawer--header';
-
-  var headerContent = document.createElement('div');
-  headerContent.className = 'mdc-drawer__header-content';
-
-  var ImageDiv = document.createElement('div');
-  ImageDiv.className = 'drawer--header-div';
-  ImageDiv.onclick = function () {
-    profileView(true);
-  };
-  var headerIcon = document.createElement('img');
-  headerIcon.className = 'drawer-header-icon';
-
-  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-
-  var headerDetails = document.createElement('div');
-  headerDetails.className = 'header--details';
-
-  var name = document.createElement('div');
-  name.className = 'mdc-typography--subtitle';
-  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-
-  headerDetails.appendChild(name);
-
-  ImageDiv.appendChild(headerIcon);
-  headerContent.appendChild(ImageDiv);
-  headerContent.appendChild(headerDetails);
-  header.appendChild(headerContent);
-
-  var navContent = document.createElement('nav');
-
-  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list';
-
-  nav.appendChild(header);
-  nav.appendChild(navContent);
-  aside.appendChild(nav);
-  document.getElementById('drawer-parent').appendChild(aside);
-  var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  drawer.open = true;
 }
 
 function header(contentStart, contentEnd, headerType) {

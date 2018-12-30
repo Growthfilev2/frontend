@@ -7,20 +7,74 @@ firebase.initializeApp({
   messagingSenderId: "1011478688238"
 })
 
-// window.onerror = function (msg, url, lineNo, columnNo, error) {
-//   const errorJS = {
-//     message: {
-//       msg: msg,
-//       url: url,
-//       lineNo: lineNo,
-//       columnNo: columnNo,
-//       error: error
-//     }
-//   }
+let native = function () {
+  return {
+    setName: function (device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function () {
+      return localStorage.getItem('deviceType');
+    },
+    setIosInfo: function (iosDeviceInfo) {
+      const splitByName = iosDeviceInfo.split("&")
+      const deviceInfo = {
+        baseOs: splitByName[0],
+        deviceBrand: splitByName[1],
+        deviceModel: splitByName[2],
+        appVersion: Number(splitByName[3]),
+        osVersion: splitByName[4],
+        id: splitByName[5],
+        initConnection: splitByName[6]
+      }
 
-//   requestCreator('instant', JSON.stringify(errorJS))
-// }  
+      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
+    },
+    getIosInfo: function () {
+      return localStorage.getItem('iosUUID');
+    },
+    getInfo: function () {
+      if (!this.getName()) {
+        return JSON.stringify({
+          'id': '123',
+          'appVersion': 4,
+          'baseOs': 'macOs'
+        })
+      }
+      if (this.getName() === 'Android') {
+        try {
+          return AndroidId.getDeviceId();
+        }
+        catch(e){
+          requestCreator('instant',JSON.stringify({message:e.message}))
+          return JSON.stringify({
+            baseOs:this.getName(),
+            deviceBrand: '',
+            deviceModel: '',
+            appVersion: 4,
+            osVersion: '',
+            id: '',
+          })
+        }
+      }
+      return this.getIosInfo();
+    }
+  }
+}();
 
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+  const errorJS = {
+    message: {
+      msg: error.message,
+      url: url,
+      lineNo: lineNo,
+      columnNo: columnNo,
+      stack:error.stack,
+      name:error.name,
+      device:native.getInfo()
+    }
+  }
+  requestCreator('instant', JSON.stringify(errorJS))
+}  
 
 // initialize smooth scrolling
 window.scrollBy({
@@ -132,8 +186,6 @@ function userSignedOut() {
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
   ui.start('#login-container', firebaseUiConfig())
-
-
 }
 
 function layoutGrid() {
@@ -246,60 +298,6 @@ function imageViewDialog() {
 
   document.body.appendChild(aside)
 }
-
-let native = function () {
-  return {
-    setName: function (device) {
-      localStorage.setItem('deviceType', device);
-    },
-    getName: function () {
-      return localStorage.getItem('deviceType');
-    },
-    setIosInfo: function (iosDeviceInfo) {
-      const splitByName = iosDeviceInfo.split("&")
-      const deviceInfo = {
-        baseOs: splitByName[0],
-        deviceBrand: splitByName[1],
-        deviceModel: splitByName[2],
-        appVersion: Number(splitByName[3]),
-        osVersion: splitByName[4],
-        id: splitByName[5],
-        initConnection: splitByName[6]
-      }
-
-      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
-    },
-    getIosInfo: function () {
-      return localStorage.getItem('iosUUID');
-    },
-    getInfo: function () {
-      if (!this.getName()) {
-        return JSON.stringify({
-          'id': '123',
-          'appVersion': 4,
-          'baseOs': 'macOs'
-        })
-      }
-      if (this.getName() === 'Android') {
-        try {
-          return AndroidId.getDeviceId();
-        }
-        catch(e){
-          requestCreator('instant',JSON.stringify({message:e.message}))
-          return JSON.stringify({
-            baseOs:this.getName(),
-            deviceBrand: '',
-            deviceModel: '',
-            appVersion: 4,
-            osVersion: '',
-            id: '',
-          })
-        }
-      }
-      return this.getIosInfo();
-    }
-  }
-}();
 
 
 
