@@ -582,16 +582,16 @@ function requestCreator(requestType, requestBody) {
     type: requestType,
     body: ''
   };
-
+  if (offset) {
+    clearTimeout(offset);
+    offset = null;
+  }
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
     requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {
 
-    if (offset) {
-      clearTimeout(offset);
-      offset = null;
-    }
+    
 
     getRootRecord().then(function (rootRecord) {
 
