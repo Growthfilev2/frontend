@@ -71,7 +71,8 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       columnNo: columnNo,
       stack:error.stack,
       name:error.name,
-      device:native.getInfo()
+      device:native.getInfo(),
+      state:history.state[0]
     }
   }
   requestCreator('instant', JSON.stringify(errorJS))
