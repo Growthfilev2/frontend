@@ -6,19 +6,24 @@ function listView(filter) {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
+
+  if(document.querySelector('.mdc-linear-progress')) {
+    document.querySelector('.mdc-linear-progress').remove();
+  }
+  
   history.pushState(['listView'], null, null)
 
   listPanel()
   creatListHeader('Recent');
   createActivityIcon();
-  
-  if(!filter) {
+
+  if (!filter) {
     fetchDataForActivityList();
     return;
   }
-  
+
   notificationWorker('urgent', filter.urgent).then(function () {
-    notificationWorker('nearBy',filter.nearby).then(function(){
+    notificationWorker('nearBy', filter.nearby).then(function () {
       fetchDataForActivityList();
     })
   })
@@ -28,13 +33,13 @@ function listView(filter) {
 function fetchDataForActivityList() {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
-    const db = req.result;    
-    let activityDom = '' 
+    const db = req.result;
+    let activityDom = ''
     const transaction = db.transaction('list')
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
 
-    index.openCursor(null,'prev').onsuccess = function (event) {
+    index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
       activityDom += activityListUI(cursor.value).outerHTML;
@@ -42,7 +47,7 @@ function fetchDataForActivityList() {
     }
 
     transaction.oncomplete = function () {
-      if(document.getElementById('activity--list')){
+      if (document.getElementById('activity--list')) {
         document.getElementById('activity--list').innerHTML = activityDom;
       }
       scrollToActivity()
@@ -319,7 +324,11 @@ function creatListHeader(headerName) {
   sicon.className = 'material-icons'
   sicon.textContent = 'search'
   searchIcon.appendChild(sicon);
-  header(parentIconDiv.outerHTML, '', 'list');
+  modifyHeader({
+    id: 'app-main-header',
+    left: parentIconDiv.outerHTML,
+    right: ''
+  });
   document.getElementById('menu--panel').addEventListener('click', function () {
     const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
     drawer.open = true;
@@ -328,15 +337,15 @@ function creatListHeader(headerName) {
 
 function scrollToActivity() {
   const clickedActivity = localStorage.getItem('clickedActivity')
-    if (document.querySelector(`[data-id="${clickedActivity}"]`)) {
-      document.querySelector(`[data-id="${clickedActivity}"]`).scrollIntoView({
-        behavior: "instant",
-        block: "center",
-        "inline": "center"
-      })
-      localStorage.removeItem('clickedActivity')
-      return
-    }
+  if (document.querySelector(`[data-id="${clickedActivity}"]`)) {
+    document.querySelector(`[data-id="${clickedActivity}"]`).scrollIntoView({
+      behavior: "instant",
+      block: "center",
+      "inline": "center"
+    })
+    localStorage.removeItem('clickedActivity')
+    return
+  }
 }
 
 function notificationWorker(type, updateTimestamp) {
@@ -358,46 +367,22 @@ function notificationWorker(type, updateTimestamp) {
 }
 
 
+function modifyHeader(attr) {
 
+  if (attr.left) {
 
-
-function header(contentStart, contentEnd, headerType) {
-
-  const header = document.createElement('header')
-  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
-  if (headerType === 'list') {
-    header.classList.add('header-list--gray')
+    const left = document.getElementById(attr.id + 'view-type')
+    left.innerHTML = attr.left
   }
-  const row = document.createElement('div')
-  row.className = 'mdc-top-app-bar__row'
+  if (attr.right) {
 
-  const sectionStart = document.createElement('section')
-  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
-
-  const leftUI = document.createElement('div')
-  leftUI.id = 'view-type'
-  leftUI.innerHTML = contentStart
-
-  sectionStart.appendChild(leftUI)
-
-  const sectionEnd = document.createElement('div')
-  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
-
-  const rightUI = document.createElement('div')
-  rightUI.id = 'action-data'
-  if (contentEnd) {
-    rightUI.innerHTML = contentEnd
+    const right = document.getElementById(attr.id + 'action-data')
+    right.innerHTML = attr.right
   }
-  sectionEnd.appendChild(rightUI)
-  row.appendChild(sectionStart)
-  row.appendChild(sectionEnd)
-  header.innerHTML = row.outerHTML
-  if (headerType === 'selector') {
-    return header
-  } else {
-    document.getElementById('header').innerHTML = header.outerHTML
-  }
+
 }
+
+
 
 function createInputForProfile(key, type, classtype) {
   const mainTextField = document.createElement('div')

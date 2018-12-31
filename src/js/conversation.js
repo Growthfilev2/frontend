@@ -479,7 +479,7 @@ function createHeaderContent(db, id) {
 
       leftDiv.appendChild(backDiv)
       leftDiv.appendChild(primarySpan)
-      header(leftDiv.outerHTML, '')
+      modifyHeader({id:'app-main-header',left:leftDiv.outerHTML})
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav();
@@ -541,9 +541,10 @@ function selectorUI(evt, data) {
   aside.id = 'dialog--component'
   aside.className = 'mdc-dialog'
   aside.role = 'alertdialog'
-
+  
   const dialogSurface = document.createElement('div')
   dialogSurface.className = 'mdc-dialog__surface'
+  dialogSurface.appendChild(createHeader('dialog--surface-header'))
 
   const searchIcon = document.createElement('span')
   searchIcon.className = 'material-icons'
@@ -586,14 +587,10 @@ function selectorUI(evt, data) {
   }
   accept.appendChild(acceptIcon)
 
-  footer.appendChild(accept)
-  if (data.store === 'subscriptions' || data.store === 'children') {
-    dialogSurface.appendChild(header(backSpan.outerHTML, '', 'selector'))
+  footer.appendChild(accept);
 
-  } else {
 
-    dialogSurface.appendChild(header(backSpan.outerHTML, searchIcon.outerHTML, 'selector'))
-  }
+
   dialogSurface.appendChild(section)
   dialogSurface.appendChild(footer)
 
@@ -602,6 +599,12 @@ function selectorUI(evt, data) {
   backdrop.className = 'mdc-dialog__backdrop'
   aside.appendChild(backdrop)
   document.body.appendChild(aside)
+
+  if (data.store === 'subscriptions' || data.store === 'children') {
+    modifyHeader({id:'dialog--surface-header',left:backSpan.outerHTML})
+  } else {
+    modifyHeader({id:'dialog--surface-header',left:backSpan.outerHTML, right:searchIcon.outerHTML})
+  }
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
@@ -1319,7 +1322,7 @@ function updateCreateContainer(record) {
 
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)
-  header(leftHeaderContent.outerHTML, '')
+  modifyHeader({id:'app-main-header',left:leftHeaderContent.outerHTML})
 
 
   document.getElementById('backToConv').addEventListener('click', function () {
@@ -2529,7 +2532,7 @@ function initSearchForSelectors(db, type, attr) {
 function searchBarUI(type) {
 
   const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#action-data")
+  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
   actionCont.className = 'search--cont'
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.add('search-field-transform')
@@ -2544,9 +2547,9 @@ function searchBarUI(type) {
   document.getElementById('selector--search').style.display = 'none'
   document.querySelector('.selector-send').dataset.clicktype = ''
   document.querySelector('.selector-send span').textContent = 'send'
-  dialogEl.querySelector('#view-type span').dataset.type = 'back-list'
+  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = 'back-list'
   if (type === 'users') {
-    dialogEl.querySelector('#view-type span').dataset.state = 'user-list-back'
+    dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back'
   }
   // document.getElementById('data-list--container').style.display = 'none'
 }
@@ -2554,8 +2557,9 @@ function searchBarUI(type) {
 function resetSelectorUI(data) {
 
   const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#action-data")
-  dialogEl.querySelector('#view-type span').dataset.type = ''
+  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
+  
+  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = ''
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
   actionCont.querySelector('#search--bar--field').classList.remove('field-input')

@@ -48,7 +48,7 @@ function profileView(pushState) {
   
     backIcon.textContent = 'arrow_back'
     backSpan.appendChild(backIcon)
-    header(backSpan.outerHTML)
+    modifyHeader({id:'app-main-header',left:backSpan.outerHTML})
   
   
   }
