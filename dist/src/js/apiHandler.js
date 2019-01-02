@@ -1007,6 +1007,7 @@ function updateIDB(param) {
       console.log(root);
       http('GET', apiUrl + 'read?from=' + root.target.result.fromTime).then(function (response) {
         if (!response) return;
+
         successResponse(response, param.swipe);
       }).catch(function (error) {
 

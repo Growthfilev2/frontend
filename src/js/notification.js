@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js')
+importScripts('../../external/js/moment.min.js')
 self.onmessage = function (event) {
   const dbName = event.data.dbName;
   const type = event.data.type;

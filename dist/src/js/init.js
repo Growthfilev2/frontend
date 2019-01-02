@@ -142,32 +142,32 @@ function backNav() {
 function firebaseUiConfig(value) {
 
   return {
-    'callbacks': {
-      'signInSuccess': function signInSuccess(user) {
-        if (value) {
-          updateEmail(user, value);
-          return;
-        }
-        console.log("now start ");
+    callbacks: {
+      signInSuccessWithAuthResult: function signInSuccessWithAuthResult(authResult) {
 
-        init(user);
+        if (value) {
+          updateEmail(authResult.user, value);
+        } else {
+          init(authResult.user);
+        }
         return false;
       },
-      'signInFailure': function signInFailure(error) {
-        return handleUIError(error);
-      }
+      uiShown: function uiShown() {}
     },
-    'signInFlow': 'popup',
-    'signInOptions': [{
+    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+    signInFlow: 'popup',
+    signInOptions: [
+    // Leave the lines as is for the providers you want to offer your users.
+    {
       provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-
       recaptchaParameters: {
-        type: 'image',
-        size: 'invisible',
-        badge: 'bottomleft'
+        type: 'image', // 'audio'
+        size: 'normal', // 'invisible' or 'compact'
+        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
       },
       defaultCountry: 'IN'
     }]
+
   };
 }
 
@@ -325,7 +325,9 @@ function startApp() {
       userSignedOut();
       return;
     }
-    init(auth);
+    if (localStorage.getItem('dbexist')) {
+      init(auth);
+    }
   });
 }
 // new day suggest

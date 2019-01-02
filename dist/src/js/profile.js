@@ -225,6 +225,7 @@ function newSignIn(value) {
 
   // DOM element to insert firebaseui login UI
   ui.start('#refresh-login', firebaseUiConfig(value));
+
   setTimeout(function () {
     document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber;
     document.querySelector('.firebaseui-id-phone-number').disabled = true;

@@ -1,5 +1,5 @@
 // import firebase app script because there is no native support of firebase inside web workers
-importScripts('../external/js/moment.min.js')
+importScripts('../../external/js/moment.min.js')
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
