@@ -517,18 +517,7 @@ function instantUpdateDB(dbName, data, type) {
 
     }
     objStoreTx.oncomplete = function () {
-
-      if (type === 'status' || type === 'update') {
         requestHandlerResponse('redirect-to-list', 200, '')
-      }
-      if (type === 'share') {
-
-        requestHandlerResponse('updateAssigneesList', 200, 'update user', {
-          id: data.activityId,
-          number: data.share[0]
-        })
-      }
-
     }
   }
 }

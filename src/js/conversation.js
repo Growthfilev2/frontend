@@ -700,6 +700,7 @@ function fillUsersInSelector(data, dialog) {
       const userRecord = cursor.value
 
       if (data.attachment.present) {
+        
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))

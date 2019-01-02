@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -674,7 +674,6 @@ const receiverCaller = {
   'error': resetLoaders,
   'reset-offset': resetOffset,
   'android-stop-refreshing': androidStopRefreshing,
-  'updateAssigneesList': updateAssigneesList,
   'updateIDB': updateIDB,
   'redirect-to-list': changeState,
 }
@@ -720,14 +719,7 @@ function changeState(data) {
   history.pushState(['listView'], null, null);
 }
 
-function updateAssigneesList(data) {
-  const req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    const db = req.result;
-    readNameAndImageFromNumber([data.params.number], db);
-    changeState()
-  }
-}
+
 
 function updateIDB(data) {
   if (data.msg === 'true') {
