@@ -61,7 +61,6 @@ var native = function () {
 }();
 
 window.onerror = function (msg, url, lineNo, columnNo, error) {
-alert(msg);
   var errorJS = {
     message: {
       msg: error.message,
@@ -70,7 +69,8 @@ alert(msg);
       columnNo: columnNo,
       stack: error.stack,
       name: error.name,
-      device: native.getInfo()
+      device: native.getInfo(),
+      state: history.state[0]
     }
   };
   requestCreator('instant', JSON.stringify(errorJS));
@@ -106,7 +106,7 @@ window.addEventListener('load', function () {
     return;
   }
 
-  moment.locale('en', {
+  moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
       sameDay: 'LT',
@@ -148,8 +148,9 @@ function firebaseUiConfig(value) {
           updateEmail(user, value);
           return;
         }
+        console.log("now start ");
 
-        // no redirect
+        init(user);
         return false;
       },
       'signInFailure': function signInFailure(error) {
@@ -195,12 +196,45 @@ function layoutGrid() {
   var snackbar = document.createElement('div');
   snackbar.id = 'snackbar-container';
 
+  headerDiv.appendChild(createHeader('app-main-header'));
   layoutInner.appendChild(headerDiv);
   layoutInner.appendChild(currentPanel);
   layoutInner.appendChild(snackbar);
   layout.appendChild(layoutInner);
   document.body.innerHTML = layout.outerHTML;
   imageViewDialog();
+}
+
+function createHeader(id) {
+
+  var header = document.createElement('header');
+  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1';
+  header.id = id;
+
+  var row = document.createElement('div');
+  row.className = 'mdc-top-app-bar__row';
+
+  var sectionStart = document.createElement('section');
+  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start';
+
+  var leftUI = document.createElement('div');
+  leftUI.id = id + 'view-type';
+  leftUI.className = 'view-type';
+  sectionStart.appendChild(leftUI);
+
+  var sectionEnd = document.createElement('div');
+  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end';
+
+  var rightUI = document.createElement('div');
+  rightUI.id = id + 'action-data';
+
+  rightUI.className = 'action-data';
+
+  sectionEnd.appendChild(rightUI);
+  row.appendChild(sectionStart);
+  row.appendChild(sectionEnd);
+  header.appendChild(row);
+  return header;
 }
 
 function drawerDom() {
@@ -291,8 +325,6 @@ function startApp() {
       userSignedOut();
       return;
     }
-    drawerDom();
-    document.getElementById("main-layout-app").style.display = 'block';
     init(auth);
   });
 }
@@ -379,6 +411,9 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
+
+  drawerDom();
+  document.getElementById("main-layout-app").style.display = 'block';
 
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
 

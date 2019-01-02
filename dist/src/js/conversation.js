@@ -464,7 +464,7 @@ function createHeaderContent(db, id) {
 
       leftDiv.appendChild(backDiv);
       leftDiv.appendChild(primarySpan);
-      header(leftDiv.outerHTML, '');
+      modifyHeader({ id: 'app-main-header', left: leftDiv.outerHTML });
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav();
@@ -529,6 +529,7 @@ function selectorUI(evt, data) {
 
   var dialogSurface = document.createElement('div');
   dialogSurface.className = 'mdc-dialog__surface';
+  dialogSurface.appendChild(createHeader('dialog--surface-header'));
 
   var searchIcon = document.createElement('span');
   searchIcon.className = 'material-icons';
@@ -565,12 +566,7 @@ function selectorUI(evt, data) {
   accept.appendChild(acceptIcon);
 
   footer.appendChild(accept);
-  if (data.store === 'subscriptions' || data.store === 'children') {
-    dialogSurface.appendChild(header(backSpan.outerHTML, '', 'selector'));
-  } else {
 
-    dialogSurface.appendChild(header(backSpan.outerHTML, searchIcon.outerHTML, 'selector'));
-  }
   dialogSurface.appendChild(section);
   dialogSurface.appendChild(footer);
 
@@ -579,6 +575,12 @@ function selectorUI(evt, data) {
   backdrop.className = 'mdc-dialog__backdrop';
   aside.appendChild(backdrop);
   document.body.appendChild(aside);
+
+  if (data.store === 'subscriptions' || data.store === 'children') {
+    modifyHeader({ id: 'dialog--surface-header', left: backSpan.outerHTML });
+  } else {
+    modifyHeader({ id: 'dialog--surface-header', left: backSpan.outerHTML, right: searchIcon.outerHTML });
+  }
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
@@ -620,8 +622,8 @@ function initializeSelectorWithData(evt, data) {
       fillMapInSelector(db, selectorStore, dialog, data);
     }
     if (data.store === 'subscriptions') {
-      var _selectorStore = db.transaction(data.store).objectStore(data.store);
-      fillSubscriptionInSelector(db, _selectorStore, dialog, data);
+
+      fillSubscriptionInSelector(db, dialog, data);
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store);
@@ -670,6 +672,7 @@ function fillUsersInSelector(data, dialog) {
       var userRecord = cursor.value;
 
       if (data.attachment.present) {
+
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false));
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true));
@@ -956,36 +959,19 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   };
 }
 
-function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+function fillSubscriptionInSelector(db, dialog, data) {
   console.log(data);
   var mainUL = document.getElementById('data-list--container');
   var grp = document.createElement('div');
   grp.className = 'mdc-list-group';
   var offices = [];
-  var officeIndex = selectorStore.index('office');
+  var tx = db.transaction(['subscriptions']);
+  var store = tx.objectStore('subscriptions');
+  var officeIndex = store.index('office');
   officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
     var cursor = event.target.result;
 
-    if (!cursor) {
-      if (data.suggestCheckIn) {
-        var parent = document.getElementById('data-list--container');
-        var suggestion = document.createElement('div');
-        suggestion.className = 'suggest-checkin--view';
-        var icon = document.createElement('span');
-        icon.className = 'material-icons suggestion-icon';
-        icon.textContent = 'add_alert';
-        suggestion.appendChild(icon);
-
-        var text = document.createElement('span');
-        text.textContent = 'Check-In ?';
-        text.className = 'suggest-checkin--text';
-        suggestion.appendChild(icon);
-        suggestion.appendChild(text);
-        parent.insertBefore(suggestion, parent.childNodes[0]);
-      }
-      insertTemplateByOffice(offices, data.suggestCheckIn);
-      return;
-    }
+    if (!cursor) return;
 
     var headline3 = document.createElement('h3');
     headline3.className = 'mdc-list-group__subheader subheader--group-small';
@@ -1002,20 +988,40 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     grp.appendChild(ul);
     cursor.continue();
   };
-  mainUL.appendChild(grp);
+  tx.oncomplete = function () {
+    if (data.suggestCheckIn) {
+      var parent = document.getElementById('data-list--container');
+      var suggestion = document.createElement('div');
+      suggestion.className = 'suggest-checkin--view';
+      var icon = document.createElement('span');
+      icon.className = 'material-icons suggestion-icon';
+      icon.textContent = 'add_alert';
+      suggestion.appendChild(icon);
 
-  dialog['acceptButton_'].onclick = function () {
-
-    if (document.querySelector('.mdc-radio.radio-selected')) {
-
-      var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
-      console.log(radio);
-      var selectedField = JSON.parse(radio.value);
-      console.log(selectedField.office);
-      console.log(selectedField.template);
-      document.getElementById('app-current-panel').dataset.view = 'create';
-      createTempRecord(selectedField.office, selectedField.template, data);
+      var text = document.createElement('span');
+      text.textContent = 'Check-In ?';
+      text.className = 'suggest-checkin--text';
+      suggestion.appendChild(icon);
+      suggestion.appendChild(text);
+      parent.insertBefore(suggestion, parent.childNodes[0]);
     }
+    insertTemplateByOffice(offices, data.suggestCheckIn);
+
+    mainUL.appendChild(grp);
+
+    dialog['acceptButton_'].onclick = function () {
+
+      if (document.querySelector('.mdc-radio.radio-selected')) {
+
+        var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+        console.log(radio);
+        var selectedField = JSON.parse(radio.value);
+        console.log(selectedField.office);
+        console.log(selectedField.template);
+        document.getElementById('app-current-panel').dataset.view = 'create';
+        createTempRecord(selectedField.office, selectedField.template, data);
+      }
+    };
   };
 }
 
@@ -1260,7 +1266,7 @@ function updateCreateContainer(record) {
 
   leftHeaderContent.appendChild(backSpan);
   leftHeaderContent.appendChild(activityName);
-  header(leftHeaderContent.outerHTML, '');
+  modifyHeader({ id: 'app-main-header', left: leftHeaderContent.outerHTML });
 
   document.getElementById('backToConv').addEventListener('click', function () {
     backNav();
@@ -2130,8 +2136,12 @@ function setFilePath(str, key, show) {
 }
 
 function readCameraFile() {
-  if (localStorage.getItem('deviceType') === 'Android') {
-    FetchCameraForAttachment.startCamera();
+  if (native.getName() === 'Android') {
+    try {
+      FetchCameraForAttachment.startCamera();
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({ message: e.message, device: native.getInfo() }));
+    }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64");
   }
@@ -2410,7 +2420,7 @@ function initSearchForSelectors(db, type, attr) {
 function searchBarUI(type) {
 
   var dialogEl = document.getElementById('dialog--component');
-  var actionCont = dialogEl.querySelector("#action-data");
+  var actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data");
   actionCont.className = 'search--cont';
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.add('search-field-transform');
@@ -2424,9 +2434,9 @@ function searchBarUI(type) {
   document.getElementById('selector--search').style.display = 'none';
   document.querySelector('.selector-send').dataset.clicktype = '';
   document.querySelector('.selector-send span').textContent = 'send';
-  dialogEl.querySelector('#view-type span').dataset.type = 'back-list';
+  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = 'back-list';
   if (type === 'users') {
-    dialogEl.querySelector('#view-type span').dataset.state = 'user-list-back';
+    dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back';
   }
   // document.getElementById('data-list--container').style.display = 'none'
 }
@@ -2434,8 +2444,9 @@ function searchBarUI(type) {
 function resetSelectorUI(data) {
 
   var dialogEl = document.getElementById('dialog--component');
-  var actionCont = dialogEl.querySelector("#action-data");
-  dialogEl.querySelector('#view-type span').dataset.type = '';
+  var actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data");
+
+  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = '';
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform');
   actionCont.querySelector('#search--bar--field').classList.remove('field-input');

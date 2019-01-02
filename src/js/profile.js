@@ -225,7 +225,8 @@ function profileView(pushState) {
     const ui = new firebaseui.auth.AuthUI(firebase.auth())
   
     // DOM element to insert firebaseui login UI
-    ui.start('#refresh-login', firebaseUiConfig(value))
+    ui.start('#refresh-login', firebaseUiConfig(value));
+    
     setTimeout(function () {
       document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber
       document.querySelector('.firebaseui-id-phone-number').disabled = true

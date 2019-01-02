@@ -497,7 +497,6 @@ function getNonLocationmessageString(name) {
 function isLocationVerified(reqType) {
   if (native.getName() === 'Android') {
     var title = 'Message';
-
     var messageData = {
       title: title,
       message: '',
@@ -514,41 +513,22 @@ function isLocationVerified(reqType) {
       }
     };
 
-    let instant = {
-      message: [],
-      device : native.getInfo()
-    }
-    try {
-
-      if (!Internet.isConnectionActive()) {
-        messageData.message = 'Please Check Your Internet Connection';
-        Android.notification(JSON.stringify(messageData));
-        return false;
-      }
-    }
-    catch(e) {
-      instant.message.push({msg:e.message});
+    if (!Internet.isConnectionActive()) {
+      messageData.message = 'Please Check Your Internet Connection';
+      Android.notification(JSON.stringify(messageData));
+      return false;
     }
 
-    try {
-      const gpsEnabled = gps.isEnabled(); 
-      var locationStatus = JSON.parse(gpsEnabled);
-      if (!locationStatus.active) {
-        messageData.message = getNonLocationmessageString(locationStatus.name);
-        Android.notification(JSON.stringify(messageData));
-        return false;
-      }
-      return true;
+    var locationStatus = JSON.parse(gps.isEnabled());
+
+    if (!locationStatus.active) {
+      messageData.message = getNonLocationmessageString(locationStatus.name);
+      Android.notification(JSON.stringify(messageData));
+      return false;
     }
-    catch(e){
-      instant.message.push({msg:e.message})
-    }
-    if(instant.message.length > 0) {
-      requestCreator('instant',JSON.stringify(instant));
-      return true;
-    }
+    return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -592,16 +572,14 @@ function requestCreator(requestType, requestBody) {
     type: requestType,
     body: ''
   };
-
+  if (offset) {
+    clearTimeout(offset);
+    offset = null;
+  }
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
     requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {
-
-    if (offset) {
-      clearTimeout(offset);
-      offset = null;
-    }
 
     getRootRecord().then(function (rootRecord) {
 
@@ -677,7 +655,6 @@ var receiverCaller = {
   'error': resetLoaders,
   'reset-offset': resetOffset,
   'android-stop-refreshing': androidStopRefreshing,
-  'updateAssigneesList': updateAssigneesList,
   'updateIDB': updateIDB,
   'redirect-to-list': changeState
 };
@@ -719,15 +696,6 @@ function resetOffset() {
 
 function changeState(data) {
   history.pushState(['listView'], null, null);
-}
-
-function updateAssigneesList(data) {
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    readNameAndImageFromNumber([data.params.number], db);
-    changeState();
-  };
 }
 
 function updateIDB(data) {
@@ -808,7 +776,7 @@ function handleTimeout(type) {
   }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 5000);
+  }, 8000);
 }
 
 function getInputText(selector) {

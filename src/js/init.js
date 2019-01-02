@@ -149,37 +149,38 @@ function backNav() {
 
 function firebaseUiConfig(value) {
 
-  return {
-    'callbacks': {
-      'signInSuccess': function (user) {
-        if (value) {
-          updateEmail(user, value)
-          return
+  return  {
+    callbacks: {
+      signInSuccessWithAuthResult: function(authResult) {
+      
+        if(value) {
+          updateEmail(authResult.user,value);
         }
-        console.log("now start ")
-        
-        init(user);
-        return false
+        else {
+          init(authResult.user);
+        }
+        return false;
       },
-      'signInFailure': function (error) {
-        return handleUIError(error)
+      uiShown: function() {
+      
       }
     },
-    'signInFlow': 'popup',
-    'signInOptions': [
-
-      {
-        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-
-        recaptchaParameters: {
-          type: 'image',
-          size: 'invisible',
-          badge: 'bottomleft'
-        },
-        defaultCountry: 'IN'
-      }
+    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+    signInFlow: 'popup',
+    signInOptions: [
+      // Leave the lines as is for the providers you want to offer your users.
+     {
+      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+      recaptchaParameters: {
+        type: 'image', // 'audio'
+        size: 'normal', // 'invisible' or 'compact'
+        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+      },
+      defaultCountry: 'IN',
+     }
     ]
-  }
+  
+  };
 }
 
 function userSignedOut() {
@@ -347,8 +348,9 @@ function startApp() {
       userSignedOut()
       return
     }
-    init(auth);
-    
+    if(localStorage.getItem('dbexist')) {
+      init(auth)
+    }
   })
 }
 // new day suggest

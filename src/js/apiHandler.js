@@ -1093,7 +1093,8 @@ function updateIDB(param) {
         )
         .then(function (response) {
           if (!response) return;
-          successResponse(response, param.swipe)
+     
+          successResponse(test, param.swipe)
         })
         .catch(function (error) {
 

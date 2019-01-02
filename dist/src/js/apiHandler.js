@@ -1,11 +1,14 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 // import firebase app script because there is no native support of firebase inside web workers
+importScripts('../../external/js/moment.min.js');
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
+
 var deviceInfo = void 0;
 /** reinitialize the firebase app */
 
@@ -13,6 +16,15 @@ var deviceInfo = void 0;
 function getTime() {
   return Date.now();
 }
+
+firebase.initializeApp({
+  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
+});
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
@@ -40,17 +52,9 @@ function createLog(body) {
   return JSON.stringify(body);
 }
 
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-});
-
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (event.data.type === 'now') {
@@ -71,7 +75,7 @@ self.onmessage = function (event) {
 
 function http(method, url, data) {
   return new Promise(function (resolve, reject) {
-    firebase.auth().currentUser.getIdToken().then(function (idToken) {
+    firebase.auth().currentUser.getIdToken(false).then(function (idToken) {
       var xhr = new XMLHttpRequest();
 
       xhr.open(method, url, true);
@@ -428,16 +432,12 @@ function instantUpdateDB(dbName, data, type) {
       record.editable = 0;
 
       if (type === 'share') {
-        record.assignees.push(data.share[0]);
+        data.share.forEach(function (number) {
+          record.assignees.push(number);
+        });
         objStore.put(record);
-        console.log(record);
       }
       if (type === 'update') {
-
-        // const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-        // activityStore.get(data.activityId).onsuccess = function (event) {
-        //   const record = event.target.result
-        //   const updateData = data
         record.schedule = data.schedule;
         record.attachment = data.attachment;
         for (var i = 0; i < record.venue.length; i++) {
@@ -455,17 +455,7 @@ function instantUpdateDB(dbName, data, type) {
       }
     };
     objStoreTx.oncomplete = function () {
-
-      if (type === 'status' || type === 'update') {
-        requestHandlerResponse('redirect-to-list', 200, '');
-      }
-      if (type === 'share') {
-
-        requestHandlerResponse('updateAssigneesList', 200, 'update user', {
-          id: data.activityId,
-          number: data.share[0]
-        });
-      }
+      requestHandlerResponse('redirect-to-list', 200, '');
     };
   };
 }
