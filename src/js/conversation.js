@@ -1050,7 +1050,7 @@ function fillSubscriptionInSelector(db, dialog, data) {
     }
     insertTemplateByOffice(offices, data.suggestCheckIn);
 
-  mainUL.appendChild(grp)
+    mainUL.appendChild(grp)
 
   dialog['acceptButton_'].onclick = function () {
 
