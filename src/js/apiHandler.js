@@ -477,6 +477,7 @@ function create(body) {
 
 function instantUpdateDB(dbName, data, type) {
   console.log(data)
+  debugger;
   const req = indexedDB.open(dbName)
   req.onsuccess = function (event) {
     const db = req.result
@@ -488,7 +489,9 @@ function instantUpdateDB(dbName, data, type) {
 
 
       if (type === 'share') {
-        record.assignees.push(data.share[0])
+        data.share.forEach(function(number){
+          record.assignees.push(number);
+        })
         objStore.put(record)
         console.log(record)
       }

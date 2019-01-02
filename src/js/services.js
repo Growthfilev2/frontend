@@ -666,6 +666,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
   return false;
 }
 
+
 const receiverCaller = {
   'update-app': updateApp,
   'revoke-session': revokeSession,
@@ -803,7 +804,7 @@ function handleTimeout(type) {
   }
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
-  }, 5000000);
+  }, 8000);
 }
 
 function getInputText(selector) {
