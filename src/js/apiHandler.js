@@ -477,7 +477,6 @@ function create(body) {
 
 function instantUpdateDB(dbName, data, type) {
   console.log(data)
-  debugger;
   const req = indexedDB.open(dbName)
   req.onsuccess = function (event) {
     const db = req.result
@@ -493,14 +492,8 @@ function instantUpdateDB(dbName, data, type) {
           record.assignees.push(number);
         })
         objStore.put(record)
-        console.log(record)
       }
       if (type === 'update') {
-
-        // const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-        // activityStore.get(data.activityId).onsuccess = function (event) {
-        //   const record = event.target.result
-        //   const updateData = data
         record.schedule = data.schedule;
         record.attachment = data.attachment
         for (var i = 0; i < record.venue.length; i++) {
