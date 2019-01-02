@@ -2243,8 +2243,13 @@ function setFilePath(str, key, show) {
 }
 
 function readCameraFile() {
-  if (localStorage.getItem('deviceType') === 'Android') {
-    FetchCameraForAttachment.startCamera()
+  if (native.getName() === 'Android') {
+    try {
+      FetchCameraForAttachment.startCamera()
+    }
+    catch(e){
+      requestCreator('instant',JSON.stringify({message:e.message,device:native.getInfo()}));
+    }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
   }
