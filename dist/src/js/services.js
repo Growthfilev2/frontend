@@ -497,6 +497,7 @@ function getNonLocationmessageString(name) {
 function isLocationVerified(reqType) {
   if (native.getName() === 'Android') {
     var title = 'Message';
+
     var messageData = {
       title: title,
       message: '',
@@ -513,22 +514,41 @@ function isLocationVerified(reqType) {
       }
     };
 
-    if (!Internet.isConnectionActive()) {
-      messageData.message = 'Please Check Your Internet Connection';
-      Android.notification(JSON.stringify(messageData));
-      return false;
+    let instant = {
+      message: [],
+      device : native.getInfo()
+    }
+    try {
+
+      if (!Internet.isConnectionActive()) {
+        messageData.message = 'Please Check Your Internet Connection';
+        Android.notification(JSON.stringify(messageData));
+        return false;
+      }
+    }
+    catch(e) {
+      instant.message.push({msg:e.message});
     }
 
-    var locationStatus = JSON.parse(gps.isEnabled());
-
-    if (!locationStatus.active) {
-      messageData.message = getNonLocationmessageString(locationStatus.name);
-      Android.notification(JSON.stringify(messageData));
-      return false;
+    try {
+      const gpsEnabled = gps.isEnabled(); 
+      var locationStatus = JSON.parse(gpsEnabled);
+      if (!locationStatus.active) {
+        messageData.message = getNonLocationmessageString(locationStatus.name);
+        Android.notification(JSON.stringify(messageData));
+        return false;
+      }
+      return true;
     }
-    return true;
+    catch(e){
+      instant.message.push({msg:e.message})
+    }
+    if(instant.message.length > 0) {
+      requestCreator('instant',JSON.stringify(instant));
+      return true;
+    }
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
