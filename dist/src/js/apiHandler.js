@@ -4,7 +4,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
+importScripts('../../external/js/moment.min.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
 var deviceInfo = void 0;
