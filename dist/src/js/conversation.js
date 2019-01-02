@@ -934,7 +934,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     var cursor = event.target.result;
     if (!cursor) return;
 
-    if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && data.attachment.status != 'CANCELLED') {
+    if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && cursor.value.status != 'CANCELLED') {
       if (cursor.value.attachment.Name) {
         ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value));
       }

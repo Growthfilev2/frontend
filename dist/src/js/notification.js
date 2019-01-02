@@ -169,6 +169,7 @@ self.onmessage = function (event) {
         cursor.continue();
       };
       mapTx.oncomplete = function () {
+
         var filtered = isDistanceNearBy(distanceArr, 0.5);
         var sorted = sortDistance(filtered);
         resetNearBy().then(function () {
