@@ -647,8 +647,8 @@ function initializeSelectorWithData(evt, data) {
       fillMapInSelector(db, selectorStore, dialog, data)
     }
     if (data.store === 'subscriptions') {
-      const selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillSubscriptionInSelector(db, selectorStore, dialog, data)
+     
+      fillSubscriptionInSelector(db, dialog, data)
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
@@ -1002,38 +1002,20 @@ document.querySelector('.selector-send').classList.remove('hidden')
 
 
 
-function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+function fillSubscriptionInSelector(db, dialog, data) {
   console.log(data);
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
   const offices = []
-  const officeIndex = selectorStore.index('office')
+  const tx = db.transaction(['subscriptions'])
+  const store = tx.objectStore('subscriptions');
+  const officeIndex = store.index('office')
   officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
 
-    if (!cursor) {
-      if(data.suggestCheckIn) {
-        const parent = document.getElementById('data-list--container')
-        const suggestion = document.createElement('div')
-        suggestion.className = 'suggest-checkin--view'
-        const icon = document.createElement('span')
-        icon.className = 'material-icons suggestion-icon'
-        icon.textContent = 'add_alert'
-        suggestion.appendChild(icon)
-
-        const text = document.createElement('span')
-        text.textContent = 'Check-In ?'
-        text.className = 'suggest-checkin--text'
-        suggestion.appendChild(icon)
-        suggestion.appendChild(text)
-        parent.insertBefore(suggestion,parent.childNodes[0]);
-      }
-      insertTemplateByOffice(offices, data.suggestCheckIn)
-      return;
-    }
-
-
+    if (!cursor) return;
+  
     const headline3 = document.createElement('h3')
     headline3.className = 'mdc-list-group__subheader subheader--group-small'
     headline3.textContent = cursor.value.office
@@ -1049,6 +1031,25 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     grp.appendChild(ul)
     cursor.continue();
   }
+  tx.oncomplete = function(){
+    if(data.suggestCheckIn) {
+      const parent = document.getElementById('data-list--container')
+      const suggestion = document.createElement('div')
+      suggestion.className = 'suggest-checkin--view'
+      const icon = document.createElement('span')
+      icon.className = 'material-icons suggestion-icon'
+      icon.textContent = 'add_alert'
+      suggestion.appendChild(icon)
+
+      const text = document.createElement('span')
+      text.textContent = 'Check-In ?'
+      text.className = 'suggest-checkin--text'
+      suggestion.appendChild(icon)
+      suggestion.appendChild(text)
+      parent.insertBefore(suggestion,parent.childNodes[0]);
+    }
+    insertTemplateByOffice(offices, data.suggestCheckIn);
+
   mainUL.appendChild(grp)
 
   dialog['acceptButton_'].onclick = function () {
@@ -1065,6 +1066,8 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     }
 
   }
+  }
+
 }
 
 
