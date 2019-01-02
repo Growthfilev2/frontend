@@ -1,5 +1,4 @@
-importScripts("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js");
-
+importScripts('../../external/js/moment.min.js');
 self.onmessage = function (event) {
   var dbName = event.data.dbName;
   var type = event.data.type;
@@ -31,7 +30,9 @@ self.onmessage = function (event) {
       var cursor = event.target.result;
       if (!cursor) return;
 
-      if (moment(yesterday).isSameOrBefore(cursor.value.end) && moment(tomorrow).isSameOrAfter(cursor.value.start)) {
+      var end = moment(cursor.value.end, 'YYYY-MM-DD');
+      var start = moment(cursor.value.start, 'YYYY-MM-DD');
+      if (moment(yesterday).isSameOrBefore(end) && moment(tomorrow).isSameOrAfter(start)) {
         var data = {
           activityId: cursor.value.activityId,
           name: cursor.value.scheduleName,
@@ -168,10 +169,6 @@ self.onmessage = function (event) {
         cursor.continue();
       };
       mapTx.oncomplete = function () {
-        if (!distanceArr) {
-          self.postMessage(true);
-          return;
-        }
         var filtered = isDistanceNearBy(distanceArr, 0.5);
         var sorted = sortDistance(filtered);
         resetNearBy().then(function () {

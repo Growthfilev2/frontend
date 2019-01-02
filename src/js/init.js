@@ -7,20 +7,76 @@ firebase.initializeApp({
   messagingSenderId: '701025551237'
 })
 
+let native = function () {
+  return {
+    setName: function (device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function () {
+      return localStorage.getItem('deviceType');
+    },
+    setIosInfo: function (iosDeviceInfo) {
+      const splitByName = iosDeviceInfo.split("&")
+      const deviceInfo = {
+        baseOs: splitByName[0],
+        deviceBrand: splitByName[1],
+        deviceModel: splitByName[2],
+        appVersion: Number(splitByName[3]),
+        osVersion: splitByName[4],
+        id: splitByName[5],
+        initConnection: splitByName[6]
+      }
+
+      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
+    },
+    getIosInfo: function () {
+      return localStorage.getItem('iosUUID');
+    },
+    getInfo: function () {
+      if (!this.getName()) {
+        return JSON.stringify({
+          'id': '123',
+          'appVersion': 4,
+          'baseOs': 'macOs'
+        })
+      }
+      if (this.getName() === 'Android') {
+        try {
+          return AndroidId.getDeviceId();
+        }
+        catch(e){
+          requestCreator('instant',JSON.stringify({message:e.message}))
+          return JSON.stringify({
+            baseOs:this.getName(),
+            deviceBrand: '',
+            deviceModel: '',
+            appVersion: 4,
+            osVersion: '',
+            id: '',
+          })
+        }
+      }
+      return this.getIosInfo();
+    }
+  }
+}();
+
+
 window.onerror = function (msg, url, lineNo, columnNo, error) {
   const errorJS = {
     message: {
-      msg: msg,
+      msg: error.message,
       url: url,
       lineNo: lineNo,
       columnNo: columnNo,
-      error: error
+      stack:error.stack,
+      name:error.name,
+      device:native.getInfo(),
+      state:history.state[0]
     }
   }
-
   requestCreator('instant', JSON.stringify(errorJS))
-}
-
+}  
 
 // initialize smooth scrolling
 window.scrollBy({
@@ -54,7 +110,7 @@ window.addEventListener('load', function () {
     return
   }
 
-  moment.locale('en', {
+  moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
       sameDay: 'LT',
@@ -93,36 +149,38 @@ function backNav() {
 
 function firebaseUiConfig(value) {
 
-  return {
-    'callbacks': {
-      'signInSuccess': function (user) {
-        if (value) {
-          updateEmail(user, value)
-          return
+  return  {
+    callbacks: {
+      signInSuccessWithAuthResult: function(authResult) {
+      
+        if(value) {
+          updateEmail(authResult.user,value);
         }
-
-        // no redirect
-        return false
+        else {
+          init(authResult.user);
+        }
+        return false;
       },
-      'signInFailure': function (error) {
-        return handleUIError(error)
+      uiShown: function() {
+      
       }
     },
-    'signInFlow': 'popup',
-    'signInOptions': [
-
-      {
-        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-
-        recaptchaParameters: {
-          type: 'image',
-          size: 'invisible',
-          badge: 'bottomleft'
-        },
-        defaultCountry: 'IN'
-      }
+    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+    signInFlow: 'popup',
+    signInOptions: [
+      // Leave the lines as is for the providers you want to offer your users.
+     {
+      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+      recaptchaParameters: {
+        type: 'image', // 'audio'
+        size: 'normal', // 'invisible' or 'compact'
+        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+      },
+      defaultCountry: 'IN',
+     }
     ]
-  }
+  
+  };
 }
 
 function userSignedOut() {
@@ -131,8 +189,7 @@ function userSignedOut() {
   document.body.appendChild(login)
 
   const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
-  ui.start('#login-container', firebaseUiConfig())
-
+  ui.start('#login-container', firebaseUiConfig());
 
 }
 
@@ -152,7 +209,7 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-
+  headerDiv.appendChild(createHeader('app-main-header'))
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
@@ -160,6 +217,40 @@ function layoutGrid() {
   document.body.innerHTML = layout.outerHTML
   imageViewDialog();
 }
+
+
+function createHeader(id) {
+
+  const header = document.createElement('header')
+  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
+  header.id = id
+  
+  const row = document.createElement('div')
+  row.className = 'mdc-top-app-bar__row'
+
+  const sectionStart = document.createElement('section')
+  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
+
+  const leftUI = document.createElement('div')
+  leftUI.id = id+'view-type'
+  leftUI.className = 'view-type'
+  sectionStart.appendChild(leftUI)
+
+  const sectionEnd = document.createElement('div')
+  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
+
+  const rightUI = document.createElement('div')
+  rightUI.id = id+'action-data'
+  
+  rightUI.className = 'action-data'
+  
+  sectionEnd.appendChild(rightUI)
+  row.appendChild(sectionStart)
+  row.appendChild(sectionEnd)
+  header.appendChild(row)
+  return header
+}
+
 
 function drawerDom() {
   const div = document.createElement('div')
@@ -247,47 +338,6 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-let native = function () {
-  return {
-    setName: function (device) {
-      localStorage.setItem('deviceType', device);
-    },
-    getName: function () {
-      return localStorage.getItem('deviceType');
-    },
-    setIosInfo: function (iosDeviceInfo) {
-      const splitByName = iosDeviceInfo.split("&")
-      const deviceInfo = {
-        baseOs: splitByName[0],
-        deviceBrand: splitByName[1],
-        deviceModel: splitByName[2],
-        appVersion: Number(splitByName[3]),
-        osVersion: splitByName[4],
-        id: splitByName[5],
-        initConnection: splitByName[6]
-      }
-
-      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
-    },
-    getIosInfo: function () {
-      return localStorage.getItem('iosUUID');
-    },
-    getInfo: function () {
-      if (!this.getName()) {
-        return JSON.stringify({
-          'id': '123',
-          'appVersion': 4,
-          'baseOs': 'macOs'
-        })
-      }
-      if (this.getName() === 'Android') {
-        return AndroidId.getDeviceId();
-      }
-      return this.getIosInfo();
-    }
-  }
-}();
-
 
 
 function startApp() {
@@ -298,9 +348,9 @@ function startApp() {
       userSignedOut()
       return
     }
-    drawerDom();
-    document.getElementById("main-layout-app").style.display = 'block'
-    init(auth);
+    if(localStorage.getItem('dbexist')) {
+      init(auth)
+    }
   })
 }
 // new day suggest
@@ -369,7 +419,8 @@ function removeIDBInstance(auth) {
       message: 'Please Restart The App',
       error: '',
       device:native.getInfo()
-    }
+    };
+
     const req = indexedDB.deleteDatabase(auth.uid)
     req.onsuccess = function () {
       resolve(true)
@@ -386,9 +437,11 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-
+  
+  drawerDom();
+  document.getElementById("main-layout-app").style.display = 'block'
+  
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
-
 
     if (localStorage.getItem('dbexist')) {
       from = 1;
@@ -401,13 +454,9 @@ function init(auth) {
     }
 
     resetApp(auth, 0)
-
   }).catch(function(error){
     requestCreator('instant',JSON.stringify({message:error}));
-
-  })
-
-  return
+  });
 }
 
 function resetApp(auth, from) {
@@ -423,7 +472,8 @@ function resetApp(auth, from) {
     requestCreator('now', {
       device: native.getInfo(),
       from: from
-    })
+    });
+
   }).catch(function (error) {
     snacks(error.message);
     requestCreator('instant',JSON.stringify({message:error}));
@@ -436,10 +486,13 @@ function startInitializatioOfList(auth) {
     setInterval(function () {
       manageLocation();
     }, 5000);
+    
+  
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
     });
+  
     suggestCheckIn(isNew).then(function () {
       listView({urgent:isNew,nearby:isNew});
     }).catch(function(error){

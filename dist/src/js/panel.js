@@ -6,6 +6,11 @@ function listView(filter) {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove();
   }
+
+  if (document.querySelector('.mdc-linear-progress')) {
+    document.querySelector('.mdc-linear-progress').remove();
+  }
+
   history.pushState(['listView'], null, null);
 
   listPanel();
@@ -310,11 +315,14 @@ function creatListHeader(headerName) {
   sicon.className = 'material-icons';
   sicon.textContent = 'search';
   searchIcon.appendChild(sicon);
-  header(parentIconDiv.outerHTML, '', 'list');
+  modifyHeader({
+    id: 'app-main-header',
+    left: parentIconDiv.outerHTML,
+    right: ''
+  });
   document.getElementById('menu--panel').addEventListener('click', function () {
     var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
     drawer.open = true;
-    sendCurrentViewNameToAndroid('drawer');
   });
 }
 
@@ -349,41 +357,17 @@ function notificationWorker(type, updateTimestamp) {
   });
 }
 
-function header(contentStart, contentEnd, headerType) {
+function modifyHeader(attr) {
 
-  var header = document.createElement('header');
-  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1';
-  if (headerType === 'list') {
-    header.classList.add('header-list--gray');
+  if (attr.left) {
+
+    var left = document.getElementById(attr.id + 'view-type');
+    left.innerHTML = attr.left;
   }
-  var row = document.createElement('div');
-  row.className = 'mdc-top-app-bar__row';
+  if (attr.right) {
 
-  var sectionStart = document.createElement('section');
-  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start';
-
-  var leftUI = document.createElement('div');
-  leftUI.id = 'view-type';
-  leftUI.innerHTML = contentStart;
-
-  sectionStart.appendChild(leftUI);
-
-  var sectionEnd = document.createElement('div');
-  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end';
-
-  var rightUI = document.createElement('div');
-  rightUI.id = 'action-data';
-  if (contentEnd) {
-    rightUI.innerHTML = contentEnd;
-  }
-  sectionEnd.appendChild(rightUI);
-  row.appendChild(sectionStart);
-  row.appendChild(sectionEnd);
-  header.innerHTML = row.outerHTML;
-  if (headerType === 'selector') {
-    return header;
-  } else {
-    document.getElementById('header').innerHTML = header.outerHTML;
+    var right = document.getElementById(attr.id + 'action-data');
+    right.innerHTML = attr.right;
   }
 }
 

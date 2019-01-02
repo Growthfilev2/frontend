@@ -72,7 +72,7 @@ self.onmessage = function (event) {
 
 function http(method, url, data) {
   return new Promise(function (resolve, reject) {
-    firebase.auth().currentUser.getIdToken().then(function (idToken) {
+    firebase.auth().currentUser.getIdToken(false).then(function (idToken) {
       var xhr = new XMLHttpRequest();
 
       xhr.open(method, url, true);
@@ -162,10 +162,15 @@ function fetchServerTime(info) {
 }
 
 function instant(error) {
+  console.log(error);
   http('POST', apiUrl + 'services/logs', error).then(function (response) {
     console.log(response);
   }).catch(console.log);
 }
+
+/**
+ * Initialize the indexedDB with database of currently signed in user's uid.
+ */
 
 function fetchRecord(dbName, id) {
   return new Promise(function (resolve) {
@@ -424,16 +429,12 @@ function instantUpdateDB(dbName, data, type) {
       record.editable = 0;
 
       if (type === 'share') {
-        record.assignees.push(data.share[0]);
+        data.share.forEach(function (number) {
+          record.assignees.push(number);
+        });
         objStore.put(record);
-        console.log(record);
       }
       if (type === 'update') {
-
-        // const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-        // activityStore.get(data.activityId).onsuccess = function (event) {
-        //   const record = event.target.result
-        //   const updateData = data
         record.schedule = data.schedule;
         record.attachment = data.attachment;
         for (var i = 0; i < record.venue.length; i++) {
@@ -451,17 +452,7 @@ function instantUpdateDB(dbName, data, type) {
       }
     };
     objStoreTx.oncomplete = function () {
-
-      if (type === 'status' || type === 'update') {
-        requestHandlerResponse('redirect-to-list', 200, '');
-      }
-      if (type === 'share') {
-
-        requestHandlerResponse('updateAssigneesList', 200, 'update user', {
-          id: data.activityId,
-          number: data.share[0]
-        });
-      }
+      requestHandlerResponse('redirect-to-list', 200, '');
     };
   };
 }

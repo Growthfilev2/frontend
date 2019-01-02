@@ -7,17 +7,72 @@ firebase.initializeApp({
   messagingSenderId: '701025551237'
 });
 
+var native = function () {
+  return {
+    setName: function setName(device) {
+      localStorage.setItem('deviceType', device);
+    },
+    getName: function getName() {
+      return localStorage.getItem('deviceType');
+    },
+    setIosInfo: function setIosInfo(iosDeviceInfo) {
+      var splitByName = iosDeviceInfo.split("&");
+      var deviceInfo = {
+        baseOs: splitByName[0],
+        deviceBrand: splitByName[1],
+        deviceModel: splitByName[2],
+        appVersion: Number(splitByName[3]),
+        osVersion: splitByName[4],
+        id: splitByName[5],
+        initConnection: splitByName[6]
+      };
+
+      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo));
+    },
+    getIosInfo: function getIosInfo() {
+      return localStorage.getItem('iosUUID');
+    },
+    getInfo: function getInfo() {
+      if (!this.getName()) {
+        return JSON.stringify({
+          'id': '123',
+          'appVersion': 4,
+          'baseOs': 'macOs'
+        });
+      }
+      if (this.getName() === 'Android') {
+        try {
+          return AndroidId.getDeviceId();
+        } catch (e) {
+          requestCreator('instant', JSON.stringify({ message: e.message }));
+          return JSON.stringify({
+            baseOs: this.getName(),
+            deviceBrand: '',
+            deviceModel: '',
+            appVersion: 4,
+            osVersion: '',
+            id: ''
+          });
+        }
+      }
+      return this.getIosInfo();
+    }
+  };
+}();
+
 window.onerror = function (msg, url, lineNo, columnNo, error) {
   var errorJS = {
     message: {
-      msg: msg,
+      msg: error.message,
       url: url,
       lineNo: lineNo,
       columnNo: columnNo,
-      error: error
+      stack: error.stack,
+      name: error.name,
+      device: native.getInfo(),
+      state: history.state[0]
     }
   };
-
   requestCreator('instant', JSON.stringify(errorJS));
 };
 
@@ -51,7 +106,7 @@ window.addEventListener('load', function () {
     return;
   }
 
-  moment.locale('en', {
+  moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
       sameDay: 'LT',
@@ -87,31 +142,32 @@ function backNav() {
 function firebaseUiConfig(value) {
 
   return {
-    'callbacks': {
-      'signInSuccess': function signInSuccess(user) {
-        if (value) {
-          updateEmail(user, value);
-          return;
-        }
+    callbacks: {
+      signInSuccessWithAuthResult: function signInSuccessWithAuthResult(authResult) {
 
-        // no redirect
+        if (value) {
+          updateEmail(authResult.user, value);
+        } else {
+          init(authResult.user);
+        }
         return false;
       },
-      'signInFailure': function signInFailure(error) {
-        return handleUIError(error);
-      }
+      uiShown: function uiShown() {}
     },
-    'signInFlow': 'popup',
-    'signInOptions': [{
+    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+    signInFlow: 'popup',
+    signInOptions: [
+    // Leave the lines as is for the providers you want to offer your users.
+    {
       provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-
       recaptchaParameters: {
-        type: 'image',
-        size: 'invisible',
-        badge: 'bottomleft'
+        type: 'image', // 'audio'
+        size: 'normal', // 'invisible' or 'compact'
+        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
       },
       defaultCountry: 'IN'
     }]
+
   };
 }
 
@@ -140,12 +196,45 @@ function layoutGrid() {
   var snackbar = document.createElement('div');
   snackbar.id = 'snackbar-container';
 
+  headerDiv.appendChild(createHeader('app-main-header'));
   layoutInner.appendChild(headerDiv);
   layoutInner.appendChild(currentPanel);
   layoutInner.appendChild(snackbar);
   layout.appendChild(layoutInner);
   document.body.innerHTML = layout.outerHTML;
   imageViewDialog();
+}
+
+function createHeader(id) {
+
+  var header = document.createElement('header');
+  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1';
+  header.id = id;
+
+  var row = document.createElement('div');
+  row.className = 'mdc-top-app-bar__row';
+
+  var sectionStart = document.createElement('section');
+  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start';
+
+  var leftUI = document.createElement('div');
+  leftUI.id = id + 'view-type';
+  leftUI.className = 'view-type';
+  sectionStart.appendChild(leftUI);
+
+  var sectionEnd = document.createElement('div');
+  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end';
+
+  var rightUI = document.createElement('div');
+  rightUI.id = id + 'action-data';
+
+  rightUI.className = 'action-data';
+
+  sectionEnd.appendChild(rightUI);
+  row.appendChild(sectionStart);
+  row.appendChild(sectionEnd);
+  header.appendChild(row);
+  return header;
 }
 
 function drawerDom() {
@@ -228,47 +317,6 @@ function imageViewDialog() {
   document.body.appendChild(aside);
 }
 
-var native = function () {
-  return {
-    setName: function setName(device) {
-      localStorage.setItem('deviceType', device);
-    },
-    getName: function getName() {
-      return localStorage.getItem('deviceType');
-    },
-    setIosInfo: function setIosInfo(iosDeviceInfo) {
-      var splitByName = iosDeviceInfo.split("&");
-      var deviceInfo = {
-        baseOs: splitByName[0],
-        deviceBrand: splitByName[1],
-        deviceModel: splitByName[2],
-        appVersion: Number(splitByName[3]),
-        osVersion: splitByName[4],
-        id: splitByName[5],
-        initConnection: splitByName[6]
-      };
-
-      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo));
-    },
-    getIosInfo: function getIosInfo() {
-      return localStorage.getItem('iosUUID');
-    },
-    getInfo: function getInfo() {
-      if (!this.getName()) {
-        return JSON.stringify({
-          'id': '123',
-          'appVersion': 4,
-          'baseOs': 'macOs'
-        });
-      }
-      if (this.getName() === 'Android') {
-        return AndroidId.getDeviceId();
-      }
-      return this.getIosInfo();
-    }
-  };
-}();
-
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -277,9 +325,9 @@ function startApp() {
       userSignedOut();
       return;
     }
-    drawerDom();
-    document.getElementById("main-layout-app").style.display = 'block';
-    init(auth);
+    if (localStorage.getItem('dbexist')) {
+      init(auth);
+    }
   });
 }
 // new day suggest
@@ -348,6 +396,7 @@ function removeIDBInstance(auth) {
       error: '',
       device: native.getInfo()
     };
+
     var req = indexedDB.deleteDatabase(auth.uid);
     req.onsuccess = function () {
       resolve(true);
@@ -365,6 +414,9 @@ function removeIDBInstance(auth) {
 
 function init(auth) {
 
+  drawerDom();
+  document.getElementById("main-layout-app").style.display = 'block';
+
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
     if (localStorage.getItem('dbexist')) {
@@ -381,8 +433,6 @@ function init(auth) {
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({ message: error }));
   });
-
-  return;
 }
 
 function resetApp(auth, from) {
@@ -411,10 +461,12 @@ function startInitializatioOfList(auth) {
     setInterval(function () {
       manageLocation();
     }, 5000);
+
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
     });
+
     suggestCheckIn(isNew).then(function () {
       listView({ urgent: isNew, nearby: isNew });
     }).catch(function (error) {

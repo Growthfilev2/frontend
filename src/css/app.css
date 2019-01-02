@@ -627,7 +627,7 @@ footer.mdc-dialog__footer {
   margin: 0px !important;
 }
 
-#action-data {
+.action-data {
   font-weight: 400;
   font-size: 14px;
   margin-top: 0px;
@@ -638,7 +638,7 @@ footer.mdc-dialog__footer {
   cursor: pointer;
 }
 
-#view-type {
+.view-type {
   padding-left: 10px;
   padding-top:5px;
 }
@@ -1096,7 +1096,7 @@ input[type="datetime-local"] {
     margin-bottom:0px;
   }
 
-  #action-data .mdc-text-field__input {
+  .action-data .mdc-text-field__input {
     height:100%;
     width: 100%;
     border-bottom: none;
@@ -1579,4 +1579,8 @@ input[type="datetime-local"] {
 
   .notification {
     color: #ff9800;
+  }
+
+  #search--bar-selector {
+    border-bottom: 0px;
   }

@@ -479,7 +479,7 @@ function createHeaderContent(db, id) {
 
       leftDiv.appendChild(backDiv)
       leftDiv.appendChild(primarySpan)
-      header(leftDiv.outerHTML, '')
+      modifyHeader({id:'app-main-header',left:leftDiv.outerHTML})
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav();
@@ -541,9 +541,10 @@ function selectorUI(evt, data) {
   aside.id = 'dialog--component'
   aside.className = 'mdc-dialog'
   aside.role = 'alertdialog'
-
+  
   const dialogSurface = document.createElement('div')
   dialogSurface.className = 'mdc-dialog__surface'
+  dialogSurface.appendChild(createHeader('dialog--surface-header'))
 
   const searchIcon = document.createElement('span')
   searchIcon.className = 'material-icons'
@@ -571,8 +572,8 @@ function selectorUI(evt, data) {
 
 
 
-  const accept = document.createElement('button')
-  accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send'
+  const accept = document.createElement('button');
+  accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
   accept.type = 'button'
 
   const acceptIcon = document.createElement('span')
@@ -586,14 +587,10 @@ function selectorUI(evt, data) {
   }
   accept.appendChild(acceptIcon)
 
-  footer.appendChild(accept)
-  if (data.store === 'subscriptions' || data.store === 'children') {
-    dialogSurface.appendChild(header(backSpan.outerHTML, '', 'selector'))
+  footer.appendChild(accept);
 
-  } else {
 
-    dialogSurface.appendChild(header(backSpan.outerHTML, searchIcon.outerHTML, 'selector'))
-  }
+
   dialogSurface.appendChild(section)
   dialogSurface.appendChild(footer)
 
@@ -602,6 +599,12 @@ function selectorUI(evt, data) {
   backdrop.className = 'mdc-dialog__backdrop'
   aside.appendChild(backdrop)
   document.body.appendChild(aside)
+
+  if (data.store === 'subscriptions' || data.store === 'children') {
+    modifyHeader({id:'dialog--surface-header',left:backSpan.outerHTML})
+  } else {
+    modifyHeader({id:'dialog--surface-header',left:backSpan.outerHTML, right:searchIcon.outerHTML})
+  }
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
@@ -644,8 +647,8 @@ function initializeSelectorWithData(evt, data) {
       fillMapInSelector(db, selectorStore, dialog, data)
     }
     if (data.store === 'subscriptions') {
-      const selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillSubscriptionInSelector(db, selectorStore, dialog, data)
+     
+      fillSubscriptionInSelector(db, dialog, data)
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
@@ -697,6 +700,7 @@ function fillUsersInSelector(data, dialog) {
       const userRecord = cursor.value
 
       if (data.attachment.present) {
+        
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
@@ -709,6 +713,7 @@ function fillUsersInSelector(data, dialog) {
     document.getElementById('selector--search').addEventListener('click', function () {
       initSearchForSelectors(db, 'users', data)
     })
+    document.querySelector('.selector-send').classList.remove('hidden');
 
     dialog['acceptButton_'].onclick = function () {
 
@@ -944,6 +949,8 @@ function fillMapInSelector(db, selectorStore, dialog, data) {
     initSearchForSelectors(db, 'map', data)
   })
 
+  document.querySelector('.selector-send').classList.remove('hidden');
+
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
@@ -979,7 +986,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     cursor.continue()
   }
 
-
+document.querySelector('.selector-send').classList.remove('hidden')
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
@@ -995,38 +1002,20 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 
 
 
-function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
+function fillSubscriptionInSelector(db, dialog, data) {
   console.log(data);
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
   const offices = []
-  const officeIndex = selectorStore.index('office')
+  const tx = db.transaction(['subscriptions'])
+  const store = tx.objectStore('subscriptions');
+  const officeIndex = store.index('office')
   officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
 
-    if (!cursor) {
-      if(data.suggestCheckIn) {
-        const parent = document.getElementById('data-list--container')
-        const suggestion = document.createElement('div')
-        suggestion.className = 'suggest-checkin--view'
-        const icon = document.createElement('span')
-        icon.className = 'material-icons suggestion-icon'
-        icon.textContent = 'add_alert'
-        suggestion.appendChild(icon)
-
-        const text = document.createElement('span')
-        text.textContent = 'Check-In ?'
-        text.className = 'suggest-checkin--text'
-        suggestion.appendChild(icon)
-        suggestion.appendChild(text)
-        parent.insertBefore(suggestion,parent.childNodes[0]);
-      }
-      insertTemplateByOffice(offices, data.suggestCheckIn)
-      return;
-    }
-
-
+    if (!cursor) return;
+  
     const headline3 = document.createElement('h3')
     headline3.className = 'mdc-list-group__subheader subheader--group-small'
     headline3.textContent = cursor.value.office
@@ -1042,7 +1031,26 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     grp.appendChild(ul)
     cursor.continue();
   }
-  mainUL.appendChild(grp)
+  tx.oncomplete = function(){
+    if(data.suggestCheckIn) {
+      const parent = document.getElementById('data-list--container')
+      const suggestion = document.createElement('div')
+      suggestion.className = 'suggest-checkin--view'
+      const icon = document.createElement('span')
+      icon.className = 'material-icons suggestion-icon'
+      icon.textContent = 'add_alert'
+      suggestion.appendChild(icon)
+
+      const text = document.createElement('span')
+      text.textContent = 'Check-In ?'
+      text.className = 'suggest-checkin--text'
+      suggestion.appendChild(icon)
+      suggestion.appendChild(text)
+      parent.insertBefore(suggestion,parent.childNodes[0]);
+    }
+    insertTemplateByOffice(offices, data.suggestCheckIn);
+
+    mainUL.appendChild(grp)
 
   dialog['acceptButton_'].onclick = function () {
 
@@ -1058,6 +1066,8 @@ function fillSubscriptionInSelector(db, selectorStore, dialog, data) {
     }
 
   }
+  }
+
 }
 
 
@@ -1104,7 +1114,9 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
           const el =  document.querySelector(`[data-selection="${key}"]`);
           el.insertBefore(li[key],el.childNodes[0])
         })
-      })
+      });
+      document.querySelector('.selector-send').classList.remove('hidden');
+
     }
   }
 }
@@ -1314,7 +1326,7 @@ function updateCreateContainer(record) {
 
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)
-  header(leftHeaderContent.outerHTML, '')
+  modifyHeader({id:'app-main-header',left:leftHeaderContent.outerHTML})
 
 
   document.getElementById('backToConv').addEventListener('click', function () {
@@ -2529,7 +2541,7 @@ function initSearchForSelectors(db, type, attr) {
 function searchBarUI(type) {
 
   const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#action-data")
+  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
   actionCont.className = 'search--cont'
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.add('search-field-transform')
@@ -2544,9 +2556,9 @@ function searchBarUI(type) {
   document.getElementById('selector--search').style.display = 'none'
   document.querySelector('.selector-send').dataset.clicktype = ''
   document.querySelector('.selector-send span').textContent = 'send'
-  dialogEl.querySelector('#view-type span').dataset.type = 'back-list'
+  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = 'back-list'
   if (type === 'users') {
-    dialogEl.querySelector('#view-type span').dataset.state = 'user-list-back'
+    dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back'
   }
   // document.getElementById('data-list--container').style.display = 'none'
 }
@@ -2554,8 +2566,9 @@ function searchBarUI(type) {
 function resetSelectorUI(data) {
 
   const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#action-data")
-  dialogEl.querySelector('#view-type span').dataset.type = ''
+  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
+  
+  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = ''
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
   actionCont.querySelector('#search--bar--field').classList.remove('field-input')

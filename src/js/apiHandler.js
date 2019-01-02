@@ -1,4 +1,5 @@
 // import firebase app script because there is no native support of firebase inside web workers
+importScripts('../../external/js/moment.min.js')
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
@@ -12,6 +13,16 @@ let deviceInfo;
 function getTime() {
   return Date.now()
 }
+
+firebase.initializeApp({
+  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
+  authDomain: "growthfilev2-0.firebaseapp.com",
+  databaseURL: "https://growthfilev2-0.firebaseio.com",
+  projectId: "growthfilev2-0",
+  storageBucket: "growthfilev2-0.appspot.com",
+  messagingSenderId: "1011478688238"
+})
+
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
@@ -52,6 +63,8 @@ firebase.initializeApp({
 
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
+  
+  
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (event.data.type === 'now') {
@@ -76,7 +89,7 @@ function http(method, url, data) {
     firebase
       .auth()
       .currentUser
-      .getIdToken()
+      .getIdToken(false)
       .then(function (idToken) {
         const xhr = new XMLHttpRequest()
 
@@ -170,6 +183,7 @@ function fetchServerTime(info) {
 }
 
 function instant(error) {
+  console.log(error)
   http(
     'POST',
     `${apiUrl}services/logs`,
@@ -477,16 +491,12 @@ function instantUpdateDB(dbName, data, type) {
 
 
       if (type === 'share') {
-        record.assignees.push(data.share[0])
+        data.share.forEach(function(number){
+          record.assignees.push(number);
+        })
         objStore.put(record)
-        console.log(record)
       }
       if (type === 'update') {
-
-        // const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-        // activityStore.get(data.activityId).onsuccess = function (event) {
-        //   const record = event.target.result
-        //   const updateData = data
         record.schedule = data.schedule;
         record.attachment = data.attachment
         for (var i = 0; i < record.venue.length; i++) {
@@ -506,18 +516,7 @@ function instantUpdateDB(dbName, data, type) {
 
     }
     objStoreTx.oncomplete = function () {
-
-      if (type === 'status' || type === 'update') {
         requestHandlerResponse('redirect-to-list', 200, '')
-      }
-      if (type === 'share') {
-
-        requestHandlerResponse('updateAssigneesList', 200, 'update user', {
-          id: data.activityId,
-          number: data.share[0]
-        })
-      }
-
     }
   }
 }
@@ -1086,7 +1085,8 @@ function updateIDB(param) {
 
   req.onsuccess = function () {
     const db = req.result
-    const rootObjectStore = db.transaction('root', 'readonly').objectStore('root')
+    const rootObjectStore = db.transaction('root', 'readonly').objectStore('root');
+    
     console.log(rootObjectStore)
     rootObjectStore.get(param.dbName).onsuccess = function (root) {
       console.log(root)
@@ -1096,12 +1096,14 @@ function updateIDB(param) {
         )
         .then(function (response) {
           if (!response) return;
-          successResponse(response, param.swipe)
+     
+          successResponse(test, param.swipe)
         })
         .catch(function (error) {
 
           instant(createLog(error));
         })
     }
+    
   }
 }

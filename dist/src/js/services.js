@@ -219,7 +219,7 @@ function manageLocation() {
   if (!localStorage.getItem('dbexist')) {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   }
-  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
+  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   var CelllarJson = false;
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
@@ -475,7 +475,11 @@ function isNewLocationMoreThanThreshold(distance) {
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
-    Fetchview.startConversation(viewName);
+    try {
+      Fetchview.startConversation(viewName);
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({ message: e.message }));
+    }
   }
 }
 
@@ -588,16 +592,14 @@ function requestCreator(requestType, requestBody) {
     type: requestType,
     body: ''
   };
-
+  if (offset) {
+    clearTimeout(offset);
+    offset = null;
+  }
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
     requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {
-
-    if (offset) {
-      clearTimeout(offset);
-      offset = null;
-    }
 
     getRootRecord().then(function (rootRecord) {
 
@@ -673,7 +675,6 @@ var receiverCaller = {
   'error': resetLoaders,
   'reset-offset': resetOffset,
   'android-stop-refreshing': androidStopRefreshing,
-  'updateAssigneesList': updateAssigneesList,
   'updateIDB': updateIDB,
   'redirect-to-list': changeState
 };
@@ -717,15 +718,6 @@ function changeState(data) {
   history.pushState(['listView'], null, null);
 }
 
-function updateAssigneesList(data) {
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    readNameAndImageFromNumber([data.params.number], db);
-    changeState();
-  };
-}
-
 function updateIDB(data) {
   if (data.msg === 'true') {
     androidStopRefreshing();
@@ -764,7 +756,16 @@ function updateIDB(data) {
 
 function androidStopRefreshing() {
   if (native.getName() === 'Android') {
-    AndroidRefreshing.stopRefreshing(true);
+    try {
+      AndroidRefreshing.stopRefreshing(true);
+    } catch (e) {
+
+      var instantBody = {
+        message: e.message,
+        device: native.getInfo()
+      };
+      requestCreator('instant', JSON.stringify(instantBody));
+    }
   }
 }
 
