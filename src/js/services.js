@@ -797,7 +797,7 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout(type) {
-  const whitelist = ['update-app', 'revoke-session','manageLocation'];
+  const whitelist = ['update-app', 'revoke-session','manageLocation','error'];
   const index = whitelist.indexOf(type);
   if (index > -1) {
     return;

@@ -79,7 +79,7 @@ function http(method, url, data) {
     firebase
       .auth()
       .currentUser
-      .getIdToken(false)
+      .getIdToken(true)
       .then(function (idToken) {
         const xhr = new XMLHttpRequest()
 
@@ -99,14 +99,14 @@ function http(method, url, data) {
             }
 
             if (xhr.status > 226) {
-              const errorObject = JSON.parse(xhr.response)
-              requestHandlerResponse('error', errorObject.code, errorObject.message)
+              const errorObject = JSON.parse(xhr.response);
+              requestHandlerResponse('error', errorObject.code, errorObject.message);
               return reject({
                 res: JSON.parse(xhr.response),
                 url: url,
                 data: data,
                 device: currentDevice
-              })
+              });
             }
             xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
           }
@@ -114,8 +114,7 @@ function http(method, url, data) {
 
         xhr.send(data || null)
       }).catch(function (error) {
-
-        instant(createLog(error))
+        instant(JSON.stringify({message:error,time:Date.now()}))
       })
   })
 }
@@ -1086,7 +1085,6 @@ function updateIDB(param) {
         )
         .then(function (response) {
           if (!response) return;
-     
           successResponse(response, param.swipe)
         })
         .catch(function (error) {
