@@ -769,7 +769,7 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout(type) {
-  var whitelist = ['update-app', 'revoke-session'];
+  var whitelist = ['update-app', 'revoke-session','manageLocation'];
   var index = whitelist.indexOf(type);
   if (index > -1) {
     return;
