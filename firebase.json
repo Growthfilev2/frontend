@@ -7,13 +7,13 @@
         "value": "max-age=3600"
       }]
     },{
-      "source": "**/*.@(js|css|html)",
+      "source": "**/*.@(js)",
       "headers": [ {
-        "key": "Cache-Control",
-        "value": "max-age=3600"
+        "key": "Access-Control-Allow-Origin",
+        "value": "*"
       }]
     }, {
-      "source": "index.html",
+      "source": "**/*.@(js|html|css)",
       "headers": [ {
         "key": "Cache-Control",
         "value": "max-age=3600"
