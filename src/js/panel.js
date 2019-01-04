@@ -330,8 +330,7 @@ function creatListHeader(headerName) {
     right: ''
   });
   document.getElementById('menu--panel').addEventListener('click', function () {
-    const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-    drawer.open = true;
+   
   })
 }
 

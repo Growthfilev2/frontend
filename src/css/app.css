@@ -327,11 +327,7 @@ padding: 8px 20px 8px 20px;
   cursor: pointer;
 }
 
-.drawer--icons span {
-  padding: 0px 10px 0px 10px;
-  float: right;
-  margin-top: 3px;
-}
+
 .filter-sort--list {
   overflow: scroll;
 }
@@ -1231,32 +1227,12 @@ input[type="datetime-local"] {
     text-decoration: none;
   }
 
-  .drawer--icons {
-    color: rgba(0,0,0,0.54) !important;
-  }
-
-  .drawer--header {
-    background-color: #eeeeee
-  }
-
-  .drawer--header-div{
-    position: absolute;
-    top:20px;
-
-  }
+ 
+  
   .header--details {
     width:100%;
   }
-  .drawer-header-icon {
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-  }
-
-  .mdc-drawer__content div {
-    height: 60px;
-  }
-
+ 
   #name--change-container div {
     margin-top:0px;
   }
