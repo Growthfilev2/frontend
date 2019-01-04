@@ -180,7 +180,7 @@ function statusChange(db, id) {
 
   const label = document.createElement('label')
   label.setAttribute('for', 'toggle-status')
-  label.textContent = 'Confirm Completion'
+  label.textContent = 'Done'
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function (event) {
@@ -2383,7 +2383,7 @@ function createActivityCancellation(record) {
   if (record.status !== 'CANCELLED') {
 
     StautsCont.appendChild(createSimpleLi('delete', {
-      text: 'Delete Activity'
+      text: 'CANCEL'
     }))
 
 
