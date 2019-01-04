@@ -192,7 +192,7 @@ function createActivityIcon() {
 
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
-      createActivityIconDom(officeTemplateObject)
+      createActivityIconDom()
       return;
     }
   }).catch(console.log)
@@ -229,9 +229,9 @@ function getCountOfTemplates() {
 }
 
 
-function createActivityIconDom(officeTemplateCombo) {
+function createActivityIconDom() {
 
-  getRootRecord().then(function (record) {
+ 
     const parent = document.getElementById('create-activity--parent')
 
     const fab = document.createElement('button')
@@ -241,40 +241,23 @@ function createActivityIconDom(officeTemplateCombo) {
     const span = document.createElement('span')
     span.className = 'mdc-fab_icon material-icons'
     span.id = 'activity-create--icon'
-    if (record.suggestCheckIn) {
-      span.textContent = 'add_alert'
-    } else {
+  
       span.textContent = 'add'
-    }
+    
 
     fab.appendChild(span)
     parent.innerHTML = fab.outerHTML;
 
     document.querySelector('.create-activity').addEventListener('click', function (evt) {
-      const keysArray = Object.keys(officeTemplateCombo);
-      console.log(record.suggestCheckIn);
-      if (record.suggestCheckIn) {
-        if (keysArray.length === 1) {
-          createTempRecord(keysArray[0], 'check-in')
-        } else {
-          callSubscriptionSelectorUI(evt, record.suggestCheckIn)
-        }
-        suggestCheckIn(false).then(function () {
-          createActivityIcon();
-        }).catch(console.log)
-        return;
-      }
-
       callSubscriptionSelectorUI(evt)
     })
-  }).catch(console.log)
 }
 
-function callSubscriptionSelectorUI(evt, suggestCheckIn) {
+function callSubscriptionSelectorUI(evt, checkIn) {
   selectorUI(evt, {
     record: '',
     store: 'subscriptions',
-    suggestCheckIn: suggestCheckIn
+    suggestCheckIn: checkIn
   })
 }
 
@@ -405,30 +388,3 @@ function createInputForProfile(key, type, classtype) {
   return mainTextField
 }
 
-
-function suggestCheckIn(value) {
-  return new Promise(function (resolve, reject) {
-    getRootRecord().then(function (record) {
-      const req = indexedDB.open(firebase.auth().currentUser.uid)
-      req.onsuccess = function () {
-        const db = req.result;
-        const tx = db.transaction(['root'], 'readwrite')
-        const store = tx.objectStore('root')
-        record.suggestCheckIn = value;
-        store.put(record)
-
-        tx.oncomplete = function () {
-          resolve(true)
-        }
-        tx.onerror = function () {
-          reject(tx.error)
-        }
-      }
-      req.onerror = function () {
-        reject(req.error);
-      }
-    }).catch(function (error) {
-      reject(error)
-    })
-  })
-}

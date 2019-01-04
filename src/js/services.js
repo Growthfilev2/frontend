@@ -69,7 +69,7 @@ function successDialog() {
   }, 1200);
 }
 
-function enableGps(messageString) {
+function appDialog(messageString) {
   if (!document.getElementById('enable-gps')) {
 
     var aside = document.createElement('aside');
@@ -105,6 +105,7 @@ function enableGps(messageString) {
   var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
   gpsDialog.show();
 }
+
 
 function progressBar() {
   var div = document.createElement('div');
@@ -307,16 +308,45 @@ function locationUpdationSuccess(location) {
   });
   window.dispatchEvent(locationEvent);
 
-  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true).then(function () {
-      if (history.state[0] === 'listView') {
-        listView({
-          urgent: false,
-          nearby: true
-        });
+  // if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+
+    if (history.state[0] === 'listView') {
+      if(!isDialogOpened('#dialog--component')) {
+        showSuggestCheckInDialog();
       }
-    }).catch(console.log)
-  }
+      listView({
+        urgent: false,
+        nearby: true
+      });
+    }
+  // }
+}
+
+function showSuggestCheckInDialog() {
+  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
+  if (!dialog) return;
+  if(isDialogOpened('#suggest-checkIn-dialog')) return;
+  if(isDialogOpened('#dialog--component')) return;
+  dialog.show();
+}
+
+function showSubscriptionSelectorForCheckIn(evt,dialog){
+  getRootRecord().then(function (rootRecord) {
+    if (rootRecord.offices.length === 1) {
+      createTempRecord(keysArray[0], 'check-in')
+    } else {
+      callSubscriptionSelectorUI(evt, true)
+    }
+  }).catch(function (error) {
+  dialog.close();
+})
+}
+
+function isDialogOpened(id){
+  const currentDialog = document.querySelector(id)
+  if(!currentDialog) return false;
+  const isOpen = currentDialog.classList.contains('mdc-dialog--open');
+  return isOpen;
 }
 
 function locationUpdationError(error) {
@@ -485,9 +515,10 @@ function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
     try {
       Fetchview.startConversation(viewName);
-    }
-    catch(e) {
-      requestCreator('instant',JSON.stringify({message:e.message}))
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }))
     }
   }
 }
@@ -591,7 +622,7 @@ function requestCreator(requestType, requestBody) {
     apiHandler.postMessage(requestGenerator);
   } else {
 
-    
+
 
     getRootRecord().then(function (rootRecord) {
 
@@ -649,7 +680,7 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
+    appDialog('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
   }
 
 }
@@ -725,7 +756,7 @@ function changeState(data) {
 function updateIDB(data) {
   if (data.msg === 'true') {
     androidStopRefreshing();
-  
+
   }
 
   if (!history.state) {
@@ -733,14 +764,14 @@ function updateIDB(data) {
       manageLocation();
     }, 5000);
 
-    suggestCheckIn(true).then(function () {
-        window["listView"]({
-          urgent: true,
-          nearby:true
-        });
+    window["listView"]({
+      urgent: true,
+      nearby: true
     });
+    
     return;
   }
+
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
@@ -749,14 +780,14 @@ function updateIDB(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-    // listView({
-    //   urgent: false,
-    //   nearBy: false
-    // });
+    listView({
+      urgent: false,
+      nearBy: false
+    });
     return;
   }
 
-  // window[history.state[0]](history.state[1], false);
+  window[history.state[0]](history.state[1], false);
 }
 
 
@@ -765,14 +796,13 @@ function androidStopRefreshing() {
   if (native.getName() === 'Android') {
     try {
       AndroidRefreshing.stopRefreshing(true);
-    }
-    catch(e){
+    } catch (e) {
 
       const instantBody = {
-        message:e.message,
-        device : native.getInfo()
+        message: e.message,
+        device: native.getInfo()
       }
-      requestCreator('instant',JSON.stringify(instantBody))
+      requestCreator('instant', JSON.stringify(instantBody))
     }
   }
 }
@@ -797,7 +827,7 @@ function onErrorMessage(error) {
 }
 
 function handleTimeout(type) {
-  const whitelist = ['update-app', 'revoke-session','manageLocation'];
+  const whitelist = ['update-app', 'revoke-session', 'manageLocation'];
   const index = whitelist.indexOf(type);
   if (index > -1) {
     return;
