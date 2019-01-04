@@ -300,7 +300,7 @@ function listPanel() {
 
 function creatListHeader(headerName) {
   const parentIconDiv = document.createElement('div')
-  parentIconDiv.className = 'drawer--icons'
+  parentIconDiv.className = ''
 
   const menuIcon = document.createElement('span')
   menuIcon.id = 'menu--panel'

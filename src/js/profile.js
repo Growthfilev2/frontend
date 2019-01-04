@@ -3,8 +3,7 @@ function profileView(pushState) {
       history.pushState(['profileView'], null, null)
     }
   
-    const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'))
-    drawer.open = false;
+   
   
     document.body.style.backgroundColor = '#eeeeee'
     const user = firebase.auth().currentUser
@@ -309,7 +308,7 @@ function profileView(pushState) {
   
   function showProfilePicture(url) {
     document.getElementById('user-profile--image').src = url || './img/empty-user.jpg'
-    document.querySelector('.drawer-header-icon').src = url  || './img/empty-user.jpg'
+    // document.querySelector('.drawer-header-icon').src = url  || './img/empty-user.jpg'
   }
   
   function authUpdatedError(error) {
