@@ -796,7 +796,7 @@ footer.mdc-dialog__footer {
 }
 
 .label--text {
-  color: #ff9800 !important;
+  color: #0399f4 !important;
 }
 
 .attachment-field {
@@ -1472,10 +1472,10 @@ input[type="datetime-local"] {
     height: 35px !important; } }
 /** Labels **/
 .mdc-floating-label.mdc-floating-label--float-above {
-  color: #ff9800 !important; }
+  color:#0399f4 !important; }
 
 .detail--static-text {
-  color: #ff9800 !important; }
+  color: #0399f4 !important; }
 
 /** background **/
 .mdc-theme--background {
@@ -1512,7 +1512,7 @@ input[type="datetime-local"] {
 /** count **/
 .count {
   display: none;
-  background-color: #ff9800 !important;
+  background-color: #0399f4 !important;
   border-radius: 12px;
   padding: 0px 5px 0px 5px;
   text-align: center;
@@ -1551,7 +1551,7 @@ input[type="datetime-local"] {
 
 
   .notification {
-    color: #ff9800;
+    color: #0399f4;
   }
 
   #search--bar-selector {
