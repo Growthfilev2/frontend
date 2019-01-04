@@ -1361,7 +1361,7 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(record) {
+function updateCreateContainer(record,db) {
 
   document.body.style.backgroundColor = '#eeeeee'
 
@@ -1388,7 +1388,11 @@ function updateCreateContainer(record) {
 
 
   document.getElementById('backToConv').addEventListener('click', function () {
-    backNav()
+    updateLocalRecord(record,db).then(function(){
+      backNav()
+    }).catch(function(error){
+      requestCreator('instant',JSON.stringify({message:error}))
+    })
   })
 
 
@@ -1460,7 +1464,7 @@ function updateCreateActivity(record, pushState) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-    appView.innerHTML = updateCreateContainer(record).outerHTML
+    appView.innerHTML = updateCreateContainer(record,db).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
