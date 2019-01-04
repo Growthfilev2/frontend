@@ -756,7 +756,7 @@ function updateIDB(data) {
     return;
   }
 
-  window[history.state[0]](history.state[1], false);
+  // window[history.state[0]](history.state[1], false);
 }
 
 
