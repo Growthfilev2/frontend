@@ -749,10 +749,10 @@ function updateIDB(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-    listView({
-      urgent: false,
-      nearBy: false
-    });
+    // listView({
+    //   urgent: false,
+    //   nearBy: false
+    // });
     return;
   }
 

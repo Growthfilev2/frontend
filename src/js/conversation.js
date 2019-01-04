@@ -1377,9 +1377,9 @@ function updateCreateContainer(recordCopy,db) {
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
 
-  activityName.style.fontSize = '19px'
+  activityName.style.fontSize = '20px'
   activityName.style.paddingLeft = '10px'
-  activityName.style.marginTop = '2px'
+  activityName.style.marginTop = '3px'
 
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)

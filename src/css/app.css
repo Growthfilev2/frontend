@@ -379,7 +379,7 @@ padding: 8px 20px 8px 20px;
 
 .comment-header-primary .mdc-list-item__secondary-text {
   margin-top: -5px;
-  color: #0399f4;
+  color: white;
 }
 
 .reauth-recaptcha {
@@ -1451,12 +1451,9 @@ input[type="datetime-local"] {
   --mdc-theme-primary: #eeeeee !important;
   --mdc-theme-secondary: #0399f4 !important;
   --mdc-theme-background: #ffffff !important;
-  --mdc-theme-on-primary: #black !important;
+  --mdc-theme-on-primary: white !important;
   --mdc-theme-on-secondary: #ffffff !important; }
 
-.mdc-top-app-bar .material-icons {
-  color: rgba(0, 0, 0, 0.54);
- }
 
 .mdc-line-ripple {
   background-color: #44a3eb !important; }
@@ -1534,9 +1531,9 @@ input[type="datetime-local"] {
 
 /** top app bar **/
 .mdc-top-app-bar {
-  color: black !important; }
+  background-color: #0399f4;
+  color: white}
   .mdc-top-app-bar .material-icons {
-    color: #0399f4 !important;
   font-size: 30px;}
 
 
@@ -1559,4 +1556,22 @@ input[type="datetime-local"] {
 
   #search--bar-selector {
     border-bottom: 0px;
+  }
+  #menu--panel p {
+    float: right;
+    font-size: 23px;
+    margin-bottom: 0px;
+    margin-top: 9px;
+    margin-left: 16px;
+    color: white;
+  }
+  .list-photo-header {
+    border-radius: 50%;
+    width:40px;
+    height: 40px;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
   }

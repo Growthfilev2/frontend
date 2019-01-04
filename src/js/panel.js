@@ -14,7 +14,7 @@ function listView(filter) {
   history.pushState(['listView'], null, null)
 
   listPanel()
-  creatListHeader('Recent');
+  creatListHeader('Activities');
   createActivityIcon();
 
   if (!filter) {
@@ -300,22 +300,19 @@ function listPanel() {
 
 function creatListHeader(headerName) {
   const parentIconDiv = document.createElement('div')
-  parentIconDiv.className = ''
+  parentIconDiv.className = 'profile--icon-header'
 
   const menuIcon = document.createElement('span')
   menuIcon.id = 'menu--panel'
-  const icon = document.createElement('i')
-  icon.className = 'material-icons'
 
-  icon.textContent = 'menu'
-
-  const menuSpan = document.createElement('span')
-  menuSpan.className = 'current--selcted-filter'
-  headerName === 'Cancelled' ? menuSpan.textContent = 'Trash' : menuSpan.textContent = headerName
-
+  const icon = document.createElement('img')
+  icon.src = firebase.auth().currentUser.photoURL
+  icon.className = 'list-photo-header'
   menuIcon.appendChild(icon)
-  menuIcon.appendChild(menuSpan)
 
+  const headerText = document.createElement('p');
+  headerText.textContent = headerName;
+  menuIcon.appendChild(headerText)
   parentIconDiv.appendChild(menuIcon)
 
   const searchIcon = document.createElement('span')
@@ -329,8 +326,8 @@ function creatListHeader(headerName) {
     left: parentIconDiv.outerHTML,
     right: ''
   });
-  document.getElementById('menu--panel').addEventListener('click', function () {
-   
+  document.querySelector('.list-photo-header').addEventListener('click', function () {
+   profileView(true)
   })
 }
 
