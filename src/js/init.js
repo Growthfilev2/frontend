@@ -476,7 +476,9 @@ function startInitializatioOfList(auth) {
       device: native.getInfo(),
       from: ''
     });
-  
+    if(isNew) {
+      showSuggestCheckInDialog();
+    }
     listView({urgent:isNew,nearby:isNew});
   
   }).catch(function(error){

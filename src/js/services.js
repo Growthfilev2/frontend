@@ -308,7 +308,7 @@ function locationUpdationSuccess(location) {
   });
   window.dispatchEvent(locationEvent);
 
-  // if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
 
     if (history.state[0] === 'listView') {
       if(!isDialogOpened('#dialog--component')) {
@@ -319,7 +319,7 @@ function locationUpdationSuccess(location) {
         nearby: true
       });
     }
-  // }
+  }
 }
 
 function showSuggestCheckInDialog() {
@@ -763,7 +763,7 @@ function updateIDB(data) {
     setInterval(function () {
       manageLocation();
     }, 5000);
-
+    showSuggestCheckInDialog()
     window["listView"]({
       urgent: true,
       nearby: true
