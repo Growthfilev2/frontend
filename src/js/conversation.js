@@ -621,7 +621,7 @@ function selectorUI(evt, data) {
       })
       return
     }
-    handleRemoveDialogEvt(e, data)
+    removeDialog()
   })
 
   initializeSelectorWithData(evt, data)
@@ -1319,6 +1319,7 @@ function changeTextContentForNewSelectedVenue(attr, data) {
   if (!el) return;
   const primaryText = el.querySelector(`[data-primary]`)
   const secondaryText = el.querySelector(`[data-secondary]`);
+  const sendActivity = document.getElementById('send-activity');
 
   if (data.primary) {
     if (primaryText) {
@@ -1330,9 +1331,10 @@ function changeTextContentForNewSelectedVenue(attr, data) {
       secondaryText.textContent = data.secondary.address
     }
   }
-
-  if (!document.getElementById('send-activity').dataset.progress) {
-    document.getElementById('send-activity').classList.remove('hidden')
+  if(sendActivity) {
+    if (!sendActivity.dataset.progress) {
+      sendActivity.classList.remove('hidden')
+    }
   }
 }
 
@@ -1361,8 +1363,8 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(record,db) {
-
+function updateCreateContainer(recordCopy,db) {
+  const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
 
   const leftHeaderContent = document.createElement('div')
@@ -1388,6 +1390,7 @@ function updateCreateContainer(record,db) {
 
 
   document.getElementById('backToConv').addEventListener('click', function () {
+    console.log(record)
     updateLocalRecord(record,db).then(function(){
       backNav()
     }).catch(function(error){
@@ -1464,7 +1467,8 @@ function updateCreateActivity(record, pushState) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-    appView.innerHTML = updateCreateContainer(record,db).outerHTML
+    const oldRecord = JSON.stringify(record);
+    appView.innerHTML = updateCreateContainer(oldRecord,db).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
