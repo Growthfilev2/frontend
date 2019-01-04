@@ -388,3 +388,29 @@ function createInputForProfile(key, type, classtype) {
   return mainTextField
 }
 
+function suggestCheckIn(value) {
+  return new Promise(function (resolve, reject) {
+    getRootRecord().then(function (record) {
+      var req = indexedDB.open(firebase.auth().currentUser.uid);
+      req.onsuccess = function () {
+        var db = req.result;
+        var tx = db.transaction(['root'], 'readwrite');
+        var store = tx.objectStore('root');
+        record.suggestCheckIn = value;
+        store.put(record);
+
+        tx.oncomplete = function () {
+          resolve(true);
+        };
+        tx.onerror = function () {
+          reject(tx.error);
+        };
+      };
+      req.onerror = function () {
+        reject(req.error);
+      };
+    }).catch(function (error) {
+      reject(error);
+    });
+  });
+}

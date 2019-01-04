@@ -309,16 +309,17 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+    suggestCheckIn(true).then(function(){
 
-    if (history.state[0] === 'listView') {
-      if(!isDialogOpened('#dialog--component')) {
+      if (history.state[0] === 'listView') {
+        if(isDialogOpened('#dialog--component')) return;
         showSuggestCheckInDialog();
+        listView({
+          urgent: false,
+          nearby: true
+        });
       }
-      listView({
-        urgent: false,
-        nearby: true
-      });
-    }
+    })
   }
 }
 
@@ -326,17 +327,18 @@ function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
   if (!dialog) return;
   if(isDialogOpened('#suggest-checkIn-dialog')) return;
-  if(isDialogOpened('#dialog--component')) return;
   dialog.show();
 }
 
 function showSubscriptionSelectorForCheckIn(evt,dialog){
   getRootRecord().then(function (rootRecord) {
-    if (rootRecord.offices.length === 1) {
-      createTempRecord(keysArray[0], 'check-in')
-    } else {
-      callSubscriptionSelectorUI(evt, true)
-    }
+    suggestCheckIn(false).then(function(){
+      if (rootRecord.offices.length === 1) {
+        createTempRecord(keysArray[0], 'check-in')
+      } else {
+        callSubscriptionSelectorUI(evt, true)
+      }
+    })
   }).catch(function (error) {
   dialog.close();
 })
@@ -748,27 +750,28 @@ function resetOffset() {
 }
 
 function changeState(data) {
-  history.pushState(['listView'], null, null);
+  getRootRecord().then(function(record){
+    history.pushState(['listView'], null, null);
+    if(record.suggestCheckIn) {
+      showSuggestCheckInDialog()
+    }
+  })
 }
-
-
 
 function updateIDB(data) {
   if (data.msg === 'true') {
     androidStopRefreshing();
-
   }
 
   if (!history.state) {
     setInterval(function () {
       manageLocation();
     }, 5000);
-    showSuggestCheckInDialog()
     window["listView"]({
       urgent: true,
       nearby: true
     });
-    
+    showSuggestCheckInDialog()
     return;
   }
 

@@ -137,7 +137,12 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
-    window[event.state[0]]()
+    getRootRecord().then(function(record){
+      window[event.state[0]]()
+      if(record.suggestCheckIn) {
+        suggestCheckInDialog();
+      }
+    })
     return;
   }
   window[event.state[0]](event.state[1], false)
