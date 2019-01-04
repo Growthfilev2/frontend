@@ -202,8 +202,7 @@ function geolocationApi(method, url, data) {
             'success': true
           })
         } else {
-          const result = JSON.parse(xhr.responseText)
-
+          const result = JSON.parse(xhr.response)
           reject({
             message: result.error.message,
             cellular: data,
@@ -226,6 +225,7 @@ function manageLocation() {
     getRootRecord().then(function (rootRecord) {
       try {
         CelllarJson = Towers.getCellularData();
+      
         geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
         if (rootRecord.location.provider === 'MOCK') {
