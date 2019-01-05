@@ -892,7 +892,7 @@ function getLastComment(id){
     }
   })
 }
-function createListStore(activity,commentData) {
+function createListStore(activity,commentData,counter) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function(){
   const db = req.result;
@@ -902,7 +902,7 @@ function createListStore(activity,commentData) {
   const requiredData = {
     'activityId': activity.activityId,
     'secondLine': '',
-    'count': '',
+    'count': counter[activity.activityId],
     'timestamp': activity.timestamp,
     'creator': {
       number: activity.creator,
@@ -924,27 +924,16 @@ function createListStore(activity,commentData) {
 }
 
 
-function updateListStoreWithCount(counter) {
+function updateListStoreWithCreatorImage(counter) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function () {
+
       const db = req.result
       const transaction = db.transaction(['list', 'users'], 'readwrite')
       const listStore = transaction.objectStore('list');
       const userStore = transaction.objectStore('users');
-      console.log(counter)
-      Object.keys(counter).forEach(function (id) {
-        listStore.get(id).onsuccess = function (event) {
-          const record = event.target.result;
-          if (!record) {
-            console.log(" no record found")
-          } else {
-            record.count = counter[id];
-            listStore.put(record);
-          }
-        }
-      })
-
+  
       listStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -961,22 +950,7 @@ function updateListStoreWithCount(counter) {
               listStore.put(cursor.value);
             }
           }
-        }
-        if(cursor.value.lastComment.user === firebase.auth().currentUser.phoneNumber) {
-          cursor.value.lastComment.user = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-          listStore.put(cursor.value);
-        }
-        else {
-          userStore.get(cursor.value.lastComment.user).onsuccess = function (userEvent) {
-            const record = userEvent.target.result;
-            if (record) {
-              if(record.displayName) {
-                cursor.value.lastComment.user = record.displayName
-              }
-              listStore.put(cursor.value);
-            }
-          }
-        }
+        }   
         cursor.continue();
       }
 
@@ -1044,7 +1018,7 @@ function successResponse(read, swipeInfo) {
       }
       if (activity.hidden === 0) {
         getLastComment(activity.activityId).then(function(commentData){
-          createListStore(activity,commentData)
+          createListStore(activity,commentData,counter)
         })
       }
 
@@ -1071,7 +1045,7 @@ function successResponse(read, swipeInfo) {
       record.fromTime = read.upto
       rootObjectStore.put(record);
 
-      updateListStoreWithCount(counter).then(function () {
+      updateListStoreWithCreatorImage(counter).then(function () {
         requestHandlerResponse('updateIDB', 200, swipeInfo);
       })
     }
