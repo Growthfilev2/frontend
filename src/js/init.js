@@ -137,12 +137,7 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
-    getRootRecord().then(function(record){
-      window[event.state[0]]()
-      if(record.suggestCheckIn) {
-        suggestCheckInDialog();
-      }
-    })
+      window[event.state[0]]()    
     return;
   }
   window[event.state[0]](event.state[1], false)
@@ -221,10 +216,10 @@ function layoutGrid() {
   layout.appendChild(layoutInner)
   document.body.innerHTML = layout.outerHTML
   imageViewDialog();
-  suggestCheckInDialog('Check-IN ?')
+  suggestCheckInDialog()
 }
 
-function suggestCheckInDialog(messageString){
+function suggestCheckInDialog(){
 
     var aside = document.createElement('aside');
     aside.className = 'mdc-dialog mdc-dialog--open';
@@ -235,9 +230,15 @@ function suggestCheckInDialog(messageString){
     surface.style.width = '90%';
     surface.style.height = 'auto';
 
+    const header = document.createElement('header');
+    header.className = 'mdc-dialog__header'
+    const headerText = document.createElement('h2')
+    headerText.className ='mdc-dialog__header__title'
+    headerText.textContent = 'New Location Detected'
+  header.appendChild(headerText)
     var section = document.createElement('section');
     section.className = 'mdc-dialog__body';
-    section.textContent = messageString;
+    section.textContent = 'Grwothfile detected a new location. Do you want to create a check-in ?';
 
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
@@ -245,14 +246,16 @@ function suggestCheckInDialog(messageString){
     var ok = document.createElement('button');
     ok.type = 'button';
     ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    ok.textContent = 'Ok';
+    ok.textContent = 'Okay';
     ok.style.backgroundColor = '#3498db';
 
     footer.appendChild(ok);
 
+    surface.appendChild(header)
     surface.appendChild(section);
     surface.appendChild(footer);
     aside.appendChild(surface);
+
     const backdrop = document.createElement('div')
     backdrop.className = 'mdc-dialog__backdrop'
     aside.appendChild(backdrop);
@@ -481,10 +484,9 @@ function startInitializatioOfList(auth) {
       device: native.getInfo(),
       from: ''
     });
-    if(isNew) {
-      showSuggestCheckInDialog();
-    }
-    listView({urgent:isNew,nearby:isNew});
+    suggestCheckIn(true).then(function(){
+      listView({urgent:isNew,nearby:isNew});
+    })
   
   }).catch(function(error){
     requestCreator('instant',JSON.stringify({message:error}))

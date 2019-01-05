@@ -310,10 +310,7 @@ function locationUpdationSuccess(location) {
 
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
     suggestCheckIn(true).then(function(){
-
       if (history.state[0] === 'listView') {
-        if(isDialogOpened('#dialog--component')) return;
-        showSuggestCheckInDialog();
         listView({
           urgent: false,
           nearby: true
@@ -750,12 +747,8 @@ function resetOffset() {
 }
 
 function changeState(data) {
-  getRootRecord().then(function(record){
-    history.pushState(['listView'], null, null);
-    if(record.suggestCheckIn) {
-      showSuggestCheckInDialog()
-    }
-  })
+  history.pushState(['listView'], null, null);
+  
 }
 
 function updateIDB(data) {
@@ -767,11 +760,12 @@ function updateIDB(data) {
     setInterval(function () {
       manageLocation();
     }, 5000);
-    window["listView"]({
-      urgent: true,
-      nearby: true
-    });
-    showSuggestCheckInDialog()
+    suggestCheckIn(true).then(function(){
+      window["listView"]({
+        urgent: true,
+        nearby: true
+      });
+    })
     return;
   }
 
@@ -787,6 +781,7 @@ function updateIDB(data) {
       urgent: false,
       nearBy: false
     });
+    
     return;
   }
 

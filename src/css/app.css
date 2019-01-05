@@ -836,10 +836,10 @@ footer.mdc-dialog__footer {
 }
 
 .mdc-dialog__surface .mdc-dialog__header {
-  display: table;
+  /* display: table;
   margin: 0 auto;
   padding-top: 0px;
-  padding-bottom: 10px;
+  padding-bottom: 10px; */
 }
 
 .start-calendar-transition {

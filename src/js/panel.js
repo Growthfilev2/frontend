@@ -3,6 +3,12 @@ const notification = new Worker('js/notification.js')
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   console.log(filter)
+  getRootRecord().then(function(record){
+    if(record.suggestCheckIn) {
+      showSuggestCheckInDialog()
+    }
+   })
+   
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
@@ -42,7 +48,7 @@ function fetchDataForActivityList() {
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      activityDom += activityListUI(cursor.value).outerHTML;
+      activityDom += activityListUI(cursor.value).outerHTML
       cursor.continue();
     }
 
@@ -57,66 +63,74 @@ function fetchDataForActivityList() {
 
 
 function activityListUI(data) {
-
-  const li = document.createElement('li')
-  li.dataset.id = data.activityId
-  li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
-  li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-
-  const creator = document.createElement("img")
-  creator.dataset.number = data.creator.number
-  creator.className = 'mdc-list-item__graphic material-icons'
-  creator.setAttribute('onerror', `handleImageError(this)`)
-  creator.src = data.creator.photo || './img/empty-user.jpg'
-
-  const leftTextContainer = document.createElement('span')
-  leftTextContainer.classList.add('mdc-list-item__text')
-  const activityNameText = document.createElement('span')
-
-  activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
-
-  activityNameText.textContent = data.activityName;
-  const secondLine = document.createElement('span')
-  secondLine.className = 'mdc-list-item__secondary-text'
-  if (data.urgent || data.nearby) {
-    secondLine.textContent = data.secondLine;
-  }
-
-  leftTextContainer.appendChild(activityNameText)
-  leftTextContainer.appendChild(secondLine);
-  // leftTextContainer.appendChild(lastComment)
-
-  const metaTextContainer = document.createElement('span')
-  metaTextContainer.classList.add('mdc-list-item__meta');
-  metaTextContainer.appendChild(generateIconByCondition(data, li));
-
-  const metaTextActivityStatus = document.createElement('span')
-  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
-  const statusIcon = document.createElement('i')
-  statusIcon.className = 'material-icons'
-
-  const cancelIcon = document.createElement('i')
-  cancelIcon.classList.add('status-cancel', 'material-icons')
-  cancelIcon.appendChild(document.createTextNode('clear'))
-
-  const confirmedIcon = document.createElement('i')
-  confirmedIcon.classList.add('status-confirmed', 'material-icons')
-  confirmedIcon.appendChild(document.createTextNode('check'))
-
-  if (data.status === 'CONFIRMED') {
-    metaTextActivityStatus.appendChild(confirmedIcon)
-  }
-  if (data.status === 'CANCELLED') {
-    metaTextActivityStatus.appendChild(cancelIcon)
-  }
-
-  metaTextContainer.appendChild(metaTextActivityStatus)
-
-  li.appendChild(creator);
-  li.appendChild(leftTextContainer);
-  li.appendChild(metaTextContainer);
-  return li;
+  
+    const li = document.createElement('li')
+    li.dataset.id = data.activityId
+    li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
+    li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
+    
+    const creator = document.createElement("img")
+    creator.dataset.number = data.creator.number
+    creator.className = 'mdc-list-item__graphic material-icons'
+    creator.setAttribute('onerror', `handleImageError(this)`)
+    creator.src = data.creator.photo || './img/empty-user.jpg'
+    
+    const leftTextContainer = document.createElement('span')
+    leftTextContainer.classList.add('mdc-list-item__text')
+    const activityNameText = document.createElement('span')
+    
+    activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
+    
+    activityNameText.textContent = data.activityName;
+    const secondLine = document.createElement('span')
+    secondLine.className = 'mdc-list-item__secondary-text'
+    if (data.urgent || data.nearby) {
+      secondLine.textContent = data.secondLine;
+    }
+    else {
+      if(data.lastComment.user && data.lastComment.text) {
+        secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
+      }
+    }
+    
+    leftTextContainer.appendChild(activityNameText);
+    
+    leftTextContainer.appendChild(secondLine);
+    // leftTextContainer.appendChild(lastComment)
+    
+    const metaTextContainer = document.createElement('span')
+    metaTextContainer.classList.add('mdc-list-item__meta');
+    metaTextContainer.appendChild(generateIconByCondition(data, li));
+    
+    const metaTextActivityStatus = document.createElement('span')
+    metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
+    const statusIcon = document.createElement('i')
+    statusIcon.className = 'material-icons'
+    
+    const cancelIcon = document.createElement('i')
+    cancelIcon.classList.add('status-cancel', 'material-icons')
+    cancelIcon.appendChild(document.createTextNode('clear'))
+    
+    const confirmedIcon = document.createElement('i')
+    confirmedIcon.classList.add('status-confirmed', 'material-icons')
+    confirmedIcon.appendChild(document.createTextNode('check'))
+    
+    if (data.status === 'CONFIRMED') {
+      metaTextActivityStatus.appendChild(confirmedIcon)
+    }
+    if (data.status === 'CANCELLED') {
+      metaTextActivityStatus.appendChild(cancelIcon)
+    }
+    
+    metaTextContainer.appendChild(metaTextActivityStatus)
+    
+    li.appendChild(creator);
+    li.appendChild(leftTextContainer);
+    li.appendChild(metaTextContainer);
+   return li
+  
 }
+
 
 function generateIconByCondition(data, li) {
   const icon = document.createElement('i');
@@ -147,8 +161,6 @@ function generateIconByCondition(data, li) {
   timeCustomText.style.fontSize = '14px';
   timeCustomText.textContent = moment(data.timestamp).calendar()
   return timeCustomText;
-
-
 }
 
 

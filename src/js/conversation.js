@@ -1054,6 +1054,7 @@ function fillSubscriptionInSelector(db, dialog, data) {
     grp.appendChild(ul)
     cursor.continue();
   }
+  
   tx.oncomplete = function () {
     if (data.suggestCheckIn) {
       const parent = document.getElementById('data-list--container')

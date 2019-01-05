@@ -862,11 +862,43 @@ function updateSubscription(db, subscription) {
 
   }).catch(console.log)
 }
+function getLastComment(id){
+  return new Promise(function(resolve,reject){
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function(){
+      const db = req.result;
+      const addendumTx = db.transaction(['addendum'], 'readonly');
+      const addendumStore = addendumTx.objectStore('addendum');
+      const index =  addendumStore.index('activityId')
+      let name ='';
+      let text = '';
+      let count = 0;
+     index.openCursor(id,'prev').onsuccess = function(event){
+        const cursor = event.target.result;
+        console.log(cursor)
+        if(!cursor) return;
+        count = count +1;
 
-function createListStore(db, activity) {
-
-  const transaction = db.transaction(['list', 'root'], 'readwrite');
-  const store = transaction.objectStore('list');
+        if(!cursor.value.isComment)  return;
+        name = cursor.value.user,
+        text = cursor.value.comment;
+        if(count > 1) {
+          cursor.continue();
+        }
+      };
+      addendumTx.oncomplete = function(){
+        resolve({name:name,text:text})
+      }
+    }
+  })
+}
+function createListStore(activity,commentData) {
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+  const db = req.result;
+  const listTx = db.transaction(['list'], 'readwrite');
+  const listStore = listTx.objectStore('list');
+  
   const requiredData = {
     'activityId': activity.activityId,
     'secondLine': '',
@@ -876,18 +908,21 @@ function createListStore(db, activity) {
       number: activity.creator,
       photo: ''
     },
+    'lastComment':{
+      user : commentData.name,
+      text:commentData.text
+    },
     'activityName': activity.activityName,
     'status': activity.status
   }
 
-
-  store.put(requiredData);
-
-  transaction.oncomplete = function () {
-    console.log("done")
+    listStore.put(requiredData);
+    listTx.oncomplete = function () {
+      console.log("done")
+    }
   }
-
 }
+
 
 function updateListStoreWithCount(counter) {
   return new Promise(function (resolve, reject) {
@@ -923,6 +958,21 @@ function updateListStoreWithCount(counter) {
             const record = userEvent.target.result;
             if (record) {
               creator.photo = record.photoURL;
+              listStore.put(cursor.value);
+            }
+          }
+        }
+        if(cursor.value.lastComment.user === firebase.auth().currentUser.phoneNumber) {
+          cursor.value.lastComment.user = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
+          listStore.put(cursor.value);
+        }
+        else {
+          userStore.get(cursor.value.lastComment.user).onsuccess = function (userEvent) {
+            const record = userEvent.target.result;
+            if (record) {
+              if(record.displayName) {
+                cursor.value.lastComment.user = record.displayName
+              }
               listStore.put(cursor.value);
             }
           }
@@ -993,7 +1043,9 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity)
       }
       if (activity.hidden === 0) {
-        createListStore(db, activity)
+        getLastComment(activity.activityId).then(function(commentData){
+          createListStore(activity,commentData)
+        })
       }
 
       updateMap(activity)
