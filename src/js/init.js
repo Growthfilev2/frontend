@@ -484,8 +484,9 @@ function startInitializatioOfList(auth) {
       device: native.getInfo(),
       from: ''
     });
-    suggestCheckIn(true).then(function(){
-      listView({urgent:isNew,nearby:isNew});
+
+    suggestCheckIn(isNew).then(function(){
+      listView({urgent:isNew,nearby:false});
     })
   
   }).catch(function(error){

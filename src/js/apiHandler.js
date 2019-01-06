@@ -908,10 +908,6 @@ function createListStore(activity,commentData,counter) {
       number: activity.creator,
       photo: ''
     },
-    'lastComment':{
-      user : commentData.name,
-      text:commentData.text
-    },
     'activityName': activity.activityName,
     'status': activity.status
   }

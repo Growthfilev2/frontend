@@ -3,20 +3,20 @@ const notification = new Worker('js/notification.js')
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   console.log(filter)
-  getRootRecord().then(function(record){
-    if(record.suggestCheckIn) {
+  getRootRecord().then(function (record) {
+    if (record.suggestCheckIn) {
       showSuggestCheckInDialog()
     }
-   })
-   
+  })
+
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
 
-  if(document.querySelector('.mdc-linear-progress')) {
+  if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
   }
-  
+
   history.pushState(['listView'], null, null)
 
   listPanel()
@@ -41,17 +41,118 @@ function fetchDataForActivityList() {
   req.onsuccess = function () {
     const db = req.result;
     let activityDom = ''
-    const transaction = db.transaction('list')
+    const transaction = db.transaction(['list', 'activity'])
+    const activity = transaction.objectStore('activity');
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
+    const today = moment().format('YYYY-MM-DD');
+    const textStatus = {
+      'CONFIRMED': 'Done',
+      'CANCELLED': 'Cancelled'
+    }
 
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      activityDom += activityListUI(cursor.value).outerHTML
+
+
+
+      const secondLine = document.createElement('span')
+      secondLine.className = 'mdc-list-item__secondary-text'
+
+      activity.get(cursor.value.activityId).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return
+        if (textStatus[record.status]) {
+          const schedule = document.createElement('span');
+          schedule.textContent = textStatus[record.status]
+          secondLine.appendChild(schedule);
+        } else {
+          if (record.schedule.length) {
+
+            if (record.schedule.length === 1) {
+
+              const schedule = document.createElement('span');
+              const startTime = moment(cursor.value.startTime).format('YYYY-MM-DD');
+              const endTime = moment(cursor.value.startTime).format('YYYY-MM-DD');
+
+              if (moment(startTime).isAfter(moment(today))) {
+                schedule.textContent = `${record.schedule[0].name} : ${moment(record.schedule[0].startTime).calendar()}`
+              } else {
+                schedule.textContent = `${record.schedule[0].name} : ${moment(record.schedule[0].endTime).calendar()}`
+              }
+              secondLine.appendChild(schedule)
+
+            } else {
+              const schedule = document.createElement('span');
+
+              const nearestStart = []
+              const farthestEnd = []
+              const any = []
+
+              record.schedule.forEach(function (schedule) {
+                const startTime = moment(schedule.startTime).format('YYYY-MM-DD');
+                   if (moment(today).isBefore(moment(startTime))) {
+                      nearestStart.push(record.schedule);
+                  }
+              })
+
+              if (nearestStart.length) {
+                const nearest = sortNearestStartTime(nearestStart);
+                schedule.textContent = `${nearest.name} : ${moment(nearest.startTime)}`
+                secondLine.appendChild(schedule)
+                
+              }
+              else {
+
+                record.schedule.forEach(function (schdule) {
+                  const endTime = moment(schedule.endTime).format('YYYY-MM-DD');
+                  if (moment(today).isAfter(moment(endTime))) {
+                    farthestEnd.push(record.schedule);
+                  }
+                })
+                if (farthestEnd.length) {
+                  const farthest = sortFarthestEndTime(farthestEnd);
+                  schedule.textContent = `${farthest.name} : ${moment(farthest.endTime)}`
+                  secondLine.appendChild(schedule)
+
+                }
+                else {
+                  record.schedule.forEach(function (schdule) {
+                    const startTime = moment(schedule.startTime).format('YYYY-MM-DD');
+                    const endTime = moment(schedule.endTime).format('YYYY-MM-DD');
+                    if (moment(today).isAfter(moment(startTime)) && moment(today).isBefore(moment(endTime))) {
+                      any.push(record.schedule);
+                    }
+                  })
+                  if (any.length) {
+    
+                    schedule.textContent = `${any[0].name} : ${moment(any[0].endTime)}`
+                    secondLine.appendChild(schedule)
+                    
+                  }
+                }
+              }
+
+              
+            }
+          }
+        }
+        if (record.venue.length === 1) {
+          const venue = document.createElement('div');
+          venue.textContent = `${record.venue[0].venueDescriptor} : ${record.venue[0].location}`
+          secondLine.appendChild(venue)
+        }
+        activityDom += activityListUI(cursor.value, secondLine).outerHTML
+      }
       cursor.continue();
     }
 
+
+
+    //start date is after today  - > start date else end date
+    // status completed : done
+    //staus delete : cancel
     transaction.oncomplete = function () {
       if (document.getElementById('activity--list')) {
         document.getElementById('activity--list').innerHTML = activityDom;
@@ -61,74 +162,123 @@ function fetchDataForActivityList() {
   }
 }
 
+function sortNearestStartTime(data) {
+  const sort = data.sort(function (a, b) {
+    return a.startTime - b.startTime
+  })
+  return sort[0]
+}
 
-function activityListUI(data) {
-  
-    const li = document.createElement('li')
-    li.dataset.id = data.activityId
-    li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
-    li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-    
-    const creator = document.createElement("img")
-    creator.dataset.number = data.creator.number
-    creator.className = 'mdc-list-item__graphic material-icons'
-    creator.setAttribute('onerror', `handleImageError(this)`)
-    creator.src = data.creator.photo || './img/empty-user.jpg'
-    
-    const leftTextContainer = document.createElement('span')
-    leftTextContainer.classList.add('mdc-list-item__text')
-    const activityNameText = document.createElement('span')
-    
-    activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
-    
-    activityNameText.textContent = data.activityName;
-    const secondLine = document.createElement('span')
-    secondLine.className = 'mdc-list-item__secondary-text'
-    if (data.urgent || data.nearby) {
-      secondLine.textContent = data.secondLine;
-    }
-    else {
-      if(data.lastComment.user && data.lastComment.text) {
-        secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
+function sortFarthestEndTime(data) {
+  const sort = data.sort(function (a, b) {
+    return b.endTime - a.endTime
+  })
+  return sort[0]
+}
+
+function getSecondLine(id) {
+  return new Promise(function (resolve, reject) {
+
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const transaction = db.transaction(['activity'])
+      const store = transaction.objectStore('activity')
+      const secondLine = document.createElement('span')
+      secondLine.className = 'mdc-list-item__secondary-text'
+
+      store.get(id).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return
+        if (record.schedule.length === 1) {
+          const schedule = document.createElement('span');
+          schedule.textContent = `${record.schedule[0].name} : ${moment(record.schedule[0].endTime).calendar()}`
+          secondLine.appendChild(schedule)
+        }
+        if (record.venue.length === 1) {
+          const venue = document.createElement('div');
+          venue.textContent = `${record.venue[0].venueDescriptor} : ${record.venue[0].location}`
+          secondLine.appendChild(venue)
+        }
       }
+      transaction.oncomplete = function () {
+        resolve(secondLine)
+      }
+
     }
-    
-    leftTextContainer.appendChild(activityNameText);
-    
-    leftTextContainer.appendChild(secondLine);
-    // leftTextContainer.appendChild(lastComment)
-    
-    const metaTextContainer = document.createElement('span')
-    metaTextContainer.classList.add('mdc-list-item__meta');
-    metaTextContainer.appendChild(generateIconByCondition(data, li));
-    
-    const metaTextActivityStatus = document.createElement('span')
-    metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
-    const statusIcon = document.createElement('i')
-    statusIcon.className = 'material-icons'
-    
-    const cancelIcon = document.createElement('i')
-    cancelIcon.classList.add('status-cancel', 'material-icons')
-    cancelIcon.appendChild(document.createTextNode('clear'))
-    
-    const confirmedIcon = document.createElement('i')
-    confirmedIcon.classList.add('status-confirmed', 'material-icons')
-    confirmedIcon.appendChild(document.createTextNode('check'))
-    
-    if (data.status === 'CONFIRMED') {
-      metaTextActivityStatus.appendChild(confirmedIcon)
-    }
-    if (data.status === 'CANCELLED') {
-      metaTextActivityStatus.appendChild(cancelIcon)
-    }
-    
-    metaTextContainer.appendChild(metaTextActivityStatus)
-    
-    li.appendChild(creator);
-    li.appendChild(leftTextContainer);
-    li.appendChild(metaTextContainer);
-   return li
-  
+
+
+    // current date is less than sll start time =>
+
+  })
+}
+
+function activityListUI(data, secondLine) {
+
+  const li = document.createElement('li')
+  li.dataset.id = data.activityId
+  li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
+  li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
+
+  const creator = document.createElement("img")
+  creator.dataset.number = data.creator.number
+  creator.className = 'mdc-list-item__graphic material-icons'
+  creator.setAttribute('onerror', `handleImageError(this)`)
+  creator.src = data.creator.photo || './img/empty-user.jpg'
+
+  const leftTextContainer = document.createElement('span')
+  leftTextContainer.classList.add('mdc-list-item__text')
+  const activityNameText = document.createElement('span')
+
+  activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
+
+  activityNameText.textContent = data.activityName;
+
+  // if (data.urgent || data.nearby) {
+  //   secondLine.textContent = data.secondLine;
+  // }
+  // else {
+  //   if(data.lastComment.user && data.lastComment.text) {
+  //     secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
+  //   }
+  // }
+
+  leftTextContainer.appendChild(activityNameText);
+
+  leftTextContainer.appendChild(secondLine);
+  // leftTextContainer.appendChild(lastComment)
+
+  const metaTextContainer = document.createElement('span')
+  metaTextContainer.classList.add('mdc-list-item__meta');
+  metaTextContainer.appendChild(generateIconByCondition(data, li));
+
+  const metaTextActivityStatus = document.createElement('span')
+  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
+  const statusIcon = document.createElement('i')
+  statusIcon.className = 'material-icons'
+
+  const cancelIcon = document.createElement('i')
+  cancelIcon.classList.add('status-cancel', 'material-icons')
+  cancelIcon.appendChild(document.createTextNode('clear'))
+
+  const confirmedIcon = document.createElement('i')
+  confirmedIcon.classList.add('status-confirmed', 'material-icons')
+  confirmedIcon.appendChild(document.createTextNode('check'))
+
+  if (data.status === 'CONFIRMED') {
+    metaTextActivityStatus.appendChild(confirmedIcon)
+  }
+  if (data.status === 'CANCELLED') {
+    metaTextActivityStatus.appendChild(cancelIcon)
+  }
+
+  metaTextContainer.appendChild(metaTextActivityStatus)
+
+  li.appendChild(creator);
+  li.appendChild(leftTextContainer);
+  li.appendChild(metaTextContainer);
+  return li
+
 }
 
 
@@ -243,26 +393,26 @@ function getCountOfTemplates() {
 
 function createActivityIconDom() {
 
- 
-    const parent = document.getElementById('create-activity--parent')
 
-    const fab = document.createElement('button')
-    fab.className = 'mdc-fab create-activity'
-    fab.id = 'create-activity'
-    fab.setAttribute('aria-label', 'Add')
-    const span = document.createElement('span')
-    span.className = 'mdc-fab_icon material-icons'
-    span.id = 'activity-create--icon'
-  
-      span.textContent = 'add'
-    
+  const parent = document.getElementById('create-activity--parent')
 
-    fab.appendChild(span)
-    parent.innerHTML = fab.outerHTML;
+  const fab = document.createElement('button')
+  fab.className = 'mdc-fab create-activity'
+  fab.id = 'create-activity'
+  fab.setAttribute('aria-label', 'Add')
+  const span = document.createElement('span')
+  span.className = 'mdc-fab_icon material-icons'
+  span.id = 'activity-create--icon'
 
-    document.querySelector('.create-activity').addEventListener('click', function (evt) {
-      callSubscriptionSelectorUI(evt)
-    })
+  span.textContent = 'add'
+
+
+  fab.appendChild(span)
+  parent.innerHTML = fab.outerHTML;
+
+  document.querySelector('.create-activity').addEventListener('click', function (evt) {
+    callSubscriptionSelectorUI(evt)
+  })
 }
 
 function callSubscriptionSelectorUI(evt, checkIn) {
@@ -322,7 +472,7 @@ function creatListHeader(headerName) {
     right: ''
   });
   document.querySelector('.list-photo-header').addEventListener('click', function () {
-   profileView(true)
+    profileView(true)
   })
 }
 
