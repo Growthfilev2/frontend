@@ -238,7 +238,7 @@ function suggestCheckInDialog(){
   header.appendChild(headerText)
     var section = document.createElement('section');
     section.className = 'mdc-dialog__body';
-    section.textContent = 'Grwothfile detected a new location. Do you want to create a check-in ?';
+    section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
 
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
