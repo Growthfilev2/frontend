@@ -2,45 +2,44 @@ var notification = new Worker('src/js/notification.js');
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
-  console.log(filter);
   getRootRecord().then(function (record) {
     if (record.suggestCheckIn) {
       showSuggestCheckInDialog();
     }
-  });
+    console.log(filter);
+    history.pushState(['listView'], null, null);
 
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove();
-  }
+    if (document.querySelector('.init-loader')) {
+      document.querySelector('.init-loader').remove();
+    }
 
-  if (document.querySelector('.mdc-linear-progress')) {
-    document.querySelector('.mdc-linear-progress').remove();
-  }
+    if (document.querySelector('.mdc-linear-progress')) {
+      document.querySelector('.mdc-linear-progress').remove();
+    }
 
-  history.pushState(['listView'], null, null);
+    listPanel();
+    creatListHeader('Activities');
+    createActivityIcon();
 
-  listPanel();
-  creatListHeader('Activities');
-  createActivityIcon();
+    if (!filter) {
+      fetchDataForActivityList(record.location);
+      return;
+    }
 
-  if (!filter) {
-    fetchDataForActivityList();
-    return;
-  }
-
-  notificationWorker('urgent', filter.urgent).then(function () {
-    notificationWorker('nearBy', filter.nearby).then(function () {
-      fetchDataForActivityList();
+    notificationWorker('urgent', filter.urgent).then(function () {
+      notificationWorker('nearBy', filter.nearby).then(function () {
+        fetchDataForActivityList(record.location);
+      });
     });
   });
 }
 
-function fetchDataForActivityList() {
+function fetchDataForActivityList(currentLocation) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
     var activityDom = '';
-    var transaction = db.transaction(['list', 'activity']);
+    var transaction = db.transaction(['list', 'activity', 'root']);
     var activity = transaction.objectStore('activity');
     var store = transaction.objectStore('list');
     var index = store.index('timestamp');
@@ -53,27 +52,24 @@ function fetchDataForActivityList() {
       var secondLine = document.createElement('span');
       secondLine.className = 'mdc-list-item__secondary-text';
 
-      var venueContent = '';
-
       activity.get(cursor.value.activityId).onsuccess = function (event) {
         var record = event.target.result;
         if (!record) return;
         var schedules = record.schedule;
         var venues = record.venue;
         var status = record.status;
-        if (record.venue.length) {
-          venueContent = generateSecondLine(venues[0].venueDescriptor, venues[0].location);
-        }
 
         if (status === 'PENDING') {
           secondLine.appendChild(generateLastestSchedule(schedules));
         } else {
-          secondLine.appendChild(generateSecondLine(generateTextIfActivityIsNotPending(status)));
+          if (schedules.length) {
+            var el = document.createElement('div');
+            el.textContent = generateTextIfActivityIsNotPending(status);
+            secondLine.appendChild(el);
+          }
         }
 
-        if (venueContent instanceof HTMLElement) {
-          secondLine.appendChild(venueContent);
-        }
+        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
 
         activityDom += activityListUI(cursor.value, secondLine).outerHTML;
       };
@@ -99,10 +95,10 @@ function generateTextIfActivityIsNotPending(status) {
 
 function generateSecondLine(name, value) {
   var el = document.createElement('div');
-  if (!value) {
-    el.textContent = name;
-  } else {
+  if (name && value) {
     el.textContent = name + ' : ' + value;
+  } else {
+    el.textContent = '';
   }
   return el;
 }
@@ -120,7 +116,10 @@ function generateLastestSchedule(schedules) {
       break;
     default:
       var formattedDates = formatDates(schedules);
-      var ascendingOrder = sortDatesInAscendingOrderWithPivot({ time: moment().valueOf(), pivot: true }, formattedDates);
+      var ascendingOrder = sortDatesInAscendingOrderWithPivot({
+        time: moment().valueOf(),
+        pivot: true
+      }, formattedDates);
       var timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
       text = generateSecondLine(timeTypeMultiple.name, timeTypeMultiple.time);
       break;
@@ -135,6 +134,9 @@ function getTimeTypeForSingleSchedule(schedule) {
     name: schedule.name,
     value: ''
   };
+  if (!startTime) return newScheduleText;
+  if (!schedule.endTime) return newScheduleText;
+
   if (moment(startTime).isAfter(moment(today))) {
     newScheduleText.value = moment(startTime).calendar();
   } else {
@@ -143,13 +145,17 @@ function getTimeTypeForSingleSchedule(schedule) {
   return newScheduleText;
 }
 
-function generateLatestVenue(venues) {}
-
 function formatDates(schedules) {
   var formatted = [];
   schedules.forEach(function (schedule) {
-    formatted.push({ time: schedule.startTime, name: schedule.name });
-    formatted.push({ time: schedule.endTime, name: schedule.name });
+    formatted.push({
+      time: schedule.startTime,
+      name: schedule.name
+    });
+    formatted.push({
+      time: schedule.endTime,
+      name: schedule.name
+    });
   });
   return formatted;
 }
@@ -178,6 +184,53 @@ function positionOfPivot(dates) {
     return dates.pivot;
   }).indexOf(true);
   return index;
+}
+
+function generateLatestVenue(venues, currentLocation) {
+  var length = venues.length;
+  var text = '';
+  switch (length) {
+    case 0:
+      text = generateSecondLine('', '');
+      break;
+    case 1:
+      text = generateSecondLine(venues[0].venueDescriptor, venues[0].location);
+      break;
+    default:
+
+      var distances = [];
+      venues.forEach(function (venue) {
+
+        var lat = venue.geopoint['_latitude'];
+        var lon = venue.geopoint['_longitude'];
+        if (lat && lon) {
+          var geopoint = {
+            latitude: lat,
+            longitude: lon
+          };
+          distances.push({
+            distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
+            desc: venue.venueDescriptor,
+            location: venue.location
+          });
+        }
+      });
+      if (!distances.length) {
+        text = generateSecondLine('', '');
+      } else {
+
+        var sortedDistance = sortNearestLocation(distances);
+        text = generateSecondLine(sortedDistance[0].desc, sortedDistance[0].location);
+      }
+  }
+  return text;
+}
+
+function sortNearestLocation(distances) {
+  var dataset = distances.slice();
+  return dataset.sort(function (a, b) {
+    return a.distance - b.distance;
+  });
 }
 
 function activityListUI(data, secondLine) {

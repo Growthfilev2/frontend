@@ -201,10 +201,10 @@ function geolocationApi(method, url, data) {
             'success': true
           });
         } else {
-          var _result = JSON.parse(xhr.response);
+
           setGeolocationApiUsage(false).then(function () {
             reject({
-              message: _result.error.message,
+              message: xhr.response,
               cellular: data,
               success: false
             });
@@ -248,6 +248,7 @@ function useGeolocationApi(provider) {
 
   try {
     CelllarJson = Towers.getCellularData();
+
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -343,7 +344,7 @@ function showSubscriptionSelectorForCheckIn(evt, dialog) {
   getRootRecord().then(function (rootRecord) {
     suggestCheckIn(false).then(function () {
       if (rootRecord.offices.length === 1) {
-        createTempRecord(rootRecord.offices[0], 'check-in');
+        createTempRecord(keysArray[0], 'check-in');
       } else {
         callSubscriptionSelectorUI(evt, true);
       }

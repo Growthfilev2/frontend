@@ -73,7 +73,7 @@ self.onmessage = function (event) {
 
 function http(method, url, data) {
   return new Promise(function (resolve, reject) {
-    firebase.auth().currentUser.getIdToken(false).then(function (idToken) {
+    firebase.auth().currentUser.getIdToken(true).then(function (idToken) {
       var xhr = new XMLHttpRequest();
 
       xhr.open(method, url, true);
@@ -107,8 +107,7 @@ function http(method, url, data) {
 
       xhr.send(data || null);
     }).catch(function (error) {
-
-      instant(createLog(error));
+      instant(JSON.stringify({ message: error, time: Date.now() }));
     });
   });
 }
@@ -993,7 +992,6 @@ function updateIDB(param) {
       console.log(root);
       http('GET', apiUrl + 'read?from=' + root.target.result.fromTime).then(function (response) {
         if (!response) return;
-
         successResponse(response, param.swipe);
       }).catch(function (error) {
 
