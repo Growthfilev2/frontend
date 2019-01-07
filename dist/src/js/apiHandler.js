@@ -1,11 +1,10 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 // import firebase app script because there is no native support of firebase inside web workers
-importScripts('../external/js/moment.min.js');
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js');
+importScripts('../../external/js/moment.min.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
@@ -906,7 +905,7 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity);
       }
       if (activity.hidden === 0) {
-        createListStore(activity, commentData, counter);
+        createListStore(activity, counter);
       }
 
       updateMap(activity);

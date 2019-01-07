@@ -184,19 +184,21 @@ function statusChange(db, id) {
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function (event) {
-
+    const container =  document.querySelector('.status--change-cont')
     const record = event.target.result;
     if (!record.canEdit || record.status === 'CANCELLED') {
       const statusSpan = document.createElement('span')
       const record = event.target.result
       statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
-      document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
-      document.querySelector('.status--change-cont').style.textAlign = 'center'
+      if(container) {
+        container.innerHTML = statusSpan.outerHTML
+        container.style.textAlign = 'center'
+      }
       return
     }
     if (record.editable == 0) {
 
-      document.querySelector('.status--change-cont').innerHTML = label.outerHTML + loader('status-loader').outerHTML;
+      container ? container.innerHTML = label.outerHTML + loader('status-loader').outerHTML : ''
       return
     }
     if (!document.querySelector('.status-check')) {
@@ -231,8 +233,8 @@ function statusChange(db, id) {
 
       div.appendChild(checkbox)
 
-      if (document.querySelector('.status--change-cont')) {
-        document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+      if (container) {
+        container.innerHTML = div.outerHTML + label.outerHTML
       }
     }
 
