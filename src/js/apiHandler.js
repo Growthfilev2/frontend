@@ -1,9 +1,8 @@
 // import firebase app script because there is no native support of firebase inside web workers
-importScripts('../../external/js/moment.min.js')
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js')
+importScripts('../../external/js/moment.min.js')
 // Backend API Url
 const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
 let deviceInfo;
@@ -15,14 +14,13 @@ function getTime() {
 }
 
 firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
+  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+  authDomain: 'growthfile-207204.firebaseapp.com',
+  databaseURL: 'https://growthfile-207204.firebaseio.com',
+  projectId: 'growthfile-207204',
+  storageBucket: 'growthfile-207204.appspot.com',
+  messagingSenderId: '701025551237'
 })
-
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
@@ -856,14 +854,17 @@ function updateSubscription(db, subscription) {
   }).catch(console.log)
 }
 
-function createListStore(db, activity) {
-
-  const transaction = db.transaction(['list', 'root'], 'readwrite');
-  const store = transaction.objectStore('list');
+function createListStore(activity,counter) {
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function(){
+  const db = req.result;
+  const listTx = db.transaction(['list'], 'readwrite');
+  const listStore = listTx.objectStore('list');
+  
   const requiredData = {
     'activityId': activity.activityId,
     'secondLine': '',
-    'count': '',
+    'count': counter[activity.activityId],
     'timestamp': activity.timestamp,
     'creator': {
       number: activity.creator,
@@ -873,36 +874,24 @@ function createListStore(db, activity) {
     'status': activity.status
   }
 
-
-  store.put(requiredData);
-
-  transaction.oncomplete = function () {
-    console.log("done")
+    listStore.put(requiredData);
+    listTx.oncomplete = function () {
+      console.log("done")
+    }
   }
-
 }
 
-function updateListStoreWithCount(counter) {
+
+function updateListStoreWithCreatorImage(counter) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function () {
+
       const db = req.result
       const transaction = db.transaction(['list', 'users'], 'readwrite')
       const listStore = transaction.objectStore('list');
       const userStore = transaction.objectStore('users');
-      console.log(counter)
-      Object.keys(counter).forEach(function (id) {
-        listStore.get(id).onsuccess = function (event) {
-          const record = event.target.result;
-          if (!record) {
-            console.log(" no record found")
-          } else {
-            record.count = counter[id];
-            listStore.put(record);
-          }
-        }
-      })
-
+  
       listStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -919,7 +908,7 @@ function updateListStoreWithCount(counter) {
               listStore.put(cursor.value);
             }
           }
-        }
+        }   
         cursor.continue();
       }
 
@@ -986,7 +975,7 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity)
       }
       if (activity.hidden === 0) {
-        createListStore(db, activity)
+        createListStore(activity,counter)
       }
 
       updateMap(activity)
@@ -1012,7 +1001,7 @@ function successResponse(read, swipeInfo) {
       record.fromTime = read.upto
       rootObjectStore.put(record);
 
-      updateListStoreWithCount(counter).then(function () {
+      updateListStoreWithCreatorImage(counter).then(function () {
         requestHandlerResponse('updateIDB', 200, swipeInfo);
       })
     }

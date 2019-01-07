@@ -3,18 +3,24 @@ const notification = new Worker('src/js/notification.js')
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   console.log(filter)
+  getRootRecord().then(function (record) {
+    if (record.suggestCheckIn) {
+      showSuggestCheckInDialog()
+    }
+  })
+
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
 
-  if(document.querySelector('.mdc-linear-progress')) {
+  if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
   }
-  
+
   history.pushState(['listView'], null, null)
 
   listPanel()
-  creatListHeader('Recent');
+  creatListHeader('Activities');
   createActivityIcon();
 
   if (!filter) {
@@ -35,14 +41,45 @@ function fetchDataForActivityList() {
   req.onsuccess = function () {
     const db = req.result;
     let activityDom = ''
-    const transaction = db.transaction('list')
+    const transaction = db.transaction(['list', 'activity'])
+    const activity = transaction.objectStore('activity');
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
+    const today = moment().format('YYYY-MM-DD');
+   
 
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      activityDom += activityListUI(cursor.value).outerHTML;
+
+      const secondLine = document.createElement('span')
+      secondLine.className = 'mdc-list-item__secondary-text'
+
+      let venueContent = '';
+
+      activity.get(cursor.value.activityId).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return
+        const schedules = record.schedule;
+        const venues = record.venue;
+        const status = record.status
+        if (record.venue.length) {
+          venueContent = generateSecondLine(venues[0].venueDescriptor,venues[0].location)
+        }
+
+        if(status === 'PENDING') {
+          secondLine.appendChild(generateLastestSchedule(schedules));
+        }
+        else {
+          secondLine.appendChild(generateSecondLine(generateTextIfActivityIsNotPending(status)))
+        }
+
+        if(venueContent instanceof HTMLElement) {
+          secondLine.appendChild(venueContent);
+        }
+        
+        activityDom += activityListUI(cursor.value, secondLine).outerHTML
+      }
       cursor.continue();
     }
 
@@ -55,8 +92,106 @@ function fetchDataForActivityList() {
   }
 }
 
+function generateTextIfActivityIsNotPending(status) {
+  const textStatus = {
+    'CONFIRMED': 'Done',
+    'CANCELLED': 'Cancelled'
+  }
+  return textStatus[status]
+}
 
-function activityListUI(data) {
+function generateSecondLine(name,value){
+  const el = document.createElement('div');
+  if(!value) {
+    el.textContent = name
+  } 
+  else {
+    el.textContent = `${name} : ${value}`
+  }
+  return el
+}
+
+
+function generateLastestSchedule(schedules){
+  const length = schedules.length;
+  let text;
+  switch (length) {
+    case 0:
+      text = generateSecondLine('','')
+      break;
+    case 1:
+      const timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0])
+      text = generateSecondLine(timeTypeSingle.name,timeTypeSingle.value)
+      break;
+    default:
+      const formattedDates = formatDates(schedules);
+      const ascendingOrder = sortDatesInAscendingOrderWithPivot({time:moment().valueOf(),pivot:true},formattedDates);
+      const timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
+      text = generateSecondLine(timeTypeMultiple.name,timeTypeMultiple.time);
+      break;
+  }
+  return text
+}
+
+function getTimeTypeForSingleSchedule(schedule){
+  const today = moment().format('DD-MM-YYYY');
+  const startTime = moment(schedule.startTime).format('DD-MM-YYYY');
+  let newScheduleText = {
+    name:schedule.name,
+    value:''
+  }
+  if (moment(startTime).isAfter(moment(today))) {
+    newScheduleText.value = moment(startTime).calendar();
+  }
+  else {
+    newScheduleText.value = moment(schedule.endTime).calendar(); 
+  }
+  return newScheduleText;
+  
+}
+
+function generateLatestVenue(venues){
+
+}
+
+function formatDates (schedules){
+  const formatted = []
+  schedules.forEach(function(schedule){
+    formatted.push({time:schedule.startTime,name:schedule.name})
+    formatted.push({time:schedule.endTime,name:schedule.name})
+  })
+  return formatted;
+}
+
+function sortDatesInAscendingOrderWithPivot(pivot,dates){
+  const dataset  = dates.slice();
+  dataset.push(pivot);
+  return dataset.sort(function(a,b){
+    return a-b;
+  })
+}
+
+function getTimeTypeForMultipleSchedule(dates){
+const pivotIndex = positionOfPivot(dates);
+const duplicate = dates.slice()
+  if(pivotIndex === dates.length) {
+    duplicate[pivotIndex -1].time = moment(duplicate[pivotIndex -1].time).calendar();
+    return duplicate[pivotIndex -1]
+  }
+  duplicate[pivotIndex +1].time = moment(duplicate[pivotIndex +1].time).calendar();
+  return duplicate[pivotIndex+1]
+}
+
+function positionOfPivot(dates){
+  const index = dates.map(function(e){
+    return dates.pivot
+  }).indexOf(true);
+  return index;
+}
+
+
+
+function activityListUI(data, secondLine) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
@@ -76,13 +211,18 @@ function activityListUI(data) {
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
 
   activityNameText.textContent = data.activityName;
-  const secondLine = document.createElement('span')
-  secondLine.className = 'mdc-list-item__secondary-text'
-  if (data.urgent || data.nearby) {
-    secondLine.textContent = data.secondLine;
-  }
 
-  leftTextContainer.appendChild(activityNameText)
+  // if (data.urgent || data.nearby) {
+  //   secondLine.textContent = data.secondLine;
+  // }
+  // else {
+  //   if(data.lastComment.user && data.lastComment.text) {
+  //     secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
+  //   }
+  // }
+
+  leftTextContainer.appendChild(activityNameText);
+
   leftTextContainer.appendChild(secondLine);
   // leftTextContainer.appendChild(lastComment)
 
@@ -115,8 +255,10 @@ function activityListUI(data) {
   li.appendChild(creator);
   li.appendChild(leftTextContainer);
   li.appendChild(metaTextContainer);
-  return li;
+  return li
+
 }
+
 
 function generateIconByCondition(data, li) {
   const icon = document.createElement('i');
@@ -147,8 +289,6 @@ function generateIconByCondition(data, li) {
   timeCustomText.style.fontSize = '14px';
   timeCustomText.textContent = moment(data.timestamp).calendar()
   return timeCustomText;
-
-
 }
 
 
@@ -187,12 +327,11 @@ function getRootRecord() {
   })
 }
 
-
 function createActivityIcon() {
-
+  if(document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
-      createActivityIconDom(officeTemplateObject)
+      createActivityIconDom()
       return;
     }
   }).catch(console.log)
@@ -229,52 +368,35 @@ function getCountOfTemplates() {
 }
 
 
-function createActivityIconDom(officeTemplateCombo) {
+function createActivityIconDom() {
 
-  getRootRecord().then(function (record) {
-    const parent = document.getElementById('create-activity--parent')
 
-    const fab = document.createElement('button')
-    fab.className = 'mdc-fab create-activity'
-    fab.id = 'create-activity'
-    fab.setAttribute('aria-label', 'Add')
-    const span = document.createElement('span')
-    span.className = 'mdc-fab_icon material-icons'
-    span.id = 'activity-create--icon'
-    if (record.suggestCheckIn) {
-      span.textContent = 'add_alert'
-    } else {
-      span.textContent = 'add'
-    }
+  const parent = document.getElementById('create-activity--parent')
 
-    fab.appendChild(span)
-    parent.innerHTML = fab.outerHTML;
+  const fab = document.createElement('button')
+  fab.className = 'mdc-fab create-activity'
+  fab.id = 'create-activity'
+  fab.setAttribute('aria-label', 'Add')
+  const span = document.createElement('span')
+  span.className = 'mdc-fab_icon material-icons'
+  span.id = 'activity-create--icon'
 
-    document.querySelector('.create-activity').addEventListener('click', function (evt) {
-      const keysArray = Object.keys(officeTemplateCombo);
-      console.log(record.suggestCheckIn);
-      if (record.suggestCheckIn) {
-        if (keysArray.length === 1) {
-          createTempRecord(keysArray[0], 'check-in')
-        } else {
-          callSubscriptionSelectorUI(evt, record.suggestCheckIn)
-        }
-        suggestCheckIn(false).then(function () {
-          createActivityIcon();
-        }).catch(console.log)
-        return;
-      }
+  span.textContent = 'add'
 
-      callSubscriptionSelectorUI(evt)
-    })
-  }).catch(console.log)
+
+  fab.appendChild(span)
+  parent.innerHTML = fab.outerHTML;
+
+  document.querySelector('.create-activity').addEventListener('click', function (evt) {
+    callSubscriptionSelectorUI(evt)
+  })
 }
 
-function callSubscriptionSelectorUI(evt, suggestCheckIn) {
+function callSubscriptionSelectorUI(evt, checkIn) {
   selectorUI(evt, {
     record: '',
     store: 'subscriptions',
-    suggestCheckIn: suggestCheckIn
+    suggestCheckIn: checkIn
   })
 }
 
@@ -300,22 +422,19 @@ function listPanel() {
 
 function creatListHeader(headerName) {
   const parentIconDiv = document.createElement('div')
-  parentIconDiv.className = 'drawer--icons'
+  parentIconDiv.className = 'profile--icon-header'
 
   const menuIcon = document.createElement('span')
   menuIcon.id = 'menu--panel'
-  const icon = document.createElement('i')
-  icon.className = 'material-icons'
 
-  icon.textContent = 'menu'
-
-  const menuSpan = document.createElement('span')
-  menuSpan.className = 'current--selcted-filter'
-  headerName === 'Cancelled' ? menuSpan.textContent = 'Trash' : menuSpan.textContent = headerName
-
+  const icon = document.createElement('img')
+  icon.src = firebase.auth().currentUser.photoURL
+  icon.className = 'list-photo-header'
   menuIcon.appendChild(icon)
-  menuIcon.appendChild(menuSpan)
 
+  const headerText = document.createElement('p');
+  headerText.textContent = headerName;
+  menuIcon.appendChild(headerText)
   parentIconDiv.appendChild(menuIcon)
 
   const searchIcon = document.createElement('span')
@@ -329,9 +448,8 @@ function creatListHeader(headerName) {
     left: parentIconDiv.outerHTML,
     right: ''
   });
-  document.getElementById('menu--panel').addEventListener('click', function () {
-    const drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-    drawer.open = true;
+  document.querySelector('.list-photo-header').addEventListener('click', function () {
+    profileView(true)
   })
 }
 
@@ -409,30 +527,29 @@ function createInputForProfile(key, type, classtype) {
   return mainTextField
 }
 
-
 function suggestCheckIn(value) {
   return new Promise(function (resolve, reject) {
     getRootRecord().then(function (record) {
-      const req = indexedDB.open(firebase.auth().currentUser.uid)
+      var req = indexedDB.open(firebase.auth().currentUser.uid);
       req.onsuccess = function () {
-        const db = req.result;
-        const tx = db.transaction(['root'], 'readwrite')
-        const store = tx.objectStore('root')
+        var db = req.result;
+        var tx = db.transaction(['root'], 'readwrite');
+        var store = tx.objectStore('root');
         record.suggestCheckIn = value;
-        store.put(record)
+        store.put(record);
 
         tx.oncomplete = function () {
-          resolve(true)
-        }
+          resolve(true);
+        };
         tx.onerror = function () {
-          reject(tx.error)
-        }
-      }
+          reject(tx.error);
+        };
+      };
       req.onerror = function () {
         reject(req.error);
-      }
+      };
     }).catch(function (error) {
-      reject(error)
-    })
-  })
+      reject(error);
+    });
+  });
 }

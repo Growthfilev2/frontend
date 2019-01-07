@@ -70,7 +70,7 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       stack: error.stack,
       name: error.name,
       device: native.getInfo(),
-      state: history.state ? history.state[0] :''
+      state: history.state[0]
     }
   };
   requestCreator('instant', JSON.stringify(errorJS));
@@ -203,6 +203,57 @@ function layoutGrid() {
   layout.appendChild(layoutInner);
   document.body.innerHTML = layout.outerHTML;
   imageViewDialog();
+  suggestCheckInDialog();
+}
+
+function suggestCheckInDialog() {
+
+  var aside = document.createElement('aside');
+  aside.className = 'mdc-dialog mdc-dialog--open';
+  aside.id = 'suggest-checkIn-dialog';
+
+  var surface = document.createElement('div');
+  surface.className = 'mdc-dialog__surface';
+  surface.style.width = '90%';
+  surface.style.height = 'auto';
+
+  var header = document.createElement('header');
+  header.className = 'mdc-dialog__header';
+  var headerText = document.createElement('h2');
+  headerText.className = 'mdc-dialog__header__title';
+  headerText.textContent = 'New Location Detected';
+  header.appendChild(headerText);
+  var section = document.createElement('section');
+  section.className = 'mdc-dialog__body';
+  section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
+
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
+
+  var ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
+  ok.textContent = 'Okay';
+  ok.style.backgroundColor = '#3498db';
+
+  footer.appendChild(ok);
+
+  surface.appendChild(header);
+  surface.appendChild(section);
+  surface.appendChild(footer);
+  aside.appendChild(surface);
+
+  var backdrop = document.createElement('div');
+  backdrop.className = 'mdc-dialog__backdrop';
+  aside.appendChild(backdrop);
+  document.body.appendChild(aside);
+
+  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
+
+  dialog.listen('MDCDialog:accept', function (evt) {
+    showSubscriptionSelectorForCheckIn(evt, dialog);
+  });
+  dialog.close();
 }
 
 function createHeader(id) {
@@ -235,57 +286,6 @@ function createHeader(id) {
   row.appendChild(sectionEnd);
   header.appendChild(row);
   return header;
-}
-
-function drawerDom() {
-  var div = document.createElement('div');
-  div.id = 'drawer-parent';
-
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-drawer mdc-drawer--temporary mdc-typography';
-
-  var nav = document.createElement('nav');
-  nav.className = 'mdc-drawer__drawer';
-
-  var header = document.createElement('header');
-  header.className = 'mdc-drawer__header drawer--header';
-
-  var headerContent = document.createElement('div');
-  headerContent.className = 'mdc-drawer__header-content';
-
-  var ImageDiv = document.createElement('div');
-  ImageDiv.className = 'drawer--header-div';
-  ImageDiv.onclick = function () {
-    profileView(true);
-  };
-  var headerIcon = document.createElement('img');
-  headerIcon.className = 'drawer-header-icon';
-
-  headerIcon.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-
-  var headerDetails = document.createElement('div');
-  headerDetails.className = 'header--details';
-
-  var name = document.createElement('div');
-  name.className = 'mdc-typography--subtitle';
-  name.textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-
-  headerDetails.appendChild(name);
-
-  ImageDiv.appendChild(headerIcon);
-  headerContent.appendChild(ImageDiv);
-  headerContent.appendChild(headerDetails);
-  header.appendChild(headerContent);
-
-  var navContent = document.createElement('nav');
-
-  navContent.className = 'mdc-drawer__content mdc-list filter-sort--list';
-
-  nav.appendChild(header);
-  nav.appendChild(navContent);
-  aside.appendChild(nav);
-  div.appendChild(aside);
-  document.body.appendChild(div);
 }
 
 function imageViewDialog() {
@@ -414,7 +414,6 @@ function removeIDBInstance(auth) {
 
 function init(auth) {
 
-  drawerDom();
   document.getElementById("main-layout-app").style.display = 'block';
 
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
@@ -468,9 +467,7 @@ function startInitializatioOfList(auth) {
     });
 
     suggestCheckIn(isNew).then(function () {
-      listView({ urgent: isNew, nearby: isNew });
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify({ message: error }));
+      listView({ urgent: isNew, nearby: false });
     });
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({ message: error }));

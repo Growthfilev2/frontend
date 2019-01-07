@@ -55,10 +55,10 @@ function fetchAddendumForComment(id) {
     statusChange(db, id);
     sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
-   
+
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
-      if(!cursor) return;
+      if (!cursor) return;
 
       if (!document.getElementById(cursor.value.addendumId)) {
         createComment(db, cursor.value, user).then(function (comment) {
@@ -70,12 +70,12 @@ function fetchAddendumForComment(id) {
 
       cursor.continue()
     }
-    transaction.oncomplete = function(){
+    transaction.oncomplete = function () {
       if (document.querySelector('.activity--chat-card-container')) {
         console.log(document.querySelector('.activity--chat-card-container').scrollHeight)
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
       }
-  
+
     }
   }
 }
@@ -180,23 +180,25 @@ function statusChange(db, id) {
 
   const label = document.createElement('label')
   label.setAttribute('for', 'toggle-status')
-  label.textContent = 'Confirm Completion'
+  label.textContent = 'Done'
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function (event) {
-
+    const container =  document.querySelector('.status--change-cont')
     const record = event.target.result;
     if (!record.canEdit || record.status === 'CANCELLED') {
       const statusSpan = document.createElement('span')
       const record = event.target.result
       statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
-      document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML
-      document.querySelector('.status--change-cont').style.textAlign = 'center'
+      if(container) {
+        container.innerHTML = statusSpan.outerHTML
+        container.style.textAlign = 'center'
+      }
       return
     }
     if (record.editable == 0) {
 
-      document.querySelector('.status--change-cont').innerHTML = label.outerHTML + loader('status-loader').outerHTML;
+      container ? container.innerHTML = label.outerHTML + loader('status-loader').outerHTML : ''
       return
     }
     if (!document.querySelector('.status-check')) {
@@ -231,12 +233,12 @@ function statusChange(db, id) {
 
       div.appendChild(checkbox)
 
-      if (document.querySelector('.status--change-cont')) {
-        document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML
+      if (container) {
+        container.innerHTML = div.outerHTML + label.outerHTML
       }
     }
 
-    if(!document.querySelector('.mdc-checkbox')) return;
+    if (!document.querySelector('.mdc-checkbox')) return;
 
     switchControl = new mdc.checkbox.MDCCheckbox.attachTo(document.querySelector('.mdc-checkbox'));
     if (record.status === 'CONFIRMED') {
@@ -477,7 +479,10 @@ function createHeaderContent(db, id) {
 
       leftDiv.appendChild(backDiv)
       leftDiv.appendChild(primarySpan)
-      modifyHeader({id:'app-main-header',left:leftDiv.outerHTML})
+      modifyHeader({
+        id: 'app-main-header',
+        left: leftDiv.outerHTML
+      })
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav();
@@ -485,7 +490,7 @@ function createHeaderContent(db, id) {
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
-          
+
           if (id) {
             updateCreateActivity(record, true)
           } else {
@@ -511,7 +516,7 @@ function reinitCount(db, id) {
     record.count = 0
     store.put(record)
   }
-  transaction.oncomplete = function(){
+  transaction.oncomplete = function () {
     console.log("done");
   }
 }
@@ -539,7 +544,7 @@ function selectorUI(evt, data) {
   aside.id = 'dialog--component'
   aside.className = 'mdc-dialog'
   aside.role = 'alertdialog'
-  
+
   const dialogSurface = document.createElement('div')
   dialogSurface.className = 'mdc-dialog__surface'
   dialogSurface.appendChild(createHeader('dialog--surface-header'))
@@ -599,34 +604,48 @@ function selectorUI(evt, data) {
   document.body.appendChild(aside)
 
   if (data.store === 'subscriptions' || data.store === 'children') {
-    modifyHeader({id:'dialog--surface-header',left:backSpan.outerHTML})
+    modifyHeader({
+      id: 'dialog--surface-header',
+      left: backSpan.outerHTML
+    })
   } else {
-    modifyHeader({id:'dialog--surface-header',left:backSpan.outerHTML, right:searchIcon.outerHTML})
+    modifyHeader({
+      id: 'dialog--surface-header',
+      left: backSpan.outerHTML,
+      right: searchIcon.outerHTML
+    })
   }
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
       resetSelectedContacts().then(function (people) {
-        removeDialog(e, data)
+        handleRemoveDialogEvt(e, data)
       })
       return
     }
-    removeDialog(e, data)
+    removeDialog()
   })
 
   initializeSelectorWithData(evt, data)
 }
 
-function removeDialog(evt, data) {
-  if (document.getElementById('dialog--component')) {
-    if (evt && evt.target.dataset.type === 'back-list') {
-      resetSelectorUI(data)
-    } else {
-      document.getElementById('dialog--component').remove();
-      document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock')
+function removeDialog() {
+  const dialog =  document.getElementById('dialog--component');
+  if(!dialog) return;
+  document.getElementById('dialog--component').remove();
+  document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock')
+}
 
-    }
+function handleRemoveDialogEvt(evt,data) {
+
+  if(!evt) {
+    return
   }
+  if(evt.target.dataset.type !== 'back-list') {
+    return;
+  }
+  resetSelectorUI(data);
+  removeDialog();
 }
 
 function initializeSelectorWithData(evt, data) {
@@ -645,7 +664,7 @@ function initializeSelectorWithData(evt, data) {
       fillMapInSelector(db, selectorStore, dialog, data)
     }
     if (data.store === 'subscriptions') {
-     
+
       fillSubscriptionInSelector(db, dialog, data)
     }
     if (data.store === 'users') {
@@ -698,7 +717,7 @@ function fillUsersInSelector(data, dialog) {
       const userRecord = cursor.value
 
       if (data.attachment.present) {
-        
+
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
@@ -732,8 +751,10 @@ function fillUsersInSelector(data, dialog) {
           key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
+        }).then(removeDialog).catch(function(error){
+          requestCreator('instant',JSON.stringify({message:error}))
+
         })
-        removeDialog()
         return;
       }
       if (data.record.hasOwnProperty('create')) {
@@ -742,8 +763,9 @@ function fillUsersInSelector(data, dialog) {
             hash: 'addOnlyAssignees',
           }, {
             primary: selectedPeople
+          }).then(removeDialog).catch(function(error){
+           requestCreator('instant',JSON.stringify({message:error}))
           })
-          removeDialog()
 
         })
         return
@@ -831,8 +853,9 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
+          }).then(removeDialog).catch(function(error){
+            requestCreator('instant',JSON.stringify({message:error}))
           })
-          removeDialog()
           return
         }
 
@@ -841,8 +864,9 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees',
           }, {
             primary: [formattedNumber]
+          }).then(removeDialog).catch(function(error){
+            requestCreator('instant',JSON.stringify({message:error}))
           })
-          removeDialog()
           return
         }
         if (isLocationVerified()) {
@@ -961,8 +985,10 @@ function fillMapInSelector(db, selectorStore, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
+    }).then(removeDialog).catch(function(error){
+      console.log(error)
+      requestCreator('instant',JSON.stringify({message:error}))
     })
-    removeDialog()
   }
 }
 
@@ -974,17 +1000,17 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     if (!cursor) return;
 
     if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && cursor.value.status != 'CANCELLED') {
-      if(cursor.value.attachment.Name) {
+      if (cursor.value.attachment.Name) {
         ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
       }
-      if(cursor.value.attachment.Number){
+      if (cursor.value.attachment.Number) {
         ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
       }
     }
     cursor.continue()
   }
 
-document.querySelector('.selector-send').classList.remove('hidden')
+  document.querySelector('.selector-send').classList.remove('hidden')
   dialog['acceptButton_'].onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
@@ -993,8 +1019,9 @@ document.querySelector('.selector-send').classList.remove('hidden')
       key: data.attachment.key
     }, {
       primary: selectedField.name
+    }).then(removeDialog).catch(function(error){
+      requestCreator('instant',JSON.stringify({message:error}))
     })
-    removeDialog()
   }
 }
 
@@ -1013,7 +1040,7 @@ function fillSubscriptionInSelector(db, dialog, data) {
     const cursor = event.target.result
 
     if (!cursor) return;
-  
+
     const headline3 = document.createElement('h3')
     headline3.className = 'mdc-list-group__subheader subheader--group-small'
     headline3.textContent = cursor.value.office
@@ -1029,8 +1056,9 @@ function fillSubscriptionInSelector(db, dialog, data) {
     grp.appendChild(ul)
     cursor.continue();
   }
-  tx.oncomplete = function(){
-    if(data.suggestCheckIn) {
+  
+  tx.oncomplete = function () {
+    if (data.suggestCheckIn) {
       const parent = document.getElementById('data-list--container')
       const suggestion = document.createElement('div')
       suggestion.className = 'suggest-checkin--view'
@@ -1044,26 +1072,26 @@ function fillSubscriptionInSelector(db, dialog, data) {
       text.className = 'suggest-checkin--text'
       suggestion.appendChild(icon)
       suggestion.appendChild(text)
-      parent.insertBefore(suggestion,parent.childNodes[0]);
+      parent.insertBefore(suggestion, parent.childNodes[0]);
     }
     insertTemplateByOffice(offices, data.suggestCheckIn);
 
     mainUL.appendChild(grp)
 
-  dialog['acceptButton_'].onclick = function () {
+    dialog['acceptButton_'].onclick = function () {
 
-    if(document.querySelector('.mdc-radio.radio-selected')) {
+      if (document.querySelector('.mdc-radio.radio-selected')) {
 
-      const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-      console.log(radio)
-      const selectedField = JSON.parse(radio.value)
-      console.log(selectedField.office)
-      console.log(selectedField.template)
-      document.getElementById('app-current-panel').dataset.view = 'create'
-      createTempRecord(selectedField.office, selectedField.template, data)
+        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+        console.log(radio)
+        const selectedField = JSON.parse(radio.value)
+        console.log(selectedField.office)
+        console.log(selectedField.template)
+        document.getElementById('app-current-panel').dataset.view = 'create'
+        createTempRecord(selectedField.office, selectedField.template, data)
+      }
+
     }
-
-  }
   }
 
 }
@@ -1109,8 +1137,8 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
       checkInTemplate.forEach(function (li) {
         const keys = Object.keys(li);
         keys.forEach(function (key) {
-          const el =  document.querySelector(`[data-selection="${key}"]`);
-          el.insertBefore(li[key],el.childNodes[0])
+          const el = document.querySelector(`[data-selection="${key}"]`);
+          el.insertBefore(li[key], el.childNodes[0])
         })
       });
       document.querySelector('.selector-send').classList.remove('hidden');
@@ -1214,69 +1242,103 @@ function hasAnyValueInChildren(office, template, status) {
 }
 
 function updateDomFromIDB(activityRecord, attr, data) {
-
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function (event) {
-
-    let updatedActivity = activityRecord;
-
-    const db = req.result
-    const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-
+  return new Promise(function(resolve,reject){
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result;
+    let thisActivity = activityRecord;
+    
     if (attr.hash === 'venue') {
-
-      updatedActivity = updateVenue(updatedActivity, attr, data)
-
-
-      document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
-      document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
-      if (!document.getElementById('send-activity').dataset.progress) {
-        document.getElementById('send-activity').classList.remove('hidden')
-      }
-
-      if (!activityRecord.hasOwnProperty('create')) {
-        activityStore.put(updatedActivity)
-      }
+      thisActivity = updateVenue(thisActivity, attr, data);
+      changeTextContentForNewSelectedVenue(attr, data)
+      updateLocalRecord(thisActivity,db).then(function(message){
+        resolve(message)
+      }).catch(function(error){
+        console.log(error)
+        reject(error)
+      })
       return
     }
+    
     //for create
     if (attr.hash === 'addOnlyAssignees') {
-
+      
       if (data.primary.length > 0) {
         data.primary.forEach(function (number) {
-          if (activityRecord.assignees.indexOf(number) > -1) return
-          activityRecord.assignees.push(number)
+          if (thisActivity.assignees.indexOf(number) > -1) return
+          thisActivity.assignees.push(number)
         })
       }
-      console.log(activityRecord)
-
-      readNameAndImageFromNumber(data.primary, db)
+      const newAssigness = thisActivity.assignees
+      readNameAndImageFromNumber(newAssigness,db).then(function(message){
+          resolve(message);
+      }).catch(function(error){
+        reject(error);
+        
+      })
       return
     }
+    
 
 
-
-    updatedActivity.attachment[attr.key].value = data.primary
-
-    if (!activityRecord.hasOwnProperty('create')) {
-      activityStore.put(updatedActivity)
-    }
     if (attr.hash === 'weekday') return
     if (!attr.hasOwnProperty('key')) return
+    
+    thisActivity.attachment[attr.key].value = data.primary;
 
-
-    document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-primary]`).textContent = data.primary
-    if (data.hasOwnProperty('secondary')) {
-      document.getElementById(convertKeyToId(attr.key)).querySelector(`[data-secondary]`).textContent = data.secondary.address
-    }
-    if (!document.getElementById('send-activity').dataset.progress) {
-      document.getElementById('send-activity').classList.remove('hidden')
-    }
-
+    updateLocalRecord(thisActivity,db).then(function(message){
+      changeTextContentForNewSelectedVenue(attr, data);
+      resolve(message);
+    }).catch(function(error){
+      reject(error)
+    })
   }
+  })
+}
 
+
+function updateLocalRecord(thisActivity,db) {
+  return new Promise(function(resolve,reject){
+
+      const tx = db.transaction(['activity'], 'readwrite');
+      const store = tx.objectStore('activity');
+      let updatedActivity = thisActivity;
+      
+      if (!updatedActivity.hasOwnProperty('create')) {
+        store.put(updatedActivity)
+      }
+      tx.oncomplete = function () {
+        resolve("activity object store updated with value")
+      }
+      tx.onerror = function(){
+        reject(JSON.stringify(tx.error));
+      }
+  })
+}
+
+function changeTextContentForNewSelectedVenue(attr, data) {
+  const el = document.getElementById(convertKeyToId(attr.key))
+  if (!el) return;
+  const primaryText = el.querySelector(`[data-primary]`)
+  const secondaryText = el.querySelector(`[data-secondary]`);
+  const sendActivity = document.getElementById('send-activity');
+
+  if (data.primary) {
+    if (primaryText) {
+      primaryText.textContent = data.primary
+    }
+  }
+  if (data.hasOwnProperty('secondary')) {
+    if (secondaryText) {
+      secondaryText.textContent = data.secondary.address
+    }
+  }
+  if(sendActivity) {
+    if (!sendActivity.dataset.progress) {
+      sendActivity.classList.remove('hidden')
+    }
+  }
 }
 
 function updateVenue(updatedActivity, attr, data) {
@@ -1304,8 +1366,8 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(record) {
-
+function updateCreateContainer(recordCopy,db) {
+  const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
 
   const leftHeaderContent = document.createElement('div')
@@ -1318,17 +1380,25 @@ function updateCreateContainer(record) {
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
 
-  activityName.style.fontSize = '19px'
+  activityName.style.fontSize = '18px'
   activityName.style.paddingLeft = '10px'
-  activityName.style.marginTop = '2px'
+  activityName.style.marginTop = '6px'
 
   leftHeaderContent.appendChild(backSpan)
   leftHeaderContent.appendChild(activityName)
-  modifyHeader({id:'app-main-header',left:leftHeaderContent.outerHTML})
+  modifyHeader({
+    id: 'app-main-header',
+    left: leftHeaderContent.outerHTML
+  })
 
 
   document.getElementById('backToConv').addEventListener('click', function () {
-    backNav()
+    console.log(record)
+    updateLocalRecord(record,db).then(function(){
+      backNav()
+    }).catch(function(error){
+      requestCreator('instant',JSON.stringify({message:error}))
+    })
   })
 
 
@@ -1400,7 +1470,8 @@ function updateCreateActivity(record, pushState) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-    appView.innerHTML = updateCreateContainer(record).outerHTML
+    const oldRecord = JSON.stringify(record);
+    appView.innerHTML = updateCreateContainer(oldRecord,db).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
@@ -1445,13 +1516,16 @@ function updateCreateActivity(record, pushState) {
           key: select['root_'].dataset.value
         }, {
           primary: select.value
-        })
-        if (!document.getElementById('send-activity').dataset.progress) {
+        }).then(function(message){
+          if (!document.getElementById('send-activity').dataset.progress) {
 
-          if (document.getElementById('send-activity').classList.contains('hidden')) {
-            document.getElementById('send-activity').classList.remove('hidden')
+            if (document.getElementById('send-activity').classList.contains('hidden')) {
+              document.getElementById('send-activity').classList.remove('hidden')
+            }
           }
-        }
+        }).catch(function(error){
+          requestCreator('instant',JSON.stringify({message:error}))
+        })
       });
     }
 
@@ -2019,24 +2093,45 @@ function createAssigneeList(db, record, showLabel) {
 
     document.getElementById('assignees--list').appendChild(labelAdd)
   }
-  readNameAndImageFromNumber(record.assignees, db)
+  readNameAndImageFromNumber(record.assignees, db).then(function(){
+    
+  }).catch(function(error){
+    requestCreator('instant',JSON.stringify({message:error}));
+
+  })
 }
 
 function readNameAndImageFromNumber(assignees, db) {
-  const userObjStore = db.transaction('users').objectStore('users')
-  assignees.forEach(function (assignee) {
-    userObjStore.get(assignee).onsuccess = function (event) {
-      let userRecord = event.target.result
-      if (!userRecord) {
-        userRecord = {
-          mobile: assignee,
-          displayName: '',
-          photoURL: '',
+  return new Promise(function(resolve,reject){
+    const tx = db.transaction(['users']);
+    const store = tx.objectStore('users');
+    let userRecords = [];
+    assignees.forEach(function (assignee) {
+      store.get(assignee).onsuccess = function (event) {
+        let record = event.target.result
+        if (!record) {
+          userRecord.push({
+            mobile: assignee,
+            displayName: '',
+            photoURL: '',
+          })
+        }
+        else {
+          userRecords.push(record);
         }
       }
-      if(document.getElementById('assignees--list')){
-        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord))
+    });
+    tx.oncomplete = function(){
+      const assigneeList = document.getElementById('assignees--list')
+      if (assigneeList) {
+        userRecords.forEach(function(userRecord){
+          assigneeList.appendChild(createSimpleAssigneeLi(userRecord))
+        });
+        resolve('user list updated')
       }
+    }
+    tx.onerror = function(){
+      reject(JSON.stringify(tx.error))
     }
   })
 }
@@ -2244,9 +2339,11 @@ function readCameraFile() {
   if (native.getName() === 'Android') {
     try {
       FetchCameraForAttachment.startCamera()
-    }
-    catch(e){
-      requestCreator('instant',JSON.stringify({message:e.message,device:native.getInfo()}));
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({
+        message: e.message,
+        device: native.getInfo()
+      }));
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
@@ -2289,7 +2386,7 @@ function createActivityCancellation(record) {
   if (record.status !== 'CANCELLED') {
 
     StautsCont.appendChild(createSimpleLi('delete', {
-      text: 'Delete Activity'
+      text: 'CANCEL'
     }))
 
 
@@ -2565,7 +2662,7 @@ function resetSelectorUI(data) {
 
   const dialogEl = document.getElementById('dialog--component')
   const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
-  
+
   dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = ''
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
@@ -2628,16 +2725,10 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes)
-    removeDialog()
+    }, selectedAreaAttributes).then(removeDialog).catch(function(error){
+      requestCreator('instant',JSON.stringify({message:error}))
+    })
 
-    // document.getElementById('location-text-field').dataset.location = place.name
-    // document.getElementById('location-text-field').dataset.address = address
-    // document.getElementById('location-text-field').dataset.inputlat = place.geometry.location.lat()
-    // document.getElementById('location-text-field').dataset.inputlon = place.geometry.location.lng()
-
-    console.log(address)
-    console.log(place)
   })
 }
 

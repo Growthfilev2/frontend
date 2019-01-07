@@ -69,7 +69,7 @@ function successDialog() {
   }, 1200);
 }
 
-function enableGps(messageString) {
+function appDialog(messageString) {
   if (!document.getElementById('enable-gps')) {
 
     var aside = document.createElement('aside');
@@ -201,12 +201,13 @@ function geolocationApi(method, url, data) {
             'success': true
           });
         } else {
-          var _result = JSON.parse(xhr.responseText);
-
-          reject({
-            message: _result.error.message,
-            cellular: data,
-            success: false
+          var _result = JSON.parse(xhr.response);
+          setGeolocationApiUsage(false).then(function () {
+            reject({
+              message: _result.error.message,
+              cellular: data,
+              success: false
+            });
           });
         }
       }
@@ -218,52 +219,67 @@ function geolocationApi(method, url, data) {
 function manageLocation() {
   if (!localStorage.getItem('dbexist')) {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
-  }
-  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
-  var CelllarJson = false;
+  };
+
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
-      try {
-        CelllarJson = Towers.getCellularData();
-        geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
-
-        if (rootRecord.location.provider === 'MOCK') {
-          geoFetchPromise.then(function (geoData) {
-            updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
-          }).catch(function (error) {
-            requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-          });
-          return;
-        }
-
-        geoFetchPromise.then(function (geoData) {
-          initLocationInterval(geoData);
-        }).catch(function (error) {
-          initLocationInterval(error);
-        });
-      } catch (e) {
-        requestCreator('instant', JSON.stringify({
-          message: {
-            error: e.message,
-            file: 'services.js',
-            lineNo: 231,
-            device: JSON.parse(native.getInfo()),
-            help: 'Problem in calling method for fetching cellular towers.'
-          }
-        }));
-
-        if (rootRecord.location.provider === 'MOCK') return;
-
-        locationInterval().then(function (navigatorData) {
-          updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-        });
+      if (shouldFetchCellTower(rootRecord.location)) {
+        useGeolocationApi(rootRecord.location.provider);
+        return;
       }
+
+      useHTML5Location();
     });
     return;
   }
+  useHTML5Location();
+}
 
+function shouldFetchCellTower(locationObject) {
+  if (locationObject.hasOwnProperty('useGeolocationApi')) {
+    return locationObject.useGeolocationApi;
+  }
+  return true;
+}
+
+function useGeolocationApi(provider) {
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
+  var CelllarJson = false;
+
+  try {
+    CelllarJson = Towers.getCellularData();
+    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+
+    if (provider === 'MOCK') {
+      geoFetchPromise.then(function (geoData) {
+        updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+      }).catch(function (error) {
+        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+      });
+      return;
+    }
+
+    geoFetchPromise.then(function (geoData) {
+      initLocationInterval(geoData);
+    }).catch(function (error) {
+      initLocationInterval(error);
+    });
+  } catch (e) {
+    requestCreator('instant', JSON.stringify({
+      message: {
+        error: e.message,
+        file: 'services.js',
+        lineNo: 231,
+        device: JSON.parse(native.getInfo()),
+        help: 'Problem in calling method for fetching cellular towers.'
+      }
+    }));
+
+    if (provider === 'MOCK') return;
+    useHTML5Location();
+  }
+}
+function useHTML5Location() {
   locationInterval().then(function (navigatorData) {
     updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
   }).catch(function (error) {
@@ -312,8 +328,36 @@ function locationUpdationSuccess(location) {
           nearby: true
         });
       }
-    }).catch(console.log);
+    });
   }
+}
+
+function showSuggestCheckInDialog() {
+  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
+  if (!dialog) return;
+  if (isDialogOpened('#suggest-checkIn-dialog')) return;
+  dialog.show();
+}
+
+function showSubscriptionSelectorForCheckIn(evt, dialog) {
+  getRootRecord().then(function (rootRecord) {
+    suggestCheckIn(false).then(function () {
+      if (rootRecord.offices.length === 1) {
+        createTempRecord(keysArray[0], 'check-in');
+      } else {
+        callSubscriptionSelectorUI(evt, true);
+      }
+    });
+  }).catch(function (error) {
+    dialog.close();
+  });
+}
+
+function isDialogOpened(id) {
+  var currentDialog = document.querySelector(id);
+  if (!currentDialog) return false;
+  var isOpen = currentDialog.classList.contains('mdc-dialog--open');
+  return isOpen;
 }
 
 function locationUpdationError(error) {
@@ -345,7 +389,6 @@ function navigatorPromise() {
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-
         ++totalcount;
         if (totalcount !== 1) {
 
@@ -387,16 +430,12 @@ function navigatorPromise() {
 }
 
 function locationInterval() {
-
   return new Promise(function (resolve, reject) {
     var promiseArray = [navigatorPromise()];
     if (native.getName() === 'Android') {
       promiseArray.push(mock());
     }
     Promise.race(promiseArray).then(function (location) {
-      if (location.provider === 'MOCK') {
-        alert("mock");
-      }
       resolve(location);
     }).catch(function (error) {
       reject(error);
@@ -448,6 +487,30 @@ function updateLocationInRoot(finalLocation) {
   });
 }
 
+function setGeolocationApiUsage(useApi) {
+  return new Promise(function (resolve, reject) {
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var rootStore = tx.objectStore('root');
+      rootStore.get(dbName).onsuccess = function (event) {
+        var record = event.target.result;
+        record.location.useGeolocationApi = useApi;
+        rootStore.put(record);
+      };
+
+      tx.oncomplete = function () {
+        resolve('useGeolocationApi is set to ' + useApi);
+      };
+      tx.onerror = function () {
+        reject(JSON.stringify(tx.error));
+      };
+    };
+  });
+}
+
 function toRad(value) {
   return value * Math.PI / 180;
 }
@@ -478,7 +541,9 @@ function sendCurrentViewNameToAndroid(viewName) {
     try {
       Fetchview.startConversation(viewName);
     } catch (e) {
-      requestCreator('instant', JSON.stringify({ message: e.message }));
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }));
     }
   }
 }
@@ -631,7 +696,7 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    enableGps('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
+    appDialog('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
   }
 }
 
@@ -716,6 +781,7 @@ function updateIDB(data) {
     });
     return;
   }
+
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
@@ -728,6 +794,7 @@ function updateIDB(data) {
       urgent: false,
       nearBy: false
     });
+
     return;
   }
 
