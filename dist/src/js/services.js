@@ -161,7 +161,7 @@ function snacks(message, type) {
     message: message,
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
-    actionHandler: function actionHandler() {}
+    actionHandler: function actionHandler() { }
   };
 
   var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));
@@ -344,7 +344,7 @@ function showSubscriptionSelectorForCheckIn(evt, dialog) {
   getRootRecord().then(function (rootRecord) {
     suggestCheckIn(false).then(function () {
       if (rootRecord.offices.length === 1) {
-        createTempRecord(keysArray[0], 'check-in');
+        createTempRecord(rootRecord.offices[0], 'check-in');
       } else {
         callSubscriptionSelectorUI(evt, true);
       }
