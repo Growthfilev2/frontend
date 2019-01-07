@@ -189,56 +189,7 @@ function positionOfPivot(dates){
   return index;
 }
 
-function sortNearestStartTime(data) {
-  const sort = data.sort(function (a, b) {
-    return a.startTime - b.startTime
-  })
-  return sort[0]
-}
 
-function sortFarthestEndTime(data) {
-  const sort = data.sort(function (a, b) {
-    return b.endTime - a.endTime
-  })
-  return sort[0]
-}
-
-function getSecondLine(id) {
-  return new Promise(function (resolve, reject) {
-
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result;
-      const transaction = db.transaction(['activity'])
-      const store = transaction.objectStore('activity')
-      const secondLine = document.createElement('span')
-      secondLine.className = 'mdc-list-item__secondary-text'
-
-      store.get(id).onsuccess = function (event) {
-        const record = event.target.result;
-        if (!record) return
-        if (record.schedule.length === 1) {
-          const schedule = document.createElement('span');
-          schedule.textContent = `${record.schedule[0].name} : ${moment(record.schedule[0].endTime).calendar()}`
-          secondLine.appendChild(schedule)
-        }
-        if (record.venue.length === 1) {
-          const venue = document.createElement('div');
-          venue.textContent = `${record.venue[0].venueDescriptor} : ${record.venue[0].location}`
-          secondLine.appendChild(venue)
-        }
-      }
-      transaction.oncomplete = function () {
-        resolve(secondLine)
-      }
-
-    }
-
-
-    // current date is less than sll start time =>
-
-  })
-}
 
 function activityListUI(data, secondLine) {
 
@@ -376,9 +327,8 @@ function getRootRecord() {
   })
 }
 
-
 function createActivityIcon() {
-
+  if(document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
       createActivityIconDom()

@@ -176,13 +176,13 @@ function fetchServerTime(info) {
 
 function instant(error) {
   console.log(error)
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -862,37 +862,8 @@ function updateSubscription(db, subscription) {
 
   }).catch(console.log)
 }
-function getLastComment(id){
-  return new Promise(function(resolve,reject){
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function(){
-      const db = req.result;
-      const addendumTx = db.transaction(['addendum'], 'readonly');
-      const addendumStore = addendumTx.objectStore('addendum');
-      const index =  addendumStore.index('activityId')
-      let name ='';
-      let text = '';
-      let count = 0;
-     index.openCursor(id,'prev').onsuccess = function(event){
-        const cursor = event.target.result;
-        console.log(cursor)
-        if(!cursor) return;
-        count = count +1;
 
-        if(!cursor.value.isComment)  return;
-        name = cursor.value.user,
-        text = cursor.value.comment;
-        if(count > 1) {
-          cursor.continue();
-        }
-      };
-      addendumTx.oncomplete = function(){
-        resolve({name:name,text:text})
-      }
-    }
-  })
-}
-function createListStore(activity,commentData,counter) {
+function createListStore(activity,counter) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function(){
   const db = req.result;
@@ -1013,9 +984,7 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity)
       }
       if (activity.hidden === 0) {
-        getLastComment(activity.activityId).then(function(commentData){
-          createListStore(activity,commentData,counter)
-        })
+        createListStore(activity,commentData,counter)
       }
 
       updateMap(activity)
