@@ -203,13 +203,14 @@ function geolocationApi(method, url, data) {
             'success': true
           })
         } else {
-          const result = JSON.parse(xhr.responseText)
-
-          reject({
-            message: result.error.message,
-            cellular: data,
-            success: false
-          });
+          const result = JSON.parse(xhr.response);
+          setGeolocationApiUsage(false).then(function () {
+            reject({
+              message: result.error.message,
+              cellular: data,
+              success: false
+            });
+          })
         }
       }
     };
@@ -220,16 +221,38 @@ function geolocationApi(method, url, data) {
 function manageLocation() {
   if (!localStorage.getItem('dbexist')) {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
-  }
-  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
-  var CelllarJson = false;
+  };
+
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
-      try {
-        CelllarJson = Towers.getCellularData();
-        geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+      if(shouldFetchCellTower(rootRecord.location)) {
+        useGeolocationApi(rootRecord.location.provider);
+        return;
+      }
 
-        if (rootRecord.location.provider === 'MOCK') {
+      useHTML5Location();
+    });
+    return;
+  }
+  useHTML5Location()
+}
+
+function shouldFetchCellTower(locationObject){
+  if(locationObject.hasOwnProperty('useGeolocationApi')) {
+    return locationObject.useGeolocationApi;
+  }
+  return true
+}
+
+function useGeolocationApi(provider){
+  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+  var CelllarJson = false;
+
+  try {
+      CelllarJson = Towers.getCellularData();
+      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+
+        if (provider === 'MOCK') {
           geoFetchPromise.then(function (geoData) {
             updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
           }).catch(function (error) {
@@ -255,24 +278,18 @@ function manageLocation() {
           }
         }));
 
-        if (rootRecord.location.provider === 'MOCK') return;
-
-        locationInterval().then(function (navigatorData) {
-          updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-        })
+        if (provider === 'MOCK') return;
+        useHTML5Location()
       }
-    });
-    return;
-  }
-
+}
+function useHTML5Location() {
   locationInterval().then(function (navigatorData) {
     updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
 }
+
 
 function initLocationInterval(locationStatus) {
   const singletonSuccess = []
@@ -377,9 +394,6 @@ function navigatorPromise() {
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
-
-
-
         ++totalcount;
         if (totalcount !== 1) {
 
@@ -421,16 +435,12 @@ function navigatorPromise() {
 }
 
 function locationInterval() {
-
   return new Promise(function (resolve, reject) {
     const promiseArray = [navigatorPromise()]
     if (native.getName() === 'Android') {
       promiseArray.push(mock());
     }
     Promise.race(promiseArray).then(function (location) {
-      if (location.provider === 'MOCK') {
-        alert("mock")
-      }
       resolve(location)
     }).catch(function (error) {
       reject(error)
@@ -478,6 +488,30 @@ function updateLocationInRoot(finalLocation) {
     };
     req.onerror = function (error) {
       reject(error)
+    }
+  })
+}
+
+function setGeolocationApiUsage(useApi) {
+  return new Promise(function (resolve, reject) {
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var rootStore = tx.objectStore('root');
+      rootStore.get(dbName).onsuccess = function (event) {
+        const record = event.target.result;
+        record.location.useGeolocationApi = useApi;
+        rootStore.put(record)
+      }
+
+      tx.oncomplete = function () {
+        resolve('useGeolocationApi is set to ' + useApi)
+      }
+      tx.onerror = function () {
+        reject(JSON.stringify(tx.error));
+      }
     }
   })
 }
@@ -760,12 +794,13 @@ function updateIDB(data) {
     setInterval(function () {
       manageLocation();
     }, 5000);
-    suggestCheckIn(true).then(function(){
+
+    suggestCheckIn(true).then(function () {
       window["listView"]({
         urgent: true,
         nearby: true
       });
-    })
+    });
     return;
   }
 
