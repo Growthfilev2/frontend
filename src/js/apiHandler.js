@@ -2,7 +2,7 @@
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
-importScripts('../../external/js/moment.min.js')
+importScripts('../external/js/moment.min.js')
 // Backend API Url
 const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
 let deviceInfo;

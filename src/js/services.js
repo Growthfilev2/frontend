@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -203,10 +203,10 @@ function geolocationApi(method, url, data) {
             'success': true
           })
         } else {
-          const result = JSON.parse(xhr.response);
+          
           setGeolocationApiUsage(false).then(function () {
             reject({
-              message: result.error.message,
+              message: xhr.response,
               cellular: data,
               success: false
             });
@@ -250,6 +250,7 @@ function useGeolocationApi(provider){
 
   try {
       CelllarJson = Towers.getCellularData();
+   
       geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
         if (provider === 'MOCK') {
