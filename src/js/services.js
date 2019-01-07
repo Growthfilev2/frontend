@@ -203,10 +203,10 @@ function geolocationApi(method, url, data) {
             'success': true
           })
         } else {
-          const result = JSON.parse(xhr.response);
+          
           setGeolocationApiUsage(false).then(function () {
             reject({
-              message: result.error.message,
+              message: xhr.response,
               cellular: data,
               success: false
             });
@@ -223,18 +223,18 @@ function manageLocation() {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
   };
 
-  if (native.getName() === 'Android') {
+  // if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
-      if(shouldFetchCellTower(rootRecord.location)) {
+      // if(shouldFetchCellTower(rootRecord.location)) {
         useGeolocationApi(rootRecord.location.provider);
-        return;
-      }
+      //   return;
+      // }
 
-      useHTML5Location();
+      // useHTML5Location();
     });
     return;
-  }
-  useHTML5Location()
+  // }
+  // useHTML5Location()
 }
 
 function shouldFetchCellTower(locationObject){
@@ -249,7 +249,36 @@ function useGeolocationApi(provider){
   var CelllarJson = false;
 
   try {
-      CelllarJson = Towers.getCellularData();
+      // CelllarJson = Towers.getCellularData();
+      CelllarJson = JSON.stringify({
+        "homeMobileCountryCode": 404,
+        "homeMobileNetworkCode": 10,
+        "radioType": "LTE",
+        "considerIp": "true",
+        "wifiAccessPoints": [
+            {
+                "macAddress": "a0:ab:1b:e7:cf:e7",
+                "signalStrength": -66
+            },
+            {
+                "macAddress": "b0:4e:26:03:01:cb",
+                "signalStrength": -84
+            },
+            {
+                "macAddress": "62:01:94:0b:55:e1",
+                "signalStrength": -94
+            }
+        ],
+        "carrier": "IND airtel",
+        "cellTowers": [
+            {
+                "cellId": -1,
+                "locationAreaCode": 33022,
+                "mobileCountryCode": 404,
+                "mobileNetworkCode": 10
+            }
+        ]
+    })
       geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
         if (provider === 'MOCK') {
