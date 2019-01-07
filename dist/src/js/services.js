@@ -343,7 +343,7 @@ function showSubscriptionSelectorForCheckIn(evt, dialog) {
   getRootRecord().then(function (rootRecord) {
     suggestCheckIn(false).then(function () {
       if (rootRecord.offices.length === 1) {
-        createTempRecord(keysArray[0], 'check-in');
+        createTempRecord(rootRecord.offices[0], 'check-in');
       } else {
         callSubscriptionSelectorUI(evt, true);
       }
