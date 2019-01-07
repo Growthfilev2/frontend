@@ -984,7 +984,7 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity)
       }
       if (activity.hidden === 0) {
-        createListStore(activity,commentData,counter)
+        createListStore(activity,counter)
       }
 
       updateMap(activity)
