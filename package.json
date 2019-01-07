@@ -7,7 +7,8 @@
     "clean": "rm -rf dist/src/js/*.js && rm -rf dist/src/css/*.css",
     "build": "babel src/js/* -d dist --ignore 'src/js/apiHandler.js','src/js/notification.js'",
     "worker": "babel src/js/apiHandler.js -d dist && babel src/js/notification.js -d dist",
-    "build-css": "uglifycss src/css/app.css > dist/src/css/bundle.css"
+    "build-css": "uglifycss src/css/app.css > dist/src/css/bundle.css",
+    "compile":"npm run clean && npm run build && npm run worker && npm run build-css"
   },
   "repository": {
     "type": "git",

@@ -1,4 +1,4 @@
-importScripts('../../external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 self.onmessage = function (event) {
   var dbName = event.data.dbName;
   var type = event.data.type;
@@ -32,6 +32,7 @@ self.onmessage = function (event) {
 
       var end = moment(cursor.value.end, 'YYYY-MM-DD');
       var start = moment(cursor.value.start, 'YYYY-MM-DD');
+
       if (moment(yesterday).isSameOrBefore(end) && moment(tomorrow).isSameOrAfter(start)) {
         var data = {
           activityId: cursor.value.activityId,
@@ -55,20 +56,32 @@ self.onmessage = function (event) {
         output.push(ascendingDates[id]);
       });
 
-      updateTimestamp('urgent', { data: output.reverse(), 'tsUpdate': tsUpdate }).then(function (success) {
+      updateTimestamp('urgent', {
+        data: output.reverse(),
+        'tsUpdate': tsUpdate
+      }).then(function (success) {
         self.postMessage(success);
       });
     };
   }
+
   function sortByNearestEndDate(results) {
     var holder = {};
     var arr = [];
     results.forEach(function (rec) {
       if (!holder.hasOwnProperty(rec.activityId)) {
-        holder[rec.activityId] = { id: rec.activityId, name: rec.name, value: rec.value };
+        holder[rec.activityId] = {
+          id: rec.activityId,
+          name: rec.name,
+          value: rec.value
+        };
       } else {
         if (moment(holder[rec.activityId].value).valueOf() > moment(rec.value).valueOf()) {
-          holder[rec.activityId] = { id: rec.activityId, name: rec.name, value: rec.value };
+          holder[rec.activityId] = {
+            id: rec.activityId,
+            name: rec.name,
+            value: rec.value
+          };
         }
       }
     });
@@ -122,13 +135,6 @@ self.onmessage = function (event) {
               if (results.tsUpdate) {
                 record.timestamp = moment().valueOf();
               }
-              if (type === 'nearby') {
-                if (!record.urgent) {
-                  record.secondLine = data.name + ' : ' + data.value;
-                }
-              } else {
-                record.secondLine = data.name + ' : ' + data.value;
-              }
               record[type] = true;
               store.put(record);
             }
@@ -173,7 +179,10 @@ self.onmessage = function (event) {
         var filtered = isDistanceNearBy(distanceArr, 0.5);
         var sorted = sortDistance(filtered);
         resetNearBy().then(function () {
-          updateTimestamp('nearby', { data: sorted.reverse(), 'tsUpdate': tsUpdate }).then(function (success) {
+          updateTimestamp('nearby', {
+            data: sorted.reverse(),
+            'tsUpdate': tsUpdate
+          }).then(function (success) {
             self.postMessage(success);
           });
         }).catch(console.log);

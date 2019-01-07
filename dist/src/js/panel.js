@@ -1,8 +1,14 @@
-var notification = new Worker('src/js/notification.js');
+var notification = new Worker('js/notification.js');
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   console.log(filter);
+  getRootRecord().then(function (record) {
+    if (record.suggestCheckIn) {
+      showSuggestCheckInDialog();
+    }
+  });
+
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove();
   }
@@ -14,7 +20,7 @@ function listView(filter) {
   history.pushState(['listView'], null, null);
 
   listPanel();
-  creatListHeader('Recent');
+  creatListHeader('Activities');
   createActivityIcon();
 
   if (!filter) {
@@ -34,14 +40,43 @@ function fetchDataForActivityList() {
   req.onsuccess = function () {
     var db = req.result;
     var activityDom = '';
-    var transaction = db.transaction('list');
+    var transaction = db.transaction(['list', 'activity']);
+    var activity = transaction.objectStore('activity');
     var store = transaction.objectStore('list');
     var index = store.index('timestamp');
+    var today = moment().format('YYYY-MM-DD');
 
     index.openCursor(null, 'prev').onsuccess = function (event) {
       var cursor = event.target.result;
       if (!cursor) return;
-      activityDom += activityListUI(cursor.value).outerHTML;
+
+      var secondLine = document.createElement('span');
+      secondLine.className = 'mdc-list-item__secondary-text';
+
+      var venueContent = '';
+
+      activity.get(cursor.value.activityId).onsuccess = function (event) {
+        var record = event.target.result;
+        if (!record) return;
+        var schedules = record.schedule;
+        var venues = record.venue;
+        var status = record.status;
+        if (record.venue.length) {
+          venueContent = generateSecondLine(venues[0].venueDescriptor, venues[0].location);
+        }
+
+        if (status === 'PENDING') {
+          secondLine.appendChild(generateLastestSchedule(schedules));
+        } else {
+          secondLine.appendChild(generateSecondLine(generateTextIfActivityIsNotPending(status)));
+        }
+
+        if (venueContent instanceof HTMLElement) {
+          secondLine.appendChild(venueContent);
+        }
+
+        activityDom += activityListUI(cursor.value, secondLine).outerHTML;
+      };
       cursor.continue();
     };
 
@@ -54,7 +89,98 @@ function fetchDataForActivityList() {
   };
 }
 
-function activityListUI(data) {
+function generateTextIfActivityIsNotPending(status) {
+  var textStatus = {
+    'CONFIRMED': 'Done',
+    'CANCELLED': 'Cancelled'
+  };
+  return textStatus[status];
+}
+
+function generateSecondLine(name, value) {
+  var el = document.createElement('div');
+  if (!value) {
+    el.textContent = name;
+  } else {
+    el.textContent = name + ' : ' + value;
+  }
+  return el;
+}
+
+function generateLastestSchedule(schedules) {
+  var length = schedules.length;
+  var text = void 0;
+  switch (length) {
+    case 0:
+      text = generateSecondLine('', '');
+      break;
+    case 1:
+      var timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0]);
+      text = generateSecondLine(timeTypeSingle.name, timeTypeSingle.value);
+      break;
+    default:
+      var formattedDates = formatDates(schedules);
+      var ascendingOrder = sortDatesInAscendingOrderWithPivot({ time: moment().valueOf(), pivot: true }, formattedDates);
+      var timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
+      text = generateSecondLine(timeTypeMultiple.name, timeTypeMultiple.time);
+      break;
+  }
+  return text;
+}
+
+function getTimeTypeForSingleSchedule(schedule) {
+  var today = moment().format('DD-MM-YYYY');
+  var startTime = moment(schedule.startTime).format('DD-MM-YYYY');
+  var newScheduleText = {
+    name: schedule.name,
+    value: ''
+  };
+  if (moment(startTime).isAfter(moment(today))) {
+    newScheduleText.value = moment(startTime).calendar();
+  } else {
+    newScheduleText.value = moment(schedule.endTime).calendar();
+  }
+  return newScheduleText;
+}
+
+function generateLatestVenue(venues) {}
+
+function formatDates(schedules) {
+  var formatted = [];
+  schedules.forEach(function (schedule) {
+    formatted.push({ time: schedule.startTime, name: schedule.name });
+    formatted.push({ time: schedule.endTime, name: schedule.name });
+  });
+  return formatted;
+}
+
+function sortDatesInAscendingOrderWithPivot(pivot, dates) {
+  var dataset = dates.slice();
+  dataset.push(pivot);
+  return dataset.sort(function (a, b) {
+    return a - b;
+  });
+}
+
+function getTimeTypeForMultipleSchedule(dates) {
+  var pivotIndex = positionOfPivot(dates);
+  var duplicate = dates.slice();
+  if (pivotIndex === dates.length) {
+    duplicate[pivotIndex - 1].time = moment(duplicate[pivotIndex - 1].time).calendar();
+    return duplicate[pivotIndex - 1];
+  }
+  duplicate[pivotIndex + 1].time = moment(duplicate[pivotIndex + 1].time).calendar();
+  return duplicate[pivotIndex + 1];
+}
+
+function positionOfPivot(dates) {
+  var index = dates.map(function (e) {
+    return dates.pivot;
+  }).indexOf(true);
+  return index;
+}
+
+function activityListUI(data, secondLine) {
 
   var li = document.createElement('li');
   li.dataset.id = data.activityId;
@@ -74,13 +200,18 @@ function activityListUI(data) {
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold';
 
   activityNameText.textContent = data.activityName;
-  var secondLine = document.createElement('span');
-  secondLine.className = 'mdc-list-item__secondary-text';
-  if (data.urgent || data.nearby) {
-    secondLine.textContent = data.secondLine;
-  }
+
+  // if (data.urgent || data.nearby) {
+  //   secondLine.textContent = data.secondLine;
+  // }
+  // else {
+  //   if(data.lastComment.user && data.lastComment.text) {
+  //     secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
+  //   }
+  // }
 
   leftTextContainer.appendChild(activityNameText);
+
   leftTextContainer.appendChild(secondLine);
   // leftTextContainer.appendChild(lastComment)
 
@@ -183,10 +314,10 @@ function getRootRecord() {
 }
 
 function createActivityIcon() {
-
+  if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
-      createActivityIconDom(officeTemplateObject);
+      createActivityIconDom();
       return;
     }
   }).catch(console.log);
@@ -221,52 +352,33 @@ function getCountOfTemplates() {
   });
 }
 
-function createActivityIconDom(officeTemplateCombo) {
+function createActivityIconDom() {
 
-  getRootRecord().then(function (record) {
-    var parent = document.getElementById('create-activity--parent');
+  var parent = document.getElementById('create-activity--parent');
 
-    var fab = document.createElement('button');
-    fab.className = 'mdc-fab create-activity';
-    fab.id = 'create-activity';
-    fab.setAttribute('aria-label', 'Add');
-    var span = document.createElement('span');
-    span.className = 'mdc-fab_icon material-icons';
-    span.id = 'activity-create--icon';
-    if (record.suggestCheckIn) {
-      span.textContent = 'add_alert';
-    } else {
-      span.textContent = 'add';
-    }
+  var fab = document.createElement('button');
+  fab.className = 'mdc-fab create-activity';
+  fab.id = 'create-activity';
+  fab.setAttribute('aria-label', 'Add');
+  var span = document.createElement('span');
+  span.className = 'mdc-fab_icon material-icons';
+  span.id = 'activity-create--icon';
 
-    fab.appendChild(span);
-    parent.innerHTML = fab.outerHTML;
+  span.textContent = 'add';
 
-    document.querySelector('.create-activity').addEventListener('click', function (evt) {
-      var keysArray = Object.keys(officeTemplateCombo);
-      console.log(record.suggestCheckIn);
-      if (record.suggestCheckIn) {
-        if (keysArray.length === 1) {
-          createTempRecord(keysArray[0], 'check-in');
-        } else {
-          callSubscriptionSelectorUI(evt, record.suggestCheckIn);
-        }
-        suggestCheckIn(false).then(function () {
-          createActivityIcon();
-        }).catch(console.log);
-        return;
-      }
+  fab.appendChild(span);
+  parent.innerHTML = fab.outerHTML;
 
-      callSubscriptionSelectorUI(evt);
-    });
-  }).catch(console.log);
+  document.querySelector('.create-activity').addEventListener('click', function (evt) {
+    callSubscriptionSelectorUI(evt);
+  });
 }
 
-function callSubscriptionSelectorUI(evt, suggestCheckIn) {
+function callSubscriptionSelectorUI(evt, checkIn) {
   selectorUI(evt, {
     record: '',
     store: 'subscriptions',
-    suggestCheckIn: suggestCheckIn
+    suggestCheckIn: checkIn
   });
 }
 
@@ -291,22 +403,19 @@ function listPanel() {
 
 function creatListHeader(headerName) {
   var parentIconDiv = document.createElement('div');
-  parentIconDiv.className = 'drawer--icons';
+  parentIconDiv.className = 'profile--icon-header';
 
   var menuIcon = document.createElement('span');
   menuIcon.id = 'menu--panel';
-  var icon = document.createElement('i');
-  icon.className = 'material-icons';
 
-  icon.textContent = 'menu';
-
-  var menuSpan = document.createElement('span');
-  menuSpan.className = 'current--selcted-filter';
-  headerName === 'Cancelled' ? menuSpan.textContent = 'Trash' : menuSpan.textContent = headerName;
-
+  var icon = document.createElement('img');
+  icon.src = firebase.auth().currentUser.photoURL;
+  icon.className = 'list-photo-header';
   menuIcon.appendChild(icon);
-  menuIcon.appendChild(menuSpan);
 
+  var headerText = document.createElement('p');
+  headerText.textContent = headerName;
+  menuIcon.appendChild(headerText);
   parentIconDiv.appendChild(menuIcon);
 
   var searchIcon = document.createElement('span');
@@ -320,9 +429,8 @@ function creatListHeader(headerName) {
     left: parentIconDiv.outerHTML,
     right: ''
   });
-  document.getElementById('menu--panel').addEventListener('click', function () {
-    var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-    drawer.open = true;
+  document.querySelector('.list-photo-header').addEventListener('click', function () {
+    profileView(true);
   });
 }
 

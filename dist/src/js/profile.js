@@ -7,9 +7,6 @@ function profileView(pushState) {
     history.pushState(['profileView'], null, null);
   }
 
-  var drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
-  drawer.open = false;
-
   document.body.style.backgroundColor = '#eeeeee';
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
@@ -225,6 +222,7 @@ function newSignIn(value) {
 
   // DOM element to insert firebaseui login UI
   ui.start('#refresh-login', firebaseUiConfig(value));
+
   setTimeout(function () {
     document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber;
     document.querySelector('.firebaseui-id-phone-number').disabled = true;
@@ -302,7 +300,7 @@ function removeLoader(url) {
 
 function showProfilePicture(url) {
   document.getElementById('user-profile--image').src = url || './img/empty-user.jpg';
-  document.querySelector('.drawer-header-icon').src = url || './img/empty-user.jpg';
+  // document.querySelector('.drawer-header-icon').src = url  || './img/empty-user.jpg'
 }
 
 function authUpdatedError(error) {

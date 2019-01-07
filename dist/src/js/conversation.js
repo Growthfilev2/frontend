@@ -179,7 +179,7 @@ function statusChange(db, id) {
 
   var label = document.createElement('label');
   label.setAttribute('for', 'toggle-status');
-  label.textContent = 'Confirm Completion';
+  label.textContent = 'Done';
 
   var activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function (event) {
@@ -464,7 +464,10 @@ function createHeaderContent(db, id) {
 
       leftDiv.appendChild(backDiv);
       leftDiv.appendChild(primarySpan);
-      modifyHeader({ id: 'app-main-header', left: leftDiv.outerHTML });
+      modifyHeader({
+        id: 'app-main-header',
+        left: leftDiv.outerHTML
+      });
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav();
@@ -577,33 +580,48 @@ function selectorUI(evt, data) {
   document.body.appendChild(aside);
 
   if (data.store === 'subscriptions' || data.store === 'children') {
-    modifyHeader({ id: 'dialog--surface-header', left: backSpan.outerHTML });
+    modifyHeader({
+      id: 'dialog--surface-header',
+      left: backSpan.outerHTML
+    });
   } else {
-    modifyHeader({ id: 'dialog--surface-header', left: backSpan.outerHTML, right: searchIcon.outerHTML });
+    modifyHeader({
+      id: 'dialog--surface-header',
+      left: backSpan.outerHTML,
+      right: searchIcon.outerHTML
+    });
   }
 
   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
       resetSelectedContacts().then(function (people) {
-        removeDialog(e, data);
+        handleRemoveDialogEvt(e, data);
       });
       return;
     }
-    removeDialog(e, data);
+    removeDialog();
   });
 
   initializeSelectorWithData(evt, data);
 }
 
-function removeDialog(evt, data) {
-  if (document.getElementById('dialog--component')) {
-    if (evt && evt.target.dataset.type === 'back-list') {
-      resetSelectorUI(data);
-    } else {
-      document.getElementById('dialog--component').remove();
-      document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock');
-    }
+function removeDialog() {
+  var dialog = document.getElementById('dialog--component');
+  if (!dialog) return;
+  document.getElementById('dialog--component').remove();
+  document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock');
+}
+
+function handleRemoveDialogEvt(evt, data) {
+
+  if (!evt) {
+    return;
   }
+  if (evt.target.dataset.type !== 'back-list') {
+    return;
+  }
+  resetSelectorUI(data);
+  removeDialog();
 }
 
 function initializeSelectorWithData(evt, data) {
@@ -705,8 +723,9 @@ function fillUsersInSelector(data, dialog) {
           key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
+        }).then(removeDialog).catch(function (error) {
+          requestCreator('instant', JSON.stringify({ message: error }));
         });
-        removeDialog();
         return;
       }
       if (data.record.hasOwnProperty('create')) {
@@ -715,8 +734,9 @@ function fillUsersInSelector(data, dialog) {
             hash: 'addOnlyAssignees'
           }, {
             primary: selectedPeople
+          }).then(removeDialog).catch(function (error) {
+            requestCreator('instant', JSON.stringify({ message: error }));
           });
-          removeDialog();
         });
         return;
       }
@@ -797,8 +817,9 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
+          }).then(removeDialog).catch(function (error) {
+            requestCreator('instant', JSON.stringify({ message: error }));
           });
-          removeDialog();
           return;
         }
 
@@ -807,8 +828,9 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees'
           }, {
             primary: [formattedNumber]
+          }).then(removeDialog).catch(function (error) {
+            requestCreator('instant', JSON.stringify({ message: error }));
           });
-          removeDialog();
           return;
         }
         if (isLocationVerified()) {
@@ -922,8 +944,10 @@ function fillMapInSelector(db, selectorStore, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       }
+    }).then(removeDialog).catch(function (error) {
+      console.log(error);
+      requestCreator('instant', JSON.stringify({ message: error }));
     });
-    removeDialog();
   };
 }
 
@@ -934,7 +958,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     var cursor = event.target.result;
     if (!cursor) return;
 
-    if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && data.attachment.status != 'CANCELLED') {
+    if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && cursor.value.status != 'CANCELLED') {
       if (cursor.value.attachment.Name) {
         ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value));
       }
@@ -954,8 +978,9 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
       key: data.attachment.key
     }, {
       primary: selectedField.name
+    }).then(removeDialog).catch(function (error) {
+      requestCreator('instant', JSON.stringify({ message: error }));
     });
-    removeDialog();
   };
 }
 
@@ -988,6 +1013,7 @@ function fillSubscriptionInSelector(db, dialog, data) {
     grp.appendChild(ul);
     cursor.continue();
   };
+
   tx.oncomplete = function () {
     if (data.suggestCheckIn) {
       var parent = document.getElementById('data-list--container');
@@ -1163,62 +1189,99 @@ function hasAnyValueInChildren(office, template, status) {
 }
 
 function updateDomFromIDB(activityRecord, attr, data) {
+  return new Promise(function (resolve, reject) {
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var thisActivity = activityRecord;
 
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function (event) {
-
-    var updatedActivity = activityRecord;
-
-    var db = req.result;
-    var activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
-
-    if (attr.hash === 'venue') {
-
-      updatedActivity = updateVenue(updatedActivity, attr, data);
-
-      document.getElementById(convertKeyToId(attr.key)).querySelector('[data-primary]').textContent = data.primary;
-      document.getElementById(convertKeyToId(attr.key)).querySelector('[data-secondary]').textContent = data.secondary.address;
-      if (!document.getElementById('send-activity').dataset.progress) {
-        document.getElementById('send-activity').classList.remove('hidden');
-      }
-
-      if (!activityRecord.hasOwnProperty('create')) {
-        activityStore.put(updatedActivity);
-      }
-      return;
-    }
-    //for create
-    if (attr.hash === 'addOnlyAssignees') {
-
-      if (data.primary.length > 0) {
-        data.primary.forEach(function (number) {
-          if (activityRecord.assignees.indexOf(number) > -1) return;
-          activityRecord.assignees.push(number);
+      if (attr.hash === 'venue') {
+        thisActivity = updateVenue(thisActivity, attr, data);
+        changeTextContentForNewSelectedVenue(attr, data);
+        updateLocalRecord(thisActivity, db).then(function (message) {
+          resolve(message);
+        }).catch(function (error) {
+          console.log(error);
+          reject(error);
         });
+        return;
       }
-      console.log(activityRecord);
 
-      readNameAndImageFromNumber(data.primary, db);
-      return;
-    }
+      //for create
+      if (attr.hash === 'addOnlyAssignees') {
 
-    updatedActivity.attachment[attr.key].value = data.primary;
+        if (data.primary.length > 0) {
+          data.primary.forEach(function (number) {
+            if (thisActivity.assignees.indexOf(number) > -1) return;
+            thisActivity.assignees.push(number);
+          });
+        }
+        var newAssigness = thisActivity.assignees;
+        readNameAndImageFromNumber(newAssigness, db).then(function (message) {
+          resolve(message);
+        }).catch(function (error) {
+          reject(error);
+        });
+        return;
+      }
 
-    if (!activityRecord.hasOwnProperty('create')) {
-      activityStore.put(updatedActivity);
-    }
-    if (attr.hash === 'weekday') return;
-    if (!attr.hasOwnProperty('key')) return;
+      if (attr.hash === 'weekday') return;
+      if (!attr.hasOwnProperty('key')) return;
 
-    document.getElementById(convertKeyToId(attr.key)).querySelector('[data-primary]').textContent = data.primary;
-    if (data.hasOwnProperty('secondary')) {
-      document.getElementById(convertKeyToId(attr.key)).querySelector('[data-secondary]').textContent = data.secondary.address;
+      thisActivity.attachment[attr.key].value = data.primary;
+
+      updateLocalRecord(thisActivity, db).then(function (message) {
+        changeTextContentForNewSelectedVenue(attr, data);
+        resolve(message);
+      }).catch(function (error) {
+        reject(error);
+      });
+    };
+  });
+}
+
+function updateLocalRecord(thisActivity, db) {
+  return new Promise(function (resolve, reject) {
+
+    var tx = db.transaction(['activity'], 'readwrite');
+    var store = tx.objectStore('activity');
+    var updatedActivity = thisActivity;
+
+    if (!updatedActivity.hasOwnProperty('create')) {
+      store.put(updatedActivity);
     }
-    if (!document.getElementById('send-activity').dataset.progress) {
-      document.getElementById('send-activity').classList.remove('hidden');
+    tx.oncomplete = function () {
+      resolve("activity object store updated with value");
+    };
+    tx.onerror = function () {
+      reject(JSON.stringify(tx.error));
+    };
+  });
+}
+
+function changeTextContentForNewSelectedVenue(attr, data) {
+  var el = document.getElementById(convertKeyToId(attr.key));
+  if (!el) return;
+  var primaryText = el.querySelector('[data-primary]');
+  var secondaryText = el.querySelector('[data-secondary]');
+  var sendActivity = document.getElementById('send-activity');
+
+  if (data.primary) {
+    if (primaryText) {
+      primaryText.textContent = data.primary;
     }
-  };
+  }
+  if (data.hasOwnProperty('secondary')) {
+    if (secondaryText) {
+      secondaryText.textContent = data.secondary.address;
+    }
+  }
+  if (sendActivity) {
+    if (!sendActivity.dataset.progress) {
+      sendActivity.classList.remove('hidden');
+    }
+  }
 }
 
 function updateVenue(updatedActivity, attr, data) {
@@ -1246,8 +1309,8 @@ function convertIdToKey(id) {
   return str.replace('  ', '-');
 }
 
-function updateCreateContainer(record) {
-
+function updateCreateContainer(recordCopy, db) {
+  var record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee';
 
   var leftHeaderContent = document.createElement('div');
@@ -1260,16 +1323,24 @@ function updateCreateContainer(record) {
   var activityName = document.createElement('span');
   activityName.textContent = record.activityName;
 
-  activityName.style.fontSize = '19px';
+  activityName.style.fontSize = '21px';
   activityName.style.paddingLeft = '10px';
-  activityName.style.marginTop = '2px';
+  activityName.style.marginTop = '6px';
 
   leftHeaderContent.appendChild(backSpan);
   leftHeaderContent.appendChild(activityName);
-  modifyHeader({ id: 'app-main-header', left: leftHeaderContent.outerHTML });
+  modifyHeader({
+    id: 'app-main-header',
+    left: leftHeaderContent.outerHTML
+  });
 
   document.getElementById('backToConv').addEventListener('click', function () {
-    backNav();
+    console.log(record);
+    updateLocalRecord(record, db).then(function () {
+      backNav();
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify({ message: error }));
+    });
   });
 
   var container = document.createElement('div');
@@ -1339,7 +1410,8 @@ function updateCreateActivity(record, pushState) {
 
     // create base container for activity update/create
     var appView = document.getElementById('app-current-panel');
-    appView.innerHTML = updateCreateContainer(record).outerHTML;
+    var oldRecord = JSON.stringify(record);
+    appView.innerHTML = updateCreateContainer(oldRecord, db).outerHTML;
 
     var officeSection = document.getElementById('office--list');
     officeSection.appendChild(createSimpleLi('Office', {
@@ -1382,13 +1454,16 @@ function updateCreateActivity(record, pushState) {
           key: select['root_'].dataset.value
         }, {
           primary: select.value
-        });
-        if (!document.getElementById('send-activity').dataset.progress) {
+        }).then(function (message) {
+          if (!document.getElementById('send-activity').dataset.progress) {
 
-          if (document.getElementById('send-activity').classList.contains('hidden')) {
-            document.getElementById('send-activity').classList.remove('hidden');
+            if (document.getElementById('send-activity').classList.contains('hidden')) {
+              document.getElementById('send-activity').classList.remove('hidden');
+            }
           }
-        }
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify({ message: error }));
+        });
       });
     }
 
@@ -1929,24 +2004,41 @@ function createAssigneeList(db, record, showLabel) {
 
     document.getElementById('assignees--list').appendChild(labelAdd);
   }
-  readNameAndImageFromNumber(record.assignees, db);
+  readNameAndImageFromNumber(record.assignees, db).then(function () {}).catch(function (error) {
+    requestCreator('instant', JSON.stringify({ message: error }));
+  });
 }
 
 function readNameAndImageFromNumber(assignees, db) {
-  var userObjStore = db.transaction('users').objectStore('users');
-  assignees.forEach(function (assignee) {
-    userObjStore.get(assignee).onsuccess = function (event) {
-      var userRecord = event.target.result;
-      if (!userRecord) {
-        userRecord = {
-          mobile: assignee,
-          displayName: '',
-          photoURL: ''
-        };
+  return new Promise(function (resolve, reject) {
+    var tx = db.transaction(['users']);
+    var store = tx.objectStore('users');
+    var userRecords = [];
+    assignees.forEach(function (assignee) {
+      store.get(assignee).onsuccess = function (event) {
+        var record = event.target.result;
+        if (!record) {
+          userRecord.push({
+            mobile: assignee,
+            displayName: '',
+            photoURL: ''
+          });
+        } else {
+          userRecords.push(record);
+        }
+      };
+    });
+    tx.oncomplete = function () {
+      var assigneeList = document.getElementById('assignees--list');
+      if (assigneeList) {
+        userRecords.forEach(function (userRecord) {
+          assigneeList.appendChild(createSimpleAssigneeLi(userRecord));
+        });
+        resolve('user list updated');
       }
-      if (document.getElementById('assignees--list')) {
-        document.getElementById('assignees--list').appendChild(createSimpleAssigneeLi(userRecord));
-      }
+    };
+    tx.onerror = function () {
+      reject(JSON.stringify(tx.error));
     };
   });
 }
@@ -2140,7 +2232,10 @@ function readCameraFile() {
     try {
       FetchCameraForAttachment.startCamera();
     } catch (e) {
-      requestCreator('instant', JSON.stringify({ message: e.message, device: native.getInfo() }));
+      requestCreator('instant', JSON.stringify({
+        message: e.message,
+        device: native.getInfo()
+      }));
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64");
@@ -2183,7 +2278,7 @@ function createActivityCancellation(record) {
   if (record.status !== 'CANCELLED') {
 
     StautsCont.appendChild(createSimpleLi('delete', {
-      text: 'Delete Activity'
+      text: 'CANCEL'
     }));
 
     document.querySelector('.update-create--activity').appendChild(StautsCont);
@@ -2503,16 +2598,9 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes);
-    removeDialog();
-
-    // document.getElementById('location-text-field').dataset.location = place.name
-    // document.getElementById('location-text-field').dataset.address = address
-    // document.getElementById('location-text-field').dataset.inputlat = place.geometry.location.lat()
-    // document.getElementById('location-text-field').dataset.inputlon = place.geometry.location.lng()
-
-    console.log(address);
-    console.log(place);
+    }, selectedAreaAttributes).then(removeDialog).catch(function (error) {
+      requestCreator('instant', JSON.stringify({ message: error }));
+    });
   });
 }
 

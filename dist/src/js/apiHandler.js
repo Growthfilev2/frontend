@@ -1,7 +1,7 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 // import firebase app script because there is no native support of firebase inside web workers
-importScripts('../../external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
@@ -789,50 +789,42 @@ function updateSubscription(db, subscription) {
   }).catch(console.log);
 }
 
-function createListStore(db, activity) {
+function createListStore(activity, counter) {
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
+    var listTx = db.transaction(['list'], 'readwrite');
+    var listStore = listTx.objectStore('list');
 
-  var transaction = db.transaction(['list', 'root'], 'readwrite');
-  var store = transaction.objectStore('list');
-  var requiredData = {
-    'activityId': activity.activityId,
-    'secondLine': '',
-    'count': '',
-    'timestamp': activity.timestamp,
-    'creator': {
-      number: activity.creator,
-      photo: ''
-    },
-    'activityName': activity.activityName,
-    'status': activity.status
-  };
+    var requiredData = {
+      'activityId': activity.activityId,
+      'secondLine': '',
+      'count': counter[activity.activityId],
+      'timestamp': activity.timestamp,
+      'creator': {
+        number: activity.creator,
+        photo: ''
+      },
+      'activityName': activity.activityName,
+      'status': activity.status
+    };
 
-  store.put(requiredData);
-
-  transaction.oncomplete = function () {
-    console.log("done");
+    listStore.put(requiredData);
+    listTx.oncomplete = function () {
+      console.log("done");
+    };
   };
 }
 
-function updateListStoreWithCount(counter) {
+function updateListStoreWithCreatorImage(counter) {
   return new Promise(function (resolve, reject) {
     var req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
+
       var db = req.result;
       var transaction = db.transaction(['list', 'users'], 'readwrite');
       var listStore = transaction.objectStore('list');
       var userStore = transaction.objectStore('users');
-      console.log(counter);
-      Object.keys(counter).forEach(function (id) {
-        listStore.get(id).onsuccess = function (event) {
-          var record = event.target.result;
-          if (!record) {
-            console.log(" no record found");
-          } else {
-            record.count = counter[id];
-            listStore.put(record);
-          }
-        };
-      });
 
       listStore.openCursor().onsuccess = function (event) {
         var cursor = event.target.result;
@@ -914,7 +906,7 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity);
       }
       if (activity.hidden === 0) {
-        createListStore(db, activity);
+        createListStore(activity, commentData, counter);
       }
 
       updateMap(activity);
@@ -939,7 +931,7 @@ function successResponse(read, swipeInfo) {
       record.fromTime = read.upto;
       rootObjectStore.put(record);
 
-      updateListStoreWithCount(counter).then(function () {
+      updateListStoreWithCreatorImage(counter).then(function () {
         requestHandlerResponse('updateIDB', 200, swipeInfo);
       });
     };
@@ -1007,6 +999,7 @@ function updateIDB(param) {
       console.log(root);
       http('GET', apiUrl + 'read?from=' + root.target.result.fromTime).then(function (response) {
         if (!response) return;
+
         successResponse(response, param.swipe);
       }).catch(function (error) {
 
