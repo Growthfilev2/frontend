@@ -706,10 +706,12 @@ function fillUsersInSelector(data, dialog) {
       if (!cursor) {
         const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
         selectedBoxes.forEach(function (box) {
-          const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-          mdcBox.checked = true
-          box.children[1].style.animation = 'none'
-          box.children[1].children[0].children[0].style.animation = 'none'
+          if(box){
+            const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
+            mdcBox.checked = true
+            box.children[1].style.animation = 'none'
+            box.children[1].children[0].children[0].style.animation = 'none'
+          }
         })
         return
       }
@@ -2279,13 +2281,16 @@ function checkRadioInput(inherit, value) {
     input.classList.remove('radio-selected');
   });
   const parent = inherit
-  const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
-  radio['root_'].classList.add('radio-selected')
+    if(parent) {
 
-  document.querySelector('.selector-send span').textContent = 'send'
-  document.querySelector('.selector-send').dataset.clicktype = ''
-  radio.value = JSON.stringify(value)
-  console.log(value)
+      const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
+      radio['root_'].classList.add('radio-selected')
+      
+      document.querySelector('.selector-send span').textContent = 'send'
+      document.querySelector('.selector-send').dataset.clicktype = ''
+      radio.value = JSON.stringify(value)
+      console.log(value)
+    }
 }
 
 
@@ -2366,11 +2371,6 @@ function createActivityCancellation(record) {
 
   if (record.hasOwnProperty('create')) return
 
-  if (!record.canEdit) {
-    // StautsCont.appendChild(createSimpleLi('delete',{text:'Deleted'}))
-    // document.querySelector('.update-create--activity').appendChild(StautsCont);
-    return
-  }
 
   if (record.status === 'CANCELLED') {
     StautsCont.appendChild(createSimpleLi('undo-deleted', {
@@ -2379,6 +2379,7 @@ function createActivityCancellation(record) {
     }))
 
     document.querySelector('.update-create--activity').appendChild(StautsCont);
+
     const undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'))
 
     return

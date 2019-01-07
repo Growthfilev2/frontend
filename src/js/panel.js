@@ -1,52 +1,53 @@
-const notification = new Worker('src/js/notification.js')
+const notification = new Worker('js/notification.js')
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
-  console.log(filter)
   getRootRecord().then(function (record) {
-    if (record.suggestCheckIn) {
-      showSuggestCheckInDialog()
+    // if (record.suggestCheckIn) {
+    //   // showSuggestCheckInDialog()
+    //  return; 
+    // }
+    console.log(filter)
+    history.pushState(['listView'], null, null)
+
+    if (document.querySelector('.init-loader')) {
+      document.querySelector('.init-loader').remove()
     }
-  })
 
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  }
+    if (document.querySelector('.mdc-linear-progress')) {
+      document.querySelector('.mdc-linear-progress').remove();
+    }
 
-  if (document.querySelector('.mdc-linear-progress')) {
-    document.querySelector('.mdc-linear-progress').remove();
-  }
 
-  history.pushState(['listView'], null, null)
+    listPanel()
+    creatListHeader('Activities');
+    createActivityIcon();
 
-  listPanel()
-  creatListHeader('Activities');
-  createActivityIcon();
+    if (!filter) {
+      fetchDataForActivityList(record.location);
+      return;
+    }
 
-  if (!filter) {
-    fetchDataForActivityList();
-    return;
-  }
-
-  notificationWorker('urgent', filter.urgent).then(function () {
-    notificationWorker('nearBy', filter.nearby).then(function () {
-      fetchDataForActivityList();
-    })
+    notificationWorker('urgent', filter.urgent).then(function () {
+      notificationWorker('nearBy', filter.nearby).then(function () {
+        fetchDataForActivityList(record.location);
+      })
+    });
   })
 }
 
 
-function fetchDataForActivityList() {
+function fetchDataForActivityList(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
     let activityDom = ''
-    const transaction = db.transaction(['list', 'activity'])
+    const transaction = db.transaction(['list', 'activity', 'root'])
     const activity = transaction.objectStore('activity');
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
     const today = moment().format('YYYY-MM-DD');
-   
+
 
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
@@ -55,7 +56,6 @@ function fetchDataForActivityList() {
       const secondLine = document.createElement('span')
       secondLine.className = 'mdc-list-item__secondary-text'
 
-      let venueContent = '';
 
       activity.get(cursor.value.activityId).onsuccess = function (event) {
         const record = event.target.result;
@@ -63,21 +63,19 @@ function fetchDataForActivityList() {
         const schedules = record.schedule;
         const venues = record.venue;
         const status = record.status
-        if (record.venue.length) {
-          venueContent = generateSecondLine(venues[0].venueDescriptor,venues[0].location)
-        }
-
-        if(status === 'PENDING') {
+        
+        if (status === 'PENDING') {
           secondLine.appendChild(generateLastestSchedule(schedules));
-        }
-        else {
-          secondLine.appendChild(generateSecondLine(generateTextIfActivityIsNotPending(status)))
-        }
-
-        if(venueContent instanceof HTMLElement) {
-          secondLine.appendChild(venueContent);
+        } else {
+          if(schedules.length) {
+            const el =document.createElement('div')
+            el.textContent = generateTextIfActivityIsNotPending(status)
+            secondLine.appendChild(el);
+          }
         }
         
+        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+
         activityDom += activityListUI(cursor.value, secondLine).outerHTML
       }
       cursor.continue();
@@ -100,94 +98,153 @@ function generateTextIfActivityIsNotPending(status) {
   return textStatus[status]
 }
 
-function generateSecondLine(name,value){
+function generateSecondLine(name, value) {
   const el = document.createElement('div');
-  if(!value) {
-    el.textContent = name
-  } 
-  else {
+  if (name && value) {
     el.textContent = `${name} : ${value}`
+  }
+  else {
+    el.textContent = ''
   }
   return el
 }
 
 
-function generateLastestSchedule(schedules){
+function generateLastestSchedule(schedules) {
   const length = schedules.length;
   let text;
   switch (length) {
     case 0:
-      text = generateSecondLine('','')
+      text = generateSecondLine('', '')
       break;
     case 1:
       const timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0])
-      text = generateSecondLine(timeTypeSingle.name,timeTypeSingle.value)
+      text = generateSecondLine(timeTypeSingle.name, timeTypeSingle.value)
       break;
     default:
       const formattedDates = formatDates(schedules);
-      const ascendingOrder = sortDatesInAscendingOrderWithPivot({time:moment().valueOf(),pivot:true},formattedDates);
+      const ascendingOrder = sortDatesInAscendingOrderWithPivot({
+        time: moment().valueOf(),
+        pivot: true
+      }, formattedDates);
       const timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
-      text = generateSecondLine(timeTypeMultiple.name,timeTypeMultiple.time);
+      text = generateSecondLine(timeTypeMultiple.name, timeTypeMultiple.time);
       break;
   }
   return text
 }
 
-function getTimeTypeForSingleSchedule(schedule){
+function getTimeTypeForSingleSchedule(schedule) {
   const today = moment().format('DD-MM-YYYY');
   const startTime = moment(schedule.startTime).format('DD-MM-YYYY');
   let newScheduleText = {
-    name:schedule.name,
-    value:''
+    name: schedule.name,
+    value: ''
   }
+  if(!startTime) return newScheduleText
+  if(!schedule.endTime) return newScheduleText
+  
   if (moment(startTime).isAfter(moment(today))) {
     newScheduleText.value = moment(startTime).calendar();
-  }
-  else {
-    newScheduleText.value = moment(schedule.endTime).calendar(); 
+  } else {
+    newScheduleText.value = moment(schedule.endTime).calendar();
   }
   return newScheduleText;
-  
-}
-
-function generateLatestVenue(venues){
 
 }
 
-function formatDates (schedules){
+function formatDates(schedules) {
   const formatted = []
-  schedules.forEach(function(schedule){
-    formatted.push({time:schedule.startTime,name:schedule.name})
-    formatted.push({time:schedule.endTime,name:schedule.name})
+  schedules.forEach(function (schedule) {
+    formatted.push({
+      time: schedule.startTime,
+      name: schedule.name
+    })
+    formatted.push({
+      time: schedule.endTime,
+      name: schedule.name
+    })
   })
   return formatted;
 }
 
-function sortDatesInAscendingOrderWithPivot(pivot,dates){
-  const dataset  = dates.slice();
+function sortDatesInAscendingOrderWithPivot(pivot, dates) {
+  const dataset = dates.slice();
   dataset.push(pivot);
-  return dataset.sort(function(a,b){
-    return a-b;
+  return dataset.sort(function (a, b) {
+    return a - b;
   })
 }
 
-function getTimeTypeForMultipleSchedule(dates){
-const pivotIndex = positionOfPivot(dates);
-const duplicate = dates.slice()
-  if(pivotIndex === dates.length) {
-    duplicate[pivotIndex -1].time = moment(duplicate[pivotIndex -1].time).calendar();
-    return duplicate[pivotIndex -1]
+function getTimeTypeForMultipleSchedule(dates) {
+  const pivotIndex = positionOfPivot(dates);
+  const duplicate = dates.slice()
+  if (pivotIndex === dates.length) {
+    duplicate[pivotIndex - 1].time = moment(duplicate[pivotIndex - 1].time).calendar();
+    return duplicate[pivotIndex - 1]
   }
-  duplicate[pivotIndex +1].time = moment(duplicate[pivotIndex +1].time).calendar();
-  return duplicate[pivotIndex+1]
+  duplicate[pivotIndex + 1].time = moment(duplicate[pivotIndex + 1].time).calendar();
+  return duplicate[pivotIndex + 1]
 }
 
-function positionOfPivot(dates){
-  const index = dates.map(function(e){
+function positionOfPivot(dates) {
+  const index = dates.map(function (e) {
     return dates.pivot
   }).indexOf(true);
   return index;
 }
+
+function generateLatestVenue(venues, currentLocation) {
+  const length = venues.length
+  let text = ''
+  switch (length) {
+    case 0:
+      text = generateSecondLine('', '');
+      break;
+    case 1:
+      text = generateSecondLine(venues[0].venueDescriptor, venues[0].location)
+      break;
+    default:
+
+
+      const distances = []
+      venues.forEach(function (venue) {
+
+        const lat = venue.geopoint['_latitude']
+        const lon = venue.geopoint['_longitude']
+        if (lat && lon) {
+          const geopoint = {
+            latitude: lat,
+            longitude: lon
+          }
+          distances.push({
+            distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
+            desc: venue.venueDescriptor,
+            location: venue.location
+          })
+        }
+      })
+      if(!distances.length) {
+        text = generateSecondLine('','')
+      }
+      else {
+
+        const sortedDistance = sortNearestLocation(distances)
+        text = generateSecondLine(sortedDistance[0].desc, sortedDistance[0].location)
+      }
+  }
+  return text;
+}
+
+
+
+function sortNearestLocation(distances) {
+  const dataset = distances.slice();
+  return dataset.sort(function (a, b) {
+    return a.distance - b.distance
+  })
+}
+
 
 
 
@@ -328,7 +385,7 @@ function getRootRecord() {
 }
 
 function createActivityIcon() {
-  if(document.getElementById('create-activity')) return;
+  if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
     if (Object.keys(officeTemplateObject).length) {
       createActivityIconDom()
