@@ -46,113 +46,43 @@ function fetchDataForActivityList() {
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
     const today = moment().format('YYYY-MM-DD');
-    const textStatus = {
-      'CONFIRMED': 'Done',
-      'CANCELLED': 'Cancelled'
-    }
+   
 
     index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
 
-
-
       const secondLine = document.createElement('span')
       secondLine.className = 'mdc-list-item__secondary-text'
+
+      let venueContent = '';
 
       activity.get(cursor.value.activityId).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return
-        if (textStatus[record.status]) {
-          const schedule = document.createElement('span');
-          schedule.textContent = textStatus[record.status]
-          secondLine.appendChild(schedule);
-        } else {
-          if (record.schedule.length) {
-
-            if (record.schedule.length === 1) {
-
-              const schedule = document.createElement('span');
-              const startTime = moment(cursor.value.startTime).format('YYYY-MM-DD');
-              const endTime = moment(cursor.value.startTime).format('YYYY-MM-DD');
-
-              if (moment(startTime).isAfter(moment(today))) {
-                schedule.textContent = `${record.schedule[0].name} : ${moment(record.schedule[0].startTime).calendar()}`
-              } else {
-                schedule.textContent = `${record.schedule[0].name} : ${moment(record.schedule[0].endTime).calendar()}`
-              }
-              secondLine.appendChild(schedule)
-
-            } else {
-              const schedule = document.createElement('span');
-
-              const nearestStart = []
-              const farthestEnd = []
-              const any = []
-
-              record.schedule.forEach(function (schedule) {
-                const startTime = moment(schedule.startTime).format('YYYY-MM-DD');
-                   if (moment(today).isBefore(moment(startTime))) {
-                      nearestStart.push(record.schedule);
-                  }
-              })
-
-              if (nearestStart.length) {
-                const nearest = sortNearestStartTime(nearestStart);
-                schedule.textContent = `${nearest.name} : ${moment(nearest.startTime)}`
-                secondLine.appendChild(schedule)
-                
-              }
-              else {
-
-                record.schedule.forEach(function (schdule) {
-                  const endTime = moment(schedule.endTime).format('YYYY-MM-DD');
-                  if (moment(today).isAfter(moment(endTime))) {
-                    farthestEnd.push(record.schedule);
-                  }
-                })
-                if (farthestEnd.length) {
-                  const farthest = sortFarthestEndTime(farthestEnd);
-                  schedule.textContent = `${farthest.name} : ${moment(farthest.endTime)}`
-                  secondLine.appendChild(schedule)
-
-                }
-                else {
-                  record.schedule.forEach(function (schdule) {
-                    const startTime = moment(schedule.startTime).format('YYYY-MM-DD');
-                    const endTime = moment(schedule.endTime).format('YYYY-MM-DD');
-                    if (moment(today).isAfter(moment(startTime)) && moment(today).isBefore(moment(endTime))) {
-                      any.push(record.schedule);
-                    }
-                  })
-                  if (any.length) {
-    
-                    schedule.textContent = `${any[0].name} : ${moment(any[0].endTime)}`
-                    secondLine.appendChild(schedule)
-                    
-                  }
-                }
-              }
-
-              
-            }
-          }
+        const schedules = record.schedule;
+        const venues = record.venue;
+        const status = record.status
+        if (record.venue.length) {
+          venueContent = generateSecondLine(venues[0].venueDescriptor,venues[0].location)
         }
-        if (record.venue.length === 1) {
-          const venue = document.createElement('div');
-          venue.textContent = `${record.venue[0].venueDescriptor} : ${record.venue[0].location}`
-          secondLine.appendChild(venue)
+
+        if(status === 'PENDING') {
+          secondLine.appendChild(generateLastestSchedule(schedules));
         }
+        else {
+          secondLine.appendChild(generateSecondLine(generateTextIfActivityIsNotPending(status)))
+        }
+
+        if(venueContent instanceof HTMLElement) {
+          secondLine.appendChild(venueContent);
+        }
+        
         activityDom += activityListUI(cursor.value, secondLine).outerHTML
       }
       cursor.continue();
     }
 
-
-
-    //start date is after today  - > start date else end date
-    // status completed : done
-    //staus delete : cancel
     transaction.oncomplete = function () {
       if (document.getElementById('activity--list')) {
         document.getElementById('activity--list').innerHTML = activityDom;
@@ -160,6 +90,103 @@ function fetchDataForActivityList() {
       scrollToActivity()
     }
   }
+}
+
+function generateTextIfActivityIsNotPending(status) {
+  const textStatus = {
+    'CONFIRMED': 'Done',
+    'CANCELLED': 'Cancelled'
+  }
+  return textStatus[status]
+}
+
+function generateSecondLine(name,value){
+  const el = document.createElement('div');
+  if(!value) {
+    el.textContent = name
+  } 
+  else {
+    el.textContent = `${name} : ${value}`
+  }
+  return el
+}
+
+
+function generateLastestSchedule(schedules){
+  const length = schedules.length;
+  let text;
+  switch (length) {
+    case 0:
+      text = generateSecondLine('','')
+      break;
+    case 1:
+      const timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0])
+      text = generateSecondLine(timeTypeSingle.name,timeTypeSingle.value)
+      break;
+    default:
+      const formattedDates = formatDates(schedules);
+      const ascendingOrder = sortDatesInAscendingOrderWithPivot({time:moment().valueOf(),pivot:true},formattedDates);
+      const timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
+      text = generateSecondLine(timeTypeMultiple.name,timeTypeMultiple.time);
+      break;
+  }
+  return text
+}
+
+function getTimeTypeForSingleSchedule(schedule){
+  const today = moment().format('DD-MM-YYYY');
+  const startTime = moment(schedule.startTime).format('DD-MM-YYYY');
+  let newScheduleText = {
+    name:schedule.name,
+    value:''
+  }
+  if (moment(startTime).isAfter(moment(today))) {
+    newScheduleText.value = moment(startTime).calendar();
+  }
+  else {
+    newScheduleText.value = moment(schedule.endTime).calendar(); 
+  }
+  return newScheduleText;
+  
+}
+
+function generateLatestVenue(venues){
+
+}
+
+function formatDates (schedules){
+  const formatted = []
+  schedules.forEach(function(schedule){
+    formatted.push({time:schedule.startTime,name:schedule.name})
+    formatted.push({time:schedule.endTime,name:schedule.name})
+  })
+  return formatted;
+}
+
+function sortDatesInAscendingOrderWithPivot(pivot,dates){
+  const dataset  = dates.slice();
+  dataset.push(pivot);
+  return dataset.sort(function(a,b){
+    return a-b;
+  })
+}
+
+function getTimeTypeForMultipleSchedule(dates){
+const pivotIndex = positionOfPivot(dates);
+const duplicate = dates.slice()
+  if(pivotIndex === dates.length) {
+    duplicate[pivotIndex -1].time = moment(duplicate[pivotIndex -1].time).calendar();
+    return duplicate[pivotIndex -1]
+  }
+  duplicate[pivotIndex +1].time = moment(duplicate[pivotIndex +1].time).calendar();
+  return duplicate[pivotIndex+1]
+}
+
+function positionOfPivot(dates){
+  const index = dates.map(function(e){
+    return dates.pivot
+  }).indexOf(true);
+  return index;
 }
 
 function sortNearestStartTime(data) {

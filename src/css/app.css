@@ -706,12 +706,21 @@ footer.mdc-dialog__footer {
 }
 
 .activity--list-item {
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
+  padding-top: 5px;
+}
+#activity--list .mdc-list-item__graphic {
+  height: 50px;
+  width:50px;
+
+}
+
+#activity--list .mdc-list-item__text {
+  margin-top: -6px;
 }
 
 .activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text {
-  padding-top: 4px;
+  padding-top: 8px;
 }
 
 .activity--list-item .mdc-list-item__meta {
@@ -990,6 +999,8 @@ input[type="datetime-local"] {
   .bigBlackBold {
     font-size: 1rem;
     font-weight: 500;
+    margin-bottom: -44px;  
+
   }
 
   .header--icon-creator {
@@ -1562,8 +1573,12 @@ input[type="datetime-local"] {
     font-size: 23px;
     margin-bottom: 0px;
     margin-top: 9px;
-    margin-left: 13px;
+    margin-left: 20px;
     color: white;
+  }
+  .profile--icon-header {
+    padding-left: 5px;
+    margin-top: -2px;
   }
   .list-photo-header {
     border-radius: 50%;
