@@ -183,19 +183,21 @@ function statusChange(db, id) {
 
   var activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function (event) {
-
+    var container = document.querySelector('.status--change-cont');
     var record = event.target.result;
     if (!record.canEdit || record.status === 'CANCELLED') {
       var statusSpan = document.createElement('span');
       var _record = event.target.result;
       statusSpan.textContent = 'Activity ' + _record.status.toLowerCase();
-      document.querySelector('.status--change-cont').innerHTML = statusSpan.outerHTML;
-      document.querySelector('.status--change-cont').style.textAlign = 'center';
+      if (container) {
+        container.innerHTML = statusSpan.outerHTML;
+        container.style.textAlign = 'center';
+      }
       return;
     }
     if (record.editable == 0) {
 
-      document.querySelector('.status--change-cont').innerHTML = label.outerHTML + loader('status-loader').outerHTML;
+      container ? container.innerHTML = label.outerHTML + loader('status-loader').outerHTML : '';
       return;
     }
     if (!document.querySelector('.status-check')) {
@@ -223,8 +225,8 @@ function statusChange(db, id) {
 
       div.appendChild(checkbox);
 
-      if (document.querySelector('.status--change-cont')) {
-        document.querySelector('.status--change-cont').innerHTML = div.outerHTML + label.outerHTML;
+      if (container) {
+        container.innerHTML = div.outerHTML + label.outerHTML;
       }
     }
 
@@ -679,10 +681,12 @@ function fillUsersInSelector(data, dialog) {
       if (!cursor) {
         var selectedBoxes = document.querySelectorAll('[data-selected="true"]');
         selectedBoxes.forEach(function (box) {
-          var mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-          mdcBox.checked = true;
-          box.children[1].style.animation = 'none';
-          box.children[1].children[0].children[0].style.animation = 'none';
+          if (box) {
+            var mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
+            mdcBox.checked = true;
+            box.children[1].style.animation = 'none';
+            box.children[1].children[0].children[0].style.animation = 'none';
+          }
         });
         return;
       }
@@ -2175,13 +2179,16 @@ function checkRadioInput(inherit, value) {
     input.classList.remove('radio-selected');
   });
   var parent = inherit;
-  var radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'));
-  radio['root_'].classList.add('radio-selected');
+  if (parent) {
 
-  document.querySelector('.selector-send span').textContent = 'send';
-  document.querySelector('.selector-send').dataset.clicktype = '';
-  radio.value = JSON.stringify(value);
-  console.log(value);
+    var radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'));
+    radio['root_'].classList.add('radio-selected');
+
+    document.querySelector('.selector-send span').textContent = 'send';
+    document.querySelector('.selector-send').dataset.clicktype = '';
+    radio.value = JSON.stringify(value);
+    console.log(value);
+  }
 }
 
 function setFilePath(str, key, show) {
@@ -2258,12 +2265,6 @@ function createActivityCancellation(record) {
 
   if (record.hasOwnProperty('create')) return;
 
-  if (!record.canEdit) {
-    // StautsCont.appendChild(createSimpleLi('delete',{text:'Deleted'}))
-    // document.querySelector('.update-create--activity').appendChild(StautsCont);
-    return;
-  }
-
   if (record.status === 'CANCELLED') {
     StautsCont.appendChild(createSimpleLi('undo-deleted', {
       text: 'Deleted',
@@ -2271,6 +2272,7 @@ function createActivityCancellation(record) {
     }));
 
     document.querySelector('.update-create--activity').appendChild(StautsCont);
+
     var undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'));
 
     return;
@@ -2280,8 +2282,8 @@ function createActivityCancellation(record) {
     StautsCont.appendChild(createSimpleLi('delete', {
       text: 'CANCEL'
     }));
-
     document.querySelector('.update-create--activity').appendChild(StautsCont);
+    if (!record.canEdit) return;
     if (!document.getElementById('cancel-alert')) {
       cancelAlertDialog();
     }
@@ -2533,7 +2535,7 @@ function searchBarUI(type) {
   if (type === 'users') {
     dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back';
   }
-  // document.getElementById('data-list--container').style.display = 'none'
+  dialogEl.querySelector('#dialog--surface-headerview-type span').style.color = '#0399f4';
 }
 
 function resetSelectorUI(data) {

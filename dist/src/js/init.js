@@ -115,6 +115,11 @@ window.addEventListener('load', function () {
       nextWeek: 'dddd [at] LT',
       sameElse: 'L'
     },
+    longDateFormat: {
+      LT: "h:mm A",
+      LTS: "h:mm:ss A",
+      L: "DD/MM/YY"
+    },
 
     months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
