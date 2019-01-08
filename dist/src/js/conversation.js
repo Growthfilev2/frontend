@@ -2260,12 +2260,14 @@ function openImage(imageSrc) {
 }
 
 function createActivityCancellation(record) {
+  if (!record.canEdit) return;
   var StautsCont = document.createElement('div');
   StautsCont.className = 'status--cancel-cont';
 
   if (record.hasOwnProperty('create')) return;
 
   if (record.status === 'CANCELLED') {
+
     StautsCont.appendChild(createSimpleLi('undo-deleted', {
       text: 'Cancelled',
       id: record.activityId
