@@ -70,7 +70,6 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       stack: error.stack,
       name: error.name,
       device: native.getInfo()
-
     }
   };
   requestCreator('instant', JSON.stringify(errorJS));
