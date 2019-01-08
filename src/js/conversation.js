@@ -2389,9 +2389,8 @@ function createActivityCancellation(record) {
     StautsCont.appendChild(createSimpleLi('delete', {
       text: 'CANCEL'
     }))
-
-
     document.querySelector('.update-create--activity').appendChild(StautsCont);
+    if(!record.canEdit) return;
     if (!document.getElementById('cancel-alert')) {
       cancelAlertDialog()
     }
@@ -2656,7 +2655,7 @@ function searchBarUI(type) {
   if (type === 'users') {
     dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back'
   }
-  // document.getElementById('data-list--container').style.display = 'none'
+  dialogEl.querySelector('#dialog--surface-headerview-type span').style.color = '#0399f4'
 }
 
 function resetSelectorUI(data) {

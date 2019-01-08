@@ -56,12 +56,14 @@ self.onmessage = function (event) {
       urgentestDates.forEach(function (id) {
         output.push(ascendingDates[id])
       })
+      resetNotifs('urgent').then(function(){
 
-      updateTimestamp('urgent', {
-        data: output.reverse(),
-        'tsUpdate': tsUpdate
-      }).then(function (success) {
-        self.postMessage(success);
+        updateTimestamp('urgent', {
+          data: output.reverse(),
+          'tsUpdate': tsUpdate
+        }).then(function (success) {
+          self.postMessage(success);
+        })
       })
     }
 
@@ -90,7 +92,7 @@ self.onmessage = function (event) {
     return holder;
   }
 
-  function resetNearBy() {
+  function resetNotifs(type) {
     return new Promise(function (resolve, reject) {
       const req = indexedDB.open(dbName);
       req.onsuccess = function () {
@@ -102,8 +104,8 @@ self.onmessage = function (event) {
         cursorReq.onsuccess = function (event) {
           const cursor = event.target.result;
           if (!cursor) return;
-          if (cursor.value.nearby) {
-            cursor.value.nearby = false;
+          if (cursor.value[type]) {
+            cursor.value[type] = false;
             objectStore.put(cursor.value)
           }
           cursor.continue()
@@ -180,7 +182,7 @@ self.onmessage = function (event) {
 
         const filtered = isDistanceNearBy(distanceArr, 0.5);
         const sorted = sortDistance(filtered);
-        resetNearBy().then(function () {
+        resetNotifs('nearby').then(function () {
           updateTimestamp('nearby', {
             data: sorted.reverse(),
             'tsUpdate': tsUpdate

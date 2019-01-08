@@ -4,7 +4,7 @@ function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   getRootRecord().then(function (record) {
     if (record.suggestCheckIn) {
-      showSuggestCheckInDialog();
+      showSuggestCheckInDialog()
     }
     console.log(filter);
     history.pushState(['listView'], null, null);
@@ -164,14 +164,14 @@ function sortDatesInAscendingOrderWithPivot(pivot, dates) {
   var dataset = dates.slice();
   dataset.push(pivot);
   return dataset.sort(function (a, b) {
-    return a - b;
+    return a.time - b.time;
   });
 }
 
 function getTimeTypeForMultipleSchedule(dates) {
-  var pivotIndex = positionOfPivot(dates);
   var duplicate = dates.slice();
-  if (pivotIndex === dates.length) {
+  var pivotIndex = positionOfPivot(duplicate);
+  if (pivotIndex === dates.length - 1) {
     duplicate[pivotIndex - 1].time = moment(duplicate[pivotIndex - 1].time).calendar();
     return duplicate[pivotIndex - 1];
   }
@@ -180,9 +180,11 @@ function getTimeTypeForMultipleSchedule(dates) {
 }
 
 function positionOfPivot(dates) {
-  var index = dates.map(function (e) {
-    return dates.pivot;
-  }).indexOf(true);
+  var index = dates.findIndex(function (obj) {
+    if (obj.pivot) {
+      return obj;
+    }
+  });
   return index;
 }
 
