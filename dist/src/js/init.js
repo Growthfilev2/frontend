@@ -241,6 +241,13 @@ function suggestCheckInDialog() {
   ok.textContent = 'Okay';
   ok.style.backgroundColor = '#3498db';
 
+  var canel = document.createElement('button');
+  canel.type = 'button';
+  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+  canel.textContent = 'Cancel';
+  canel.style.backgroundColor = '#3498db';
+
+  footer.appendChild(canel);
   footer.appendChild(ok);
 
   surface.appendChild(header);

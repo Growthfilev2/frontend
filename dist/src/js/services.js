@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -344,7 +344,7 @@ function showSubscriptionSelectorForCheckIn(evt, dialog) {
   getRootRecord().then(function (rootRecord) {
     suggestCheckIn(false).then(function () {
       if (rootRecord.offices.length === 1) {
-        createTempRecord(keysArray[0], 'check-in');
+        createTempRecord(rootRecord.offices[0], 'check-in');
       } else {
         callSubscriptionSelectorUI(evt, true);
       }
