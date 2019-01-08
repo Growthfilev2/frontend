@@ -69,8 +69,8 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       columnNo: columnNo,
       stack: error.stack,
       name: error.name,
-      device: native.getInfo(),
-      state: history.state[0]
+      device: native.getInfo()
+
     }
   };
   requestCreator('instant', JSON.stringify(errorJS));
@@ -201,20 +201,22 @@ function layoutGrid() {
   var snackbar = document.createElement('div');
   snackbar.id = 'snackbar-container';
 
+  var alertDom = document.createElement('div');
+  alertDom.id = 'alert--box';
   headerDiv.appendChild(createHeader('app-main-header'));
   layoutInner.appendChild(headerDiv);
   layoutInner.appendChild(currentPanel);
   layoutInner.appendChild(snackbar);
   layout.appendChild(layoutInner);
+  layout.appendChild(alertDom);
   document.body.innerHTML = layout.outerHTML;
   imageViewDialog();
-  suggestCheckInDialog();
 }
 
-function suggestCheckInDialog() {
+function createCheckInDialog() {
 
   var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open';
+  aside.className = 'mdc-dialog mdc-dialog--open hidden';
   aside.id = 'suggest-checkIn-dialog';
 
   var surface = document.createElement('div');
@@ -258,14 +260,7 @@ function suggestCheckInDialog() {
   var backdrop = document.createElement('div');
   backdrop.className = 'mdc-dialog__backdrop';
   aside.appendChild(backdrop);
-  document.body.appendChild(aside);
-
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
-
-  dialog.listen('MDCDialog:accept', function (evt) {
-    showSubscriptionSelectorForCheckIn(evt, dialog);
-  });
-  dialog.close();
+  return aside;
 }
 
 function createHeader(id) {
@@ -469,17 +464,15 @@ function resetApp(auth, from) {
 function startInitializatioOfList(auth) {
   localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
-
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: ''
-    });
-
     suggestCheckIn(isNew).then(function () {
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: ''
+      });
       listView({ urgent: isNew, nearby: false });
+      setInterval(function () {
+        manageLocation();
+      }, 5000);
     });
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({ message: error }));

@@ -4,8 +4,10 @@ function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   getRootRecord().then(function (record) {
     if (record.suggestCheckIn) {
+      document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML;
       showSuggestCheckInDialog();
     }
+
     history.pushState(['listView'], null, null);
 
     if (document.querySelector('.init-loader')) {
@@ -561,14 +563,17 @@ function createInputForProfile(key, type, classtype) {
 function suggestCheckIn(value) {
   return new Promise(function (resolve, reject) {
     getRootRecord().then(function (record) {
+
       var req = indexedDB.open(firebase.auth().currentUser.uid);
       req.onsuccess = function () {
         var db = req.result;
         var tx = db.transaction(['root'], 'readwrite');
         var store = tx.objectStore('root');
-        record.suggestCheckIn = value;
-        store.put(record);
+        if (record.suggestCheckIn !== value) {
 
+          record.suggestCheckIn = value;
+          store.put(record);
+        }
         tx.oncomplete = function () {
           resolve(true);
         };
