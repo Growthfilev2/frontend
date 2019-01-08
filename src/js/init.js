@@ -87,9 +87,9 @@ window.scrollBy({
 
 
 window.addEventListener('load', function () {
-  if (!window.Worker && !window.indexedDB) {
-    const title = 'Device Incompatibility'
-    const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
+  const title = 'Device Incompatibility'
+  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
+  if (!window.Worker && !window.indexedDB) {  
     const messageData = {
       title: title,
       message: message,
@@ -105,7 +105,13 @@ window.addEventListener('load', function () {
         }
       }
     }
-    Android.notification(JSON.stringify(messageData))
+    try {
+      Android.notification(JSON.stringify(messageData))
+    }
+    catch(e){
+      requestCreator('instant',JSON.stringify({message:e.message}))
+      appDialog(message);
+    }
     return
   }
 
