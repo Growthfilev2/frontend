@@ -2366,6 +2366,7 @@ function openImage(imageSrc) {
 }
 
 function createActivityCancellation(record) {
+  if(!record.canEdit) return
   const StautsCont = document.createElement('div')
   StautsCont.className = 'status--cancel-cont'
 
@@ -2373,14 +2374,16 @@ function createActivityCancellation(record) {
 
 
   if (record.status === 'CANCELLED') {
-    StautsCont.appendChild(createSimpleLi('undo-deleted', {
-      text: 'Cancelled',
-      id: record.activityId
-    }))
 
-    document.querySelector('.update-create--activity').appendChild(StautsCont);
-
-    const undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'))
+      StautsCont.appendChild(createSimpleLi('undo-deleted', {
+        text: 'Cancelled',
+        id: record.activityId
+      }))
+      
+      document.querySelector('.update-create--activity').appendChild(StautsCont);
+      
+      const undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'))
+    
 
     return
   }
