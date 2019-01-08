@@ -2374,7 +2374,7 @@ function createActivityCancellation(record) {
 
   if (record.status === 'CANCELLED') {
     StautsCont.appendChild(createSimpleLi('undo-deleted', {
-      text: 'Deleted',
+      text: 'Cancelled',
       id: record.activityId
     }))
 
