@@ -2655,7 +2655,7 @@ function searchBarUI(type) {
   if (type === 'users') {
     dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back'
   }
-  // document.getElementById('data-list--container').style.display = 'none'
+  dialogEl.querySelector('#dialog--surface-headerview-type span').style.color = '#0399f4'
 }
 
 function resetSelectorUI(data) {
