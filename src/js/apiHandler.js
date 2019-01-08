@@ -52,9 +52,6 @@ function createLog(body) {
 // when worker receives the request body from the main thread
 self.onmessage = function (event) {
   
-  
-  firebase.auth().onAuthStateChanged(function (auth) {
-
     if (event.data.type === 'now') {
       fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
       return
@@ -66,7 +63,6 @@ self.onmessage = function (event) {
     requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
       console.log(error)
     })
-  })
 }
 
 
