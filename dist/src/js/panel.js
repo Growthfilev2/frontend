@@ -1,12 +1,11 @@
-var notification = new Worker('js/notification.js');
+var notification = new Worker('src/js/notification.js');
 
 function listView(filter) {
   // document.body.style.backgroundColor = 'white'
   getRootRecord().then(function (record) {
-    // if (record.suggestCheckIn) {
-    //   // showSuggestCheckInDialog()
-    //  return; 
-    // }
+    if (record.suggestCheckIn) {
+      showSuggestCheckInDialog()
+    }
     console.log(filter);
     history.pushState(['listView'], null, null);
 
