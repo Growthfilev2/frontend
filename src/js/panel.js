@@ -36,7 +36,6 @@ function listView(filter) {
   })
 }
 
-
 function fetchDataForActivityList(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -172,14 +171,14 @@ function sortDatesInAscendingOrderWithPivot(pivot, dates) {
   const dataset = dates.slice();
   dataset.push(pivot);
   return dataset.sort(function (a, b) {
-    return a - b;
+    return a.time - b.time;
   })
 }
 
 function getTimeTypeForMultipleSchedule(dates) {
-  const pivotIndex = positionOfPivot(dates);
   const duplicate = dates.slice()
-  if (pivotIndex === dates.length) {
+  const pivotIndex = positionOfPivot(duplicate);
+  if (pivotIndex === dates.length -1) {
     duplicate[pivotIndex - 1].time = moment(duplicate[pivotIndex - 1].time).calendar();
     return duplicate[pivotIndex - 1]
   }
@@ -188,10 +187,12 @@ function getTimeTypeForMultipleSchedule(dates) {
 }
 
 function positionOfPivot(dates) {
-  const index = dates.map(function (e) {
-    return dates.pivot
-  }).indexOf(true);
-  return index;
+ const index = dates.findIndex(function(obj){
+    if(obj.pivot){
+      return obj
+    }
+ })
+ return index;
 }
 
 function generateLatestVenue(venues, currentLocation) {
