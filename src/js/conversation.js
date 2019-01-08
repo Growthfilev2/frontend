@@ -2389,9 +2389,8 @@ function createActivityCancellation(record) {
     StautsCont.appendChild(createSimpleLi('delete', {
       text: 'CANCEL'
     }))
-
-
     document.querySelector('.update-create--activity').appendChild(StautsCont);
+    if(!record.canEdit) return;
     if (!document.getElementById('cancel-alert')) {
       cancelAlertDialog()
     }
