@@ -52,8 +52,18 @@ function createLog(body) {
 }
 
 // when worker receives the request body from the main thread
-self.onmessage = function (event) {
 
+self.onmessage = function (event) {
+  setTimeout(function () {
+    var auth = firebase.auth().currentUser;
+    if (auth) {
+      handleMessageEvt(event);
+      return;
+    }
+  }, 500);
+};
+
+function handleMessageEvt(event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log);
     return;
@@ -65,7 +75,7 @@ self.onmessage = function (event) {
   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
     console.log(error);
   });
-};
+}
 
 // Performs XMLHTTPRequest for the API's.
 

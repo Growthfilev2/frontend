@@ -280,6 +280,7 @@ function useGeolocationApi(provider) {
     useHTML5Location();
   }
 }
+
 function useHTML5Location() {
   locationInterval().then(function (navigatorData) {
     updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
@@ -324,10 +325,12 @@ function locationUpdationSuccess(location) {
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
     suggestCheckIn(true).then(function () {
       if (history.state[0] === 'listView') {
-        listView({
-          urgent: false,
-          nearby: true
-        });
+        if (!app.isNewDay) {
+          listView({
+            urgent: false,
+            nearby: true
+          });
+        }
       }
     });
   }
@@ -336,21 +339,22 @@ function locationUpdationSuccess(location) {
 function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
   if (!dialog) return;
-  if (isDialogOpened('#suggest-checkIn-dialog')) return;
+  if (document.getElementById('dialog--component')) return;
+  dialog['root_'].classList.remove('hidden');
   dialog.show();
-}
-
-function showSubscriptionSelectorForCheckIn(evt, dialog) {
-  getRootRecord().then(function (rootRecord) {
-    suggestCheckIn(false).then(function () {
-      if (rootRecord.offices.length === 1) {
-        createTempRecord(rootRecord.offices[0], 'check-in');
-      } else {
-        callSubscriptionSelectorUI(evt, true);
-      }
-    });
-  }).catch(function (error) {
-    dialog.close();
+  dialog.listen('MDCDialog:accept', function (evt) {
+    getRootRecord().then(function (rootRecord) {
+      suggestCheckIn(false).then(function () {
+        if (rootRecord.offices.length === 1) {
+          createTempRecord(rootRecord.offices[0], 'check-in');
+        } else {
+          callSubscriptionSelectorUI(evt, true);
+        }
+      });
+    }).catch(function (error) {});
+  });
+  dialog.listen('MDCDialog:cancel', function (evt) {
+    suggestCheckIn(false).then(console.log).catch(console.log);
   });
 }
 
