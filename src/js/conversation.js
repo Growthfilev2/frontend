@@ -2767,9 +2767,9 @@ function createSimpleInput(value, canEdit, withIcon, key, required) {
   }
   textField.appendChild(input)
   textField.appendChild(ripple)
-  const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
-
-
+  if(textField) {
+    const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
+  }
   return textField
 }
 
