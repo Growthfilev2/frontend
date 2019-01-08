@@ -203,7 +203,7 @@ function geolocationApi(method, url, data) {
             'success': true
           })
         } else {
-          
+
           setGeolocationApiUsage(false).then(function () {
             reject({
               message: xhr.response,
@@ -225,7 +225,7 @@ function manageLocation() {
 
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
-      if(shouldFetchCellTower(rootRecord.location)) {
+      if (shouldFetchCellTower(rootRecord.location)) {
         useGeolocationApi(rootRecord.location.provider);
         return;
       }
@@ -237,8 +237,8 @@ function manageLocation() {
   useHTML5Location()
 }
 
-function shouldFetchCellTower(locationObject){
-  if(locationObject.hasOwnProperty('useGeolocationApi')) {
+function shouldFetchCellTower(locationObject) {
+  if (locationObject.hasOwnProperty('useGeolocationApi')) {
     return locationObject.useGeolocationApi;
   }
   return true
@@ -249,40 +249,41 @@ function useGeolocationApi(provider){
   var CelllarJson = false;
 
   try {
-      CelllarJson = Towers.getCellularData();
-   
-      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+    CelllarJson = Towers.getCellularData();
 
-        if (provider === 'MOCK') {
-          geoFetchPromise.then(function (geoData) {
-            updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
-          }).catch(function (error) {
-            requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-          })
-          return;
-        }
+    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
-        geoFetchPromise.then(function (geoData) {
-          initLocationInterval(geoData)
-        }).catch(function (error) {
-          initLocationInterval(error)
-        })
+    if (provider === 'MOCK') {
+      geoFetchPromise.then(function (geoData) {
+        updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+      }).catch(function (error) {
+        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+      })
+      return;
+    }
 
-      } catch (e) {
-        requestCreator('instant', JSON.stringify({
-          message: {
-            error: e.message,
-            file: 'services.js',
-            lineNo: 231,
-            device: JSON.parse(native.getInfo()),
-            help: 'Problem in calling method for fetching cellular towers.'
-          }
-        }));
+    geoFetchPromise.then(function (geoData) {
+      initLocationInterval(geoData)
+    }).catch(function (error) {
+      initLocationInterval(error)
+    })
 
-        if (provider === 'MOCK') return;
-        useHTML5Location()
+  } catch (e) {
+    requestCreator('instant', JSON.stringify({
+      message: {
+        error: e.message,
+        file: 'services.js',
+        lineNo: 231,
+        device: JSON.parse(native.getInfo()),
+        help: 'Problem in calling method for fetching cellular towers.'
       }
+    }));
+
+    if (provider === 'MOCK') return;
+    useHTML5Location()
+  }
 }
+
 function useHTML5Location() {
   locationInterval().then(function (navigatorData) {
     updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
@@ -327,41 +328,45 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true).then(function(){
-      if (history.state[0] === 'listView') {
+    suggestCheckIn(true).then(function () {
+    if (history.state[0] === 'listView') {
+      if(!app.isNewDay) {
         listView({
           urgent: false,
           nearby: true
         });
       }
-    })
-  }
+    }
+  })
+}
 }
 
 function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
   if (!dialog) return;
-  if(isDialogOpened('#suggest-checkIn-dialog')) return;
+  if(document.getElementById('dialog--component')) return;
+  dialog['root_'].classList.remove('hidden');
   dialog.show();
+  dialog.listen('MDCDialog:accept', function (evt) {
+    getRootRecord().then(function (rootRecord) {
+      suggestCheckIn(false).then(function () {
+        if (rootRecord.offices.length === 1) {
+          createTempRecord(rootRecord.offices[0], 'check-in')
+        } else {
+          callSubscriptionSelectorUI(evt, true)
+        }
+      })
+    }).catch(function (error) {})
+  })
+  dialog.listen('MDCDialog:cancel', function (evt) {
+    suggestCheckIn(false).then(console.log).catch(console.log)
+   
+  })
 }
 
-function showSubscriptionSelectorForCheckIn(evt,dialog){
-  getRootRecord().then(function (rootRecord) {
-    suggestCheckIn(false).then(function(){
-      if (rootRecord.offices.length === 1) {
-        createTempRecord(keysArray[0], 'check-in')
-      } else {
-        callSubscriptionSelectorUI(evt, true)
-      }
-    })
-  }).catch(function (error) {
-  dialog.close();
-})
-}
-
-function isDialogOpened(id){
+function isDialogOpened(id) {
   const currentDialog = document.querySelector(id)
-  if(!currentDialog) return false;
+  if (!currentDialog) return false;
   const isOpen = currentDialog.classList.contains('mdc-dialog--open');
   return isOpen;
 }
@@ -783,7 +788,7 @@ function resetOffset() {
 
 function changeState(data) {
   history.pushState(['listView'], null, null);
-  
+
 }
 
 function updateIDB(data) {
@@ -817,7 +822,7 @@ function updateIDB(data) {
       urgent: false,
       nearBy: false
     });
-    
+
     return;
   }
 

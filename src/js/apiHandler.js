@@ -50,19 +50,31 @@ function createLog(body) {
 }
 
 // when worker receives the request body from the main thread
+
 self.onmessage = function (event) {
-  
-    if (event.data.type === 'now') {
-      fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
-      return
+  setTimeout(function(){
+    const auth = firebase.auth().currentUser
+    if(auth)  {
+      handleMessageEvt(event);
+      return;
     }
-    if (event.data.type === 'instant') {
-      instant(event.data.body)
-      return
-    }
-    requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
-      console.log(error)
-    })
+  },500)
+  }
+
+
+
+function handleMessageEvt(event){
+  if (event.data.type === 'now') {
+    fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
+    return
+  }
+  if (event.data.type === 'instant') {
+    instant(event.data.body)
+    return
+  }
+  requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
+    console.log(error)
+  })    
 }
 
 

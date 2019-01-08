@@ -214,20 +214,23 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
+  const alertDom = document.createElement('div')
+  alertDom.id = 'alert--box'
   headerDiv.appendChild(createHeader('app-main-header'))
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
+  layout.appendChild(alertDom)
   document.body.innerHTML = layout.outerHTML
   imageViewDialog();
-  suggestCheckInDialog()
+
 }
 
-function suggestCheckInDialog(){
+function createCheckInDialog(){
 
     var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
+    aside.className = 'mdc-dialog mdc-dialog--open hidden';
     aside.id = 'suggest-checkIn-dialog';
 
     var surface = document.createElement('div');
@@ -254,6 +257,13 @@ function suggestCheckInDialog(){
     ok.textContent = 'Okay';
     ok.style.backgroundColor = '#3498db';
 
+    var canel = document.createElement('button');
+    canel.type = 'button';
+    canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    canel.textContent = 'Cancel';
+    canel.style.backgroundColor = '#3498db';
+
+    footer.appendChild(canel);
     footer.appendChild(ok);
 
     surface.appendChild(header)
@@ -264,14 +274,8 @@ function suggestCheckInDialog(){
     const backdrop = document.createElement('div')
     backdrop.className = 'mdc-dialog__backdrop'
     aside.appendChild(backdrop);
-    document.body.appendChild(aside);
+    return aside
 
-    var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
-
-    dialog.listen('MDCDialog:accept', function (evt) {
-    showSubscriptionSelectorForCheckIn(evt,dialog)
-  })
-  dialog.close();
 }
 
 function createHeader(id) {
@@ -346,9 +350,10 @@ function startApp() {
       userSignedOut()
       return
     }
-    if(localStorage.getItem('dbexist')) {
+     if(localStorage.getItem('dbexist')) {
       init(auth)
     }
+
   })
 }
 // new day suggest
@@ -480,20 +485,16 @@ function resetApp(auth, from) {
 function startInitializatioOfList(auth) {
   localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
-    
-  
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: ''
-    });
-
     suggestCheckIn(isNew).then(function(){
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: ''
+      });
       listView({urgent:isNew,nearby:false});
+      setInterval(function () {
+        manageLocation();
+      }, 5000);
     })
-  
   }).catch(function(error){
     requestCreator('instant',JSON.stringify({message:error}))
   })
