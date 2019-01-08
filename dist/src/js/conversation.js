@@ -2640,8 +2640,9 @@ function createSimpleInput(value, canEdit, withIcon, key, required) {
   }
   textField.appendChild(input);
   textField.appendChild(ripple);
-  var jsTField = new mdc.textField.MDCTextField.attachTo(textField);
-
+  if (textField) {
+    var jsTField = new mdc.textField.MDCTextField.attachTo(textField);
+  }
   return textField;
 }
 
