@@ -490,7 +490,7 @@ function resetApp(auth, from) {
 function startInitializatioOfList(auth) {
   localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
-    suggestCheckIn(isNew).then(function(){
+    suggestCheckIn(true).then(function(){
       requestCreator('now', {
         device: native.getInfo(),
         from: ''

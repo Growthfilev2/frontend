@@ -322,12 +322,13 @@ function locationUpdationSuccess(location) {
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+
   const locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
-  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
+  if (isLocationMoreThanThreshold(distanceBetweenBoth)) {
     suggestCheckIn(true).then(function () {
     if (history.state[0] === 'listView') {
       app.isNewDay(firebase.auth().currentUser).then(function(isNew){
@@ -344,6 +345,8 @@ function locationUpdationSuccess(location) {
 }
 }
 
+
+
 function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
   if (!dialog) return;
@@ -354,12 +357,12 @@ function showSuggestCheckInDialog() {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
         if (rootRecord.offices.length === 1) {
-          createTempRecord(rootRecord.offices[0], 'check-in')
+          createTempRecord(rootRecord.offices[0], 'check-in',{suggestCheckIn:true})
         } else {
           callSubscriptionSelectorUI(evt, true)
         }
       })
-    }).catch(function (error) {})
+    }).catch(console.log)
   })
   dialog.listen('MDCDialog:cancel', function (evt) {
     suggestCheckIn(false).then(console.log).catch(console.log)
@@ -546,12 +549,17 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 
 }
 
-function isNewLocationMoreThanThreshold(distance) {
+function isLocationMoreThanThreshold(distance) {
   const THRESHOLD = 0.5; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
 
+function isLocationLessThanThreshold(distance){
+  const THRESHOLD = 0.5; //km
+  if(distance <= THRESHOLD) return true
+  return false
+}
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {

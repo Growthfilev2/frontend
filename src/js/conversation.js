@@ -492,7 +492,7 @@ function createHeaderContent(db, id) {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
 
           if (id) {
-            updateCreateActivity(record, true)
+            updateCreateActivity(record)
           } else {
             listView()
           }
@@ -659,9 +659,8 @@ function initializeSelectorWithData(evt, data) {
   req.onsuccess = function () {
     const db = req.result
     if (data.store === 'map') {
-      const objectStore = db.transaction(data.store).objectStore(data.store)
-      selectorStore = objectStore.index('location')
-      fillMapInSelector(db, selectorStore, dialog, data)
+      const tx = db.transaction([data.store]);
+      fillMapInSelector(db, tx, dialog, data)
     }
     if (data.store === 'subscriptions') {
 
@@ -956,18 +955,64 @@ function resetSelectedContacts() {
   })
 }
 
-function fillMapInSelector(db, selectorStore, dialog, data) {
-  const ul = document.getElementById('data-list--container')
-  selectorStore.openCursor(null, 'nextunique').onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) return
-    if (cursor.value.location) {
-      ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-    }
-
-    cursor.continue()
+function fillMapInSelector(db, tx, dialog, data) {
+  console.log(data);
+  if(data.record.venue[0].nearBy) {
+      getRootRecord().then(function(record){
+        const req = indexedDB.open(firebase.auth().currentUser.uid);
+        req.onsuccess = function(){
+          const db =req.result;
+          const tx = db.transaction(['map']);
+          getLocationForMapSelector(tx,data,record.location).then(function(){
+            handleClickListnersForMap(db,dialog,data)
+          }).catch(console.log)
+        }
+    })
   }
+  else {
+    getLocationForMapSelector(tx,data).then(function(){
+      handleClickListnersForMap(db,dialog,data)
 
+    }).catch(console.log)
+  }
+}
+
+function getLocationForMapSelector(tx,data,currentLocation){
+  return new Promise(function(resolve,reject){
+
+    const ul = document.getElementById('data-list--container')
+    const store = tx.objectStore('map');
+    
+    store.index('location').openCursor(null, 'nextunique').onsuccess = function (event) {
+      const cursor = event.target.result
+      if (!cursor) return
+      if(cursor.value.office !== data.record.office) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.location) {
+        if(currentLocation) {
+          const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+          if(isLocationLessThanThreshold(distanceBetweenBoth)){
+            ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+          }
+        }
+        else {
+          ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+        }
+      }
+      cursor.continue()
+    }
+    tx.oncomplete = function(){
+      resolve(true)      
+    }
+    tx.onerror = function(){
+      reject(tx.error)
+    }
+  })
+}
+
+function handleClickListnersForMap(db,dialog,data){
   document.getElementById('selector--search').addEventListener('click', function () {
 
     initSearchForSelectors(db, 'map', data)
@@ -1150,6 +1195,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 }
 
 function createTempRecord(office, template, data) {
+  console.log(data)
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1163,13 +1209,14 @@ function createTempRecord(office, template, data) {
         console.log("no such combo")
         return;
       }
-      const bareBonesVenue = {}
       const bareBonesVenueArray = []
 
       const bareBonesScheduleArray = []
       selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
-
+        if(template === 'check-in' && data.suggestCheckIn) {
+          bareBonesVenue.nearBy = true
+        }
         bareBonesVenue.venueDescriptor = venue
         bareBonesVenue.location = ''
         bareBonesVenue.address = ''
@@ -1202,7 +1249,7 @@ function createTempRecord(office, template, data) {
         create: true
       }
 
-      updateCreateActivity(bareBonesRecord, true)
+      updateCreateActivity(bareBonesRecord)
       removeDialog()
 
     }
@@ -1458,12 +1505,9 @@ function updateCreateContainer(recordCopy,db) {
   return container
 }
 
-function updateCreateActivity(record, pushState) {
+function updateCreateActivity(record) {
 
-  if (pushState) {
-    history.pushState(['updateCreateActivity', record], null, null)
-  }
-
+  history.pushState(['updateCreateActivity', record], null, null)
   //open indexedDB
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
