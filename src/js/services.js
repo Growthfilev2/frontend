@@ -330,12 +330,15 @@ function locationUpdationSuccess(location) {
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
     suggestCheckIn(true).then(function () {
     if (history.state[0] === 'listView') {
-      if(!app.isNewDay) {
-        listView({
-          urgent: false,
-          nearby: true
-        });
-      }
+      app.isNewDay(firebase.auth().currentUser).then(function(isNew){
+        if(!isNew) {
+          listView({
+            urgent: false,
+            nearby: true
+          });
+        }
+      })
+      
     }
   })
 }
