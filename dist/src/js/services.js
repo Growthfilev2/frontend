@@ -316,6 +316,7 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
+
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
@@ -323,10 +324,10 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true).then(function () {
-      if (history.state[0] === 'listView') {
-        app.isNewDay(firebase.auth().currentUser).then(function (isNew) {
-          if (!isNew) {
+    app.isNewDay(firebase.auth().currentUser.uid).then(function (isNew) {
+      if (!isNew) {
+        suggestCheckIn(true).then(function () {
+          if (history.state[0] === 'listView') {
             listView({
               urgent: false,
               nearby: true

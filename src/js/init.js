@@ -489,6 +489,9 @@ function resetApp(auth, from) {
 
 function startInitializatioOfList(auth) {
   localStorage.removeItem('clickedActivity');
+  setInterval(function () {
+    manageLocation();
+  }, 5000);
   app.isNewDay(auth).then(function (isNew) {
     suggestCheckIn(isNew).then(function(){
       requestCreator('now', {
@@ -496,9 +499,6 @@ function startInitializatioOfList(auth) {
         from: ''
       });
       listView({urgent:isNew,nearby:false});
-      setInterval(function () {
-        manageLocation();
-      }, 5000);
     })
   }).catch(function(error){
     requestCreator('instant',JSON.stringify({message:error}))
