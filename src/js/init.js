@@ -365,8 +365,12 @@ function startApp() {
 // if location changes
 let app = function () {
   return {
+  
     today: function () {
-      return moment().format("DD/MM/YYYY");
+      return moment();
+    },
+    format: function() {
+      return this.today().format("DD/MM/YYYY")
     },
     tomorrow: function () {
       return moment(this.today()).add(1, 'day');
@@ -380,22 +384,67 @@ let app = function () {
         })
       })
     },
-    isNewDay: function () {
-      return new Promise(function (resolve, reject) {
-        app.getLastLocationTime().then(function (time) {
-          if (moment(time).isSame(moment(), 'day')) {
-            resolve(false);
-          } else {
-            resolve(true);
+    isEmployeeOnLeave : function(auth){
+      return new Promise(function(resolve,reject){
+        getRootRecord().then(function(rootRecord){
+          let isOnLeave = false;
+          const req = indexedDB.open(auth);
+          req.onsuccess = function(){
+            const db = req.result;
+            const tx = db.transaction(['calendar']);
+            const store = tx.objectStore('calendar');
+            store.openCursor(null,'next').onsuccess = function(event){
+              const cursor = event.target.result;
+              if(!cursor) return;
+              if(cursor.value.office !== rootRecord.offices[0]) {
+                cursor.continue();
+                return;
+              }
+              if(cursor.value.template !== 'leave') {
+                cursor.continue();
+                return;
+              } 
+              if(cursor.value.status !== 'CONFIRMED') {
+                cursor.continue();
+                return;
+              }
+              if(this.today().isBetween(cursor.value.start,cursor.value.end,null,'[]')) {
+                 isOnLeave = true;
+                 return;
+              }
+              cursor.continue()
+            }
+            tx.oncomplete = function(){
+              resolve(isOnLeave)
+            }
+            tx.onerror = function(){
+              reject(tx.error)
+            }
           }
-        }).catch(function (error) {
-          reject(error)
+          req.onerror = function(){
+            reject(req.error)
+          }
         })
+      })
+    },
+    isNewDay: function (auth) {
+      return new Promise(function (resolve, reject) {
+       
+          app.getLastLocationTime().then(function (time) {
+            if (moment(time).isSame(this.today(), 'day')) {
+              resolve(false);
+            } else {
+              resolve(true);
+            }
+          }).catch(function (error) {
+            reject(error)
+          })
       })
     }
   }
 }();
 
+ 
 
 function idbVersionLessThan2(auth) {
   return new Promise(function (resolve, reject) {
@@ -455,7 +504,13 @@ function init(auth) {
       if (lessThanTwo) {
         resetApp(auth, from);
       } else {
-        startInitializatioOfList(auth);
+        runAppChecks(auth).then(startInitializatioOfList).catch(function(error){
+          requestCreator('instant',JSON.stringify({message:JSON.stringify(error)}))
+          return {
+            onLeave:false,
+            newDay:false
+          }
+        }).then(startInitializatioOfList)
       }
       return;
     }
@@ -487,20 +542,35 @@ function resetApp(auth, from) {
   })
 }
 
-function startInitializatioOfList(auth) {
-  localStorage.removeItem('clickedActivity');
-  app.isNewDay(auth).then(function (isNew) {
-    suggestCheckIn(true).then(function(){
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: ''
-      });
-      listView({urgent:isNew,nearby:false});
-      setInterval(function () {
-        manageLocation();
-      }, 5000);
+function runAppChecks(auth) {
+  return newPromise(function(){
+ 
+    const promiseArray = [app.isEmployeeOnLeave(auth),app.isNewDay(auth)]
+    Promise.all(promiseArray).then(function(data){
+      const leave = data[0]
+      const newDay = data[1]
+      if(leave) {
+        resolve(!leave)
+        return
+      }
+      return resolve(newDay)
+    }).catch(function(error){
+      reject(error)
     })
-  }).catch(function(error){
-    requestCreator('instant',JSON.stringify({message:error}))
+  })
+
+}
+
+function startInitializatioOfList(checkIn){
+  suggestCheckIn(checkIn).then(function(){
+    localStorage.removeItem('clickedActivity');
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: ''
+    });
+    listView({urgent:isNew,nearby:false});
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
   })
 }
