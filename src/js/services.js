@@ -321,6 +321,7 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
+  
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   const locationEvent = new CustomEvent("location", {
     "detail": location.new
@@ -328,23 +329,25 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true).then(function () {
-    if (history.state[0] === 'listView') {
-      if(!app.isNewDay) {
-        listView({
-          urgent: false,
-          nearby: true
-        });
+    app.isNewDay(firebase.auth().currentUser.uid).then(function (isNew) {
+      if (!isNew) {
+        suggestCheckIn(true).then(function () {
+          if (history.state[0] === 'listView') {
+            listView({
+              urgent: false,
+              nearby: true
+            });
+          }
+        })
       }
-    }
-  })
-}
+    })
+  }
 }
 
 function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
   if (!dialog) return;
-  if(document.getElementById('dialog--component')) return;
+  if (document.getElementById('dialog--component')) return;
   dialog['root_'].classList.remove('hidden');
   dialog.show();
   dialog.listen('MDCDialog:accept', function (evt) {
@@ -360,7 +363,7 @@ function showSuggestCheckInDialog() {
   })
   dialog.listen('MDCDialog:cancel', function (evt) {
     suggestCheckIn(false).then(console.log).catch(console.log)
-   
+
   })
 }
 
