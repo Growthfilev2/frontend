@@ -321,7 +321,7 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
-  
+
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   const locationEvent = new CustomEvent("location", {
     "detail": location.new
