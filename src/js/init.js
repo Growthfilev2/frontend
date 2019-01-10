@@ -43,11 +43,12 @@ let native = function () {
       if (this.getName() === 'Android') {
         try {
           return AndroidId.getDeviceId();
-        }
-        catch(e){
-          requestCreator('instant',JSON.stringify({message:e.message}))
+        } catch (e) {
+          requestCreator('instant', JSON.stringify({
+            message: e.message
+          }))
           return JSON.stringify({
-            baseOs:this.getName(),
+            baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
             appVersion: 4,
@@ -69,13 +70,13 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       url: url,
       lineNo: lineNo,
       columnNo: columnNo,
-      stack:error.stack,
-      name:error.name,
-      device:native.getInfo(),
+      stack: error.stack,
+      name: error.name,
+      device: native.getInfo(),
     }
   }
   requestCreator('instant', JSON.stringify(errorJS))
-}  
+}
 
 // initialize smooth scrolling
 window.scrollBy({
@@ -89,7 +90,7 @@ window.scrollBy({
 window.addEventListener('load', function () {
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-  if (!window.Worker && !window.indexedDB) {  
+  if (!window.Worker && !window.indexedDB) {
     const messageData = {
       title: title,
       message: message,
@@ -107,9 +108,10 @@ window.addEventListener('load', function () {
     }
     try {
       Android.notification(JSON.stringify(messageData))
-    }
-    catch(e){
-      requestCreator('instant',JSON.stringify({message:e.message}))
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }))
       appDialog(message);
     }
     return
@@ -124,11 +126,11 @@ window.addEventListener('load', function () {
       nextWeek: 'dddd [at] LT',
       sameElse: 'L'
     },
-    longDateFormat : {
+    longDateFormat: {
       LT: "h:mm A",
       LTS: "h:mm:ss A",
       L: "DD/MM/YY",
-  },
+    },
 
     months: [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -147,7 +149,7 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
   if (event.state[0] === 'listView') {
-      window[event.state[0]]()    
+    window[event.state[0]]()
     return;
   }
   window[event.state[0]](event.state[1], false)
@@ -159,37 +161,36 @@ function backNav() {
 
 function firebaseUiConfig(value) {
 
-  return  {
+  return {
     callbacks: {
-      signInSuccessWithAuthResult: function(authResult) {
-      
-        if(value) {
-          updateEmail(authResult.user,value);
-        }
-        else {
+      signInSuccessWithAuthResult: function (authResult) {
+
+        if (value) {
+          updateEmail(authResult.user, value);
+        } else {
           init(authResult.user);
         }
         return false;
       },
-      uiShown: function() {
-      
+      uiShown: function () {
+
       }
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
     signInOptions: [
       // Leave the lines as is for the providers you want to offer your users.
-     {
-      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-      recaptchaParameters: {
-        type: 'image', // 'audio'
-        size: 'normal', // 'invisible' or 'compact'
-        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
-      },
-      defaultCountry: 'IN',
-     }
+      {
+        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+        recaptchaParameters: {
+          type: 'image', // 'audio'
+          size: 'normal', // 'invisible' or 'compact'
+          badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+        },
+        defaultCountry: 'IN',
+      }
     ]
-  
+
   };
 }
 
@@ -232,54 +233,54 @@ function layoutGrid() {
 
 }
 
-function createCheckInDialog(){
+function createCheckInDialog() {
 
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open hidden';
-    aside.id = 'suggest-checkIn-dialog';
+  var aside = document.createElement('aside');
+  aside.className = 'mdc-dialog mdc-dialog--open hidden';
+  aside.id = 'suggest-checkIn-dialog';
 
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
+  var surface = document.createElement('div');
+  surface.className = 'mdc-dialog__surface';
+  surface.style.width = '90%';
+  surface.style.height = 'auto';
 
-    const header = document.createElement('header');
-    header.className = 'mdc-dialog__header'
-    const headerText = document.createElement('h2')
-    headerText.className ='mdc-dialog__header__title'
-    headerText.textContent = 'New Location Detected'
+  const header = document.createElement('header');
+  header.className = 'mdc-dialog__header'
+  const headerText = document.createElement('h2')
+  headerText.className = 'mdc-dialog__header__title'
+  headerText.textContent = 'New Location Detected'
   header.appendChild(headerText)
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body';
-    section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
+  var section = document.createElement('section');
+  section.className = 'mdc-dialog__body';
+  section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
 
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer';
-    
-    var ok = document.createElement('button');
-    ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    ok.textContent = 'Okay';
-    ok.style.backgroundColor = '#3498db';
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
 
-    var canel = document.createElement('button');
-    canel.type = 'button';
-    canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-    canel.textContent = 'Cancel';
-    canel.style.backgroundColor = '#3498db';
+  var ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
+  ok.textContent = 'Okay';
+  ok.style.backgroundColor = '#3498db';
 
-    footer.appendChild(canel);
-    footer.appendChild(ok);
+  var canel = document.createElement('button');
+  canel.type = 'button';
+  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+  canel.textContent = 'Cancel';
+  canel.style.backgroundColor = '#3498db';
 
-    surface.appendChild(header)
-    surface.appendChild(section);
-    surface.appendChild(footer);
-    aside.appendChild(surface);
+  footer.appendChild(canel);
+  footer.appendChild(ok);
 
-    const backdrop = document.createElement('div')
-    backdrop.className = 'mdc-dialog__backdrop'
-    aside.appendChild(backdrop);
-    return aside
+  surface.appendChild(header)
+  surface.appendChild(section);
+  surface.appendChild(footer);
+  aside.appendChild(surface);
+
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mdc-dialog__backdrop'
+  aside.appendChild(backdrop);
+  return aside
 
 }
 
@@ -288,7 +289,7 @@ function createHeader(id) {
   const header = document.createElement('header')
   header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
   header.id = id
-  
+
   const row = document.createElement('div')
   row.className = 'mdc-top-app-bar__row'
 
@@ -296,7 +297,7 @@ function createHeader(id) {
   sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
 
   const leftUI = document.createElement('div')
-  leftUI.id = id+'view-type'
+  leftUI.id = id + 'view-type'
   leftUI.className = 'view-type'
   sectionStart.appendChild(leftUI)
 
@@ -304,10 +305,10 @@ function createHeader(id) {
   sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
 
   const rightUI = document.createElement('div')
-  rightUI.id = id+'action-data'
-  
+  rightUI.id = id + 'action-data'
+
   rightUI.className = 'action-data'
-  
+
   sectionEnd.appendChild(rightUI)
   row.appendChild(sectionStart)
   row.appendChild(sectionEnd)
@@ -355,7 +356,7 @@ function startApp() {
       userSignedOut()
       return
     }
-     if(localStorage.getItem('dbexist')) {
+    if (localStorage.getItem('dbexist')) {
       init(auth)
     }
 
@@ -365,11 +366,11 @@ function startApp() {
 // if location changes
 let app = function () {
   return {
-  
+
     today: function () {
       return moment();
     },
-    format: function() {
+    format: function () {
       return this.today().format("DD/MM/YYYY")
     },
     tomorrow: function () {
@@ -384,67 +385,113 @@ let app = function () {
         })
       })
     },
-    isEmployeeOnLeave : function(auth){
-      return new Promise(function(resolve,reject){
-        getRootRecord().then(function(rootRecord){
-          let isOnLeave = false;
-          const req = indexedDB.open(auth);
-          req.onsuccess = function(){
-            const db = req.result;
-            const tx = db.transaction(['calendar']);
-            const store = tx.objectStore('calendar');
-            store.openCursor(null,'next').onsuccess = function(event){
-              const cursor = event.target.result;
-              if(!cursor) return;
-              if(cursor.value.office !== rootRecord.offices[0]) {
-                cursor.continue();
-                return;
-              }
-              if(cursor.value.template !== 'leave') {
-                cursor.continue();
-                return;
-              } 
-              if(cursor.value.status !== 'CONFIRMED') {
-                cursor.continue();
-                return;
-              }
-              if(this.today().isBetween(cursor.value.start,cursor.value.end,null,'[]')) {
-                 isOnLeave = true;
-                 return;
-              }
-              cursor.continue()
-            }
-            tx.oncomplete = function(){
-              resolve(isOnLeave)
-            }
-            tx.onerror = function(){
-              reject(tx.error)
-            }
+    isNewDay: function (auth) {
+      return new Promise(function (resolve, reject) {
+
+        app.getLastLocationTime().then(function (time) {
+          if (moment(time).isSame(this.today(), 'day')) {
+            resolve(false);
+          } else {
+            resolve(true);
           }
-          req.onerror = function(){
-            reject(req.error)
-          }
+        }).catch(function (error) {
+          reject(error)
         })
       })
     },
-    isNewDay: function (auth) {
-      return new Promise(function (resolve, reject) {
-       
-          app.getLastLocationTime().then(function (time) {
-            if (moment(time).isSame(this.today(), 'day')) {
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          }).catch(function (error) {
-            reject(error)
-          })
-      })
+
+    isCurrentTimeNearStart: function (startTime) {
+
+      const offsetStartBefore = moment(startTime).subtract(15, 'minutes')
+      const offsetStartAfter = moment(startTime).add(15, 'minutes');
+
+      if (this.today().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')) {
+        return true
+      }
+      return false
+    },
+    isCurrentTimeNearEnd: function (endTime) {
+      const offsetEndBefore = moment(endTime).subtract(15, 'minutes');
+      const offsetEndAfter = moment(endTime).add(15, 'minutes');
+      if (this.today().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')) {
+        return true
+      }
+      return false
     }
   }
 }();
 
- 
+function getEmployeeDetails() {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['children']);
+      const store = tx.objectStore('childrend');
+      let details;
+      store.index('template').openCursor('employee').onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.status !== 'CONFIRMED') {
+          cursor.continue();
+          return;
+        }
+        details = cursor.value
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        resolve(details);
+      }
+    }
+  })
+}
+
+function isEmployeeOnLeave() {
+  getEmployeeDetails().then(function (empDetails) {
+
+    empDetails.onLeave = false
+    const req = indexedDB.open(auth);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['calendar']);
+      const store = tx.objectStore('calendar');
+      store.index('activityId').openCursor(empDetails.activityId, 'next').onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.office !== empDetails.office) {
+          cursor.continue();
+          return;
+        }
+
+        if (cursor.value.template !== 'leave') {
+          cursor.continue();
+          return;
+        }
+
+        if (cursor.value.status !== 'CONFIRMED') {
+          cursor.continue();
+          return;
+        }
+
+        if (this.today().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+          empDetails.onLeave = true
+          return;
+        }
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        resolve(isOnLeave)
+      }
+      tx.onerror = function () {
+        reject(tx.error)
+      }
+    }
+    req.onerror = function () {
+      reject(req.error)
+    }
+  })
+}
+
 
 function idbVersionLessThan2(auth) {
   return new Promise(function (resolve, reject) {
@@ -464,7 +511,10 @@ function idbVersionLessThan2(auth) {
       resolve(value)
     }
     req.onerror = function () {
-      reject({error:req.error,device:native.getInfo()})
+      reject({
+        error: req.error,
+        device: native.getInfo()
+      })
     }
   })
 }
@@ -475,7 +525,7 @@ function removeIDBInstance(auth) {
     const failure = {
       message: 'Please Restart The App',
       error: '',
-      device:native.getInfo()
+      device: native.getInfo()
     };
 
     const req = indexedDB.deleteDatabase(auth.uid)
@@ -494,9 +544,9 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-  
+
   document.getElementById("main-layout-app").style.display = 'block'
-  
+
   idbVersionLessThan2(auth).then(function (lessThanTwo) {
 
     if (localStorage.getItem('dbexist')) {
@@ -504,32 +554,34 @@ function init(auth) {
       if (lessThanTwo) {
         resetApp(auth, from);
       } else {
-        runAppChecks(auth).then(startInitializatioOfList).catch(function(error){
-          requestCreator('instant',JSON.stringify({message:JSON.stringify(error)}))
-          return {
-            onLeave:false,
-            newDay:false
-          }
+
+        runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
+          requestCreator('instant', JSON.stringify({
+            message: JSON.stringify(error)
+          }))
+          return false
         }).then(startInitializatioOfList)
       }
       return;
     }
 
     resetApp(auth, 0)
-  }).catch(function(error){
-    requestCreator('instant',JSON.stringify({message:error}));
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
   });
 }
 
 function resetApp(auth, from) {
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
-    history.pushState(null,null,null);
+    history.pushState(null, null, null);
     document.getElementById('growthfile').appendChild(loader('init-loader'))
-    
-    setTimeout(function(){
+
+    setTimeout(function () {
       snacks('Growthfile is Loading. Please Wait');
-    },1000)
+    }, 1000)
 
     requestCreator('now', {
       device: native.getInfo(),
@@ -538,37 +590,54 @@ function resetApp(auth, from) {
 
   }).catch(function (error) {
     snacks(error.message);
-    requestCreator('instant',JSON.stringify({message:error}));
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
   })
 }
 
 function runAppChecks(auth) {
-  return newPromise(function(){
- 
-    const promiseArray = [app.isEmployeeOnLeave(auth),app.isNewDay(auth)]
-    Promise.all(promiseArray).then(function(data){
-      const leave = data[0]
-      const newDay = data[1]
-      if(leave) {
-        resolve(!leave)
-        return
+  return new Promise(function (resolve, reject) {
+    isEmployeeOnLeave().then(function (emp) {
+      // suggest check in false
+      if (emp.onLeave) {
+        resolve(false)
+        return;
       }
-      return resolve(newDay)
-    }).catch(function(error){
-      reject(error)
+
+      window.addEventListener('locationChanged', function _listener(e) {
+        const changed = e.detail;
+        if(changed) {
+          return resolve(changed);
+        }
+        app.isNewDay().then(function (newDay) {
+
+          if (newDay) {
+            if (isCurrentTimeNearStart(emp)) {
+              return resolve(newDay)
+            }
+            if (isCurrentTimeNearEnd(emp)) {
+              return resolve(newDay)
+            }
+            return resolve(false)
+          }
+        })
+      }, true);
     })
   })
-
 }
 
-function startInitializatioOfList(checkIn){
-  suggestCheckIn(checkIn).then(function(){
+function startInitializatioOfList(checkIn) {
+  suggestCheckIn(checkIn).then(function () {
     localStorage.removeItem('clickedActivity');
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
     });
-    listView({urgent:isNew,nearby:false});
+    listView({
+      urgent: isNew,
+      nearby: false
+    });
     setInterval(function () {
       manageLocation();
     }, 5000);
