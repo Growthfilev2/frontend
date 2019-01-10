@@ -1022,6 +1022,37 @@ function getLocationForMapSelector(tx, data, currentLocation) {
   })
 }
 
+
+function checkMapStoreForNearByLocation(office){
+  return new Promise(function(resolve,reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function(){
+      const results = [];
+      const db = req.result;
+      const tx = db.transaction(['map'])
+      const store = tx.objectStore('map')
+      const index = store.index('location')
+      index.openCursor().onsuccess = function(event){
+        const cursor = event.target.result;
+        if(!cursor) return;
+        if(cursor.value.office !== office) {
+          cursor.continue();
+          return;
+        }
+        results.push(cursor.value)
+        cursor.continue();
+      }
+      tx.oncomplete = function(){
+
+        resolve(results)
+      }
+      tx.onerror = function(){
+        reject(tx.error)
+      }
+    }
+  })
+}
+
 function handleClickListnersForMap(db, dialog, data) {
   document.getElementById('selector--search').addEventListener('click', function () {
 
@@ -1209,6 +1240,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 }
 
 function createTempRecord(office, template, data) {
+
   getRootRecord().then(function (record) {
 
     console.log(data)
@@ -1216,7 +1248,7 @@ function createTempRecord(office, template, data) {
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result
-      const tx = db.transaction(['subscriptions', 'map']);
+      const tx = db.transaction(['subscriptions']);
       const subscription = db.objectStore('subscriptions')
       const officeTemplateCombo = subscription.index('officeTemplate')
       const range = IDBKeyRange.only([office, template])
@@ -1227,8 +1259,34 @@ function createTempRecord(office, template, data) {
           return;
         }
 
-        const bareBonesVenueArray = []
+    
+
         const bareBonesScheduleArray = []
+        console.log(selectedCombo)
+        selectedCombo.schedule.forEach(function (schedule) {
+          const bareBonesSchedule = {}
+          bareBonesSchedule.name = schedule
+          bareBonesSchedule.startTime = ''
+          bareBonesSchedule.endTime = ''
+          bareBonesScheduleArray.push(bareBonesSchedule)
+        })
+
+
+        const bareBonesRecord = {
+          office: selectedCombo.office,
+          template: selectedCombo.template,
+          venue: '',
+          schedule: bareBonesScheduleArray,
+          attachment: selectedCombo.attachment,
+          timestamp: Date.now(),
+          canEdit: true,
+          assignees: [],
+          activityName: selectedCombo.template.toUpperCase(),
+          create: true
+        }
+
+
+        const bareBonesVenueArray = []
 
         selectedCombo.venue.forEach(function (venue) {
           const bareBonesVenue = {}
@@ -1242,9 +1300,8 @@ function createTempRecord(office, template, data) {
 
           if (template === 'check-in' && data.suggestCheckIn) {
             bareBonesVenue.nearBy = true
-
-            getLocationForMapSelector(tx, data, record.location).then(function (results) {
-              if (results.length === 1) {
+            checkMapStoreForNearByLocation(office).then(function(results){
+              if(results.length === 1) {
                 const singleLocation = results[0]
                 bareBonesVenue.location = singleLocation.location
                 bareBonesVenue.address = singleLocation.address
@@ -1253,39 +1310,17 @@ function createTempRecord(office, template, data) {
                   '_longitude': singleLocation.longitude
                 }
               }
-            }).catch(console.log)
-          } else {
-            bareBonesVenueArray.push(bareBonesVenue)
-          }
-
-
-          console.log(selectedCombo)
-          selectedCombo.schedule.forEach(function (schedule) {
-            const bareBonesSchedule = {}
-            bareBonesSchedule.name = schedule
-            bareBonesSchedule.startTime = ''
-            bareBonesSchedule.endTime = ''
-            bareBonesScheduleArray.push(bareBonesSchedule)
-          })
-
-          const bareBonesRecord = {
-            office: selectedCombo.office,
-            template: selectedCombo.template,
-            venue: bareBonesVenueArray,
-            schedule: bareBonesScheduleArray,
-            attachment: selectedCombo.attachment,
-            timestamp: Date.now(),
-            canEdit: true,
-            assignees: [],
-            activityName: selectedCombo.template.toUpperCase(),
-            create: true
-          }
-
+              bareBonesVenueArray.push(bareBonesVenue)
+              bareBonesRecord.venue = bareBonesVenueArray
+              updateCreateActivity(bareBonesRecord)
+              removeDialog()
+            })
+            return;
+          } 
+          bareBonesVenueArray.push(bareBonesVenue)
           updateCreateActivity(bareBonesRecord)
           removeDialog()
-
         });
-        
       }
     }
   });
