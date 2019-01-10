@@ -612,7 +612,7 @@ function selectorUI(evt, data) {
     modifyHeader({
       id: 'dialog--surface-header',
       left: backSpan.outerHTML,
-      right: searchIcon.outerHTML
+      right: data.template !== 'check-in' ? searchIcon.outerHTML : ''
     })
   }
 
@@ -965,7 +965,8 @@ function resetSelectedContacts() {
 
 function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
-  if (data.record.venue[0].nearBy) {
+  
+  if (data.record.template === 'check-in' && data.record.venue[0].nearBy) {
     getRootRecord().then(function (record) {
       checkMapStoreForNearByLocation().then(function(results){
         results.forEach(function(result){
@@ -974,8 +975,7 @@ function fillMapInSelector(db, tx, dialog, data) {
 
         handleClickListnersForMap(db, dialog, data)
       })
-  })
-     
+    })
   } else {
     getLocationForMapSelector(tx, data).then(function () {
       handleClickListnersForMap(db, dialog, data)
@@ -1053,6 +1053,7 @@ function checkMapStoreForNearByLocation(office){
 }
 
 function handleClickListnersForMap(db, dialog, data) {
+
   document.getElementById('selector--search').addEventListener('click', function () {
 
     initSearchForSelectors(db, 'map', data)
