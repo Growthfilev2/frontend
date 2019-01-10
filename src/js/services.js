@@ -204,8 +204,9 @@ function geolocationApi(method, url, data) {
             'useTowerInfo':true
           })
         } else {
-          if(JSON.parse(xhr.response) !== 'notFound') {
-            setGeolocationApiUsage(true).then(function () {
+          console.log(JSON.parse(xhr.response).error.errors[0].reason)
+          if(JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
+            setGeolocationApiUsage(false).then(function () {
               reject({
                 message: xhr.response,
                 cellular: data,
@@ -225,7 +226,7 @@ function manageLocation() {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
   };
 
-  // if (native.getName() === 'Android') {
+  if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
         useGeolocationApi(rootRecord.location.provider);
@@ -234,9 +235,9 @@ function manageLocation() {
 
       useHTML5Location();
     });
-  //   return;
-  // }
-  // useHTML5Location()
+    return;
+  }
+  useHTML5Location()
 }
 
 function shouldFetchCellTower(locationObject) {
@@ -510,11 +511,16 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-        record.location.latitude = finalLocation.latitude;
-        record.location.longitude = finalLocation.longitude
-        record.location.accuracy = finalLocation.accuracy;
-        record.location.lastLocationTime = finalLocation.lastLocationTime,
-        record.location.provider = finalLocation.provider
+        if(!record.location) {
+          record.location = finalLocation
+        }
+        else {
+          record.location.latitude = finalLocation.latitude;
+          record.location.longitude = finalLocation.longitude
+          record.location.accuracy = finalLocation.accuracy;
+          record.location.lastLocationTime = finalLocation.lastLocationTime,
+          record.location.provider = finalLocation.provider
+        }
         rootStore.put(record);
       };
       tx.oncomplete = function () {
