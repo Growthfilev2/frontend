@@ -200,17 +200,19 @@ function geolocationApi(method, url, data) {
             'accuracy': result.accuracy,
             'provider': 'Cellular',
             'lastLocationTime': Date.now(),
-            'success': true
+            'success': true,
+            'useTowerInfo':true
           })
         } else {
-
-          setGeolocationApiUsage(false).then(function () {
-            reject({
-              message: xhr.response,
-              cellular: data,
-              success: false
-            });
-          })
+          if(JSON.parse(xhr.response) !== 'notFound') {
+            setGeolocationApiUsage(true).then(function () {
+              reject({
+                message: xhr.response,
+                cellular: data,
+                success: false
+              });
+            })
+          }
         }
       }
     };
@@ -223,7 +225,7 @@ function manageLocation() {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
   };
 
-  if (native.getName() === 'Android') {
+  // if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
         useGeolocationApi(rootRecord.location.provider);
@@ -232,14 +234,14 @@ function manageLocation() {
 
       useHTML5Location();
     });
-    return;
-  }
-  useHTML5Location()
+  //   return;
+  // }
+  // useHTML5Location()
 }
 
 function shouldFetchCellTower(locationObject) {
-  if (locationObject.hasOwnProperty('useGeolocationApi')) {
-    return locationObject.useGeolocationApi;
+  if (locationObject.hasOwnProperty('useTowerInfo')) {
+    return locationObject.useTowerInfo;
   }
   return true
 }
@@ -249,8 +251,30 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    CelllarJson = Towers.getCellularData();
-
+    // CelllarJson = Towers.getCellularData();
+    CelllarJson = JSON.stringify({
+      "homeMobileCountryCode": 405,
+      "homeMobileNetworkCode": 872,
+      "radioType": "LTE",
+      "considerIp": "true",
+      "wifiAccessPoints": [{
+        "macAddress": "b4:5d:50:4e:f0:e2",
+        "signalStrength": -88
+      }, {
+        "macAddress": "b4:5d:50:4e:f0:e1",
+        "signalStrength": -89
+      }, {
+        "macAddress": "b4:5d:50:4e:f0:e0",
+        "signalStrength": -90
+      }],
+      "carrier": "Jio 4G",
+      "cellTowers": [{
+        "cellId": -1,
+        "locationAreaCode": 24,
+        "mobileCountryCode": 405,
+        "mobileNetworkCode": 872
+      }]
+    })
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -300,6 +324,7 @@ function initLocationInterval(locationStatus) {
     if (locationStatus.success) {
       singletonSuccess.push(locationStatus, navigatorData)
       bestLocation = sortedByAccuracy(singletonSuccess)
+      
     } else {
       requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
       bestLocation = navigatorData
@@ -485,7 +510,11 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-        record.location = finalLocation;
+        record.location.latitude = finalLocation.latitude;
+        record.location.longitude = finalLocation.longitude
+        record.location.accuracy = finalLocation.accuracy;
+        record.location.lastLocationTime = finalLocation.lastLocationTime,
+        record.location.provider = finalLocation.provider
         rootStore.put(record);
       };
       tx.oncomplete = function () {
@@ -511,11 +540,12 @@ function setGeolocationApiUsage(useApi) {
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
         const record = event.target.result;
-        record.location.useGeolocationApi = useApi;
+        record.location.useTowerInfo = useApi;
         rootStore.put(record)
       }
 
       tx.oncomplete = function () {
+
         resolve('useGeolocationApi is set to ' + useApi)
       }
       tx.onerror = function () {
