@@ -967,29 +967,28 @@ function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
   if (data.record.venue[0].nearBy) {
     getRootRecord().then(function (record) {
-      const req = indexedDB.open(firebase.auth().currentUser.uid);
-      req.onsuccess = function () {
-        const db = req.result;
-        const tx = db.transaction(['map']);
-        getLocationForMapSelector(tx, data, record.location).then(function () {
-          handleClickListnersForMap(db, dialog, data)
-        }).catch(console.log)
-      }
-    })
+      checkMapStoreForNearByLocation().then(function(results){
+        results.forEach(function(result){
+          ul.appendChild(createVenueLi(result, false, data.record, true))
+        })
+
+        handleClickListnersForMap(db, dialog, data)
+      })
+  })
+     
   } else {
     getLocationForMapSelector(tx, data).then(function () {
       handleClickListnersForMap(db, dialog, data)
-
     }).catch(console.log)
   }
 }
 
-function getLocationForMapSelector(tx, data, currentLocation) {
+function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
 
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
-    const results = []
+
     store.index('location').openCursor(null, 'nextunique').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -998,22 +997,14 @@ function getLocationForMapSelector(tx, data, currentLocation) {
         return;
       }
       if (cursor.value.location) {
-        if (currentLocation) {
-          const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-          if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-            results.push(cursor.value);
-          }
-        } else {
-          ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-        }
+      
+        ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+        
       }
       cursor.continue()
     }
     tx.oncomplete = function () {
-      if (currentLocation) {
-        resolve(results)
-        return
-      }
+      
       resolve(true)
     }
     tx.onerror = function () {
@@ -1039,7 +1030,15 @@ function checkMapStoreForNearByLocation(office){
           cursor.continue();
           return;
         }
-        results.push(cursor.value)
+        if(!cursor.value.location) {
+          cursor.continue();
+          return
+        }
+
+        const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+        if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+          results.push(cursor.value);
+        }
         cursor.continue();
       }
       tx.oncomplete = function(){
