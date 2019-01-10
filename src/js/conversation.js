@@ -184,13 +184,13 @@ function statusChange(db, id) {
 
   const activityStore = db.transaction('activity').objectStore('activity');
   activityStore.get(id).onsuccess = function (event) {
-    const container =  document.querySelector('.status--change-cont')
+    const container = document.querySelector('.status--change-cont')
     const record = event.target.result;
     if (!record.canEdit || record.status === 'CANCELLED') {
       const statusSpan = document.createElement('span')
       const record = event.target.result
       statusSpan.textContent = 'Activity ' + (record.status.toLowerCase())
-      if(container) {
+      if (container) {
         container.innerHTML = statusSpan.outerHTML
         container.style.textAlign = 'center'
       }
@@ -630,18 +630,18 @@ function selectorUI(evt, data) {
 }
 
 function removeDialog() {
-  const dialog =  document.getElementById('dialog--component');
-  if(!dialog) return;
+  const dialog = document.getElementById('dialog--component');
+  if (!dialog) return;
   document.getElementById('dialog--component').remove();
   document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock')
 }
 
-function handleRemoveDialogEvt(evt,data) {
+function handleRemoveDialogEvt(evt, data) {
 
-  if(!evt) {
+  if (!evt) {
     return
   }
-  if(evt.target.dataset.type !== 'back-list') {
+  if (evt.target.dataset.type !== 'back-list') {
     return;
   }
   resetSelectorUI(data);
@@ -705,7 +705,7 @@ function fillUsersInSelector(data, dialog) {
       if (!cursor) {
         const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
         selectedBoxes.forEach(function (box) {
-          if(box){
+          if (box) {
             const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
             mdcBox.checked = true
             box.children[1].style.animation = 'none'
@@ -752,8 +752,10 @@ function fillUsersInSelector(data, dialog) {
           key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
-        }).then(removeDialog).catch(function(error){
-          requestCreator('instant',JSON.stringify({message:error}))
+        }).then(removeDialog).catch(function (error) {
+          requestCreator('instant', JSON.stringify({
+            message: error
+          }))
 
         })
         return;
@@ -764,8 +766,10 @@ function fillUsersInSelector(data, dialog) {
             hash: 'addOnlyAssignees',
           }, {
             primary: selectedPeople
-          }).then(removeDialog).catch(function(error){
-           requestCreator('instant',JSON.stringify({message:error}))
+          }).then(removeDialog).catch(function (error) {
+            requestCreator('instant', JSON.stringify({
+              message: error
+            }))
           })
 
         })
@@ -854,8 +858,10 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(function(error){
-            requestCreator('instant',JSON.stringify({message:error}))
+          }).then(removeDialog).catch(function (error) {
+            requestCreator('instant', JSON.stringify({
+              message: error
+            }))
           })
           return
         }
@@ -865,8 +871,10 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees',
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(function(error){
-            requestCreator('instant',JSON.stringify({message:error}))
+          }).then(removeDialog).catch(function (error) {
+            requestCreator('instant', JSON.stringify({
+              message: error
+            }))
           })
           return
         }
@@ -957,62 +965,64 @@ function resetSelectedContacts() {
 
 function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
-  if(data.record.venue[0].nearBy) {
-      getRootRecord().then(function(record){
-        const req = indexedDB.open(firebase.auth().currentUser.uid);
-        req.onsuccess = function(){
-          const db =req.result;
-          const tx = db.transaction(['map']);
-          getLocationForMapSelector(tx,data,record.location).then(function(){
-            handleClickListnersForMap(db,dialog,data)
-          }).catch(console.log)
-        }
+  if (data.record.venue[0].nearBy) {
+    getRootRecord().then(function (record) {
+      const req = indexedDB.open(firebase.auth().currentUser.uid);
+      req.onsuccess = function () {
+        const db = req.result;
+        const tx = db.transaction(['map']);
+        getLocationForMapSelector(tx, data, record.location).then(function () {
+          handleClickListnersForMap(db, dialog, data)
+        }).catch(console.log)
+      }
     })
-  }
-  else {
-    getLocationForMapSelector(tx,data).then(function(){
-      handleClickListnersForMap(db,dialog,data)
+  } else {
+    getLocationForMapSelector(tx, data).then(function () {
+      handleClickListnersForMap(db, dialog, data)
 
     }).catch(console.log)
   }
 }
 
-function getLocationForMapSelector(tx,data,currentLocation){
-  return new Promise(function(resolve,reject){
+function getLocationForMapSelector(tx, data, currentLocation) {
+  return new Promise(function (resolve, reject) {
 
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
-    
+    const results = []
     store.index('location').openCursor(null, 'nextunique').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      if(cursor.value.office !== data.record.office) {
+      if (cursor.value.office !== data.record.office) {
         cursor.continue();
         return;
       }
       if (cursor.value.location) {
-        if(currentLocation) {
+        if (currentLocation) {
           const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-          if(isLocationLessThanThreshold(distanceBetweenBoth)){
-            ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+          if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+            results.push(cursor.value);
           }
-        }
-        else {
+        } else {
           ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
         }
       }
       cursor.continue()
     }
-    tx.oncomplete = function(){
-      resolve(true)      
+    tx.oncomplete = function () {
+      if (currentLocation) {
+        resolve(results)
+        return
+      }
+      resolve(true)
     }
-    tx.onerror = function(){
+    tx.onerror = function () {
       reject(tx.error)
     }
   })
 }
 
-function handleClickListnersForMap(db,dialog,data){
+function handleClickListnersForMap(db, dialog, data) {
   document.getElementById('selector--search').addEventListener('click', function () {
 
     initSearchForSelectors(db, 'map', data)
@@ -1032,9 +1042,11 @@ function handleClickListnersForMap(db,dialog,data){
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-    }).then(removeDialog).catch(function(error){
+    }).then(removeDialog).catch(function (error) {
       console.log(error)
-      requestCreator('instant',JSON.stringify({message:error}))
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }))
     })
   }
 }
@@ -1066,8 +1078,10 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
       key: data.attachment.key
     }, {
       primary: selectedField.name
-    }).then(removeDialog).catch(function(error){
-      requestCreator('instant',JSON.stringify({message:error}))
+    }).then(removeDialog).catch(function (error) {
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }))
     })
   }
 }
@@ -1103,7 +1117,7 @@ function fillSubscriptionInSelector(db, dialog, data) {
     grp.appendChild(ul)
     cursor.continue();
   }
-  
+
   tx.oncomplete = function () {
     if (data.suggestCheckIn) {
       const parent = document.getElementById('data-list--container')
@@ -1195,65 +1209,86 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 }
 
 function createTempRecord(office, template, data) {
-  console.log(data)
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const selectorStore = db.transaction('subscriptions').objectStore('subscriptions')
-    const officeTemplateCombo = selectorStore.index('officeTemplate')
-    const range = IDBKeyRange.only([office, template])
-    officeTemplateCombo.get(range).onsuccess = function (event) {
-      const selectedCombo = event.target.result
-      if (!selectedCombo) {
-        console.log("no such combo")
-        return;
-      }
-      const bareBonesVenueArray = []
+  getRootRecord().then(function (record) {
 
-      const bareBonesScheduleArray = []
-      selectedCombo.venue.forEach(function (venue) {
-        const bareBonesVenue = {}
-        if(template === 'check-in' && data.suggestCheckIn) {
-          bareBonesVenue.nearBy = true
+    console.log(data)
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['subscriptions', 'map']);
+      const subscription = db.objectStore('subscriptions')
+      const officeTemplateCombo = subscription.index('officeTemplate')
+      const range = IDBKeyRange.only([office, template])
+      officeTemplateCombo.get(range).onsuccess = function (event) {
+        const selectedCombo = event.target.result
+        if (!selectedCombo) {
+          console.log("no such combo")
+          return;
         }
-        bareBonesVenue.venueDescriptor = venue
-        bareBonesVenue.location = ''
-        bareBonesVenue.address = ''
-        bareBonesVenue.geopoint = {
-          '_latitude': '',
-          '_longitude': ''
-        }
-        bareBonesVenueArray.push(bareBonesVenue)
-      })
 
-      console.log(selectedCombo)
-      selectedCombo.schedule.forEach(function (schedule) {
-        const bareBonesSchedule = {}
-        bareBonesSchedule.name = schedule
-        bareBonesSchedule.startTime = ''
-        bareBonesSchedule.endTime = ''
-        bareBonesScheduleArray.push(bareBonesSchedule)
-      })
+        const bareBonesVenueArray = []
+        const bareBonesScheduleArray = []
 
-      const bareBonesRecord = {
-        office: selectedCombo.office,
-        template: selectedCombo.template,
-        venue: bareBonesVenueArray,
-        schedule: bareBonesScheduleArray,
-        attachment: selectedCombo.attachment,
-        timestamp: Date.now(),
-        canEdit: true,
-        assignees: [],
-        activityName: selectedCombo.template.toUpperCase(),
-        create: true
+        selectedCombo.venue.forEach(function (venue) {
+          const bareBonesVenue = {}
+          bareBonesVenue.venueDescriptor = venue.venueDescriptor
+          bareBonesVenue.location = ''
+          bareBonesVenue.address = ''
+          bareBonesVenue.geopoint = {
+            '_latitude': '',
+            '_longitude': ''
+          }
+
+          if (template === 'check-in' && data.suggestCheckIn) {
+            bareBonesVenue.nearBy = true
+
+            getLocationForMapSelector(tx, data, record.location).then(function (results) {
+              if (results.length === 1) {
+                const singleLocation = results[0]
+                bareBonesVenue.location = singleLocation.location
+                bareBonesVenue.address = singleLocation.address
+                bareBonesVenue.geopoint = {
+                  '_latitude': singleLocation.latitude,
+                  '_longitude': singleLocation.longitude
+                }
+              }
+            }).catch(console.log)
+          } else {
+            bareBonesVenueArray.push(bareBonesVenue)
+          }
+
+
+          console.log(selectedCombo)
+          selectedCombo.schedule.forEach(function (schedule) {
+            const bareBonesSchedule = {}
+            bareBonesSchedule.name = schedule
+            bareBonesSchedule.startTime = ''
+            bareBonesSchedule.endTime = ''
+            bareBonesScheduleArray.push(bareBonesSchedule)
+          })
+
+          const bareBonesRecord = {
+            office: selectedCombo.office,
+            template: selectedCombo.template,
+            venue: bareBonesVenueArray,
+            schedule: bareBonesScheduleArray,
+            attachment: selectedCombo.attachment,
+            timestamp: Date.now(),
+            canEdit: true,
+            assignees: [],
+            activityName: selectedCombo.template.toUpperCase(),
+            create: true
+          }
+
+          updateCreateActivity(bareBonesRecord)
+          removeDialog()
+
+        });
+        
       }
-
-      updateCreateActivity(bareBonesRecord)
-      removeDialog()
-
     }
-  }
+  });
 }
 
 
@@ -1291,78 +1326,78 @@ function hasAnyValueInChildren(office, template, status) {
 }
 
 function updateDomFromIDB(activityRecord, attr, data) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
     const dbName = firebase.auth().currentUser.uid
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result;
-    let thisActivity = activityRecord;
-    
-    if (attr.hash === 'venue') {
-      thisActivity = updateVenue(thisActivity, attr, data);
-      changeTextContentForNewSelectedVenue(attr, data)
-      updateLocalRecord(thisActivity,db).then(function(message){
-        resolve(message)
-      }).catch(function(error){
-        console.log(error)
+      let thisActivity = activityRecord;
+
+      if (attr.hash === 'venue') {
+        thisActivity = updateVenue(thisActivity, attr, data);
+        changeTextContentForNewSelectedVenue(attr, data)
+        updateLocalRecord(thisActivity, db).then(function (message) {
+          resolve(message)
+        }).catch(function (error) {
+          console.log(error)
+          reject(error)
+        })
+        return
+      }
+
+      //for create
+      if (attr.hash === 'addOnlyAssignees') {
+
+        if (data.primary.length > 0) {
+          data.primary.forEach(function (number) {
+            if (thisActivity.assignees.indexOf(number) > -1) return
+            thisActivity.assignees.push(number)
+          })
+        }
+        const newAssigness = thisActivity.assignees
+        readNameAndImageFromNumber(newAssigness, db).then(function (message) {
+          resolve(message);
+        }).catch(function (error) {
+          reject(error);
+
+        })
+        return
+      }
+
+
+
+      if (attr.hash === 'weekday') return
+      if (!attr.hasOwnProperty('key')) return
+
+      thisActivity.attachment[attr.key].value = data.primary;
+
+      updateLocalRecord(thisActivity, db).then(function (message) {
+        changeTextContentForNewSelectedVenue(attr, data);
+        resolve(message);
+      }).catch(function (error) {
         reject(error)
       })
-      return
     }
-    
-    //for create
-    if (attr.hash === 'addOnlyAssignees') {
-      
-      if (data.primary.length > 0) {
-        data.primary.forEach(function (number) {
-          if (thisActivity.assignees.indexOf(number) > -1) return
-          thisActivity.assignees.push(number)
-        })
-      }
-      const newAssigness = thisActivity.assignees
-      readNameAndImageFromNumber(newAssigness,db).then(function(message){
-          resolve(message);
-      }).catch(function(error){
-        reject(error);
-        
-      })
-      return
-    }
-    
-
-
-    if (attr.hash === 'weekday') return
-    if (!attr.hasOwnProperty('key')) return
-    
-    thisActivity.attachment[attr.key].value = data.primary;
-
-    updateLocalRecord(thisActivity,db).then(function(message){
-      changeTextContentForNewSelectedVenue(attr, data);
-      resolve(message);
-    }).catch(function(error){
-      reject(error)
-    })
-  }
   })
 }
 
 
-function updateLocalRecord(thisActivity,db) {
-  return new Promise(function(resolve,reject){
+function updateLocalRecord(thisActivity, db) {
+  return new Promise(function (resolve, reject) {
 
-      const tx = db.transaction(['activity'], 'readwrite');
-      const store = tx.objectStore('activity');
-      let updatedActivity = thisActivity;
-      
-      if (!updatedActivity.hasOwnProperty('create')) {
-        store.put(updatedActivity)
-      }
-      tx.oncomplete = function () {
-        resolve("activity object store updated with value")
-      }
-      tx.onerror = function(){
-        reject(JSON.stringify(tx.error));
-      }
+    const tx = db.transaction(['activity'], 'readwrite');
+    const store = tx.objectStore('activity');
+    let updatedActivity = thisActivity;
+
+    if (!updatedActivity.hasOwnProperty('create')) {
+      store.put(updatedActivity)
+    }
+    tx.oncomplete = function () {
+      resolve("activity object store updated with value")
+    }
+    tx.onerror = function () {
+      reject(JSON.stringify(tx.error));
+    }
   })
 }
 
@@ -1383,7 +1418,7 @@ function changeTextContentForNewSelectedVenue(attr, data) {
       secondaryText.textContent = data.secondary.address
     }
   }
-  if(sendActivity) {
+  if (sendActivity) {
     if (!sendActivity.dataset.progress) {
       sendActivity.classList.remove('hidden')
     }
@@ -1415,7 +1450,7 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy,db) {
+function updateCreateContainer(recordCopy, db) {
   const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
 
@@ -1443,10 +1478,12 @@ function updateCreateContainer(recordCopy,db) {
 
   document.getElementById('backToConv').addEventListener('click', function () {
     console.log(record)
-    updateLocalRecord(record,db).then(function(){
+    updateLocalRecord(record, db).then(function () {
       backNav()
-    }).catch(function(error){
-      requestCreator('instant',JSON.stringify({message:error}))
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }))
     })
   })
 
@@ -1517,7 +1554,7 @@ function updateCreateActivity(record) {
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord,db).outerHTML
+    appView.innerHTML = updateCreateContainer(oldRecord, db).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
@@ -1562,15 +1599,17 @@ function updateCreateActivity(record) {
           key: select['root_'].dataset.value
         }, {
           primary: select.value
-        }).then(function(message){
+        }).then(function (message) {
           if (!document.getElementById('send-activity').dataset.progress) {
 
             if (document.getElementById('send-activity').classList.contains('hidden')) {
               document.getElementById('send-activity').classList.remove('hidden')
             }
           }
-        }).catch(function(error){
-          requestCreator('instant',JSON.stringify({message:error}))
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify({
+            message: error
+          }))
         })
       });
     }
@@ -2139,16 +2178,18 @@ function createAssigneeList(db, record, showLabel) {
 
     document.getElementById('assignees--list').appendChild(labelAdd)
   }
-  readNameAndImageFromNumber(record.assignees, db).then(function(){
-    
-  }).catch(function(error){
-    requestCreator('instant',JSON.stringify({message:error}));
+  readNameAndImageFromNumber(record.assignees, db).then(function () {
+
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
 
   })
 }
 
 function readNameAndImageFromNumber(assignees, db) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
     const tx = db.transaction(['users']);
     const store = tx.objectStore('users');
     let userRecords = [];
@@ -2161,22 +2202,21 @@ function readNameAndImageFromNumber(assignees, db) {
             displayName: '',
             photoURL: '',
           })
-        }
-        else {
+        } else {
           userRecords.push(record);
         }
       }
     });
-    tx.oncomplete = function(){
+    tx.oncomplete = function () {
       const assigneeList = document.getElementById('assignees--list')
       if (assigneeList) {
-        userRecords.forEach(function(userRecord){
+        userRecords.forEach(function (userRecord) {
           assigneeList.appendChild(createSimpleAssigneeLi(userRecord))
         });
         resolve('user list updated')
       }
     }
-    tx.onerror = function(){
+    tx.onerror = function () {
       reject(JSON.stringify(tx.error))
     }
   })
@@ -2325,16 +2365,16 @@ function checkRadioInput(inherit, value) {
     input.classList.remove('radio-selected');
   });
   const parent = inherit
-    if(parent) {
+  if (parent) {
 
-      const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
-      radio['root_'].classList.add('radio-selected')
-      
-      document.querySelector('.selector-send span').textContent = 'send'
-      document.querySelector('.selector-send').dataset.clicktype = ''
-      radio.value = JSON.stringify(value)
-      console.log(value)
-    }
+    const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
+    radio['root_'].classList.add('radio-selected')
+
+    document.querySelector('.selector-send span').textContent = 'send'
+    document.querySelector('.selector-send').dataset.clicktype = ''
+    radio.value = JSON.stringify(value)
+    console.log(value)
+  }
 }
 
 
@@ -2410,7 +2450,7 @@ function openImage(imageSrc) {
 }
 
 function createActivityCancellation(record) {
-  if(!record.canEdit) return
+  if (!record.canEdit) return
   const StautsCont = document.createElement('div')
   StautsCont.className = 'status--cancel-cont'
 
@@ -2419,15 +2459,15 @@ function createActivityCancellation(record) {
 
   if (record.status === 'CANCELLED') {
 
-      StautsCont.appendChild(createSimpleLi('undo-deleted', {
-        text: 'Cancelled',
-        id: record.activityId
-      }))
-      
-      document.querySelector('.update-create--activity').appendChild(StautsCont);
-      
-      const undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'))
-    
+    StautsCont.appendChild(createSimpleLi('undo-deleted', {
+      text: 'Cancelled',
+      id: record.activityId
+    }))
+
+    document.querySelector('.update-create--activity').appendChild(StautsCont);
+
+    const undo = new mdc.ripple.MDCRipple.attachTo(document.querySelector('.undo-deleted'))
+
 
     return
   }
@@ -2437,7 +2477,7 @@ function createActivityCancellation(record) {
       text: 'CANCEL'
     }))
     document.querySelector('.update-create--activity').appendChild(StautsCont);
-    if(!record.canEdit) return;
+    if (!record.canEdit) return;
     if (!document.getElementById('cancel-alert')) {
       cancelAlertDialog()
     }
@@ -2772,8 +2812,10 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes).then(removeDialog).catch(function(error){
-      requestCreator('instant',JSON.stringify({message:error}))
+    }, selectedAreaAttributes).then(removeDialog).catch(function (error) {
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }))
     })
 
   })
@@ -2814,7 +2856,7 @@ function createSimpleInput(value, canEdit, withIcon, key, required) {
   }
   textField.appendChild(input)
   textField.appendChild(ripple)
-  if(textField) {
+  if (textField) {
     const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
   }
   return textField

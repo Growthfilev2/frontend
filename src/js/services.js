@@ -802,16 +802,7 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
-
-    suggestCheckIn(true).then(function () {
-      window["listView"]({
-        urgent: true,
-        nearby: true
-      });
-    });
+    openListWithChecks()
     return;
   }
 

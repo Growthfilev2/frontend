@@ -554,13 +554,7 @@ function init(auth) {
       if (lessThanTwo) {
         resetApp(auth, from);
       } else {
-
-        runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: JSON.stringify(error)
-          }))
-          return false
-        }).then(startInitializatioOfList)
+        openListWithChecks()
       }
       return;
     }
@@ -600,46 +594,67 @@ function runAppChecks(auth) {
   return new Promise(function (resolve, reject) {
     isEmployeeOnLeave().then(function (emp) {
       // suggest check in false
+      let dataObject = {
+        urgent: false,
+        nearby: false,
+        checkin: false
+      }
       if (emp.onLeave) {
-        resolve(false)
-        return;
+          dataObject.checkin = false
       }
 
       window.addEventListener('locationChanged', function _listener(e) {
         const changed = e.detail;
-        if(changed) {
-          return resolve(changed);
-        }
         app.isNewDay().then(function (newDay) {
 
-          if (newDay) {
-            if (isCurrentTimeNearStart(emp)) {
-              return resolve(newDay)
+          if (changed) {
+            dataObject.nearby = true;
+            dataObject.checkin = true;
+            if (newDay) {
+              dataObject.urgent = true
             }
-            if (isCurrentTimeNearEnd(emp)) {
-              return resolve(newDay)
-            }
-            return resolve(false)
+            return resolve(dataObject)
           }
+          if (newDay) {
+            dataObject.urgent = true
+            if (isCurrentTimeNearStart(emp) || isCurrentTimeNearEnd(emp)) {
+              dataObject.checkin = true
+            }
+          }
+          return resolve(dataObject)
         })
       }, true);
     })
+  }).catch(function(error){
+    reject(error)
   })
 }
 
-function startInitializatioOfList(checkIn) {
-  suggestCheckIn(checkIn).then(function () {
+function startInitializatioOfList(data) {
+  suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
     requestCreator('now', {
       device: native.getInfo(),
       from: ''
     });
     listView({
-      urgent: isNew,
-      nearby: false
+      urgent: data.urgent,
+      nearby: data.nearby
     });
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
+   
   })
+}
+
+function openListWithChecks(){
+  manageLocation();
+  setInterval(function () {
+    manageLocation();
+  }, 5000);       
+
+  runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: JSON.stringify(error)
+    }))
+    return {checkin:false,urgent:false,nearby:false}
+  }).then(startInitializatioOfList)
 }
