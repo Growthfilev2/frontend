@@ -554,6 +554,10 @@ function init(auth) {
       if (lessThanTwo) {
         resetApp(auth, from);
       } else {
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: ''
+        });
         openListWithChecks()
       }
       return;
@@ -631,12 +635,9 @@ function runAppChecks(auth) {
 }
 
 function startInitializatioOfList(data) {
+  
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: ''
-    });
     listView({
       urgent: data.urgent,
       nearby: data.nearby
