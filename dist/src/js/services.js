@@ -224,7 +224,9 @@ function manageLocation() {
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        useGeolocationApi(rootRecord.location.provider);
+        if(Internet.isConnectionActive()) {
+          useGeolocationApi(rootRecord.location.provider);
+        }
         return;
       }
 

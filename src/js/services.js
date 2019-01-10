@@ -179,6 +179,7 @@ function fetchCurrentTime(serverTime) {
 function sendLocationServiceCrashRequest(rejection) {
   return {
     'message': rejection,
+     
     'phoneProp': native.getInfo()
   }
 }
@@ -192,7 +193,21 @@ function geolocationApi(method, url, data) {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
+        console.log(xhr);
+
+        if(xhr.status >= 400) {
+          if(JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
+            setGeolocationApiUsage(false).then(function () {
+              reject({
+                message: xhr.response,
+                cellular: data,
+                success: false
+              });
+            })
+          }
+          return;
+        }
+      
           var result = JSON.parse(xhr.responseText);
           resolve({
             'latitude': result.location.lat,
@@ -203,18 +218,6 @@ function geolocationApi(method, url, data) {
             'success': true,
             'useTowerInfo':true
           })
-        } else {
-          console.log(JSON.parse(xhr.response).error.errors[0].reason)
-          if(JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
-            setGeolocationApiUsage(false).then(function () {
-              reject({
-                message: xhr.response,
-                cellular: data,
-                success: false
-              });
-            })
-          }
-        }
       }
     };
     xhr.send(data);
@@ -226,18 +229,20 @@ function manageLocation() {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
   };
 
-  if (native.getName() === 'Android') {
+  // if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        useGeolocationApi(rootRecord.location.provider);
+        if (Internet.isConnectionActive()) {
+          useGeolocationApi(rootRecord.location.provider);
+        }
         return;
       }
-
-      useHTML5Location();
+      // useHTML5Location();
     });
-    return;
-  }
-  useHTML5Location()
+  //   return;
+  // }
+
+  // useHTML5Location();
 }
 
 function shouldFetchCellTower(locationObject) {
@@ -253,29 +258,8 @@ function useGeolocationApi(provider) {
 
   try {
     // CelllarJson = Towers.getCellularData();
-    CelllarJson = JSON.stringify({
-      "homeMobileCountryCode": 405,
-      "homeMobileNetworkCode": 872,
-      "radioType": "LTE",
-      "considerIp": "true",
-      "wifiAccessPoints": [{
-        "macAddress": "b4:5d:50:4e:f0:e2",
-        "signalStrength": -88
-      }, {
-        "macAddress": "b4:5d:50:4e:f0:e1",
-        "signalStrength": -89
-      }, {
-        "macAddress": "b4:5d:50:4e:f0:e0",
-        "signalStrength": -90
-      }],
-      "carrier": "Jio 4G",
-      "cellTowers": [{
-        "cellId": -1,
-        "locationAreaCode": 24,
-        "mobileCountryCode": 405,
-        "mobileNetworkCode": 872
-      }]
-    })
+    CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [ { "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 } ], "carrier": "airtel", "cellTowers": [ { "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 } ] })
+    
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -305,7 +289,7 @@ function useGeolocationApi(provider) {
     }));
 
     if (provider === 'MOCK') return;
-    useHTML5Location()
+      useHTML5Location()
   }
 }
 
