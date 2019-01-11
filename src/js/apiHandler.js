@@ -183,13 +183,13 @@ function fetchServerTime(info) {
 
 function instant(error) {
   console.log(error)
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -220,7 +220,7 @@ function initializeIDB(data) {
   return new Promise(function (resolve, reject) {
     var auth = firebase.auth().currentUser
 
-    const request = indexedDB.open(auth.uid, 2)
+    const request = indexedDB.open(auth.uid, 3)
 
 
     request.onerror = function () {

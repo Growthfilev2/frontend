@@ -329,10 +329,9 @@ function locationUpdationSuccess(location) {
   
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   const locationChanged = new CustomEvent("locationChanged", {
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
+    "detail":isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
-
   }
 
 
@@ -802,7 +801,9 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-    openListWithChecks()
+    isEmployeeOnLeave().then(function (emp) {
+      openListWithChecks(emp)
+    })  
     return;
   }
 
