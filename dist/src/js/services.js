@@ -873,6 +873,25 @@ function handleTimeout(type) {
   if (index > -1) {
     return;
   }
+
+  if (native.getName() === 'Android') {
+    try {
+      var connection = Internet.isConnectionActive();
+      if (connection) {
+        offset = setTimeout(function () {
+          requestCreator('Null', 'false');
+        }, 8000);
+      }
+    } catch (e) {
+      if (navigator.onLine) {
+        offset = setTimeout(function () {
+          requestCreator('Null', 'false');
+        }, 8000);
+      }
+    }
+    return;
+  }
+
   offset = setTimeout(function () {
     requestCreator('Null', 'false');
   }, 8000);
