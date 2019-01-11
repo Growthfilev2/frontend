@@ -4,7 +4,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
-importScripts('../external/js/moment.min.js');
+importScripts('../../external/js/moment.min.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
@@ -127,7 +127,8 @@ function fetchServerTime(info) {
 
   console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
-    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
+    console.log(info.token)
+    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs+'&registrationToken='+info.token).then(function (response) {
       console.log(response);
       if (response.updateClient) {
         console.log("please update device");

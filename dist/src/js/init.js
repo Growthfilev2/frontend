@@ -9,6 +9,12 @@ firebase.initializeApp({
 
 var native = function () {
   return {
+    setFCMToken:function(token){
+        localStorage.setItem('token',token);
+    },
+    getFCMToken :function(){
+      return localStorage.getItem('token');
+    },
     setName: function setName(device) {
       localStorage.setItem('deviceType', device);
     },
@@ -131,7 +137,10 @@ window.addEventListener('load', function () {
 
   layoutGrid();
 
-  startApp();
+
+    startApp();
+  
+
 });
 
 window.onpopstate = function (event) {
@@ -148,7 +157,7 @@ function backNav() {
   history.back();
 }
 
-function firebaseUiConfig(value) {
+function firebaseUiConfig(value,token) {
 
   return {
     callbacks: {
@@ -157,7 +166,7 @@ function firebaseUiConfig(value) {
         if (value) {
           updateEmail(authResult.user, value);
         } else {
-          init(authResult.user);
+          init(authResult.user,token);
         }
         return false;
       },
@@ -180,13 +189,13 @@ function firebaseUiConfig(value) {
   };
 }
 
-function userSignedOut() {
+function userSignedOut(token) {
   var login = document.createElement('div');
   login.id = 'login-container';
   document.body.appendChild(login);
 
   var ui = new firebaseui.auth.AuthUI(firebase.auth() || '');
-  ui.start('#login-container', firebaseUiConfig());
+  ui.start('#login-container', firebaseUiConfig('',token));
 }
 
 function layoutGrid() {
@@ -330,17 +339,20 @@ function imageViewDialog() {
 
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
-
+    const token = native.getFCMToken();
+    alert(token);
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none';
-      userSignedOut();
+      userSignedOut(token);
       return;
     }
     if (localStorage.getItem('dbexist')) {
-      init(auth);
+      init(auth,token);
     }
   });
 }
+
+
 // new day suggest
 // if location changes
 var app = function () {
@@ -423,29 +435,31 @@ function removeIDBInstance(auth) {
   });
 }
 
-function init(auth) {
-
-  document.getElementById("main-layout-app").style.display = 'block';
-
-  idbVersionLessThan2(auth).then(function (lessThanTwo) {
-
-    if (localStorage.getItem('dbexist')) {
-      from = 1;
-      if (lessThanTwo) {
-        resetApp(auth, from);
-      } else {
-        startInitializatioOfList(auth);
+function init(auth,token) {
+  
+    
+    document.getElementById("main-layout-app").style.display = 'block';
+    
+    idbVersionLessThan2(auth).then(function (lessThanTwo) {
+      
+      if (localStorage.getItem('dbexist')) {
+        from = 1;
+        if (lessThanTwo) {
+          resetApp(auth, from,token);
+        } else {
+          
+          startInitializatioOfList(auth,token);
+        }
+        return;
       }
-      return;
-    }
-
-    resetApp(auth, 0);
-  }).catch(function (error) {
-    requestCreator('instant', JSON.stringify({ message: error }));
-  });
+      
+      resetApp(auth, 0,token);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify({ message: error }));
+    });
 }
 
-function resetApp(auth, from) {
+function resetApp(auth, from,token) {
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
     history.pushState(null, null, null);
@@ -457,6 +471,7 @@ function resetApp(auth, from) {
 
     requestCreator('now', {
       device: native.getInfo(),
+      token:token,
       from: from
     });
   }).catch(function (error) {
@@ -465,12 +480,15 @@ function resetApp(auth, from) {
   });
 }
 
-function startInitializatioOfList(auth) {
+
+function startInitializatioOfList(auth,token) {
+
   localStorage.removeItem('clickedActivity');
   app.isNewDay(auth).then(function (isNew) {
     suggestCheckIn(isNew).then(function () {
       requestCreator('now', {
         device: native.getInfo(),
+        token:token,
         from: ''
       });
       listView({ urgent: isNew, nearby: false });
@@ -482,3 +500,4 @@ function startInitializatioOfList(auth) {
     requestCreator('instant', JSON.stringify({ message: error }));
   });
 }
+

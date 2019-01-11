@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -804,7 +804,9 @@ function updateIDB(data) {
     setInterval(function () {
       manageLocation();
     }, 5000);
-
+    getFcmTokenFromAndroid().then(function(token){
+      console.log(token)
+    }).catch(console.log)
     suggestCheckIn(true).then(function () {
       window["listView"]({
         urgent: true,

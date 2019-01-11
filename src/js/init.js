@@ -504,3 +504,10 @@ function startInitializatioOfList(auth) {
     requestCreator('instant',JSON.stringify({message:error}))
   })
 }
+
+function getFcmTokenFromAndroid(token){
+  return new Promise(function(resolve,reject){
+    const token = fcm.getToken();
+    resolve(token)
+  })
+}
