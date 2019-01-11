@@ -153,6 +153,10 @@ window.onpopstate = function (event) {
   window[event.state[0]](event.state[1], false)
 }
 
+window.addEventListener('onMessage', function _onMessage(e){
+    requestCreator('Null',false)
+})
+
 function backNav() {
   history.back();
 }

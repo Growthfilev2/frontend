@@ -1,7 +1,4 @@
 // import firebase app script because there is no native support of firebase inside web workers
-
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js')
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js')
 importScripts('../external/js/moment.min.js')
 // Backend API Url
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
@@ -13,15 +10,6 @@ let deviceInfo;
 function getTime() {
   return Date.now()
 }
-
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-})
 
 
 // dictionary object with key as the worker's onmessage event data and value as
@@ -55,18 +43,7 @@ function createLog(body) {
 // when worker receives the request body from the main thread
 
 self.onmessage = function (event) {
-  setTimeout(function(){
-    const auth = firebase.auth().currentUser
-    if(auth)  {
-      handleMessageEvt(event);
-      return;
-    }
-  },500)
-  }
-
-
-
-function handleMessageEvt(event){
+  
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log)
     return
@@ -77,9 +54,9 @@ function handleMessageEvt(event){
   }
   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
     console.log(error)
-  })    
-}
+  }) 
 
+}
 
 // Performs XMLHTTPRequest for the API's.
 
@@ -1102,3 +1079,6 @@ function updateIDB(param) {
     
   }
 }
+
+
+

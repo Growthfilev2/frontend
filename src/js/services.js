@@ -637,7 +637,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -681,15 +681,20 @@ function requestCreator(requestType, requestBody) {
 
   var requestGenerator = {
     type: requestType,
-    body: ''
+    body: '',
+    token:'',
+    auth:firebase.auth().currentUser
   };
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
+
+  
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    requestGenerator.body = requestBody;
-    apiHandler.postMessage(requestGenerator);
+    firebase.auth().currentUser.getIdToken(false).then(function(token){
+
+      requestGenerator.body = requestBody;
+      requestGenerator.token = token;
+      apiHandler.postMessage(requestGenerator);
+    })
+  
   } else {
 
 
@@ -703,6 +708,8 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator)
       } else {
+        firebase.auth().currentUser.getIdToken(false).then(function(token){
+
         var geopoints = {
           'latitude': location.latitude,
           'longitude': location.longitude,
@@ -711,8 +718,10 @@ function requestCreator(requestType, requestBody) {
 
         requestBody['geopoint'] = geopoints;
         requestGenerator.body = requestBody;
+        requestGenerator.token = token;
         console.log(requestGenerator)
         sendRequest(location, requestGenerator)
+       })
       }
     })
   };
@@ -729,16 +738,19 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
-    const data = e.detail;
-    var geopoints = {
-      'latitude': data.latitude,
-      'longitude': data.longitude,
-      'accuracy': data.accuracy
-    };
-    requestBody['geopoint'] = geopoints;
-    requestGenerator.body = requestBody;
-    sendRequest(geopoints, requestGenerator);
     window.removeEventListener('location', _listener, true);
+    firebase.auth().currentUser.getIdToken(false).then(function(token){
+      const data = e.detail;
+      var geopoints = {
+        'latitude': data.latitude,
+        'longitude': data.longitude,
+        'accuracy': data.accuracy
+      };
+      requestBody['geopoint'] = geopoints;
+      requestGenerator.body = requestBody;
+      requestGenerator.token = token;
+      sendRequest(geopoints, requestGenerator);
+    })
   }, true);
 
 }
@@ -902,29 +914,7 @@ function handleTimeout(type) {
   if (index > -1) {
     return;
   }
-
-  if(native.getName() === 'Android') {
-    try {
-      const connection = Internet.isConnectionActive();
-      if(connection) {
-        offset = setTimeout(function () {
-          requestCreator('Null', 'false');
-        }, 8000);
-      }
-    }
-    catch(e){
-      if(navigator.onLine) {
-        offset = setTimeout(function () {
-          requestCreator('Null', 'false');
-        }, 8000);
-      }
-    }
-    return;
-  }
-
-  offset = setTimeout(function () {
-    requestCreator('Null', 'false');
-  }, 8000);
+  
 }
 
 function getInputText(selector) {
