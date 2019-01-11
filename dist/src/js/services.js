@@ -261,8 +261,8 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
+    
     CelllarJson = Towers.getCellularData();
-
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
