@@ -261,8 +261,7 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    // CelllarJson = Towers.getCellularData();
-    CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [{ "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 }], "carrier": "airtel", "cellTowers": [{ "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 }] });
+    CelllarJson = Towers.getCellularData();
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
