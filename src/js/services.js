@@ -637,7 +637,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -648,7 +648,7 @@ function iosConnectivity(connectivity) {
   }
 }
 
-function resetLoaders() {
+function resetLoaders(data) {
   if (native.getName() === 'Android') {
 
     if (document.getElementById('send-activity')) {
@@ -673,6 +673,7 @@ function resetLoaders() {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
+  snacks(data.msg)
 }
 
 function requestCreator(requestType, requestBody) {
