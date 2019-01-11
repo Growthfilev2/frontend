@@ -222,7 +222,6 @@ function initializeIDB(data) {
 
     const request = indexedDB.open(auth.uid, 3)
 
-
     request.onerror = function () {
       console.log(request.error)
       reject(request.error)
