@@ -692,3 +692,10 @@ function openListWithChecks(emp) {
   listView();
   runAppChecks(emp);
 }
+
+function getFcmTokenFromAndroid(token){
+  return new Promise(function(resolve,reject){
+    const token = fcm.getToken();
+    resolve(token)
+  })
+}
