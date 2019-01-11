@@ -229,20 +229,27 @@ function manageLocation() {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
   };
 
-  // if (native.getName() === 'Android') {
+  if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        if (Internet.isConnectionActive()) {
-          useGeolocationApi(rootRecord.location.provider);
+        try {
+          if (Internet.isConnectionActive()) {
+            useGeolocationApi(rootRecord.location.provider);
+          }
+        }
+        catch(e) {
+          if(navigator.onLine) {
+            useGeolocationApi(rootRecord.location.provider);
+          }
         }
         return;
       }
-      // useHTML5Location();
+      useHTML5Location();
     });
-  //   return;
-  // }
+    return;
+  }
 
-  // useHTML5Location();
+  useHTML5Location();
 }
 
 function shouldFetchCellTower(locationObject) {
