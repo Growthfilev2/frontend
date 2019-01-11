@@ -1,5 +1,5 @@
 var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -177,6 +177,7 @@ function fetchCurrentTime(serverTime) {
 function sendLocationServiceCrashRequest(rejection) {
   return {
     'message': rejection,
+
     'phoneProp': native.getInfo()
   };
 }
@@ -190,26 +191,31 @@ function geolocationApi(method, url, data) {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        if (xhr.status === 200) {
-          var result = JSON.parse(xhr.responseText);
-          resolve({
-            'latitude': result.location.lat,
-            'longitude': result.location.lng,
-            'accuracy': result.accuracy,
-            'provider': 'Cellular',
-            'lastLocationTime': Date.now(),
-            'success': true
-          });
-        } else {
+        console.log(xhr);
 
-          setGeolocationApiUsage(false).then(function () {
-            reject({
-              message: xhr.response,
-              cellular: data,
-              success: false
+        if (xhr.status >= 400) {
+          if (JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
+            setGeolocationApiUsage(false).then(function () {
+              reject({
+                message: xhr.response,
+                cellular: data,
+                success: false
+              });
             });
-          });
+          }
+          return;
         }
+
+        var result = JSON.parse(xhr.responseText);
+        resolve({
+          'latitude': result.location.lat,
+          'longitude': result.location.lng,
+          'accuracy': result.accuracy,
+          'provider': 'Cellular',
+          'lastLocationTime': Date.now(),
+          'success': true,
+          'useTowerInfo': true
+        });
       }
     };
     xhr.send(data);
@@ -224,22 +230,28 @@ function manageLocation() {
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        if(Internet.isConnectionActive()) {
-          useGeolocationApi(rootRecord.location.provider);
+        try {
+          if (Internet.isConnectionActive()) {
+            useGeolocationApi(rootRecord.location.provider);
+          }
+        } catch (e) {
+          if (navigator.onLine) {
+            useGeolocationApi(rootRecord.location.provider);
+          }
         }
         return;
       }
-
       useHTML5Location();
     });
     return;
   }
+
   useHTML5Location();
 }
 
 function shouldFetchCellTower(locationObject) {
-  if (locationObject.hasOwnProperty('useGeolocationApi')) {
-    return locationObject.useGeolocationApi;
+  if (locationObject.hasOwnProperty('useTowerInfo')) {
+    return locationObject.useTowerInfo;
   }
   return true;
 }
@@ -249,7 +261,8 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    CelllarJson = Towers.getCellularData();
+    // CelllarJson = Towers.getCellularData();
+    CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [{ "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 }], "carrier": "airtel", "cellTowers": [{ "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 }] });
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
@@ -318,6 +331,7 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
+
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
@@ -325,14 +339,16 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    suggestCheckIn(true).then(function () {
-      if (history.state[0] === 'listView') {
-        if (!app.isNewDay) {
-          listView({
-            urgent: false,
-            nearby: true
-          });
-        }
+    app.isNewDay(firebase.auth().currentUser.uid).then(function (isNew) {
+      if (!isNew) {
+        suggestCheckIn(true).then(function () {
+          if (history.state[0] === 'listView') {
+            listView({
+              urgent: false,
+              nearby: true
+            });
+          }
+        });
       }
     });
   }
@@ -478,7 +494,14 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-        record.location = finalLocation;
+        if (!record.location) {
+          record.location = finalLocation;
+        } else {
+          record.location.latitude = finalLocation.latitude;
+          record.location.longitude = finalLocation.longitude;
+          record.location.accuracy = finalLocation.accuracy;
+          record.location.lastLocationTime = finalLocation.lastLocationTime, record.location.provider = finalLocation.provider;
+        }
         rootStore.put(record);
       };
       tx.oncomplete = function () {
@@ -504,11 +527,12 @@ function setGeolocationApiUsage(useApi) {
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
-        record.location.useGeolocationApi = useApi;
+        record.location.useTowerInfo = useApi;
         rootStore.put(record);
       };
 
       tx.oncomplete = function () {
+
         resolve('useGeolocationApi is set to ' + useApi);
       };
       tx.onerror = function () {
@@ -600,7 +624,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+  webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -611,7 +635,7 @@ function iosConnectivity(connectivity) {
   }
 }
 
-function resetLoaders() {
+function resetLoaders(data) {
   if (native.getName() === 'Android') {
 
     if (document.getElementById('send-activity')) {
@@ -636,6 +660,7 @@ function resetLoaders() {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
+  snacks(data.msg);
 }
 
 function requestCreator(requestType, requestBody) {

@@ -69,7 +69,7 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       columnNo: columnNo,
       stack: error.stack,
       name: error.name,
-      device: native.getInfo(),
+      device: native.getInfo()
     }
   };
   requestCreator('instant', JSON.stringify(errorJS));
@@ -83,9 +83,9 @@ window.scrollBy({
 });
 
 window.addEventListener('load', function () {
+  var title = 'Device Incompatibility';
+  var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
   if (!window.Worker && !window.indexedDB) {
-    var title = 'Device Incompatibility';
-    var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
     var messageData = {
       title: title,
       message: message,
@@ -101,7 +101,12 @@ window.addEventListener('load', function () {
         }
       }
     };
-    Android.notification(JSON.stringify(messageData));
+    try {
+      Android.notification(JSON.stringify(messageData));
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({ message: e.message }));
+      appDialog(message);
+    }
     return;
   }
 
