@@ -9,12 +9,6 @@ firebase.initializeApp({
 
 var native = function () {
   return {
-    setFCMToken:function(token){
-        localStorage.setItem('token',token);
-    },
-    getFCMToken :function(){
-      return localStorage.getItem('token');
-    },
     setName: function setName(device) {
       localStorage.setItem('deviceType', device);
     },
@@ -50,7 +44,9 @@ var native = function () {
         try {
           return AndroidId.getDeviceId();
         } catch (e) {
-          requestCreator('instant', JSON.stringify({ message: e.message }));
+          requestCreator('instant', JSON.stringify({
+            message: e.message
+          }));
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -110,7 +106,9 @@ window.addEventListener('load', function () {
     try {
       Android.notification(JSON.stringify(messageData));
     } catch (e) {
-      requestCreator('instant', JSON.stringify({ message: e.message }));
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }));
       appDialog(message);
     }
     return;
@@ -137,10 +135,7 @@ window.addEventListener('load', function () {
 
   layoutGrid();
 
-
-    startApp();
-  
-
+  startApp();
 });
 
 window.onpopstate = function (event) {
@@ -153,11 +148,15 @@ window.onpopstate = function (event) {
   window[event.state[0]](event.state[1], false);
 };
 
+window.addEventListener('onMessage', function _onMessage(e) {
+  requestCreator('Null', false);
+});
+
 function backNav() {
   history.back();
 }
 
-function firebaseUiConfig(value,token) {
+function firebaseUiConfig(value) {
 
   return {
     callbacks: {
@@ -166,7 +165,7 @@ function firebaseUiConfig(value,token) {
         if (value) {
           updateEmail(authResult.user, value);
         } else {
-          init(authResult.user,token);
+          init(authResult.user);
         }
         return false;
       },
@@ -189,13 +188,13 @@ function firebaseUiConfig(value,token) {
   };
 }
 
-function userSignedOut(token) {
+function userSignedOut() {
   var login = document.createElement('div');
   login.id = 'login-container';
   document.body.appendChild(login);
 
   var ui = new firebaseui.auth.AuthUI(firebase.auth() || '');
-  ui.start('#login-container', firebaseUiConfig('',token));
+  ui.start('#login-container', firebaseUiConfig());
 }
 
 function layoutGrid() {
@@ -339,26 +338,27 @@ function imageViewDialog() {
 
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
-    const token = native.getFCMToken();
-    alert(token);
+
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none';
-      userSignedOut(token);
+      userSignedOut();
       return;
     }
     if (localStorage.getItem('dbexist')) {
-      init(auth,token);
+      init(auth);
     }
   });
 }
-
-
 // new day suggest
 // if location changes
 var app = function () {
   return {
+
     today: function today() {
-      return moment().format("DD/MM/YYYY");
+      return moment();
+    },
+    format: function format() {
+      return this.today().format("DD/MM/YYYY");
     },
     tomorrow: function tomorrow() {
       return moment(this.today()).add(1, 'day');
@@ -372,10 +372,11 @@ var app = function () {
         });
       });
     },
-    isNewDay: function isNewDay() {
+    isNewDay: function isNewDay(auth) {
       return new Promise(function (resolve, reject) {
+
         app.getLastLocationTime().then(function (time) {
-          if (moment(time).isSame(moment(), 'day')) {
+          if (moment(time).isSame(this.today(), 'day')) {
             resolve(false);
           } else {
             resolve(true);
@@ -384,9 +385,99 @@ var app = function () {
           reject(error);
         });
       });
+    },
+
+    isCurrentTimeNearStart: function isCurrentTimeNearStart(startTime) {
+
+      var offsetStartBefore = moment(startTime).subtract(15, 'minutes');
+      var offsetStartAfter = moment(startTime).add(15, 'minutes');
+
+      if (this.today().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')) {
+        return true;
+      }
+      return false;
+    },
+    isCurrentTimeNearEnd: function isCurrentTimeNearEnd(endTime) {
+      var offsetEndBefore = moment(endTime).subtract(15, 'minutes');
+      var offsetEndAfter = moment(endTime).add(15, 'minutes');
+      if (this.today().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')) {
+        return true;
+      }
+      return false;
     }
   };
 }();
+
+function getEmployeeDetails() {
+  return new Promise(function (resolve, reject) {
+    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['children']);
+      var store = tx.objectStore('childrend');
+      var details = void 0;
+      store.index('template').openCursor('employee').onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.status !== 'CONFIRMED') {
+          cursor.continue();
+          return;
+        }
+        details = cursor.value;
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+        resolve(details);
+      };
+    };
+  });
+}
+
+function isEmployeeOnLeave() {
+  getEmployeeDetails().then(function (empDetails) {
+
+    empDetails.onLeave = false;
+    var req = indexedDB.open(auth);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['calendar']);
+      var store = tx.objectStore('calendar');
+      store.index('activityId').openCursor(empDetails.activityId, 'next').onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.office !== empDetails.office) {
+          cursor.continue();
+          return;
+        }
+
+        if (cursor.value.template !== 'leave') {
+          cursor.continue();
+          return;
+        }
+
+        if (cursor.value.status !== 'CONFIRMED') {
+          cursor.continue();
+          return;
+        }
+
+        if (this.today().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+          empDetails.onLeave = true;
+          return;
+        }
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+        resolve(isOnLeave);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
+}
 
 function idbVersionLessThan2(auth) {
   return new Promise(function (resolve, reject) {
@@ -406,7 +497,10 @@ function idbVersionLessThan2(auth) {
       resolve(value);
     };
     req.onerror = function () {
-      reject({ error: req.error, device: native.getInfo() });
+      reject({
+        error: req.error,
+        device: native.getInfo()
+      });
     };
   });
 }
@@ -435,31 +529,35 @@ function removeIDBInstance(auth) {
   });
 }
 
-function init(auth,token) {
-  
-    
-    document.getElementById("main-layout-app").style.display = 'block';
-    
-    idbVersionLessThan2(auth).then(function (lessThanTwo) {
-      
-      if (localStorage.getItem('dbexist')) {
-        from = 1;
-        if (lessThanTwo) {
-          resetApp(auth, from,token);
-        } else {
-          
-          startInitializatioOfList(auth,token);
-        }
-        return;
+function init(auth) {
+
+  document.getElementById("main-layout-app").style.display = 'block';
+
+  idbVersionLessThan2(auth).then(function (lessThanTwo) {
+
+    if (localStorage.getItem('dbexist')) {
+      from = 1;
+      if (lessThanTwo) {
+        resetApp(auth, from);
+      } else {
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: ''
+        });
+        openListWithChecks();
       }
-      
-      resetApp(auth, 0,token);
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify({ message: error }));
-    });
+      return;
+    }
+
+    resetApp(auth, 0);
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
+  });
 }
 
-function resetApp(auth, from,token) {
+function resetApp(auth, from) {
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
     history.pushState(null, null, null);
@@ -471,33 +569,77 @@ function resetApp(auth, from,token) {
 
     requestCreator('now', {
       device: native.getInfo(),
-      token:token,
       from: from
     });
   }).catch(function (error) {
     snacks(error.message);
-    requestCreator('instant', JSON.stringify({ message: error }));
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
   });
 }
 
+function runAppChecks(auth) {
+  return new Promise(function (resolve, reject) {
+    isEmployeeOnLeave().then(function (emp) {
+      // suggest check in false
+      var dataObject = {
+        urgent: false,
+        nearby: false,
+        checkin: false
+      };
+      if (emp.onLeave) {
+        dataObject.checkin = false;
+      }
 
-function startInitializatioOfList(auth,token) {
+      window.addEventListener('locationChanged', function _listener(e) {
+        var changed = e.detail;
+        app.isNewDay().then(function (newDay) {
 
-  localStorage.removeItem('clickedActivity');
-  app.isNewDay(auth).then(function (isNew) {
-    suggestCheckIn(isNew).then(function () {
-      requestCreator('now', {
-        device: native.getInfo(),
-        token:token,
-        from: ''
-      });
-      listView({ urgent: isNew, nearby: false });
-      setInterval(function () {
-        manageLocation();
-      }, 5000);
+          if (changed) {
+            dataObject.nearby = true;
+            dataObject.checkin = true;
+            if (newDay) {
+              dataObject.urgent = true;
+            }
+            return resolve(dataObject);
+          }
+          if (newDay) {
+            dataObject.urgent = true;
+            if (isCurrentTimeNearStart(emp) || isCurrentTimeNearEnd(emp)) {
+              dataObject.checkin = true;
+            }
+          }
+          return resolve(dataObject);
+        });
+      }, true);
     });
   }).catch(function (error) {
-    requestCreator('instant', JSON.stringify({ message: error }));
+    reject(error);
   });
 }
 
+function startInitializatioOfList(data) {
+
+  suggestCheckIn(data.checkin).then(function () {
+    localStorage.removeItem('clickedActivity');
+    listView({
+      urgent: data.urgent,
+      nearby: data.nearby
+    });
+  });
+}
+
+function openListWithChecks() {
+  manageLocation();
+  setInterval(function () {
+    manageLocation();
+  }, 5000);
+
+  runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: JSON.stringify(error)
+    }));
+    return { checkin: false, urgent: false, nearby: false };
+  }).then(startInitializatioOfList);
+}

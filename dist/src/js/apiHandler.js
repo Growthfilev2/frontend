@@ -1,9 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 // import firebase app script because there is no native support of firebase inside web workers
-
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('../../external/js/moment.min.js');
 // Backend API Url
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
@@ -15,15 +12,6 @@ var deviceInfo = void 0;
 function getTime() {
   return Date.now();
 }
-
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-});
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
@@ -54,16 +42,7 @@ function createLog(body) {
 // when worker receives the request body from the main thread
 
 self.onmessage = function (event) {
-  setTimeout(function () {
-    var auth = firebase.auth().currentUser;
-    if (auth) {
-      handleMessageEvt(event);
-      return;
-    }
-  }, 500);
-};
 
-function handleMessageEvt(event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log);
     return;
@@ -75,7 +54,7 @@ function handleMessageEvt(event) {
   requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
     console.log(error);
   });
-}
+};
 
 // Performs XMLHTTPRequest for the API's.
 
@@ -127,8 +106,7 @@ function fetchServerTime(info) {
 
   console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
-    console.log(info.token)
-    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs+'&registrationToken='+info.token).then(function (response) {
+    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
       console.log(response);
       if (response.updateClient) {
         console.log("please update device");

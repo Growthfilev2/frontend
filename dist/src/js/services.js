@@ -261,9 +261,8 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    // CelllarJson = Towers.getCellularData();
-    CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [{ "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 }], "carrier": "airtel", "cellTowers": [{ "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 }] });
-
+    
+    CelllarJson = Towers.getCellularData();
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -332,26 +331,16 @@ function locationUpdationSuccess(location) {
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
 
-  var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
-  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    app.isNewDay(firebase.auth().currentUser.uid).then(function (isNew) {
-      if (!isNew) {
-        suggestCheckIn(true).then(function () {
-          if (history.state[0] === 'listView') {
-            listView({
-              urgent: false,
-              nearby: true
-            });
-          }
-        });
-      }
-    });
-  }
+  var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  var locationChanged = new CustomEvent("locationChanged", {
+    "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
+  });
+  window.dispatchEvent(locationChanged);
 }
 
 function showSuggestCheckInDialog() {
@@ -364,12 +353,14 @@ function showSuggestCheckInDialog() {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
         if (rootRecord.offices.length === 1) {
-          createTempRecord(rootRecord.offices[0], 'check-in');
+          createTempRecord(rootRecord.offices[0], 'check-in', {
+            suggestCheckIn: true
+          });
         } else {
           callSubscriptionSelectorUI(evt, true);
         }
       });
-    }).catch(function (error) {});
+    }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
     suggestCheckIn(false).then(console.log).catch(console.log);
@@ -561,9 +552,15 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   return distance;
 }
 
-function isNewLocationMoreThanThreshold(distance) {
+function isLocationMoreThanThreshold(distance) {
   var THRESHOLD = 0.5; //km
   if (distance >= THRESHOLD) return true;
+  return false;
+}
+
+function isLocationLessThanThreshold(distance) {
+  var THRESHOLD = 0.5; //km
+  if (distance <= THRESHOLD) return true;
   return false;
 }
 
@@ -624,7 +621,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -667,15 +664,18 @@ function requestCreator(requestType, requestBody) {
 
   var requestGenerator = {
     type: requestType,
-    body: ''
+    body: '',
+    token: '',
+    auth: firebase.auth().currentUser
   };
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
+
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    requestGenerator.body = requestBody;
-    apiHandler.postMessage(requestGenerator);
+    firebase.auth().currentUser.getIdToken(false).then(function (token) {
+
+      requestGenerator.body = requestBody;
+      requestGenerator.token = token;
+      apiHandler.postMessage(requestGenerator);
+    });
   } else {
 
     getRootRecord().then(function (rootRecord) {
@@ -687,16 +687,20 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator);
       } else {
-        var geopoints = {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'accuracy': location.accuracy
-        };
+        firebase.auth().currentUser.getIdToken(false).then(function (token) {
 
-        requestBody['geopoint'] = geopoints;
-        requestGenerator.body = requestBody;
-        console.log(requestGenerator);
-        sendRequest(location, requestGenerator);
+          var geopoints = {
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+            'accuracy': location.accuracy
+          };
+
+          requestBody['geopoint'] = geopoints;
+          requestGenerator.body = requestBody;
+          requestGenerator.token = token;
+          console.log(requestGenerator);
+          sendRequest(location, requestGenerator);
+        });
       }
     });
   };
@@ -709,16 +713,19 @@ function requestCreator(requestType, requestBody) {
 function handleWaitForLocation(requestBody, requestGenerator) {
 
   window.addEventListener('location', function _listener(e) {
-    var data = e.detail;
-    var geopoints = {
-      'latitude': data.latitude,
-      'longitude': data.longitude,
-      'accuracy': data.accuracy
-    };
-    requestBody['geopoint'] = geopoints;
-    requestGenerator.body = requestBody;
-    sendRequest(geopoints, requestGenerator);
     window.removeEventListener('location', _listener, true);
+    firebase.auth().currentUser.getIdToken(false).then(function (token) {
+      var data = e.detail;
+      var geopoints = {
+        'latitude': data.latitude,
+        'longitude': data.longitude,
+        'accuracy': data.accuracy
+      };
+      requestBody['geopoint'] = geopoints;
+      requestGenerator.body = requestBody;
+      requestGenerator.token = token;
+      sendRequest(geopoints, requestGenerator);
+    });
   }, true);
 }
 
@@ -801,18 +808,7 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
-    getFcmTokenFromAndroid().then(function(token){
-      console.log(token)
-    }).catch(console.log)
-    suggestCheckIn(true).then(function () {
-      window["listView"]({
-        urgent: true,
-        nearby: true
-      });
-    });
+    openListWithChecks();
     return;
   }
 
@@ -875,28 +871,6 @@ function handleTimeout(type) {
   if (index > -1) {
     return;
   }
-
-  if (native.getName() === 'Android') {
-    try {
-      var connection = Internet.isConnectionActive();
-      if (connection) {
-        offset = setTimeout(function () {
-          requestCreator('Null', 'false');
-        }, 8000);
-      }
-    } catch (e) {
-      if (navigator.onLine) {
-        offset = setTimeout(function () {
-          requestCreator('Null', 'false');
-        }, 8000);
-      }
-    }
-    return;
-  }
-
-  offset = setTimeout(function () {
-    requestCreator('Null', 'false');
-  }, 8000);
 }
 
 function getInputText(selector) {
