@@ -1,4 +1,3 @@
-var offset = '';
 var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
@@ -63,10 +62,17 @@ function successDialog() {
 
   var successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'));
   successDialog.show();
+  
   setTimeout(function () {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
+  
+  listView({
+    urgent:false,
+    nearBy:false
+  })
+
 }
 
 function appDialog(messageString) {
@@ -650,19 +656,29 @@ function resetLoaders() {
 }
 
 function requestCreator(requestType, requestBody) {
-
-
+  const auth = firebase.auth().currentUser;
   var requestGenerator = {
     type: requestType,
-    body: ''
+    body: '',
+    user:{
+      token:'',
+      uid:auth.uid,
+      displayName:auth.displayName,
+      photoURL:auth.photoURL,
+      phoneNumber:auth.phoneNumber
+    }
   };
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
+  
+ 
+  
+
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    requestGenerator.body = requestBody;
-    apiHandler.postMessage(requestGenerator);
+    user.getIdToken(false).then(function(){
+
+      requestGenerator.body = requestBody;
+      requestGenerator.user.token = token;
+      apiHandler.postMessage(requestGenerator);
+    })
   } else {
 
 
@@ -676,16 +692,20 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator)
       } else {
-        var geopoints = {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'accuracy': location.accuracy
-        };
+        auth.getIdToken(false).then(function(token){
 
-        requestBody['geopoint'] = geopoints;
-        requestGenerator.body = requestBody;
-        console.log(requestGenerator)
-        sendRequest(location, requestGenerator)
+          var geopoints = {
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+            'accuracy': location.accuracy
+          };
+          
+          requestBody['geopoint'] = geopoints;
+          requestGenerator.body = requestBody;
+          requestGenerator.user.token = token;
+          console.log(requestGenerator)
+          sendRequest(location, requestGenerator)
+        })
       }
     })
   };
@@ -702,6 +722,8 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
+    auth.getIdToken(false).then(function(token){
+
     const data = e.detail;
     var geopoints = {
       'latitude': data.latitude,
@@ -710,10 +732,11 @@ function handleWaitForLocation(requestBody, requestGenerator) {
     };
     requestBody['geopoint'] = geopoints;
     requestGenerator.body = requestBody;
+    requestGenerator.user.token = token;
     sendRequest(geopoints, requestGenerator);
-    window.removeEventListener('location', _listener, true);
-  }, true);
-
+  })
+  window.removeEventListener('location', _listener, true);
+}, true);
 }
 
 function sendRequest(location, requestGenerator) {
@@ -755,7 +778,6 @@ const receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data)
-  handleTimeout(response.data.type);
 }
 
 
@@ -783,12 +805,6 @@ function revokeSession() {
   });
 }
 
-function resetOffset() {
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
-}
 
 function changeState(data) {
   history.pushState(['listView'], null, null);
@@ -862,17 +878,11 @@ function onErrorMessage(error) {
   });
 }
 
-function handleTimeout(type) {
-  const whitelist = ['update-app', 'revoke-session', 'manageLocation'];
-  const index = whitelist.indexOf(type);
-  if (index > -1) {
-    return;
-  }
-  offset = setTimeout(function () {
-    requestCreator('Null', 'false');
-  }, 8000);
-}
-
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
+}
+
+
+function runRead(value) {
+  requestCreator('Null',value);
 }

@@ -11,6 +11,12 @@ firebase.initializeApp({
 
 let native = function () {
   return {
+    setFCMToken:function(token){
+      localStorage.setItem('token',token)
+    },
+    getFCMToken : function(){
+      return localStorage.getItem('token')
+    },
     setName: function (device) {
       localStorage.setItem('deviceType', device);
     },
