@@ -519,9 +519,9 @@ function idbVersionLessThan3(auth) {
         case 2:
           value = false;
           reset.version = 2;
-          const calendar = request.transaction.objectStore('calendar');
+          const calendar = req.transaction.objectStore('calendar');
           calendar.createIndex('onLeave', ['template', 'status', 'office']);
-          const children = request.transaction.objectStore('children');
+          const children = req.transaction.objectStore('children');
           children.createIndex('templateStatus', ['template', 'status']);
 
           break;

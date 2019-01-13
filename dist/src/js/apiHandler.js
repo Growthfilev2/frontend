@@ -1,29 +1,14 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-// import firebase app script because there is no native support of firebase inside web workers
-
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
 importScripts('../../external/js/moment.min.js');
-// Backend API Url
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
-/** reinitialize the firebase app */
 
 // get Device time
 function getTime() {
   return Date.now();
 }
-
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-});
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
@@ -32,9 +17,8 @@ var requestFunctionCaller = {
   statusChange: statusChange,
   share: share,
   update: update,
-  create: create,
-  Null: Null,
-  now: fetchServerTime
+  create: create
+
 };
 
 function requestHandlerResponse(type, code, message, params) {
@@ -54,83 +38,88 @@ function createLog(body) {
 // when worker receives the request body from the main thread
 
 self.onmessage = function (event) {
-  setTimeout(function () {
-    var auth = firebase.auth().currentUser;
-    if (auth) {
-      handleMessageEvt(event);
-      return;
-    }
-  }, 500);
-};
-
-function handleMessageEvt(event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body).then(initializeIDB).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
     return;
   }
+
   if (event.data.type === 'instant') {
     instant(event.data.body);
     return;
   }
-  requestFunctionCaller[event.data.type](event.data.body).then(updateIDB).catch(function (error) {
+
+  if (event.data.type === 'Null') {
+    updateIDB(event.data.body, event.data.user);
+    return;
+  }
+
+  requestFunctionCaller[event.data.type](event.data.body, event.data.user).then(function (backToList) {
+    if (backToList) {
+      requestHandlerResponse('notification', 200, 'status changed successfully');
+    }
+  }).catch(function (error) {
     console.log(error);
   });
-}
+};
 
 // Performs XMLHTTPRequest for the API's.
 
-function http(method, url, data) {
+function http(request) {
   return new Promise(function (resolve, reject) {
-    firebase.auth().currentUser.getIdToken(false).then(function (idToken) {
-      var xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
+    xhr.open(request.method, request.url, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + request.token);
 
-      xhr.open(method, url, true);
-
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + idToken);
-
-      xhr.onreadystatechange = function () {
+    xhr.onreadystatechange = function () {
+      // console.log(xhr.status)
+      if (xhr.readyState === 4) {
         // console.log(xhr.status)
-        if (xhr.readyState === 4) {
-          // console.log(xhr.status)
-          if (!xhr.status) {
-            requestHandlerResponse('android-stop-refreshing', 400, 'true');
-            return;
-          }
-
-          if (xhr.status > 226) {
-            var errorObject = JSON.parse(xhr.response);
-            requestHandlerResponse('error', errorObject.code, errorObject.message);
-            return reject({
-              res: JSON.parse(xhr.response),
-              url: url,
-              data: data,
-              device: currentDevice
-            });
-          }
-          xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
+        if (!xhr.status) {
+          requestHandlerResponse('android-stop-refreshing', 400, 'true');
+          return;
         }
-      };
 
-      xhr.send(data || null);
-    }).catch(function (error) {
+        if (xhr.status > 226) {
+          var errorObject = JSON.parse(xhr.response);
+          requestHandlerResponse('error', errorObject.code, errorObject.message);
+          return reject({
+            res: JSON.parse(xhr.response),
+            url: request.url,
+            data: request.data,
+            device: currentDevice
+          });
+        }
+        xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
+      }
+    };
 
-      instant(createLog(error));
-    });
+    xhr.send(request.body || null);
+  }).catch(function (error) {
+
+    instant(createLog(error));
   });
 }
 
-function fetchServerTime(info) {
-  currentDevice = info.device;
+function fetchServerTime(body, user) {
+  currentDevice = body.device;
   var parsedDeviceInfo = JSON.parse(currentDevice);
 
   console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
-    http('GET', apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs).then(function (response) {
+    var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registration=' + body.registerToken;
+    var httpReq = {
+      method: 'GET',
+      url: url,
+      body: null,
+      token: user.token
+    };
+
+    http(httpReq).then(function (response) {
       console.log(response);
       if (response.updateClient) {
-        console.log("please update device");
+
         var title = 'Message';
         var message = 'There is a New version of your app available';
 
@@ -162,7 +151,9 @@ function fetchServerTime(info) {
 
       resolve({
         ts: response.timestamp,
-        fromTime: info.from
+        fromTime: body.from,
+        user: user,
+        swipe: false
       });
     }).catch(function (error) {
       instant(createLog(error));
@@ -172,19 +163,23 @@ function fetchServerTime(info) {
 
 function instant(error) {
   console.log(error);
-  http('POST', apiUrl + 'services/logs', error).then(function (response) {
-    console.log(response);
-  }).catch(console.log);
+  // http(
+  //   'POST',
+  //   `${apiUrl}services/logs`,
+  //   error
+  // ).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
 
-function fetchRecord(dbName, id) {
+function fetchRecord(uid, id) {
   return new Promise(function (resolve) {
 
-    var req = indexedDB.open(dbName);
+    var req = indexedDB.open(uid);
     req.onsuccess = function (event) {
       var db = req.result;
       var objStore = db.transaction('activity').objectStore('activity');
@@ -198,12 +193,8 @@ function fetchRecord(dbName, id) {
 
 function initializeIDB(data) {
   console.log("init db");
-  // onAuthStateChanged is added because app is reinitialized
   return new Promise(function (resolve, reject) {
-    var auth = firebase.auth().currentUser;
-
-    var request = indexedDB.open(auth.uid, 2);
-
+    var request = indexedDB.open(data.user.uid, 3);
     request.onerror = function () {
       console.log(request.error);
       reject(request.error);
@@ -211,30 +202,26 @@ function initializeIDB(data) {
 
     request.onupgradeneeded = function (evt) {
       console.log(evt);
-      createObjectStores(request, auth, data.fromTime);
+      createObjectStores(request, data);
     };
 
     request.onsuccess = function () {
       var rootTx = request.result.transaction(['root'], 'readwrite');
       var rootObjectStore = rootTx.objectStore('root');
-      rootObjectStore.get(auth.uid).onsuccess = function (event) {
+      rootObjectStore.get(data.user.uid).onsuccess = function (event) {
         var record = event.target.result;
         record.serverTime = data.ts - Date.now();
         rootObjectStore.put(record);
       };
       rootTx.oncomplete = function () {
         requestHandlerResponse('manageLocation');
-        resolve({
-          dbName: auth.uid,
-          swipe: 'false'
-        });
+        resolve({ swipe: data.swipe, user: data.user });
       };
     };
   });
 }
 
-function createObjectStores(request, auth, fromTime) {
-  console.log(fromTime);
+function createObjectStores(request, data) {
   var db = request.result;
 
   var activity = db.createObjectStore('activity', {
@@ -281,7 +268,7 @@ function createObjectStores(request, auth, fromTime) {
   calendar.createIndex('timestamp', 'timestamp');
   calendar.createIndex('start', 'start');
   calendar.createIndex('end', 'end');
-  calendar.createIndex('urgent', ['status', 'hidden']);
+  calendar.createIndex('urgent', ['status', 'hidden']), calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   var map = db.createObjectStore('map', {
     autoIncrement: true
@@ -299,49 +286,49 @@ function createObjectStores(request, auth, fromTime) {
 
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
-
+  children.createIndex('templateStatus', ['template', 'status']);
   var root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
 
   root.put({
-    uid: auth.uid,
-    fromTime: fromTime,
+    uid: data.user.uid,
+    fromTime: data.fromTime,
     location: ''
   });
 }
 
-function comment(body) {
+function comment(body, auth) {
   console.log(body);
   return new Promise(function (resolve, reject) {
-    http('POST', apiUrl + 'activities/comment', JSON.stringify(body)).then(function () {
-      // requestHandlerResponse('notification', 200, 'comment added successfully', firebase.auth().currentUser.uid)
-      resolve({
-        dbName: firebase.auth().currentUser.uid,
-        swipe: 'false'
-      });
+    var req = {
+      method: 'POST',
+      url: apiUrl + 'activities/comment',
+      body: JSON.stringify(body),
+      token: auth.token
+    };
+    http(req).then(function () {
+      resolve(false);
     }).catch(function (error) {
-
       instant(createLog(error));
     });
   });
 }
 
-function statusChange(body) {
-  console.log(body);
-  var dbName = firebase.auth().currentUser.uid;
+function statusChange(body, user) {
 
   return new Promise(function (resolve, reject) {
-    fetchRecord(dbName, body.activityId).then(function (originalRecord) {
-      http('PATCH', apiUrl + 'activities/change-status', JSON.stringify(body), originalRecord).then(function (success) {
-        instantUpdateDB(dbName, body, 'status');
-
-        requestHandlerResponse('notification', 200, 'status changed successfully', dbName);
-
-        resolve({
-          dbName: firebase.auth().currentUser.uid,
-          swipe: 'false'
-        });
+    fetchRecord(user.uid, body.activityId).then(function (originalRecord) {
+      var req = {
+        method: 'PATCH',
+        url: apiUrl + 'activities/change-status',
+        body: JSON.stringify(body),
+        token: user.token
+      };
+      http(req).then(function (success) {
+        instantUpdateDB(body, 'status', user).then(function () {
+          resolve(true);
+        }).catch(console.log);
       }).catch(function (error) {
         instant(createLog(error));
       });
@@ -349,17 +336,17 @@ function statusChange(body) {
   });
 }
 
-function share(body) {
-  var dbName = firebase.auth().currentUser.uid;
-
+function share(body, user) {
   return new Promise(function (resolve, reject) {
-
-    http('PATCH', apiUrl + 'activities/share', JSON.stringify(body)).then(function (success) {
-      instantUpdateDB(dbName, body, 'share');
-      requestHandlerResponse('notification', 200, 'assignne added successfully', dbName);
-      resolve({
-        dbName: firebase.auth().currentUser.uid,
-        swipe: 'false'
+    var req = {
+      method: 'PATCH',
+      url: apiUrl + 'activities/share',
+      body: JSON.stringify(body),
+      token: user.token
+    };
+    http(req).then(function (success) {
+      instantUpdateDB(body, 'share', user).then(function () {
+        resolve(true);
       });
     }).catch(function (error) {
       instant(createLog(error));
@@ -367,108 +354,90 @@ function share(body) {
   });
 }
 
-function Null(swipe) {
-  console.log(swipe);
+function update(body, user) {
   return new Promise(function (resolve, reject) {
-    var user = firebase.auth().currentUser;
-    if (!user) {
-      requestHandlerResponse('android-stop-refreshing');
-      reject(null);
-      return;
-    }
-    if (swipe === "true") {
-      console.log(JSON.parse(swipe));
-      requestHandlerResponse('reset-offset');
-    }
-    console.log("Null Ran");
-    resolve({
-      dbName: user.uid,
-      swipe: swipe
-    });
-  });
-}
-
-function update(body) {
-  var dbName = firebase.auth().currentUser.uid;
-  console.log(body);
-
-  return new Promise(function (resolve, reject) {
-    http('PATCH', apiUrl + 'activities/update', JSON.stringify(body)).then(function (success) {
-      instantUpdateDB(dbName, body, 'update');
-      requestHandlerResponse('notification', 200, 'activity update successfully', dbName);
-
-      resolve({
-        dbName: firebase.auth().currentUser.uid,
-        swipe: 'false'
+    var req = {
+      method: 'PATCH',
+      url: apiUrl + 'activities/update',
+      body: JSON.stringify(body),
+      token: user.token
+    };
+    http(req).then(function (success) {
+      instantUpdateDB(body, 'update', user).then(function () {
+        resolve(true);
       });
     }).catch(function (error) {
-
       instant(createLog(error));
     });
   });
 }
 
-function create(body) {
+function create(body, user) {
   console.log(body);
   return new Promise(function (resolve, reject) {
-    http('POST', apiUrl + 'activities/create', JSON.stringify(body)).then(function (success) {
-      requestHandlerResponse('notification', 200, 'activity created successfully', firebase.auth().currentUser.uid);
-
-      requestHandlerResponse('redirect-to-list', 200, '', firebase.auth().currentUser.uid);
-      resolve({
-        dbName: firebase.auth().currentUser.uid,
-        swipe: 'false'
-      });
+    var req = {
+      method: 'POST',
+      url: apiUrl + 'activities/create',
+      body: JSON.stringify(body),
+      token: user.token
+    };
+    http(req).then(function (success) {
+      resolve(true);
     }).catch(function (error) {
-      console.log(error);
       instant(createLog(error));
     });
   });
 }
 
-function instantUpdateDB(dbName, data, type) {
-  console.log(data);
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function (event) {
-    var db = req.result;
-    var objStoreTx = db.transaction(['activity'], 'readwrite');
-    var objStore = objStoreTx.objectStore('activity');
-    objStore.get(data.activityId).onsuccess = function (event) {
-      var record = event.target.result;
-      record.editable = 0;
+function instantUpdateDB(data, type, user) {
+  return new Promise(function (resolve, reject) {
 
-      if (type === 'share') {
-        data.share.forEach(function (number) {
-          record.assignees.push(number);
-        });
-        objStore.put(record);
-      }
-      if (type === 'update') {
-        record.schedule = data.schedule;
-        record.attachment = data.attachment;
-        for (var i = 0; i < record.venue.length; i++) {
-          record.venue[i].geopoint = {
-            '_latitude': data.venue[i].geopoint['_latitude'],
-            '_longitude': data.venue[i].geopoint['_longitude']
-          };
+    var idbRequest = indexedDB.open(user.uid);
+
+    idbRequest.onsuccess = function () {
+      var db = idbRequest.result;
+      var objStoreTx = db.transaction(['activity'], 'readwrite');
+      var objStore = objStoreTx.objectStore('activity');
+      objStore.get(data.activityId).onsuccess = function (event) {
+        var record = event.target.result;
+        record.editable = 0;
+
+        if (type === 'share') {
+          data.share.forEach(function (number) {
+            record.assignees.push(number);
+          });
+          objStore.put(record);
         }
-        objStore.put(record);
-      }
-      if (type === 'status') {
+        if (type === 'update') {
+          record.schedule = data.schedule;
+          record.attachment = data.attachment;
+          for (var i = 0; i < record.venue.length; i++) {
+            record.venue[i].geopoint = {
+              '_latitude': data.venue[i].geopoint['_latitude'],
+              '_longitude': data.venue[i].geopoint['_longitude']
+            };
+          }
+          objStore.put(record);
+        }
+        if (type === 'status') {
 
-        record[type] = data[type];
-        objStore.put(record);
-      }
+          record[type] = data[type];
+          objStore.put(record);
+        }
+      };
+      objStoreTx.oncomplete = function () {
+        resolve(true);
+      };
+      objStoreTx.onerror = function () {
+        reject(true);
+      };
     };
-    objStoreTx.oncomplete = function () {
-      requestHandlerResponse('redirect-to-list', 200, '');
-    };
-  };
+  });
 }
 
-function updateMap(activity) {
+function updateMap(activity, param) {
 
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  var req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     var db = req.result;
     var mapTx = db.transaction(['map'], 'readwrite');
@@ -515,9 +484,9 @@ function transactionError(event) {
   console.log(event.target.error);
 }
 
-function updateCalendar(activity) {
+function updateCalendar(activity, param) {
 
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  var req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     var db = req.result;
     var calendarTx = db.transaction(['calendar'], 'readwrite');
@@ -564,13 +533,14 @@ function updateCalendar(activity) {
 function putAttachment(db, activity) {
   var chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children');
 
-  chidlrenObjectStore.put({
+  var commonSet = {
     activityId: activity.activityId,
     status: activity.status,
     template: activity.template,
     office: activity.office,
     attachment: activity.attachment
-  });
+  };
+  chidlrenObjectStore.put(commonSet);
 }
 
 // if an assignee's phone number is present inside the users object store then
@@ -612,7 +582,7 @@ function removeUserFromAssigneeInActivity(db, userActivityId) {
   };
 }
 
-function removeActivityFromDB(db, myActivities) {
+function removeActivityFromDB(db, myActivities, param) {
   if (!myActivities.length) return;
   var transaction = db.transaction(['activity', 'list', 'children'], 'readwrite');
   var activityObjectStore = transaction.objectStore('activity');
@@ -634,13 +604,13 @@ function removeActivityFromDB(db, myActivities) {
   });
 
   transaction.oncomplete = function () {
-    mapAndCalendarRemovalRequest(activitiesToRemove);
+    mapAndCalendarRemovalRequest(activitiesToRemove, param);
   };
 }
 
-function mapAndCalendarRemovalRequest(activitiesToRemove) {
+function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
 
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  var req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     var db = req.result;
     var tx = db.transaction(['calendar', 'map'], 'readwrite');
@@ -673,7 +643,7 @@ function deleteByIndex(store, activitiesToRemove) {
   };
 }
 
-function createUsersApiUrl(db) {
+function createUsersApiUrl(db, user) {
   return new Promise(function (resolve) {
     var tx = db.transaction(['users'], 'readwrite');
     var usersObjectStore = tx.objectStore('users');
@@ -698,7 +668,8 @@ function createUsersApiUrl(db) {
 
         resolve({
           db: db,
-          url: fullReadUserString
+          url: fullReadUserString,
+          user: user
         });
       }
     };
@@ -707,12 +678,17 @@ function createUsersApiUrl(db) {
 
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
-function updateUserObjectStore(successUrl) {
-
-  http('GET', successUrl.url).then(function (userProfile) {
-    console.log(userProfile);
+function updateUserObjectStore(requestPayload) {
+  var req = {
+    method: 'GET',
+    url: requestPayload.url,
+    data: null,
+    token: requestPayload.user.token
+  };
+  http(req).then(function (userProfile) {
     if (!Object.keys(userProfile).length) return;
-    var tx = successUrl.db.transaction(['users'], 'readwrite');
+
+    var tx = requestPayload.db.transaction(['users'], 'readwrite');
     var usersObjectStore = tx.objectStore('users');
     var isUpdatedIndex = usersObjectStore.index('isUpdated');
     var USER_NOT_UPDATED = 0;
@@ -758,10 +734,10 @@ function findSubscriptionCount(db) {
   });
 }
 
-function updateSubscription(db, subscription) {
+function updateSubscription(db, subscription, param) {
 
   findSubscriptionCount(db).then(function (count) {
-    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    var req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       var db = req.result;
       var tx = db.transaction(['subscriptions'], 'readwrite');
@@ -784,7 +760,7 @@ function updateSubscription(db, subscription) {
       };
 
       tx.oncomplete = function () {
-        var req = indexedDB.open(firebase.auth().currentUser.uid);
+        var req = indexedDB.open(param.user.uid);
         req.onsuccess = function () {
           var db = req.result;
           var store = db.transaction('subscriptions', 'readwrite').objectStore('subscriptions');
@@ -795,8 +771,8 @@ function updateSubscription(db, subscription) {
   }).catch(console.log);
 }
 
-function createListStore(activity, counter) {
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
+function createListStore(activity, counter, param) {
+  var req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     var db = req.result;
     var listTx = db.transaction(['list'], 'readwrite');
@@ -822,9 +798,9 @@ function createListStore(activity, counter) {
   };
 }
 
-function updateListStoreWithCreatorImage(counter) {
+function updateListStoreWithCreatorImage(param) {
   return new Promise(function (resolve, reject) {
-    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    var req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
 
       var db = req.result;
@@ -837,8 +813,8 @@ function updateListStoreWithCreatorImage(counter) {
         if (!cursor) return;
         var creator = cursor.value.creator;
 
-        if (creator.number === firebase.auth().currentUser.phoneNumber) {
-          creator.photo = firebase.auth().currentUser.photoURL;
+        if (creator.number === param.user.phoneNumber) {
+          creator.photo = param.user.photoURL;
           listStore.put(cursor.value);
         } else {
           userStore.get(creator.number).onsuccess = function (userEvent) {
@@ -863,11 +839,9 @@ function updateListStoreWithCreatorImage(counter) {
   });
 }
 
-function successResponse(read, swipeInfo) {
-  console.log(swipeInfo);
-  var user = firebase.auth().currentUser;
+function successResponse(read, param) {
 
-  var request = indexedDB.open(user.uid);
+  var request = indexedDB.open(param.user.uid);
   var removeActivitiesForUser = [];
   var removeActivitiesForOthers = [];
   request.onsuccess = function () {
@@ -884,7 +858,7 @@ function successResponse(read, swipeInfo) {
     read.addendum.forEach(function (addendum) {
       if (addendum.unassign) {
 
-        if (addendum.user == firebase.auth().currentUser.phoneNumber) {
+        if (addendum.user == param.user.phoneNumber) {
           removeActivitiesForUser.push(addendum.activityId);
         } else {
           removeActivitiesForOthers.push({
@@ -898,8 +872,8 @@ function successResponse(read, swipeInfo) {
       addendumObjectStore.add(addendum);
     });
 
-    removeActivityFromDB(db, removeActivitiesForUser);
-    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers);
+    removeActivityFromDB(db, removeActivitiesForUser, param);
+    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
 
     read.activities.forEach(function (activity) {
       // put activity in activity object store
@@ -912,12 +886,12 @@ function successResponse(read, swipeInfo) {
         activityObjectStore.put(activity);
       }
       if (activity.hidden === 0) {
-        createListStore(activity, counter);
+        createListStore(activity, counter, param);
       }
 
-      updateMap(activity);
+      updateMap(activity, param);
 
-      updateCalendar(activity);
+      updateCalendar(activity, param);
       // put each assignee (number) in the users object store
 
       putAssignessInStore(db, activity.assignees);
@@ -926,30 +900,32 @@ function successResponse(read, swipeInfo) {
     });
 
     read.templates.forEach(function (subscription) {
-      updateSubscription(db, subscription);
+      updateSubscription(db, subscription, param);
     });
 
-    rootObjectStore.get(user.uid).onsuccess = function (event) {
-      createUsersApiUrl(db).then(updateUserObjectStore);
-      getUniqueOfficeCount().then(setUniqueOffice).catch(console.log);
+    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+      createUsersApiUrl(db, param.user).then(updateUserObjectStore);
+      getUniqueOfficeCount(param).then(function (offices) {
+        setUniqueOffice(offices, param);
+      }).catch(console.log);
 
       var record = event.target.result;
       record.fromTime = read.upto;
       rootObjectStore.put(record);
 
-      updateListStoreWithCreatorImage(counter).then(function () {
-        requestHandlerResponse('updateIDB', 200, swipeInfo);
+      updateListStoreWithCreatorImage(param).then(function () {
+        requestHandlerResponse('updateIDB', 200, param.swipe);
       });
     };
   };
 }
 
-function getUniqueOfficeCount() {
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
+function getUniqueOfficeCount(param) {
 
-  var offices = [];
   return new Promise(function (resolve, reject) {
+    var dbName = param.user.uid;
+    var req = indexedDB.open(dbName);
+    var offices = [];
     req.onsuccess = function () {
       var db = req.result;
       var tx = db.transaction(['activity']);
@@ -970,8 +946,8 @@ function getUniqueOfficeCount() {
   });
 }
 
-function setUniqueOffice(offices) {
-  var dbName = firebase.auth().currentUser.uid;
+function setUniqueOffice(offices, param) {
+  var dbName = param.user.uid;
   var req = indexedDB.open(dbName);
 
   req.onsuccess = function () {
@@ -992,23 +968,27 @@ function setUniqueOffice(offices) {
 
 function updateIDB(param) {
 
-  var req = indexedDB.open(param.dbName);
-  console.log(param.dbName);
-  console.log(param.swipe);
+  var req = indexedDB.open(param.user.uid);
 
   req.onsuccess = function () {
     var db = req.result;
-    var rootObjectStore = db.transaction('root', 'readonly').objectStore('root');
-
-    console.log(rootObjectStore);
-    rootObjectStore.get(param.dbName).onsuccess = function (root) {
-      console.log(root);
-      http('GET', apiUrl + 'read?from=' + root.target.result.fromTime).then(function (response) {
+    var tx = db.transaction(['root']);
+    var rootObjectStore = tx.objectStore('root');
+    var record = void 0;
+    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+      record = event.target.result;
+    };
+    tx.oncomplete = function () {
+      var req = {
+        method: 'GET',
+        url: apiUrl + 'read?from=' + record.fromTime,
+        data: null,
+        token: param.user.token
+      };
+      http(req).then(function (response) {
         if (!response) return;
-
-        successResponse(response, param.swipe);
+        successResponse(response, param);
       }).catch(function (error) {
-
         instant(createLog(error));
       });
     };
