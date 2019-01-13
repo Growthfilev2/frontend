@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-// import firebase app script because there is no native support of firebase inside web workers
-importScripts('../external/js/moment.min.js')
-// Backend API Url
-=======
 importScripts('../external/js/moment.min.js');
->>>>>>> FCM
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -45,10 +39,6 @@ function createLog(body) {
 // when worker receives the request body from the main thread
 
 self.onmessage = function (event) {
-<<<<<<< HEAD
-  
-=======
->>>>>>> FCM
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
     return
@@ -70,16 +60,9 @@ self.onmessage = function (event) {
     }
   }).catch(function (error) {
     console.log(error)
-<<<<<<< HEAD
-  }) 
-
-}
-
-=======
   })
 }
 
->>>>>>> FCM
 // Performs XMLHTTPRequest for the API's.
 
 function http(request) {

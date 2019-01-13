@@ -59,18 +59,6 @@ var native = function () {
   };
 }();
 
-<<<<<<< HEAD
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-  var errorJS = {
-    message: {
-      msg: error.message,
-      url: url,
-      lineNo: lineNo,
-      columnNo: columnNo,
-      stack: error.stack,
-      name: error.name,
-      device: native.getInfo()
-=======
 var app = function () {
   return {
 
@@ -116,7 +104,6 @@ var app = function () {
       var offsetEndAfter = moment(endTime, format).add(15, 'minutes');
 
       return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]');
->>>>>>> FCM
     }
   };
 }();
@@ -216,23 +203,10 @@ window.addEventListener('load', function () {
   startApp();
 });
 
-<<<<<<< HEAD
-window.onpopstate = function (event) {
-
-  if (!event.state) return;
-  if (event.state[0] === 'listView') {
-    window[event.state[0]]();
-    return;
-  }
-  window[event.state[0]](event.state[1], false);
-};
-
 window.addEventListener('onMessage', function _onMessage(e) {
   requestCreator('Null', false);
 });
 
-=======
->>>>>>> FCM
 function backNav() {
   history.back();
 }
@@ -433,137 +407,6 @@ function startApp() {
 }
 // new day suggest
 // if location changes
-<<<<<<< HEAD
-var app = function () {
-  return {
-
-    today: function today() {
-      return moment();
-    },
-    format: function format() {
-      return this.today().format("DD/MM/YYYY");
-    },
-    tomorrow: function tomorrow() {
-      return moment(this.today()).add(1, 'day');
-    },
-    getLastLocationTime: function getLastLocationTime() {
-      return new Promise(function (resolve, reject) {
-        getRootRecord().then(function (rootRecord) {
-          resolve(rootRecord.location.lastLocationTime);
-        }).catch(function (error) {
-          reject(error);
-        });
-      });
-    },
-    isNewDay: function isNewDay(auth) {
-      return new Promise(function (resolve, reject) {
-
-        app.getLastLocationTime().then(function (time) {
-          if (moment(time).isSame(this.today(), 'day')) {
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        }).catch(function (error) {
-          reject(error);
-        });
-      });
-    },
-
-    isCurrentTimeNearStart: function isCurrentTimeNearStart(startTime) {
-
-      var offsetStartBefore = moment(startTime).subtract(15, 'minutes');
-      var offsetStartAfter = moment(startTime).add(15, 'minutes');
-
-      if (this.today().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')) {
-        return true;
-      }
-      return false;
-    },
-    isCurrentTimeNearEnd: function isCurrentTimeNearEnd(endTime) {
-      var offsetEndBefore = moment(endTime).subtract(15, 'minutes');
-      var offsetEndAfter = moment(endTime).add(15, 'minutes');
-      if (this.today().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')) {
-        return true;
-      }
-      return false;
-    }
-  };
-}();
-
-function getEmployeeDetails() {
-  return new Promise(function (resolve, reject) {
-    var req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      var db = req.result;
-      var tx = db.transaction(['children']);
-      var store = tx.objectStore('childrend');
-      var details = void 0;
-      store.index('template').openCursor('employee').onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.status !== 'CONFIRMED') {
-          cursor.continue();
-          return;
-        }
-        details = cursor.value;
-        cursor.continue();
-      };
-      tx.oncomplete = function () {
-        resolve(details);
-      };
-    };
-  });
-}
-
-function isEmployeeOnLeave() {
-  getEmployeeDetails().then(function (empDetails) {
-
-    empDetails.onLeave = false;
-    var req = indexedDB.open(auth);
-    req.onsuccess = function () {
-      var db = req.result;
-      var tx = db.transaction(['calendar']);
-      var store = tx.objectStore('calendar');
-      store.index('activityId').openCursor(empDetails.activityId, 'next').onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.office !== empDetails.office) {
-          cursor.continue();
-          return;
-        }
-
-        if (cursor.value.template !== 'leave') {
-          cursor.continue();
-          return;
-        }
-
-        if (cursor.value.status !== 'CONFIRMED') {
-          cursor.continue();
-          return;
-        }
-
-        if (this.today().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-          empDetails.onLeave = true;
-          return;
-        }
-        cursor.continue();
-      };
-      tx.oncomplete = function () {
-        resolve(isOnLeave);
-      };
-      tx.onerror = function () {
-        reject(tx.error);
-      };
-    };
-    req.onerror = function () {
-      reject(req.error);
-    };
-  });
-}
-
-function idbVersionLessThan2(auth) {
-=======
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
@@ -638,7 +481,6 @@ function isEmployeeOnLeave() {
 }
 
 function idbVersionLessThan3(auth) {
->>>>>>> FCM
   return new Promise(function (resolve, reject) {
 
     var req = indexedDB.open(auth.uid, 3);
@@ -679,11 +521,7 @@ function idbVersionLessThan3(auth) {
     };
     req.onerror = function () {
       reject({
-<<<<<<< HEAD
-        error: req.error,
-=======
         error: req.error.message,
->>>>>>> FCM
         device: native.getInfo()
       });
     };
@@ -723,16 +561,7 @@ function init(auth) {
       from = 1;
       if (reset.value) {
         resetApp(auth, from);
-<<<<<<< HEAD
-      } else {
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: ''
-        });
-        openListWithChecks();
-=======
         return;
->>>>>>> FCM
       }
 
       requestCreator('now', {
@@ -777,59 +606,6 @@ function resetApp(auth, from) {
   });
 }
 
-<<<<<<< HEAD
-function runAppChecks(auth) {
-  return new Promise(function (resolve, reject) {
-    isEmployeeOnLeave().then(function (emp) {
-      // suggest check in false
-      var dataObject = {
-        urgent: false,
-        nearby: false,
-        checkin: false
-      };
-      if (emp.onLeave) {
-        dataObject.checkin = false;
-      }
-
-      window.addEventListener('locationChanged', function _listener(e) {
-        var changed = e.detail;
-        app.isNewDay().then(function (newDay) {
-
-          if (changed) {
-            dataObject.nearby = true;
-            dataObject.checkin = true;
-            if (newDay) {
-              dataObject.urgent = true;
-            }
-            return resolve(dataObject);
-          }
-          if (newDay) {
-            dataObject.urgent = true;
-            if (isCurrentTimeNearStart(emp) || isCurrentTimeNearEnd(emp)) {
-              dataObject.checkin = true;
-            }
-          }
-          return resolve(dataObject);
-        });
-      }, true);
-    });
-  }).catch(function (error) {
-    reject(error);
-  });
-}
-
-function startInitializatioOfList(data) {
-
-  suggestCheckIn(data.checkin).then(function () {
-    localStorage.removeItem('clickedActivity');
-    listView({
-      urgent: data.urgent,
-      nearby: data.nearby
-    });
-  });
-}
-
-=======
 function runAppChecks(emp) {
   // suggest check in false
 
@@ -873,9 +649,9 @@ function runAppChecks(emp) {
         dataObject.checkin = true;
         startInitializatioOfList(dataObject);
       }
-
       return;
     }
+
     if (app.isCurrentTimeNearEnd(emp)) {
       var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
       if (_hasAlreadyCheckedIn == null) {
@@ -904,26 +680,21 @@ function startInitializatioOfList(data) {
   });
 }
 
->>>>>>> FCM
 function openListWithChecks() {
   manageLocation();
   setInterval(function () {
     manageLocation();
   }, 5000);
 
-<<<<<<< HEAD
-  runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: JSON.stringify(error)
-    }));
-    return { checkin: false, urgent: false, nearby: false };
-  }).then(startInitializatioOfList);
-}
-=======
   listView();
   isEmployeeOnLeave().then(function (emp) {
     runAppChecks(emp);
   });
 }
 
->>>>>>> FCM
+function getFcmTokenFromAndroid(token) {
+  return new Promise(function (resolve, reject) {
+    var token = fcm.getToken();
+    resolve(token);
+  });
+}

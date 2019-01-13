@@ -590,7 +590,7 @@ function selectorUI(evt, data) {
     modifyHeader({
       id: 'dialog--surface-header',
       left: backSpan.outerHTML,
-      right: data.template !== 'check-in' ? searchIcon.outerHTML : ''
+      right: searchIcon.outerHTML
     });
   }
 
@@ -927,11 +927,6 @@ function resetSelectedContacts() {
 function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
 
-<<<<<<< HEAD
-  if (data.record.template === 'check-in' && data.record.venue[0].nearBy) {
-    getRootRecord().then(function (record) {
-      checkMapStoreForNearByLocation().then(function (results) {
-=======
   if (data.record.template === 'check-in') {
     var searchIcon = document.getElementById('selector--search');
     searchIcon.classList.add('hidden');
@@ -939,7 +934,6 @@ function fillMapInSelector(db, tx, dialog, data) {
 
     getRootRecord().then(function (record) {
       checkMapStoreForNearByLocation(data.record.office, record.location).then(function (results) {
->>>>>>> FCM
         results.forEach(function (result) {
           ul.appendChild(createVenueLi(result, false, data.record, true));
         });
@@ -959,14 +953,9 @@ function getLocationForMapSelector(tx, data) {
 
     var ul = document.getElementById('data-list--container');
     var store = tx.objectStore('map');
-<<<<<<< HEAD
-
-    store.index('location').openCursor(null, 'nextunique').onsuccess = function (event) {
-=======
     var office = data.record.office;
     var range = IDBKeyRange.bound([office, ''], [office, '\uFFFF']);
     store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
->>>>>>> FCM
       var cursor = event.target.result;
       if (!cursor) return;
       if (cursor.value.office !== data.record.office) {
@@ -974,10 +963,6 @@ function getLocationForMapSelector(tx, data) {
         return;
       }
       if (cursor.value.location) {
-<<<<<<< HEAD
-
-=======
->>>>>>> FCM
         ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
       }
       cursor.continue();
@@ -991,49 +976,6 @@ function getLocationForMapSelector(tx, data) {
     };
   });
 }
-<<<<<<< HEAD
-
-function checkMapStoreForNearByLocation(office) {
-  return new Promise(function (resolve, reject) {
-    var req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      var results = [];
-      var db = req.result;
-      var tx = db.transaction(['map']);
-      var store = tx.objectStore('map');
-      var index = store.index('location');
-      index.openCursor().onsuccess = function (event) {
-        var cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.office !== office) {
-          cursor.continue();
-          return;
-        }
-        if (!cursor.value.location) {
-          cursor.continue();
-          return;
-        }
-
-        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-        if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-          results.push(cursor.value);
-        }
-        cursor.continue();
-      };
-      tx.oncomplete = function () {
-
-        resolve(results);
-      };
-      tx.onerror = function () {
-        reject(tx.error);
-      };
-    };
-  });
-}
-
-function handleClickListnersForMap(db, dialog, data) {
-=======
->>>>>>> FCM
 
 function checkMapStoreForNearByLocation(office, currentLocation) {
   return new Promise(function (resolve, reject) {
@@ -1260,85 +1202,6 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 
 function createTempRecord(office, template, data) {
 
-<<<<<<< HEAD
-  getRootRecord().then(function (record) {
-
-    console.log(data);
-    var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName);
-    req.onsuccess = function () {
-      var db = req.result;
-      var tx = db.transaction(['subscriptions']);
-      var subscription = db.objectStore('subscriptions');
-      var officeTemplateCombo = subscription.index('officeTemplate');
-      var range = IDBKeyRange.only([office, template]);
-      officeTemplateCombo.get(range).onsuccess = function (event) {
-        var selectedCombo = event.target.result;
-        if (!selectedCombo) {
-          console.log("no such combo");
-          return;
-        }
-
-        var bareBonesScheduleArray = [];
-        console.log(selectedCombo);
-        selectedCombo.schedule.forEach(function (schedule) {
-          var bareBonesSchedule = {};
-          bareBonesSchedule.name = schedule;
-          bareBonesSchedule.startTime = '';
-          bareBonesSchedule.endTime = '';
-          bareBonesScheduleArray.push(bareBonesSchedule);
-        });
-
-        var bareBonesRecord = {
-          office: selectedCombo.office,
-          template: selectedCombo.template,
-          venue: '',
-          schedule: bareBonesScheduleArray,
-          attachment: selectedCombo.attachment,
-          timestamp: Date.now(),
-          canEdit: true,
-          assignees: [],
-          activityName: selectedCombo.template.toUpperCase(),
-          create: true
-        };
-
-        var bareBonesVenueArray = [];
-
-        selectedCombo.venue.forEach(function (venue) {
-          var bareBonesVenue = {};
-          bareBonesVenue.venueDescriptor = venue.venueDescriptor;
-          bareBonesVenue.location = '';
-          bareBonesVenue.address = '';
-          bareBonesVenue.geopoint = {
-            '_latitude': '',
-            '_longitude': ''
-          };
-
-          if (template === 'check-in' && data.suggestCheckIn) {
-            bareBonesVenue.nearBy = true;
-            checkMapStoreForNearByLocation(office).then(function (results) {
-              if (results.length === 1) {
-                var singleLocation = results[0];
-                bareBonesVenue.location = singleLocation.location;
-                bareBonesVenue.address = singleLocation.address;
-                bareBonesVenue.geopoint = {
-                  '_latitude': singleLocation.latitude,
-                  '_longitude': singleLocation.longitude
-                };
-              }
-              bareBonesVenueArray.push(bareBonesVenue);
-              bareBonesRecord.venue = bareBonesVenueArray;
-              updateCreateActivity(bareBonesRecord);
-              removeDialog();
-            });
-            return;
-          }
-          bareBonesVenueArray.push(bareBonesVenue);
-          updateCreateActivity(bareBonesRecord);
-          removeDialog();
-        });
-      };
-=======
   console.log(data);
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
@@ -1398,9 +1261,8 @@ function createTempRecord(office, template, data) {
       bareBonesRecord.venue = bareBonesVenueArray;
       updateCreateActivity(bareBonesRecord);
       removeDialog();
->>>>>>> FCM
     };
-  });
+  };
 }
 
 function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {

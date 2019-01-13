@@ -1,4 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -235,15 +235,7 @@ function manageLocation() {
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        try {
-          if (Internet.isConnectionActive()) {
-            useGeolocationApi(rootRecord.location.provider);
-          }
-        } catch (e) {
-          if (navigator.onLine) {
-            useGeolocationApi(rootRecord.location.provider);
-          }
-        }
+        useGeolocationApi(rootRecord.location.provider);
         return;
       }
       useHTML5Location();
@@ -266,15 +258,9 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    
     CelllarJson = Towers.getCellularData();
-<<<<<<< HEAD
-=======
-    if(!Object.keys(JSON.parse(CelllarJson)).length) {
-      return;
-    }
-    
->>>>>>> FCM
+    if (!Object.keys(JSON.parse(CelllarJson)).length) return;
+
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -349,10 +335,6 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-<<<<<<< HEAD
-=======
-  console.log(distanceBetweenBoth);
->>>>>>> FCM
   var locationChanged = new CustomEvent("locationChanged", {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
@@ -556,23 +538,12 @@ function toRad(value) {
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   var R = 6371; // km
 
-  var lat2 = newLocation.latitude
-  var lon2 = newLocation.longitude
-  var lat1 = oldLocation.latitude
-  var lon1 = oldLocation.longitude
+  var dLat = toRad(newLocation.latitude - oldLocation.latitude);
+  var dLon = toRad(newLocation.longitude - oldLocation.longitude);
+  var lat1 = toRad(newLocation.latitude);
+  var lat2 = toRad(oldLocation.latitude);
 
-  var latDiff  = lat2 - lat1;
-
-  var dLat = toRad(latDiff);
-
-  var lonDiff = lon2 - lon1;
-
-  var dLon = toRad(lonDiff);
-
-  
-  var a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
-  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-  Math.sin(dLon/2) * Math.sin(dLon/2);  
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
 
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var distance = R * c;
@@ -692,17 +663,6 @@ function requestCreator(requestType, requestBody) {
   var requestGenerator = {
     type: requestType,
     body: '',
-<<<<<<< HEAD
-    token: '',
-    auth: firebase.auth().currentUser
-  };
-
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    firebase.auth().currentUser.getIdToken(false).then(function (token) {
-
-      requestGenerator.body = requestBody;
-      requestGenerator.token = token;
-=======
     user: {
       token: '',
       uid: auth.uid,
@@ -717,7 +677,6 @@ function requestCreator(requestType, requestBody) {
 
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
->>>>>>> FCM
       apiHandler.postMessage(requestGenerator);
     });
   } else {
@@ -731,11 +690,7 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator);
       } else {
-<<<<<<< HEAD
-        firebase.auth().currentUser.getIdToken(false).then(function (token) {
-=======
         auth.getIdToken(false).then(function (token) {
->>>>>>> FCM
 
           var geopoints = {
             'latitude': location.latitude,
@@ -745,11 +700,7 @@ function requestCreator(requestType, requestBody) {
 
           requestBody['geopoint'] = geopoints;
           requestGenerator.body = requestBody;
-<<<<<<< HEAD
-          requestGenerator.token = token;
-=======
           requestGenerator.user.token = token;
->>>>>>> FCM
           console.log(requestGenerator);
           sendRequest(location, requestGenerator);
         });
@@ -765,8 +716,6 @@ function requestCreator(requestType, requestBody) {
 function handleWaitForLocation(requestBody, requestGenerator) {
 
   window.addEventListener('location', function _listener(e) {
-<<<<<<< HEAD
-=======
     firebase.auth().currentUser.getIdToken(false).then(function (token) {
 
       var data = e.detail;
@@ -780,20 +729,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       requestGenerator.user.token = token;
       sendRequest(geopoints, requestGenerator);
     });
->>>>>>> FCM
     window.removeEventListener('location', _listener, true);
-    firebase.auth().currentUser.getIdToken(false).then(function (token) {
-      var data = e.detail;
-      var geopoints = {
-        'latitude': data.latitude,
-        'longitude': data.longitude,
-        'accuracy': data.accuracy
-      };
-      requestBody['geopoint'] = geopoints;
-      requestGenerator.body = requestBody;
-      requestGenerator.token = token;
-      sendRequest(geopoints, requestGenerator);
-    });
   }, true);
 }
 
@@ -867,10 +803,7 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-<<<<<<< HEAD
-=======
     localStorage.setItem('today', null);
->>>>>>> FCM
     openListWithChecks();
     return;
   }
@@ -928,23 +861,12 @@ function onErrorMessage(error) {
   });
 }
 
-<<<<<<< HEAD
-function handleTimeout(type) {
-  var whitelist = ['update-app', 'revoke-session', 'manageLocation'];
-  var index = whitelist.indexOf(type);
-  if (index > -1) {
-    return;
-  }
-}
-
-=======
->>>>>>> FCM
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
 function runRead(value) {
-  if(localStorage.getItem('dbexist')) {
-    requestCreator('Null',value);
+  if (localStorage.getItem('dbexist')) {
+    requestCreator('Null', value);
   }
 }

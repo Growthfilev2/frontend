@@ -238,16 +238,7 @@ function manageLocation() {
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        try {
-          if (Internet.isConnectionActive()) {
-            useGeolocationApi(rootRecord.location.provider);
-          }
-        }
-        catch(e) {
-          if(navigator.onLine) {
-            useGeolocationApi(rootRecord.location.provider);
-          }
-        }
+         useGeolocationApi(rootRecord.location.provider);
         return;
       }
       useHTML5Location();
@@ -270,15 +261,9 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-<<<<<<< HEAD
-    // CelllarJson = Towers.getCellularData();
-    CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [ { "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 } ], "carrier": "airtel", "cellTowers": [ { "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 } ] })
-    
-=======
     CelllarJson = Towers.getCellularData();
     if(!Object.keys(JSON.parse(CelllarJson)).length) return;
 
->>>>>>> FCM
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -686,11 +671,7 @@ function resetLoaders(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-<<<<<<< HEAD
-  snacks(data.msg)
-=======
   snacks(data.msg);
->>>>>>> FCM
 }
 
 function requestCreator(requestType, requestBody) {
@@ -698,21 +679,6 @@ function requestCreator(requestType, requestBody) {
   var requestGenerator = {
     type: requestType,
     body: '',
-<<<<<<< HEAD
-    token:'',
-    auth:firebase.auth().currentUser
-  };
-
-  
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    firebase.auth().currentUser.getIdToken(false).then(function(token){
-
-      requestGenerator.body = requestBody;
-      requestGenerator.token = token;
-      apiHandler.postMessage(requestGenerator);
-    })
-  
-=======
     user:{
       token:'',
       uid:auth.uid,
@@ -732,7 +698,6 @@ function requestCreator(requestType, requestBody) {
       requestGenerator.user.token = token;
       apiHandler.postMessage(requestGenerator);
     })
->>>>>>> FCM
   } else {
 
 
@@ -746,22 +711,6 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator)
       } else {
-<<<<<<< HEAD
-        firebase.auth().currentUser.getIdToken(false).then(function(token){
-
-        var geopoints = {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'accuracy': location.accuracy
-        };
-
-        requestBody['geopoint'] = geopoints;
-        requestGenerator.body = requestBody;
-        requestGenerator.token = token;
-        console.log(requestGenerator)
-        sendRequest(location, requestGenerator)
-       })
-=======
         auth.getIdToken(false).then(function(token){
 
           var geopoints = {
@@ -776,7 +725,6 @@ function requestCreator(requestType, requestBody) {
           console.log(requestGenerator)
           sendRequest(location, requestGenerator)
         })
->>>>>>> FCM
       }
     })
   };
@@ -793,23 +741,6 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
-<<<<<<< HEAD
-    window.removeEventListener('location', _listener, true);
-    firebase.auth().currentUser.getIdToken(false).then(function(token){
-      const data = e.detail;
-      var geopoints = {
-        'latitude': data.latitude,
-        'longitude': data.longitude,
-        'accuracy': data.accuracy
-      };
-      requestBody['geopoint'] = geopoints;
-      requestGenerator.body = requestBody;
-      requestGenerator.token = token;
-      sendRequest(geopoints, requestGenerator);
-    })
-  }, true);
-
-=======
     firebase.auth().currentUser.getIdToken(false).then(function(token){
 
     const data = e.detail;
@@ -825,7 +756,6 @@ function handleWaitForLocation(requestBody, requestGenerator) {
   })
   window.removeEventListener('location', _listener, true);
 }, true);
->>>>>>> FCM
 }
 
 function sendRequest(location, requestGenerator) {
@@ -965,18 +895,6 @@ function onErrorMessage(error) {
   });
 }
 
-<<<<<<< HEAD
-function handleTimeout(type) {
-  const whitelist = ['update-app', 'revoke-session', 'manageLocation'];
-  const index = whitelist.indexOf(type);
-  if (index > -1) {
-    return;
-  }
-  
-}
-
-=======
->>>>>>> FCM
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
