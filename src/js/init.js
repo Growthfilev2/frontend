@@ -1,14 +1,11 @@
-firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
-})
-
 let native = function () {
   return {
+    setFCMToken: function (token) {
+      localStorage.setItem('token', token)
+    },
+    getFCMToken: function () {
+      return localStorage.getItem('token')
+    },
     setName: function (device) {
       localStorage.setItem('deviceType', device);
     },
@@ -43,11 +40,12 @@ let native = function () {
       if (this.getName() === 'Android') {
         try {
           return AndroidId.getDeviceId();
-        }
-        catch(e){
-          requestCreator('instant',JSON.stringify({message:e.message}))
+        } catch (e) {
+          requestCreator('instant', JSON.stringify({
+            message: e.message
+          }))
           return JSON.stringify({
-            baseOs:this.getName(),
+            baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
             appVersion: 4,
@@ -61,35 +59,62 @@ let native = function () {
   }
 }();
 
+let app = function () {
+  return {
 
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-  const errorJS = {
-    message: {
-      msg: error.message,
-      url: url,
-      lineNo: lineNo,
-      columnNo: columnNo,
-      stack:error.stack,
-      name:error.name,
-      device:native.getInfo(),
+    today: function (format) {
+      if (!format) return moment();
+      return moment().format(format);
+    },
+
+    tomorrow: function () {
+      return moment(this.today()).add(1, 'day');
+    },
+    getLastLocationTime: function () {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
+          resolve(rootRecord.location.lastLocationTime);
+        }).catch(function (error) {
+          reject(error)
+        })
+      })
+    },
+
+    isNewDay: function (auth) {
+      var today = localStorage.getItem('today');
+
+      if (today === "null" || today == null) {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
+        return true;
+      }
+      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
+    },
+    isCurrentTimeNearStart: function (emp) {
+      const startTime = emp.attachment['Daily Start Time'].value
+      const format = 'hh:mm:ss'
+      const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
+      const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
+      return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
+      
+    },
+    isCurrentTimeNearEnd: function (emp) {
+      
+      const endTime = emp.attachment['Daily End Time'].value
+      const format = 'hh:mm:ss'
+      const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
+      const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
+
+      return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
     }
   }
-  requestCreator('instant', JSON.stringify(errorJS))
-}  
-
-// initialize smooth scrolling
-window.scrollBy({
-  top: 100,
-  left: 0,
-  behavior: 'smooth'
-})
+}();
 
 
 
 window.addEventListener('load', function () {
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-  if (!window.Worker && !window.indexedDB) {  
+  if (!window.Worker && !window.indexedDB) {
     const messageData = {
       title: title,
       message: message,
@@ -107,13 +132,26 @@ window.addEventListener('load', function () {
     }
     try {
       Android.notification(JSON.stringify(messageData))
-    }
-    catch(e){
-      requestCreator('instant',JSON.stringify({message:e.message}))
+    } catch (e) {
+      requestCreator('instant', JSON.stringify({
+        message: e.message
+      }))
       appDialog(message);
     }
     return
   }
+
+
+
+  firebase.initializeApp({
+    apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+    authDomain: 'growthfile-207204.firebaseapp.com',
+    databaseURL: 'https://growthfile-207204.firebaseio.com',
+    projectId: 'growthfile-207204',
+    storageBucket: 'growthfile-207204.appspot.com',
+    messagingSenderId: '701025551237'
+  })
+
 
   moment.updateLocale('en', {
     calendar: {
@@ -124,11 +162,11 @@ window.addEventListener('load', function () {
       nextWeek: 'dddd [at] LT',
       sameElse: 'L'
     },
-    longDateFormat : {
+    longDateFormat: {
       LT: "h:mm A",
       LTS: "h:mm:ss A",
       L: "DD/MM/YY",
-  },
+    },
 
     months: [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -137,21 +175,50 @@ window.addEventListener('load', function () {
 
   })
 
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    const errorJS = {
+      message: {
+        msg: error.message,
+        url: url,
+        lineNo: lineNo,
+        columnNo: columnNo,
+        stack: error.stack,
+        name: error.name,
+        device: native.getInfo(),
+      }
+    }
+    requestCreator('instant', JSON.stringify(errorJS))
+  }
+
+  // initialize smooth scrolling
+  window.scrollBy({
+    top: 100,
+    left: 0,
+    behavior: 'smooth'
+  })
+
+  window.onpopstate = function (event) {
+
+    if (!event.state) return;
+    if (event.state[0] === 'listView') {
+      window[event.state[0]]()
+      return;
+    }
+    window[event.state[0]](event.state[1], false)
+  }
+
+
+
   layoutGrid()
 
   startApp()
 
 })
 
-window.onpopstate = function (event) {
 
-  if (!event.state) return;
-  if (event.state[0] === 'listView') {
-      window[event.state[0]]()    
-    return;
-  }
-  window[event.state[0]](event.state[1], false)
-}
+window.addEventListener('onMessage', function _onMessage(e){
+    requestCreator('Null',false)
+})
 
 function backNav() {
   history.back();
@@ -159,37 +226,36 @@ function backNav() {
 
 function firebaseUiConfig(value) {
 
-  return  {
+  return {
     callbacks: {
-      signInSuccessWithAuthResult: function(authResult) {
-      
-        if(value) {
-          updateEmail(authResult.user,value);
-        }
-        else {
+      signInSuccessWithAuthResult: function (authResult) {
+
+        if (value) {
+          updateEmail(authResult.user, value);
+        } else {
           init(authResult.user);
         }
         return false;
       },
-      uiShown: function() {
-      
+      uiShown: function () {
+
       }
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
     signInOptions: [
       // Leave the lines as is for the providers you want to offer your users.
-     {
-      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-      recaptchaParameters: {
-        type: 'image', // 'audio'
-        size: 'normal', // 'invisible' or 'compact'
-        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
-      },
-      defaultCountry: 'IN',
-     }
+      {
+        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+        recaptchaParameters: {
+          type: 'image', // 'audio'
+          size: 'normal', // 'invisible' or 'compact'
+          badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+        },
+        defaultCountry: 'IN',
+      }
     ]
-  
+
   };
 }
 
@@ -232,54 +298,54 @@ function layoutGrid() {
 
 }
 
-function createCheckInDialog(){
+function createCheckInDialog() {
 
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open hidden';
-    aside.id = 'suggest-checkIn-dialog';
+  var aside = document.createElement('aside');
+  aside.className = 'mdc-dialog mdc-dialog--open hidden';
+  aside.id = 'suggest-checkIn-dialog';
 
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
+  var surface = document.createElement('div');
+  surface.className = 'mdc-dialog__surface';
+  surface.style.width = '90%';
+  surface.style.height = 'auto';
 
-    const header = document.createElement('header');
-    header.className = 'mdc-dialog__header'
-    const headerText = document.createElement('h2')
-    headerText.className ='mdc-dialog__header__title'
-    headerText.textContent = 'New Location Detected'
+  const header = document.createElement('header');
+  header.className = 'mdc-dialog__header'
+  const headerText = document.createElement('h2')
+  headerText.className = 'mdc-dialog__header__title'
+  headerText.textContent = 'New Location Detected'
   header.appendChild(headerText)
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body';
-    section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
+  var section = document.createElement('section');
+  section.className = 'mdc-dialog__body';
+  section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
 
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer';
-    
-    var ok = document.createElement('button');
-    ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    ok.textContent = 'Okay';
-    ok.style.backgroundColor = '#3498db';
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
 
-    var canel = document.createElement('button');
-    canel.type = 'button';
-    canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-    canel.textContent = 'Cancel';
-    canel.style.backgroundColor = '#3498db';
+  var ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
+  ok.textContent = 'Okay';
+  ok.style.backgroundColor = '#3498db';
 
-    footer.appendChild(canel);
-    footer.appendChild(ok);
+  var canel = document.createElement('button');
+  canel.type = 'button';
+  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+  canel.textContent = 'Cancel';
+  canel.style.backgroundColor = '#3498db';
 
-    surface.appendChild(header)
-    surface.appendChild(section);
-    surface.appendChild(footer);
-    aside.appendChild(surface);
+  footer.appendChild(canel);
+  footer.appendChild(ok);
 
-    const backdrop = document.createElement('div')
-    backdrop.className = 'mdc-dialog__backdrop'
-    aside.appendChild(backdrop);
-    return aside
+  surface.appendChild(header)
+  surface.appendChild(section);
+  surface.appendChild(footer);
+  aside.appendChild(surface);
+
+  const backdrop = document.createElement('div')
+  backdrop.className = 'mdc-dialog__backdrop'
+  aside.appendChild(backdrop);
+  return aside
 
 }
 
@@ -288,7 +354,7 @@ function createHeader(id) {
   const header = document.createElement('header')
   header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
   header.id = id
-  
+
   const row = document.createElement('div')
   row.className = 'mdc-top-app-bar__row'
 
@@ -296,7 +362,7 @@ function createHeader(id) {
   sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
 
   const leftUI = document.createElement('div')
-  leftUI.id = id+'view-type'
+  leftUI.id = id + 'view-type'
   leftUI.className = 'view-type'
   sectionStart.appendChild(leftUI)
 
@@ -304,10 +370,10 @@ function createHeader(id) {
   sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
 
   const rightUI = document.createElement('div')
-  rightUI.id = id+'action-data'
-  
+  rightUI.id = id + 'action-data'
+
   rightUI.className = 'action-data'
-  
+
   sectionEnd.appendChild(rightUI)
   row.appendChild(sectionStart)
   row.appendChild(sectionEnd)
@@ -355,69 +421,138 @@ function startApp() {
       userSignedOut()
       return
     }
-     if(localStorage.getItem('dbexist')) {
+
+    if (localStorage.getItem('dbexist')) {
       init(auth)
     }
-
   })
 }
 // new day suggest
 // if location changes
-let app = function () {
-  return {
-    today: function () {
-      return moment().format("DD/MM/YYYY");
-    },
-    tomorrow: function () {
-      return moment(this.today()).add(1, 'day');
-    },
-    getLastLocationTime: function () {
-      return new Promise(function (resolve, reject) {
-        getRootRecord().then(function (rootRecord) {
-          resolve(rootRecord.location.lastLocationTime);
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    },
-    isNewDay: function () {
-      return new Promise(function (resolve, reject) {
-        app.getLastLocationTime().then(function (time) {
-          if (moment(time).isSame(moment(), 'day')) {
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    }
-  }
-}();
 
-
-function idbVersionLessThan2(auth) {
+function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
-    let value = false;
-    const req = indexedDB.open(auth.uid, 2);
+    const auth = firebase.auth().currentUser
+    const req = indexedDB.open(auth.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['children']);
+      const store = tx.objectStore('children');
+      let details;
+      const phoneNumberEmp = auth.phoneNumber;
+      const range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+
+      store.index('templateStatus').openCursor(range).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.attachment['Employee Contact'].value !== auth.phoneNumber) {
+          cursor.continue();
+          return;
+        }
+
+        details = cursor.value
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        resolve(details);
+      }
+    }
+  })
+}
+
+function isEmployeeOnLeave() {
+  return new Promise(function (resolve, reject) {
+
+    getEmployeeDetails().then(function (empDetails) {
+     
+      if(!empDetails) {
+        return resolve({onLeave:false})
+      }
+     
+     empDetails.onLeave = false
+      const req = indexedDB.open(firebase.auth().currentUser.uid);
+      req.onsuccess = function () {
+        const db = req.result;
+        const tx = db.transaction(['calendar']);
+        const store = tx.objectStore('calendar');
+        const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
+
+        store.index('onLeave').openCursor(range).onsuccess = function (event) {
+
+          const cursor = event.target.result;
+          if (!cursor) return;
+
+          if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+            empDetails.onLeave = true
+            return;
+          }
+          cursor.continue()
+        }
+        tx.oncomplete = function () {
+          resolve(empDetails)
+        }
+        tx.onerror = function () {
+          reject(tx.error)
+        }
+      }
+      req.onerror = function () {
+        reject(req.error)
+      }
+
+    })
+  })
+}
+
+function idbVersionLessThan3(auth) {
+  return new Promise(function (resolve, reject) {
+
+    const req = indexedDB.open(auth.uid, 3);
     let db;
+    let reset = {
+      value: false,
+      version: ''
+    };
     req.onupgradeneeded = function (evt) {
-      if (evt.oldVersion === 1) {
-        value = true
-      } else {
-        value = false;
+      switch (evt.oldVersion) {
+        case 1:
+          reset.value = true;
+          reset.version = 1;
+          break;
+        case 2:
+          value = false;
+          reset.version = 2;
+          const calendar = req.transaction.objectStore('calendar');
+          calendar.createIndex('onLeave', ['template', 'status', 'office']);
+          const children = req.transaction.objectStore('children');
+          children.createIndex('templateStatus', ['template', 'status']);
+          const map = req.transaction.objectStore('map');
+          map.createIndex('byOffice',['office','location']);
+          break;
+        case 3:
+          value = false;
+          reset.version = 3
+          break;
+        default:
+          reset.value = true;
+          reset.version = ''
       }
     }
     req.onsuccess = function () {
       db = req.result;
       db.close();
-      resolve(value)
+      resolve(reset)
     }
     req.onerror = function () {
-      reject({error:req.error,device:native.getInfo()})
+      reject({
+        error: req.error.message,
+        device: native.getInfo()
+      })
     }
   })
+}
+
+function createNewIndex() {
+
 }
 
 function removeIDBInstance(auth) {
@@ -426,7 +561,7 @@ function removeIDBInstance(auth) {
     const failure = {
       message: 'Please Restart The App',
       error: '',
-      device:native.getInfo()
+      device: native.getInfo()
     };
 
     const req = indexedDB.deleteDatabase(auth.uid)
@@ -445,62 +580,147 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-  
   document.getElementById("main-layout-app").style.display = 'block'
-  
-  idbVersionLessThan2(auth).then(function (lessThanTwo) {
-
+  idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
       from = 1;
-      if (lessThanTwo) {
+      if (reset.value) {
         resetApp(auth, from);
-      } else {
-        startInitializatioOfList(auth);
+        return;
       }
+
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: '',
+        registerToken: native.getFCMToken()
+      });
+
+      openListWithChecks()
+
       return;
     }
 
     resetApp(auth, 0)
-  }).catch(function(error){
-    requestCreator('instant',JSON.stringify({message:error}));
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
   });
 }
 
 function resetApp(auth, from) {
   removeIDBInstance(auth).then(function () {
     localStorage.removeItem('dbexist');
-    history.pushState(null,null,null);
+    history.pushState(null, null, null);
     document.getElementById('growthfile').appendChild(loader('init-loader'))
-    
-    setTimeout(function(){
+
+    setTimeout(function () {
       snacks('Growthfile is Loading. Please Wait');
-    },1000)
+    }, 1000)
 
     requestCreator('now', {
       device: native.getInfo(),
-      from: from
+      from: from,
+      registerToken: native.getFCMToken()
     });
 
   }).catch(function (error) {
     snacks(error.message);
-    requestCreator('instant',JSON.stringify({message:error}));
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
   })
 }
 
-function startInitializatioOfList(auth) {
-  localStorage.removeItem('clickedActivity');
+function runAppChecks(emp) {
+ // suggest check in false
+
+ window.addEventListener('locationChanged', function _locationChanged(e) {
+
+  var dataObject = {
+    urgent: false,
+    nearby: false,
+    checkin: false
+  };
+
+  if (emp.onLeave) {
+    dataObject.checkin = false;
+  }
+
+  var changed = e.detail;
+  var newDay = app.isNewDay();
+
+  if (changed) {
+    dataObject.nearby = true;
+    dataObject.checkin = true;
+    if (newDay) {
+      dataObject.urgent = true;
+    }
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (newDay) {
+    dataObject.urgent = true;
+    dataObject.checkin = true;
+    startInitializatioOfList(dataObject);
+    return;
+  };
+
+  if(app.isCurrentTimeNearStart(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+    if(hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyStartTimeCheckIn',true);
+      localStorage.removeItem('dailyEndTimeCheckIn')
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+  
+  if(app.isCurrentTimeNearEnd(emp)){
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+    if(hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyEndTimeCheckIn',true);
+      localStorage.removeItem('dailyStartTimeCheckIn')
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+
+  return;
+}, true);
+}
+
+function startInitializatioOfList(data) {
+  console.log(data)
+  suggestCheckIn(data.checkin).then(function () {
+    localStorage.removeItem('clickedActivity');
+    if (history.state[0] === 'listView' || !history.state) {
+      listView({
+        urgent: data.urgent,
+        nearby: data.nearby
+      });
+    }
+  })
+}
+
+function openListWithChecks() {
+  manageLocation();
   setInterval(function () {
     manageLocation();
   }, 5000);
-  app.isNewDay(auth).then(function (isNew) {
-    suggestCheckIn(isNew).then(function(){
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: ''
-      });
-      listView({urgent:isNew,nearby:false});
-    })
-  }).catch(function(error){
-    requestCreator('instant',JSON.stringify({message:error}))
+
+  listView();
+  isEmployeeOnLeave().then(function (emp) {
+    runAppChecks(emp);
+  })
+}
+
+function getFcmTokenFromAndroid(token) {
+  return new Promise(function (resolve, reject) {
+    const token = fcm.getToken();
+    resolve(token)
   })
 }

@@ -1,4 +1,3 @@
-var offset = '';
 var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
@@ -63,10 +62,17 @@ function successDialog() {
 
   var successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'));
   successDialog.show();
+  
   setTimeout(function () {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
+  
+  listView({
+    urgent:false,
+    nearBy:false
+  })
+
 }
 
 function appDialog(messageString) {
@@ -232,16 +238,7 @@ function manageLocation() {
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
       if (shouldFetchCellTower(rootRecord.location)) {
-        try {
-          if (Internet.isConnectionActive()) {
-            useGeolocationApi(rootRecord.location.provider);
-          }
-        }
-        catch(e) {
-          if(navigator.onLine) {
-            useGeolocationApi(rootRecord.location.provider);
-          }
-        }
+         useGeolocationApi(rootRecord.location.provider);
         return;
       }
       useHTML5Location();
@@ -264,9 +261,9 @@ function useGeolocationApi(provider){
   var CelllarJson = false;
 
   try {
-    // CelllarJson = Towers.getCellularData();
-    CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [ { "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 } ], "carrier": "airtel", "cellTowers": [ { "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 } ] })
-    
+    CelllarJson = Towers.getCellularData();
+    if(!Object.keys(JSON.parse(CelllarJson)).length) return;
+
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -338,28 +335,22 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
-
-  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  
   const locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
-
-  if (isNewLocationMoreThanThreshold(distanceBetweenBoth)) {
-    app.isNewDay(firebase.auth().currentUser.uid).then(function (isNew) {
-      if (!isNew) {
-        suggestCheckIn(true).then(function () {
-          if (history.state[0] === 'listView') {
-            listView({
-              urgent: false,
-              nearby: true
-            });
-          }
-        })
-      }
-    })
+  
+  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  const locationChanged = new CustomEvent("locationChanged", {
+    "detail":isLocationMoreThanThreshold(distanceBetweenBoth)
+  });
+  window.dispatchEvent(locationChanged);
   }
-}
+
+
+
+
 
 function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
@@ -371,12 +362,14 @@ function showSuggestCheckInDialog() {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
         if (rootRecord.offices.length === 1) {
-          createTempRecord(rootRecord.offices[0], 'check-in')
+          createTempRecord(rootRecord.offices[0], 'check-in', {
+            suggestCheckIn: true
+          })
         } else {
           callSubscriptionSelectorUI(evt, true)
         }
       })
-    }).catch(function (error) {})
+    }).catch(console.log)
   })
   dialog.listen('MDCDialog:cancel', function (evt) {
     suggestCheckIn(false).then(console.log).catch(console.log)
@@ -573,12 +566,17 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 
 }
 
-function isNewLocationMoreThanThreshold(distance) {
+function isLocationMoreThanThreshold(distance) {
   const THRESHOLD = 0.5; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
 
+function isLocationLessThanThreshold(distance) {
+  const THRESHOLD = 0.5; //km
+  if (distance <= THRESHOLD) return true
+  return false
+}
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
@@ -637,7 +635,7 @@ function isLocationVerified(reqType) {
     }
     return true;
   }
-  webkit.messageHandlers.checkInternet.postMessage(reqType);
+  // webkit.messageHandlers.checkInternet.postMessage(reqType);
   return true;
 }
 
@@ -673,23 +671,33 @@ function resetLoaders(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-  snacks(data.msg)
+  snacks(data.msg);
 }
 
 function requestCreator(requestType, requestBody) {
-
-
+  const auth = firebase.auth().currentUser;
   var requestGenerator = {
     type: requestType,
-    body: ''
+    body: '',
+    user:{
+      token:'',
+      uid:auth.uid,
+      displayName:auth.displayName,
+      photoURL:auth.photoURL,
+      phoneNumber:auth.phoneNumber
+    }
   };
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
+  
+ 
+  
+
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    requestGenerator.body = requestBody;
-    apiHandler.postMessage(requestGenerator);
+    auth.getIdToken(false).then(function(token){
+
+      requestGenerator.body = requestBody;
+      requestGenerator.user.token = token;
+      apiHandler.postMessage(requestGenerator);
+    })
   } else {
 
 
@@ -703,16 +711,20 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator)
       } else {
-        var geopoints = {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'accuracy': location.accuracy
-        };
+        auth.getIdToken(false).then(function(token){
 
-        requestBody['geopoint'] = geopoints;
-        requestGenerator.body = requestBody;
-        console.log(requestGenerator)
-        sendRequest(location, requestGenerator)
+          var geopoints = {
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+            'accuracy': location.accuracy
+          };
+          
+          requestBody['geopoint'] = geopoints;
+          requestGenerator.body = requestBody;
+          requestGenerator.user.token = token;
+          console.log(requestGenerator)
+          sendRequest(location, requestGenerator)
+        })
       }
     })
   };
@@ -729,6 +741,8 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
+    firebase.auth().currentUser.getIdToken(false).then(function(token){
+
     const data = e.detail;
     var geopoints = {
       'latitude': data.latitude,
@@ -737,10 +751,11 @@ function handleWaitForLocation(requestBody, requestGenerator) {
     };
     requestBody['geopoint'] = geopoints;
     requestGenerator.body = requestBody;
+    requestGenerator.user.token = token;
     sendRequest(geopoints, requestGenerator);
-    window.removeEventListener('location', _listener, true);
-  }, true);
-
+  })
+  window.removeEventListener('location', _listener, true);
+}, true);
 }
 
 function sendRequest(location, requestGenerator) {
@@ -774,7 +789,6 @@ const receiverCaller = {
   'notification': successDialog,
   'manageLocation': manageLocation,
   'error': resetLoaders,
-  'reset-offset': resetOffset,
   'android-stop-refreshing': androidStopRefreshing,
   'updateIDB': updateIDB,
   'redirect-to-list': changeState,
@@ -782,7 +796,6 @@ const receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data)
-  handleTimeout(response.data.type);
 }
 
 
@@ -810,12 +823,6 @@ function revokeSession() {
   });
 }
 
-function resetOffset() {
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
-}
 
 function changeState(data) {
   history.pushState(['listView'], null, null);
@@ -828,16 +835,8 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
-
-    suggestCheckIn(true).then(function () {
-      window["listView"]({
-        urgent: true,
-        nearby: true
-      });
-    });
+    localStorage.setItem('today',null);
+    openListWithChecks()    
     return;
   }
 
@@ -896,37 +895,13 @@ function onErrorMessage(error) {
   });
 }
 
-function handleTimeout(type) {
-  const whitelist = ['update-app', 'revoke-session', 'manageLocation'];
-  const index = whitelist.indexOf(type);
-  if (index > -1) {
-    return;
-  }
-
-  if(native.getName() === 'Android') {
-    try {
-      const connection = Internet.isConnectionActive();
-      if(connection) {
-        offset = setTimeout(function () {
-          requestCreator('Null', 'false');
-        }, 8000);
-      }
-    }
-    catch(e){
-      if(navigator.onLine) {
-        offset = setTimeout(function () {
-          requestCreator('Null', 'false');
-        }, 8000);
-      }
-    }
-    return;
-  }
-
-  offset = setTimeout(function () {
-    requestCreator('Null', 'false');
-  }, 8000);
-}
-
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
+}
+
+
+function runRead(value) {
+  if(localStorage.getItem('dbexist')) {
+    requestCreator('Null',value);
+  }
 }

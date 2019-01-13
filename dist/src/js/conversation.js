@@ -479,7 +479,7 @@ function createHeaderContent(db, id) {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
 
           if (id) {
-            updateCreateActivity(record, true);
+            updateCreateActivity(record);
           } else {
             listView();
           }
@@ -637,9 +637,8 @@ function initializeSelectorWithData(evt, data) {
   req.onsuccess = function () {
     var db = req.result;
     if (data.store === 'map') {
-      var objectStore = db.transaction(data.store).objectStore(data.store);
-      selectorStore = objectStore.index('location');
-      fillMapInSelector(db, selectorStore, dialog, data);
+      var tx = db.transaction([data.store]);
+      fillMapInSelector(db, tx, dialog, data);
     }
     if (data.store === 'subscriptions') {
 
@@ -728,7 +727,9 @@ function fillUsersInSelector(data, dialog) {
         }, {
           primary: JSON.parse(radio.value)
         }).then(removeDialog).catch(function (error) {
-          requestCreator('instant', JSON.stringify({ message: error }));
+          requestCreator('instant', JSON.stringify({
+            message: error
+          }));
         });
         return;
       }
@@ -739,7 +740,9 @@ function fillUsersInSelector(data, dialog) {
           }, {
             primary: selectedPeople
           }).then(removeDialog).catch(function (error) {
-            requestCreator('instant', JSON.stringify({ message: error }));
+            requestCreator('instant', JSON.stringify({
+              message: error
+            }));
           });
         });
         return;
@@ -822,7 +825,9 @@ function addNewNumber(data) {
           }, {
             primary: [formattedNumber]
           }).then(removeDialog).catch(function (error) {
-            requestCreator('instant', JSON.stringify({ message: error }));
+            requestCreator('instant', JSON.stringify({
+              message: error
+            }));
           });
           return;
         }
@@ -833,7 +838,9 @@ function addNewNumber(data) {
           }, {
             primary: [formattedNumber]
           }).then(removeDialog).catch(function (error) {
-            requestCreator('instant', JSON.stringify({ message: error }));
+            requestCreator('instant', JSON.stringify({
+              message: error
+            }));
           });
           return;
         }
@@ -917,28 +924,115 @@ function resetSelectedContacts() {
   });
 }
 
-function fillMapInSelector(db, selectorStore, dialog, data) {
-  var ul = document.getElementById('data-list--container');
-  selectorStore.openCursor(null, 'nextunique').onsuccess = function (event) {
-    var cursor = event.target.result;
-    if (!cursor) return;
-    if (cursor.value.location) {
-      ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-    }
+function fillMapInSelector(db, tx, dialog, data) {
+  console.log(data);
 
-    cursor.continue();
-  };
+  if (data.record.template === 'check-in') {
+    var searchIcon = document.getElementById('selector--search');
+    searchIcon.classList.add('hidden');
+    var ul = document.getElementById('data-list--container');
 
-  document.getElementById('selector--search').addEventListener('click', function () {
+    getRootRecord().then(function (record) {
+      checkMapStoreForNearByLocation(data.record.office, record.location).then(function (results) {
+        results.forEach(function (result) {
+          ul.appendChild(createVenueLi(result, false, data.record, true));
+        });
 
-    initSearchForSelectors(db, 'map', data);
+        handleClickListnersForMap(db, dialog, data);
+      });
+    });
+  } else {
+    getLocationForMapSelector(tx, data).then(function () {
+      handleClickListnersForMap(db, dialog, data);
+    }).catch(console.log);
+  }
+}
+
+function getLocationForMapSelector(tx, data) {
+  return new Promise(function (resolve, reject) {
+
+    var ul = document.getElementById('data-list--container');
+    var store = tx.objectStore('map');
+    var office = data.record.office;
+    var range = IDBKeyRange.bound([office, ''], [office, '\uFFFF']);
+    store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
+      var cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.office !== data.record.office) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.location) {
+        ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+      }
+      cursor.continue();
+    };
+    tx.oncomplete = function () {
+
+      resolve(true);
+    };
+    tx.onerror = function () {
+      reject(tx.error);
+    };
   });
+}
+
+function checkMapStoreForNearByLocation(office, currentLocation) {
+  return new Promise(function (resolve, reject) {
+    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var results = [];
+      var db = req.result;
+      var tx = db.transaction(['map']);
+      var store = tx.objectStore('map');
+      var index = store.index('byOffice');
+      var range = IDBKeyRange.bound([office, ''], [office, '\uFFFF']);
+      index.openCursor(range, 'nextunique').onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
+
+        if (!cursor.value.location) {
+          cursor.continue();
+          return;
+        }
+
+        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+        if (cursor.value.activityId === 'cTl0mhORBYhFxXUot3yp') {
+          debugger;
+        }
+        if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+          results.push(cursor.value);
+        }
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+
+        resolve(results);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+    };
+  });
+}
+
+function handleClickListnersForMap(db, dialog, data) {
+
+  var searchIcon = document.getElementById('selector--search');
+  if (searchIcon) {
+    document.getElementById('selector--search').addEventListener('click', function () {
+      initSearchForSelectors(db, 'map', data);
+    });
+  }
 
   document.querySelector('.selector-send').classList.remove('hidden');
 
   dialog['acceptButton_'].onclick = function () {
-    var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+    var selected = document.querySelector('.mdc-radio.radio-selected');
+    if (!selected) return;
+    var radio = new mdc.radio.MDCRadio(selected);
     var selectedField = JSON.parse(radio.value);
+
     updateDomFromIDB(data.record, {
       hash: 'venue',
       key: data.key
@@ -950,7 +1044,9 @@ function fillMapInSelector(db, selectorStore, dialog, data) {
       }
     }).then(removeDialog).catch(function (error) {
       console.log(error);
-      requestCreator('instant', JSON.stringify({ message: error }));
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }));
     });
   };
 }
@@ -983,7 +1079,9 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     }, {
       primary: selectedField.name
     }).then(removeDialog).catch(function (error) {
-      requestCreator('instant', JSON.stringify({ message: error }));
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }));
     });
   };
 }
@@ -1103,12 +1201,15 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 }
 
 function createTempRecord(office, template, data) {
+
+  console.log(data);
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
   req.onsuccess = function () {
     var db = req.result;
-    var selectorStore = db.transaction('subscriptions').objectStore('subscriptions');
-    var officeTemplateCombo = selectorStore.index('officeTemplate');
+    var tx = db.transaction(['subscriptions']);
+    var subscription = tx.objectStore('subscriptions');
+    var officeTemplateCombo = subscription.index('officeTemplate');
     var range = IDBKeyRange.only([office, template]);
     officeTemplateCombo.get(range).onsuccess = function (event) {
       var selectedCombo = event.target.result;
@@ -1116,23 +1217,8 @@ function createTempRecord(office, template, data) {
         console.log("no such combo");
         return;
       }
-      var bareBonesVenue = {};
-      var bareBonesVenueArray = [];
 
       var bareBonesScheduleArray = [];
-      selectedCombo.venue.forEach(function (venue) {
-        var bareBonesVenue = {};
-
-        bareBonesVenue.venueDescriptor = venue;
-        bareBonesVenue.location = '';
-        bareBonesVenue.address = '';
-        bareBonesVenue.geopoint = {
-          '_latitude': '',
-          '_longitude': ''
-        };
-        bareBonesVenueArray.push(bareBonesVenue);
-      });
-
       console.log(selectedCombo);
       selectedCombo.schedule.forEach(function (schedule) {
         var bareBonesSchedule = {};
@@ -1145,7 +1231,7 @@ function createTempRecord(office, template, data) {
       var bareBonesRecord = {
         office: selectedCombo.office,
         template: selectedCombo.template,
-        venue: bareBonesVenueArray,
+        venue: '',
         schedule: bareBonesScheduleArray,
         attachment: selectedCombo.attachment,
         timestamp: Date.now(),
@@ -1155,10 +1241,64 @@ function createTempRecord(office, template, data) {
         create: true
       };
 
-      updateCreateActivity(bareBonesRecord, true);
+      var bareBonesVenueArray = [];
+      if (template === 'check-in') {
+        prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0]);
+        return;
+      }
+      selectedCombo.venue.forEach(function (venue) {
+        var bareBonesVenue = {};
+        bareBonesVenue.venueDescriptor = venue;
+        bareBonesVenue.location = '';
+        bareBonesVenue.address = '';
+        bareBonesVenue.geopoint = {
+          '_latitude': '',
+          '_longitude': ''
+        };
+
+        bareBonesVenueArray.push(bareBonesVenue);
+      });
+      bareBonesRecord.venue = bareBonesVenueArray;
+      updateCreateActivity(bareBonesRecord);
       removeDialog();
     };
   };
+}
+
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
+  getRootRecord().then(function (record) {
+    checkMapStoreForNearByLocation(bareBonesRecord.office, record.location).then(function (results) {
+      var locations = [];
+      var bareBonesVenue = {};
+      bareBonesVenue.venueDescriptor = venueDesc;
+      bareBonesVenue.location = '';
+      bareBonesVenue.address = '';
+      bareBonesVenue.geopoint = {
+        '_latitude': '',
+        '_longitude': ''
+      };
+
+      if (!results.length) {
+        bareBonesVenue.showIcon = false;
+      } else {
+        bareBonesVenue.showIcon = true;
+      }
+
+      if (results.length === 1) {
+        var singleLocation = results[0];
+        bareBonesVenue.location = singleLocation.location;
+        bareBonesVenue.address = singleLocation.address;
+        bareBonesVenue.geopoint = {
+          '_latitude': singleLocation.latitude,
+          '_longitude': singleLocation.longitude
+        };
+      }
+      locations.push(bareBonesVenue);
+      bareBonesRecord.venue = locations;
+      updateCreateActivity(bareBonesRecord);
+      removeDialog();
+    });
+  });
 }
 
 function hasAnyValueInChildren(office, template, status) {
@@ -1343,7 +1483,9 @@ function updateCreateContainer(recordCopy, db) {
     updateLocalRecord(record, db).then(function () {
       backNav();
     }).catch(function (error) {
-      requestCreator('instant', JSON.stringify({ message: error }));
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }));
     });
   });
 
@@ -1400,12 +1542,9 @@ function updateCreateContainer(recordCopy, db) {
   return container;
 }
 
-function updateCreateActivity(record, pushState) {
+function updateCreateActivity(record) {
 
-  if (pushState) {
-    history.pushState(['updateCreateActivity', record], null, null);
-  }
-
+  history.pushState(['updateCreateActivity', record], null, null);
   //open indexedDB
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
@@ -1466,7 +1605,9 @@ function updateCreateActivity(record, pushState) {
             }
           }
         }).catch(function (error) {
-          requestCreator('instant', JSON.stringify({ message: error }));
+          requestCreator('instant', JSON.stringify({
+            message: error
+          }));
         });
       });
     }
@@ -1682,16 +1823,30 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   var secondaryText = document.createElement('span');
   secondaryText.className = 'mdc-list-item__secondary-text';
-  secondaryText.textContent = venue.address;
+  if (record.template === 'check-in' && !showMetaInput) {
+    if (!venue.showIcon) {
+      secondaryText.style.paddingTop = '3px';
+      secondaryText.textContent = 'No Locations Found for Check-In';
+    } else {
+      secondaryText.textContent = venue.address;
+    }
+  } else {
+    secondaryText.textContent = venue.address;
+  }
   secondaryText.dataset.secondary = '';
   textSpan.appendChild(secondaryText);
   listItem.appendChild(textSpan);
   if (showMetaInput) {
     listItem.appendChild(metaInput);
   } else {
-    listItem.appendChild(selectorIcon);
+    if (record.template === 'check-in') {
+      if (venue.showIcon) {
+        listItem.appendChild(selectorIcon);
+      }
+    } else {
+      listItem.appendChild(selectorIcon);
+    }
   }
-
   return listItem;
 }
 
@@ -2009,7 +2164,9 @@ function createAssigneeList(db, record, showLabel) {
     document.getElementById('assignees--list').appendChild(labelAdd);
   }
   readNameAndImageFromNumber(record.assignees, db).then(function () {}).catch(function (error) {
-    requestCreator('instant', JSON.stringify({ message: error }));
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
   });
 }
 
@@ -2461,6 +2618,9 @@ function insertInputsIntoActivity(record, activityStore) {
       latitude: record.venue[i].geopoint['_latitude'] || "",
       longitude: record.venue[i].geopoint['_longitude'] || ""
     };
+    if (record.venue[i].hasOwnProperty('showIcon')) {
+      delete record.venue[i].showIcon;
+    }
   }
 
   var requiredObject = {
@@ -2603,7 +2763,9 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
       hash: 'venue',
       key: attr.key
     }, selectedAreaAttributes).then(removeDialog).catch(function (error) {
-      requestCreator('instant', JSON.stringify({ message: error }));
+      requestCreator('instant', JSON.stringify({
+        message: error
+      }));
     });
   });
 }
