@@ -612,7 +612,7 @@ function selectorUI(evt, data) {
     modifyHeader({
       id: 'dialog--surface-header',
       left: backSpan.outerHTML,
-      right: data.template !== 'check-in' ? searchIcon.outerHTML : ''
+      right: searchIcon.outerHTML
     })
   }
 
@@ -966,9 +966,13 @@ function resetSelectedContacts() {
 function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
   
-  if (data.record.template === 'check-in' && data.record.venue[0].nearBy) {
+  if (data.record.template === 'check-in') {
+    const searchIcon = document.getElementById('selector--search')
+    searchIcon.classList.add('hidden');
+    const ul = document.getElementById('data-list--container')
+
     getRootRecord().then(function (record) {
-      checkMapStoreForNearByLocation().then(function(results){
+      checkMapStoreForNearByLocation(data.record.office,record.location).then(function(results){
         results.forEach(function(result){
           ul.appendChild(createVenueLi(result, false, data.record, true))
         })
@@ -988,18 +992,17 @@ function getLocationForMapSelector(tx, data) {
 
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
-
-    store.index('location').openCursor(null, 'nextunique').onsuccess = function (event) {
+    const office = data.record.office
+    const range = IDBKeyRange.bound([office,''],[office,'\uffff']);
+    store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
       if (cursor.value.office !== data.record.office) {
         cursor.continue();
         return;
       }
-      if (cursor.value.location) {
-      
+      if (cursor.value.location) {      
         ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-        
       }
       cursor.continue()
     }
@@ -1014,7 +1017,7 @@ function getLocationForMapSelector(tx, data) {
 }
 
 
-function checkMapStoreForNearByLocation(office){
+function checkMapStoreForNearByLocation(office,currentLocation){
   return new Promise(function(resolve,reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function(){
@@ -1022,20 +1025,21 @@ function checkMapStoreForNearByLocation(office){
       const db = req.result;
       const tx = db.transaction(['map'])
       const store = tx.objectStore('map')
-      const index = store.index('location')
-      index.openCursor().onsuccess = function(event){
+      const index = store.index('byOffice')
+      const range = IDBKeyRange.bound([office,''],[office,'\uffff']);
+      index.openCursor(range,'nextunique').onsuccess = function(event){
         const cursor = event.target.result;
         if(!cursor) return;
-        if(cursor.value.office !== office) {
+        
+        if(!cursor.value.location) {
           cursor.continue();
           return;
         }
-        if(!cursor.value.location) {
-          cursor.continue();
-          return
-        }
-
+      
         const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+        if(cursor.value.activityId === 'cTl0mhORBYhFxXUot3yp') {
+          debugger;
+        }
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
           results.push(cursor.value);
         }
@@ -1053,17 +1057,22 @@ function checkMapStoreForNearByLocation(office){
 }
 
 function handleClickListnersForMap(db, dialog, data) {
-
-  document.getElementById('selector--search').addEventListener('click', function () {
-
-    initSearchForSelectors(db, 'map', data)
-  })
+  
+  const searchIcon = document.getElementById('selector--search')
+  if(searchIcon) {
+    document.getElementById('selector--search').addEventListener('click', function () {
+      initSearchForSelectors(db, 'map', data)
+    })
+  }
 
   document.querySelector('.selector-send').classList.remove('hidden');
 
   dialog['acceptButton_'].onclick = function () {
-    const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+    const selected = document.querySelector('.mdc-radio.radio-selected');
+    if(!selected) return;
+    const radio = new mdc.radio.MDCRadio(selected);
     const selectedField = JSON.parse(radio.value)
+
     updateDomFromIDB(data.record, {
       hash: 'venue',
       key: data.key
@@ -1241,7 +1250,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 
 function createTempRecord(office, template, data) {
 
-  getRootRecord().then(function (record) {
+
 
     console.log(data)
     const dbName = firebase.auth().currentUser.uid
@@ -1249,7 +1258,7 @@ function createTempRecord(office, template, data) {
     req.onsuccess = function () {
       const db = req.result
       const tx = db.transaction(['subscriptions']);
-      const subscription = db.objectStore('subscriptions')
+      const subscription = tx.objectStore('subscriptions')
       const officeTemplateCombo = subscription.index('officeTemplate')
       const range = IDBKeyRange.only([office, template])
       officeTemplateCombo.get(range).onsuccess = function (event) {
@@ -1258,8 +1267,6 @@ function createTempRecord(office, template, data) {
           console.log("no such combo")
           return;
         }
-
-    
 
         const bareBonesScheduleArray = []
         console.log(selectedCombo)
@@ -1285,12 +1292,14 @@ function createTempRecord(office, template, data) {
           create: true
         }
 
-
         const bareBonesVenueArray = []
-
+        if(template === 'check-in') {
+            prefillLocationForCheckIn(bareBonesRecord,selectedCombo.venue[0]);
+            return
+        }
         selectedCombo.venue.forEach(function (venue) {
           const bareBonesVenue = {}
-          bareBonesVenue.venueDescriptor = venue.venueDescriptor
+          bareBonesVenue.venueDescriptor = venue
           bareBonesVenue.location = ''
           bareBonesVenue.address = ''
           bareBonesVenue.geopoint = {
@@ -1298,32 +1307,53 @@ function createTempRecord(office, template, data) {
             '_longitude': ''
           }
 
-          if (template === 'check-in' && data.suggestCheckIn) {
-            bareBonesVenue.nearBy = true
-            checkMapStoreForNearByLocation(office).then(function(results){
-              if(results.length === 1) {
-                const singleLocation = results[0]
-                bareBonesVenue.location = singleLocation.location
-                bareBonesVenue.address = singleLocation.address
-                bareBonesVenue.geopoint = {
-                  '_latitude': singleLocation.latitude,
-                  '_longitude': singleLocation.longitude
-                }
-              }
-              bareBonesVenueArray.push(bareBonesVenue)
-              bareBonesRecord.venue = bareBonesVenueArray
-              updateCreateActivity(bareBonesRecord)
-              removeDialog()
-            })
-            return;
-          } 
-          bareBonesVenueArray.push(bareBonesVenue)
-          updateCreateActivity(bareBonesRecord)
-          removeDialog()
+          bareBonesVenueArray.push(bareBonesVenue);          
         });
+        bareBonesRecord.venue = bareBonesVenueArray
+        updateCreateActivity(bareBonesRecord)
+        removeDialog()
       }
     }
-  });
+  
+}
+
+
+function prefillLocationForCheckIn(bareBonesRecord,venueDesc){
+  getRootRecord().then(function (record) {
+    checkMapStoreForNearByLocation(bareBonesRecord.office,record.location).then(function(results){
+        const locations = [];
+        const bareBonesVenue = {}
+        bareBonesVenue.venueDescriptor = venueDesc
+        bareBonesVenue.location = ''
+        bareBonesVenue.address = ''
+        bareBonesVenue.geopoint = {
+          '_latitude': '',
+          '_longitude': ''
+        }
+
+        if(!results.length) {
+          bareBonesVenue.showIcon = false;
+        }
+        else {
+          bareBonesVenue.showIcon = true;
+        }
+
+        if(results.length === 1) {
+          const singleLocation = results[0]
+          bareBonesVenue.location = singleLocation.location
+          bareBonesVenue.address = singleLocation.address
+          bareBonesVenue.geopoint = {
+            '_latitude': singleLocation.latitude,
+            '_longitude': singleLocation.longitude
+          }
+        }
+        locations.push(bareBonesVenue)
+        bareBonesRecord.venue = locations
+        updateCreateActivity(bareBonesRecord)
+        removeDialog()
+      })
+      
+    })
 }
 
 
@@ -1838,6 +1868,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
           key: venue.venueDescriptor
         })
       }
+  
     }
   } else {
     primarySpan.textContent = venue.location
@@ -1867,17 +1898,34 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const secondaryText = document.createElement('span')
   secondaryText.className = 'mdc-list-item__secondary-text'
-  secondaryText.textContent = venue.address
+  if(record.template === 'check-in' && !showMetaInput) {
+    if(!venue.showIcon) {
+      secondaryText.style.paddingTop = '3px';
+      secondaryText.textContent = 'No Locations Found for Check-In'
+    }
+    else {
+      secondaryText.textContent = venue.address
+
+    }
+  }
+  else {
+    secondaryText.textContent = venue.address
+  }
   secondaryText.dataset.secondary = ''
   textSpan.appendChild(secondaryText)
   listItem.appendChild(textSpan)
   if (showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
-    listItem.appendChild(selectorIcon)
-
+    if(record.template === 'check-in') {
+      if(venue.showIcon) {
+        listItem.appendChild(selectorIcon)
+      }
+    }
+    else {
+      listItem.appendChild(selectorIcon)
+    }
   }
-
   return listItem
 
 }
@@ -2697,6 +2745,9 @@ function insertInputsIntoActivity(record, activityStore) {
     record.venue[i].geopoint = {
       latitude: record.venue[i].geopoint['_latitude'] || "",
       longitude: record.venue[i].geopoint['_longitude'] || ""
+    }
+    if(record.venue[i].hasOwnProperty('showIcon')) {
+      delete record.venue[i].showIcon
     }
   }
 

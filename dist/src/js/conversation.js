@@ -927,9 +927,19 @@ function resetSelectedContacts() {
 function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
 
+<<<<<<< HEAD
   if (data.record.template === 'check-in' && data.record.venue[0].nearBy) {
     getRootRecord().then(function (record) {
       checkMapStoreForNearByLocation().then(function (results) {
+=======
+  if (data.record.template === 'check-in') {
+    var searchIcon = document.getElementById('selector--search');
+    searchIcon.classList.add('hidden');
+    var ul = document.getElementById('data-list--container');
+
+    getRootRecord().then(function (record) {
+      checkMapStoreForNearByLocation(data.record.office, record.location).then(function (results) {
+>>>>>>> FCM
         results.forEach(function (result) {
           ul.appendChild(createVenueLi(result, false, data.record, true));
         });
@@ -949,8 +959,14 @@ function getLocationForMapSelector(tx, data) {
 
     var ul = document.getElementById('data-list--container');
     var store = tx.objectStore('map');
+<<<<<<< HEAD
 
     store.index('location').openCursor(null, 'nextunique').onsuccess = function (event) {
+=======
+    var office = data.record.office;
+    var range = IDBKeyRange.bound([office, ''], [office, '\uFFFF']);
+    store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
+>>>>>>> FCM
       var cursor = event.target.result;
       if (!cursor) return;
       if (cursor.value.office !== data.record.office) {
@@ -958,7 +974,10 @@ function getLocationForMapSelector(tx, data) {
         return;
       }
       if (cursor.value.location) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> FCM
         ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
       }
       cursor.continue();
@@ -972,6 +991,7 @@ function getLocationForMapSelector(tx, data) {
     };
   });
 }
+<<<<<<< HEAD
 
 function checkMapStoreForNearByLocation(office) {
   return new Promise(function (resolve, reject) {
@@ -1012,17 +1032,65 @@ function checkMapStoreForNearByLocation(office) {
 }
 
 function handleClickListnersForMap(db, dialog, data) {
+=======
+>>>>>>> FCM
 
-  document.getElementById('selector--search').addEventListener('click', function () {
+function checkMapStoreForNearByLocation(office, currentLocation) {
+  return new Promise(function (resolve, reject) {
+    var req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var results = [];
+      var db = req.result;
+      var tx = db.transaction(['map']);
+      var store = tx.objectStore('map');
+      var index = store.index('byOffice');
+      var range = IDBKeyRange.bound([office, ''], [office, '\uFFFF']);
+      index.openCursor(range, 'nextunique').onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
 
-    initSearchForSelectors(db, 'map', data);
+        if (!cursor.value.location) {
+          cursor.continue();
+          return;
+        }
+
+        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+        if (cursor.value.activityId === 'cTl0mhORBYhFxXUot3yp') {
+          debugger;
+        }
+        if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+          results.push(cursor.value);
+        }
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+
+        resolve(results);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+    };
   });
+}
+
+function handleClickListnersForMap(db, dialog, data) {
+
+  var searchIcon = document.getElementById('selector--search');
+  if (searchIcon) {
+    document.getElementById('selector--search').addEventListener('click', function () {
+      initSearchForSelectors(db, 'map', data);
+    });
+  }
 
   document.querySelector('.selector-send').classList.remove('hidden');
 
   dialog['acceptButton_'].onclick = function () {
-    var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+    var selected = document.querySelector('.mdc-radio.radio-selected');
+    if (!selected) return;
+    var radio = new mdc.radio.MDCRadio(selected);
     var selectedField = JSON.parse(radio.value);
+
     updateDomFromIDB(data.record, {
       hash: 'venue',
       key: data.key
@@ -1192,6 +1260,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 
 function createTempRecord(office, template, data) {
 
+<<<<<<< HEAD
   getRootRecord().then(function (record) {
 
     console.log(data);
@@ -1269,7 +1338,104 @@ function createTempRecord(office, template, data) {
           removeDialog();
         });
       };
+=======
+  console.log(data);
+  var dbName = firebase.auth().currentUser.uid;
+  var req = indexedDB.open(dbName);
+  req.onsuccess = function () {
+    var db = req.result;
+    var tx = db.transaction(['subscriptions']);
+    var subscription = tx.objectStore('subscriptions');
+    var officeTemplateCombo = subscription.index('officeTemplate');
+    var range = IDBKeyRange.only([office, template]);
+    officeTemplateCombo.get(range).onsuccess = function (event) {
+      var selectedCombo = event.target.result;
+      if (!selectedCombo) {
+        console.log("no such combo");
+        return;
+      }
+
+      var bareBonesScheduleArray = [];
+      console.log(selectedCombo);
+      selectedCombo.schedule.forEach(function (schedule) {
+        var bareBonesSchedule = {};
+        bareBonesSchedule.name = schedule;
+        bareBonesSchedule.startTime = '';
+        bareBonesSchedule.endTime = '';
+        bareBonesScheduleArray.push(bareBonesSchedule);
+      });
+
+      var bareBonesRecord = {
+        office: selectedCombo.office,
+        template: selectedCombo.template,
+        venue: '',
+        schedule: bareBonesScheduleArray,
+        attachment: selectedCombo.attachment,
+        timestamp: Date.now(),
+        canEdit: true,
+        assignees: [],
+        activityName: selectedCombo.template.toUpperCase(),
+        create: true
+      };
+
+      var bareBonesVenueArray = [];
+      if (template === 'check-in') {
+        prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0]);
+        return;
+      }
+      selectedCombo.venue.forEach(function (venue) {
+        var bareBonesVenue = {};
+        bareBonesVenue.venueDescriptor = venue;
+        bareBonesVenue.location = '';
+        bareBonesVenue.address = '';
+        bareBonesVenue.geopoint = {
+          '_latitude': '',
+          '_longitude': ''
+        };
+
+        bareBonesVenueArray.push(bareBonesVenue);
+      });
+      bareBonesRecord.venue = bareBonesVenueArray;
+      updateCreateActivity(bareBonesRecord);
+      removeDialog();
+>>>>>>> FCM
     };
+  });
+}
+
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
+  getRootRecord().then(function (record) {
+    checkMapStoreForNearByLocation(bareBonesRecord.office, record.location).then(function (results) {
+      var locations = [];
+      var bareBonesVenue = {};
+      bareBonesVenue.venueDescriptor = venueDesc;
+      bareBonesVenue.location = '';
+      bareBonesVenue.address = '';
+      bareBonesVenue.geopoint = {
+        '_latitude': '',
+        '_longitude': ''
+      };
+
+      if (!results.length) {
+        bareBonesVenue.showIcon = false;
+      } else {
+        bareBonesVenue.showIcon = true;
+      }
+
+      if (results.length === 1) {
+        var singleLocation = results[0];
+        bareBonesVenue.location = singleLocation.location;
+        bareBonesVenue.address = singleLocation.address;
+        bareBonesVenue.geopoint = {
+          '_latitude': singleLocation.latitude,
+          '_longitude': singleLocation.longitude
+        };
+      }
+      locations.push(bareBonesVenue);
+      bareBonesRecord.venue = locations;
+      updateCreateActivity(bareBonesRecord);
+      removeDialog();
+    });
   });
 }
 
@@ -1795,16 +1961,30 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   var secondaryText = document.createElement('span');
   secondaryText.className = 'mdc-list-item__secondary-text';
-  secondaryText.textContent = venue.address;
+  if (record.template === 'check-in' && !showMetaInput) {
+    if (!venue.showIcon) {
+      secondaryText.style.paddingTop = '3px';
+      secondaryText.textContent = 'No Locations Found for Check-In';
+    } else {
+      secondaryText.textContent = venue.address;
+    }
+  } else {
+    secondaryText.textContent = venue.address;
+  }
   secondaryText.dataset.secondary = '';
   textSpan.appendChild(secondaryText);
   listItem.appendChild(textSpan);
   if (showMetaInput) {
     listItem.appendChild(metaInput);
   } else {
-    listItem.appendChild(selectorIcon);
+    if (record.template === 'check-in') {
+      if (venue.showIcon) {
+        listItem.appendChild(selectorIcon);
+      }
+    } else {
+      listItem.appendChild(selectorIcon);
+    }
   }
-
   return listItem;
 }
 
@@ -2576,6 +2756,9 @@ function insertInputsIntoActivity(record, activityStore) {
       latitude: record.venue[i].geopoint['_latitude'] || "",
       longitude: record.venue[i].geopoint['_longitude'] || ""
     };
+    if (record.venue[i].hasOwnProperty('showIcon')) {
+      delete record.venue[i].showIcon;
+    }
   }
 
   var requiredObject = {

@@ -1,14 +1,11 @@
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-});
-
 var native = function () {
   return {
+    setFCMToken: function setFCMToken(token) {
+      localStorage.setItem('token', token);
+    },
+    getFCMToken: function getFCMToken() {
+      return localStorage.getItem('token');
+    },
     setName: function setName(device) {
       localStorage.setItem('deviceType', device);
     },
@@ -62,6 +59,7 @@ var native = function () {
   };
 }();
 
+<<<<<<< HEAD
 window.onerror = function (msg, url, lineNo, columnNo, error) {
   var errorJS = {
     message: {
@@ -72,17 +70,56 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
       stack: error.stack,
       name: error.name,
       device: native.getInfo()
+=======
+var app = function () {
+  return {
+
+    today: function today(format) {
+      if (!format) return moment();
+      return moment().format(format);
+    },
+
+    tomorrow: function tomorrow() {
+      return moment(this.today()).add(1, 'day');
+    },
+    getLastLocationTime: function getLastLocationTime() {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
+          resolve(rootRecord.location.lastLocationTime);
+        }).catch(function (error) {
+          reject(error);
+        });
+      });
+    },
+
+    isNewDay: function isNewDay(auth) {
+      var today = localStorage.getItem('today');
+
+      if (today === "null" || today == null) {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
+        return true;
+      }
+      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
+    },
+    isCurrentTimeNearStart: function isCurrentTimeNearStart(emp) {
+      var startTime = emp.attachment['Daily Start Time'].value;
+      var format = 'hh:mm:ss';
+      var offsetStartBefore = moment(startTime, format).subtract(15, 'minutes');
+      var offsetStartAfter = moment(startTime, format).add(15, 'minutes');
+      return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]');
+    },
+    isCurrentTimeNearEnd: function isCurrentTimeNearEnd(emp) {
+
+      var endTime = emp.attachment['Daily End Time'].value;
+      var format = 'hh:mm:ss';
+      var offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
+      var offsetEndAfter = moment(endTime, format).add(15, 'minutes');
+
+      return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]');
+>>>>>>> FCM
     }
   };
-  requestCreator('instant', JSON.stringify(errorJS));
-};
-
-// initialize smooth scrolling
-window.scrollBy({
-  top: 100,
-  left: 0,
-  behavior: 'smooth'
-});
+}();
 
 window.addEventListener('load', function () {
   var title = 'Device Incompatibility';
@@ -114,6 +151,15 @@ window.addEventListener('load', function () {
     return;
   }
 
+  firebase.initializeApp({
+    apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
+    authDomain: "growthfilev2-0.firebaseapp.com",
+    databaseURL: "https://growthfilev2-0.firebaseio.com",
+    projectId: "growthfilev2-0",
+    storageBucket: "growthfilev2-0.appspot.com",
+    messagingSenderId: "1011478688238"
+  });
+
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -133,11 +179,44 @@ window.addEventListener('load', function () {
 
   });
 
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    var errorJS = {
+      message: {
+        msg: error.message,
+        url: url,
+        lineNo: lineNo,
+        columnNo: columnNo,
+        stack: error.stack,
+        name: error.name,
+        device: native.getInfo()
+      }
+    };
+    requestCreator('instant', JSON.stringify(errorJS));
+  };
+
+  // initialize smooth scrolling
+  window.scrollBy({
+    top: 100,
+    left: 0,
+    behavior: 'smooth'
+  });
+
+  window.onpopstate = function (event) {
+
+    if (!event.state) return;
+    if (event.state[0] === 'listView') {
+      window[event.state[0]]();
+      return;
+    }
+    window[event.state[0]](event.state[1], false);
+  };
+
   layoutGrid();
 
   startApp();
 });
 
+<<<<<<< HEAD
 window.onpopstate = function (event) {
 
   if (!event.state) return;
@@ -152,6 +231,8 @@ window.addEventListener('onMessage', function _onMessage(e) {
   requestCreator('Null', false);
 });
 
+=======
+>>>>>>> FCM
 function backNav() {
   history.back();
 }
@@ -344,6 +425,7 @@ function startApp() {
       userSignedOut();
       return;
     }
+
     if (localStorage.getItem('dbexist')) {
       init(auth);
     }
@@ -351,6 +433,7 @@ function startApp() {
 }
 // new day suggest
 // if location changes
+<<<<<<< HEAD
 var app = function () {
   return {
 
@@ -480,30 +563,134 @@ function isEmployeeOnLeave() {
 }
 
 function idbVersionLessThan2(auth) {
+=======
+
+function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
-    var value = false;
-    var req = indexedDB.open(auth.uid, 2);
+    var auth = firebase.auth().currentUser;
+    var req = indexedDB.open(auth.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['children']);
+      var store = tx.objectStore('children');
+      var details = void 0;
+      var phoneNumberEmp = auth.phoneNumber;
+      var range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+
+      store.index('templateStatus').openCursor(range).onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.attachment['Employee Contact'].value !== auth.phoneNumber) {
+          cursor.continue();
+          return;
+        }
+
+        details = cursor.value;
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+        resolve(details);
+      };
+    };
+  });
+}
+
+function isEmployeeOnLeave() {
+  return new Promise(function (resolve, reject) {
+
+    getEmployeeDetails().then(function (empDetails) {
+
+      if (!empDetails) {
+        return resolve({ onLeave: false });
+      }
+
+      empDetails.onLeave = false;
+      var req = indexedDB.open(firebase.auth().currentUser.uid);
+      req.onsuccess = function () {
+        var db = req.result;
+        var tx = db.transaction(['calendar']);
+        var store = tx.objectStore('calendar');
+        var range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
+
+        store.index('onLeave').openCursor(range).onsuccess = function (event) {
+
+          var cursor = event.target.result;
+          if (!cursor) return;
+
+          if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+            empDetails.onLeave = true;
+            return;
+          }
+          cursor.continue();
+        };
+        tx.oncomplete = function () {
+          resolve(empDetails);
+        };
+        tx.onerror = function () {
+          reject(tx.error);
+        };
+      };
+      req.onerror = function () {
+        reject(req.error);
+      };
+    });
+  });
+}
+
+function idbVersionLessThan3(auth) {
+>>>>>>> FCM
+  return new Promise(function (resolve, reject) {
+
+    var req = indexedDB.open(auth.uid, 3);
     var db = void 0;
+    var reset = {
+      value: false,
+      version: ''
+    };
     req.onupgradeneeded = function (evt) {
-      if (evt.oldVersion === 1) {
-        value = true;
-      } else {
-        value = false;
+      switch (evt.oldVersion) {
+        case 1:
+          reset.value = true;
+          reset.version = 1;
+          break;
+        case 2:
+          value = false;
+          reset.version = 2;
+          var calendar = req.transaction.objectStore('calendar');
+          calendar.createIndex('onLeave', ['template', 'status', 'office']);
+          var children = req.transaction.objectStore('children');
+          children.createIndex('templateStatus', ['template', 'status']);
+          var map = req.transaction.objectStore('map');
+          map.createIndex('byOffice', ['office', 'location']);
+          break;
+        case 3:
+          value = false;
+          reset.version = 3;
+          break;
+        default:
+          reset.value = true;
+          reset.version = '';
       }
     };
     req.onsuccess = function () {
       db = req.result;
       db.close();
-      resolve(value);
+      resolve(reset);
     };
     req.onerror = function () {
       reject({
+<<<<<<< HEAD
         error: req.error,
+=======
+        error: req.error.message,
+>>>>>>> FCM
         device: native.getInfo()
       });
     };
   });
 }
+
+function createNewIndex() {}
 
 function removeIDBInstance(auth) {
 
@@ -530,22 +717,32 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-
   document.getElementById("main-layout-app").style.display = 'block';
-
-  idbVersionLessThan2(auth).then(function (lessThanTwo) {
-
+  idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
       from = 1;
-      if (lessThanTwo) {
+      if (reset.value) {
         resetApp(auth, from);
+<<<<<<< HEAD
       } else {
         requestCreator('now', {
           device: native.getInfo(),
           from: ''
         });
         openListWithChecks();
+=======
+        return;
+>>>>>>> FCM
       }
+
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: '',
+        registerToken: native.getFCMToken()
+      });
+
+      openListWithChecks();
+
       return;
     }
 
@@ -569,7 +766,8 @@ function resetApp(auth, from) {
 
     requestCreator('now', {
       device: native.getInfo(),
-      from: from
+      from: from,
+      registerToken: native.getFCMToken()
     });
   }).catch(function (error) {
     snacks(error.message);
@@ -579,6 +777,7 @@ function resetApp(auth, from) {
   });
 }
 
+<<<<<<< HEAD
 function runAppChecks(auth) {
   return new Promise(function (resolve, reject) {
     isEmployeeOnLeave().then(function (emp) {
@@ -630,12 +829,89 @@ function startInitializatioOfList(data) {
   });
 }
 
+=======
+function runAppChecks(emp) {
+  // suggest check in false
+
+  window.addEventListener('locationChanged', function _locationChanged(e) {
+
+    var dataObject = {
+      urgent: false,
+      nearby: false,
+      checkin: false
+    };
+
+    if (emp.onLeave) {
+      dataObject.checkin = false;
+    }
+
+    var changed = e.detail;
+    var newDay = app.isNewDay();
+
+    if (changed) {
+      dataObject.nearby = true;
+      dataObject.checkin = true;
+      if (newDay) {
+        dataObject.urgent = true;
+      }
+      startInitializatioOfList(dataObject);
+      return;
+    }
+
+    if (newDay) {
+      dataObject.urgent = true;
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+      return;
+    };
+
+    if (app.isCurrentTimeNearStart(emp)) {
+      var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+      if (hasAlreadyCheckedIn == null) {
+        localStorage.setItem('dailyStartTimeCheckIn', true);
+        localStorage.removeItem('dailyEndTimeCheckIn');
+        dataObject.checkin = true;
+        startInitializatioOfList(dataObject);
+      }
+
+      return;
+    }
+    if (app.isCurrentTimeNearEnd(emp)) {
+      var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+      if (_hasAlreadyCheckedIn == null) {
+        localStorage.setItem('dailyEndTimeCheckIn', true);
+        localStorage.removeItem('dailyStartTimeCheckIn');
+        dataObject.checkin = true;
+        startInitializatioOfList(dataObject);
+      }
+      return;
+    }
+
+    return;
+  }, true);
+}
+
+function startInitializatioOfList(data) {
+  console.log(data);
+  suggestCheckIn(data.checkin).then(function () {
+    localStorage.removeItem('clickedActivity');
+    if (history.state[0] === 'listView' || !history.state) {
+      listView({
+        urgent: data.urgent,
+        nearby: data.nearby
+      });
+    }
+  });
+}
+
+>>>>>>> FCM
 function openListWithChecks() {
   manageLocation();
   setInterval(function () {
     manageLocation();
   }, 5000);
 
+<<<<<<< HEAD
   runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
     requestCreator('instant', JSON.stringify({
       message: JSON.stringify(error)
@@ -643,3 +919,11 @@ function openListWithChecks() {
     return { checkin: false, urgent: false, nearby: false };
   }).then(startInitializatioOfList);
 }
+=======
+  listView();
+  isEmployeeOnLeave().then(function (emp) {
+    runAppChecks(emp);
+  });
+}
+
+>>>>>>> FCM

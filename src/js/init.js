@@ -1,14 +1,11 @@
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-})
-
 let native = function () {
   return {
+    setFCMToken: function (token) {
+      localStorage.setItem('token', token)
+    },
+    getFCMToken: function () {
+      return localStorage.getItem('token')
+    },
     setName: function (device) {
       localStorage.setItem('deviceType', device);
     },
@@ -62,28 +59,55 @@ let native = function () {
   }
 }();
 
+let app = function () {
+  return {
 
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-  const errorJS = {
-    message: {
-      msg: error.message,
-      url: url,
-      lineNo: lineNo,
-      columnNo: columnNo,
-      stack: error.stack,
-      name: error.name,
-      device: native.getInfo(),
+    today: function (format) {
+      if (!format) return moment();
+      return moment().format(format);
+    },
+
+    tomorrow: function () {
+      return moment(this.today()).add(1, 'day');
+    },
+    getLastLocationTime: function () {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
+          resolve(rootRecord.location.lastLocationTime);
+        }).catch(function (error) {
+          reject(error)
+        })
+      })
+    },
+
+    isNewDay: function (auth) {
+      var today = localStorage.getItem('today');
+
+      if (today === "null" || today == null) {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
+        return true;
+      }
+      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
+    },
+    isCurrentTimeNearStart: function (emp) {
+      const startTime = emp.attachment['Daily Start Time'].value
+      const format = 'hh:mm:ss'
+      const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
+      const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
+      return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
+      
+    },
+    isCurrentTimeNearEnd: function (emp) {
+      
+      const endTime = emp.attachment['Daily End Time'].value
+      const format = 'hh:mm:ss'
+      const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
+      const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
+
+      return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
     }
   }
-  requestCreator('instant', JSON.stringify(errorJS))
-}
-
-// initialize smooth scrolling
-window.scrollBy({
-  top: 100,
-  left: 0,
-  behavior: 'smooth'
-})
+}();
 
 
 
@@ -117,6 +141,18 @@ window.addEventListener('load', function () {
     return
   }
 
+
+
+  firebase.initializeApp({
+    apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
+    authDomain: "growthfilev2-0.firebaseapp.com",
+    databaseURL: "https://growthfilev2-0.firebaseio.com",
+    projectId: "growthfilev2-0",
+    storageBucket: "growthfilev2-0.appspot.com",
+    messagingSenderId: "1011478688238"
+  })
+
+
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -139,21 +175,46 @@ window.addEventListener('load', function () {
 
   })
 
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    const errorJS = {
+      message: {
+        msg: error.message,
+        url: url,
+        lineNo: lineNo,
+        columnNo: columnNo,
+        stack: error.stack,
+        name: error.name,
+        device: native.getInfo(),
+      }
+    }
+    requestCreator('instant', JSON.stringify(errorJS))
+  }
+
+  // initialize smooth scrolling
+  window.scrollBy({
+    top: 100,
+    left: 0,
+    behavior: 'smooth'
+  })
+
+  window.onpopstate = function (event) {
+
+    if (!event.state) return;
+    if (event.state[0] === 'listView') {
+      window[event.state[0]]()
+      return;
+    }
+    window[event.state[0]](event.state[1], false)
+  }
+
+
+
   layoutGrid()
 
   startApp()
 
 })
 
-window.onpopstate = function (event) {
-
-  if (!event.state) return;
-  if (event.state[0] === 'listView') {
-    window[event.state[0]]()
-    return;
-  }
-  window[event.state[0]](event.state[1], false)
-}
 
 window.addEventListener('onMessage', function _onMessage(e){
     requestCreator('Null',false)
@@ -360,86 +421,35 @@ function startApp() {
       userSignedOut()
       return
     }
+
     if (localStorage.getItem('dbexist')) {
       init(auth)
     }
-
   })
 }
 // new day suggest
 // if location changes
-let app = function () {
-  return {
-
-    today: function () {
-      return moment();
-    },
-    format: function () {
-      return this.today().format("DD/MM/YYYY")
-    },
-    tomorrow: function () {
-      return moment(this.today()).add(1, 'day');
-    },
-    getLastLocationTime: function () {
-      return new Promise(function (resolve, reject) {
-        getRootRecord().then(function (rootRecord) {
-          resolve(rootRecord.location.lastLocationTime);
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    },
-    isNewDay: function (auth) {
-      return new Promise(function (resolve, reject) {
-
-        app.getLastLocationTime().then(function (time) {
-          if (moment(time).isSame(this.today(), 'day')) {
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    },
-
-    isCurrentTimeNearStart: function (startTime) {
-
-      const offsetStartBefore = moment(startTime).subtract(15, 'minutes')
-      const offsetStartAfter = moment(startTime).add(15, 'minutes');
-
-      if (this.today().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')) {
-        return true
-      }
-      return false
-    },
-    isCurrentTimeNearEnd: function (endTime) {
-      const offsetEndBefore = moment(endTime).subtract(15, 'minutes');
-      const offsetEndAfter = moment(endTime).add(15, 'minutes');
-      if (this.today().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')) {
-        return true
-      }
-      return false
-    }
-  }
-}();
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    const auth = firebase.auth().currentUser
+    const req = indexedDB.open(auth.uid)
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['children']);
-      const store = tx.objectStore('childrend');
+      const store = tx.objectStore('children');
       let details;
-      store.index('template').openCursor('employee').onsuccess = function (event) {
+      const phoneNumberEmp = auth.phoneNumber;
+      const range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+
+      store.index('templateStatus').openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if (cursor.value.status !== 'CONFIRMED') {
+        if (cursor.value.attachment['Employee Contact'].value !== auth.phoneNumber) {
           cursor.continue();
           return;
         }
+
         details = cursor.value
         cursor.continue();
       }
@@ -451,76 +461,98 @@ function getEmployeeDetails() {
 }
 
 function isEmployeeOnLeave() {
-  getEmployeeDetails().then(function (empDetails) {
+  return new Promise(function (resolve, reject) {
 
-    empDetails.onLeave = false
-    const req = indexedDB.open(auth);
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['calendar']);
-      const store = tx.objectStore('calendar');
-      store.index('activityId').openCursor(empDetails.activityId, 'next').onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.office !== empDetails.office) {
-          cursor.continue();
-          return;
-        }
-
-        if (cursor.value.template !== 'leave') {
-          cursor.continue();
-          return;
-        }
-
-        if (cursor.value.status !== 'CONFIRMED') {
-          cursor.continue();
-          return;
-        }
-
-        if (this.today().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-          empDetails.onLeave = true
-          return;
-        }
-        cursor.continue()
+    getEmployeeDetails().then(function (empDetails) {
+     
+      if(!empDetails) {
+        return resolve({onLeave:false})
       }
-      tx.oncomplete = function () {
-        resolve(isOnLeave)
+     
+     empDetails.onLeave = false
+      const req = indexedDB.open(firebase.auth().currentUser.uid);
+      req.onsuccess = function () {
+        const db = req.result;
+        const tx = db.transaction(['calendar']);
+        const store = tx.objectStore('calendar');
+        const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
+
+        store.index('onLeave').openCursor(range).onsuccess = function (event) {
+
+          const cursor = event.target.result;
+          if (!cursor) return;
+
+          if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+            empDetails.onLeave = true
+            return;
+          }
+          cursor.continue()
+        }
+        tx.oncomplete = function () {
+          resolve(empDetails)
+        }
+        tx.onerror = function () {
+          reject(tx.error)
+        }
       }
-      tx.onerror = function () {
-        reject(tx.error)
+      req.onerror = function () {
+        reject(req.error)
       }
-    }
-    req.onerror = function () {
-      reject(req.error)
-    }
+
+    })
   })
 }
 
-
-function idbVersionLessThan2(auth) {
+function idbVersionLessThan3(auth) {
   return new Promise(function (resolve, reject) {
-    let value = false;
-    const req = indexedDB.open(auth.uid, 2);
+
+    const req = indexedDB.open(auth.uid, 3);
     let db;
+    let reset = {
+      value: false,
+      version: ''
+    };
     req.onupgradeneeded = function (evt) {
-      if (evt.oldVersion === 1) {
-        value = true
-      } else {
-        value = false;
+      switch (evt.oldVersion) {
+        case 1:
+          reset.value = true;
+          reset.version = 1;
+          break;
+        case 2:
+          value = false;
+          reset.version = 2;
+          const calendar = req.transaction.objectStore('calendar');
+          calendar.createIndex('onLeave', ['template', 'status', 'office']);
+          const children = req.transaction.objectStore('children');
+          children.createIndex('templateStatus', ['template', 'status']);
+          const map = req.transaction.objectStore('map');
+          map.createIndex('byOffice',['office','location']);
+          break;
+        case 3:
+          value = false;
+          reset.version = 3
+          break;
+        default:
+          reset.value = true;
+          reset.version = ''
       }
     }
     req.onsuccess = function () {
       db = req.result;
       db.close();
-      resolve(value)
+      resolve(reset)
     }
     req.onerror = function () {
       reject({
-        error: req.error,
+        error: req.error.message,
         device: native.getInfo()
       })
     }
   })
+}
+
+function createNewIndex() {
+
 }
 
 function removeIDBInstance(auth) {
@@ -548,22 +580,23 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-
   document.getElementById("main-layout-app").style.display = 'block'
-
-  idbVersionLessThan2(auth).then(function (lessThanTwo) {
-
+  idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
       from = 1;
-      if (lessThanTwo) {
+      if (reset.value) {
         resetApp(auth, from);
-      } else {
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: ''
-        });
-        openListWithChecks()
+        return;
       }
+
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: '',
+        registerToken: native.getFCMToken()
+      });
+
+      openListWithChecks()
+
       return;
     }
 
@@ -587,7 +620,8 @@ function resetApp(auth, from) {
 
     requestCreator('now', {
       device: native.getInfo(),
-      from: from
+      from: from,
+      registerToken: native.getFCMToken()
     });
 
   }).catch(function (error) {
@@ -598,68 +632,95 @@ function resetApp(auth, from) {
   })
 }
 
-function runAppChecks(auth) {
-  return new Promise(function (resolve, reject) {
-    isEmployeeOnLeave().then(function (emp) {
-      // suggest check in false
-      let dataObject = {
-        urgent: false,
-        nearby: false,
-        checkin: false
-      }
-      if (emp.onLeave) {
-          dataObject.checkin = false
-      }
+function runAppChecks(emp) {
+ // suggest check in false
 
-      window.addEventListener('locationChanged', function _listener(e) {
-        const changed = e.detail;
-        app.isNewDay().then(function (newDay) {
+ window.addEventListener('locationChanged', function _locationChanged(e) {
 
-          if (changed) {
-            dataObject.nearby = true;
-            dataObject.checkin = true;
-            if (newDay) {
-              dataObject.urgent = true
-            }
-            return resolve(dataObject)
-          }
-          if (newDay) {
-            dataObject.urgent = true
-            if (isCurrentTimeNearStart(emp) || isCurrentTimeNearEnd(emp)) {
-              dataObject.checkin = true
-            }
-          }
-          return resolve(dataObject)
-        })
-      }, true);
-    })
-  }).catch(function(error){
-    reject(error)
-  })
+  var dataObject = {
+    urgent: false,
+    nearby: false,
+    checkin: false
+  };
+
+  if (emp.onLeave) {
+    dataObject.checkin = false;
+  }
+
+  var changed = e.detail;
+  var newDay = app.isNewDay();
+
+  if (changed) {
+    dataObject.nearby = true;
+    dataObject.checkin = true;
+    if (newDay) {
+      dataObject.urgent = true;
+    }
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (newDay) {
+    dataObject.urgent = true;
+    dataObject.checkin = true;
+    startInitializatioOfList(dataObject);
+    return;
+  };
+
+  if(app.isCurrentTimeNearStart(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+    if(hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyStartTimeCheckIn',true);
+      localStorage.removeItem('dailyEndTimeCheckIn')
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+  
+  if(app.isCurrentTimeNearEnd(emp)){
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+    if(hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyEndTimeCheckIn',true);
+      localStorage.removeItem('dailyStartTimeCheckIn')
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+
+  return;
+}, true);
 }
 
 function startInitializatioOfList(data) {
-  
+  console.log(data)
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
-    listView({
-      urgent: data.urgent,
-      nearby: data.nearby
-    });
-   
+    if (history.state[0] === 'listView' || !history.state) {
+      listView({
+        urgent: data.urgent,
+        nearby: data.nearby
+      });
+    }
   })
 }
 
-function openListWithChecks(){
+function openListWithChecks() {
   manageLocation();
   setInterval(function () {
     manageLocation();
-  }, 5000);       
+  }, 5000);
 
-  runAppChecks(auth).then(startInitializatioOfList).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: JSON.stringify(error)
-    }))
-    return {checkin:false,urgent:false,nearby:false}
-  }).then(startInitializatioOfList)
+  listView();
+  isEmployeeOnLeave().then(function (emp) {
+    runAppChecks(emp);
+  })
+}
+
+function getFcmTokenFromAndroid(token) {
+  return new Promise(function (resolve, reject) {
+    const token = fcm.getToken();
+    resolve(token)
+  })
 }

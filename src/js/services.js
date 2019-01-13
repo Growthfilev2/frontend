@@ -1,4 +1,3 @@
-var offset = '';
 var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
@@ -63,10 +62,17 @@ function successDialog() {
 
   var successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'));
   successDialog.show();
+  
   setTimeout(function () {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
+  
+  listView({
+    urgent:false,
+    nearBy:false
+  })
+
 }
 
 function appDialog(messageString) {
@@ -264,9 +270,15 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
+<<<<<<< HEAD
     // CelllarJson = Towers.getCellularData();
     CelllarJson = JSON.stringify({ "homeMobileCountryCode": 404, "homeMobileNetworkCode": 40, "considerIp": "true", "wifiAccessPoints": [ { "macAddress": "cc:d3:1e:51:4d:4a", "signalStrength": -93 } ], "carrier": "airtel", "cellTowers": [ { "cellId": 241057300, "locationAreaCode": 41070, "mobileCountryCode": 404, "mobileNetworkCode": 40 } ] })
     
+=======
+    CelllarJson = Towers.getCellularData();
+    if(!Object.keys(JSON.parse(CelllarJson)).length) return;
+
+>>>>>>> FCM
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -346,10 +358,9 @@ function locationUpdationSuccess(location) {
   
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   const locationChanged = new CustomEvent("locationChanged", {
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
+    "detail":isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
-
   }
 
 
@@ -675,15 +686,19 @@ function resetLoaders(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
+<<<<<<< HEAD
   snacks(data.msg)
+=======
+  snacks(data.msg);
+>>>>>>> FCM
 }
 
 function requestCreator(requestType, requestBody) {
-
-
+  const auth = firebase.auth().currentUser;
   var requestGenerator = {
     type: requestType,
     body: '',
+<<<<<<< HEAD
     token:'',
     auth:firebase.auth().currentUser
   };
@@ -697,6 +712,27 @@ function requestCreator(requestType, requestBody) {
       apiHandler.postMessage(requestGenerator);
     })
   
+=======
+    user:{
+      token:'',
+      uid:auth.uid,
+      displayName:auth.displayName,
+      photoURL:auth.photoURL,
+      phoneNumber:auth.phoneNumber
+    }
+  };
+  
+ 
+  
+
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
+    auth.getIdToken(false).then(function(token){
+
+      requestGenerator.body = requestBody;
+      requestGenerator.user.token = token;
+      apiHandler.postMessage(requestGenerator);
+    })
+>>>>>>> FCM
   } else {
 
 
@@ -710,6 +746,7 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator)
       } else {
+<<<<<<< HEAD
         firebase.auth().currentUser.getIdToken(false).then(function(token){
 
         var geopoints = {
@@ -724,6 +761,22 @@ function requestCreator(requestType, requestBody) {
         console.log(requestGenerator)
         sendRequest(location, requestGenerator)
        })
+=======
+        auth.getIdToken(false).then(function(token){
+
+          var geopoints = {
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+            'accuracy': location.accuracy
+          };
+          
+          requestBody['geopoint'] = geopoints;
+          requestGenerator.body = requestBody;
+          requestGenerator.user.token = token;
+          console.log(requestGenerator)
+          sendRequest(location, requestGenerator)
+        })
+>>>>>>> FCM
       }
     })
   };
@@ -740,6 +793,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
+<<<<<<< HEAD
     window.removeEventListener('location', _listener, true);
     firebase.auth().currentUser.getIdToken(false).then(function(token){
       const data = e.detail;
@@ -755,6 +809,23 @@ function handleWaitForLocation(requestBody, requestGenerator) {
     })
   }, true);
 
+=======
+    firebase.auth().currentUser.getIdToken(false).then(function(token){
+
+    const data = e.detail;
+    var geopoints = {
+      'latitude': data.latitude,
+      'longitude': data.longitude,
+      'accuracy': data.accuracy
+    };
+    requestBody['geopoint'] = geopoints;
+    requestGenerator.body = requestBody;
+    requestGenerator.user.token = token;
+    sendRequest(geopoints, requestGenerator);
+  })
+  window.removeEventListener('location', _listener, true);
+}, true);
+>>>>>>> FCM
 }
 
 function sendRequest(location, requestGenerator) {
@@ -788,7 +859,6 @@ const receiverCaller = {
   'notification': successDialog,
   'manageLocation': manageLocation,
   'error': resetLoaders,
-  'reset-offset': resetOffset,
   'android-stop-refreshing': androidStopRefreshing,
   'updateIDB': updateIDB,
   'redirect-to-list': changeState,
@@ -796,7 +866,6 @@ const receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data)
-  handleTimeout(response.data.type);
 }
 
 
@@ -824,12 +893,6 @@ function revokeSession() {
   });
 }
 
-function resetOffset() {
-  if (offset) {
-    clearTimeout(offset);
-    offset = null;
-  }
-}
 
 function changeState(data) {
   history.pushState(['listView'], null, null);
@@ -842,7 +905,8 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-    openListWithChecks()
+    localStorage.setItem('today',null);
+    openListWithChecks()    
     return;
   }
 
@@ -901,6 +965,7 @@ function onErrorMessage(error) {
   });
 }
 
+<<<<<<< HEAD
 function handleTimeout(type) {
   const whitelist = ['update-app', 'revoke-session', 'manageLocation'];
   const index = whitelist.indexOf(type);
@@ -910,6 +975,15 @@ function handleTimeout(type) {
   
 }
 
+=======
+>>>>>>> FCM
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
+}
+
+
+function runRead(value) {
+  if(localStorage.getItem('dbexist')) {
+    requestCreator('Null',value);
+  }
 }
