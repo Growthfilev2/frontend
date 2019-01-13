@@ -256,6 +256,7 @@ function useGeolocationApi(provider) {
 
   try {
     CelllarJson = Towers.getCellularData();
+    if(!Object.keys(JSON.parse(CelllarJson)).length) return;
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 

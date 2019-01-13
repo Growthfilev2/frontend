@@ -50,7 +50,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB(event.data.body,event.data.user);
+    updateIDB({swipe:event.data.body, user:event.data.user});
     return;
   }
 
@@ -110,7 +110,7 @@ function fetchServerTime(body,user) {
 
   console.log(typeof parsedDeviceInfo.appVersion)
   return new Promise(function (resolve) {
-    const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registration=${body.registerToken}`
+    const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
     const httpReq = {
       method:'GET',
       url: url,
