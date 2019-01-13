@@ -81,15 +81,13 @@ let app = function () {
     },
 
     isNewDay: function (auth) {
-      const today = localStorage.getItem('today');
-      if (today == null) {
-        localStorage.setItem('today', moment())
+      var today = localStorage.getItem('today');
+
+      if (today === "null" || today == null) {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
-      if (moment().isSame(moment(today))) {
-        return false;
-      }
-      return true;
+      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
     },
     isCurrentTimeNearStart: function (emp) {
       const startTime = emp.attachment['Daily Start Time'].value
@@ -630,44 +628,49 @@ function resetApp(auth, from) {
 }
 
 function runAppChecks(emp) {
-  // suggest check in false
+ // suggest check in false
 
-  window.addEventListener('locationChanged', function _locationChanged(e) {
+ window.addEventListener('locationChanged', function _locationChanged(e) {
 
-    let dataObject = {
-      urgent: false,
-      nearby: false,
-      checkin: false
-    }
-    if (emp.onLeave) {
-      dataObject.checkin = false
-    }
+  var dataObject = {
+    urgent: false,
+    nearby: false,
+    checkin: false
+  };
 
-    const changed = e.detail;
-    const newDay = app.isNewDay();
+  if (emp.onLeave) {
+    dataObject.checkin = false;
+  }
 
-    if (changed) {
-      dataObject.nearby = true;
-      dataObject.checkin = true;
-      if (newDay) {
-        dataObject.urgent = true
-      }
-      startInitializatioOfList(dataObject)
-      return;
-    }
+  var changed = e.detail;
+  var newDay = app.isNewDay();
+
+  if (changed) {
+    dataObject.nearby = true;
+    dataObject.checkin = true;
     if (newDay) {
-      dataObject.urgent = true
-      if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
-        dataObject.checkin = true
-      }
-      startInitializatioOfList(dataObject);
-      return;
-    };
-    //  startInitializatioOfList(dataObject);
+      dataObject.urgent = true;
+    }
+    startInitializatioOfList(dataObject);
     return;
+  }
 
-  }, true);
+  if (newDay) {
+    dataObject.urgent = true;
+    dataObject.checkin = true;
+    if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
+      dataObject.checkin = true;
+    }
+    startInitializatioOfList(dataObject);
+    return;
+  };
 
+  if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
+    dataObject.checkin = true;
+  }
+  startInitializatioOfList(dataObject);
+  return;
+}, true);
 }
 
 function startInitializatioOfList(data) {

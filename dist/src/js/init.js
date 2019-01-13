@@ -82,14 +82,13 @@ var app = function () {
 
     isNewDay: function isNewDay(auth) {
       var today = localStorage.getItem('today');
-      if (today == null) {
-        localStorage.setItem('today', moment());
+
+      if (today === "null" || today == null) {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
-      if (moment().isSame(moment(today))) {
-        return false;
-      }
-      return true;
+
+      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
     },
     isCurrentTimeNearStart: function isCurrentTimeNearStart(emp) {
       var startTime = emp.attachment['Daily Start Time'].value;
@@ -613,6 +612,7 @@ function runAppChecks(emp) {
       nearby: false,
       checkin: false
     };
+
     if (emp.onLeave) {
       dataObject.checkin = false;
     }
@@ -629,15 +629,21 @@ function runAppChecks(emp) {
       startInitializatioOfList(dataObject);
       return;
     }
+
     if (newDay) {
       dataObject.urgent = true;
+      dataObject.checkin = true;
       if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
         dataObject.checkin = true;
       }
       startInitializatioOfList(dataObject);
       return;
     };
-    //  startInitializatioOfList(dataObject);
+
+    if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
+      dataObject.checkin = true;
+    }
+    startInitializatioOfList(dataObject);
     return;
   }, true);
 }
