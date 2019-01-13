@@ -671,9 +671,9 @@ function runAppChecks(emp) {
       dataObject.checkin = true;
       startInitializatioOfList(dataObject);
     }
-    
     return;
   }
+  
   if(app.isCurrentTimeNearEnd(emp)){
     const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
     if(hasAlreadyCheckedIn == null) {
