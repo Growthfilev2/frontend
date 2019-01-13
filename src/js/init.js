@@ -521,7 +521,8 @@ function idbVersionLessThan3(auth) {
           calendar.createIndex('onLeave', ['template', 'status', 'office']);
           const children = req.transaction.objectStore('children');
           children.createIndex('templateStatus', ['template', 'status']);
-
+          const map = req.transaction.objectStore('map');
+          map.createIndex('byOffice',['office','location']);
           break;
         case 3:
           value = false;
@@ -539,7 +540,7 @@ function idbVersionLessThan3(auth) {
     }
     req.onerror = function () {
       reject({
-        error: req.error,
+        error: req.error.message,
         device: native.getInfo()
       })
     }
@@ -658,17 +659,32 @@ function runAppChecks(emp) {
   if (newDay) {
     dataObject.urgent = true;
     dataObject.checkin = true;
-    if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
-      dataObject.checkin = true;
-    }
     startInitializatioOfList(dataObject);
     return;
   };
 
-  if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
-    dataObject.checkin = true;
+  if(app.isCurrentTimeNearStart(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+    if(hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyStartTimeCheckIn',true);
+      localStorage.removeItem('dailyEndTimeCheckIn')
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+    }
+    
+    return;
   }
-  startInitializatioOfList(dataObject);
+  if(app.isCurrentTimeNearEnd(emp)){
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+    if(hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyEndTimeCheckIn',true);
+      localStorage.removeItem('dailyStartTimeCheckIn')
+      dataObject.checkin = true;
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+
   return;
 }, true);
 }

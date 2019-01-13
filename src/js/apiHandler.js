@@ -287,6 +287,7 @@ function createObjectStores(request, data) {
   map.createIndex('latitude', 'latitude')
   map.createIndex('longitude', 'longitude')
   map.createIndex('nearby', ['status', 'hidden'])
+  map.createIndex('byOffice',['office','location'])
 
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'

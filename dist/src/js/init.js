@@ -666,7 +666,7 @@ function openListWithChecks() {
   setInterval(function () {
     manageLocation();
   }, 5000);
-
+  
   listView();
   isEmployeeOnLeave().then(function (emp) {
     runAppChecks(emp);
