@@ -883,5 +883,7 @@ function getInputText(selector) {
 
 
 function runRead(value) {
-  requestCreator('Null',value);
+  if(localStorage.getItem('dbexist')) {
+    requestCreator('Null',value);
+  }
 }

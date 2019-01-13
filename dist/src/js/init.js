@@ -87,8 +87,7 @@ var app = function () {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
-
-      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
+      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
     },
     isCurrentTimeNearStart: function isCurrentTimeNearStart(emp) {
       var startTime = emp.attachment['Daily Start Time'].value;
@@ -499,7 +498,8 @@ function idbVersionLessThan3(auth) {
           calendar.createIndex('onLeave', ['template', 'status', 'office']);
           var children = req.transaction.objectStore('children');
           children.createIndex('templateStatus', ['template', 'status']);
-
+          var map = req.transaction.objectStore('map');
+          map.createIndex('byOffice', ['office', 'location']);
           break;
         case 3:
           value = false;
@@ -517,7 +517,7 @@ function idbVersionLessThan3(auth) {
     };
     req.onerror = function () {
       reject({
-        error: req.error,
+        error: req.error.message,
         device: native.getInfo()
       });
     };
@@ -633,17 +633,32 @@ function runAppChecks(emp) {
     if (newDay) {
       dataObject.urgent = true;
       dataObject.checkin = true;
-      if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
-        dataObject.checkin = true;
-      }
       startInitializatioOfList(dataObject);
       return;
     };
 
-    if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
-      dataObject.checkin = true;
+    if (app.isCurrentTimeNearStart(emp)) {
+      var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+      if (hasAlreadyCheckedIn == null) {
+        localStorage.setItem('dailyStartTimeCheckIn', true);
+        localStorage.removeItem('dailyEndTimeCheckIn');
+        dataObject.checkin = true;
+        startInitializatioOfList(dataObject);
+      }
+
+      return;
     }
-    startInitializatioOfList(dataObject);
+    if (app.isCurrentTimeNearEnd(emp)) {
+      var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+      if (_hasAlreadyCheckedIn == null) {
+        localStorage.setItem('dailyEndTimeCheckIn', true);
+        localStorage.removeItem('dailyStartTimeCheckIn');
+        dataObject.checkin = true;
+        startInitializatioOfList(dataObject);
+      }
+      return;
+    }
+
     return;
   }, true);
 }
@@ -666,16 +681,10 @@ function openListWithChecks() {
   setInterval(function () {
     manageLocation();
   }, 5000);
-  
+
   listView();
   isEmployeeOnLeave().then(function (emp) {
     runAppChecks(emp);
   });
 }
 
-function getFcmTokenFromAndroid(token) {
-  return new Promise(function (resolve, reject) {
-    var token = fcm.getToken();
-    resolve(token);
-  });
-}

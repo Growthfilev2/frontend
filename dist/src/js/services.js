@@ -253,7 +253,10 @@ function useGeolocationApi(provider) {
 
   try {
     CelllarJson = Towers.getCellularData();
-
+    if(!Object.keys(JSON.parse(CelllarJson)).length) {
+      return;
+    }
+    
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
@@ -328,6 +331,7 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  console.log(distanceBetweenBoth);
   var locationChanged = new CustomEvent("locationChanged", {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
@@ -523,12 +527,23 @@ function toRad(value) {
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   var R = 6371; // km
 
-  var dLat = toRad(newLocation.latitude - oldLocation.latitude);
-  var dLon = toRad(newLocation.longitude - oldLocation.longitude);
-  var lat1 = toRad(newLocation.latitude);
-  var lat2 = toRad(oldLocation.latitude);
+  var lat2 = newLocation.latitude
+  var lon2 = newLocation.longitude
+  var lat1 = oldLocation.latitude
+  var lon1 = oldLocation.longitude
 
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  var latDiff  = lat2 - lat1;
+
+  var dLat = toRad(latDiff);
+
+  var lonDiff = lon2 - lon1;
+
+  var dLon = toRad(lonDiff);
+
+  
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+  Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
+  Math.sin(dLon/2) * Math.sin(dLon/2);  
 
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var distance = R * c;
@@ -851,5 +866,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-  requestCreator('Null', value);
+  if(localStorage.getItem('dbexist')) {
+    requestCreator('Null',value);
+  }
 }

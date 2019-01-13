@@ -49,7 +49,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB(event.data.body, event.data.user);
+    updateIDB({swipe:event.data.body, user:event.data.user});
     return;
   }
 
@@ -108,7 +108,7 @@ function fetchServerTime(body, user) {
 
   console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
-    var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registration=' + body.registerToken;
+    var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registrationToken=' + body.registerToken;
     var httpReq = {
       method: 'GET',
       url: url,
@@ -279,6 +279,7 @@ function createObjectStores(request, data) {
   map.createIndex('latitude', 'latitude');
   map.createIndex('longitude', 'longitude');
   map.createIndex('nearby', ['status', 'hidden']);
+  map.createIndex('byOffice', ['office', 'location']);
 
   var children = db.createObjectStore('children', {
     keyPath: 'activityId'
