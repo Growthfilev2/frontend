@@ -1,5 +1,6 @@
-
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+
 let deviceInfo;
 
 // get Device time
@@ -53,9 +54,9 @@ self.onmessage = function (event) {
     return;
   }
 
-  requestFunctionCaller[event.data.type](event.data.body).then(function (backToList) {
+  requestFunctionCaller[event.data.type](event.data.body,event.data.user).then(function (backToList) {
     if (backToList) {
-      requestHandlerResponse('notification', 200, 'status changed successfully', dbName)
+      requestHandlerResponse('notification', 200, 'status changed successfully');
     }
   }).catch(function (error) {
     console.log(error)
@@ -95,7 +96,7 @@ function http(request) {
       }
     }
 
-    xhr.send(request.data || null)
+    xhr.send(request.body || null)
   }).catch(function (error) {
 
     instant(createLog(error))
@@ -109,12 +110,12 @@ function fetchServerTime(body,user) {
 
   console.log(typeof parsedDeviceInfo.appVersion)
   return new Promise(function (resolve) {
-    const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registration=${info.token}`
+    const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registration=${body.registerToken}`
     const httpReq = {
       method:'GET',
       url: url,
-      data:null,
-      token:user.token
+      body:null,
+      token: user.token
     }
 
     http(httpReq).then(function (response) {
@@ -153,7 +154,7 @@ function fetchServerTime(body,user) {
 
       resolve({
         ts: response.timestamp,
-        fromTime: info.from,
+        fromTime: body.from,
         user:user,
         swipe:false
       })
@@ -180,10 +181,10 @@ function instant(error) {
  */
 
 
-function fetchRecord(dbName, id) {
+function fetchRecord(uid, id) {
   return new Promise(function (resolve) {
 
-    const req = indexedDB.open(dbName)
+    const req = indexedDB.open(uid)
     req.onsuccess = function (event) {
       const db = req.result
       const objStore = db.transaction('activity').objectStore('activity')
@@ -199,7 +200,7 @@ function fetchRecord(dbName, id) {
 function initializeIDB(data) {
   console.log("init db")
   return new Promise(function (resolve, reject) {
-    const request = indexedDB.open(auth.uid, 3);
+    const request = indexedDB.open(data.user.uid, 3);
     request.onerror = function () {
       console.log(request.error)
       reject(request.error)
@@ -220,14 +221,13 @@ function initializeIDB(data) {
       }
       rootTx.oncomplete = function () {
         requestHandlerResponse('manageLocation');
-        resolve({swipe:data.siwpe,user:data.user})
+        resolve({swipe:data.swipe,user:data.user})
       }
     }
   })
 }
 
 function createObjectStores(request, data) {
-  console.log(fromTime)
   const db = request.result;
 
   const activity = db.createObjectStore('activity', {
@@ -275,7 +275,8 @@ function createObjectStores(request, data) {
   calendar.createIndex('timestamp', 'timestamp')
   calendar.createIndex('start', 'start')
   calendar.createIndex('end', 'end')
-  calendar.createIndex('urgent', ['status', 'hidden'])
+  calendar.createIndex('urgent', ['status', 'hidden']),
+  calendar.createIndex('onLeave',['template','status','office']);
 
   const map = db.createObjectStore('map', {
     autoIncrement: true
@@ -293,7 +294,7 @@ function createObjectStores(request, data) {
 
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
-
+  children.createIndex('templateStatus',['template','status']);
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   })
@@ -312,7 +313,7 @@ function comment(body,auth) {
     const req = {
       method:'POST',
       url:`${apiUrl}activities/comment`,
-      data: JSON.stringify(body),
+      body: JSON.stringify(body),
       token:auth.token
     }
     http(req).then(function () {
@@ -326,15 +327,15 @@ function comment(body,auth) {
 function statusChange(body,user) {
 
   return new Promise(function (resolve, reject) {
-    fetchRecord(dbName, body.activityId).then(function (originalRecord) {
+    fetchRecord(user.uid, body.activityId).then(function (originalRecord) {
       const req = {
         method:'PATCH',
         url: `${apiUrl}activities/change-status`,
-        data:JSON.stringify(body),
-        user:user
+        body:JSON.stringify(body),
+        token:user.token
       }
       http(req).then(function (success) {
-        instantUpdateDB(req,'status').then(function () {
+        instantUpdateDB(body,'status',user).then(function () {
           resolve(true)
         }).catch(console.log)
       }).catch(function (error) {
@@ -351,11 +352,11 @@ function share(body,user) {
       method:'PATCH',
       url: `${apiUrl}activities/share`,
       body: JSON.stringify(body),
-      user:user
+      token:user.token
     }
     http(req)
       .then(function (success) {
-        instantUpdateDB(req,'share').then(function () {
+        instantUpdateDB(body,'share',user).then(function () {
           resolve(true)
         })
       })
@@ -374,11 +375,11 @@ function update(body,user) {
       method:'PATCH',
       url:`${apiUrl}activities/update`,
       body:JSON.stringify(body),
-      user:user
+      token:user.token
     }
     http(req)
       .then(function (success) {
-        instantUpdateDB(req ,'update').then(function () {
+        instantUpdateDB(body ,'update',user).then(function () {
           resolve(true)
         })
       })
@@ -395,7 +396,7 @@ function create(body,user) {
       method:'POST',
       url:`${apiUrl}activities/create`,
       body:JSON.stringify(body),
-      user:user
+      token:user.token
     }
     http(req)
       .then(function (success) {
@@ -408,11 +409,10 @@ function create(body,user) {
 }
 
 
-function instantUpdateDB(req, type) {
+function instantUpdateDB(data, type,user) {
   return new Promise(function (resolve, reject) {
-    console.log(req)
-    const idbRequest = indexedDB.open(req.user.uid);
-    const data = req.body;
+   
+    const idbRequest = indexedDB.open(user.uid);
 
     idbRequest.onsuccess = function () {
       const db = idbRequest.result
@@ -556,15 +556,16 @@ function updateCalendar(activity,param) {
 // present inside activity object store.
 
 function putAttachment(db, activity) {
-  const chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children')
+  const chidlrenObjectStore = db.transaction('children', 'readwrite').objectStore('children');
 
-  chidlrenObjectStore.put({
+  const commonSet = {
     activityId: activity.activityId,
     status: activity.status,
     template: activity.template,
     office: activity.office,
-    attachment: activity.attachment
-  })
+    attachment: activity.attachment,
+  }
+  chidlrenObjectStore.put(commonSet)
 }
 
 // if an assignee's phone number is present inside the users object store then
@@ -606,7 +607,7 @@ function removeUserFromAssigneeInActivity(db, userActivityId) {
   }
 }
 
-function removeActivityFromDB(db, myActivities) {
+function removeActivityFromDB(db, myActivities,param) {
   if (!myActivities.length) return;
   const transaction = db.transaction(['activity', 'list', 'children'], 'readwrite')
   const activityObjectStore = transaction.objectStore('activity');
@@ -628,13 +629,13 @@ function removeActivityFromDB(db, myActivities) {
   })
 
   transaction.oncomplete = function () {
-    mapAndCalendarRemovalRequest(activitiesToRemove)
+    mapAndCalendarRemovalRequest(activitiesToRemove,param)
   }
 }
 
-function mapAndCalendarRemovalRequest(activitiesToRemove) {
+function mapAndCalendarRemovalRequest(activitiesToRemove,param) {
 
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  const req = indexedDB.open(param.user.uid)
   req.onsuccess = function () {
     const db = req.result;
     const tx = db.transaction(['calendar', 'map'], 'readwrite')
@@ -804,8 +805,8 @@ function updateSubscription(db, subscription,param) {
   }).catch(console.log)
 }
 
-function createListStore(activity, counter) {
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
+function createListStore(activity, counter,param) {
+  const req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     const db = req.result;
     const listTx = db.transaction(['list'], 'readwrite');
@@ -894,7 +895,7 @@ function successResponse(read,param) {
     read.addendum.forEach(function (addendum) {
       if (addendum.unassign) {
 
-        if (addendum.user == firebase.auth().currentUser.phoneNumber) {
+        if (addendum.user == param.user.phoneNumber) {
           removeActivitiesForUser.push(addendum.activityId)
         } else {
           removeActivitiesForOthers.push({
@@ -908,8 +909,8 @@ function successResponse(read,param) {
       addendumObjectStore.add(addendum)
     })
 
-    removeActivityFromDB(db, removeActivitiesForUser);
-    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers);
+    removeActivityFromDB(db, removeActivitiesForUser,param);
+    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers,param);
 
 
 
@@ -924,7 +925,7 @@ function successResponse(read,param) {
         activityObjectStore.put(activity)
       }
       if (activity.hidden === 0) {
-        createListStore(activity, counter)
+        createListStore(activity, counter,param)
       }
 
       updateMap(activity,param)
@@ -1015,8 +1016,8 @@ function updateIDB(param) {
     const tx = db.transaction(['root']);
     const rootObjectStore = tx.objectStore('root');
     let record;
-    rootObjectStore.get(param.dbName).onsuccess = function (event) {
-      record = event.target.data;
+    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+      record = event.target.result;
     }
     tx.oncomplete = function(){
       const req = {

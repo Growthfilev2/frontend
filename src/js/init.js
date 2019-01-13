@@ -1,20 +1,9 @@
-
-
-firebase.initializeApp({
-  apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-  authDomain: "growthfilev2-0.firebaseapp.com",
-  databaseURL: "https://growthfilev2-0.firebaseio.com",
-  projectId: "growthfilev2-0",
-  storageBucket: "growthfilev2-0.appspot.com",
-  messagingSenderId: "1011478688238"
-})
-
 let native = function () {
   return {
-    setFCMToken:function(token){
-      localStorage.setItem('token',token)
+    setFCMToken: function (token) {
+      localStorage.setItem('token', token)
     },
-    getFCMToken : function(){
+    getFCMToken: function () {
       return localStorage.getItem('token')
     },
     setName: function (device) {
@@ -70,28 +59,57 @@ let native = function () {
   }
 }();
 
+let app = function () {
+  return {
 
-window.onerror = function (msg, url, lineNo, columnNo, error) {
-  const errorJS = {
-    message: {
-      msg: error.message,
-      url: url,
-      lineNo: lineNo,
-      columnNo: columnNo,
-      stack: error.stack,
-      name: error.name,
-      device: native.getInfo(),
+    today: function (format) {
+      if (!format) return moment();
+      return moment().format(format);
+    },
+
+    tomorrow: function () {
+      return moment(this.today()).add(1, 'day');
+    },
+    getLastLocationTime: function () {
+      return new Promise(function (resolve, reject) {
+        getRootRecord().then(function (rootRecord) {
+          resolve(rootRecord.location.lastLocationTime);
+        }).catch(function (error) {
+          reject(error)
+        })
+      })
+    },
+
+    isNewDay: function (auth) {
+      const today = localStorage.getItem('today');
+      if (today == null) {
+        localStorage.setItem('today', moment())
+        return true;
+      }
+      if (moment().isSame(moment(today))) {
+        return false;
+      }
+      return true;
+    },
+    isCurrentTimeNearStart: function (emp) {
+      const startTime = emp.attachment['Daily Start Time'].value
+      const format = 'hh:mm:ss'
+      const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
+      const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
+      return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
+      
+    },
+    isCurrentTimeNearEnd: function (emp) {
+      
+      const endTime = emp.attachment['Daily End Time'].value
+      const format = 'hh:mm:ss'
+      const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
+      const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
+
+      return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
     }
   }
-  requestCreator('instant', JSON.stringify(errorJS))
-}
-
-// initialize smooth scrolling
-window.scrollBy({
-  top: 100,
-  left: 0,
-  behavior: 'smooth'
-})
+}();
 
 
 
@@ -125,6 +143,18 @@ window.addEventListener('load', function () {
     return
   }
 
+
+
+  firebase.initializeApp({
+    apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
+    authDomain: "growthfilev2-0.firebaseapp.com",
+    databaseURL: "https://growthfilev2-0.firebaseio.com",
+    projectId: "growthfilev2-0",
+    storageBucket: "growthfilev2-0.appspot.com",
+    messagingSenderId: "1011478688238"
+  })
+
+
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -147,21 +177,46 @@ window.addEventListener('load', function () {
 
   })
 
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    const errorJS = {
+      message: {
+        msg: error.message,
+        url: url,
+        lineNo: lineNo,
+        columnNo: columnNo,
+        stack: error.stack,
+        name: error.name,
+        device: native.getInfo(),
+      }
+    }
+    requestCreator('instant', JSON.stringify(errorJS))
+  }
+
+  // initialize smooth scrolling
+  window.scrollBy({
+    top: 100,
+    left: 0,
+    behavior: 'smooth'
+  })
+
+  window.onpopstate = function (event) {
+
+    if (!event.state) return;
+    if (event.state[0] === 'listView') {
+      window[event.state[0]]()
+      return;
+    }
+    window[event.state[0]](event.state[1], false)
+  }
+
+
+
   layoutGrid()
 
   startApp()
 
 })
 
-window.onpopstate = function (event) {
-
-  if (!event.state) return;
-  if (event.state[0] === 'listView') {
-    window[event.state[0]]()
-    return;
-  }
-  window[event.state[0]](event.state[1], false)
-}
 
 function backNav() {
   history.back();
@@ -364,89 +419,35 @@ function startApp() {
       userSignedOut()
       return
     }
+
     if (localStorage.getItem('dbexist')) {
       init(auth)
     }
-
   })
 }
 // new day suggest
 // if location changes
-let app = function () {
-  return {
-
-    today: function (format) {
-      if (!format) return moment();
-      return moment(format);
-    },
-
-    tomorrow: function () {
-      return moment(this.today()).add(1, 'day');
-    },
-    getLastLocationTime: function () {
-      return new Promise(function (resolve, reject) {
-        getRootRecord().then(function (rootRecord) {
-          resolve(rootRecord.location.lastLocationTime);
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    },
-    isNewDay: function (auth) {
-      return new Promise(function (resolve, reject) {
-
-        app.getLastLocationTime().then(function (time) {
-          if (moment(time).isSame(app.today(), 'day')) {
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    },
-    isCurrentTimeNearStart: function (emp) {
-      const startTime = emp.attachment['Daily Start Time'].value
-      const format = 'hh:mm:ss'
-      const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
-      const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
-      const time = moment(this.today(), format)
-
-      if (time.isBetween(offsetStartBefore, offsetStartAfter, null, '[]')) {
-        return true
-      }
-      return false
-    },
-    isCurrentTimeNearEnd: function (emp) {
-      const endTime = emp.attachment['Daily End Time'].value
-      const format = 'hh:mm:ss'
-      const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
-      const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-      const time = moment(this.today(), format)
-      if (time.isBetween(offsetEndBefore, offsetEndAfter, null, '[]')) {
-        return true
-      }
-      return false
-    }
-  }
-}();
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    const auth = firebase.auth().currentUser
+    const req = indexedDB.open(auth.uid)
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
       let details;
-      store.index('template').openCursor('employee').onsuccess = function (event) {
+      const phoneNumberEmp = auth.phoneNumber;
+      const range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+
+      store.index('templateStatus').openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if (cursor.value.status !== 'CONFIRMED') {
+        if (cursor.value.attachment['Employee Contact'].value !== auth.phoneNumber) {
           cursor.continue();
           return;
         }
+
         details = cursor.value
         cursor.continue();
       }
@@ -461,33 +462,25 @@ function isEmployeeOnLeave() {
   return new Promise(function (resolve, reject) {
 
     getEmployeeDetails().then(function (empDetails) {
-
-      empDetails.onLeave = false
+     
+      if(!empDetails) {
+        return resolve({onLeave:false})
+      }
+     
+     empDetails.onLeave = false
       const req = indexedDB.open(firebase.auth().currentUser.uid);
       req.onsuccess = function () {
         const db = req.result;
         const tx = db.transaction(['calendar']);
         const store = tx.objectStore('calendar');
-        store.index().openCursor(empDetails.activityId, 'next').onsuccess = function (event) {
+        const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
+
+        store.index('onLeave').openCursor(range).onsuccess = function (event) {
 
           const cursor = event.target.result;
           if (!cursor) return;
-          if (cursor.value.office !== empDetails.office) {
-            cursor.continue();
-            return;
-          }
 
-          if (cursor.value.template !== 'leave') {
-            cursor.continue();
-            return;
-          }
-
-          if (cursor.value.status !== 'CONFIRMED') {
-            cursor.continue();
-            return;
-          }
-
-          if (this.today().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+          if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
             empDetails.onLeave = true
             return;
           }
@@ -510,34 +503,35 @@ function isEmployeeOnLeave() {
 
 function idbVersionLessThan3(auth) {
   return new Promise(function (resolve, reject) {
-   
+
     const req = indexedDB.open(auth.uid, 3);
     let db;
     let reset = {
-      value:false,
-      version:''
+      value: false,
+      version: ''
     };
     req.onupgradeneeded = function (evt) {
-      switch(evt.oldVersion) {
+      switch (evt.oldVersion) {
         case 1:
-        reset.value = true;
-        reset.version = 1;
-        break;
+          reset.value = true;
+          reset.version = 1;
+          break;
         case 2:
-        value = false;
-        reset.version = 2;
-        const calendar =  request.transaction.objectStore('calendar');
-        calendar.createIndex('onLeave',['template','status','office']);
-        const children = request.transaction.objectStore('children');
-        children.createIndex('employee',['template','status']);
-        break;
+          value = false;
+          reset.version = 2;
+          const calendar = request.transaction.objectStore('calendar');
+          calendar.createIndex('onLeave', ['template', 'status', 'office']);
+          const children = request.transaction.objectStore('children');
+          children.createIndex('templateStatus', ['template', 'status']);
+
+          break;
         case 3:
-        value = false;
-        reset.version = 3
-        break;
+          value = false;
+          reset.version = 3
+          break;
         default:
-        reset.value = true;
-        reset.version = ''
+          reset.value = true;
+          reset.version = ''
       }
     }
     req.onsuccess = function () {
@@ -583,25 +577,23 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
-
   document.getElementById("main-layout-app").style.display = 'block'
-
   idbVersionLessThan3(auth).then(function (reset) {
-
     if (localStorage.getItem('dbexist')) {
       from = 1;
-      if(reset.value) {
+      if (reset.value) {
         resetApp(auth, from);
         return;
       }
-      
+
       requestCreator('now', {
-          device: native.getInfo(),
-          from: ''
+        device: native.getInfo(),
+        from: '',
+        registerToken: native.getFCMToken()
       });
-      isEmployeeOnLeave().then(function (emp) {
-          openListWithChecks(emp)
-      })  
+
+      openListWithChecks()
+
       return;
     }
 
@@ -625,7 +617,8 @@ function resetApp(auth, from) {
 
     requestCreator('now', {
       device: native.getInfo(),
-      from: from
+      from: from,
+      registerToken: native.getFCMToken()
     });
 
   }).catch(function (error) {
@@ -640,7 +633,7 @@ function runAppChecks(emp) {
   // suggest check in false
 
   window.addEventListener('locationChanged', function _locationChanged(e) {
- 
+
     let dataObject = {
       urgent: false,
       nearby: false,
@@ -649,30 +642,30 @@ function runAppChecks(emp) {
     if (emp.onLeave) {
       dataObject.checkin = false
     }
-    
+
     const changed = e.detail;
-    app.isNewDay().then(function (newDay) {
-      
-      if (changed) {
-        dataObject.nearby = true;
-        dataObject.checkin = true;
-        if (newDay) {
-          dataObject.urgent = true
-        }
-        startInitializatioOfList(dataObject)
-        return;
-      }
+    const newDay = app.isNewDay();
+
+    if (changed) {
+      dataObject.nearby = true;
+      dataObject.checkin = true;
       if (newDay) {
         dataObject.urgent = true
-        if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
-          dataObject.checkin = true
-        }
-        startInitializatioOfList(dataObject);
-        return;
-      };
-       startInitializatioOfList(dataObject);
-       return;
-    })
+      }
+      startInitializatioOfList(dataObject)
+      return;
+    }
+    if (newDay) {
+      dataObject.urgent = true
+      if (app.isCurrentTimeNearStart(emp) || app.isCurrentTimeNearEnd(emp)) {
+        dataObject.checkin = true
+      }
+      startInitializatioOfList(dataObject);
+      return;
+    };
+    //  startInitializatioOfList(dataObject);
+    return;
+
   }, true);
 
 }
@@ -681,26 +674,29 @@ function startInitializatioOfList(data) {
   console.log(data)
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
-    if(history.state[0] === 'listView' || !history.state) {
+    if (history.state[0] === 'listView' || !history.state) {
       listView({
         urgent: data.urgent,
         nearby: data.nearby
-      }); 
+      });
     }
   })
 }
 
-function openListWithChecks(emp) {
+function openListWithChecks() {
   manageLocation();
   setInterval(function () {
     manageLocation();
   }, 5000);
+
   listView();
-  runAppChecks(emp);
+  isEmployeeOnLeave().then(function (emp) {
+    runAppChecks(emp);
+  })
 }
 
-function getFcmTokenFromAndroid(token){
-  return new Promise(function(resolve,reject){
+function getFcmTokenFromAndroid(token) {
+  return new Promise(function (resolve, reject) {
     const token = fcm.getToken();
     resolve(token)
   })

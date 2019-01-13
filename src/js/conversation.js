@@ -1249,7 +1249,7 @@ function createTempRecord(office, template, data) {
     req.onsuccess = function () {
       const db = req.result
       const tx = db.transaction(['subscriptions']);
-      const subscription = db.objectStore('subscriptions')
+      const subscription = tx.objectStore('subscriptions')
       const officeTemplateCombo = subscription.index('officeTemplate')
       const range = IDBKeyRange.only([office, template])
       officeTemplateCombo.get(range).onsuccess = function (event) {
@@ -1258,8 +1258,6 @@ function createTempRecord(office, template, data) {
           console.log("no such combo")
           return;
         }
-
-    
 
         const bareBonesScheduleArray = []
         console.log(selectedCombo)
@@ -1285,12 +1283,11 @@ function createTempRecord(office, template, data) {
           create: true
         }
 
-
         const bareBonesVenueArray = []
 
         selectedCombo.venue.forEach(function (venue) {
           const bareBonesVenue = {}
-          bareBonesVenue.venueDescriptor = venue.venueDescriptor
+          bareBonesVenue.venueDescriptor = venue
           bareBonesVenue.location = ''
           bareBonesVenue.address = ''
           bareBonesVenue.geopoint = {
@@ -1316,11 +1313,12 @@ function createTempRecord(office, template, data) {
               removeDialog()
             })
             return;
-          } 
-          bareBonesVenueArray.push(bareBonesVenue)
-          updateCreateActivity(bareBonesRecord)
-          removeDialog()
+          }
+          bareBonesVenueArray.push(bareBonesVenue);          
         });
+        bareBonesRecord.venue = bareBonesVenueArray
+        updateCreateActivity(bareBonesRecord)
+          removeDialog()
       }
     }
   });

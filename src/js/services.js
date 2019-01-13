@@ -628,7 +628,7 @@ function iosConnectivity(connectivity) {
   }
 }
 
-function resetLoaders() {
+function resetLoaders(data) {
   if (native.getName() === 'Android') {
 
     if (document.getElementById('send-activity')) {
@@ -653,6 +653,7 @@ function resetLoaders() {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
+  snacks(data.msg);
 }
 
 function requestCreator(requestType, requestBody) {
@@ -673,7 +674,7 @@ function requestCreator(requestType, requestBody) {
   
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    user.getIdToken(false).then(function(){
+    auth.getIdToken(false).then(function(token){
 
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
@@ -722,7 +723,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
-    auth.getIdToken(false).then(function(token){
+    firebase.auth().currentUser.getIdToken(false).then(function(token){
 
     const data = e.detail;
     var geopoints = {
@@ -770,7 +771,6 @@ const receiverCaller = {
   'notification': successDialog,
   'manageLocation': manageLocation,
   'error': resetLoaders,
-  'reset-offset': resetOffset,
   'android-stop-refreshing': androidStopRefreshing,
   'updateIDB': updateIDB,
   'redirect-to-list': changeState,
@@ -817,9 +817,8 @@ function updateIDB(data) {
   }
 
   if (!history.state) {
-    isEmployeeOnLeave().then(function (emp) {
-      openListWithChecks(emp)
-    })  
+    localStorage.setItem('today',null);
+    openListWithChecks()    
     return;
   }
 
