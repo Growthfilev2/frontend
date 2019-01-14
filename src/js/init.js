@@ -83,7 +83,7 @@ let app = function () {
     },
     isCurrentTimeNearStart: function (emp) {
       const startTime = emp.attachment['Daily Start Time'].value
-      const format = 'hh:mm:ss'
+      const format = 'hh:mm'
       const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
       const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
       return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
@@ -92,10 +92,10 @@ let app = function () {
     isCurrentTimeNearEnd: function (emp) {
       
       const endTime = emp.attachment['Daily End Time'].value
-      const format = 'hh:mm:ss'
+      const format = 'hh:mm'
       const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
       const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-
+    
       return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
     }
   }
@@ -221,7 +221,6 @@ function firebaseUiConfig(value) {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-
         if (value) {
           updateEmail(authResult.user, value);
         } else {
@@ -575,6 +574,7 @@ function removeIDBInstance(auth) {
 function init(auth) {
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
+
     if (localStorage.getItem('dbexist')) {
       from = 1;
       if (reset.value) {
