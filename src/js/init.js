@@ -628,65 +628,71 @@ function resetApp(auth, from) {
   })
 }
 
-function runAppChecks(emp) {
+function runAppChecks() {
  // suggest check in false
 
  window.addEventListener('locationChanged', function _locationChanged(e) {
-
-  var dataObject = {
-    urgent: false,
-    nearby: false,
-    checkin: false
-  };
-
-  if (emp.onLeave) {
-    dataObject.checkin = false;
-  }
-
-  var changed = e.detail;
-  var newDay = app.isNewDay();
-
-  if (changed) {
-    dataObject.nearby = true;
-    dataObject.checkin = true;
+  isEmployeeOnLeave().then(function (emp) {
+    var dataObject = {
+      urgent: false,
+      nearby: false,
+      checkin: false
+    };
+ 
+    var changed = e.detail;
+    var newDay = app.isNewDay();
+    
+    if (changed) {
+      dataObject.nearby = true;
+      if(!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      if (newDay) {
+        dataObject.urgent = true;
+      }
+      startInitializatioOfList(dataObject);
+      return;
+    }
+    
     if (newDay) {
+      localStorage.removeItem('dailyStartTimeCheckIn');
+      localStorage.removeItem('dailyEndTimeCheckIn');
+    
       dataObject.urgent = true;
-    }
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (newDay) {
-    dataObject.urgent = true;
-    dataObject.checkin = true;
-    startInitializatioOfList(dataObject);
-    return;
-  };
-
-  if(app.isCurrentTimeNearStart(emp)) {
-    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-    if(hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyStartTimeCheckIn',true);
-      localStorage.removeItem('dailyEndTimeCheckIn')
-      dataObject.checkin = true;
+      if(!emp.onLeave) {
+        dataObject.checkin = true;
+      }
       startInitializatioOfList(dataObject);
+      return;
+    };
+    
+    if(app.isCurrentTimeNearStart(emp)) {
+      const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+      if(hasAlreadyCheckedIn == null) {
+        localStorage.setItem('dailyStartTimeCheckIn',true);
+        if(!emp.onLeave) {
+            dataObject.checkin = true;
+        }
+        startInitializatioOfList(dataObject);
+      }
+      return;
     }
-    return;
-  }
-  
-  if(app.isCurrentTimeNearEnd(emp)){
-    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-    if(hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyEndTimeCheckIn',true);
-      localStorage.removeItem('dailyStartTimeCheckIn')
-      dataObject.checkin = true;
-      startInitializatioOfList(dataObject);
+    
+    if(app.isCurrentTimeNearEnd(emp)){
+      const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+      if(hasAlreadyCheckedIn == null) {
+        localStorage.setItem('dailyEndTimeCheckIn',true);
+        if(!emp.onLeave) {
+            dataObject.checkin = true;
+        }
+        startInitializatioOfList(dataObject);
+      }
+      return;
     }
+    
     return;
-  }
-
-  return;
-}, true);
+  })
+  }, true);
 }
 
 function startInitializatioOfList(data) {
@@ -709,14 +715,6 @@ function openListWithChecks() {
   }, 5000);
 
   listView();
-  isEmployeeOnLeave().then(function (emp) {
-    runAppChecks(emp);
-  })
-}
-
-function getFcmTokenFromAndroid(token) {
-  return new Promise(function (resolve, reject) {
-    const token = fcm.getToken();
-    resolve(token)
-  })
+  
+  runAppChecks();
 }
