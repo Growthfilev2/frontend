@@ -1,18 +1,8 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-<<<<<<< HEAD
-// import firebase app script because there is no native support of firebase inside web workers
-
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/5.0.4/firebase-auth.js');
-importScripts('../../external/js/moment.min.js');
-// Backend API Url
-var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
-=======
 importScripts('../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
->>>>>>> development
 var deviceInfo = void 0;
 
 // get Device time
@@ -20,7 +10,6 @@ function getTime() {
   return Date.now();
 }
 
-<<<<<<< HEAD
 firebase.initializeApp({
   apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
   authDomain: 'growthfile-207204.firebaseapp.com',
@@ -30,8 +19,6 @@ firebase.initializeApp({
   messagingSenderId: '701025551237'
 });
 
-=======
->>>>>>> development
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
 var requestFunctionCaller = {
@@ -88,18 +75,6 @@ self.onmessage = function (event) {
 
 function http(request) {
   return new Promise(function (resolve, reject) {
-<<<<<<< HEAD
-    firebase.auth().currentUser.getIdToken(true).then(function (idToken) {
-      var xhr = new XMLHttpRequest();
-
-      xhr.open(method, url, true);
-
-      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      xhr.setRequestHeader('Content-Type', 'application/json');
-      xhr.setRequestHeader('Authorization', 'Bearer ' + idToken);
-
-      xhr.onreadystatechange = function () {
-=======
     var xhr = new XMLHttpRequest();
     xhr.open(request.method, request.url, true);
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
@@ -109,7 +84,6 @@ function http(request) {
     xhr.onreadystatechange = function () {
       // console.log(xhr.status)
       if (xhr.readyState === 4) {
->>>>>>> development
         // console.log(xhr.status)
         if (!xhr.status) {
           requestHandlerResponse('android-stop-refreshing', 400, 'true');
@@ -130,17 +104,10 @@ function http(request) {
       }
     };
 
-<<<<<<< HEAD
-      xhr.send(data || null);
-    }).catch(function (error) {
-      instant(JSON.stringify({ message: error, time: Date.now() }));
-    });
-=======
     xhr.send(request.body || null);
   }).catch(function (error) {
 
     instant(createLog(error));
->>>>>>> development
   });
 }
 
@@ -214,15 +181,11 @@ function instant(error) {
   // }).catch(console.log)
 }
 
-<<<<<<< HEAD
-function fetchRecord(dbName, id) {
-=======
 /**
  * Initialize the indexedDB with database of currently signed in user's uid.
  */
 
 function fetchRecord(uid, id) {
->>>>>>> development
   return new Promise(function (resolve) {
 
     var req = indexedDB.open(uid);
@@ -1034,11 +997,7 @@ function updateIDB(param) {
       };
       http(req).then(function (response) {
         if (!response) return;
-<<<<<<< HEAD
-        successResponse(response, param.swipe);
-=======
         successResponse(response, param);
->>>>>>> development
       }).catch(function (error) {
         instant(createLog(error));
       });

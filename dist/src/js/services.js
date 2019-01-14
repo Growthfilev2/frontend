@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-var offset = '';
-var apiHandler = new Worker('src/js/apiHandler.js');
-=======
 var apiHandler = new Worker('js/apiHandler.js');
->>>>>>> development
 
 function handleImageError(img) {
   img.onerror = null;
@@ -263,14 +258,9 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-<<<<<<< HEAD
-    
-    CelllarJson = Towers.getCellularData();
-=======
     CelllarJson = Towers.getCellularData();
     if (!Object.keys(JSON.parse(CelllarJson)).length) return;
 
->>>>>>> development
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
     if (provider === 'MOCK') {
