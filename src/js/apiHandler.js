@@ -41,7 +41,7 @@ function createLog(body) {
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function(){
-      
+
     }).catch(console.log);
     return
   }
@@ -482,21 +482,23 @@ function updateMap(activity,param) {
     mapTx.oncomplete = function () {
       const mapTx = db.transaction(['map'], 'readwrite')
       const mapObjectStore = mapTx.objectStore('map')
+      if(activity.template !== 'check-in') {
 
-      activity.venue.forEach(function (newVenue) {
-        mapObjectStore.add({
-          activityId: activity.activityId,
-          latitude: newVenue.geopoint['_latitude'],
-          longitude: newVenue.geopoint['_longitude'],
-          location: newVenue.location.toLowerCase(),
-          template: activity.template,
-          address: newVenue.address.toLowerCase(),
-          venueDescriptor: newVenue.venueDescriptor,
-          status: activity.status,
-          office: activity.office,
-          hidden: activity.hidden
+        activity.venue.forEach(function (newVenue) {
+          mapObjectStore.add({
+            activityId: activity.activityId,
+            latitude: newVenue.geopoint['_latitude'],
+            longitude: newVenue.geopoint['_longitude'],
+            location: newVenue.location.toLowerCase(),
+            template: activity.template,
+            address: newVenue.address.toLowerCase(),
+            venueDescriptor: newVenue.venueDescriptor,
+            status: activity.status,
+            office: activity.office,
+            hidden: activity.hidden
+          })
         })
-      })
+      }
     }
     mapTx.onerror = errorDeletingRecord
   }
