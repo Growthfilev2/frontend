@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -574,10 +574,6 @@ function sendCurrentViewNameToAndroid(viewName) {
   }
 }
 
-function inputFile(selector) {
-  return document.getElementById(selector);
-}
-
 function getNonLocationmessageString(name) {
   if (name === 'gps') {
     return 'Please Enable GPS to use Growthfile';
@@ -672,9 +668,8 @@ function requestCreator(requestType, requestBody) {
     }
   };
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
     auth.getIdToken(false).then(function (token) {
-
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       apiHandler.postMessage(requestGenerator);
@@ -762,8 +757,9 @@ var receiverCaller = {
   'manageLocation': manageLocation,
   'error': resetLoaders,
   'android-stop-refreshing': androidStopRefreshing,
-  'updateIDB': updateIDB,
-  'redirect-to-list': changeState
+  'loadView': loadView,
+  'redirect-to-list': changeState,
+  'backblazeRequest': urlFromBase64Image
 };
 
 function messageReceiver(response) {
@@ -797,7 +793,26 @@ function changeState(data) {
   history.pushState(['listView'], null, null);
 }
 
-function updateIDB(data) {
+function urlFromBase64Image(data) {
+
+  if (data.code === 200) {
+    if (data.msg.uploadLocation === 'profileView') {
+      updateAuth(data.msg.url);
+      return;
+    }
+    // for activity
+    return;
+  }
+  if (history.state[0] === 'profileView') {
+    var selector = document.querySelector('#profile--image-container .profile--loader ');
+    if (selector) {
+      selector.remove();
+    }
+    return;
+  }
+}
+
+function loadView(data) {
 
   androidStopRefreshing();
 

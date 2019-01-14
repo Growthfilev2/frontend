@@ -54,6 +54,11 @@ self.onmessage = function (event) {
     return;
   }
 
+  if(event.data.type === 'backblaze'){
+    getUrlFromPhoto(event.data.body,event.data.user)
+    return;
+  }
+
   requestFunctionCaller[event.data.type](event.data.body,event.data.user).then(function (backToList) {
     if (backToList) {
       requestHandlerResponse('notification', 200, 'status changed successfully');
@@ -409,6 +414,27 @@ function create(body,user) {
   })
 }
 
+function getUrlFromPhoto(body,user){
+  const parsedBody = JSON.parse(body);
+  const imageString = {imageBase64:parsedBody.imageBase64};
+  const uploadLocation = parsedBody.uploadLocation;
+
+  const req = {
+    method:'POST',
+    url:`${apiUrl}services/images`,
+    body:JSON.stringify(imageString),
+    token:user.token
+  }
+
+  http(req).then(function(url){
+    requestHandlerResponse('backblazeRequest',200,{url:url,uploadLocation:uploadLocation});
+
+  }).catch(function(error){
+    console.log(error)
+    requestHandlerResponse('backblazeRequest',400,{url:null,uploadLocation:uploadLocation});
+  })
+
+}
 
 function instantUpdateDB(data, type,user) {
   return new Promise(function (resolve, reject) {
@@ -955,7 +981,7 @@ function successResponse(read,param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('updateIDB', 200);
+        requestHandlerResponse('loadView', 200);
       })
     }
   }
