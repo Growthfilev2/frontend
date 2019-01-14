@@ -40,7 +40,9 @@ function createLog(body) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function(){
+      
+    }).catch(console.log);
     return
   }
 
