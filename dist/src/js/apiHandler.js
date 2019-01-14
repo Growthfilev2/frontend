@@ -39,7 +39,12 @@ function createLog(body) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function (result) {
+      if (result.fromTime == 0 || result.fromTime == 1) {
+        updateIDB({ user: result.user });
+        return;
+      }
+    }).catch(console.log);
     return;
   }
 
@@ -211,7 +216,7 @@ function initializeIDB(data) {
       };
       rootTx.oncomplete = function () {
         requestHandlerResponse('manageLocation');
-        resolve({ user: data.user });
+        resolve({ user: data.user, fromTime: data.fromTime });
       };
     };
   });
@@ -453,21 +458,23 @@ function updateMap(activity, param) {
     mapTx.oncomplete = function () {
       var mapTx = db.transaction(['map'], 'readwrite');
       var mapObjectStore = mapTx.objectStore('map');
+      if (activity.template !== 'check-in') {
 
-      activity.venue.forEach(function (newVenue) {
-        mapObjectStore.add({
-          activityId: activity.activityId,
-          latitude: newVenue.geopoint['_latitude'],
-          longitude: newVenue.geopoint['_longitude'],
-          location: newVenue.location.toLowerCase(),
-          template: activity.template,
-          address: newVenue.address.toLowerCase(),
-          venueDescriptor: newVenue.venueDescriptor,
-          status: activity.status,
-          office: activity.office,
-          hidden: activity.hidden
+        activity.venue.forEach(function (newVenue) {
+          mapObjectStore.add({
+            activityId: activity.activityId,
+            latitude: newVenue.geopoint['_latitude'],
+            longitude: newVenue.geopoint['_longitude'],
+            location: newVenue.location.toLowerCase(),
+            template: activity.template,
+            address: newVenue.address.toLowerCase(),
+            venueDescriptor: newVenue.venueDescriptor,
+            status: activity.status,
+            office: activity.office,
+            hidden: activity.hidden
+          });
         });
-      });
+      }
     };
     mapTx.onerror = errorDeletingRecord;
   };
@@ -911,7 +918,7 @@ function successResponse(read, param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('updateIDB', 200);
+        requestHandlerResponse('loadView', 200);
       });
     };
   };

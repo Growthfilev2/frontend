@@ -790,7 +790,7 @@ const receiverCaller = {
   'manageLocation': manageLocation,
   'error': resetLoaders,
   'android-stop-refreshing': androidStopRefreshing,
-  'updateIDB': updateIDB,
+  'loadView': loadView,
   'redirect-to-list': changeState,
 }
 
@@ -829,7 +829,7 @@ function changeState(data) {
 
 }
 
-function updateIDB(data) {
+function loadView(data) {
   
   androidStopRefreshing();
   
@@ -897,6 +897,7 @@ function onErrorMessage(error) {
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
+
 
 function runRead(value) {
 
