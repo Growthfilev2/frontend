@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-importScripts('../external/js/moment.min.js');
+importScripts('../../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
@@ -58,7 +58,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB({ swipe: event.data.body, user: event.data.user });
+    updateIDB({ user: event.data.user });
     return;
   }
 
@@ -86,7 +86,7 @@ function http(request) {
       if (xhr.readyState === 4) {
         // console.log(xhr.status)
         if (!xhr.status) {
-          requestHandlerResponse('android-stop-refreshing', 400, 'true');
+          requestHandlerResponse('android-stop-refreshing', 400);
           return;
         }
 
@@ -161,8 +161,8 @@ function fetchServerTime(body, user) {
       resolve({
         ts: response.timestamp,
         fromTime: body.from,
-        user: user,
-        swipe: false
+        user: user
+
       });
     }).catch(function (error) {
       instant(createLog(error));
@@ -224,7 +224,7 @@ function initializeIDB(data) {
       };
       rootTx.oncomplete = function () {
         requestHandlerResponse('manageLocation');
-        resolve({ swipe: data.swipe, user: data.user });
+        resolve({ user: data.user });
       };
     };
   });
@@ -924,7 +924,7 @@ function successResponse(read, param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('updateIDB', 200, param.swipe);
+        requestHandlerResponse('updateIDB', 200);
       });
     };
   };

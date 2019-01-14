@@ -33,7 +33,7 @@ let native = function () {
       if (!this.getName()) {
         return JSON.stringify({
           'id': '123',
-          'appVersion': 4,
+          'appVersion': 5,
           'baseOs': 'macOs'
         })
       }
@@ -82,11 +82,11 @@ let app = function () {
 
     isNewDay: function (auth) {
       var today = localStorage.getItem('today');
-
       if (today === "null" || today == null) {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
+
       return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
     },
     isCurrentTimeNearStart: function (emp) {
@@ -661,6 +661,7 @@ function runAppChecks(emp) {
   }
 
   if (newDay) {
+    localStorage.setItem('today',moment().format('YYYY-MM-DD'));
     dataObject.urgent = true;
     dataObject.checkin = true;
     startInitializatioOfList(dataObject);
