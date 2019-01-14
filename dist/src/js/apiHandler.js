@@ -49,7 +49,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB({swipe:event.data.body, user:event.data.user});
+    updateIDB({ swipe: event.data.body, user: event.data.user });
     return;
   }
 

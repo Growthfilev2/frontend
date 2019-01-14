@@ -602,64 +602,70 @@ function resetApp(auth, from) {
   });
 }
 
-function runAppChecks(emp) {
+function runAppChecks() {
   // suggest check in false
 
   window.addEventListener('locationChanged', function _locationChanged(e) {
+    isEmployeeOnLeave().then(function (emp) {
+      var dataObject = {
+        urgent: false,
+        nearby: false,
+        checkin: false
+      };
 
-    var dataObject = {
-      urgent: false,
-      nearby: false,
-      checkin: false
-    };
+      var changed = e.detail;
+      var newDay = app.isNewDay();
 
-    if (emp.onLeave) {
-      dataObject.checkin = false;
-    }
+      if (changed) {
+        dataObject.nearby = true;
+        if (!emp.onLeave) {
+          dataObject.checkin = true;
+        }
+        if (newDay) {
+          dataObject.urgent = true;
+        }
+        startInitializatioOfList(dataObject);
+        return;
+      }
 
-    var changed = e.detail;
-    var newDay = app.isNewDay();
-
-    if (changed) {
-      dataObject.nearby = true;
-      dataObject.checkin = true;
       if (newDay) {
-        dataObject.urgent = true;
-      }
-      startInitializatioOfList(dataObject);
-      return;
-    }
-
-    if (newDay) {
-      dataObject.urgent = true;
-      dataObject.checkin = true;
-      startInitializatioOfList(dataObject);
-      return;
-    };
-
-    if (app.isCurrentTimeNearStart(emp)) {
-      var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-      if (hasAlreadyCheckedIn == null) {
-        localStorage.setItem('dailyStartTimeCheckIn', true);
-        localStorage.removeItem('dailyEndTimeCheckIn');
-        dataObject.checkin = true;
-        startInitializatioOfList(dataObject);
-      }
-
-      return;
-    }
-    if (app.isCurrentTimeNearEnd(emp)) {
-      var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-      if (_hasAlreadyCheckedIn == null) {
-        localStorage.setItem('dailyEndTimeCheckIn', true);
         localStorage.removeItem('dailyStartTimeCheckIn');
-        dataObject.checkin = true;
-        startInitializatioOfList(dataObject);
-      }
-      return;
-    }
+        localStorage.removeItem('dailyEndTimeCheckIn');
 
-    return;
+        dataObject.urgent = true;
+        if (!emp.onLeave) {
+          dataObject.checkin = true;
+        }
+        startInitializatioOfList(dataObject);
+        return;
+      };
+
+      if (app.isCurrentTimeNearStart(emp)) {
+        var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+        if (hasAlreadyCheckedIn == null) {
+          localStorage.setItem('dailyStartTimeCheckIn', true);
+          if (!emp.onLeave) {
+            dataObject.checkin = true;
+          }
+          startInitializatioOfList(dataObject);
+        }
+        return;
+      }
+
+      if (app.isCurrentTimeNearEnd(emp)) {
+        var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+        if (_hasAlreadyCheckedIn == null) {
+          localStorage.setItem('dailyEndTimeCheckIn', true);
+          if (!emp.onLeave) {
+            dataObject.checkin = true;
+          }
+          startInitializatioOfList(dataObject);
+        }
+        return;
+      }
+
+      return;
+    });
   }, true);
 }
 
@@ -683,8 +689,6 @@ function openListWithChecks() {
   }, 5000);
 
   listView();
-  isEmployeeOnLeave().then(function (emp) {
-    runAppChecks(emp);
-  });
-}
 
+  runAppChecks();
+}

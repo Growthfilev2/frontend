@@ -70,15 +70,7 @@ let app = function () {
     tomorrow: function () {
       return moment(this.today()).add(1, 'day');
     },
-    getLastLocationTime: function () {
-      return new Promise(function (resolve, reject) {
-        getRootRecord().then(function (rootRecord) {
-          resolve(rootRecord.location.lastLocationTime);
-        }).catch(function (error) {
-          reject(error)
-        })
-      })
-    },
+  
 
     isNewDay: function (auth) {
       var today = localStorage.getItem('today');
@@ -523,6 +515,7 @@ function idbVersionLessThan3(auth) {
           children.createIndex('templateStatus', ['template', 'status']);
           const map = req.transaction.objectStore('map');
           map.createIndex('byOffice',['office','location']);
+          
           break;
         case 3:
           value = false;
@@ -636,36 +629,33 @@ function runAppChecks() {
     var dataObject = {
       urgent: false,
       nearby: false,
-      checkin: false
+      checkin: !emp.onLeave
     };
- 
+    
+
     var changed = e.detail;
     var newDay = app.isNewDay();
-    
-    if (changed) {
+    if(changed && newDay){
       dataObject.nearby = true;
-      if(!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      if (newDay) {
-        dataObject.urgent = true;
-      }
+      dataObject.urgent = true;
       startInitializatioOfList(dataObject);
       return;
     }
-    
+
+    if(changed) {
+      dataObject.nearby = true;
+      startInitializatioOfList(dataObject);
+      return;
+    }
+
     if (newDay) {
+      dataObject.urgent = true;
       localStorage.removeItem('dailyStartTimeCheckIn');
       localStorage.removeItem('dailyEndTimeCheckIn');
-    
-      dataObject.urgent = true;
-      if(!emp.onLeave) {
-        dataObject.checkin = true;
-      }
       startInitializatioOfList(dataObject);
       return;
     };
-    
+
     if(app.isCurrentTimeNearStart(emp)) {
       const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
       if(hasAlreadyCheckedIn == null) {
