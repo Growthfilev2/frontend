@@ -40,8 +40,11 @@ function createLog(body) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function(){
-
+    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function(result){
+      if(result.fromTime ==0 || result.fromTime ==1){
+        updateIDB({user:result.user})
+        return;
+      }
     }).catch(console.log);
     return
   }
@@ -168,13 +171,13 @@ function fetchServerTime(body,user) {
 
 function instant(error) {
   console.log(error)
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -223,7 +226,7 @@ function initializeIDB(data) {
       }
       rootTx.oncomplete = function () { 
         requestHandlerResponse('manageLocation');
-        resolve({user:data.user})
+        resolve({user:data.user,fromTime:data.fromTime})
       }
     }
   })
@@ -959,7 +962,7 @@ function successResponse(read,param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('updateIDB', 200);
+        requestHandlerResponse('loadView', 200);
       })
     }
   }
