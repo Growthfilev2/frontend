@@ -40,8 +40,9 @@ function createLog(body) {
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function (result) {
-      if(result.fromTime ==0 || result.fromTime ==1) {
-        updateIDB(result.user)
+      if (result.fromTime == 0 || result.fromTime == 1) {
+        updateIDB({ user: result.user });
+        return;
       }
     }).catch(console.log);
     return;
@@ -215,7 +216,7 @@ function initializeIDB(data) {
       };
       rootTx.oncomplete = function () {
         requestHandlerResponse('manageLocation');
-        resolve({ user: data.user,from:data.fromTime });
+        resolve({ user: data.user, fromTime: data.fromTime });
       };
     };
   });
@@ -917,7 +918,7 @@ function successResponse(read, param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('updateIDB', 200);
+        requestHandlerResponse('loadView', 200);
       });
     };
   };
