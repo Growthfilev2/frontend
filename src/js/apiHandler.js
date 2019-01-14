@@ -50,7 +50,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB({swipe:event.data.body, user:event.data.user});
+    updateIDB({user:event.data.user});
     return;
   }
 
@@ -78,7 +78,7 @@ function http(request) {
       if (xhr.readyState === 4) {
         // console.log(xhr.status)
         if (!xhr.status) {
-          requestHandlerResponse('android-stop-refreshing', 400, 'true')
+          requestHandlerResponse('android-stop-refreshing', 400)
           return;
         }
 
@@ -156,7 +156,7 @@ function fetchServerTime(body,user) {
         ts: response.timestamp,
         fromTime: body.from,
         user:user,
-        swipe:false
+       
       })
     }).catch(function (error) {
       instant(createLog(error))
@@ -219,9 +219,9 @@ function initializeIDB(data) {
         record.serverTime = data.ts - Date.now()
         rootObjectStore.put(record)
       }
-      rootTx.oncomplete = function () {
+      rootTx.oncomplete = function () { 
         requestHandlerResponse('manageLocation');
-        resolve({swipe:data.swipe,user:data.user})
+        resolve({user:data.user})
       }
     }
   })
@@ -955,7 +955,7 @@ function successResponse(read,param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('updateIDB', 200, param.swipe);
+        requestHandlerResponse('updateIDB', 200);
       })
     }
   }

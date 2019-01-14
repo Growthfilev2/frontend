@@ -75,7 +75,6 @@ function fetchAddendumForComment(id) {
     };
     transaction.oncomplete = function () {
       if (document.querySelector('.activity--chat-card-container')) {
-        console.log(document.querySelector('.activity--chat-card-container').scrollHeight);
         document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight;
       }
     };

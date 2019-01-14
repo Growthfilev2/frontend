@@ -805,7 +805,7 @@ function updateApp(data) {
     Android.notification(data.msg);
     return;
   }
-  webkit.messageHandlers.updateApp.postMessage();
+  // webkit.messageHandlers.updateApp.postMessage();
 
 }
 
@@ -830,10 +830,9 @@ function changeState(data) {
 }
 
 function updateIDB(data) {
-  if (data.msg === 'true') {
-    androidStopRefreshing();
-  }
-
+  
+  androidStopRefreshing();
+  
   if (!history.state) {
     localStorage.setItem('today',null);
     openListWithChecks()    
@@ -899,9 +898,9 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
-
 function runRead(value) {
+
   if(localStorage.getItem('dbexist')) {
-    requestCreator('Null',value);
+      requestCreator('Null',value);
   }
 }

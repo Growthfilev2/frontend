@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -776,7 +776,7 @@ function updateApp(data) {
     Android.notification(data.msg);
     return;
   }
-  webkit.messageHandlers.updateApp.postMessage();
+  // webkit.messageHandlers.updateApp.postMessage();
 }
 
 function revokeSession() {
@@ -798,9 +798,8 @@ function changeState(data) {
 }
 
 function updateIDB(data) {
-  if (data.msg === 'true') {
-    androidStopRefreshing();
-  }
+
+  androidStopRefreshing();
 
   if (!history.state) {
     localStorage.setItem('today', null);
@@ -866,6 +865,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
+
   if (localStorage.getItem('dbexist')) {
     requestCreator('Null', value);
   }
