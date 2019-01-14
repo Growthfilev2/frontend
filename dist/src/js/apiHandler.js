@@ -1,7 +1,7 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 importScripts('../../external/js/moment.min.js');
-var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
+var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
 
@@ -9,15 +9,6 @@ var deviceInfo = void 0;
 function getTime() {
   return Date.now();
 }
-
-firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
-});
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
@@ -172,13 +163,9 @@ function fetchServerTime(body, user) {
 
 function instant(error) {
   console.log(error);
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
 
 /**

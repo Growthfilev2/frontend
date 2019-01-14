@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-firebase.initializeApp({
-  apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-  authDomain: 'growthfile-207204.firebaseapp.com',
-  databaseURL: 'https://growthfile-207204.firebaseio.com',
-  projectId: 'growthfile-207204',
-  storageBucket: 'growthfile-207204.appspot.com',
-  messagingSenderId: '701025551237'
-});
-
-=======
->>>>>>> development
 var native = function () {
   return {
     setFCMToken: function setFCMToken(token) {
@@ -151,12 +139,12 @@ window.addEventListener('load', function () {
   }
 
   firebase.initializeApp({
-    apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
-    authDomain: "growthfilev2-0.firebaseapp.com",
-    databaseURL: "https://growthfilev2-0.firebaseio.com",
-    projectId: "growthfilev2-0",
-    storageBucket: "growthfilev2-0.appspot.com",
-    messagingSenderId: "1011478688238"
+    apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
+    authDomain: 'growthfile-207204.firebaseapp.com',
+    databaseURL: 'https://growthfile-207204.firebaseio.com',
+    projectId: 'growthfile-207204',
+    storageBucket: 'growthfile-207204.appspot.com',
+    messagingSenderId: '701025551237'
   });
 
   moment.updateLocale('en', {
@@ -618,23 +606,6 @@ function resetApp(auth, from) {
   });
 }
 
-<<<<<<< HEAD
-function startInitializatioOfList(auth) {
-  localStorage.removeItem('clickedActivity');
-  setInterval(function () {
-    manageLocation();
-  }, 5000);
-  app.isNewDay(auth).then(function (isNew) {
-    suggestCheckIn(isNew).then(function () {
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: ''
-      });
-      listView({ urgent: isNew, nearby: false });
-    });
-  }).catch(function (error) {
-    requestCreator('instant', JSON.stringify({ message: error }));
-=======
 function runAppChecks(emp) {
   // suggest check in false
 
@@ -726,6 +697,5 @@ function getFcmTokenFromAndroid(token) {
   return new Promise(function (resolve, reject) {
     var token = fcm.getToken();
     resolve(token);
->>>>>>> development
   });
 }
