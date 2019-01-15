@@ -592,9 +592,6 @@ function sendCurrentViewNameToAndroid(viewName) {
   }
 }
 
-function inputFile(selector) {
-  return document.getElementById(selector);
-}
 
 function getNonLocationmessageString(name) {
   if (name === 'gps') {
@@ -693,9 +690,8 @@ function requestCreator(requestType, requestBody) {
 
 
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    auth.getIdToken(false).then(function (token) {
-
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
+    auth.getIdToken(false).then(function(token){
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       apiHandler.postMessage(requestGenerator);
@@ -794,7 +790,9 @@ const receiverCaller = {
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'redirect-to-list': changeState,
+  'backblazeRequest':urlFromBase64Image
 }
+
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data)
@@ -829,6 +827,21 @@ function revokeSession() {
 function changeState(data) {
   history.pushState(['listView'], null, null);
 
+}
+
+function urlFromBase64Image(data){
+
+  if(data.code === 200) {
+    if(history.state[0] === 'profileView') {
+      const selector = document.querySelector('#profile--image-container .profile--loader ');
+      if(selector) {
+        selector.remove();
+      }
+      document.getElementById('user-profile--image').src = firebase.auth().currentUser.photoURL;
+      return
+    }
+  }
+  // to do update
 }
 
 function loadView(data) {

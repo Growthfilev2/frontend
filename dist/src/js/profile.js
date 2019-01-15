@@ -39,6 +39,10 @@ function profileView(pushState) {
   sendCurrentViewNameToAndroid('profile');
 }
 
+function inputFile(selector) {
+  return document.getElementById(selector);
+}
+
 function createProfileHeader() {
 
   var backSpan = document.createElement('span');
@@ -73,7 +77,7 @@ function createProfilePanel() {
   fileInput.type = 'file';
   fileInput.style.display = 'none';
   fileInput.id = 'uploadProfileImage';
-  fileInput.accept = 'accept="image/png,image/jpeg;capture=camera';
+  fileInput.accept = 'accept="image/png,image/jpeg;';
   var profileImgCont = document.createElement('div');
   profileImgCont.id = 'profile--image-container';
   profileImgCont.className = 'profile-container--main';
@@ -231,51 +235,21 @@ function newSignIn(value) {
 }
 
 function readUploadedFile(event) {
-  console.log(event);
-  var file = event.target.files[0];
-
+  var file = inputFile('uploadProfileImage').files[0];
   var reader = new FileReader();
+
+  reader.addEventListener("load", function () {
+    var body = {
+      'imageBase64': reader.result,
+      'uploadLocation': 'profileView'
+    };
+    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
+    requestCreator('backblaze', JSON.stringify(body));
+    return;
+  }, false);
 
   if (file) {
     reader.readAsDataURL(file);
-    processImage(file);
-  }
-}
-
-function processImage(image) {
-  var metadata = {
-    cacheControl: 'public,max-age=31536000',
-    contentType: 'image/jpeg'
-  };
-
-  var uid = firebase.auth().currentUser.uid;
-  var storageRef = firebase.storage().ref('ProfileImage/' + uid);
-  var uploadTask = storageRef.put(image, metadata);
-
-  uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, snapshotHandler, storageErrorHandler, storageSuccessHandler);
-
-  function snapshotHandler(snapshot) {
-    if (firebase.storage.TaskState.RUNNING) {
-      if (document.querySelector('#profile--image-container .loader')) return;
-
-      document.querySelector('.insert-overlay').classList.add('middle');
-      document.getElementById('profile--image-container').appendChild(loader());
-      document.querySelector('#profile--image-container .loader').classList.add('profile--loader');
-      // show gola
-    }
-  }
-
-  function storageErrorHandler(error) {
-
-    console.log(error);
-    var log = {
-      message: error
-    };
-    requestCreator('instant', JSON.stringify(log));
-  }
-
-  function storageSuccessHandler() {
-    uploadTask.snapshot.ref.getDownloadURL().then(updateAuth);
   }
 }
 

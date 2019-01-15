@@ -58,6 +58,11 @@ self.onmessage = function (event) {
     return;
   }
 
+  if(event.data.type === 'backblaze'){
+    getUrlFromPhoto(event.data.body,event.data.user)
+    return;
+  }
+
   requestFunctionCaller[event.data.type](event.data.body,event.data.user).then(function (backToList) {
     if (backToList) {
       requestHandlerResponse('notification', 200, 'status changed successfully');
@@ -417,6 +422,22 @@ function create(body,user) {
   })
 }
 
+function getUrlFromPhoto(body,user){
+  
+  const req = {
+    method:'POST',
+    url:`${apiUrl}services/images`,
+    body:JSON.stringify(body),
+    token:user.token
+  }
+  
+  http(req).then(function(url){
+    requestHandlerResponse('backblazeRequest',200);
+  }).catch(function(error){
+    console.log(error)
+    requestHandlerResponse('backblazeRequest',400,);
+  })
+}
 
 function instantUpdateDB(data, type,user) {
   return new Promise(function (resolve, reject) {

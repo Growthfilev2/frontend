@@ -27,8 +27,9 @@ function profileView(pushState) {
   
           showProfilePicture(firebase.auth().currentUser.photoURL)
   
-          inputFile('uploadProfileImage').addEventListener('change', readUploadedFile)
-  
+        inputFile('uploadProfileImage').addEventListener('change',readUploadedFile);
+          
+        
           changeDisplayName(user)
           changeEmailAddress(user)
         }
@@ -36,6 +37,11 @@ function profileView(pushState) {
     }
     sendCurrentViewNameToAndroid('profile')
   }
+
+  function inputFile(selector) {
+    return document.getElementById(selector);
+  }
+  
   
   function createProfileHeader() {
   
@@ -74,7 +80,7 @@ function profileView(pushState) {
     fileInput.type = 'file'
     fileInput.style.display = 'none'
     fileInput.id = 'uploadProfileImage'
-    fileInput.accept = 'accept="image/png,image/jpeg;capture=camera'
+    fileInput.accept = 'accept="image/png,image/jpeg;'
     const profileImgCont = document.createElement('div')
     profileImgCont.id = 'profile--image-container'
     profileImgCont.className = 'profile-container--main'
@@ -234,58 +240,25 @@ function profileView(pushState) {
   }
   
   function readUploadedFile(event) {
-    console.log(event)
-    const file = event.target.files[0]
+   const file =  inputFile('uploadProfileImage').files[0];
+  const reader = new FileReader();
   
-    const reader = new FileReader()
-  
-    if (file) {
-      reader.readAsDataURL(file)
-      processImage(file)
+  reader.addEventListener("load",function(){
+    const body = {
+      'imageBase64':reader.result
     }
+    document.getElementById('profile--image-container').appendChild(loader('profile--loader'))
+    requestCreator('backblaze',body)
+    return;
+  },false)
+
+  if(file){
+    reader.readAsDataURL(file);
   }
+
+}
   
-  function processImage(image) {
-    const metadata = {
-      cacheControl: 'public,max-age=31536000',
-      contentType: 'image/jpeg'
-    }
   
-    const uid = firebase.auth().currentUser.uid
-    const storageRef = firebase.storage().ref(`ProfileImage/${uid}`)
-    const uploadTask = storageRef.put(image, metadata)
-  
-    uploadTask.on(
-      firebase.storage.TaskEvent.STATE_CHANGED,
-      snapshotHandler,
-      storageErrorHandler,
-      storageSuccessHandler
-    )
-  
-    function snapshotHandler(snapshot) {
-      if (firebase.storage.TaskState.RUNNING) {
-        if (document.querySelector('#profile--image-container .loader')) return
-  
-        document.querySelector('.insert-overlay').classList.add('middle')
-        document.getElementById('profile--image-container').appendChild(loader())
-        document.querySelector('#profile--image-container .loader').classList.add('profile--loader')
-        // show gola
-      }
-    }
-  
-    function storageErrorHandler(error) {
-     
-      console.log(error)
-      const log = {
-        message : error
-      }
-      requestCreator('instant',JSON.stringify(log))
-    }
-  
-    function storageSuccessHandler() {
-      uploadTask.snapshot.ref.getDownloadURL().then(updateAuth)
-    }
-  }
   
   function updateAuth(url) {
     console.log(url)
