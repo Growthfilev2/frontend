@@ -104,7 +104,6 @@ var app = function () {
 
 window.addEventListener('load', function () {
 
-  document.getElementById('growthfile').appendChild(loader('init-loader'));
   var title = 'Device Incompatibility';
   var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
   if (!window.Worker && !window.indexedDB) {
@@ -222,9 +221,7 @@ function firebaseUiConfig(value) {
       signInFailure: function signInFailure(error) {
         return handleUIError(error);
       },
-      uiShown: function uiShown() {
-        document.querySelector('.init-loader').classList.add('hidden');
-      }
+      uiShown: function uiShown() {}
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
