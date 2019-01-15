@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-importScripts('../../external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
@@ -55,6 +55,11 @@ self.onmessage = function (event) {
 
   if (event.data.type === 'Null') {
     updateIDB({ user: event.data.user });
+    return;
+  }
+
+  if (event.data.type === 'backblaze') {
+    getUrlFromPhoto(event.data.body, event.data.user);
     return;
   }
 
@@ -388,6 +393,26 @@ function create(body, user) {
     }).catch(function (error) {
       instant(createLog(error));
     });
+  });
+}
+
+function getUrlFromPhoto(body, user) {
+  var parsedBody = JSON.parse(body);
+  var imageString = { imageBase64: parsedBody.imageBase64 };
+  var uploadLocation = parsedBody.uploadLocation;
+
+  var req = {
+    method: 'POST',
+    url: apiUrl + 'services/images',
+    body: JSON.stringify(imageString),
+    token: user.token
+  };
+
+  http(req).then(function (url) {
+    requestHandlerResponse('backblazeRequest', 200, { url: url, uploadLocation: uploadLocation });
+  }).catch(function (error) {
+    console.log(error);
+    requestHandlerResponse('backblazeRequest', 400, { url: null, uploadLocation: uploadLocation });
   });
 }
 
