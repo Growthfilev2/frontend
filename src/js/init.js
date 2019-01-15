@@ -78,8 +78,15 @@ let app = function () {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
-
-      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today))
+      const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
+      if(isSame) {
+        return false;
+      }
+      else {
+        localStorage.setItem('today',moment().format('YYYY-MM-DD'))
+        return true
+      }
+      
     },
     isCurrentTimeNearStart: function (emp) {
       const startTime = emp.attachment['Daily Start Time'].value
@@ -104,6 +111,8 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
+  document.getElementById('growthfile').appendChild(loader('init-loader'))
+
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
@@ -200,7 +209,6 @@ window.addEventListener('load', function () {
   }
 
 
-
   layoutGrid()
 
   startApp()
@@ -228,8 +236,11 @@ function firebaseUiConfig(value) {
         }
         return false;
       },
+      signInFailure : function(error){
+        return handleUIError(error)
+      },
       uiShown: function () {
-
+        document.querySelector('.init-loader').classList.add('hidden');
       }
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
