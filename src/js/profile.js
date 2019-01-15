@@ -258,17 +258,7 @@ function profileView(pushState) {
 
 }
   
-  
-  
-  function updateAuth(url) {
-    console.log(url)
-    const user = firebase.auth().currentUser
-    user.updateProfile({
-      photoURL: url
-    }).then(function () {
-      removeLoader(url)
-    }).catch(authUpdatedError)
-  }
+
   
   function removeLoader(url) {
     document.querySelector('.insert-overlay').classList.remove('middle')

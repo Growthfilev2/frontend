@@ -565,7 +565,7 @@ function init(auth) {
         resetApp(auth, from);
         return;
       }
-      console.log("running now")
+
       requestCreator('now', {
         device: native.getInfo(),
         from: '',

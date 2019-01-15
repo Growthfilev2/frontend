@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -799,20 +799,16 @@ function changeState(data) {
 function urlFromBase64Image(data) {
 
   if (data.code === 200) {
-    if (data.msg.uploadLocation === 'profileView') {
-      updateAuth(data.msg.url);
+    if (history.state[0] === 'profileView') {
+      var selector = document.querySelector('#profile--image-container .profile--loader ');
+      if (selector) {
+        selector.remove();
+      }
+      document.getElementById('user-profile--image').src = firebase.auth().currentUser.photoURL;
       return;
     }
-    // for activity
-    return;
   }
-  if (history.state[0] === 'profileView') {
-    var selector = document.querySelector('#profile--image-container .profile--loader ');
-    if (selector) {
-      selector.remove();
-    }
-    return;
-  }
+  // to do update
 }
 
 function loadView(data) {

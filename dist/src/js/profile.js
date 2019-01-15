@@ -240,27 +240,16 @@ function readUploadedFile(event) {
 
   reader.addEventListener("load", function () {
     var body = {
-      'imageBase64': reader.result,
-      'uploadLocation': 'profileView'
+      'imageBase64': reader.result
     };
     document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
-    requestCreator('backblaze', JSON.stringify(body));
+    requestCreator('backblaze', body);
     return;
   }, false);
 
   if (file) {
     reader.readAsDataURL(file);
   }
-}
-
-function updateAuth(url) {
-  console.log(url);
-  var user = firebase.auth().currentUser;
-  user.updateProfile({
-    photoURL: url
-  }).then(function () {
-    removeLoader(url);
-  }).catch(authUpdatedError);
 }
 
 function removeLoader(url) {

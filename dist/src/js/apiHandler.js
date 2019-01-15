@@ -1,12 +1,7 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-<<<<<<< HEAD
 importScripts('../../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
-=======
-importScripts('../external/js/moment.min.js');
-var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
->>>>>>> development
 
 var deviceInfo = void 0;
 
@@ -121,7 +116,7 @@ function fetchServerTime(body, user) {
   currentDevice = body.device;
   var parsedDeviceInfo = JSON.parse(currentDevice);
 
-  console.log(body.registerToken);
+  console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
     var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registrationToken=' + body.registerToken;
     var httpReq = {
@@ -409,22 +404,19 @@ function create(body, user) {
 }
 
 function getUrlFromPhoto(body, user) {
-  var parsedBody = JSON.parse(body);
-  var imageString = { imageBase64: parsedBody.imageBase64 };
-  var uploadLocation = parsedBody.uploadLocation;
 
   var req = {
     method: 'POST',
     url: apiUrl + 'services/images',
-    body: JSON.stringify(imageString),
+    body: JSON.stringify(body),
     token: user.token
   };
 
   http(req).then(function (url) {
-    requestHandlerResponse('backblazeRequest', 200, { url: url, uploadLocation: uploadLocation });
+    requestHandlerResponse('backblazeRequest', 200);
   }).catch(function (error) {
     console.log(error);
-    requestHandlerResponse('backblazeRequest', 400, { url: null, uploadLocation: uploadLocation });
+    requestHandlerResponse('backblazeRequest', 400);
   });
 }
 
