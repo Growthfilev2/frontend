@@ -50,7 +50,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'instant') {
-    instant(event.data.body)
+    instant(event.data.body,event.data.user)
     return
   }
 
@@ -169,13 +169,17 @@ function fetchServerTime(body,user) {
   })
 }
 
-function instant(error) {
+function instant(error,user) {
+
+
+  const req = {
+    method:'POST',
+    url:`${apiUrl}services/logs`,
+    body:error,
+    token:user.token
+  }
   console.log(error)
-  http(
-    'POST',
-    `${apiUrl}services/logs`,
-    error
-  ).then(function (response) {
+  http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
 }

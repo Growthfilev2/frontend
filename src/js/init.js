@@ -85,8 +85,7 @@ let app = function () {
       else {
         localStorage.setItem('today',moment().format('YYYY-MM-DD'))
         return true
-      }
-      
+      }      
     },
     isCurrentTimeNearStart: function (emp) {
       const startTime = emp.attachment['Daily Start Time'].value
@@ -94,25 +93,21 @@ let app = function () {
       const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
       const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
       return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
-      
     },
-    isCurrentTimeNearEnd: function (emp) {
-      
+    isCurrentTimeNearEnd: function (emp) {      
       const endTime = emp.attachment['Daily End Time'].value
       const format = 'hh:mm'
       const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
       const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-    
       return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
     }
   }
 }();
 
 
-
 window.addEventListener('load', function () {
+  
   document.getElementById('growthfile').appendChild(loader('init-loader'))
-
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {

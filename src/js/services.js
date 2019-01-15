@@ -62,15 +62,15 @@ function successDialog() {
 
   var successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'));
   successDialog.show();
-  
+
   setTimeout(function () {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
-  
+
   listView({
-    urgent:false,
-    nearBy:false
+    urgent: false,
+    nearBy: false
   })
 
 }
@@ -185,7 +185,7 @@ function fetchCurrentTime(serverTime) {
 function sendLocationServiceCrashRequest(rejection) {
   return {
     'message': rejection,
-     
+
     'phoneProp': native.getInfo()
   }
 }
@@ -201,11 +201,11 @@ function geolocationApi(method, url, data) {
       if (xhr.readyState === 4) {
         console.log(xhr);
 
-        if(xhr.status >= 400) {
-          if(JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
+        if (xhr.status >= 400) {
+          if (JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
             setGeolocationApiUsage(false).then(function () {
               reject({
-                message: xhr.response,
+                message: JSON.parse(xhr.response).error.errors[0].message,
                 cellular: data,
                 success: false
               });
@@ -213,17 +213,20 @@ function geolocationApi(method, url, data) {
           }
           return;
         }
-      
-          var result = JSON.parse(xhr.responseText);
-          resolve({
-            'latitude': result.location.lat,
-            'longitude': result.location.lng,
-            'accuracy': result.accuracy,
-            'provider': 'Cellular',
-            'lastLocationTime': Date.now(),
-            'success': true,
-            'useTowerInfo':true
-          })
+
+        if (!xhr.responseText) return;
+        if(!JSON.parse(xhr.responseText)) return;
+
+        var result = JSON.parse(xhr.responseText);
+        resolve({
+          'latitude': result.location.lat,
+          'longitude': result.location.lng,
+          'accuracy': result.accuracy,
+          'provider': 'Cellular',
+          'lastLocationTime': Date.now(),
+          'success': true,
+          'useTowerInfo': true
+        })
       }
     };
     xhr.send(data);
@@ -236,14 +239,14 @@ function manageLocation() {
   };
 
   if (native.getName() === 'Android') {
-    getRootRecord().then(function (rootRecord) {
-      if (shouldFetchCellTower(rootRecord.location)) {
-         useGeolocationApi(rootRecord.location.provider);
-        return;
-      }
-      useHTML5Location();
-    });
-    return;
+  getRootRecord().then(function (rootRecord) {
+    if (shouldFetchCellTower(rootRecord.location)) {
+      useGeolocationApi(rootRecord.location.provider);
+      return;
+    }
+    useHTML5Location();
+  });
+  return;
   }
 
   useHTML5Location();
@@ -262,7 +265,8 @@ function useGeolocationApi(provider) {
 
   try {
     CelllarJson = Towers.getCellularData();
-    if(!Object.keys(JSON.parse(CelllarJson)).length) return;
+  
+    if (!Object.keys(JSON.parse(CelllarJson)).length) return;
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
@@ -293,7 +297,7 @@ function useGeolocationApi(provider) {
     }));
 
     if (provider === 'MOCK') return;
-      useHTML5Location()
+    useHTML5Location()
   }
 }
 
@@ -313,7 +317,7 @@ function initLocationInterval(locationStatus) {
     if (locationStatus.success) {
       singletonSuccess.push(locationStatus, navigatorData)
       bestLocation = sortedByAccuracy(singletonSuccess)
-      
+
     } else {
       requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
       bestLocation = navigatorData
@@ -335,18 +339,18 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
-  
+
   const locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
-  
+
   const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
   const locationChanged = new CustomEvent("locationChanged", {
-    "detail":isLocationMoreThanThreshold(distanceBetweenBoth)
+    "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
-  }
+}
 
 
 
@@ -495,15 +499,14 @@ function updateLocationInRoot(finalLocation) {
           provider: record.location.provider,
           localStorage: record.location.lastLocationTime
         };
-        if(!record.location) {
+        if (!record.location) {
           record.location = finalLocation
-        }
-        else {
+        } else {
           record.location.latitude = finalLocation.latitude;
           record.location.longitude = finalLocation.longitude
           record.location.accuracy = finalLocation.accuracy;
           record.location.lastLocationTime = finalLocation.lastLocationTime,
-          record.location.provider = finalLocation.provider
+            record.location.provider = finalLocation.provider
         }
         rootStore.put(record);
       };
@@ -679,20 +682,20 @@ function requestCreator(requestType, requestBody) {
   var requestGenerator = {
     type: requestType,
     body: '',
-    user:{
-      token:'',
-      uid:auth.uid,
-      displayName:auth.displayName,
-      photoURL:auth.photoURL,
-      phoneNumber:auth.phoneNumber
+    user: {
+      token: '',
+      uid: auth.uid,
+      displayName: auth.displayName,
+      photoURL: auth.photoURL,
+      phoneNumber: auth.phoneNumber
     }
   };
-  
- 
-  
+
+
+
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null') {
-    auth.getIdToken(false).then(function(token){
+    auth.getIdToken(false).then(function (token) {
 
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
@@ -711,14 +714,14 @@ function requestCreator(requestType, requestBody) {
       if (isLocationOld) {
         handleWaitForLocation(requestBody, requestGenerator)
       } else {
-        auth.getIdToken(false).then(function(token){
+        auth.getIdToken(false).then(function (token) {
 
           var geopoints = {
             'latitude': location.latitude,
             'longitude': location.longitude,
             'accuracy': location.accuracy
           };
-          
+
           requestBody['geopoint'] = geopoints;
           requestGenerator.body = requestBody;
           requestGenerator.user.token = token;
@@ -741,21 +744,21 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 
 
   window.addEventListener('location', function _listener(e) {
-    firebase.auth().currentUser.getIdToken(false).then(function(token){
+    firebase.auth().currentUser.getIdToken(false).then(function (token) {
 
-    const data = e.detail;
-    var geopoints = {
-      'latitude': data.latitude,
-      'longitude': data.longitude,
-      'accuracy': data.accuracy
-    };
-    requestBody['geopoint'] = geopoints;
-    requestGenerator.body = requestBody;
-    requestGenerator.user.token = token;
-    sendRequest(geopoints, requestGenerator);
-  })
-  window.removeEventListener('location', _listener, true);
-}, true);
+      const data = e.detail;
+      var geopoints = {
+        'latitude': data.latitude,
+        'longitude': data.longitude,
+        'accuracy': data.accuracy
+      };
+      requestBody['geopoint'] = geopoints;
+      requestGenerator.body = requestBody;
+      requestGenerator.user.token = token;
+      sendRequest(geopoints, requestGenerator);
+    })
+    window.removeEventListener('location', _listener, true);
+  }, true);
 }
 
 function sendRequest(location, requestGenerator) {
@@ -830,12 +833,12 @@ function changeState(data) {
 }
 
 function loadView(data) {
-  
+
   androidStopRefreshing();
-  
+
   if (!history.state) {
-    localStorage.setItem('today',null);
-    openListWithChecks()    
+    localStorage.setItem('today', null);
+    openListWithChecks()
     return;
   }
 
@@ -901,7 +904,7 @@ function getInputText(selector) {
 
 function runRead(value) {
 
-  if(localStorage.getItem('dbexist')) {
-      requestCreator('Null',value);
+  if (localStorage.getItem('dbexist')) {
+    requestCreator('Null', value);
   }
 }
