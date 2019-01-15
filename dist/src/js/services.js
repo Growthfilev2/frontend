@@ -202,7 +202,7 @@ function geolocationApi(method, url, data) {
           if (JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
             setGeolocationApiUsage(false).then(function () {
               reject({
-                message: xhr.response,
+                message: JSON.parse(xhr.response).error.errors[0].message,
                 cellular: data,
                 success: false
               });
@@ -210,6 +210,9 @@ function geolocationApi(method, url, data) {
           }
           return;
         }
+
+        if (!xhr.responseText) return;
+        if (!JSON.parse(xhr.responseText)) return;
 
         var result = JSON.parse(xhr.responseText);
         resolve({
@@ -242,7 +245,6 @@ function manageLocation() {
     });
     return;
   }
-
   useHTML5Location();
 }
 
@@ -259,6 +261,7 @@ function useGeolocationApi(provider) {
 
   try {
     CelllarJson = Towers.getCellularData();
+
     if (!Object.keys(JSON.parse(CelllarJson)).length) return;
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
