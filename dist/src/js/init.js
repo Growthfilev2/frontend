@@ -77,12 +77,17 @@ var app = function () {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
-
-      return !moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
+      var isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
+      if (isSame) {
+        return false;
+      } else {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
+        return true;
+      }
     },
     isCurrentTimeNearStart: function isCurrentTimeNearStart(emp) {
       var startTime = emp.attachment['Daily Start Time'].value;
-      var format = 'hh:mm:ss';
+      var format = 'hh:mm';
       var offsetStartBefore = moment(startTime, format).subtract(15, 'minutes');
       var offsetStartAfter = moment(startTime, format).add(15, 'minutes');
       return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]');
@@ -90,7 +95,7 @@ var app = function () {
     isCurrentTimeNearEnd: function isCurrentTimeNearEnd(emp) {
 
       var endTime = emp.attachment['Daily End Time'].value;
-      var format = 'hh:mm:ss';
+      var format = 'hh:mm';
       var offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
       var offsetEndAfter = moment(endTime, format).add(15, 'minutes');
 
@@ -100,6 +105,8 @@ var app = function () {
 }();
 
 window.addEventListener('load', function () {
+  document.getElementById('growthfile').appendChild(loader('init-loader'));
+
   var title = 'Device Incompatibility';
   var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
   if (!window.Worker && !window.indexedDB) {
@@ -207,7 +214,6 @@ function firebaseUiConfig(value) {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function signInSuccessWithAuthResult(authResult) {
-
         if (value) {
           updateEmail(authResult.user, value);
         } else {
@@ -215,7 +221,12 @@ function firebaseUiConfig(value) {
         }
         return false;
       },
-      uiShown: function uiShown() {}
+      signInFailure: function signInFailure(error) {
+        return handleUIError(error);
+      },
+      uiShown: function uiShown() {
+        document.querySelector('.init-loader').classList.add('hidden');
+      }
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
@@ -549,6 +560,7 @@ function removeIDBInstance(auth) {
 function init(auth) {
   document.getElementById("main-layout-app").style.display = 'block';
   idbVersionLessThan3(auth).then(function (reset) {
+
     if (localStorage.getItem('dbexist')) {
       from = 1;
       if (reset.value) {

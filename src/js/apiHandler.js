@@ -40,7 +40,12 @@ function createLog(body) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function(result){
+      if(result.fromTime ==0 || result.fromTime ==1){
+        updateIDB({user:result.user})
+        return;
+      }
+    }).catch(console.log);
     return
   }
 
@@ -171,13 +176,13 @@ function fetchServerTime(body,user) {
 
 function instant(error) {
   console.log(error)
-  // http(
-  //   'POST',
-  //   `${apiUrl}services/logs`,
-  //   error
-  // ).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(
+    'POST',
+    `${apiUrl}services/logs`,
+    error
+  ).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -226,7 +231,7 @@ function initializeIDB(data) {
       }
       rootTx.oncomplete = function () { 
         requestHandlerResponse('manageLocation');
-        resolve({user:data.user})
+        resolve({user:data.user,fromTime:data.fromTime})
       }
     }
   })
@@ -415,23 +420,13 @@ function create(body,user) {
 }
 
 function getUrlFromPhoto(body,user){
-  const parsedBody = JSON.parse(body);
-  const imageString = {imageBase64:parsedBody.imageBase64};
-  const uploadLocation = parsedBody.uploadLocation;
-
-  const req = {
-    method:'POST',
-    url:`${apiUrl}services/images`,
-    body:JSON.stringify(imageString),
-    token:user.token
-  }
+  
 
   http(req).then(function(url){
-    requestHandlerResponse('backblazeRequest',200,{url:url,uploadLocation:uploadLocation});
-
+    requestHandlerResponse('backblazeRequest',200);
   }).catch(function(error){
     console.log(error)
-    requestHandlerResponse('backblazeRequest',400,{url:null,uploadLocation:uploadLocation});
+    requestHandlerResponse('backblazeRequest',400,);
   })
 
 }
@@ -506,21 +501,23 @@ function updateMap(activity,param) {
     mapTx.oncomplete = function () {
       const mapTx = db.transaction(['map'], 'readwrite')
       const mapObjectStore = mapTx.objectStore('map')
+      if(activity.template !== 'check-in') {
 
-      activity.venue.forEach(function (newVenue) {
-        mapObjectStore.add({
-          activityId: activity.activityId,
-          latitude: newVenue.geopoint['_latitude'],
-          longitude: newVenue.geopoint['_longitude'],
-          location: newVenue.location.toLowerCase(),
-          template: activity.template,
-          address: newVenue.address.toLowerCase(),
-          venueDescriptor: newVenue.venueDescriptor,
-          status: activity.status,
-          office: activity.office,
-          hidden: activity.hidden
+        activity.venue.forEach(function (newVenue) {
+          mapObjectStore.add({
+            activityId: activity.activityId,
+            latitude: newVenue.geopoint['_latitude'],
+            longitude: newVenue.geopoint['_longitude'],
+            location: newVenue.location.toLowerCase(),
+            template: activity.template,
+            address: newVenue.address.toLowerCase(),
+            venueDescriptor: newVenue.venueDescriptor,
+            status: activity.status,
+            office: activity.office,
+            hidden: activity.hidden
+          })
         })
-      })
+      }
     }
     mapTx.onerror = errorDeletingRecord
   }

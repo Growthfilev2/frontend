@@ -245,11 +245,10 @@ function profileView(pushState) {
   
   reader.addEventListener("load",function(){
     const body = {
-      'imageBase64':reader.result,
-       'uploadLocation':'profileView'
+      'imageBase64':reader.result
     }
     document.getElementById('profile--image-container').appendChild(loader('profile--loader'))
-    requestCreator('backblaze',JSON.stringify(body))
+    requestCreator('backblaze',body)
     return;
   },false)
 

@@ -828,23 +828,18 @@ function changeState(data) {
 }
 
 function urlFromBase64Image(data){
-  
+
   if(data.code === 200) {
-    if(data.msg.uploadLocation === 'profileView') {
-      updateAuth(data.msg.url)
-      return;
+    if(history.state[0] === 'profileView') {
+      const selector = document.querySelector('#profile--image-container .profile--loader ');
+      if(selector) {
+        selector.remove();
+      }
+      document.getElementById('user-profile--image').src = firebase.auth().currentUser.photoURL;
+      return
     }
-    // for activity
-    return;
   }
-  if(history.state[0] === 'profileView') {
-    const selector = document.querySelector('#profile--image-container .profile--loader ');
-    if(selector) {
-      selector.remove();
-    }
-    return
-  }
-  
+  // to do update
 }
 
 function loadView(data) {
@@ -915,6 +910,7 @@ function onErrorMessage(error) {
 function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
+
 
 function runRead(value) {
 
