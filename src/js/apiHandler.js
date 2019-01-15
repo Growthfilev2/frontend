@@ -425,6 +425,12 @@ function create(body,user) {
 
 function getUrlFromPhoto(body,user){
   
+  const req = {
+    method:'POST',
+    url:`${apiUrl}services/image`,
+    doby:body,
+    token:user.token
+  }
 
   http(req).then(function(url){
     requestHandlerResponse('backblazeRequest',200);
