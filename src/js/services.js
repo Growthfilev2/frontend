@@ -215,7 +215,7 @@ function geolocationApi(method, url, data) {
         }
 
         if (!xhr.responseText) return;
-        if(!JSON.parse(xhr.responseText)) return;
+        if (!JSON.parse(xhr.responseText)) return;
 
         var result = JSON.parse(xhr.responseText);
         resolve({
@@ -239,16 +239,15 @@ function manageLocation() {
   };
 
   if (native.getName() === 'Android') {
-  getRootRecord().then(function (rootRecord) {
-    if (shouldFetchCellTower(rootRecord.location)) {
-      useGeolocationApi(rootRecord.location.provider);
-      return;
-    }
-    useHTML5Location();
-  });
-  return;
+    getRootRecord().then(function (rootRecord) {
+      if (shouldFetchCellTower(rootRecord.location)) {
+        useGeolocationApi(rootRecord.location.provider);
+        return;
+      }
+      useHTML5Location();
+    });
+    return;
   }
-
   useHTML5Location();
 }
 
@@ -265,7 +264,7 @@ function useGeolocationApi(provider) {
 
   try {
     CelllarJson = Towers.getCellularData();
-  
+
     if (!Object.keys(JSON.parse(CelllarJson)).length) return;
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
