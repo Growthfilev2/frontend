@@ -427,18 +427,17 @@ function getUrlFromPhoto(body,user){
   
   const req = {
     method:'POST',
-    url:`${apiUrl}services/image`,
-    doby:body,
+    url:`${apiUrl}services/images`,
+    body:JSON.stringify(body),
     token:user.token
   }
-
+  
   http(req).then(function(url){
     requestHandlerResponse('backblazeRequest',200);
   }).catch(function(error){
     console.log(error)
     requestHandlerResponse('backblazeRequest',400,);
   })
-
 }
 
 function instantUpdateDB(data, type,user) {
