@@ -113,6 +113,40 @@ function appDialog(messageString) {
 }
 
 
+function appUpdateDialog(messageString) {
+  if (!document.getElementById('app-update-dialog')) {
+
+    var aside = document.createElement('aside');
+    aside.className = 'mdc-dialog mdc-dialog--open';
+    aside.id = 'app-update-dialog';
+
+    var surface = document.createElement('div');
+    surface.className = 'mdc-dialog__surface';
+    surface.style.width = '90%';
+    surface.style.height = 'auto';
+
+    var section = document.createElement('section');
+    section.className = 'mdc-dialog__body mock-main-body';
+    section.textContent = messageString;
+
+    var footer = document.createElement('footer');
+    footer.className = 'mdc-dialog__footer mock-footer';
+
+
+    surface.appendChild(section);
+    surface.appendChild(footer);
+    aside.appendChild(surface);
+    
+    document.body.appendChild(aside);
+
+
+  }
+
+  var appUpdate = new mdc.dialog.MDCDialog(document.querySelector('#app-update-dialog'));
+  appUpdate.show();
+}
+
+
 function progressBar() {
   var div = document.createElement('div');
   div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update';
@@ -800,13 +834,19 @@ function messageReceiver(response) {
 
 
 function updateApp(data) {
-  if (native.getName() === 'Android') {
+  // if (native.getName() === 'Android') {
     console.log("update App");
-    Android.notification(data.msg);
-    return;
-  }
-  // webkit.messageHandlers.updateApp.postMessage();
+    try {
+      Android.notification(data.msg);
 
+    } catch(e){
+      const message = JSON.parse(data.msg).message
+      const extra = '. Please Install the current version from google play store , to Use Growthfile.'
+      appUpdateDialog(`${message} ${extra}`);
+   }
+    return;
+  // }
+  // webkit.messageHandlers.updateApp.postMessage();
 }
 
 function revokeSession() {
