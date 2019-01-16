@@ -93,20 +93,18 @@ var app = function () {
       return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]');
     },
     isCurrentTimeNearEnd: function isCurrentTimeNearEnd(emp) {
-
       var endTime = emp.attachment['Daily End Time'].value;
       var format = 'hh:mm';
       var offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
       var offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-
       return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]');
     }
   };
 }();
 
 window.addEventListener('load', function () {
-  document.getElementById('growthfile').appendChild(loader('init-loader'));
 
+  document.getElementById('growthfile').appendChild(loader('init-loader'));
   var title = 'Device Incompatibility';
   var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
   if (!window.Worker && !window.indexedDB) {
@@ -567,7 +565,7 @@ function init(auth) {
         resetApp(auth, from);
         return;
       }
-      console.log("running now")
+
       requestCreator('now', {
         device: native.getInfo(),
         from: '',

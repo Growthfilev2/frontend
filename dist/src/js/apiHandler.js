@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-importScripts('../external/js/moment.min.js');
+importScripts('../../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
@@ -40,7 +40,8 @@ function createLog(body) {
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function (result) {
-      if(!result.fromTime) return
+      if (result.fromTime === "") return;
+    
       if (result.fromTime == 0 || result.fromTime == 1) {
         updateIDB({ user: result.user });
         return;
@@ -50,7 +51,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'instant') {
-    instant(event.data.body);
+    instant(event.data.body, event.data.user);
     return;
   }
 
@@ -116,8 +117,10 @@ function http(request) {
 function fetchServerTime(body, user) {
   currentDevice = body.device;
   var parsedDeviceInfo = JSON.parse(currentDevice);
-
+  console.log(parsedDeviceInfo.id)
+  console.log(parsedDeviceInfo.appVersion)
   console.log(body.registerToken);
+
   return new Promise(function (resolve) {
     var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registrationToken=' + body.registerToken;
     var httpReq = {
@@ -129,8 +132,7 @@ function fetchServerTime(body, user) {
 
     http(httpReq).then(function (response) {
       console.log(response);
-      if (true) {
-
+      if (response.updateClient) {
         var title = 'Message';
         var message = 'There is a New version of your app available';
 
@@ -172,9 +174,16 @@ function fetchServerTime(body, user) {
   });
 }
 
-function instant(error) {
+function instant(error, user) {
+
+  var req = {
+    method: 'POST',
+    url: apiUrl + 'services/logs',
+    body: error,
+    token: user.token
+  };
   console.log(error);
-  http('POST', apiUrl + 'services/logs', error).then(function (response) {
+  http(req).then(function (response) {
     console.log(response);
   }).catch(console.log);
 }
@@ -398,22 +407,19 @@ function create(body, user) {
 }
 
 function getUrlFromPhoto(body, user) {
-  var parsedBody = JSON.parse(body);
-  var imageString = { imageBase64: parsedBody.imageBase64 };
-  var uploadLocation = parsedBody.uploadLocation;
 
   var req = {
     method: 'POST',
     url: apiUrl + 'services/images',
-    body: JSON.stringify(imageString),
+    body: JSON.stringify(body),
     token: user.token
   };
 
   http(req).then(function (url) {
-    requestHandlerResponse('backblazeRequest', 200, { url: url, uploadLocation: uploadLocation });
+    requestHandlerResponse('backblazeRequest', 200);
   }).catch(function (error) {
     console.log(error);
-    requestHandlerResponse('backblazeRequest', 400, { url: null, uploadLocation: uploadLocation });
+    requestHandlerResponse('backblazeRequest', 400);
   });
 }
 

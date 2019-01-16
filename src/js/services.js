@@ -838,7 +838,7 @@ function messageReceiver(response) {
 
 
 function updateApp(data) {
-  // if (native.getName() === 'Android') {
+  if (native.getName() === 'Android') {
     console.log("update App");
     try {
       Android.notification(data.msg);
@@ -846,12 +846,11 @@ function updateApp(data) {
     } catch(e){
       const message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again '
       const title = JSON.parse(data.msg).message
-    
       appUpdateDialog(`${message}`,title);
    }
     return;
-  // }
-  // webkit.messageHandlers.updateApp.postMessage();
+  }
+  webkit.messageHandlers.updateApp.postMessage();
 }
 
 function revokeSession() {
