@@ -184,7 +184,7 @@ window.addEventListener('load', function () {
     }
     requestCreator('instant', JSON.stringify(errorJS))
   }
-
+  
   // initialize smooth scrolling
   window.scrollBy({
     top: 100,

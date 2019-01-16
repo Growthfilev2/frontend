@@ -40,6 +40,8 @@ function createLog(body) {
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function(result){
+      
+      if(result.fromTime === "") return
       if(result.fromTime ==0 || result.fromTime ==1){
         updateIDB({user:result.user})
         return;
@@ -130,7 +132,6 @@ function fetchServerTime(body,user) {
     http(httpReq).then(function (response) {
       console.log(response)
       if (response.updateClient) {
-  
         const title = 'Message';
         const message = 'There is a New version of your app available';
 

@@ -113,6 +113,44 @@ function appDialog(messageString) {
 }
 
 
+function appUpdateDialog(messageString,title) {
+  if (!document.getElementById('app-update-dialog')) {
+    var aside = document.createElement('aside');
+    aside.className = 'mdc-dialog mdc-dialog--open';
+    aside.id = 'app-update-dialog';
+  
+    var surface = document.createElement('div');
+    surface.className = 'mdc-dialog__surface';
+    surface.style.width = '90%';
+    surface.style.height = 'auto';
+  
+    const header = document.createElement('header');
+    header.className = 'mdc-dialog__header'
+    const headerText = document.createElement('h2')
+    headerText.className = 'mdc-dialog__header__title'
+    headerText.textContent = title
+    header.appendChild(headerText)
+    var section = document.createElement('section');
+    section.className = 'mdc-dialog__body';
+    section.textContent = messageString;
+  
+    var footer = document.createElement('footer');
+    footer.className = 'mdc-dialog__footer';
+  
+   
+    surface.appendChild(header)
+    surface.appendChild(section);
+    surface.appendChild(footer);
+    aside.appendChild(surface);
+    document.body.appendChild(aside);
+  
+  }
+
+  var appUpdate = new mdc.dialog.MDCDialog(document.querySelector('#app-update-dialog'));
+  appUpdate.show();
+}
+
+
 function progressBar() {
   var div = document.createElement('div');
   div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update';
@@ -802,11 +840,17 @@ function messageReceiver(response) {
 function updateApp(data) {
   if (native.getName() === 'Android') {
     console.log("update App");
-    Android.notification(data.msg);
+    try {
+      Android.notification(data.msg);
+
+    } catch(e){
+      const message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again '
+      const title = JSON.parse(data.msg).message
+      appUpdateDialog(`${message}`,title);
+   }
     return;
   }
-  // webkit.messageHandlers.updateApp.postMessage();
-
+  webkit.messageHandlers.updateApp.postMessage();
 }
 
 function revokeSession() {
