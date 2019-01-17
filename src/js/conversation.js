@@ -2475,13 +2475,14 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
-    document.getElementById('attachment-picture').src = `data:image/jpeg;base64,${str}`
+    document.getElementById('attachment-picture').src = `data:image/jpg;base64,${str}`
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden')
     }
     return
   }
+
   const li = document.createElement('li')
   li.className = 'mdc-image-list__item image--list-li'
 
@@ -2713,7 +2714,11 @@ function insertInputsIntoActivity(record, activityStore) {
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
+   let source = ''
+    if(imagesInAttachments[i].src !== './img/placeholder.png') {
+      source = imagesInAttachments[i].src
+    }
+    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
   }
 
   let sd;
