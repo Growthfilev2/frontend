@@ -1,11 +1,15 @@
+const scroll_namespace = {
+  count: 0,
+  size: 10
+}
 
 const notification = new Worker('js/notification.js')
 
-function listView(filter) {
+function listView(filter,size) {
 
   getRootRecord().then(function (record) {
     if (record.suggestCheckIn) {
-      document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML   
+      document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
 
@@ -19,76 +23,104 @@ function listView(filter) {
       document.querySelector('.mdc-linear-progress').remove();
     }
 
-
     listPanel()
     creatListHeader('Activities');
     createActivityIcon();
-
+    document.getElementById('activity--list').addEventListener('scroll', handleScroll)
     if (!filter) {
-      fetchDataForActivityList(record.location);
+      fetchDataForActivityList(record.location,size);
       return;
     }
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
-        fetchDataForActivityList(record.location);
+        fetchDataForActivityList(record.location,size);
       })
     });
   })
 }
 
-function fetchDataForActivityList(currentLocation) {
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
+function handleScroll(ev) {
+  const target = ev.target;
+  console.log(target.scrollTop)
+  console.log(target.scrollHeight)
+  if ((target.scrollTop + target.offsetHeight) >= target.scrollHeight) {
+    getRootRecord().then(function (record) {
+      fetchDataForActivityList(record.location)
+    })
+  }
+}
 
+function fetchDataForActivityList(currentLocation,size) {
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
-    
-    let activityDom = ''
     const transaction = db.transaction(['list', 'activity', 'root'])
     const activity = transaction.objectStore('activity');
     const store = transaction.objectStore('list')
     const index = store.index('timestamp');
-    
-    const today = moment().format('YYYY-MM-DD');
+    let iterator = 0;
+    const advanceCount = scroll_namespace.count;
+    const size = scroll_namespace.size;
+    let skip;
+
+    const ul = document.getElementById('activity--list')
     index.openCursor(null, 'prev').onsuccess = function (event) {
-          
+
       const cursor = event.target.result;
       if (!cursor) return;
-
-      const secondLine = document.createElement('span')
-      secondLine.className = 'mdc-list-item__secondary-text'
-
-
-      activity.get(cursor.value.activityId).onsuccess = function (event) {
-        const record = event.target.result;
-        if (!record) return
-        const schedules = record.schedule;
-        const venues = record.venue;
-        const status = record.status
-        
-        if (status === 'PENDING') {
-          secondLine.appendChild(generateLastestSchedule(schedules));
-        } else {
-          if(schedules.length) {
-            const el =document.createElement('div')
-            el.textContent = generateTextIfActivityIsNotPending(status)
-            secondLine.appendChild(el);
-          }
+      if (advanceCount) {
+        if (!skip) {
+          cursor.advance(advanceCount)
+          skip = true
         }
-        
-        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
-       
-        activityDom += activityListUI(cursor.value, secondLine).outerHTML
+        getActivityDataForList(activity, cursor.value,ul,currentLocation)
+      } else {
+        getActivityDataForList(activity, cursor.value,ul,currentLocation)
       }
-      cursor.continue();
-    }
 
-    transaction.oncomplete = function () {
-      if (document.getElementById('activity--list')) {
-        document.getElementById('activity--list').innerHTML = activityDom;
+      iterator++
+      if (iterator < size) {
+        cursor.continue();
       }
-      scrollToActivity()
     }
+  }
+
+  /** Transaction has ended. Increment the namespace_count 
+   * If an activity was clicked , then scroll to that activity
+   */
+
+  transaction.oncomplete = function () {
+
+    scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
+    scrollToActivity()
+  }
+}
+
+
+function getActivityDataForList(activity, value,parent,currentLocation) {
+
+  const secondLine = document.createElement('span')
+  secondLine.className = 'mdc-list-item__secondary-text'
+
+  activity.get(value.activityId).onsuccess = function (event) {
+    const record = event.target.result;
+    if (!record) return
+    const schedules = record.schedule;
+    const venues = record.venue;
+    const status = record.status
+
+    if (status === 'PENDING') {
+      secondLine.appendChild(generateLastestSchedule(schedules));
+    } else {
+      if (schedules.length) {
+        const el = document.createElement('div')
+        el.textContent = generateTextIfActivityIsNotPending(status)
+        secondLine.appendChild(el);
+      }
+    }
+    secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+    parent.appendChild(activityListUI(value, secondLine))
   }
 }
 
@@ -104,8 +136,7 @@ function generateSecondLine(name, value) {
   const el = document.createElement('div');
   if (name && value) {
     el.textContent = `${name} : ${value}`
-  }
-  else {
+  } else {
     el.textContent = ''
   }
   return el
@@ -143,9 +174,9 @@ function getTimeTypeForSingleSchedule(schedule) {
     name: schedule.name,
     value: ''
   }
-  if(!startTime) return newScheduleText
-  if(!schedule.endTime) return newScheduleText
-  
+  if (!startTime) return newScheduleText
+  if (!schedule.endTime) return newScheduleText
+
   if (moment(startTime).isAfter(moment(today))) {
     newScheduleText.value = moment(startTime).calendar();
   } else {
@@ -181,7 +212,7 @@ function sortDatesInAscendingOrderWithPivot(pivot, dates) {
 function getTimeTypeForMultipleSchedule(dates) {
   const duplicate = dates.slice()
   const pivotIndex = positionOfPivot(duplicate);
-  if (pivotIndex === dates.length -1) {
+  if (pivotIndex === dates.length - 1) {
     duplicate[pivotIndex - 1].time = moment(duplicate[pivotIndex - 1].time).calendar();
     return duplicate[pivotIndex - 1]
   }
@@ -190,12 +221,12 @@ function getTimeTypeForMultipleSchedule(dates) {
 }
 
 function positionOfPivot(dates) {
- const index = dates.findIndex(function(obj){
-    if(obj.pivot){
+  const index = dates.findIndex(function (obj) {
+    if (obj.pivot) {
       return obj
     }
- })
- return index;
+  })
+  return index;
 }
 
 function generateLatestVenue(venues, currentLocation) {
@@ -228,10 +259,9 @@ function generateLatestVenue(venues, currentLocation) {
           })
         }
       })
-      if(!distances.length) {
-        text = generateSecondLine('','')
-      }
-      else {
+      if (!distances.length) {
+        text = generateSecondLine('', '')
+      } else {
 
         const sortedDistance = sortNearestLocation(distances)
         text = generateSecondLine(sortedDistance[0].desc, sortedDistance[0].location)
@@ -597,14 +627,14 @@ function suggestCheckIn(value) {
         var db = req.result;
         var tx = db.transaction(['root'], 'readwrite');
         var store = tx.objectStore('root');
-        if(record.suggestCheckIn !== value) {
- 
+        if (record.suggestCheckIn !== value) {
+
           record.suggestCheckIn = value;
           store.put(record);
-          
+
         }
-          tx.oncomplete = function () {
-            resolve(true);
+        tx.oncomplete = function () {
+          resolve(true);
         };
         tx.onerror = function () {
           reject(tx.error);

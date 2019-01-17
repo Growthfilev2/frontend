@@ -193,6 +193,8 @@ window.addEventListener('load', function () {
     behavior: 'smooth'
   })
 
+
+
   window.onpopstate = function (event) {
 
     if (!event.state) return;

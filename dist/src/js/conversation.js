@@ -2360,13 +2360,14 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
-    document.getElementById('attachment-picture').src = 'data:image/jpeg;base64,' + str;
+    document.getElementById('attachment-picture').src = 'data:image/jpg;base64,' + str;
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden');
     }
     return;
   }
+
   var li = document.createElement('li');
   li.className = 'mdc-image-list__item image--list-li';
 
@@ -2584,7 +2585,11 @@ function insertInputsIntoActivity(record, activityStore) {
 
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
-    record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = imagesInAttachments[_i].src;
+    var source = '';
+    if (imagesInAttachments[_i].src !== './img/placeholder.png') {
+      source = imagesInAttachments[_i].src;
+    }
+    record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = source;
   }
 
   var sd = void 0;
