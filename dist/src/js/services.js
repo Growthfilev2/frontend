@@ -694,6 +694,7 @@ function resetLoaders(data) {
 
 function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;
+
   var requestGenerator = {
     type: requestType,
     body: '',
@@ -874,7 +875,6 @@ function loadView(data) {
       urgent: false,
       nearBy: false
     });
-
     return;
   }
 

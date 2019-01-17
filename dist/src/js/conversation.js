@@ -1,3 +1,5 @@
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
@@ -309,6 +311,7 @@ function createComment(db, addendum, currentUser) {
       mapIcon.appendChild(document.createTextNode('location_on'));
 
       link.onclick = function (evt) {
+        if (!hasMapsApiLoaded()) return;
         showMap = !showMap;
         var loc = {
           lat: addendum.location['_latitude'],
@@ -356,6 +359,13 @@ function readNameFromNumber(db, number) {
   });
 }
 
+function hasMapsApiLoaded() {
+  if ((typeof google === 'undefined' ? 'undefined' : _typeof(google)) === 'object' && _typeof(google.maps) === 'object') {
+    return true;
+  }
+  return false;
+}
+
 function maps(evt, show, id, location) {
   var selector = '';
   evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector('.map-detail.' + id);
@@ -389,6 +399,7 @@ function maps(evt, show, id, location) {
     customControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
   }
+
   var marker = new google.maps.Marker({
     position: location,
     map: map
@@ -996,9 +1007,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         }
 
         var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-        if (cursor.value.activityId === 'cTl0mhORBYhFxXUot3yp') {
-          debugger;
-        }
+
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
           results.push(cursor.value);
         }
@@ -1771,13 +1780,13 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     textSpan.appendChild(primarySpan);
 
     textSpan.onclick = function (evt) {
+      if (!hasMapsApiLoaded()) return;
       showMap = !showMap;
 
       var loc = {
         lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       };
-
       maps('', showMap, convertKeyToId(venue.venueDescriptor), loc);
     };
 
@@ -1822,16 +1831,17 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   var secondaryText = document.createElement('span');
   secondaryText.className = 'mdc-list-item__secondary-text';
-  if (record.template === 'check-in' && !showMetaInput) {
+  if (!record.hasOwnProperty('create')) {
+    secondaryText.textContent = venue.address;
+  } else if (record.template === 'check-in' && !showMetaInput) {
     if (!venue.showIcon) {
       secondaryText.style.paddingTop = '3px';
       secondaryText.textContent = 'No Locations Found for Check-In';
     } else {
       secondaryText.textContent = venue.address;
     }
-  } else {
-    secondaryText.textContent = venue.address;
   }
+
   secondaryText.dataset.secondary = '';
   textSpan.appendChild(secondaryText);
   listItem.appendChild(textSpan);
@@ -2665,6 +2675,7 @@ function initSearchForSelectors(db, type, attr) {
         country: "in"
       }
     };
+
     autocomplete = new google.maps.places.Autocomplete(input, options);
     initializeAutocompleteGoogle(autocomplete, attr.record, attr);
     return;
