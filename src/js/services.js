@@ -713,6 +713,7 @@ function resetLoaders(data) {
 
 function requestCreator(requestType, requestBody) {
   const auth = firebase.auth().currentUser;
+  
   var requestGenerator = {
     type: requestType,
     body: '',
@@ -724,9 +725,6 @@ function requestCreator(requestType, requestBody) {
       phoneNumber: auth.phoneNumber
     }
   };
-
-
-
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
     auth.getIdToken(false).then(function(token){
@@ -910,7 +908,6 @@ function loadView(data) {
       urgent: false,
       nearBy: false
     });
-
     return;
   }
 

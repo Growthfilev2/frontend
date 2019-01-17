@@ -318,6 +318,7 @@ function createComment(db, addendum, currentUser) {
       mapIcon.appendChild(document.createTextNode('location_on'))
 
       link.onclick = function (evt) {
+        if(!hasMapsApiLoaded()) return
         showMap = !showMap;
         const loc = {
           lat: addendum.location['_latitude'],
@@ -366,6 +367,13 @@ function readNameFromNumber(db, number) {
   })
 }
 
+function hasMapsApiLoaded(){
+  if(typeof google === 'object' && typeof google.maps === 'object') {
+    return true
+  }
+  return false
+}
+
 function maps(evt, show, id, location) {
   let selector = ''
   evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector(`.map-detail.${id}`)
@@ -387,22 +395,26 @@ function maps(evt, show, id, location) {
 
   selector.style.height = '200px'
 
-  const map = new google.maps.Map(selector, {
-    zoom: 16,
-    center: location,
-    disableDefaultUI: true
-  });
+    const map = new google.maps.Map(selector, {
+      zoom: 16,
+      center: location,
+      disableDefaultUI: true
+    });
 
+    
   if (!evt) {
     var customControlDiv = document.createElement('div');
     var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
     customControlDiv.index = 1;
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
   }
+
   const marker = new google.maps.Marker({
     position: location,
     map: map
   });
+
+  
 }
 
 function MapsCustomControl(customControlDiv, map, lat, lng) {
@@ -1036,9 +1048,7 @@ function checkMapStoreForNearByLocation(office,currentLocation){
         }
       
         const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-        if(cursor.value.activityId === 'cTl0mhORBYhFxXUot3yp') {
-          debugger;
-        }
+
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
           results.push(cursor.value);
         }
@@ -1844,14 +1854,15 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     textSpan.appendChild(primarySpan)
 
     textSpan.onclick = function (evt) {
+      if(!hasMapsApiLoaded()) return;
       showMap = !showMap
 
       const loc = {
         lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       }
-
       maps('', showMap, convertKeyToId(venue.venueDescriptor), loc)
+      
     }
 
     if (record.canEdit) {
@@ -1897,19 +1908,20 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const secondaryText = document.createElement('span')
   secondaryText.className = 'mdc-list-item__secondary-text'
-  if(record.template === 'check-in' && !showMetaInput) {
-    if(!venue.showIcon) {
-      secondaryText.style.paddingTop = '3px';
-      secondaryText.textContent = 'No Locations Found for Check-In'
-    }
-    else {
-      secondaryText.textContent = venue.address
-
-    }
-  }
-  else {
+  if(!record.hasOwnProperty('create')) { 
     secondaryText.textContent = venue.address
   }
+
+  else if(record.template === 'check-in' && !showMetaInput) {
+      if(!venue.showIcon) {
+        secondaryText.style.paddingTop = '3px';
+        secondaryText.textContent = 'No Locations Found for Check-In'
+      }
+      else {
+        secondaryText.textContent = venue.address
+      }
+}
+
   secondaryText.dataset.secondary = ''
   textSpan.appendChild(secondaryText)
   listItem.appendChild(textSpan)
@@ -2794,6 +2806,7 @@ function initSearchForSelectors(db, type, attr) {
         country: "in"
       }
     }
+
     autocomplete = new google.maps.places.Autocomplete(input, options);
     initializeAutocompleteGoogle(autocomplete, attr.record, attr)
     return
@@ -3122,3 +3135,4 @@ function toggleActionables(id) {
     }
   }
 }
+
