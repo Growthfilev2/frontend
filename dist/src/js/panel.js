@@ -1,7 +1,8 @@
-var notification = new Worker('src/js/notification.js');
+
+var notification = new Worker('js/notification.js');
 
 function listView(filter) {
-  // document.body.style.backgroundColor = 'white'
+
   getRootRecord().then(function (record) {
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML;
@@ -37,16 +38,19 @@ function listView(filter) {
 
 function fetchDataForActivityList(currentLocation) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
+
   req.onsuccess = function () {
     var db = req.result;
+
     var activityDom = '';
     var transaction = db.transaction(['list', 'activity', 'root']);
     var activity = transaction.objectStore('activity');
     var store = transaction.objectStore('list');
     var index = store.index('timestamp');
-    var today = moment().format('YYYY-MM-DD');
 
+    var today = moment().format('YYYY-MM-DD');
     index.openCursor(null, 'prev').onsuccess = function (event) {
+
       var cursor = event.target.result;
       if (!cursor) return;
 

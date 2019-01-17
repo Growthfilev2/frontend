@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-importScripts('../../external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
@@ -40,8 +40,8 @@ function createLog(body) {
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function (result) {
+
       if (result.fromTime === "") return;
-    
       if (result.fromTime == 0 || result.fromTime == 1) {
         updateIDB({ user: result.user });
         return;
@@ -117,10 +117,8 @@ function http(request) {
 function fetchServerTime(body, user) {
   currentDevice = body.device;
   var parsedDeviceInfo = JSON.parse(currentDevice);
-  console.log(parsedDeviceInfo.id)
-  console.log(parsedDeviceInfo.appVersion)
-  console.log(body.registerToken);
 
+  console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
     var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registrationToken=' + body.registerToken;
     var httpReq = {

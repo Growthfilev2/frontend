@@ -1,4 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -694,6 +694,7 @@ function resetLoaders(data) {
 
 function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;
+
   var requestGenerator = {
     type: requestType,
     body: '',
@@ -805,19 +806,18 @@ function messageReceiver(response) {
 }
 
 function updateApp(data) {
-  // if (native.getName() === 'Android') {
-  console.log("update App");
-  try {
-    Android.notification(data.msg);
-  } catch (e) {
-    var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
-    var title = JSON.parse(data.msg).message;
-
-    appUpdateDialog('' + message, title);
+  if (native.getName() === 'Android') {
+    console.log("update App");
+    try {
+      Android.notification(data.msg);
+    } catch (e) {
+      var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
+      var title = JSON.parse(data.msg).message;
+      appUpdateDialog('' + message, title);
+    }
+    return;
   }
-  return;
-  // }
-  // webkit.messageHandlers.updateApp.postMessage();
+  webkit.messageHandlers.updateApp.postMessage();
 }
 
 function revokeSession() {
@@ -875,7 +875,6 @@ function loadView(data) {
       urgent: false,
       nearBy: false
     });
-
     return;
   }
 
