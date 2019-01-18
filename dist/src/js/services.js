@@ -1,4 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -803,19 +803,6 @@ var receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
-  if(native.getName() === 'Android') return;
-  
-  getRootRecord().then(function(record){
-    if(!record.hasOwnProperty('useFcm')) return;
-    if(record.useFcm) return
-    callTimerForRead();
-  })
-}
-
-function callTimerForRead(){
-  setTimeout(function(){
-    requestCreator('Null',false)
-  },8000)
 }
 
 function updateApp(data) {
@@ -936,28 +923,5 @@ function runRead(value) {
 
   if (localStorage.getItem('dbexist')) {
     requestCreator('Null', value);
-  }
-}
-
-function fcmDenied(allow) {
-  if(!localStorage.getItem('dbexist')) return
-  if(native.getName() === 'Android') return;
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName) 
-  req.onsuccess = function(){
-    const db = req.result;
-    const transaction = db.transaction(['root'],'readwrite')
-    const store = transaction.objectStore('root')
-    store.get(dbName).onsuccess = function(e){
-      const record = e.target.result
-      if(!record) return
-      record.useFcm = allow
-      store.put(record)
-    }
-
-    transaction.oncomplete = function() {
-      console.log("useFcm value set as " + allow);
-    }
   }
 }
