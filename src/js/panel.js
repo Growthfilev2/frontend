@@ -1,13 +1,15 @@
+const notification = new Worker('js/notification.js')
 
 const scroll_namespace = {
   count: 0,
   size: 10,
-  skip:false
+  skip: false
 }
 
-const notification = new Worker('js/notification.js')
 
-function listView(filter) {
+
+function listView(filter,updatedActivites) {
+
 
   getRootRecord().then(function (record) {
 
@@ -43,6 +45,18 @@ function listView(filter) {
   })
 }
 
+function removeExistingActivities(updatedActivites){
+updatedActivites.forEach(function(activity){
+  const activityLi = document.querySelector(`[data-id="${activity.activityId}"]`)
+  if(activityLi) {
+    changeContentOfUpdatedActivity()
+  }
+})
+}
+
+function changeContentOfUpdatedActivity(data){
+  
+}
 function handleScroll(ev) {
   const target = ev.target;
   console.log(target.scrollTop)
@@ -64,52 +78,51 @@ function fetchDataForActivityList(currentLocation) {
     const index = store.index('timestamp');
     let iterator = 0;
     const advanceCount = scroll_namespace.count;
-    const size = scroll_namespace.size;
-    
+
 
     const ul = document.getElementById('activity--list')
     index.openCursor(null, 'prev').onsuccess = function (event) {
 
       const cursor = event.target.result;
       if (!cursor) return;
+
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true
           cursor.advance(advanceCount)
-        }
-        else {
-          getActivityDataForList(activity, cursor.value,ul,currentLocation)
-          iterator++
-          if (iterator < size) {
-            cursor.continue();
-          }
+        } else {
+          getActivityDataForList(activity, cursor.value, currentLocation,ul)
+          runCursor(cursor,iterator)
         }
       } else {
-        getActivityDataForList(activity, cursor.value,ul,currentLocation) 
-        iterator++
-        if (iterator < size) {
-          cursor.continue();
-        }
+        getActivityDataForList(activity, cursor.value, currentLocation,ul)
+        runCursor(cursor,iterator)
       }
-
-    
     }
 
-  /** Transaction has ended. Increment the namespace_count 
-   * If an activity was clicked , then scroll to that activity
-   */
+    /** Transaction has ended. Increment the namespace_count 
+     * If an activity was clicked and not changed then scroll to that activity
+     */
 
-  transaction.oncomplete = function () {
+    transaction.oncomplete = function () {
 
-    scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
-    scroll_namespace.skip = false
-    scrollToActivity()
+      scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
+      scroll_namespace.skip = false
+      scrollToActivity()
+    }
   }
 }
+
+function runCursor(cursor, iterator) {
+  const size = scroll_namespace.size;
+  iterator++
+  if (iterator < size) {
+    cursor.continue();
+  }
 }
 
 
-function getActivityDataForList(activity, value,parent,currentLocation) {
+function getActivityDataForList(activity, value, currentLocation,parent) {
 
   const secondLine = document.createElement('span')
   secondLine.className = 'mdc-list-item__secondary-text'
