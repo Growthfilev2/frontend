@@ -67,7 +67,9 @@ function successDialog() {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
-
+  scroll_namespace.count = 0
+  scroll_namespace.size = 10
+  localStorage.removeItem('clickedActivity')
   listView({
     urgent: false,
     nearBy: false
@@ -910,6 +912,7 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
+  
     listView({
       urgent: false,
       nearBy: false

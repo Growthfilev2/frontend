@@ -1,12 +1,13 @@
 
 const scroll_namespace = {
   count: 0,
-  size: 10
+  size: 10,
+  skip:false
 }
 
 const notification = new Worker('js/notification.js')
 
-function listView(filter,size) {
+function listView(filter) {
 
   getRootRecord().then(function (record) {
 
@@ -30,13 +31,13 @@ function listView(filter,size) {
     createActivityIcon();
     document.getElementById('activity--list').addEventListener('scroll', handleScroll)
     if (!filter) {
-      fetchDataForActivityList(record.location,size);
+      fetchDataForActivityList(record.location);
       return;
     }
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
-        fetchDataForActivityList(record.location,size);
+        fetchDataForActivityList(record.location);
       })
     });
   })
@@ -53,7 +54,7 @@ function handleScroll(ev) {
   }
 }
 
-function fetchDataForActivityList(currentLocation,size) {
+function fetchDataForActivityList(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -64,7 +65,7 @@ function fetchDataForActivityList(currentLocation,size) {
     let iterator = 0;
     const advanceCount = scroll_namespace.count;
     const size = scroll_namespace.size;
-    let skip;
+    
 
     const ul = document.getElementById('activity--list')
     index.openCursor(null, 'prev').onsuccess = function (event) {
@@ -72,21 +73,27 @@ function fetchDataForActivityList(currentLocation,size) {
       const cursor = event.target.result;
       if (!cursor) return;
       if (advanceCount) {
-        if (!skip) {
+        if (!scroll_namespace.skip) {
+          scroll_namespace.skip = true
           cursor.advance(advanceCount)
-          skip = true
         }
-        getActivityDataForList(activity, cursor.value,ul,currentLocation)
+        else {
+          getActivityDataForList(activity, cursor.value,ul,currentLocation)
+          iterator++
+          if (iterator < size) {
+            cursor.continue();
+          }
+        }
       } else {
-        getActivityDataForList(activity, cursor.value,ul,currentLocation)
+        getActivityDataForList(activity, cursor.value,ul,currentLocation) 
+        iterator++
+        if (iterator < size) {
+          cursor.continue();
+        }
       }
 
-      iterator++
-      if (iterator < size) {
-        cursor.continue();
-      }
+    
     }
-  }
 
   /** Transaction has ended. Increment the namespace_count 
    * If an activity was clicked , then scroll to that activity
@@ -95,8 +102,10 @@ function fetchDataForActivityList(currentLocation,size) {
   transaction.oncomplete = function () {
 
     scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
+    scroll_namespace.skip = false
     scrollToActivity()
   }
+}
 }
 
 

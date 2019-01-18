@@ -199,6 +199,9 @@ window.addEventListener('load', function () {
 
     if (!event.state) return;
     if (event.state[0] === 'listView') {
+      const originalCount = scroll_namespace.count;
+      scroll_namespace.size = originalCount
+      scroll_namespace.count = 0;
       window[event.state[0]]()
       return;
     }
