@@ -2423,7 +2423,7 @@ function readCameraFile() {
 function openImage(imageSrc) {
   // sendCurrentViewNameToAndroid('selector')
 
-  if (imageSrc.substring(0, 4) !== "data") return;
+  if (!imageSrc) return;
 
   document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
   var imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));

@@ -954,7 +954,6 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
-
 function runRead(value) {
 
   if (localStorage.getItem('dbexist')) {
