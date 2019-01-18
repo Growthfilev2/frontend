@@ -712,6 +712,8 @@ function requestCreator(requestType, requestBody) {
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       apiHandler.postMessage(requestGenerator);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error));
     });
   } else {
 
@@ -737,6 +739,8 @@ function requestCreator(requestType, requestBody) {
           requestGenerator.user.token = token;
           console.log(requestGenerator);
           sendRequest(location, requestGenerator);
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify(error));
         });
       }
     });
@@ -762,6 +766,8 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       sendRequest(geopoints, requestGenerator);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error));
     });
     window.removeEventListener('location', _listener, true);
   }, true);
@@ -920,7 +926,6 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-
   if (localStorage.getItem('dbexist')) {
     requestCreator('Null', value);
   }

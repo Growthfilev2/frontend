@@ -107,7 +107,6 @@ let app = function () {
 
 window.addEventListener('load', function () {
   
-  document.getElementById('growthfile').appendChild(loader('init-loader'))
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
@@ -237,7 +236,6 @@ function firebaseUiConfig(value) {
         return handleUIError(error)
       },
       uiShown: function () {
-        document.querySelector('.init-loader').classList.add('hidden');
       }
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
@@ -402,7 +400,19 @@ function imageViewDialog() {
 
   dialogSurface.appendChild(section)
 
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
+
+  var cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+  cancel.textContent = 'cancel';
+  cancel.style.backgroundColor = '#3498db';
+
+  footer.appendChild(cancel)
+  dialogSurface.appendChild(footer)
   aside.appendChild(dialogSurface)
+  
   const backdrop = document.createElement('div')
   backdrop.className = 'mdc-dialog__backdrop'
   aside.appendChild(backdrop)

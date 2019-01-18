@@ -1543,6 +1543,9 @@ input[type="datetime-local"] {
   margin-top: 5px;
   margin-bottom: 2px; }
 
+  #app-main-header {
+    --webkit-transform: translateZ(0);
+  }
 /** top app bar **/
 .mdc-top-app-bar {
   background-color: #0399f4;

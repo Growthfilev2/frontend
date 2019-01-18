@@ -39,14 +39,7 @@ function createLog(body) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(function (result) {
-
-      if (result.fromTime === "") return;
-      if (result.fromTime == 0 || result.fromTime == 1) {
-        updateIDB({ user: result.user });
-        return;
-      }
-    }).catch(console.log);
+    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
     return;
   }
 
@@ -1009,13 +1002,20 @@ function updateIDB(param) {
     var tx = db.transaction(['root']);
     var rootObjectStore = tx.objectStore('root');
     var record = void 0;
-    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-      record = event.target.result;
-    };
+    var time = void 0;
+    if (param.fromTime) {
+      time = param.fromTime;
+    } else {
+      rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+        record = event.target.result;
+        time = record.fromTime;
+      };
+    }
+
     tx.oncomplete = function () {
       var req = {
         method: 'GET',
-        url: apiUrl + 'read?from=' + record.fromTime,
+        url: apiUrl + 'read?from=' + time,
         data: null,
         token: param.user.token
       };

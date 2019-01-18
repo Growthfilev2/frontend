@@ -1855,6 +1855,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     textSpan.onclick = function (evt) {
       if(!hasMapsApiLoaded()) return;
+      if(!venue.geopoint['_latitude']) return;
+      if(!venue.geopoint['_longitude']) return;
+
       showMap = !showMap
 
       const loc = {
@@ -1862,7 +1865,6 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lng: venue.geopoint['_longitude']
       }
       maps('', showMap, convertKeyToId(venue.venueDescriptor), loc)
-      
     }
 
     if (record.canEdit) {
@@ -2475,13 +2477,14 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
-    document.getElementById('attachment-picture').src = `data:image/jpeg;base64,${str}`
+    document.getElementById('attachment-picture').src = `data:image/jpg;base64,${str}`
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden')
     }
     return
   }
+
   const li = document.createElement('li')
   li.className = 'mdc-image-list__item image--list-li'
 
@@ -2537,7 +2540,7 @@ function readCameraFile() {
 function openImage(imageSrc) {
   // sendCurrentViewNameToAndroid('selector')
 
-  if (imageSrc.substring(0, 4) !== "data") return
+  if(!imageSrc) return;
 
   document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
   const imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));
@@ -2713,7 +2716,11 @@ function insertInputsIntoActivity(record, activityStore) {
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].src
+   let source = ''
+    if(imagesInAttachments[i].src !== './img/placeholder.png') {
+      source = imagesInAttachments[i].src
+    }
+    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
   }
 
   let sd;
