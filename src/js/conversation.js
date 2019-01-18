@@ -1855,6 +1855,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     textSpan.onclick = function (evt) {
       if(!hasMapsApiLoaded()) return;
+      if(!venue.geopoint['_latitude']) return;
+      if(!venue.geopoint['_longitude']) return;
+
       showMap = !showMap
 
       const loc = {
@@ -1862,7 +1865,6 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lng: venue.geopoint['_longitude']
       }
       maps('', showMap, convertKeyToId(venue.venueDescriptor), loc)
-      
     }
 
     if (record.canEdit) {
