@@ -383,7 +383,19 @@ function imageViewDialog() {
 
   dialogSurface.appendChild(section);
 
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
+
+  var cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+  cancel.textContent = 'cancel';
+  cancel.style.backgroundColor = '#3498db';
+
+  footer.appendChild(cancel);
+  dialogSurface.appendChild(footer);
   aside.appendChild(dialogSurface);
+
   var backdrop = document.createElement('div');
   backdrop.className = 'mdc-dialog__backdrop';
   aside.appendChild(backdrop);
