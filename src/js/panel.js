@@ -8,6 +8,7 @@ const notification = new Worker('js/notification.js')
 function listView(filter,size) {
 
   getRootRecord().then(function (record) {
+
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
