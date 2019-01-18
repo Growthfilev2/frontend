@@ -326,7 +326,7 @@ function comment(body,auth) {
       token:auth.token
     }
     http(req).then(function () {
-       resolve(false)
+       resolve(true)
     }).catch(function (error) {
       instant(createLog(error))
     })

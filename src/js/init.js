@@ -1,3 +1,4 @@
+
 let native = function () {
   return {
     setFCMToken: function (token) {
