@@ -291,9 +291,13 @@ function createComment(db, addendum, currentUser) {
     var user = document.createElement('p');
     user.classList.add('user-name--comment', 'mdc-typography--subtitle2');
 
-    readNameFromNumber(db, addendum.user).then(function (nameOrNumber) {
+    getUserRecord(db, addendum.user).then(function (record) {
       // console.log(nameOrNumber)
-      user.textContent = nameOrNumber;
+      if (record.displayName) {
+        user.textContent = record.displayName;
+      } else {
+        user.textContent = record.mobile;
+      }
 
       var comment = document.createElement('p');
       comment.classList.add('comment', 'mdc-typography--subtitle2');
@@ -340,18 +344,17 @@ function createComment(db, addendum, currentUser) {
   });
 }
 
-function readNameFromNumber(db, number) {
+function getUserRecord(db, number) {
   return new Promise(function (resolve, reject) {
-    // if (number === firebase.auth().currentUser.phoneNumber) return resolve(firebase.auth().currentUser.displayName)
     var usersObjectStore = db.transaction('users').objectStore('users');
     usersObjectStore.get(number).onsuccess = function (event) {
       var record = event.target.result;
-      if (!record) return resolve(number);
-      if (!record.displayName) {
-        resolve(number);
-        return;
-      }
-      return resolve(record.displayName);
+      if (!record) return resolve({
+        displayName: '',
+        mobile: number,
+        photoURL: ''
+      });
+      return resolve(record);
     };
     usersObjectStore.get(number).onerror = function (event) {
       reject(event);
@@ -1362,19 +1365,22 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       //for create
       if (attr.hash === 'addOnlyAssignees') {
+        if (!data.primary.length) return;
+        var assigneeList = document.getElementById('assignees--list');
 
-        if (data.primary.length > 0) {
-          data.primary.forEach(function (number) {
-            if (thisActivity.assignees.indexOf(number) > -1) return;
-            thisActivity.assignees.push(number);
+        data.primary.forEach(function (number) {
+          if (thisActivity.assignees.indexOf(number) > -1) return;
+          thisActivity.assignees.push(number);
+          getUserRecord(db, number).then(function (record) {
+            if (assigneeList) {
+              assigneeList.appendChild(createSimpleAssigneeLi(record));
+            }
+          }).catch(function (error) {
+            assigneeList.appendChild(createSimpleAssigneeLi());
+            reject(error);
           });
-        }
-        var newAssigness = thisActivity.assignees;
-        readNameAndImageFromNumber(newAssigness, db).then(function (message) {
-          resolve(message);
-        }).catch(function (error) {
-          reject(error);
         });
+        resolve(true);
         return;
       }
 
@@ -1570,6 +1576,12 @@ function updateCreateActivity(record) {
       showLabel: true
     }));
 
+    createVenueSection(record);
+    createScheduleTable(record);
+    createAttachmentContainer(record);
+    createAssigneeList(record, true, db);
+    createActivityCancellation(record);
+
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
         if (isLocationVerified()) {
@@ -1578,11 +1590,6 @@ function updateCreateActivity(record) {
         }
       });
     }
-
-    createVenueSection(record);
-    createScheduleTable(record);
-
-    createAttachmentContainer(record);
 
     var inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
@@ -1619,10 +1626,6 @@ function updateCreateActivity(record) {
         });
       });
     }
-
-    createAssigneeList(db, record, true);
-
-    createActivityCancellation(record);
   };
 }
 
@@ -2142,13 +2145,13 @@ function createAttachmentContainer(data) {
   });
 }
 
-function createAssigneeList(db, record, showLabel) {
+function createAssigneeList(record, showLabel, db) {
+  var parent = document.getElementById('assignees--list');
   if (showLabel) {
 
     var labelAdd = document.createElement('li');
     labelAdd.className = 'mdc-list-item label--text add--assignee-loader';
     labelAdd.textContent = 'Assignees';
-
     var labelButton = document.createElement('span');
     labelButton.className = 'mdc-list-item__meta';
     var addButton = document.createElement('div');
@@ -2173,46 +2176,15 @@ function createAssigneeList(db, record, showLabel) {
       labelAdd.appendChild(labelButton);
     }
 
-    document.getElementById('assignees--list').appendChild(labelAdd);
+    parent.appendChild(labelAdd);
   }
-  readNameAndImageFromNumber(record.assignees, db).then(function () {}).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
-  });
-}
 
-function readNameAndImageFromNumber(assignees, db) {
-  return new Promise(function (resolve, reject) {
-    var tx = db.transaction(['users']);
-    var store = tx.objectStore('users');
-    var userRecords = [];
-    assignees.forEach(function (assignee) {
-      store.get(assignee).onsuccess = function (event) {
-        var record = event.target.result;
-        if (!record) {
-          userRecords.push({
-            mobile: assignee,
-            displayName: '',
-            photoURL: ''
-          });
-        } else {
-          userRecords.push(record);
-        }
-      };
+  record.assignees.forEach(function (number) {
+    getUserRecord(db, number).then(function (record) {
+      parent.appendChild(createSimpleAssigneeLi(record));
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error));
     });
-    tx.oncomplete = function () {
-      var assigneeList = document.getElementById('assignees--list');
-      if (assigneeList) {
-        userRecords.forEach(function (userRecord) {
-          assigneeList.appendChild(createSimpleAssigneeLi(userRecord));
-        });
-        resolve('user list updated');
-      }
-    };
-    tx.onerror = function () {
-      reject(JSON.stringify(tx.error));
-    };
   });
 }
 
