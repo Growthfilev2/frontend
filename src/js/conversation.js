@@ -300,13 +300,12 @@ function createComment(db, addendum, currentUser) {
 
     getUserRecord(db, addendum.user).then(function (record) {
       // console.log(nameOrNumber)
-        if(record.displayName) {
-          user.textContent = record.displayName
-        }
-        else {
-          user.textContent = record.mobile
-        }
-    
+      if (record.displayName) {
+        user.textContent = record.displayName
+      } else {
+        user.textContent = record.mobile
+      }
+
       let comment = document.createElement('p')
       comment.classList.add('comment', 'mdc-typography--subtitle2')
       comment.textContent = addendum.comment
@@ -323,7 +322,7 @@ function createComment(db, addendum, currentUser) {
       mapIcon.appendChild(document.createTextNode('location_on'))
 
       link.onclick = function (evt) {
-        if(!hasMapsApiLoaded()) return
+        if (!hasMapsApiLoaded()) return
         showMap = !showMap;
         const loc = {
           lat: addendum.location['_latitude'],
@@ -359,9 +358,9 @@ function getUserRecord(db, number) {
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       if (!record) return resolve({
-        displayName:'',
-        mobile:number,
-        photoURL:''
+        displayName: '',
+        mobile: number,
+        photoURL: ''
       })
       return resolve(record)
     }
@@ -371,8 +370,8 @@ function getUserRecord(db, number) {
   })
 }
 
-function hasMapsApiLoaded(){
-  if(typeof google === 'object' && typeof google.maps === 'object') {
+function hasMapsApiLoaded() {
+  if (typeof google === 'object' && typeof google.maps === 'object') {
     return true
   }
   return false
@@ -399,13 +398,13 @@ function maps(evt, show, id, location) {
 
   selector.style.height = '200px'
 
-    const map = new google.maps.Map(selector, {
-      zoom: 16,
-      center: location,
-      disableDefaultUI: true
-    });
+  const map = new google.maps.Map(selector, {
+    zoom: 16,
+    center: location,
+    disableDefaultUI: true
+  });
 
-    
+
   if (!evt) {
     var customControlDiv = document.createElement('div');
     var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
@@ -418,7 +417,7 @@ function maps(evt, show, id, location) {
     map: map
   });
 
-  
+
 }
 
 function MapsCustomControl(customControlDiv, map, lat, lng) {
@@ -980,15 +979,15 @@ function resetSelectedContacts() {
 
 function fillMapInSelector(db, tx, dialog, data) {
   console.log(data);
-  
+
   if (data.record.template === 'check-in') {
     const searchIcon = document.getElementById('selector--search')
     searchIcon.classList.add('hidden');
     const ul = document.getElementById('data-list--container')
 
     getRootRecord().then(function (record) {
-      checkMapStoreForNearByLocation(data.record.office,record.location).then(function(results){
-        results.forEach(function(result){
+      checkMapStoreForNearByLocation(data.record.office, record.location).then(function (results) {
+        results.forEach(function (result) {
           ul.appendChild(createVenueLi(result, false, data.record, true))
         })
 
@@ -1008,7 +1007,7 @@ function getLocationForMapSelector(tx, data) {
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
     const office = data.record.office
-    const range = IDBKeyRange.bound([office,''],[office,'\uffff']);
+    const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
     store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -1016,13 +1015,13 @@ function getLocationForMapSelector(tx, data) {
         cursor.continue();
         return;
       }
-      if (cursor.value.location) {      
+      if (cursor.value.location) {
         ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
       }
       cursor.continue()
     }
     tx.oncomplete = function () {
-      
+
       resolve(true)
     }
     tx.onerror = function () {
@@ -1032,25 +1031,25 @@ function getLocationForMapSelector(tx, data) {
 }
 
 
-function checkMapStoreForNearByLocation(office,currentLocation){
-  return new Promise(function(resolve,reject) {
+function checkMapStoreForNearByLocation(office, currentLocation) {
+  return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function(){
+    req.onsuccess = function () {
       const results = [];
       const db = req.result;
       const tx = db.transaction(['map'])
       const store = tx.objectStore('map')
       const index = store.index('byOffice')
-      const range = IDBKeyRange.bound([office,''],[office,'\uffff']);
-      index.openCursor(range,'nextunique').onsuccess = function(event){
+      const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
+      index.openCursor(range, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result;
-        if(!cursor) return;
-        
-        if(!cursor.value.location) {
+        if (!cursor) return;
+
+        if (!cursor.value.location) {
           cursor.continue();
           return;
         }
-      
+
         const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
 
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
@@ -1058,11 +1057,11 @@ function checkMapStoreForNearByLocation(office,currentLocation){
         }
         cursor.continue();
       }
-      tx.oncomplete = function(){
+      tx.oncomplete = function () {
 
         resolve(results)
       }
-      tx.onerror = function(){
+      tx.onerror = function () {
         reject(tx.error)
       }
     }
@@ -1070,9 +1069,9 @@ function checkMapStoreForNearByLocation(office,currentLocation){
 }
 
 function handleClickListnersForMap(db, dialog, data) {
-  
+
   const searchIcon = document.getElementById('selector--search')
-  if(searchIcon) {
+  if (searchIcon) {
     document.getElementById('selector--search').addEventListener('click', function () {
       initSearchForSelectors(db, 'map', data)
     })
@@ -1082,7 +1081,7 @@ function handleClickListnersForMap(db, dialog, data) {
 
   dialog['acceptButton_'].onclick = function () {
     const selected = document.querySelector('.mdc-radio.radio-selected');
-    if(!selected) return;
+    if (!selected) return;
     const radio = new mdc.radio.MDCRadio(selected);
     const selectedField = JSON.parse(radio.value)
 
@@ -1265,78 +1264,54 @@ function createTempRecord(office, template, data) {
 
 
 
-    console.log(data)
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const tx = db.transaction(['subscriptions']);
-      const subscription = tx.objectStore('subscriptions')
-      const officeTemplateCombo = subscription.index('officeTemplate')
-      const range = IDBKeyRange.only([office, template])
-      officeTemplateCombo.get(range).onsuccess = function (event) {
-        const selectedCombo = event.target.result
-        if (!selectedCombo) {
-          console.log("no such combo")
-          return;
-        }
-
-        const bareBonesScheduleArray = []
-        console.log(selectedCombo)
-        selectedCombo.schedule.forEach(function (schedule) {
-          const bareBonesSchedule = {}
-          bareBonesSchedule.name = schedule
-          bareBonesSchedule.startTime = ''
-          bareBonesSchedule.endTime = ''
-          bareBonesScheduleArray.push(bareBonesSchedule)
-        })
-
-
-        const bareBonesRecord = {
-          office: selectedCombo.office,
-          template: selectedCombo.template,
-          venue: '',
-          schedule: bareBonesScheduleArray,
-          attachment: selectedCombo.attachment,
-          timestamp: Date.now(),
-          canEdit: true,
-          assignees: [],
-          activityName: selectedCombo.template.toUpperCase(),
-          create: true
-        }
-
-        const bareBonesVenueArray = []
-        if(template === 'check-in') {
-            prefillLocationForCheckIn(bareBonesRecord,selectedCombo.venue[0]);
-            return
-        }
-        selectedCombo.venue.forEach(function (venue) {
-          const bareBonesVenue = {}
-          bareBonesVenue.venueDescriptor = venue
-          bareBonesVenue.location = ''
-          bareBonesVenue.address = ''
-          bareBonesVenue.geopoint = {
-            '_latitude': '',
-            '_longitude': ''
-          }
-
-          bareBonesVenueArray.push(bareBonesVenue);          
-        });
-        bareBonesRecord.venue = bareBonesVenueArray
-        updateCreateActivity(bareBonesRecord)
-        removeDialog()
+  console.log(data)
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result
+    const tx = db.transaction(['subscriptions']);
+    const subscription = tx.objectStore('subscriptions')
+    const officeTemplateCombo = subscription.index('officeTemplate')
+    const range = IDBKeyRange.only([office, template])
+    officeTemplateCombo.get(range).onsuccess = function (event) {
+      const selectedCombo = event.target.result
+      if (!selectedCombo) {
+        console.log("no such combo")
+        return;
       }
-    }
-  
-}
+
+      const bareBonesScheduleArray = []
+      console.log(selectedCombo)
+      selectedCombo.schedule.forEach(function (schedule) {
+        const bareBonesSchedule = {}
+        bareBonesSchedule.name = schedule
+        bareBonesSchedule.startTime = ''
+        bareBonesSchedule.endTime = ''
+        bareBonesScheduleArray.push(bareBonesSchedule)
+      })
 
 
-function prefillLocationForCheckIn(bareBonesRecord,venueDesc){
-  getRootRecord().then(function (record) {
-    checkMapStoreForNearByLocation(bareBonesRecord.office,record.location).then(function(results){
-        const locations = [];
+      const bareBonesRecord = {
+        office: selectedCombo.office,
+        template: selectedCombo.template,
+        venue: '',
+        schedule: bareBonesScheduleArray,
+        attachment: selectedCombo.attachment,
+        timestamp: Date.now(),
+        canEdit: true,
+        assignees: [],
+        activityName: selectedCombo.template.toUpperCase(),
+        create: true
+      }
+
+      const bareBonesVenueArray = []
+      if (template === 'check-in') {
+        prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0]);
+        return
+      }
+      selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
-        bareBonesVenue.venueDescriptor = venueDesc
+        bareBonesVenue.venueDescriptor = venue
         bareBonesVenue.location = ''
         bareBonesVenue.address = ''
         bareBonesVenue.geopoint = {
@@ -1344,29 +1319,52 @@ function prefillLocationForCheckIn(bareBonesRecord,venueDesc){
           '_longitude': ''
         }
 
-        if(!results.length) {
-          bareBonesVenue.showIcon = false;
-        }
-        else {
-          bareBonesVenue.showIcon = true;
-        }
+        bareBonesVenueArray.push(bareBonesVenue);
+      });
+      bareBonesRecord.venue = bareBonesVenueArray
+      updateCreateActivity(bareBonesRecord)
+      removeDialog()
+    }
+  }
 
-        if(results.length === 1) {
-          const singleLocation = results[0]
-          bareBonesVenue.location = singleLocation.location
-          bareBonesVenue.address = singleLocation.address
-          bareBonesVenue.geopoint = {
-            '_latitude': singleLocation.latitude,
-            '_longitude': singleLocation.longitude
-          }
+}
+
+
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
+  getRootRecord().then(function (record) {
+    checkMapStoreForNearByLocation(bareBonesRecord.office, record.location).then(function (results) {
+      const locations = [];
+      const bareBonesVenue = {}
+      bareBonesVenue.venueDescriptor = venueDesc
+      bareBonesVenue.location = ''
+      bareBonesVenue.address = ''
+      bareBonesVenue.geopoint = {
+        '_latitude': '',
+        '_longitude': ''
+      }
+
+      if (!results.length) {
+        bareBonesVenue.showIcon = false;
+      } else {
+        bareBonesVenue.showIcon = true;
+      }
+
+      if (results.length === 1) {
+        const singleLocation = results[0]
+        bareBonesVenue.location = singleLocation.location
+        bareBonesVenue.address = singleLocation.address
+        bareBonesVenue.geopoint = {
+          '_latitude': singleLocation.latitude,
+          '_longitude': singleLocation.longitude
         }
-        locations.push(bareBonesVenue)
-        bareBonesRecord.venue = locations
-        updateCreateActivity(bareBonesRecord)
-        removeDialog()
-      })
-      
+      }
+      locations.push(bareBonesVenue)
+      bareBonesRecord.venue = locations
+      updateCreateActivity(bareBonesRecord)
+      removeDialog()
     })
+
+  })
 }
 
 
@@ -1425,27 +1423,22 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       //for create
       if (attr.hash === 'addOnlyAssignees') {
-
-        if (data.primary.length > 0) {
-          data.primary.forEach(function (number) {
-            if (thisActivity.assignees.indexOf(number) > -1) return
-            thisActivity.assignees.push(number)
-          })
-        }
-        const newAssigness = thisActivity.assignees
+        if (!data.primary.length) return
         const assigneeList = document.getElementById('assignees--list')
 
-        newAssigness.forEach(function(number){
-          getUserRecord(db,number).then(function (record) {
-            if (assigneeList) {
+        data.primary.forEach(function (number) {
+          if (thisActivity.assignees.indexOf(number) > -1) return
+          thisActivity.assignees.push(number)
+            getUserRecord(db, number).then(function (record) {
+              if (assigneeList) {
                 assigneeList.appendChild(createSimpleAssigneeLi(record))
-            }
-          }).catch(function (error) {
-            assigneeList.appendChild(createSimpleAssigneeLi())
-            reject(error);
-          })
+              }
+            }).catch(function (error) {
+              assigneeList.appendChild(createSimpleAssigneeLi())
+              reject(error);
+            })
         })
-        resolve(message);
+        resolve(true);
         return
       }
 
@@ -1652,10 +1645,10 @@ function updateCreateActivity(record) {
     createVenueSection(record)
     createScheduleTable(record);
     createAttachmentContainer(record)
-    createAssigneeList(record)
+    createAssigneeList(record, true, db)
     createActivityCancellation(record);
 
-    
+
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
         if (isLocationVerified()) {
@@ -1664,7 +1657,7 @@ function updateCreateActivity(record) {
         }
       })
     }
-   
+
     const inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
       inputFields[i].addEventListener('input', function (e) {
@@ -1862,9 +1855,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
     textSpan.appendChild(primarySpan)
 
     textSpan.onclick = function (evt) {
-      if(!hasMapsApiLoaded()) return;
-      if(!venue.geopoint['_latitude']) return;
-      if(!venue.geopoint['_longitude']) return;
+      if (!hasMapsApiLoaded()) return;
+      if (!venue.geopoint['_latitude']) return;
+      if (!venue.geopoint['_longitude']) return;
 
       showMap = !showMap
 
@@ -1888,7 +1881,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
           key: venue.venueDescriptor
         })
       }
-  
+
     }
   } else {
     primarySpan.textContent = venue.location
@@ -1918,19 +1911,16 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const secondaryText = document.createElement('span')
   secondaryText.className = 'mdc-list-item__secondary-text'
-  if(!record.hasOwnProperty('create')) { 
+  if (!record.hasOwnProperty('create')) {
     secondaryText.textContent = venue.address
+  } else if (record.template === 'check-in' && !showMetaInput) {
+    if (!venue.showIcon) {
+      secondaryText.style.paddingTop = '3px';
+      secondaryText.textContent = 'No Locations Found for Check-In'
+    } else {
+      secondaryText.textContent = venue.address
+    }
   }
-
-  else if(record.template === 'check-in' && !showMetaInput) {
-      if(!venue.showIcon) {
-        secondaryText.style.paddingTop = '3px';
-        secondaryText.textContent = 'No Locations Found for Check-In'
-      }
-      else {
-        secondaryText.textContent = venue.address
-      }
-}
 
   secondaryText.dataset.secondary = ''
   textSpan.appendChild(secondaryText)
@@ -1938,12 +1928,11 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   if (showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
-    if(record.template === 'check-in') {
-      if(venue.showIcon) {
+    if (record.template === 'check-in') {
+      if (venue.showIcon) {
         listItem.appendChild(selectorIcon)
       }
-    }
-    else {
+    } else {
       listItem.appendChild(selectorIcon)
     }
   }
@@ -2246,14 +2235,13 @@ function createAttachmentContainer(data) {
 
 
 
-function createAssigneeList(record) {
-  
+function createAssigneeList(record, showLabel, db) {
+  const parent = document.getElementById('assignees--list')
+  if (showLabel) {
+
     const labelAdd = document.createElement('li')
     labelAdd.className = 'mdc-list-item label--text add--assignee-loader'
     labelAdd.textContent = 'Assignees'
-
-
-
     const labelButton = document.createElement('span')
     labelButton.className = 'mdc-list-item__meta'
     const addButton = document.createElement('div')
@@ -2279,8 +2267,16 @@ function createAssigneeList(record) {
       labelAdd.appendChild(labelButton)
     }
 
-    document.getElementById('assignees--list').appendChild(labelAdd)
-  
+    parent.appendChild(labelAdd)
+  }
+
+  record.assignees.forEach(function (number) {
+    getUserRecord(db, number).then(function (record) {
+      parent.appendChild(createSimpleAssigneeLi(record))
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error))
+    })
+  })
 }
 
 
@@ -2507,7 +2503,7 @@ function readCameraFile() {
 function openImage(imageSrc) {
   // sendCurrentViewNameToAndroid('selector')
 
-  if(!imageSrc) return;
+  if (!imageSrc) return;
 
   document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
   const imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));
@@ -2683,8 +2679,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-   let source = ''
-    if(imagesInAttachments[i].src !== './img/placeholder.png') {
+    let source = ''
+    if (imagesInAttachments[i].src !== './img/placeholder.png') {
       source = imagesInAttachments[i].src
     }
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
@@ -2732,7 +2728,7 @@ function insertInputsIntoActivity(record, activityStore) {
       latitude: record.venue[i].geopoint['_latitude'] || "",
       longitude: record.venue[i].geopoint['_longitude'] || ""
     }
-    if(record.venue[i].hasOwnProperty('showIcon')) {
+    if (record.venue[i].hasOwnProperty('showIcon')) {
       delete record.venue[i].showIcon
     }
   }
@@ -3109,4 +3105,3 @@ function toggleActionables(id) {
     }
   }
 }
-
