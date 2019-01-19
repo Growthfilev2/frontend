@@ -1,5 +1,5 @@
 
-var notification = new Worker('src/js/notification.js');
+var notification = new Worker('js/notification.js');
 
 function listView(filter) {
 
