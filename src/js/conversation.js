@@ -2293,7 +2293,7 @@ function readNameAndImageFromNumber(assignees, db) {
       store.get(assignee).onsuccess = function (event) {
         let record = event.target.result
         if (!record) {
-          userRecord.push({
+          userRecords.push({
             mobile: assignee,
             displayName: '',
             photoURL: '',
