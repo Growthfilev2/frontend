@@ -916,7 +916,7 @@ function loadView(data) {
     listView({
       urgent: false,
       nearBy: false
-    },data.msg);
+    });
     return;
   }
 

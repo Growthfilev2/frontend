@@ -863,7 +863,7 @@ function createListStore(activity, counter,param) {
 function updateListStoreWithCreatorImage(param) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(param.user.uid)
-    const updatedActivities = []
+   
     req.onsuccess = function () {
 
       const db = req.result
@@ -879,14 +879,14 @@ function updateListStoreWithCreatorImage(param) {
         if (creator.number === param.user.phoneNumber) {
           creator.photo = param.user.photoURL;
           listStore.put(cursor.value)
-          updatedActivities.push(cursor.value)
+         
         } else {
           userStore.get(creator.number).onsuccess = function (userEvent) {
             const record = userEvent.target.result;
             if (record) {
               creator.photo = record.photoURL;
               listStore.put(cursor.value);
-              updatedActivities.push(cursor.value)
+             
 
             }
           }
@@ -984,8 +984,8 @@ function successResponse(read,param) {
       record.fromTime = read.upto
       rootObjectStore.put(record);
 
-      updateListStoreWithCreatorImage(param).then(function (updatedActivities) {
-        requestHandlerResponse('loadView', 200,updatedActivities);
+      updateListStoreWithCreatorImage(param).then(function () {
+        requestHandlerResponse('loadView', 200);
       })
     }
   }

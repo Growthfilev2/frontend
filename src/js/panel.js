@@ -5,11 +5,24 @@ const scroll_namespace = {
   size: 10,
   skip: false
 }
+function initDomLoad(){
 
+  if (document.querySelector('.init-loader')) {
+    document.querySelector('.init-loader').remove()
+  }
 
+  if (document.querySelector('.mdc-linear-progress')) {
+    document.querySelector('.mdc-linear-progress').remove();
+  }
 
-function listView(filter,updatedActivites) {
+  listPanel()
+  creatListHeader('Activities');
+  createActivityIcon();
+}
 
+function listView(filter) {
+  history.pushState(['listView'], null, null)
+  initDomLoad()
 
   getRootRecord().then(function (record) {
 
@@ -17,58 +30,32 @@ function listView(filter,updatedActivites) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
-
-    history.pushState(['listView'], null, null)
-
-    if (document.querySelector('.init-loader')) {
-      document.querySelector('.init-loader').remove()
-    }
-
-    if (document.querySelector('.mdc-linear-progress')) {
-      document.querySelector('.mdc-linear-progress').remove();
-    }
-
-    listPanel()
-    creatListHeader('Activities');
-    createActivityIcon();
-    document.getElementById('activity--list').addEventListener('scroll', handleScroll)
+  
+    document.getElementById('activity--list').addEventListener('scroll', function(ev){
+      handleScroll(ev,record.location)
+    })
+    
     if (!filter) {
-      fetchDataForActivityList(record.location);
+      startCursor(record.location);
       return;
     }
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
-        fetchDataForActivityList(record.location);
+        startCursor(record.location);
       })
     });
   })
 }
 
-function removeExistingActivities(updatedActivites){
-updatedActivites.forEach(function(activity){
-  const activityLi = document.querySelector(`[data-id="${activity.activityId}"]`)
-  if(activityLi) {
-    changeContentOfUpdatedActivity()
-  }
-})
-}
-
-function changeContentOfUpdatedActivity(data){
-  
-}
-function handleScroll(ev) {
+function handleScroll(ev,currentLocation) {
   const target = ev.target;
-  console.log(target.scrollTop)
-  console.log(target.scrollHeight)
   if ((target.scrollTop + target.offsetHeight) >= target.scrollHeight) {
-    getRootRecord().then(function (record) {
-      fetchDataForActivityList(record.location)
-    })
+    startCursor(currentLocation)
   }
 }
 
-function fetchDataForActivityList(currentLocation) {
+function startCursor(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -91,11 +78,15 @@ function fetchDataForActivityList(currentLocation) {
           scroll_namespace.skip = true
           cursor.advance(advanceCount)
         } else {
+         
           getActivityDataForList(activity, cursor.value, currentLocation,ul)
+          iterator++
           runCursor(cursor,iterator)
         }
       } else {
         getActivityDataForList(activity, cursor.value, currentLocation,ul)
+        iterator++
+
         runCursor(cursor,iterator)
       }
     }
@@ -115,7 +106,7 @@ function fetchDataForActivityList(currentLocation) {
 
 function runCursor(cursor, iterator) {
   const size = scroll_namespace.size;
-  iterator++
+ 
   if (iterator < size) {
     cursor.continue();
   }
@@ -317,7 +308,7 @@ function activityListUI(data, secondLine) {
   creator.dataset.number = data.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
   creator.setAttribute('onerror', `handleImageError(this)`)
-  creator.src = data.creator.photo || './img/empty-user.jpg'
+  // creator.src = data.creator.photo || './img/empty-user.jpg'
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
