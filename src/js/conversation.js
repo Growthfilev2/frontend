@@ -748,9 +748,7 @@ function fillUsersInSelector(data, dialog) {
         if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
           document.getElementById('selector--search').style.display = 'none'
           const parentNode = document.getElementById('data-list--container')
-          while(parentNode.firstChild) {
-            parentNode.removeChild(parentNode.firstChild);
-          }
+          removeChildNodes(parentNode)
           document.querySelector('.mdc-dialog__footer').style.display = 'none'
           addNewNumber(data, dialog)
           return

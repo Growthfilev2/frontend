@@ -917,6 +917,9 @@ function loadView(data) {
        scroll_namespace.count = 0;
        scroll_namespace.size = privousCount 
     }
+    const parentNode = document.getElementById('activity--list')
+    removeChildNodes(parentNode)
+    
     listView({
       urgent: false,
       nearBy: false
@@ -974,3 +977,8 @@ function runRead(value) {
 }
 
 
+function removeChildNodes(parent){
+  while(parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  }
+}
