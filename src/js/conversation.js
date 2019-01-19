@@ -713,88 +713,92 @@ function fillUsersInSelector(data, dialog) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
-    const selectorStore = db.transaction('users').objectStore('users');
-    selectorStore.openCursor().onsuccess = function (event) {
+    const transaction = db.transaction(['users']);
+    const store = transaction.objectStore('users')
+
+    store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-        const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-        selectedBoxes.forEach(function (box) {
-          if (box) {
-            const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-            mdcBox.checked = true
-            box.children[1].style.animation = 'none'
-            box.children[1].children[0].children[0].style.animation = 'none'
-          }
-        })
-        return
-      }
-
+      if(!cursor) return
       const userRecord = cursor.value
-
       if (data.attachment.present) {
-
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
-
       }
-
       cursor.continue()
     }
+    transaction.oncomplete = function(){
+      const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
+      selectedBoxes.forEach(function (box) {
+        if (box) {
+          const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
+          mdcBox.checked = true
+          box.children[1].style.animation = 'none'
+          box.children[1].children[0].children[0].style.animation = 'none'
+        }
+      })
 
-    document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(db, 'users', data)
-    })
-    document.querySelector('.selector-send').classList.remove('hidden');
-
-    dialog['acceptButton_'].onclick = function () {
-
-      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
-        document.getElementById('selector--search').style.display = 'none'
-        document.getElementById('data-list--container').innerHTML = ''
-        document.querySelector('.mdc-dialog__footer').style.display = 'none'
-        addNewNumber(data, dialog)
-        return
-      }
-
-      if (data.attachment.present) {
-        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-        console.log(radio)
-        console.log("run")
-        updateDomFromIDB(data.record, {
-          hash: '',
-          key: data.attachment.key
-        }, {
-          primary: JSON.parse(radio.value)
-        }).then(removeDialog).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: error
-          }))
-
-        })
-        return;
-      }
-      if (data.record.hasOwnProperty('create')) {
-        resetSelectedContacts().then(function (selectedPeople) {
+      document.getElementById('selector--search').addEventListener('click', function () {
+        initSearchForSelectors(db, 'users', data)
+      })
+      document.querySelector('.selector-send').classList.remove('hidden');
+  
+      dialog['acceptButton_'].onclick = function () {
+  
+        if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+          document.getElementById('selector--search').style.display = 'none'
+          const parentNode = document.getElementById('data-list--container')
+          while(parentNode.firstChild) {
+            parentNode.removeChild(parentNode.firstChild);
+          }
+          document.querySelector('.mdc-dialog__footer').style.display = 'none'
+          addNewNumber(data, dialog)
+          return
+        }
+  
+        if (data.attachment.present) {
+          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+          console.log(radio)
+          console.log("run")
           updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees',
+            hash: '',
+            key: data.attachment.key
           }, {
-            primary: selectedPeople
+            primary: JSON.parse(radio.value)
           }).then(removeDialog).catch(function (error) {
             requestCreator('instant', JSON.stringify({
               message: error
             }))
+  
           })
-
-        })
-        return
+          return;
+        }
+        if (data.record.hasOwnProperty('create')) {
+          resetSelectedContacts().then(function (selectedPeople) {
+            updateDomFromIDB(data.record, {
+              hash: 'addOnlyAssignees',
+            }, {
+              primary: selectedPeople
+            }).then(removeDialog).catch(function (error) {
+              requestCreator('instant', JSON.stringify({
+                message: error
+              }))
+            })
+  
+          })
+          return
+        }
+        if (isLocationVerified()) {
+  
+          shareReq(data)
+        }
+  
       }
-      if (isLocationVerified()) {
 
-        shareReq(data)
-      }
 
     }
+
+    
   }
 
 }
@@ -852,6 +856,7 @@ function addNewNumber(data) {
   createButton.className = 'mdc-button'
   createButton.textContent = 'Add Contact'
   createButton.id = 'new-contact'
+  
   createButton.onclick = function () {
     const number = document.getElementById('number-field').value
 
