@@ -23,14 +23,14 @@ function initDomLoad(){
 function listView(filter) {
   history.pushState(['listView'], null, null)
   initDomLoad()
-
+  
   getRootRecord().then(function (record) {
 
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
-  
+    
     document.getElementById('activity--list').addEventListener('scroll', function(ev){
       handleScroll(ev,record.location)
     })

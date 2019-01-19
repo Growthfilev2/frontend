@@ -912,7 +912,11 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-  
+    if(data.msg) {
+      const privousCount = scroll_namespace.count
+       scroll_namespace.count = 0;
+       scroll_namespace.size = privousCount 
+    }
     listView({
       urgent: false,
       nearBy: false

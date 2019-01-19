@@ -895,7 +895,7 @@ function updateListStoreWithCreatorImage(param) {
       }
 
       transaction.oncomplete = function () {
-        resolve(updatedActivities);
+        resolve(true);
       }
 
       transaction.onerror = function () {
@@ -906,8 +906,6 @@ function updateListStoreWithCreatorImage(param) {
 }
 
 function successResponse(read,param) {
-
-
   const request = indexedDB.open(param.user.uid)
   const removeActivitiesForUser = []
   const removeActivitiesForOthers = []
@@ -985,7 +983,11 @@ function successResponse(read,param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('loadView', 200);
+        let viewRefresh = false
+        if(read.activities.length){
+          viewRefresh = true
+        }
+        requestHandlerResponse('loadView', 200,viewRefresh);
       })
     }
   }

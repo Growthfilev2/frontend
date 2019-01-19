@@ -207,8 +207,7 @@ window.addEventListener('load', function () {
     }
     window[event.state[0]](event.state[1], false)
   }
-
-
+  
   layoutGrid()
 
   startApp()
