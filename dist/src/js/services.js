@@ -823,7 +823,7 @@ function updateApp(data) {
     }
     return;
   }
-  webkit.messageHandlers.updateApp.postMessage();
+  webkit.messageHandlers.updateApp.postMessage("update ios app");
 }
 
 function revokeSession() {
