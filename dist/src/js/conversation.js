@@ -291,9 +291,13 @@ function createComment(db, addendum, currentUser) {
     var user = document.createElement('p');
     user.classList.add('user-name--comment', 'mdc-typography--subtitle2');
 
-    readNameFromNumber(db, addendum.user).then(function (nameOrNumber) {
+    getUserRecord(db, addendum.user).then(function (record) {
       // console.log(nameOrNumber)
-      user.textContent = nameOrNumber;
+      if (record.displayName) {
+        user.textContent = record.displayName;
+      } else {
+        user.textContent = record.mobile;
+      }
 
       var comment = document.createElement('p');
       comment.classList.add('comment', 'mdc-typography--subtitle2');
@@ -340,18 +344,17 @@ function createComment(db, addendum, currentUser) {
   });
 }
 
-function readNameFromNumber(db, number) {
+function getUserRecord(db, number) {
   return new Promise(function (resolve, reject) {
-    // if (number === firebase.auth().currentUser.phoneNumber) return resolve(firebase.auth().currentUser.displayName)
     var usersObjectStore = db.transaction('users').objectStore('users');
     usersObjectStore.get(number).onsuccess = function (event) {
       var record = event.target.result;
-      if (!record) return resolve(number);
-      if (!record.displayName) {
-        resolve(number);
-        return;
-      }
-      return resolve(record.displayName);
+      if (!record) return resolve({
+        displayName: '',
+        mobile: number,
+        photoURL: ''
+      });
+      return resolve(record);
     };
     usersObjectStore.get(number).onerror = function (event) {
       reject(event);
@@ -684,83 +687,84 @@ function fillUsersInSelector(data, dialog) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-    var selectorStore = db.transaction('users').objectStore('users');
-    selectorStore.openCursor().onsuccess = function (event) {
+    var transaction = db.transaction(['users']);
+    var store = transaction.objectStore('users');
+
+    store.openCursor().onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) {
-        var selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-        selectedBoxes.forEach(function (box) {
-          if (box) {
-            var mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-            mdcBox.checked = true;
-            box.children[1].style.animation = 'none';
-            box.children[1].children[0].children[0].style.animation = 'none';
-          }
-        });
-        return;
-      }
-
+      if (!cursor) return;
       var userRecord = cursor.value;
-
       if (data.attachment.present) {
-
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false));
       } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true));
       }
-
       cursor.continue();
     };
+    transaction.oncomplete = function () {
+      var selectedBoxes = document.querySelectorAll('[data-selected="true"]');
+      selectedBoxes.forEach(function (box) {
+        if (box) {
+          var mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
+          mdcBox.checked = true;
+          box.children[1].style.animation = 'none';
+          box.children[1].children[0].children[0].style.animation = 'none';
+        }
+      });
 
-    document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(db, 'users', data);
-    });
-    document.querySelector('.selector-send').classList.remove('hidden');
+      document.getElementById('selector--search').addEventListener('click', function () {
+        initSearchForSelectors(db, 'users', data);
+      });
+      document.querySelector('.selector-send').classList.remove('hidden');
 
-    dialog['acceptButton_'].onclick = function () {
+      dialog['acceptButton_'].onclick = function () {
 
-      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
-        document.getElementById('selector--search').style.display = 'none';
-        document.getElementById('data-list--container').innerHTML = '';
-        document.querySelector('.mdc-dialog__footer').style.display = 'none';
-        addNewNumber(data, dialog);
-        return;
-      }
+        if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+          document.getElementById('selector--search').style.display = 'none';
+          var parentNode = document.getElementById('data-list--container');
+          while (parentNode.firstChild) {
+            parentNode.removeChild(parentNode.firstChild);
+          }
+          document.querySelector('.mdc-dialog__footer').style.display = 'none';
+          addNewNumber(data, dialog);
+          return;
+        }
 
-      if (data.attachment.present) {
-        var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
-        console.log(radio);
-        console.log("run");
-        updateDomFromIDB(data.record, {
-          hash: '',
-          key: data.attachment.key
-        }, {
-          primary: JSON.parse(radio.value)
-        }).then(removeDialog).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: error
-          }));
-        });
-        return;
-      }
-      if (data.record.hasOwnProperty('create')) {
-        resetSelectedContacts().then(function (selectedPeople) {
+        if (data.attachment.present) {
+          var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+          console.log(radio);
+          console.log("run");
           updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees'
+            hash: '',
+            key: data.attachment.key
           }, {
-            primary: selectedPeople
+            primary: JSON.parse(radio.value)
           }).then(removeDialog).catch(function (error) {
             requestCreator('instant', JSON.stringify({
               message: error
             }));
           });
-        });
-        return;
-      }
-      if (isLocationVerified()) {
+          return;
+        }
+        if (data.record.hasOwnProperty('create')) {
+          resetSelectedContacts().then(function (selectedPeople) {
+            updateDomFromIDB(data.record, {
+              hash: 'addOnlyAssignees'
+            }, {
+              primary: selectedPeople
+            }).then(removeDialog).catch(function (error) {
+              requestCreator('instant', JSON.stringify({
+                message: error
+              }));
+            });
+          });
+          return;
+        }
+        if (isLocationVerified()) {
 
-        shareReq(data);
-      }
+          shareReq(data);
+        }
+      };
     };
   };
 }
@@ -814,6 +818,7 @@ function addNewNumber(data) {
   createButton.className = 'mdc-button';
   createButton.textContent = 'Add Contact';
   createButton.id = 'new-contact';
+
   createButton.onclick = function () {
     var number = document.getElementById('number-field').value;
 
@@ -1362,19 +1367,22 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       //for create
       if (attr.hash === 'addOnlyAssignees') {
+        if (!data.primary.length) return;
+        var assigneeList = document.getElementById('assignees--list');
 
-        if (data.primary.length > 0) {
-          data.primary.forEach(function (number) {
-            if (thisActivity.assignees.indexOf(number) > -1) return;
-            thisActivity.assignees.push(number);
+        data.primary.forEach(function (number) {
+          if (thisActivity.assignees.indexOf(number) > -1) return;
+          thisActivity.assignees.push(number);
+          getUserRecord(db, number).then(function (record) {
+            if (assigneeList) {
+              assigneeList.appendChild(createSimpleAssigneeLi(record));
+            }
+          }).catch(function (error) {
+            assigneeList.appendChild(createSimpleAssigneeLi());
+            reject(error);
           });
-        }
-        var newAssigness = thisActivity.assignees;
-        readNameAndImageFromNumber(newAssigness, db).then(function (message) {
-          resolve(message);
-        }).catch(function (error) {
-          reject(error);
         });
+        resolve(true);
         return;
       }
 
@@ -1570,6 +1578,12 @@ function updateCreateActivity(record) {
       showLabel: true
     }));
 
+    createVenueSection(record);
+    createScheduleTable(record);
+    createAttachmentContainer(record);
+    createAssigneeList(record, true, db);
+    createActivityCancellation(record);
+
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
         if (isLocationVerified()) {
@@ -1578,11 +1592,6 @@ function updateCreateActivity(record) {
         }
       });
     }
-
-    createVenueSection(record);
-    createScheduleTable(record);
-
-    createAttachmentContainer(record);
 
     var inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
@@ -1619,10 +1628,6 @@ function updateCreateActivity(record) {
         });
       });
     }
-
-    createAssigneeList(db, record, true);
-
-    createActivityCancellation(record);
   };
 }
 
@@ -2142,13 +2147,13 @@ function createAttachmentContainer(data) {
   });
 }
 
-function createAssigneeList(db, record, showLabel) {
+function createAssigneeList(record, showLabel, db) {
+  var parent = document.getElementById('assignees--list');
   if (showLabel) {
 
     var labelAdd = document.createElement('li');
     labelAdd.className = 'mdc-list-item label--text add--assignee-loader';
     labelAdd.textContent = 'Assignees';
-
     var labelButton = document.createElement('span');
     labelButton.className = 'mdc-list-item__meta';
     var addButton = document.createElement('div');
@@ -2173,46 +2178,15 @@ function createAssigneeList(db, record, showLabel) {
       labelAdd.appendChild(labelButton);
     }
 
-    document.getElementById('assignees--list').appendChild(labelAdd);
+    parent.appendChild(labelAdd);
   }
-  readNameAndImageFromNumber(record.assignees, db).then(function () {}).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
-  });
-}
 
-function readNameAndImageFromNumber(assignees, db) {
-  return new Promise(function (resolve, reject) {
-    var tx = db.transaction(['users']);
-    var store = tx.objectStore('users');
-    var userRecords = [];
-    assignees.forEach(function (assignee) {
-      store.get(assignee).onsuccess = function (event) {
-        var record = event.target.result;
-        if (!record) {
-          userRecord.push({
-            mobile: assignee,
-            displayName: '',
-            photoURL: ''
-          });
-        } else {
-          userRecords.push(record);
-        }
-      };
+  record.assignees.forEach(function (number) {
+    getUserRecord(db, number).then(function (record) {
+      parent.appendChild(createSimpleAssigneeLi(record));
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error));
     });
-    tx.oncomplete = function () {
-      var assigneeList = document.getElementById('assignees--list');
-      if (assigneeList) {
-        userRecords.forEach(function (userRecord) {
-          assigneeList.appendChild(createSimpleAssigneeLi(userRecord));
-        });
-        resolve('user list updated');
-      }
-    };
-    tx.onerror = function () {
-      reject(JSON.stringify(tx.error));
-    };
   });
 }
 
