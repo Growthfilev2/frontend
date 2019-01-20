@@ -473,7 +473,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
      
       if(!empDetails) {
-        return resolve({onLeave:false})
+        return resolve(false)
       }
      
      empDetails.onLeave = false
@@ -644,11 +644,17 @@ function runAppChecks() {
 
  window.addEventListener('locationChanged', function _locationChanged(e) {
   isEmployeeOnLeave().then(function (emp) {
+
     var dataObject = {
       urgent: false,
       nearby: false,
-      checkin: !emp.onLeave
     };
+    if(emp) {
+      dataObject['checkin'] = !emp.onLeave
+    }
+    else {
+      dataObject['checkin'] = false
+    }
     
 
     var changed = e.detail;
@@ -673,6 +679,8 @@ function runAppChecks() {
       startInitializatioOfList(dataObject);
       return;
     };
+
+    if(!emp) return
 
     if(app.isCurrentTimeNearStart(emp)) {
       const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
