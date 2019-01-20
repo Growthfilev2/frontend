@@ -65,7 +65,7 @@ function startCursor(currentLocation) {
     const index = store.index('timestamp');
     let iterator = 0;
     const advanceCount = scroll_namespace.count;
-
+    let temp = []
 
     const ul = document.getElementById('activity--list')
     index.openCursor(null, 'prev').onsuccess = function (event) {
@@ -78,15 +78,17 @@ function startCursor(currentLocation) {
           scroll_namespace.skip = true
           cursor.advance(advanceCount)
         } else {
+          temp.push(cursor.value)
          
           getActivityDataForList(activity, cursor.value, currentLocation,ul)
           iterator++
           runCursor(cursor,iterator)
         }
       } else {
+        temp.push(cursor.value)
+
         getActivityDataForList(activity, cursor.value, currentLocation,ul)
         iterator++
-
         runCursor(cursor,iterator)
       }
     }
@@ -96,7 +98,7 @@ function startCursor(currentLocation) {
      */
 
     transaction.oncomplete = function () {
-
+     console.log(temp)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false
       scrollToActivity()
@@ -284,19 +286,12 @@ function generateLatestVenue(venues, currentLocation) {
   }
   return text;
 }
-
-
-
 function sortNearestLocation(distances) {
   const dataset = distances.slice();
   return dataset.sort(function (a, b) {
     return a.distance - b.distance
   })
 }
-
-
-
-
 function activityListUI(data, secondLine) {
 
   const li = document.createElement('li')
@@ -308,7 +303,7 @@ function activityListUI(data, secondLine) {
   creator.dataset.number = data.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
   creator.setAttribute('onerror', `handleImageError(this)`)
-  // creator.src = data.creator.photo || './img/empty-user.jpg'
+  creator.src = data.creator.photo || './img/empty-user.jpg'
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
@@ -396,7 +391,6 @@ function generateIconByCondition(data, li) {
   timeCustomText.textContent = moment(data.timestamp).calendar()
   return timeCustomText;
 }
-
 
 function appendActivityListToDom(activityDom) {
   const parent = document.getElementById('activity--list')
