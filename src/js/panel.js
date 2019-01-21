@@ -5,7 +5,8 @@ const scroll_namespace = {
   size: 10,
   skip: false
 }
-function initDomLoad(){
+
+function initDomLoad() {
 
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
@@ -20,21 +21,21 @@ function initDomLoad(){
   createActivityIcon();
 }
 
-function listView(filter) {
+function listView(filter, updatedActivities) {
   history.pushState(['listView'], null, null)
   initDomLoad()
-  
+
   getRootRecord().then(function (record) {
 
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
-    
-    document.getElementById('activity--list').addEventListener('scroll', function(ev){
-      handleScroll(ev,record.location)
+
+    document.getElementById('activity--list').addEventListener('scroll', function (ev) {
+      handleScroll(ev, record.location)
     })
-    
+
     if (!filter) {
       startCursor(record.location);
       return;
@@ -48,13 +49,38 @@ function listView(filter) {
   })
 }
 
-function handleScroll(ev,currentLocation) {
-  const target = ev.target;
-  if ((target.scrollTop + target.offsetHeight) >= target.scrollHeight) {
-    startCursor(currentLocation)
+function updateEl(activities, currentLocation) {
+
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
+    const db = req.result;
+    const tx = db.transaction(['list', 'activity'])
+    const activityStore = tx.objectStore('activity')
+    const listStore = tx.objectStore('list');
+    const ul = document.getElementById('activity--list')
+    activities.forEach(function (activity) {
+      listStore.get(activity.activityId).onsuccess = function (event) {
+        const record = event.target.result;
+        const existingEl = document.querySelector(`[data-id="${activity.activityId}"]`)
+        if (existingEl) {
+          existingEl.remove();
+        }
+        getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
+          ul.insertBefore(li, ul.childNodes[0])
+        })
+      }
+    })
   }
 }
 
+function handleScroll(ev, currentLocation) {
+  const target = ev.target;
+  var elemScrolPosition = target.scrollHeight - target.scrollTop - target.clientHeight;
+  if(!elemScrolPosition) {
+    startCursor(currentLocation);
+  }
+};
+ 
 function startCursor(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -65,7 +91,7 @@ function startCursor(currentLocation) {
     const index = store.index('timestamp');
     let iterator = 0;
     const advanceCount = scroll_namespace.count;
-    let temp = []
+    let fragment = document.createDocumentFragment();
 
     const ul = document.getElementById('activity--list')
     index.openCursor(null, 'prev').onsuccess = function (event) {
@@ -78,18 +104,22 @@ function startCursor(currentLocation) {
           scroll_namespace.skip = true
           cursor.advance(advanceCount)
         } else {
-          temp.push(cursor.value)
+          
+          getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+            fragment.appendChild(dom)
+            iterator++
+          })
          
-          getActivityDataForList(activity, cursor.value, currentLocation,ul)
-          iterator++
-          runCursor(cursor,iterator)
+          runCursor(cursor, iterator)
         }
       } else {
-        temp.push(cursor.value)
-
-        getActivityDataForList(activity, cursor.value, currentLocation,ul)
-        iterator++
-        runCursor(cursor,iterator)
+     
+        getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+          fragment.appendChild(dom)
+          iterator++
+        })
+      
+        runCursor(cursor, iterator)
       }
     }
 
@@ -98,9 +128,11 @@ function startCursor(currentLocation) {
      */
 
     transaction.oncomplete = function () {
-     console.log(temp)
+    
+      ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false
+      scroll_namespace.size = 10
       scrollToActivity()
     }
   }
@@ -108,37 +140,39 @@ function startCursor(currentLocation) {
 
 function runCursor(cursor, iterator) {
   const size = scroll_namespace.size;
- 
   if (iterator < size) {
     cursor.continue();
   }
 }
 
 
-function getActivityDataForList(activity, value, currentLocation,parent) {
+function getActivityDataForList(activity, value, currentLocation) {
+  return new Promise(function (resolve, reject) {
 
-  const secondLine = document.createElement('span')
-  secondLine.className = 'mdc-list-item__secondary-text'
+    const secondLine = document.createElement('span')
+    secondLine.className = 'mdc-list-item__secondary-text'
 
-  activity.get(value.activityId).onsuccess = function (event) {
-    const record = event.target.result;
-    if (!record) return
-    const schedules = record.schedule;
-    const venues = record.venue;
-    const status = record.status
+    activity.get(value.activityId).onsuccess = function (event) {
 
-    if (status === 'PENDING') {
-      secondLine.appendChild(generateLastestSchedule(schedules));
-    } else {
-      if (schedules.length) {
-        const el = document.createElement('div')
-        el.textContent = generateTextIfActivityIsNotPending(status)
-        secondLine.appendChild(el);
+      const record = event.target.result;
+      if (!record) return
+      const schedules = record.schedule;
+      const venues = record.venue;
+      const status = record.status
+
+      if (status === 'PENDING') {
+        secondLine.appendChild(generateLastestSchedule(schedules));
+      } else {
+        if (schedules.length) {
+          const el = document.createElement('div')
+          el.textContent = generateTextIfActivityIsNotPending(status)
+          secondLine.appendChild(el);
+        }
       }
+      secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+      resolve(activityListUI(value, secondLine))
     }
-    secondLine.appendChild(generateLatestVenue(venues, currentLocation));
-    parent.appendChild(activityListUI(value, secondLine))
-  }
+  })
 }
 
 function generateTextIfActivityIsNotPending(status) {
@@ -286,12 +320,14 @@ function generateLatestVenue(venues, currentLocation) {
   }
   return text;
 }
+
 function sortNearestLocation(distances) {
   const dataset = distances.slice();
   return dataset.sort(function (a, b) {
     return a.distance - b.distance
   })
 }
+
 function activityListUI(data, secondLine) {
 
   const li = document.createElement('li')

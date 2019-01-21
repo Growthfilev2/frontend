@@ -184,13 +184,6 @@ window.addEventListener('load', function () {
     requestCreator('instant', JSON.stringify(errorJS))
   }
   
-  // initialize smooth scrolling
-  window.scrollBy({
-    top: 100,
-    left: 0,
-    behavior: 'smooth'
-  })
-
   window.onpopstate = function (event) {
 
     if (!event.state) return;

@@ -912,26 +912,15 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-    if (!data.msg) return
-
-    debugger;
-    const privousCount = scroll_namespace.count
-    scroll_namespace.count = 0;
-    scroll_namespace.size = privousCount
-    const parentNode = document.getElementById('activity--list')
-    removeChildNodes(parentNode)
-
-
-    listView({
-      urgent: false,
-      nearBy: false
-    });
+    if (!data.msg.length) return
+    getRootRecord().then(function(record){
+      updateEl(data.msg, record.location)
+    })
     return;
   }
 
   window[history.state[0]](history.state[1], false);
 }
-
 
 
 function androidStopRefreshing() {

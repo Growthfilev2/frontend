@@ -1,4 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -67,7 +67,9 @@ function successDialog() {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
-
+  scroll_namespace.count = 0;
+  scroll_namespace.size = 10;
+  localStorage.removeItem('clickedActivity');
   listView({
     urgent: false,
     nearBy: false
@@ -877,9 +879,9 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-    listView({
-      urgent: false,
-      nearBy: false
+    if (!data.msg.length) return;
+    getRootRecord().then(function (record) {
+      updateEl(data.msg, record.location);
     });
     return;
   }
@@ -928,5 +930,11 @@ function getInputText(selector) {
 function runRead(value) {
   if (localStorage.getItem('dbexist')) {
     requestCreator('Null', value);
+  }
+}
+
+function removeChildNodes(parent) {
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
   }
 }

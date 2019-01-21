@@ -879,15 +879,12 @@ function updateListStoreWithCreatorImage(param) {
         if (creator.number === param.user.phoneNumber) {
           creator.photo = param.user.photoURL;
           listStore.put(cursor.value)
-         
         } else {
           userStore.get(creator.number).onsuccess = function (userEvent) {
             const record = userEvent.target.result;
             if (record) {
               creator.photo = record.photoURL;
               listStore.put(cursor.value);
-             
-
             }
           }
         }
@@ -983,11 +980,9 @@ function successResponse(read,param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        let viewRefresh = false
-        if(read.activities.length){
-          viewRefresh = true
-        }
-        requestHandlerResponse('loadView', 200,viewRefresh);
+     
+        const updatedActivities = read.activities
+        requestHandlerResponse('loadView', 200,updatedActivities);
       })
     }
   }
