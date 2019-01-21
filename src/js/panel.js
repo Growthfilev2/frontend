@@ -15,10 +15,14 @@ function initDomLoad() {
   if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
   }
-
+  
   listPanel()
   creatListHeader('Activities');
   createActivityIcon();
+
+  document.getElementById('activity--list').style.height = `${document.documentElement.clientHeight}px`
+  document.getElementById('activity--list').style.overflowY = 'auto'
+
 }
 
 function listView(filter, updatedActivities) {
@@ -76,6 +80,10 @@ function updateEl(activities, currentLocation) {
 function handleScroll(ev, currentLocation) {
   const target = ev.target;
   var elemScrolPosition = target.scrollHeight - target.scrollTop - target.clientHeight;
+  if(target.scrollTop) {
+    androidStopRefreshing()
+  }
+  
   if(!elemScrolPosition) {
     startCursor(currentLocation);
   }

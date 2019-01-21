@@ -1,4 +1,4 @@
-var notification = new Worker('js/notification.js');
+var notification = new Worker('src/js/notification.js');
 
 var scroll_namespace = {
   count: 0,
@@ -19,7 +19,12 @@ function initDomLoad() {
   listPanel();
   creatListHeader('Activities');
   createActivityIcon();
+
+  document.getElementById('activity--list').style.height = `${document.documentElement.clientHeight}px`
+  document.getElementById('activity--list').style.overflowY = 'auto'
 }
+
+
 
 function listView(filter, updatedActivities) {
   history.pushState(['listView'], null, null);
@@ -31,6 +36,8 @@ function listView(filter, updatedActivities) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML;
       showSuggestCheckInDialog();
     }
+
+
 
     document.getElementById('activity--list').addEventListener('scroll', function (ev) {
       handleScroll(ev, record.location);
@@ -76,6 +83,7 @@ function updateEl(activities, currentLocation) {
 function handleScroll(ev, currentLocation) {
   var target = ev.target;
   var elemScrolPosition = target.scrollHeight - target.scrollTop - target.clientHeight;
+  
   if (!elemScrolPosition) {
     startCursor(currentLocation);
   }

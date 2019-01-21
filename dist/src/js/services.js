@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -863,7 +863,7 @@ function urlFromBase64Image(data) {
 
 function loadView(data) {
 
-  androidStopRefreshing();
+  androidStopRefreshing(true);
 
   if (!history.state) {
     localStorage.setItem('today', null);
@@ -889,10 +889,10 @@ function loadView(data) {
   window[history.state[0]](history.state[1], false);
 }
 
-function androidStopRefreshing() {
+function androidStopRefreshing(value) {
   if (native.getName() === 'Android') {
     try {
-      AndroidRefreshing.stopRefreshing(true);
+      AndroidRefreshing.stopRefreshing(value);
     } catch (e) {
 
       var instantBody = {
