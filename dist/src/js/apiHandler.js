@@ -18,7 +18,6 @@ var requestFunctionCaller = {
   share: share,
   update: update,
   create: create
-
 };
 
 function requestHandlerResponse(type, code, message, params) {
@@ -145,7 +144,7 @@ function fetchServerTime(body, user) {
           button: button
         });
         requestHandlerResponse('update-app', 200, alertData, '');
-        return;
+        
       }
 
       if (response.revokeSession) {
