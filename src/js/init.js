@@ -1,3 +1,4 @@
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -70,8 +71,6 @@ let app = function () {
     tomorrow: function () {
       return moment(this.today()).add(1, 'day');
     },
-  
-
     isNewDay: function (auth) {
       var today = localStorage.getItem('today');
       if (today === "null" || today == null) {
@@ -185,24 +184,21 @@ window.addEventListener('load', function () {
     requestCreator('instant', JSON.stringify(errorJS))
   }
   
-  // initialize smooth scrolling
-  window.scrollBy({
-    top: 100,
-    left: 0,
-    behavior: 'smooth'
-  })
-
   window.onpopstate = function (event) {
 
     if (!event.state) return;
     if (event.state[0] === 'listView') {
+      document.getElementById('growthfile').appendChild(loader('init-loader'))
+      const originalCount = scroll_namespace.count;
+      scroll_namespace.size = originalCount
+      scroll_namespace.count = 0;
+  
       window[event.state[0]]()
       return;
     }
     window[event.state[0]](event.state[1], false)
   }
-
-
+  
   layoutGrid()
 
   startApp()
@@ -419,8 +415,6 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-
-
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -436,8 +430,7 @@ function startApp() {
     }
   })
 }
-// new day suggest
-// if location changes
+
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
@@ -599,18 +592,16 @@ function init(auth) {
         resetApp(auth, from);
         return;
       }
-
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
         registerToken: native.getFCMToken()
-      });
+      })
 
       openListWithChecks()
-
       return;
     }
-
+    
     resetApp(auth, 0)
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({

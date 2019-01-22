@@ -1,3 +1,4 @@
+
 var native = function () {
   return {
     setFCMToken: function setFCMToken(token) {
@@ -70,7 +71,6 @@ var app = function () {
     tomorrow: function tomorrow() {
       return moment(this.today()).add(1, 'day');
     },
-
     isNewDay: function isNewDay(auth) {
       var today = localStorage.getItem('today');
       if (today === "null" || today == null) {
@@ -176,17 +176,15 @@ window.addEventListener('load', function () {
     requestCreator('instant', JSON.stringify(errorJS));
   };
 
-  // initialize smooth scrolling
-  window.scrollBy({
-    top: 100,
-    left: 0,
-    behavior: 'smooth'
-  });
-
   window.onpopstate = function (event) {
 
     if (!event.state) return;
     if (event.state[0] === 'listView') {
+      document.getElementById('growthfile').appendChild(loader('init-loader'));
+      var originalCount = scroll_namespace.count;
+      scroll_namespace.size = originalCount;
+      scroll_namespace.count = 0;
+
       window[event.state[0]]();
       return;
     }
@@ -416,8 +414,6 @@ function startApp() {
     }
   });
 }
-// new day suggest
-// if location changes
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
@@ -576,7 +572,6 @@ function init(auth) {
         resetApp(auth, from);
         return;
       }
-
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -584,7 +579,6 @@ function init(auth) {
       });
 
       openListWithChecks();
-
       return;
     }
 

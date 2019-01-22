@@ -5,6 +5,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function conversation(id, pushState) {
+
+  window.removeEventListener('scroll', handleScroll, false);
+
   console.log(id);
   checkIfRecordExists('activity', id).then(function (id) {
     console.log(id);
@@ -722,9 +725,7 @@ function fillUsersInSelector(data, dialog) {
         if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
           document.getElementById('selector--search').style.display = 'none';
           var parentNode = document.getElementById('data-list--container');
-          while (parentNode.firstChild) {
-            parentNode.removeChild(parentNode.firstChild);
-          }
+          removeChildNodes(parentNode);
           document.querySelector('.mdc-dialog__footer').style.display = 'none';
           addNewNumber(data, dialog);
           return;

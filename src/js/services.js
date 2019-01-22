@@ -67,7 +67,9 @@ function successDialog() {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
-
+  scroll_namespace.count = 0
+  scroll_namespace.size = 20
+  localStorage.removeItem('clickedActivity')
   listView({
     urgent: false,
     nearBy: false
@@ -122,17 +124,17 @@ function appDialog(messageString,showButton) {
 }
 
 
-function appUpdateDialog(messageString,title) {
+function appUpdateDialog(messageString, title) {
   if (!document.getElementById('app-update-dialog')) {
     var aside = document.createElement('aside');
     aside.className = 'mdc-dialog mdc-dialog--open';
     aside.id = 'app-update-dialog';
-  
+
     var surface = document.createElement('div');
     surface.className = 'mdc-dialog__surface';
     surface.style.width = '90%';
     surface.style.height = 'auto';
-  
+
     const header = document.createElement('header');
     header.className = 'mdc-dialog__header'
     const headerText = document.createElement('h2')
@@ -142,17 +144,17 @@ function appUpdateDialog(messageString,title) {
     var section = document.createElement('section');
     section.className = 'mdc-dialog__body';
     section.textContent = messageString;
-  
+
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
-  
-   
+
+
     surface.appendChild(header)
     surface.appendChild(section);
     surface.appendChild(footer);
     aside.appendChild(surface);
     document.body.appendChild(aside);
-  
+
   }
 
   var appUpdate = new mdc.dialog.MDCDialog(document.querySelector('#app-update-dialog'));
@@ -720,7 +722,7 @@ function resetLoaders(data) {
 
 function requestCreator(requestType, requestBody) {
   const auth = firebase.auth().currentUser;
-  
+
   var requestGenerator = {
     type: requestType,
     body: '',
@@ -734,12 +736,12 @@ function requestCreator(requestType, requestBody) {
   };
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
-    auth.getIdToken(false).then(function(token){
+    auth.getIdToken(false).then(function (token) {
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       apiHandler.postMessage(requestGenerator);
-    }).catch(function(error){
-      requestCreator('instant',JSON.stringify(error))
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error))
     })
   } else {
 
@@ -767,8 +769,8 @@ function requestCreator(requestType, requestBody) {
           requestGenerator.user.token = token;
           console.log(requestGenerator)
           sendRequest(location, requestGenerator)
-        }).catch(function(error){
-          requestCreator('instant',JSON.stringify(error))
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify(error))
         })
       }
     })
@@ -798,8 +800,8 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       sendRequest(geopoints, requestGenerator);
-    }).catch(function(error){
-      requestCreator('instant',JSON.stringify(error))
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error))
     })
     window.removeEventListener('location', _listener, true);
   }, true);
@@ -811,6 +813,7 @@ function sendRequest(location, requestGenerator) {
   if (location.latitude && location.longitude && location.accuracy) {
 
     apiHandler.postMessage(requestGenerator);
+    
   } else {
     appDialog('Fetching Location Please wait.',true);
     getRootRecord().then(function(record){
@@ -858,7 +861,7 @@ const receiverCaller = {
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'redirect-to-list': changeState,
-  'backblazeRequest':urlFromBase64Image
+  'backblazeRequest': urlFromBase64Image
 }
 
 
@@ -872,12 +875,11 @@ function updateApp(data) {
     console.log("update App");
     try {
       Android.notification(data.msg);
-
-    } catch(e){
+    } catch (e) {
       const message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again '
       const title = JSON.parse(data.msg).message
-      appUpdateDialog(`${message}`,title);
-   }
+      appUpdateDialog(`${message}`, title);
+    }
     return;
   }
   webkit.messageHandlers.updateApp.postMessage();
@@ -903,12 +905,12 @@ function changeState(data) {
 
 }
 
-function urlFromBase64Image(data){
+function urlFromBase64Image(data) {
 
-  if(data.code === 200) {
-    if(history.state[0] === 'profileView') {
+  if (data.code === 200) {
+    if (history.state[0] === 'profileView') {
       const selector = document.querySelector('#profile--image-container .profile--loader ');
-      if(selector) {
+      if (selector) {
         selector.remove();
       }
       document.getElementById('user-profile--image').src = firebase.auth().currentUser.photoURL;
@@ -936,16 +938,15 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-    listView({
-      urgent: false,
-      nearBy: false
-    });
+    if (!data.msg.length) return
+    getRootRecord().then(function(record){
+      updateEl(data.msg, record.location)
+    })
     return;
   }
 
   window[history.state[0]](history.state[1], false);
 }
-
 
 
 function androidStopRefreshing() {
@@ -993,3 +994,8 @@ function runRead(value) {
 }
 
 
+function removeChildNodes(parent) {
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
+  }
+}

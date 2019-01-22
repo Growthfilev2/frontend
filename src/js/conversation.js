@@ -1,4 +1,7 @@
 function conversation(id, pushState) {
+ 
+  window.removeEventListener('scroll',handleScroll,false)
+
   console.log(id)
   checkIfRecordExists('activity', id).then(function (id) {
     console.log(id)
@@ -748,9 +751,7 @@ function fillUsersInSelector(data, dialog) {
         if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
           document.getElementById('selector--search').style.display = 'none'
           const parentNode = document.getElementById('data-list--container')
-          while(parentNode.firstChild) {
-            parentNode.removeChild(parentNode.firstChild);
-          }
+          removeChildNodes(parentNode)
           document.querySelector('.mdc-dialog__footer').style.display = 'none'
           addNewNumber(data, dialog)
           return
@@ -1229,7 +1230,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
       if (!cursor) {
         return
       }
-
+      
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue()
         return
