@@ -6,6 +6,9 @@ function profileView(pushState) {
   if (pushState) {
     history.pushState(['profileView'], null, null);
   }
+  if (window.addEventListener) {
+    window.removeEventListener('scroll', handleScroll, false);
+  }
 
   document.body.style.backgroundColor = '#eeeeee';
   var user = firebase.auth().currentUser;

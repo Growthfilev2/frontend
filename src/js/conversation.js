@@ -1,4 +1,7 @@
 function conversation(id, pushState) {
+ 
+  window.removeEventListener('scroll',handleScroll,false)
+
   console.log(id)
   checkIfRecordExists('activity', id).then(function (id) {
     console.log(id)
@@ -748,9 +751,7 @@ function fillUsersInSelector(data, dialog) {
         if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
           document.getElementById('selector--search').style.display = 'none'
           const parentNode = document.getElementById('data-list--container')
-          while(parentNode.firstChild) {
-            parentNode.removeChild(parentNode.firstChild);
-          }
+          removeChildNodes(parentNode)
           document.querySelector('.mdc-dialog__footer').style.display = 'none'
           addNewNumber(data, dialog)
           return
@@ -1229,7 +1230,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
       if (!cursor) {
         return
       }
-
+      
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue()
         return
@@ -1311,9 +1312,27 @@ function createTempRecord(office, template, data) {
 
       const bareBonesVenueArray = []
       if (template === 'check-in') {
-        prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0]);
-        return
+     
+        getRootRecord().then(function (record) {
+   
+          const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
+          if(isLocationOld) {
+            appDialog('Fetching Location Please wait',false)
+            window.addEventListener('location',function _checkInLatest(e){
+              const newLocation = e.detail
+              if(document.querySelector('#enable-gps')) {
+                document.querySelector('#enable-gps').remove();
+              }
+              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],newLocation);
+              window.removeEventListener('location', _checkInLatest, true);
+            },true)
+            return
+          }
+          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],record.location);
+        });
+        returnc
       }
+
       selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
         bareBonesVenue.venueDescriptor = venue
@@ -1335,9 +1354,11 @@ function createTempRecord(office, template, data) {
 }
 
 
-function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
-  getRootRecord().then(function (record) {
-    checkMapStoreForNearByLocation(bareBonesRecord.office, record.location).then(function (results) {
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc,currentLocation) {
+  
+
+    checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
+    
       const locations = [];
       const bareBonesVenue = {}
       bareBonesVenue.venueDescriptor = venueDesc
@@ -1368,8 +1389,6 @@ function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
       updateCreateActivity(bareBonesRecord)
       removeDialog()
     })
-
-  })
 }
 
 

@@ -1,3 +1,4 @@
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -70,8 +71,6 @@ let app = function () {
     tomorrow: function () {
       return moment(this.today()).add(1, 'day');
     },
-  
-
     isNewDay: function (auth) {
       var today = localStorage.getItem('today');
       if (today === "null" || today == null) {
@@ -185,24 +184,21 @@ window.addEventListener('load', function () {
     requestCreator('instant', JSON.stringify(errorJS))
   }
   
-  // initialize smooth scrolling
-  window.scrollBy({
-    top: 100,
-    left: 0,
-    behavior: 'smooth'
-  })
-
   window.onpopstate = function (event) {
 
     if (!event.state) return;
     if (event.state[0] === 'listView') {
+      document.getElementById('growthfile').appendChild(loader('init-loader'))
+      const originalCount = scroll_namespace.count;
+      scroll_namespace.size = originalCount
+      scroll_namespace.count = 0;
+  
       window[event.state[0]]()
       return;
     }
     window[event.state[0]](event.state[1], false)
   }
-
-
+  
   layoutGrid()
 
   startApp()
@@ -231,6 +227,7 @@ function firebaseUiConfig(value) {
         return false;
       },
       signInFailure : function(error){
+        
         return handleUIError(error)
       },
       uiShown: function () {
@@ -419,12 +416,11 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-
-
 function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
+      console.log(Towers.getCellularData())
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
@@ -435,8 +431,7 @@ function startApp() {
     }
   })
 }
-// new day suggest
-// if location changes
+
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
@@ -474,7 +469,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
      
       if(!empDetails) {
-        return resolve({onLeave:false})
+        return resolve(false)
       }
      
      empDetails.onLeave = false
@@ -598,18 +593,16 @@ function init(auth) {
         resetApp(auth, from);
         return;
       }
-
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
         registerToken: native.getFCMToken()
-      });
+      })
 
       openListWithChecks()
-
       return;
     }
-
+    
     resetApp(auth, 0)
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -647,11 +640,17 @@ function runAppChecks() {
 
  window.addEventListener('locationChanged', function _locationChanged(e) {
   isEmployeeOnLeave().then(function (emp) {
+
     var dataObject = {
       urgent: false,
       nearby: false,
-      checkin: !emp.onLeave
     };
+    if(emp) {
+      dataObject['checkin'] = !emp.onLeave
+    }
+    else {
+      dataObject['checkin'] = false
+    }
     
 
     var changed = e.detail;
@@ -676,6 +675,8 @@ function runAppChecks() {
       startInitializatioOfList(dataObject);
       return;
     };
+
+    if(!emp) return
 
     if(app.isCurrentTimeNearStart(emp)) {
       const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
@@ -724,8 +725,7 @@ function openListWithChecks() {
   setInterval(function () {
     manageLocation();
   }, 5000);
-
-  listView();
   
+  listView();
   runAppChecks();
 }

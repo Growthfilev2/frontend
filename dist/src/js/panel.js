@@ -1,90 +1,176 @@
 var notification = new Worker('src/js/notification.js');
 
-function listView(filter) {
+var scroll_namespace = {
+  count: 0,
+  size: 20,
+  skip: false
+};
+
+function initDomLoad() {
+
+  if (document.querySelector('.init-loader')) {
+    document.querySelector('.init-loader').remove();
+  }
+
+  if (document.querySelector('.mdc-linear-progress')) {
+    document.querySelector('.mdc-linear-progress').remove();
+  }
+
+  listPanel();
+  creatListHeader('Activities');
+  createActivityIcon();
+}
+
+function listView(filter, updatedActivities) {
+  history.pushState(['listView'], null, null);
+  initDomLoad();
 
   getRootRecord().then(function (record) {
+
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML;
       showSuggestCheckInDialog();
     }
-    history.pushState(['listView'], null, null);
-    if (document.querySelector('.init-loader')) {
-      document.querySelector('.init-loader').remove();
-    }
 
-    if (document.querySelector('.mdc-linear-progress')) {
-      document.querySelector('.mdc-linear-progress').remove();
-    }
-
-    listPanel();
-    creatListHeader('Activities');
-    createActivityIcon();
+    window.addEventListener('scroll', handleScroll, false);
 
     if (!filter) {
-      fetchDataForActivityList(record.location);
+      startCursor(record.location);
       return;
     }
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
-        fetchDataForActivityList(record.location);
+        startCursor(record.location);
       });
     });
   });
 }
 
-function fetchDataForActivityList(currentLocation) {
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
+function updateEl(activities, currentLocation) {
 
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
+    var tx = db.transaction(['list', 'activity']);
+    var activityStore = tx.objectStore('activity');
+    var listStore = tx.objectStore('list');
+    var ul = document.getElementById('activity--list');
+    activities.forEach(function (activity) {
+      listStore.get(activity.activityId).onsuccess = function (event) {
+        var record = event.target.result;
+        var existingEl = document.querySelector('[data-id="' + activity.activityId + '"]');
+        if (existingEl) {
+          existingEl.remove();
+        }
+        if (!record) return;
+        getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
+          ul.insertBefore(li, ul.childNodes[0]);
+        });
+      };
+    });
+  };
+}
 
-    var activityDom = '';
+function handleScroll(ev) {
+  getRootRecord().then(function (record) {
+    if (window.innerHeight + window.scrollY === document.body.scrollHeight) {
+      startCursor(record.location);
+    }
+  });
+};
+
+function startCursor(currentLocation) {
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
     var transaction = db.transaction(['list', 'activity', 'root']);
     var activity = transaction.objectStore('activity');
     var store = transaction.objectStore('list');
     var index = store.index('timestamp');
+    var iterator = 0;
+    var advanceCount = scroll_namespace.count;
+    var fragment = document.createDocumentFragment();
 
-    var today = moment().format('YYYY-MM-DD');
+    var ul = document.getElementById('activity--list');
     index.openCursor(null, 'prev').onsuccess = function (event) {
 
       var cursor = event.target.result;
       if (!cursor) return;
 
-      var secondLine = document.createElement('span');
-      secondLine.className = 'mdc-list-item__secondary-text';
-
-      activity.get(cursor.value.activityId).onsuccess = function (event) {
-        var record = event.target.result;
-        if (!record) return;
-        var schedules = record.schedule;
-        var venues = record.venue;
-        var status = record.status;
-
-        if (status === 'PENDING') {
-          secondLine.appendChild(generateLastestSchedule(schedules));
+      if (advanceCount) {
+        if (!scroll_namespace.skip) {
+          scroll_namespace.skip = true;
+          cursor.advance(advanceCount);
         } else {
-          if (schedules.length) {
-            var el = document.createElement('div');
-            el.textContent = generateTextIfActivityIsNotPending(status);
-            secondLine.appendChild(el);
-          }
+
+          getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+            fragment.appendChild(dom);
+            iterator++;
+          });
+
+          runCursor(cursor, iterator);
         }
+      } else {
 
-        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+        getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+          fragment.appendChild(dom);
+          iterator++;
+        });
 
-        activityDom += activityListUI(cursor.value, secondLine).outerHTML;
-      };
-      cursor.continue();
+        runCursor(cursor, iterator);
+      }
     };
 
+    /** Transaction has ended. Increment the namespace_count 
+     * If an activity was clicked and not changed then scroll to that activity
+     */
+
     transaction.oncomplete = function () {
-      if (document.getElementById('activity--list')) {
-        document.getElementById('activity--list').innerHTML = activityDom;
-      }
+
+      ul.appendChild(fragment);
+      scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
+      scroll_namespace.skip = false;
+      scroll_namespace.size = 20;
       scrollToActivity();
     };
   };
+}
+
+function runCursor(cursor, iterator) {
+  var size = scroll_namespace.size;
+  if (iterator < size) {
+    cursor.continue();
+  }
+}
+
+function getActivityDataForList(activity, value, currentLocation) {
+  return new Promise(function (resolve, reject) {
+
+    var secondLine = document.createElement('span');
+    secondLine.className = 'mdc-list-item__secondary-text';
+
+    activity.get(value.activityId).onsuccess = function (event) {
+
+      var record = event.target.result;
+      if (!record) return;
+      var schedules = record.schedule;
+      var venues = record.venue;
+      var status = record.status;
+
+      if (status === 'PENDING') {
+        secondLine.appendChild(generateLastestSchedule(schedules));
+      } else {
+        if (schedules.length) {
+          var el = document.createElement('div');
+          el.textContent = generateTextIfActivityIsNotPending(status);
+          secondLine.appendChild(el);
+        }
+      }
+      secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+      resolve(activityListUI(value, secondLine));
+    };
+  });
 }
 
 function generateTextIfActivityIsNotPending(status) {

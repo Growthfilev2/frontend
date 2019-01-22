@@ -157,7 +157,6 @@ self.onmessage = function (event) {
     const rootStore = rootTx.objectStore('root');
     rootStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result;
-
       userCoords = {
         'latitude': record.location.latitude,
         'longitude': record.location.longitude
@@ -165,9 +164,7 @@ self.onmessage = function (event) {
     }
 
     rootTx.oncomplete = function () {
-
       const mapTx = db.transaction(['map'], 'readwrite');
-
       const mapObjectStore = mapTx.objectStore('map');
       const index = mapObjectStore.index('nearby');
       const range = IDBKeyRange.lowerBound(['PENDING', 0])
@@ -180,7 +177,7 @@ self.onmessage = function (event) {
       }
       mapTx.oncomplete = function () {
 
-        const filtered = isDistanceNearBy(distanceArr, 0.5);
+        const filtered = isDistanceNearBy(distanceArr,1);
         const sorted = sortDistance(filtered);
         resetNotifs('nearby').then(function () {
           updateTimestamp('nearby', {

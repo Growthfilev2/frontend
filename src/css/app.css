@@ -15,10 +15,7 @@ body {
   grid-gap: 0
 }
 
-.panel-card {
-  width: 100vw;
-  min-height: 100vh;
-}
+
 
 .activity--chat-card-container.panel-card {
   min-height: auto;
@@ -1594,3 +1591,6 @@ input[type="datetime-local"] {
     border: 2px solid white;
   }
 
+  #enable-gps {
+    background-color: rgba(0,0,0,0.5);
+  }

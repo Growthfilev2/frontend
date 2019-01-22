@@ -325,7 +325,10 @@ function comment(body,auth) {
       token:auth.token
     }
     http(req).then(function () {
-       resolve(false)
+      setTimeout(function(){
+        updateIDB({user:auth})
+      },1000)
+       resolve(true)
     }).catch(function (error) {
       instant(createLog(error))
     })
@@ -862,6 +865,7 @@ function createListStore(activity, counter,param) {
 function updateListStoreWithCreatorImage(param) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(param.user.uid)
+   
     req.onsuccess = function () {
 
       const db = req.result
@@ -901,8 +905,6 @@ function updateListStoreWithCreatorImage(param) {
 }
 
 function successResponse(read,param) {
-
-
   const request = indexedDB.open(param.user.uid)
   const removeActivitiesForUser = []
   const removeActivitiesForOthers = []
@@ -980,11 +982,15 @@ function successResponse(read,param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('loadView', 200);
+     
+        const updatedActivities = read.activities
+        requestHandlerResponse('loadView', 200,updatedActivities);
       })
     }
   }
 }
+
+
 
 
 function getUniqueOfficeCount(param) {
