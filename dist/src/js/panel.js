@@ -41,7 +41,6 @@ function fetchDataForActivityList(currentLocation) {
 
   req.onsuccess = function () {
     var db = req.result;
-
     var activityDom = '';
     var transaction = db.transaction(['list', 'activity', 'root']);
     var activity = transaction.objectStore('activity');

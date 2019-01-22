@@ -231,6 +231,7 @@ function firebaseUiConfig(value) {
         return false;
       },
       signInFailure : function(error){
+        
         return handleUIError(error)
       },
       uiShown: function () {
@@ -424,6 +425,7 @@ function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
+      console.log(Towers.getCellularData())
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
@@ -731,8 +733,7 @@ function openListWithChecks() {
   setInterval(function () {
     manageLocation();
   }, 5000);
-
-  listView();
   
+  listView();
   runAppChecks();
 }

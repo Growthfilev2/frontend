@@ -1316,16 +1316,20 @@ function createTempRecord(office, template, data) {
    
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if(isLocationOld) {
+            appDialog('Fetching Location Please wait',false)
             window.addEventListener('location',function _checkInLatest(e){
               const newLocation = e.detail
+              if(document.querySelector('#enable-gps')) {
+                document.querySelector('#enable-gps').remove();
+              }
               prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],newLocation);
-              window.removeEventListener('location', _listener, true);
-            })
+              window.removeEventListener('location', _checkInLatest, true);
+            },true)
             return
           }
           prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],record.location);
         });
-        return
+        returnc
       }
 
       selectedCombo.venue.forEach(function (venue) {

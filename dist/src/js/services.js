@@ -74,7 +74,7 @@ function successDialog() {
   });
 }
 
-function appDialog(messageString) {
+function appDialog(messageString, showButton) {
   if (!document.getElementById('enable-gps')) {
 
     var aside = document.createElement('aside');
@@ -95,8 +95,12 @@ function appDialog(messageString) {
 
     var ok = document.createElement('button');
     ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
     ok.textContent = 'Ok';
+    if (!showButton) {
+      ok.classList.add('hidden');
+    }
+
     ok.style.backgroundColor = '#3498db';
 
     footer.appendChild(ok);
@@ -108,6 +112,11 @@ function appDialog(messageString) {
   }
 
   var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
+
+  gpsDialog.listen('MDCDialog:accept', function () {
+    listView({ nearby: false, urgent: false });
+  });
+
   gpsDialog.show();
 }
 
@@ -343,6 +352,7 @@ function initLocationInterval(locationStatus) {
   var singletonSuccess = [];
   var bestLocation = void 0;
   locationInterval().then(function (navigatorData) {
+
     if (locationStatus.success) {
       singletonSuccess.push(locationStatus, navigatorData);
       bestLocation = sortedByAccuracy(singletonSuccess);
@@ -362,6 +372,7 @@ function initLocationInterval(locationStatus) {
 }
 
 function locationUpdationSuccess(location) {
+
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
@@ -472,7 +483,6 @@ function navigatorPromise() {
 
         clearInterval(myInterval);
         myInterval = null;
-
         reject(error.message);
       });
     }, 500);
@@ -589,13 +599,13 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 }
 
 function isLocationMoreThanThreshold(distance) {
-  var THRESHOLD = 0.5; //km
+  var THRESHOLD = 1; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
 
 function isLocationLessThanThreshold(distance) {
-  var THRESHOLD = 0.5; //km
+  var THRESHOLD = 1; //km
   if (distance <= THRESHOLD) return true;
   return false;
 }
@@ -720,7 +730,7 @@ function requestCreator(requestType, requestBody) {
     getRootRecord().then(function (rootRecord) {
 
       var location = rootRecord.location;
-      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 1);
+      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
 
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       if (isLocationOld) {
@@ -779,7 +789,25 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    appDialog('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
+    appDialog('Fetching Location Please wait.', true);
+    getRootRecord().then(function (record) {
+      var cellTowerInfo = void 0;
+
+      try {
+        cellTowerInfo = Towers.getCellularData();
+      } catch (e) {
+        cellTowerInfo = e.message;
+      }
+
+      var locationNotFound = {
+        message: {
+          deviceInfo: native.getInfo(),
+          storedLocation: record.location,
+          cellTower: cellTowerInfo
+        }
+      };
+      requestCreator('instant', JSON.stringify(locationNotFound));
+    });
   }
 }
 

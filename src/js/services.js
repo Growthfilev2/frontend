@@ -75,7 +75,7 @@ function successDialog() {
 
 }
 
-function appDialog(messageString) {
+function appDialog(messageString,showButton) {
   if (!document.getElementById('enable-gps')) {
 
     var aside = document.createElement('aside');
@@ -96,8 +96,12 @@ function appDialog(messageString) {
 
     var ok = document.createElement('button');
     ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
     ok.textContent = 'Ok';
+    if(!showButton) {
+      ok.classList.add('hidden')
+    }
+    
     ok.style.backgroundColor = '#3498db';
 
     footer.appendChild(ok);
@@ -109,6 +113,11 @@ function appDialog(messageString) {
   }
 
   var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
+  
+  gpsDialog.listen('MDCDialog:accept',function(){
+    listView({nearby:false,urgent:false})
+  });
+
   gpsDialog.show();
 }
 
@@ -605,13 +614,13 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 }
 
 function isLocationMoreThanThreshold(distance) {
-  const THRESHOLD = 0.5; //km
+  const THRESHOLD = 1; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
 
 function isLocationLessThanThreshold(distance) {
-  const THRESHOLD = 0.5; //km
+  const THRESHOLD =1; //km
   if (distance <= THRESHOLD) return true
   return false
 }
@@ -803,9 +812,28 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    appDialog('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
-  }
+    appDialog('Fetching Location Please wait.',true);
+    getRootRecord().then(function(record){
+      let cellTowerInfo;
 
+      try {
+        cellTowerInfo = Towers.getCellularData()
+      }
+      catch(e){
+        cellTowerInfo = e.message
+      }
+      
+      const locationNotFound = {
+        message : {
+          deviceInfo : native.getInfo(),
+          storedLocation:record.location,
+          cellTower :cellTowerInfo
+        }
+      }
+      requestCreator('instant',JSON.stringify(locationNotFound))
+    })
+
+  }
 }
 
 function isLastLocationOlderThanThreshold(test, threshold) {

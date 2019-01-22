@@ -219,6 +219,7 @@ function firebaseUiConfig(value) {
         return false;
       },
       signInFailure: function signInFailure(error) {
+
         return handleUIError(error);
       },
       uiShown: function uiShown() {}
@@ -404,6 +405,7 @@ function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
+      console.log(Towers.getCellularData());
       document.getElementById("main-layout-app").style.display = 'none';
       userSignedOut();
       return;
@@ -453,7 +455,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
 
       if (!empDetails) {
-        return resolve({ onLeave: false });
+        return resolve(false);
       }
 
       empDetails.onLeave = false;
@@ -622,11 +624,16 @@ function runAppChecks() {
 
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
+
       var dataObject = {
         urgent: false,
-        nearby: false,
-        checkin: !emp.onLeave
+        nearby: false
       };
+      if (emp) {
+        dataObject['checkin'] = !emp.onLeave;
+      } else {
+        dataObject['checkin'] = false;
+      }
 
       var changed = e.detail;
       var newDay = app.isNewDay();
@@ -650,6 +657,8 @@ function runAppChecks() {
         startInitializatioOfList(dataObject);
         return;
       };
+
+      if (!emp) return;
 
       if (app.isCurrentTimeNearStart(emp)) {
         var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
@@ -700,6 +709,5 @@ function openListWithChecks() {
   }, 5000);
 
   listView();
-
   runAppChecks();
 }

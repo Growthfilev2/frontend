@@ -177,7 +177,7 @@ self.onmessage = function (event) {
       }
       mapTx.oncomplete = function () {
 
-        const filtered = isDistanceNearBy(distanceArr, 0.5);
+        const filtered = isDistanceNearBy(distanceArr,1);
         const sorted = sortDistance(filtered);
         resetNotifs('nearby').then(function () {
           updateTimestamp('nearby', {
