@@ -68,7 +68,7 @@ function successDialog() {
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
   scroll_namespace.count = 0
-  scroll_namespace.size = 10
+  scroll_namespace.size = 20
   localStorage.removeItem('clickedActivity')
   listView({
     urgent: false,
@@ -806,6 +806,7 @@ function sendRequest(location, requestGenerator) {
   if (location.latitude && location.longitude && location.accuracy) {
 
     apiHandler.postMessage(requestGenerator);
+    
   } else {
     appDialog('Fetching Location Please wait. If Problem persists, Then Please restart the application.');
   }
@@ -848,7 +849,6 @@ function updateApp(data) {
     console.log("update App");
     try {
       Android.notification(data.msg);
-
     } catch (e) {
       const message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again '
       const title = JSON.parse(data.msg).message

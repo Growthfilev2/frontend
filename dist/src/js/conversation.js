@@ -5,6 +5,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function conversation(id, pushState) {
+
+  window.removeEventListener('scroll', handleScroll, false);
+
   console.log(id);
   checkIfRecordExists('activity', id).then(function (id) {
     console.log(id);

@@ -15,10 +15,7 @@ body {
   grid-gap: 0
 }
 
-.panel-card {
-  width: 100vw;
-  min-height: 100vh;
-}
+
 
 .activity--chat-card-container.panel-card {
   min-height: auto;
@@ -704,10 +701,7 @@ footer.mdc-dialog__footer {
 #ui-auth {
   padding-top: 20px;
 }
-/* #activity--list {
-  height: 99vh;
-  overflow-y: scroll;
-} */
+
 .activity--list-item {
   padding-bottom: 5px;
   padding-top: 5px;

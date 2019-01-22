@@ -2,9 +2,11 @@ const notification = new Worker('js/notification.js')
 
 const scroll_namespace = {
   count: 0,
-  size: 10,
+  size: 20,
   skip: false
 }
+
+
 
 function initDomLoad() {
 
@@ -19,10 +21,6 @@ function initDomLoad() {
   listPanel()
   creatListHeader('Activities');
   createActivityIcon();
-
-  document.getElementById('activity--list').style.height = `${document.documentElement.clientHeight}px`
-  document.getElementById('activity--list').style.overflowY = 'auto'
-
 }
 
 function listView(filter, updatedActivities) {
@@ -36,9 +34,7 @@ function listView(filter, updatedActivities) {
       showSuggestCheckInDialog()
     }
 
-    document.getElementById('activity--list').addEventListener('scroll', function (ev) {
-      handleScroll(ev, record.location)
-    })
+    window.addEventListener('scroll', handleScroll,false)
 
     if (!filter) {
       startCursor(record.location);
@@ -69,6 +65,7 @@ function updateEl(activities, currentLocation) {
         if (existingEl) {
           existingEl.remove();
         }
+        if(!record) return;
         getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
           ul.insertBefore(li, ul.childNodes[0])
         })
@@ -77,16 +74,13 @@ function updateEl(activities, currentLocation) {
   }
 }
 
-function handleScroll(ev, currentLocation) {
-  const target = ev.target;
-  var elemScrolPosition = target.scrollHeight - target.scrollTop - target.clientHeight;
-  if(target.scrollTop) {
-    androidStopRefreshing()
-  }
-  
-  if(!elemScrolPosition) {
-    startCursor(currentLocation);
-  }
+function handleScroll(ev) { 
+  getRootRecord().then(function(record){
+    if(window.innerHeight + window.scrollY === document.body.scrollHeight) {
+      startCursor(record.location);
+    }
+  })
+
 };
  
 function startCursor(currentLocation) {
@@ -140,7 +134,7 @@ function startCursor(currentLocation) {
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false
-      scroll_namespace.size = 10
+      scroll_namespace.size = 20
       scrollToActivity()
     }
   }

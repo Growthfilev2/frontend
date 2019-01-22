@@ -1,4 +1,7 @@
 function conversation(id, pushState) {
+ 
+  window.removeEventListener('scroll',handleScroll,false)
+
   console.log(id)
   checkIfRecordExists('activity', id).then(function (id) {
     console.log(id)
@@ -1227,7 +1230,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
       if (!cursor) {
         return
       }
-
+      
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue()
         return

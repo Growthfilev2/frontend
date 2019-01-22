@@ -68,7 +68,7 @@ function successDialog() {
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
   scroll_namespace.count = 0;
-  scroll_namespace.size = 10;
+  scroll_namespace.size = 20;
   localStorage.removeItem('clickedActivity');
   listView({
     urgent: false,
@@ -863,7 +863,7 @@ function urlFromBase64Image(data) {
 
 function loadView(data) {
 
-  androidStopRefreshing(true);
+  androidStopRefreshing();
 
   if (!history.state) {
     localStorage.setItem('today', null);
@@ -889,10 +889,10 @@ function loadView(data) {
   window[history.state[0]](history.state[1], false);
 }
 
-function androidStopRefreshing(value) {
+function androidStopRefreshing() {
   if (native.getName() === 'Android') {
     try {
-      AndroidRefreshing.stopRefreshing(value);
+      AndroidRefreshing.stopRefreshing(true);
     } catch (e) {
 
       var instantBody = {

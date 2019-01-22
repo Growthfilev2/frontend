@@ -326,6 +326,9 @@ function comment(body,auth) {
       token:auth.token
     }
     http(req).then(function () {
+      setTimeout(function(){
+        updateIDB({user:auth})
+      },1000)
        resolve(true)
     }).catch(function (error) {
       instant(createLog(error))
