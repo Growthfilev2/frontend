@@ -302,7 +302,7 @@ function shouldFetchCellTower(locationObject) {
 }
 
 function useGeolocationApi(provider) {
-  var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
   var CelllarJson = false;
 
   try {
