@@ -1275,7 +1275,7 @@ function createTempRecord(office, template, data) {
           }
           prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], record.location);
         });
-        returnc;
+        return;
       }
 
       selectedCombo.venue.forEach(function (venue) {
