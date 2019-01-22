@@ -5,6 +5,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function conversation(id, pushState) {
+
+  window.removeEventListener('scroll', handleScroll, false);
+
   console.log(id);
   checkIfRecordExists('activity', id).then(function (id) {
     console.log(id);
@@ -722,9 +725,7 @@ function fillUsersInSelector(data, dialog) {
         if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
           document.getElementById('selector--search').style.display = 'none';
           var parentNode = document.getElementById('data-list--container');
-          while (parentNode.firstChild) {
-            parentNode.removeChild(parentNode.firstChild);
-          }
+          removeChildNodes(parentNode);
           document.querySelector('.mdc-dialog__footer').style.display = 'none';
           addNewNumber(data, dialog);
           return;
@@ -1256,9 +1257,27 @@ function createTempRecord(office, template, data) {
 
       var bareBonesVenueArray = [];
       if (template === 'check-in') {
-        prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0]);
-        return;
+
+        getRootRecord().then(function (record) {
+
+          var isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
+          if (isLocationOld) {
+            appDialog('Fetching Location Please wait', false);
+            window.addEventListener('location', function _checkInLatest(e) {
+              var newLocation = e.detail;
+              if (document.querySelector('#enable-gps')) {
+                document.querySelector('#enable-gps').remove();
+              }
+              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], newLocation);
+              window.removeEventListener('location', _checkInLatest, true);
+            }, true);
+            return;
+          }
+          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], record.location);
+        });
+        returnc;
       }
+
       selectedCombo.venue.forEach(function (venue) {
         var bareBonesVenue = {};
         bareBonesVenue.venueDescriptor = venue;
@@ -1278,39 +1297,39 @@ function createTempRecord(office, template, data) {
   };
 }
 
-function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
-  getRootRecord().then(function (record) {
-    checkMapStoreForNearByLocation(bareBonesRecord.office, record.location).then(function (results) {
-      var locations = [];
-      var bareBonesVenue = {};
-      bareBonesVenue.venueDescriptor = venueDesc;
-      bareBonesVenue.location = '';
-      bareBonesVenue.address = '';
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc, currentLocation) {
+
+  checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
+
+    var locations = [];
+    var bareBonesVenue = {};
+    bareBonesVenue.venueDescriptor = venueDesc;
+    bareBonesVenue.location = '';
+    bareBonesVenue.address = '';
+    bareBonesVenue.geopoint = {
+      '_latitude': '',
+      '_longitude': ''
+    };
+
+    if (!results.length) {
+      bareBonesVenue.showIcon = false;
+    } else {
+      bareBonesVenue.showIcon = true;
+    }
+
+    if (results.length === 1) {
+      var singleLocation = results[0];
+      bareBonesVenue.location = singleLocation.location;
+      bareBonesVenue.address = singleLocation.address;
       bareBonesVenue.geopoint = {
-        '_latitude': '',
-        '_longitude': ''
+        '_latitude': singleLocation.latitude,
+        '_longitude': singleLocation.longitude
       };
-
-      if (!results.length) {
-        bareBonesVenue.showIcon = false;
-      } else {
-        bareBonesVenue.showIcon = true;
-      }
-
-      if (results.length === 1) {
-        var singleLocation = results[0];
-        bareBonesVenue.location = singleLocation.location;
-        bareBonesVenue.address = singleLocation.address;
-        bareBonesVenue.geopoint = {
-          '_latitude': singleLocation.latitude,
-          '_longitude': singleLocation.longitude
-        };
-      }
-      locations.push(bareBonesVenue);
-      bareBonesRecord.venue = locations;
-      updateCreateActivity(bareBonesRecord);
-      removeDialog();
-    });
+    }
+    locations.push(bareBonesVenue);
+    bareBonesRecord.venue = locations;
+    updateCreateActivity(bareBonesRecord);
+    removeDialog();
   });
 }
 

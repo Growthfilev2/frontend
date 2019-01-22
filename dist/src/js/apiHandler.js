@@ -1,7 +1,7 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 importScripts('../../external/js/moment.min.js');
-var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
+var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
 
@@ -316,7 +316,10 @@ function comment(body, auth) {
       token: auth.token
     };
     http(req).then(function () {
-      resolve(false);
+      setTimeout(function () {
+        updateIDB({ user: auth });
+      }, 1000);
+      resolve(true);
     }).catch(function (error) {
       instant(createLog(error));
     });
@@ -828,6 +831,7 @@ function createListStore(activity, counter, param) {
 function updateListStoreWithCreatorImage(param) {
   return new Promise(function (resolve, reject) {
     var req = indexedDB.open(param.user.uid);
+
     req.onsuccess = function () {
 
       var db = req.result;
@@ -867,7 +871,6 @@ function updateListStoreWithCreatorImage(param) {
 }
 
 function successResponse(read, param) {
-
   var request = indexedDB.open(param.user.uid);
   var removeActivitiesForUser = [];
   var removeActivitiesForOthers = [];
@@ -941,7 +944,9 @@ function successResponse(read, param) {
       rootObjectStore.put(record);
 
       updateListStoreWithCreatorImage(param).then(function () {
-        requestHandlerResponse('loadView', 200);
+
+        var updatedActivities = read.activities;
+        requestHandlerResponse('loadView', 200, updatedActivities);
       });
     };
   };
