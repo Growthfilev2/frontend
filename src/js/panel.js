@@ -41,8 +41,7 @@ function fetchDataForActivityList(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
 
   req.onsuccess = function () {
-    const db = req.result;
-    
+    const db = req.result;  
     let activityDom = ''
     const transaction = db.transaction(['list', 'activity', 'root'])
     const activity = transaction.objectStore('activity');

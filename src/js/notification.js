@@ -157,7 +157,6 @@ self.onmessage = function (event) {
     const rootStore = rootTx.objectStore('root');
     rootStore.get(dbName).onsuccess = function (event) {
       const record = event.target.result;
-
       userCoords = {
         'latitude': record.location.latitude,
         'longitude': record.location.longitude
@@ -165,9 +164,7 @@ self.onmessage = function (event) {
     }
 
     rootTx.oncomplete = function () {
-
       const mapTx = db.transaction(['map'], 'readwrite');
-
       const mapObjectStore = mapTx.objectStore('map');
       const index = mapObjectStore.index('nearby');
       const range = IDBKeyRange.lowerBound(['PENDING', 0])

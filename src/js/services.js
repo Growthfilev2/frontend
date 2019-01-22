@@ -351,6 +351,7 @@ function initLocationInterval(locationStatus) {
   const singletonSuccess = []
   let bestLocation;
   locationInterval().then(function (navigatorData) {
+    
     if (locationStatus.success) {
       singletonSuccess.push(locationStatus, navigatorData)
       bestLocation = sortedByAccuracy(singletonSuccess)
@@ -372,6 +373,7 @@ function initLocationInterval(locationStatus) {
 }
 
 function locationUpdationSuccess(location) {
+
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
@@ -387,11 +389,8 @@ function locationUpdationSuccess(location) {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
+
 }
-
-
-
-
 
 function showSuggestCheckInDialog() {
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
@@ -487,7 +486,6 @@ function navigatorPromise() {
 
         clearInterval(myInterval)
         myInterval = null;
-
         reject(error.message);
       });
     }, 500);
@@ -741,7 +739,7 @@ function requestCreator(requestType, requestBody) {
     getRootRecord().then(function (rootRecord) {
 
       const location = rootRecord.location
-      const isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 1);
+      const isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
 
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       if (isLocationOld) {
@@ -953,7 +951,7 @@ function onErrorMessage(error) {
     'line-number': error.lineno,
     'error': error.message,
     'file': error.filename
-  });
+  });  
 }
 
 function getInputText(selector) {

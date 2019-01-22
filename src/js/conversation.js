@@ -1311,9 +1311,23 @@ function createTempRecord(office, template, data) {
 
       const bareBonesVenueArray = []
       if (template === 'check-in') {
-        prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0]);
+     
+        getRootRecord().then(function (record) {
+   
+          const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
+          if(isLocationOld) {
+            window.addEventListener('location',function _checkInLatest(e){
+              const newLocation = e.detail
+              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],newLocation);
+              window.removeEventListener('location', _listener, true);
+            })
+            return
+          }
+          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],record.location);
+        });
         return
       }
+
       selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
         bareBonesVenue.venueDescriptor = venue
@@ -1335,9 +1349,11 @@ function createTempRecord(office, template, data) {
 }
 
 
-function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
-  getRootRecord().then(function (record) {
-    checkMapStoreForNearByLocation(bareBonesRecord.office, record.location).then(function (results) {
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc,currentLocation) {
+  
+
+    checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
+    
       const locations = [];
       const bareBonesVenue = {}
       bareBonesVenue.venueDescriptor = venueDesc
@@ -1368,8 +1384,6 @@ function prefillLocationForCheckIn(bareBonesRecord, venueDesc) {
       updateCreateActivity(bareBonesRecord)
       removeDialog()
     })
-
-  })
 }
 
 
