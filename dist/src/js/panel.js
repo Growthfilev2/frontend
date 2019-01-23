@@ -21,7 +21,7 @@ function initDomLoad() {
   createActivityIcon();
 }
 
-function listView(filter) {
+function listView(filter, updatedActivities) {
   history.pushState(['listView'], null, null);
   initDomLoad();
 
@@ -52,9 +52,6 @@ function updateEl(activities, currentLocation) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-<<<<<<< HEAD
-    var activityDom = '';
-=======
     var tx = db.transaction(['list', 'activity']);
     var activityStore = tx.objectStore('activity');
     var listStore = tx.objectStore('list');
@@ -87,7 +84,6 @@ function startCursor(currentLocation) {
   var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
->>>>>>> infinite-scroll
     var transaction = db.transaction(['list', 'activity', 'root']);
     var activity = transaction.objectStore('activity');
     var store = transaction.objectStore('list');
