@@ -77,6 +77,8 @@ function updateEl(activities, currentLocation) {
 function handleScroll(ev) { 
   getRootRecord().then(function(record){
     if(window.innerHeight + window.scrollY === document.body.scrollHeight) {
+      const ul = document.getElementById('activity--list')
+      if(!ul) return
       startCursor(record.location);
     }
   })
@@ -129,8 +131,7 @@ function startCursor(currentLocation) {
 
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if(!ul) return
-      
+
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false
