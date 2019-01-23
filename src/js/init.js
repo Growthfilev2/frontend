@@ -419,7 +419,6 @@ function startApp() {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      console.log(Towers.getCellularData())
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return

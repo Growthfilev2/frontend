@@ -1,4 +1,4 @@
-var notification = new Worker('src/js/notification.js');
+var notification = new Worker('js/notification.js');
 
 var scroll_namespace = {
   count: 0,
@@ -91,8 +91,6 @@ function startCursor(currentLocation) {
     var iterator = 0;
     var advanceCount = scroll_namespace.count;
     var fragment = document.createDocumentFragment();
-
-    var ul = document.getElementById('activity--list');
     index.openCursor(null, 'prev').onsuccess = function (event) {
 
       var cursor = event.target.result;
@@ -127,6 +125,8 @@ function startCursor(currentLocation) {
      */
 
     transaction.oncomplete = function () {
+      var ul = document.getElementById('activity--list');
+      if (!ul) return;
 
       ul.appendChild(fragment);
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;

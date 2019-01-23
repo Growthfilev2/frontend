@@ -94,8 +94,6 @@ function startCursor(currentLocation) {
     let iterator = 0;
     const advanceCount = scroll_namespace.count;
     let fragment = document.createDocumentFragment();
-
-    const ul = document.getElementById('activity--list')
     index.openCursor(null, 'prev').onsuccess = function (event) {
 
       const cursor = event.target.result;
@@ -130,7 +128,9 @@ function startCursor(currentLocation) {
      */
 
     transaction.oncomplete = function () {
-    
+      const ul = document.getElementById('activity--list')
+      if(!ul) return
+      
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false
