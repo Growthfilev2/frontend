@@ -1,6 +1,5 @@
 importScripts('../../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/'
-
 let deviceInfo;
 
 // get Device time
