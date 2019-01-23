@@ -127,9 +127,8 @@ function startCursor(currentLocation) {
      */
 
     transaction.oncomplete = function () {
-      const ul = document.getElementById('activity--list');
-      if(!ul) return
-      
+      var ul = document.getElementById('activity--list');
+      if (!ul) return;
       ul.appendChild(fragment);
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false;
