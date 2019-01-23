@@ -1275,7 +1275,7 @@ function createTempRecord(office, template, data) {
           }
           prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], record.location);
         });
-        returnc;
+        return;
       }
 
       selectedCombo.venue.forEach(function (venue) {
@@ -2582,7 +2582,9 @@ function insertInputsIntoActivity(record, activityStore) {
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
     var source = '';
-    if (imagesInAttachments[_i].src !== './img/placeholder.png') {
+    if (imagesInAttachments[_i].src === './img/placeholder.png') {
+      source = '';
+    } else {
       source = imagesInAttachments[_i].src;
     }
     record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = source;
@@ -2592,7 +2594,7 @@ function insertInputsIntoActivity(record, activityStore) {
   var st = void 0;
   var ed = void 0;
   var et = void 0;
-  var allow = true;
+
   for (var i = 1; i < record.schedule.length + 1; i++) {
 
     sd = getInputText('.start--date' + i).value;

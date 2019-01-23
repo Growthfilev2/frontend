@@ -1330,7 +1330,7 @@ function createTempRecord(office, template, data) {
           }
           prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],record.location);
         });
-        returnc
+        return
       }
 
       selectedCombo.venue.forEach(function (venue) {
@@ -2704,7 +2704,10 @@ function insertInputsIntoActivity(record, activityStore) {
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
     let source = ''
-    if (imagesInAttachments[i].src !== './img/placeholder.png') {
+    if(imagesInAttachments[i].src === './img/placeholder.png') {
+      source = ''
+    }
+    else {
       source = imagesInAttachments[i].src
     }
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
@@ -2714,7 +2717,7 @@ function insertInputsIntoActivity(record, activityStore) {
   let st;
   let ed;
   let et
-  let allow = true;
+ 
   for (var i = 1; i < record.schedule.length + 1; i++) {
 
     sd = getInputText('.start--date' + i).value
