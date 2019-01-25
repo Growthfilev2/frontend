@@ -40,7 +40,7 @@ let native = function () {
       }
       if (this.getName() === 'Android') {
         try {
-          return AndroidId.getDeviceId();
+          return AndroidInterface.getDeviceId();
         } catch (e) {
           requestCreator('instant', JSON.stringify({
             message: e.message
@@ -49,7 +49,7 @@ let native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 4,
+            appVersion: 5,
             osVersion: '',
             id: '',
           })
@@ -719,10 +719,12 @@ function startInitializatioOfList(data) {
 }
 
 function openListWithChecks() {
-  manageLocation();
-  setInterval(function () {
-    manageLocation();
-  }, 5000);
+  if(isLocationVerified()) {
+      manageLocation();
+      setInterval(function () {
+        manageLocation();
+      }, 5000);
+  }
   
   listView();
   runAppChecks();

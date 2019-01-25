@@ -155,13 +155,12 @@ function fetchServerTime(body,user) {
         return
       };
 
-
       resolve({
         ts: response.timestamp,
         fromTime: body.from,
         user:user,
-       
       })
+
     }).catch(function (error) {
       instant(createLog(error))
     })

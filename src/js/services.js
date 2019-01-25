@@ -77,7 +77,7 @@ function successDialog() {
 
 }
 
-function appDialog(messageString,showButton) {
+function appDialog(messageString, showButton) {
   if (!document.getElementById('enable-gps')) {
 
     var aside = document.createElement('aside');
@@ -100,10 +100,10 @@ function appDialog(messageString,showButton) {
     ok.type = 'button';
     ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
     ok.textContent = 'Ok';
-    if(!showButton) {
+    if (!showButton) {
       ok.classList.add('hidden')
     }
-    
+
     ok.style.backgroundColor = '#3498db';
 
     footer.appendChild(ok);
@@ -115,9 +115,12 @@ function appDialog(messageString,showButton) {
   }
 
   var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
-  
-  gpsDialog.listen('MDCDialog:accept',function(){
-    listView({nearby:false,urgent:false})
+
+  gpsDialog.listen('MDCDialog:accept', function () {
+    listView({
+      nearby: false,
+      urgent: false
+    })
   });
 
   gpsDialog.show();
@@ -214,6 +217,7 @@ function snacks(message, type) {
   document.getElementById('snackbar-container').innerHTML = snack.outerHTML;
 
   var data = {
+
     message: message,
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
@@ -312,9 +316,7 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    CelllarJson = Towers.getCellularData();
-
-    if (!Object.keys(JSON.parse(CelllarJson)).length) return;
+    CelllarJson = AndroidInterface.getCellularData();
 
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
 
@@ -357,12 +359,11 @@ function useHTML5Location() {
   })
 }
 
-
 function initLocationInterval(locationStatus) {
   const singletonSuccess = []
   let bestLocation;
   locationInterval().then(function (navigatorData) {
-    
+
     if (locationStatus.success) {
       singletonSuccess.push(locationStatus, navigatorData)
       bestLocation = sortedByAccuracy(singletonSuccess)
@@ -622,15 +623,16 @@ function isLocationMoreThanThreshold(distance) {
 }
 
 function isLocationLessThanThreshold(distance) {
-  const THRESHOLD =1; //km
+  const THRESHOLD = 1; //km
   if (distance <= THRESHOLD) return true
   return false
 }
 
+
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
     try {
-      Fetchview.startConversation(viewName);
+      AndroidInterface.startConversation(viewName);
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: e.message
@@ -639,51 +641,47 @@ function sendCurrentViewNameToAndroid(viewName) {
   }
 }
 
-
-function getNonLocationmessageString(name) {
-  if (name === 'gps') {
-    return 'Please Enable GPS to use Growthfile';
-  }
-  return 'Please Allow Location services To Use Growthfile';
-}
-
-function isLocationVerified(reqType) {
-  if (native.getName() === 'Android') {
-    var title = 'Message';
-    var messageData = {
-      title: title,
-      message: '',
-      cancelable: true,
-      button: {
-        text: 'Okay',
-        show: true,
-        clickAction: {
-          redirection: {
-            text: '',
-            value: false
-          }
-        }
-      }
-    };
-
-    if (!Internet.isConnectionActive()) {
-      messageData.message = 'Please Check Your Internet Connection';
-      Android.notification(JSON.stringify(messageData));
-      return false;
+const locationPermission = (function () {
+  return {
+    checkGps: function () {
+      return AndroidInterface.isGpsEnabled()
+    },
+    checkLocationPermission: function () {
+      return AnrdoiInterface.isLocationPermissionGranted();
     }
-
-    var locationStatus = JSON.parse(gps.isEnabled());
-
-    if (!locationStatus.active) {
-      messageData.message = getNonLocationmessageString(locationStatus.name);
-      Android.notification(JSON.stringify(messageData));
-      return false;
-    }
-    return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
+})();
+
+
+
+function isLocationVerified() {
+
+  if (native.getName() !== 'Android') return true
+
+  if (!AndroidInterface.isConnectionActive()) {
+
+    //todo create a dialog box in js 
+
+    return;
+  }
+
+  if (!locationPermission.checkGps()) {
+
+    //todo create a dialog box in js 
+
+
+    return;
+  }
+
+  if (!locationPermission.checkLocationPermission()) {
+    //todo create a dialog box in js 
+    return;
+  }
+
   return true;
 }
+
+
 
 function iosConnectivity(connectivity) {
   // for future implementation
@@ -691,6 +689,7 @@ function iosConnectivity(connectivity) {
     // resetLoaders()
   }
 }
+
 
 function resetLoaders(data) {
   if (native.getName() === 'Android') {
@@ -813,27 +812,26 @@ function sendRequest(location, requestGenerator) {
   if (location.latitude && location.longitude && location.accuracy) {
 
     apiHandler.postMessage(requestGenerator);
-    
+
   } else {
-    appDialog('Fetching Location Please wait.',true);
-    getRootRecord().then(function(record){
+    appDialog('Fetching Location Please wait.', true);
+    getRootRecord().then(function (record) {
       let cellTowerInfo;
 
       try {
-        cellTowerInfo = Towers.getCellularData()
-      }
-      catch(e){
+        cellTowerInfo = AndroidInterface.getCellularData()
+      } catch (e) {
         cellTowerInfo = e.message
       }
-      
+
       const locationNotFound = {
-        message : {
-          deviceInfo : native.getInfo(),
-          storedLocation:record.location,
-          cellTower :cellTowerInfo
+        message: {
+          deviceInfo: native.getInfo(),
+          storedLocation: record.location,
+          cellTower: cellTowerInfo
         }
       }
-      requestCreator('instant',JSON.stringify(locationNotFound))
+      requestCreator('instant', JSON.stringify(locationNotFound))
     })
 
   }
@@ -917,7 +915,7 @@ function urlFromBase64Image(data) {
       return
     }
   }
-  // to do update
+
 }
 
 function loadView(data) {
@@ -939,7 +937,7 @@ function loadView(data) {
 
   if (history.state[0] === 'listView') {
     if (!data.msg.length) return
-    getRootRecord().then(function(record){
+    getRootRecord().then(function (record) {
       updateEl(data.msg, record.location)
     })
     return;
@@ -952,7 +950,7 @@ function loadView(data) {
 function androidStopRefreshing() {
   if (native.getName() === 'Android') {
     try {
-      AndroidRefreshing.stopRefreshing(true);
+      AndroidInterface.stopRefreshing(true);
     } catch (e) {
 
       const instantBody = {
@@ -980,7 +978,7 @@ function onErrorMessage(error) {
     'line-number': error.lineno,
     'error': error.message,
     'file': error.filename
-  });  
+  });
 }
 
 function getInputText(selector) {

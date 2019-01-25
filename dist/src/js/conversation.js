@@ -2401,7 +2401,7 @@ function setFilePath(str, key, show) {
 function readCameraFile() {
   if (native.getName() === 'Android') {
     try {
-      FetchCameraForAttachment.startCamera();
+      AndroidInterface.startCamera();
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: e.message,
@@ -2414,7 +2414,6 @@ function readCameraFile() {
 }
 
 function openImage(imageSrc) {
-  // sendCurrentViewNameToAndroid('selector')
 
   if (!imageSrc) return;
 
@@ -2831,6 +2830,7 @@ function createNumberInput(value, canEdit) {
     simeplText.textContent = value;
     return simeplText;
   }
+
   var textField = document.createElement('div');
   textField.className = 'mdc-text-field data--value-list';
   var input = document.createElement('input');

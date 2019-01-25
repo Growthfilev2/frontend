@@ -40,7 +40,7 @@ var native = function () {
       }
       if (this.getName() === 'Android') {
         try {
-          return AndroidId.getDeviceId();
+          return AndroidInterface.getDeviceId();
         } catch (e) {
           requestCreator('instant', JSON.stringify({
             message: e.message
@@ -49,7 +49,7 @@ var native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 4,
+            appVersion: 5,
             osVersion: '',
             id: ''
           });
@@ -696,10 +696,12 @@ function startInitializatioOfList(data) {
 }
 
 function openListWithChecks() {
-  manageLocation();
-  setInterval(function () {
+  // if (isLocationVerified()) {
     manageLocation();
-  }, 5000);
+    setInterval(function () {
+      manageLocation();
+    }, 5000);
+  // }
 
   listView();
   runAppChecks();

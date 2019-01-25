@@ -180,7 +180,7 @@ function toggleIconData(icon, inputField) {
       inputField['input_'].disabled = false;
       inputField['lineRipple_'].activate();
 
-      localStorage.getItem('deviceType') === 'Android' ? openAndroidKeyboard.startKeyboard() : '';
+      localStorage.getItem('deviceType') === 'Android' ? AndroidInterface.startKeyboard() : '';
       inputField['input_'].focus();
     }
   });

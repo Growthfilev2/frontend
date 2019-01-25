@@ -172,10 +172,26 @@ function getActivityDataForList(activity, value, currentLocation) {
           secondLine.appendChild(el);
         }
       }
+      
       secondLine.appendChild(generateLatestVenue(venues, currentLocation));
-      resolve(activityListUI(value, secondLine))
+      const secondLineCss = setMarginForSecondLine(secondLine)
+      resolve(activityListUI(value, secondLineCss))
     }
   })
+}
+
+function setMarginForSecondLine(secondLine){
+  const nodes = secondLine.childNodes
+  if(nodes.length > 1) {
+    if(nodes[0].innerHTML && nodes[1].innerHTML){
+      secondLine.style.marginTop = '-42px'
+      return secondLine;
+    }
+     secondLine.style.marginTop = '-35px'
+     return secondLine
+  }
+  secondLine.style.marginTop = '-35px'
+  return secondLine
 }
 
 function generateTextIfActivityIsNotPending(status) {
@@ -347,24 +363,15 @@ function activityListUI(data, secondLine) {
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const activityNameText = document.createElement('span')
-
+  console.log(data)
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
 
   activityNameText.textContent = data.activityName;
 
-  // if (data.urgent || data.nearby) {
-  //   secondLine.textContent = data.secondLine;
-  // }
-  // else {
-  //   if(data.lastComment.user && data.lastComment.text) {
-  //     secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
-  //   }
-  // }
-
   leftTextContainer.appendChild(activityNameText);
-
+  
+  
   leftTextContainer.appendChild(secondLine);
-  // leftTextContainer.appendChild(lastComment)
 
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
@@ -425,8 +432,8 @@ function generateIconByCondition(data, li) {
   }
   const timeCustomText = document.createElement('div')
   timeCustomText.className = 'mdc-meta__custom-text'
-  timeCustomText.style.width = '80px';
-  timeCustomText.style.fontSize = '14px';
+  timeCustomText.style.width = '76px';
+  timeCustomText.style.fontSize = '16px';
   timeCustomText.textContent = moment(data.timestamp).calendar()
   return timeCustomText;
 }
