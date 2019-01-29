@@ -306,7 +306,7 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
-    
+
     CelllarJson = Towers.getCellularData();
     if(!JSON.parse(CelllarJson)) {
       useHTML5Location();
@@ -345,7 +345,7 @@ function useGeolocationApi(provider) {
       }
     }));
 
-    if (provider === 'MOCK') return;
+    // if (provider === 'MOCK') return;
     useHTML5Location();
   }
 }
