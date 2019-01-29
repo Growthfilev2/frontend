@@ -31,9 +31,18 @@ function profileView(pushState) {
         });
 
         showProfilePicture(firebase.auth().currentUser.photoURL);
-
-        inputFile('uploadProfileImage').addEventListener('change', readUploadedFile);
-
+        
+        if(native.getName() === 'Android') {
+          document.getElementById('uploadProfileImage').addEventListener('click',function(){
+            AndroidInterface.openImagePicker();
+          })
+        }
+        else {
+          inputFile('uploadProfileImage').addEventListener('change', function(){
+            readUploadedFile()
+          });
+        }
+        
         changeDisplayName(user);
         changeEmailAddress(user);
       };
@@ -65,22 +74,27 @@ function createProfilePanel() {
 
   var uploadBtn = document.createElement('button');
   uploadBtn.className = 'mdc-fab';
+  if(native.getName() === 'Android'){
+    uploadBtn.id = 'uploadProfileImage'
+  }
 
   var label = document.createElement('label');
-  label.setAttribute('for', 'uploadProfileImage');
+  // label.setAttribute('for', 'uploadProfileImage');
   var btnText = document.createElement('span');
   btnText.className = 'mdc-fab__icon material-icons';
   btnText.textContent = 'add_a_photo';
 
   label.appendChild(btnText);
   uploadBtn.appendChild(label);
-
-  var fileInput = document.createElement('input');
-
+  let fileInput;
+  if(native.getName() !== 'Android') {
+  fileInput = document.createElement('input');
   fileInput.type = 'file';
   fileInput.style.display = 'none';
   fileInput.id = 'uploadProfileImage';
-  fileInput.accept = 'accept="image/png,image/jpeg;';
+  fileInput.accept = 'accept="image/png,image/jpeg;'; 
+  }
+ 
   var profileImgCont = document.createElement('div');
   profileImgCont.id = 'profile--image-container';
   profileImgCont.className = 'profile-container--main';
@@ -96,7 +110,9 @@ function createProfilePanel() {
   profileImgCont.appendChild(profileImg);
   profileImgCont.appendChild(overlay);
   profileImgCont.appendChild(uploadBtn);
-  profileImgCont.appendChild(fileInput);
+  if(native.getName() !== 'Android') {
+    profileImgCont.appendChild(fileInput);
+  }
 
   var nameChangeCont = document.createElement('div');
   nameChangeCont.id = 'name--change-container';
@@ -237,22 +253,30 @@ function newSignIn(value) {
   }, 300);
 }
 
-function readUploadedFile(event) {
+function readUploadedFile(image){
+  if(native.getName() === 'Android' && image){
+    sendBase64ImageToBackblaze(image);
+    return;
+  }
+
   var file = inputFile('uploadProfileImage').files[0];
   var reader = new FileReader();
 
   reader.addEventListener("load", function () {
-    var body = {
-      'imageBase64': reader.result
-    };
-    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
-    requestCreator('backblaze', body);
+    sendBase64ImageToBackblaze(reader.result);
     return;
   }, false);
 
   if (file) {
     reader.readAsDataURL(file);
   }
+}
+function sendBase64ImageToBackblaze(base64){
+  var body = {
+    'imageBase64': base64
+  };
+  document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
+  requestCreator('backblaze', body);
 }
 
 function updateAuth(url) {

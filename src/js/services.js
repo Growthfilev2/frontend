@@ -413,20 +413,14 @@ function showSuggestCheckInDialog() {
   dialog.listen('MDCDialog:accept', function (evt) {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
-        if(!locationPermission.checkGps()) {
-          AndroidInterface.showDialog('GPS Unavailable','Please Turn on Gps to create a Check-in');
-          return;
-        }
-        if(!locationPermission.checkLocationPermission()) {
-          AndroidInterface.showDialog('Location Permission','Please Allow Growthfile location access, to create a Check-In')
-          return;
-        }
-        if (rootRecord.offices.length === 1) {
-          createTempRecord(rootRecord.offices[0], 'check-in', {
-            suggestCheckIn: true
-          });
-        } else {
-          callSubscriptionSelectorUI(evt, true);
+        if(isLocationStatusWorking()) {
+          if (rootRecord.offices.length === 1) {
+            createTempRecord(rootRecord.offices[0], 'check-in', {
+              suggestCheckIn: true
+            });
+          } else {
+            callSubscriptionSelectorUI(evt, true);
+          }
         }
       });
     }).catch(console.log);
@@ -664,6 +658,18 @@ var locationPermission = function () {
     }
   };
 }();
+
+function isLocationStatusWorking(){
+  if(native.getName() !== 'Android') return;
+  if(!locationPermission.checkGps()) {
+    AndroidInterface.showDialog('GPS Unavailable','Please Turn on Gps to create a Check-in');
+    return;
+  }
+  if(!locationPermission.checkLocationPermission()) {
+    AndroidInterface.showDialog('Location Permission','Please Allow Growthfile location access, to create a Check-In')
+    return;
+  }
+}
 
 function androidConnectivity(){
     return AndroidInterface.isConnectionActive();
