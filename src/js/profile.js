@@ -6,10 +6,10 @@ function profileView(pushState) {
   if (pushState) {
     history.pushState(['profileView'], null, null);
   }
-  if (window.addEventListener) {
-    window.removeEventListener('scroll', handleScroll, false);
-  }
-
+  if(window.addEventListener) {
+    window.removeEventListener('scroll',handleScroll,false)
+  }  
+  
   document.body.style.backgroundColor = '#eeeeee';
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
@@ -272,11 +272,19 @@ function readUploadedFile(image){
   }
 }
 function sendBase64ImageToBackblaze(base64){
+  const selector = document.getElementById('user-profile--image');
+  const container = document.getElementById('profile--image-container')
+  if(selector) {
+    selector.src = base64;
+  }
+  if(container) {
+    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
+  }
   var body = {
     'imageBase64': base64
   };
-  document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
   requestCreator('backblaze', body);
+
 }
 
 function updateAuth(url) {

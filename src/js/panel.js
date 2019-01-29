@@ -82,9 +82,9 @@ function handleScroll(ev) {
       startCursor(record.location);
     }
   })
-
 };
  
+
 function startCursor(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {

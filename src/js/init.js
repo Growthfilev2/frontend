@@ -720,11 +720,8 @@ function startInitializatioOfList(data) {
 
 function openListWithChecks() {
   listView();
-  
   setInterval(function () {
-  if(locationPermission.checkLocationPermission()) {
       manageLocation();
-    }
   }, 5000);
   runAppChecks();
 }

@@ -1,10 +1,6 @@
 function conversation(id, pushState) {
-
-  window.removeEventListener('scroll', handleScroll, false)
-
-  console.log(id)
+  window.removeEventListener('scroll',handleScroll,false)
   checkIfRecordExists('activity', id).then(function (id) {
-    console.log(id)
     if (id) {
       if (pushState) {
         history.pushState(['conversation', id], null, null)

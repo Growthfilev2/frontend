@@ -1,6 +1,18 @@
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+var _typeof = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol" ? function (obj) {
+  return typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+};
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+  } else {
+    obj[key] = value;
+  }return obj;
+}
 
 function profileView(pushState) {
   if (pushState) {
@@ -31,18 +43,17 @@ function profileView(pushState) {
         });
 
         showProfilePicture(firebase.auth().currentUser.photoURL);
-        
-        if(native.getName() === 'Android') {
-          document.getElementById('uploadProfileImage').addEventListener('click',function(){
+
+        if (native.getName() === 'Android') {
+          document.getElementById('uploadProfileImage').addEventListener('click', function () {
             AndroidInterface.openImagePicker();
-          })
-        }
-        else {
-          inputFile('uploadProfileImage').addEventListener('change', function(){
-            readUploadedFile()
+          });
+        } else {
+          inputFile('uploadProfileImage').addEventListener('change', function () {
+            readUploadedFile();
           });
         }
-        
+
         changeDisplayName(user);
         changeEmailAddress(user);
       };
@@ -74,8 +85,8 @@ function createProfilePanel() {
 
   var uploadBtn = document.createElement('button');
   uploadBtn.className = 'mdc-fab';
-  if(native.getName() === 'Android'){
-    uploadBtn.id = 'uploadProfileImage'
+  if (native.getName() === 'Android') {
+    uploadBtn.id = 'uploadProfileImage';
   }
 
   var label = document.createElement('label');
@@ -86,15 +97,15 @@ function createProfilePanel() {
 
   label.appendChild(btnText);
   uploadBtn.appendChild(label);
-  let fileInput;
-  if(native.getName() !== 'Android') {
-  fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.style.display = 'none';
-  fileInput.id = 'uploadProfileImage';
-  fileInput.accept = 'accept="image/png,image/jpeg;'; 
+  var fileInput = void 0;
+  if (native.getName() !== 'Android') {
+    fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.style.display = 'none';
+    fileInput.id = 'uploadProfileImage';
+    fileInput.accept = 'accept="image/png,image/jpeg;';
   }
- 
+
   var profileImgCont = document.createElement('div');
   profileImgCont.id = 'profile--image-container';
   profileImgCont.className = 'profile-container--main';
@@ -110,7 +121,7 @@ function createProfilePanel() {
   profileImgCont.appendChild(profileImg);
   profileImgCont.appendChild(overlay);
   profileImgCont.appendChild(uploadBtn);
-  if(native.getName() !== 'Android') {
+  if (native.getName() !== 'Android') {
     profileImgCont.appendChild(fileInput);
   }
 
@@ -253,8 +264,8 @@ function newSignIn(value) {
   }, 300);
 }
 
-function readUploadedFile(image){
-  if(native.getName() === 'Android' && image){
+function readUploadedFile(image) {
+  if (native.getName() === 'Android') {
     sendBase64ImageToBackblaze(image);
     return;
   }
@@ -271,7 +282,7 @@ function readUploadedFile(image){
     reader.readAsDataURL(file);
   }
 }
-function sendBase64ImageToBackblaze(base64){
+function sendBase64ImageToBackblaze(base64) {
   var body = {
     'imageBase64': base64
   };

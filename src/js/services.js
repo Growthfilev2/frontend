@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -297,7 +297,10 @@ function getCellTowerInfo(){
     }))
   }
   
-  if(!coarseData) return
+  if(!coarseData) {
+    useHTML5Location();
+    return;
+  }
   useGeolocationApi(coarseData);
   
 }
@@ -328,10 +331,8 @@ function useGeolocationApi(cellTower) {
   console.log(cellTower)
     getRootRecord().then(function (rootRecord) {
       const provider = rootRecord.location.provider;
-
-    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, cellTower);
+      geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, cellTower);
   
-
     if (provider === 'MOCK') {
       geoFetchPromise.then(function (geoData) {
         updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
@@ -347,8 +348,6 @@ function useGeolocationApi(cellTower) {
       initLocationInterval(error);
     });
 
-    // if (provider === 'MOCK') return;
-    // useHTML5Location();
   });
 }
 
@@ -660,19 +659,21 @@ var locationPermission = function () {
 }();
 
 function isLocationStatusWorking(){
-  if(native.getName() !== 'Android') return;
+  if(native.getName() !== 'Android') return true;
   if(!locationPermission.checkGps()) {
-    AndroidInterface.showDialog('GPS Unavailable','Please Turn on Gps to create a Check-in');
+    AndroidInterface.showDialog('GPS Unavailable','Please Turn on Gps.');
     return;
   }
+  console.log(locationPermission.checkLocationPermission())
   if(!locationPermission.checkLocationPermission()) {
-    AndroidInterface.showDialog('Location Permission','Please Allow Growthfile location access, to create a Check-In')
+    AndroidInterface.showDialog('Location Permission','Please Allow Growthfile location access.')
     return;
   }
-}
-
-function androidConnectivity(){
-    return AndroidInterface.isConnectionActive();
+  if(!AndroidInterface.isConnectionActive()) {
+    AndroidInterface.showDialog('No Connectivity','Please Check your Internet Connectivity');
+    return;
+  }
+  return true
 }
 
 function iosConnectivity(connectivity) {

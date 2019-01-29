@@ -10,7 +10,7 @@ function handleImageError(img) {
     var usersObjectStoreTx = db.transaction('users', 'readwrite');
     var usersObjectStore = usersObjectStoreTx.objectStore('users');
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-
+      
       var record = event.target.result;
       if (!record) {
         return;
@@ -297,7 +297,10 @@ function getCellTowerInfo() {
     }));
   }
 
-  if (!coarseData) return;
+  if (!coarseData) {
+    useHTML5Location();
+    return;
+  }
   useGeolocationApi(coarseData);
 }
 
@@ -326,7 +329,6 @@ function useGeolocationApi(cellTower) {
   console.log(cellTower);
   getRootRecord().then(function (rootRecord) {
     var provider = rootRecord.location.provider;
-
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, cellTower);
 
     if (provider === 'MOCK') {
@@ -343,9 +345,6 @@ function useGeolocationApi(cellTower) {
     }).catch(function (error) {
       initLocationInterval(error);
     });
-
-    // if (provider === 'MOCK') return;
-    // useHTML5Location();
   });
 }
 
@@ -410,20 +409,14 @@ function showSuggestCheckInDialog() {
   dialog.listen('MDCDialog:accept', function (evt) {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
-        if (!locationPermission.checkGps()) {
-          AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
-          return;
-        }
-        if (!locationPermission.checkLocationPermission()) {
-          AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In');
-          return;
-        }
-        if (rootRecord.offices.length === 1) {
-          createTempRecord(rootRecord.offices[0], 'check-in', {
-            suggestCheckIn: true
-          });
-        } else {
-          callSubscriptionSelectorUI(evt, true);
+        if (isLocationStatusWorking()) {
+          if (rootRecord.offices.length === 1) {
+            createTempRecord(rootRecord.offices[0], 'check-in', {
+              suggestCheckIn: true
+            });
+          } else {
+            callSubscriptionSelectorUI(evt, true);
+          }
         }
       });
     }).catch(console.log);
@@ -662,8 +655,22 @@ var locationPermission = function () {
   };
 }();
 
-function androidConnectivity() {
-  return AndroidInterface.isConnectionActive();
+function isLocationStatusWorking() {
+  if (native.getName() !== 'Android') return true;
+  if (!locationPermission.checkGps()) {
+    AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps.');
+    return;
+  }
+  console.log(locationPermission.checkLocationPermission());
+  if (!locationPermission.checkLocationPermission()) {
+    AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access.');
+    return;
+  }
+  if (!AndroidInterface.isConnectionActive()) {
+    AndroidInterface.showDialog('No Connectivity', 'Please Check your Internet Connectivity');
+    return;
+  }
+  return true;
 }
 
 function iosConnectivity(connectivity) {
