@@ -1,4 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -280,19 +280,34 @@ function geolocationApi(method, url, data) {
   });
 }
 
+function getCellTowerInfo() {
+  var coarseData = "";
+
+  try {
+    coarseData = AndroidInterface.getCellularData();
+  } catch (e) {
+    requestCreator('instant', JSON.stringify({
+      message: {
+        error: e.message,
+        file: 'services.js',
+        lineNo: 287,
+        device: JSON.parse(native.getInfo()),
+        help: 'Problem in calling method for fetching cellular towers.'
+      }
+    }));
+  }
+
+  if (!coarseData) return;
+  useGeolocationApi(coarseData);
+}
+
 function manageLocation() {
   if (!localStorage.getItem('dbexist')) {
     localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   };
 
   if (native.getName() === 'Android') {
-    getRootRecord().then(function (rootRecord) {
-      // if (shouldFetchCellTower(rootRecord.location)) {
-        useGeolocationApi(rootRecord.location.provider);
-      //   return;
-      // }
-      // useHTML5Location();
-    });
+    getCellTowerInfo();
     return;
   }
   useHTML5Location();
@@ -305,44 +320,33 @@ function shouldFetchCellTower(locationObject) {
   return true;
 }
 
-function useGeolocationApi(provider) {
+function useGeolocationApi(cellTower) {
+
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
-  // var CelllarJson = false;
+  console.log(cellTower);
+  getRootRecord().then(function (rootRecord) {
+    var provider = rootRecord.location.provider;
 
-  // try {
-    CelllarJson = AndroidInterface.getCellularData();
-    console.log(CelllarJson)
+    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, cellTower);
 
-    // geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
+    if (provider === 'MOCK') {
+      geoFetchPromise.then(function (geoData) {
+        updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+      }).catch(function (error) {
+        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+      });
+      return;
+    }
 
-  //   if (provider === 'MOCK') {
-  //     geoFetchPromise.then(function (geoData) {
-  //       updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
-  //     }).catch(function (error) {
-  //       requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-  //     });
-  //     return;
-  //   }
+    geoFetchPromise.then(function (geoData) {
+      initLocationInterval(geoData);
+    }).catch(function (error) {
+      initLocationInterval(error);
+    });
 
-  //   geoFetchPromise.then(function (geoData) {
-  //     initLocationInterval(geoData);
-  //   }).catch(function (error) {
-  //     initLocationInterval(error);
-  //   });
-  // } catch (e) {
-  //   requestCreator('instant', JSON.stringify({
-  //     message: {
-  //       error: e.message,
-  //       file: 'services.js',
-  //       lineNo: 231,
-  //       device: JSON.parse(native.getInfo()),
-  //       help: 'Problem in calling method for fetching cellular towers.'
-  //     }
-  //   }));
-
-  //   if (provider === 'MOCK') return;
-  //   useHTML5Location();
-  // }
+    // if (provider === 'MOCK') return;
+    // useHTML5Location();
+  });
 }
 
 function useHTML5Location() {
@@ -396,7 +400,9 @@ function locationUpdationSuccess(location) {
 }
 
 function showSuggestCheckInDialog() {
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
+  var checkInDialog = document.querySelector('#suggest-checkIn-dialog');
+  if (!checkInDialog) return;
+  var dialog = new mdc.dialog.MDCDialog(checkInDialog);
   if (!dialog) return;
   if (document.getElementById('dialog--component')) return;
   dialog['root_'].classList.remove('hidden');
@@ -404,6 +410,14 @@ function showSuggestCheckInDialog() {
   dialog.listen('MDCDialog:accept', function (evt) {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
+        if (!locationPermission.checkGps()) {
+          AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+          return;
+        }
+        if (!locationPermission.checkLocationPermission()) {
+          AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In');
+          return;
+        }
         if (rootRecord.offices.length === 1) {
           createTempRecord(rootRecord.offices[0], 'check-in', {
             suggestCheckIn: true
@@ -424,6 +438,16 @@ function isDialogOpened(id) {
   if (!currentDialog) return false;
   var isOpen = currentDialog.classList.contains('mdc-dialog--open');
   return isOpen;
+}
+
+function androidLocationPermissionGrant(grant) {
+  console.log(grant);
+}
+
+function getCellularInfoError(error) {
+  requestCreator('instant', JSON.stringify({
+    'message': error
+  }));
 }
 
 function locationUpdationError(error) {
@@ -638,31 +662,8 @@ var locationPermission = function () {
   };
 }();
 
-function isLocationVerified() {
-
-  if (native.getName() !== 'Android') return true;
-
-  if (!AndroidInterface.isConnectionActive()) {
-
-    //todo create a dialog box in js 
-
-    return;
-  }
-
-  if (!locationPermission.checkGps()) {
-
-    //todo create a dialog box in js 
-
-
-    return;
-  }
-
-  if (!locationPermission.checkLocationPermission()) {
-    //todo create a dialog box in js 
-    return;
-  }
-
-  return true;
+function androidConnectivity() {
+  return AndroidInterface.isConnectionActive();
 }
 
 function iosConnectivity(connectivity) {

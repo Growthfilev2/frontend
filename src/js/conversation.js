@@ -1,6 +1,6 @@
 function conversation(id, pushState) {
- 
-  window.removeEventListener('scroll',handleScroll,false)
+
+  window.removeEventListener('scroll', handleScroll, false)
 
   console.log(id)
   checkIfRecordExists('activity', id).then(function (id) {
@@ -144,10 +144,17 @@ function commentPanel(id) {
   }
 
   document.getElementById('send-chat--input').onclick = function () {
-
-    if (isLocationVerified()) {
-      sendComment(id)
+    if (!locationPermission.checkGps()) {
+      AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+      return;
     }
+    if (!locationPermission.checkLocationPermission()) {
+      AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+      return;
+    }
+
+    sendComment(id)
+
   }
 }
 
@@ -247,11 +254,20 @@ function statusChange(db, id) {
       switchControl.checked = true
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
-      if (isLocationVerified()) {
-        changeStatusRequest(switchControl, record)
-      } else {
+      if (!locationPermission.checkGps()) {
+        AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
         resetStatusConfirmation(switchControl, record);
+        return;
       }
+      if (!locationPermission.checkLocationPermission()) {
+        AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+        resetStatusConfirmation(switchControl, record);
+        return;
+      }
+
+
+      changeStatusRequest(switchControl, record)
+
 
     }
   }
@@ -721,7 +737,7 @@ function fillUsersInSelector(data, dialog) {
 
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
-      if(!cursor) return
+      if (!cursor) return
       const userRecord = cursor.value
       if (data.attachment.present) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
@@ -730,7 +746,7 @@ function fillUsersInSelector(data, dialog) {
       }
       cursor.continue()
     }
-    transaction.oncomplete = function(){
+    transaction.oncomplete = function () {
       const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
         if (box) {
@@ -745,9 +761,9 @@ function fillUsersInSelector(data, dialog) {
         initSearchForSelectors(db, 'users', data)
       })
       document.querySelector('.selector-send').classList.remove('hidden');
-  
+
       dialog['acceptButton_'].onclick = function () {
-  
+
         if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
           document.getElementById('selector--search').style.display = 'none'
           const parentNode = document.getElementById('data-list--container')
@@ -756,7 +772,7 @@ function fillUsersInSelector(data, dialog) {
           addNewNumber(data, dialog)
           return
         }
-  
+
         if (data.attachment.present) {
           const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
           console.log(radio)
@@ -770,7 +786,7 @@ function fillUsersInSelector(data, dialog) {
             requestCreator('instant', JSON.stringify({
               message: error
             }))
-  
+
           })
           return;
         }
@@ -785,21 +801,22 @@ function fillUsersInSelector(data, dialog) {
                 message: error
               }))
             })
-  
+
           })
           return
         }
-        if (isLocationVerified()) {
-  
-          shareReq(data)
+        if (!locationPermission.checkGps()) {
+          AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+          return;
         }
-  
+        if (!locationPermission.checkLocationPermission()) {
+          AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+          return;
+        }
+        shareReq(data)
+
       }
-
-
     }
-
-    
   }
 
 }
@@ -857,7 +874,7 @@ function addNewNumber(data) {
   createButton.className = 'mdc-button'
   createButton.textContent = 'Add Contact'
   createButton.id = 'new-contact'
-  
+
   createButton.onclick = function () {
     const number = document.getElementById('number-field').value
 
@@ -1198,6 +1215,14 @@ function fillSubscriptionInSelector(db, dialog, data) {
     mainUL.appendChild(grp)
 
     dialog['acceptButton_'].onclick = function () {
+      if (!locationPermission.checkGps()) {
+        AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+        return;
+      }
+      if (!locationPermission.checkLocationPermission()) {
+        AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+        return;
+      }
 
       if (document.querySelector('.mdc-radio.radio-selected')) {
 
@@ -1230,7 +1255,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
       if (!cursor) {
         return
       }
-      
+
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue()
         return
@@ -1312,23 +1337,23 @@ function createTempRecord(office, template, data) {
 
       const bareBonesVenueArray = []
       if (template === 'check-in') {
-     
+
         getRootRecord().then(function (record) {
-   
+
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if(isLocationOld) {
-            appDialog('Fetching Location Please wait',false)
-            window.addEventListener('location',function _checkInLatest(e){
+          if (isLocationOld) {
+            appDialog('Fetching Location Please wait', false)
+            window.addEventListener('location', function _checkInLatest(e) {
               const newLocation = e.detail
-              if(document.querySelector('#enable-gps')) {
+              if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],newLocation);
+              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], newLocation);
               window.removeEventListener('location', _checkInLatest, true);
-            },true)
+            }, true)
             return
           }
-          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0],record.location);
+          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], record.location);
         });
         return
       }
@@ -1354,41 +1379,41 @@ function createTempRecord(office, template, data) {
 }
 
 
-function prefillLocationForCheckIn(bareBonesRecord, venueDesc,currentLocation) {
-  
+function prefillLocationForCheckIn(bareBonesRecord, venueDesc, currentLocation) {
 
-    checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
-    
-      const locations = [];
-      const bareBonesVenue = {}
-      bareBonesVenue.venueDescriptor = venueDesc
-      bareBonesVenue.location = ''
-      bareBonesVenue.address = ''
+
+  checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
+
+    const locations = [];
+    const bareBonesVenue = {}
+    bareBonesVenue.venueDescriptor = venueDesc
+    bareBonesVenue.location = ''
+    bareBonesVenue.address = ''
+    bareBonesVenue.geopoint = {
+      '_latitude': '',
+      '_longitude': ''
+    }
+
+    if (!results.length) {
+      bareBonesVenue.showIcon = false;
+    } else {
+      bareBonesVenue.showIcon = true;
+    }
+
+    if (results.length === 1) {
+      const singleLocation = results[0]
+      bareBonesVenue.location = singleLocation.location
+      bareBonesVenue.address = singleLocation.address
       bareBonesVenue.geopoint = {
-        '_latitude': '',
-        '_longitude': ''
+        '_latitude': singleLocation.latitude,
+        '_longitude': singleLocation.longitude
       }
-
-      if (!results.length) {
-        bareBonesVenue.showIcon = false;
-      } else {
-        bareBonesVenue.showIcon = true;
-      }
-
-      if (results.length === 1) {
-        const singleLocation = results[0]
-        bareBonesVenue.location = singleLocation.location
-        bareBonesVenue.address = singleLocation.address
-        bareBonesVenue.geopoint = {
-          '_latitude': singleLocation.latitude,
-          '_longitude': singleLocation.longitude
-        }
-      }
-      locations.push(bareBonesVenue)
-      bareBonesRecord.venue = locations
-      updateCreateActivity(bareBonesRecord)
-      removeDialog()
-    })
+    }
+    locations.push(bareBonesVenue)
+    bareBonesRecord.venue = locations
+    updateCreateActivity(bareBonesRecord)
+    removeDialog()
+  })
 }
 
 
@@ -1453,14 +1478,14 @@ function updateDomFromIDB(activityRecord, attr, data) {
         data.primary.forEach(function (number) {
           if (thisActivity.assignees.indexOf(number) > -1) return
           thisActivity.assignees.push(number)
-            getUserRecord(db, number).then(function (record) {
-              if (assigneeList) {
-                assigneeList.appendChild(createSimpleAssigneeLi(record))
-              }
-            }).catch(function (error) {
-              assigneeList.appendChild(createSimpleAssigneeLi())
-              reject(error);
-            })
+          getUserRecord(db, number).then(function (record) {
+            if (assigneeList) {
+              assigneeList.appendChild(createSimpleAssigneeLi(record))
+            }
+          }).catch(function (error) {
+            assigneeList.appendChild(createSimpleAssigneeLi())
+            reject(error);
+          })
         })
         resolve(true);
         return
@@ -1675,10 +1700,18 @@ function updateCreateActivity(record) {
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        if (isLocationVerified()) {
-          this.dataset.progress = true
-          sendActivity(record)
+        if (!locationPermission.checkGps()) {
+          AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+          return;
         }
+        if (!locationPermission.checkLocationPermission()) {
+          AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+          return;
+        }
+
+        this.dataset.progress = true
+        sendActivity(record)
+
       })
     }
 
@@ -1781,12 +1814,18 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-
-      if (isLocationVerified()) {
-        document.querySelector('.undo-deleted').style.display = 'none'
-        listItem.appendChild(loader('undo-delete-loader'));
-        reqForUndoDeleted(data.id)
+      if (!locationPermission.checkGps()) {
+        AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+        return;
       }
+      if (!locationPermission.checkLocationPermission()) {
+        AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+        return;
+      }
+
+      document.querySelector('.undo-deleted').style.display = 'none'
+      listItem.appendChild(loader('undo-delete-loader'));
+      reqForUndoDeleted(data.id)
 
     }
     listItem.appendChild(undo)
@@ -2570,10 +2609,18 @@ function createActivityCancellation(record) {
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
 
     document.getElementById('delete-allow').onclick = function () {
-      if (isLocationVerified()) {
-
-        deleteActivityReq(record.activityId)
+      if (!locationPermission.checkGps()) {
+        AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps to create a Check-in');
+        return;
       }
+      if (!locationPermission.checkLocationPermission()) {
+        AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access, to create a Check-In')
+        return;
+      }
+
+
+      deleteActivityReq(record.activityId)
+
 
     }
 
@@ -2703,10 +2750,9 @@ function insertInputsIntoActivity(record, activityStore) {
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
     let source = ''
-    if(imagesInAttachments[i].src === './img/placeholder.png') {
+    if (imagesInAttachments[i].src === './img/placeholder.png') {
       source = ''
-    }
-    else {
+    } else {
       source = imagesInAttachments[i].src
     }
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
@@ -2716,7 +2762,7 @@ function insertInputsIntoActivity(record, activityStore) {
   let st;
   let ed;
   let et
- 
+
   for (var i = 1; i < record.schedule.length + 1; i++) {
 
     sd = getInputText('.start--date' + i).value

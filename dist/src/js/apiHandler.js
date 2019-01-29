@@ -1,6 +1,6 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-importScripts('../../external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
@@ -173,9 +173,9 @@ function instant(error, user) {
     token: user.token
   };
   console.log(error);
-  // http(req).then(function (response) {
-  //   console.log(response);
-  // }).catch(console.log);
+  http(req).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
 
 /**

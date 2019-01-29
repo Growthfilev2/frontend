@@ -291,11 +291,11 @@ function createCheckInDialog() {
   header.className = 'mdc-dialog__header';
   var headerText = document.createElement('h2');
   headerText.className = 'mdc-dialog__header__title';
-  headerText.textContent = 'New Location Detected';
+  headerText.textContent = 'Reminder';
   header.appendChild(headerText);
   var section = document.createElement('section');
   section.className = 'mdc-dialog__body';
-  section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
+  section.textContent = 'Check-in ?';
 
   var footer = document.createElement('footer');
   footer.className = 'mdc-dialog__footer';
@@ -696,13 +696,12 @@ function startInitializatioOfList(data) {
 }
 
 function openListWithChecks() {
-  // if (isLocationVerified()) {
-    manageLocation();
-    setInterval(function () {
-      manageLocation();
-    }, 5000);
-  // }
-
   listView();
+
+  setInterval(function () {
+    if (locationPermission.checkLocationPermission()) {
+      manageLocation();
+    }
+  }, 5000);
   runAppChecks();
 }
