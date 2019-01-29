@@ -283,11 +283,11 @@ function manageLocation() {
 
   if (native.getName() === 'Android') {
     getRootRecord().then(function (rootRecord) {
-      if (shouldFetchCellTower(rootRecord.location)) {
+      // if (shouldFetchCellTower(rootRecord.location)) {
         useGeolocationApi(rootRecord.location.provider);
         return;
-      }
-      useHTML5Location();
+      // }
+      // useHTML5Location();
     });
     return;
   }
@@ -306,7 +306,12 @@ function useGeolocationApi(provider) {
   var CelllarJson = false;
 
   try {
+    
     CelllarJson = Towers.getCellularData();
+    if(!JSON.parse(CelllarJson)) {
+      useHTML5Location();
+      return;
+    }
 
     if (!Object.keys(JSON.parse(CelllarJson)).length) {
       useHTML5Location();
