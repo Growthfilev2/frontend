@@ -265,6 +265,8 @@ function geolocationApi(method, url, data) {
         if (!JSON.parse(xhr.responseText)) return;
 
         var result = JSON.parse(xhr.responseText);
+        console.log(result.location.lat)
+        console.log(result.location.lng);
         resolve({
           'latitude': result.location.lat,
           'longitude': result.location.lng,
@@ -285,6 +287,7 @@ function getCellTowerInfo() {
 
   try {
     coarseData = AndroidInterface.getCellularData();
+    
   } catch (e) {
     requestCreator('instant', JSON.stringify({
       message: {
@@ -297,10 +300,10 @@ function getCellTowerInfo() {
     }));
   }
 
-  if (coarseData) {
-    useHTML5Location();
-    return;
-  }
+  // if (!coarseData) {
+  //   useHTML5Location();
+  //   return;
+  // }
   useGeolocationApi(coarseData);
 }
 
@@ -327,54 +330,22 @@ function useGeolocationApi(cellTower) {
 
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   console.log(cellTower);
-  getRootRecord().then(function (rootRecord) {
-    var provider = rootRecord.location.provider;
+
     geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, cellTower);
 
-    if (provider === 'MOCK') {
       geoFetchPromise.then(function (geoData) {
         updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
       }).catch(function (error) {
         requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
       });
       return;
-    }
-
-    geoFetchPromise.then(function (geoData) {
-      initLocationInterval(geoData);
-    }).catch(function (error) {
-      initLocationInterval(error);
-    });
-  });
+  
 }
 
 function useHTML5Location() {
   locationInterval().then(function (navigatorData) {
     updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
   }).catch(function (error) {
-    requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-  });
-}
-
-function initLocationInterval(locationStatus) {
-  var singletonSuccess = [];
-  var bestLocation = void 0;
-  locationInterval().then(function (navigatorData) {
-
-    if (locationStatus.success) {
-      singletonSuccess.push(locationStatus, navigatorData);
-      bestLocation = sortedByAccuracy(singletonSuccess);
-    } else {
-      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
-      bestLocation = navigatorData;
-    }
-    updateLocationInRoot(bestLocation).then(locationUpdationSuccess, locationUpdationError);
-  }).catch(function (error) {
-    if (locationStatus.success) {
-      updateLocationInRoot(locationStatus).then(locationUpdationSuccess, locationUpdationError);
-    } else {
-      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
-    }
     requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   });
 }
@@ -509,7 +480,7 @@ function navigatorPromise() {
           }
         }
       }, function (error) {
-
+        console.log(error)
         clearInterval(myInterval);
         myInterval = null;
         reject(error.message);
@@ -542,7 +513,7 @@ function sortedByAccuracy(geoData) {
 function updateLocationInRoot(finalLocation) {
   if (!finalLocation) return;
 
-  var previousLocation = void 0;
+  var previousLocation = "";
   return new Promise(function (resolve, reject) {
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
@@ -553,21 +524,14 @@ function updateLocationInRoot(finalLocation) {
       rootStore.get(dbName).onsuccess = function (event) {
 
         var record = event.target.result;
-        previousLocation = {
-          latitude: record.location.latitude,
-          longitude: record.location.longitude,
-          accuracy: record.location.accuracy,
-          provider: record.location.provider,
-          localStorage: record.location.lastLocationTime
-        };
-        if (!record.location) {
-          record.location = finalLocation;
-        } else {
-          record.location.latitude = finalLocation.latitude;
-          record.location.longitude = finalLocation.longitude;
-          record.location.accuracy = finalLocation.accuracy;
-          record.location.lastLocationTime = finalLocation.lastLocationTime, record.location.provider = finalLocation.provider;
-        }
+        
+        previousLocation = record.location;
+
+
+        if (record.location) {
+          previousLocation = record.location;
+        } 
+        record.location = finalLocation;
         rootStore.put(record);
       };
       tx.oncomplete = function () {
