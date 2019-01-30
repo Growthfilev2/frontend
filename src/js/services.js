@@ -297,24 +297,34 @@ function getCellTowerInfo(){
     }))
   }
   
-  if(!coarseData) {
-    useHTML5Location();
-    return;
-  }
+  // if(!coarseData) {
+  //   // useHTML5Location();
+  //   return;
+  // }
+  if(!coarseData) return
   useGeolocationApi(coarseData);
-  
 }
 
+
+
 function manageLocation() {
-  if (!localStorage.getItem('dbexist')) {
-    localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
-  };
+  // if (!localStorage.getItem('dbexist')) {
+  //   localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
+  // };
 
   if (native.getName() === 'Android') {
     getCellTowerInfo();
     return;
   }
-  useHTML5Location();
+
+  navigatorPromise().then(function (location) {
+    updateLocationInRoot()
+  }).catch(function (error) {
+    requestCreator('instant',JSON.stringify({
+      error:error
+    }))
+  });
+  // useHTML5Location();
 }
 
 function shouldFetchCellTower(locationObject) {
@@ -329,27 +339,28 @@ function useGeolocationApi(cellTower) {
 
   var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
   console.log(cellTower)
-    getRootRecord().then(function (rootRecord) {
-      const provider = rootRecord.location.provider;
+    // getRootRecord().then(function (rootRecord) {
+      // const provider = rootRecord.location.provider;
       geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, cellTower);
   
-    if (provider === 'MOCK') {
-      geoFetchPromise.then(function (geoData) {
-        updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
-      }).catch(function (error) {
-        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-      });
-      return;
-    }
+    // if (provider === 'MOCK') {
+    //   geoFetchPromise.then(function (geoData) {
+    //     updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+    //   }).catch(function (error) {
+    //     requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+    //   });
+    //   return;
+    // }
     
     
     geoFetchPromise.then(function (geoData) {
-      chooseBestLocation(geoData);
+      updateLocationInRoot(bestLocation).then(locationUpdationSuccess, locationUpdationError);
     }).catch(function (error) {
-      chooseBestLocation(error);
+        requestCreator('instant',JSON.stringify({
+          error :error
+        }))
     });
-
-  });
+  // });
 }
 
 function useHTML5Location() {
@@ -453,19 +464,19 @@ function locationUpdationError(error) {
   }));
 }
 
-function mock() {
-  return new Promise(function (resolve) {
-    setTimeout(function () {
-      resolve({
-        'latitude': '',
-        'longitude': '',
-        'accuracy': 99999999,
-        'lastLocationTime': Date.now(),
-        'provider': 'Mock'
-      });
-    }, 6000);
-  });
-}
+// function mock() {
+//   return new Promise(function (resolve) {
+//     setTimeout(function () {
+//       resolve({
+//         'latitude': '',
+//         'longitude': '',
+//         'accuracy': 99999999,
+//         'lastLocationTime': Date.now(),
+//         'provider': 'Mock'
+//       });
+//     }, 6000);
+//   });
+// }
 
 function navigatorPromise() {
   var stabalzied = [];
@@ -518,11 +529,11 @@ function navigatorPromise() {
 
 function locationInterval() {
   return new Promise(function (resolve, reject) {
-    var promiseArray = [navigatorPromise()];
-    if (native.getName() === 'Android') {
-      promiseArray.push(mock());
-    }
-    Promise.race(promiseArray).then(function (location) {
+    // var promiseArray = [navigatorPromise()];
+    // if (native.getName() === 'Android') {
+    //   promiseArray.push(mock());
+    // }
+    navigatorPromise().then(function (location) {
       resolve(location);
     }).catch(function (error) {
       reject(error);
