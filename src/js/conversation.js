@@ -280,7 +280,6 @@ function changeStatusRequest(switchControl, record) {
 }
 
 function createComment(db, addendum, currentUser) {
-  // console.log(addendum)
   let showMap = false
   return new Promise(function (resolve) {
 
@@ -298,7 +297,6 @@ function createComment(db, addendum, currentUser) {
     user.classList.add('user-name--comment', 'mdc-typography--subtitle2')
 
     getUserRecord(db, addendum.user).then(function (record) {
-      // console.log(nameOrNumber)
       if (record.displayName) {
         user.textContent = record.displayName
       } else {
@@ -380,7 +378,6 @@ function maps(evt, show, id, location) {
   let selector = ''
   evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector(`.map-detail.${id}`)
 
-  console.log(show)
   if (!show) {
     selector.style.height = '0px'
     evt ? evt.target.textContent = 'location_on' : ''
@@ -530,7 +527,6 @@ function reinitCount(db, id) {
     store.put(record)
   }
   transaction.oncomplete = function () {
-    console.log("done");
   }
 }
 
@@ -662,7 +658,6 @@ function handleRemoveDialogEvt(evt, data) {
 }
 
 function initializeSelectorWithData(evt, data) {
-  console.log(data)
   //init dialog
   const dialog = new mdc.dialog.MDCDialog(document.querySelector('#dialog--component'))
   let activityRecord = data.record
@@ -755,8 +750,6 @@ function fillUsersInSelector(data, dialog) {
 
         if (data.attachment.present) {
           const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          console.log(radio)
-          console.log("run")
           updateDomFromIDB(data.record, {
             hash: '',
             key: data.attachment.key
@@ -798,7 +791,6 @@ function shareReq(data) {
   document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
   document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
   resetSelectedContacts().then(function (people) {
-    console.log(people)
     const reqBody = {
       'activityId': data.record.activityId,
       'share': people
@@ -826,7 +818,6 @@ function addNewNumber(data) {
 
   input.oninput = function () {
     if (this.value.length > this.maxLength) {
-      console.log(this)
       this.value = this.value.slice(0, this.maxLength)
 
     } else if (this.value.length === this.maxLength) {
@@ -974,7 +965,6 @@ function resetSelectedContacts() {
 }
 
 function fillMapInSelector(db, tx, dialog, data) {
-  console.log(data);
 
   if (data.record.template === 'check-in') {
     const searchIcon = document.getElementById('selector--search')
@@ -1091,7 +1081,6 @@ function handleClickListnersForMap(db, dialog, data) {
         geopoint: selectedField.geopoint
       },
     }).then(removeDialog).catch(function (error) {
-      console.log(error)
       requestCreator('instant', JSON.stringify({
         message: error
       }))
@@ -1101,7 +1090,6 @@ function handleClickListnersForMap(db, dialog, data) {
 
 function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   const ul = document.getElementById('data-list--container')
-  console.log(data)
   selectorStore.openCursor().onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
@@ -1137,7 +1125,6 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 
 
 function fillSubscriptionInSelector(db, dialog, data) {
-  console.log(data);
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
@@ -1193,10 +1180,7 @@ function fillSubscriptionInSelector(db, dialog, data) {
       if (document.querySelector('.mdc-radio.radio-selected')) {
 
         const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-        console.log(radio)
         const selectedField = JSON.parse(radio.value)
-        console.log(selectedField.office)
-        console.log(selectedField.template)
         document.getElementById('app-current-panel').dataset.view = 'create'
         createTempRecord(selectedField.office, selectedField.template, data)
       }
@@ -1261,7 +1245,6 @@ function createTempRecord(office, template, data) {
 
 
 
-  console.log(data)
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1273,12 +1256,10 @@ function createTempRecord(office, template, data) {
     officeTemplateCombo.get(range).onsuccess = function (event) {
       const selectedCombo = event.target.result
       if (!selectedCombo) {
-        console.log("no such combo")
         return;
       }
 
       const bareBonesScheduleArray = []
-      console.log(selectedCombo)
       selectedCombo.schedule.forEach(function (schedule) {
         const bareBonesSchedule = {}
         bareBonesSchedule.name = schedule
@@ -1430,7 +1411,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
         updateLocalRecord(thisActivity, db).then(function (message) {
           resolve(message)
         }).catch(function (error) {
-          console.log(error)
           reject(error)
         })
         return
@@ -1526,7 +1506,6 @@ function updateVenue(updatedActivity, attr, data) {
       field.address = data.secondary.address
       field.geopoint['_latitude'] = data.secondary.geopoint['_latitude']
       field.geopoint['_longitude'] = data.secondary.geopoint['_longitude']
-      console.log(field)
     }
   })
   return updatedActivity
@@ -1570,7 +1549,6 @@ function updateCreateContainer(recordCopy, db) {
 
 
   document.getElementById('backToConv').addEventListener('click', function () {
-    console.log(record)
     updateLocalRecord(record, db).then(function () {
       backNav()
     }).catch(function (error) {
@@ -1689,7 +1667,6 @@ function updateCreateActivity(record) {
     if (document.querySelector('.mdc-select')) {
       const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
       select.listen('change', () => {
-        console.log(select)
         updateDomFromIDB(record, {
           hash: 'weekday',
           key: select['root_'].dataset.value
@@ -1819,7 +1796,6 @@ function createGroupList(office, template) {
 }
 
 function createVenueSection(record) {
-  console.log(record)
   const venueSection = document.getElementById('venue--list')
 
   record.venue.forEach(function (venue) {
@@ -1911,7 +1887,6 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     metaInput.appendChild(createRadioInput())
     listItem.onclick = function () {
-      console.log(venue)
       checkRadioInput(this, {
         location: venue.location,
         address: venue.address,
@@ -1967,7 +1942,6 @@ function createScheduleTable(data) {
   let count = 0;
   data.schedule.forEach(function (schedule) {
     count++
-    console.log(schedule.startTime)
     const scheduleName = document.createElement('h5')
     scheduleName.className = 'mdc-list-group__subheader label--text'
     scheduleName.textContent = schedule.name
@@ -2205,7 +2179,6 @@ function createAttachmentContainer(data) {
       if (data.canEdit) {
         hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
           if (hasValue) {
-            console.log(hasValue)
             div.appendChild(addButtonName);
             div.classList.add('selector--margin')
             addButtonName.onclick = function (evt) {
@@ -2447,7 +2420,6 @@ function checkRadioInput(inherit, value) {
     document.querySelector('.selector-send span').textContent = 'send'
     document.querySelector('.selector-send').dataset.clicktype = ''
     radio.value = JSON.stringify(value)
-    console.log(value)
   }
 }
 
@@ -2567,7 +2539,6 @@ function createActivityCancellation(record) {
     }
 
     dialog.listen('MDCDialog:cancel', function () {
-      console.log('canceled');
     })
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
       dialog.lastFocusedTarget = evt.target;
@@ -2657,7 +2628,6 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, activityStore) {
-  console.log(record)
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
     let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
@@ -2666,7 +2636,6 @@ function insertInputsIntoActivity(record, activityStore) {
       snacks('Please provide an input for the field “Name” ')
       return;
     }
-    console.log(convertIdToKey(allStringTypes[i].id));
 
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   }
@@ -2712,7 +2681,6 @@ function insertInputsIntoActivity(record, activityStore) {
     ed = getInputText('.end--date' + i).value
     et = getInputText('.end--time' + i).value
 
-    console.log(concatDateWithTime(sd, st))
 
     if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
       snacks('Please Select A Start Date and End Date')
@@ -2881,7 +2849,6 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
       ].join(' ');
     }
 
-    console.log(address)
     const selectedAreaAttributes = {
       primary: place.name,
       secondary: {
@@ -3002,7 +2969,6 @@ function createTimeInput(value, canEdit, attr) {
 
     return simeplText
   }
-  console.log(canEdit)
 
   const textField = document.createElement('div')
   textField.className = 'mdc-text-field'
@@ -3073,7 +3039,6 @@ function createSelectMenu(key, value, canEdit) {
 
 
 function showSendActivity(evt) {
-  console.log(evt)
   const sendActivity = document.getElementById('send-activity')
   const rect1 = sendActivity.getBoundingClientRect();
   const rect2 = document.querySelector('.status--cancel-cont').getBoundingClientRect()
@@ -3081,7 +3046,6 @@ function showSendActivity(evt) {
     rect1.left > rect2.right ||
     rect1.bottom < rect2.top ||
     rect1.top > rect2.bottom)
-  console.log(isOverlap)
   if (isOverlap) {
     sendActivity.classList.add('hidden')
     return
@@ -3091,7 +3055,6 @@ function showSendActivity(evt) {
 
 
 function toggleActionables(id) {
-  console.log(id);
   if (!id) return;
   if (document.getElementById('app-current-panel').dataset.view === 'create') return
   const req = indexedDB.open(firebase.auth().currentUser.uid)

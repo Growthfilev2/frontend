@@ -225,7 +225,6 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
-  console.log(serverTime);
   return Date.now() + serverTime;
 }
 
@@ -246,7 +245,6 @@ function geolocationApi(method, url, data) {
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        console.log(xhr);
 
         if (xhr.status >= 400) {
           if (JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
@@ -677,7 +675,6 @@ function isLocationStatusWorking(){
     AndroidInterface.showDialog('GPS Unavailable','Please Turn on Gps.');
     return;
   }
-  console.log(locationPermission.checkLocationPermission())
   if(!locationPermission.checkLocationPermission()) {
     AndroidInterface.showDialog('Location Permission','Please Allow Growthfile location access.')
     return;
@@ -769,7 +766,6 @@ function requestCreator(requestType, requestBody) {
           requestBody['geopoint'] = geopoints;
           requestGenerator.body = requestBody;
           requestGenerator.user.token = token;
-          console.log(requestGenerator);
           sendRequest(location, requestGenerator);
         }).catch(function (error) {
           requestCreator('instant', JSON.stringify(error));
@@ -838,7 +834,6 @@ function isLastLocationOlderThanThreshold(test, threshold) {
   var lastLocationTime = test;
   var duration = moment.duration(currentTime.diff(lastLocationTime));
   var difference = duration.asSeconds();
-  console.log(difference);
   if (difference > threshold) {
     return true;
   }
@@ -863,7 +858,6 @@ function messageReceiver(response) {
 
 function updateApp(data) {
   if (native.getName() === 'Android') {
-    console.log("update App");
     try {
       Android.notification(data.msg);
     } catch (e) {
@@ -879,7 +873,6 @@ function updateApp(data) {
 function revokeSession() {
   firebase.auth().signOut().then(function () {
     removeIDBInstance(firebase.auth().currentUser).then(function () {
-      console.log("session revoked");
     }).catch(function (error) {
       var removalError = error;
       removalError.message = '';

@@ -706,7 +706,6 @@ function runAppChecks() {
 }
 
 function startInitializatioOfList(data) {
-  console.log(data)
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
     if (history.state[0] === 'listView' || !history.state) {
