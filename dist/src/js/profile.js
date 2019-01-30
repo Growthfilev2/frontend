@@ -283,10 +283,18 @@ function readUploadedFile(image) {
   }
 }
 function sendBase64ImageToBackblaze(base64) {
+  var selector = document.getElementById('user-profile--image');
+  var container = document.getElementById('profile--image-container');
+  var pre = 'data:image/jpeg;base64,';
+  if (selector) {
+    selector.src = pre + base64;
+  }
+  if (container) {
+    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
+  }
   var body = {
-    'imageBase64': base64
+    'imageBase64': pre + base64
   };
-  document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
   requestCreator('backblaze', body);
 }
 

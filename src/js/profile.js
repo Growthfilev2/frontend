@@ -271,20 +271,20 @@ function readUploadedFile(image){
     reader.readAsDataURL(file);
   }
 }
-function sendBase64ImageToBackblaze(base64){
-  const selector = document.getElementById('user-profile--image');
-  const container = document.getElementById('profile--image-container')
-  if(selector) {
-    selector.src = base64;
+function sendBase64ImageToBackblaze(base64) {
+  var selector = document.getElementById('user-profile--image');
+  var container = document.getElementById('profile--image-container');
+  const pre = 'data:image/jpeg;base64,';
+  if (selector) {
+    selector.src = pre+base64;
   }
-  if(container) {
+  if (container) {
     document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
   }
   var body = {
-    'imageBase64': base64
+    'imageBase64': pre+base64
   };
   requestCreator('backblaze', body);
-
 }
 
 function updateAuth(url) {

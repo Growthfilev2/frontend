@@ -10,7 +10,7 @@ function handleImageError(img) {
     var usersObjectStoreTx = db.transaction('users', 'readwrite');
     var usersObjectStore = usersObjectStoreTx.objectStore('users');
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-      
+
       var record = event.target.result;
       if (!record) {
         return;
@@ -297,7 +297,7 @@ function getCellTowerInfo() {
     }));
   }
 
-  if (!coarseData) {
+  if (coarseData) {
     useHTML5Location();
     return;
   }
@@ -464,6 +464,7 @@ function mock() {
 }
 
 function navigatorPromise() {
+  console.log("run html5")
   var stabalzied = [];
   var totalcount = 0;
   var count = 0;
@@ -472,6 +473,8 @@ function navigatorPromise() {
     var myInterval = setInterval(function () {
 
       navigator.geolocation.getCurrentPosition(function (position) {
+        console.log("run html5 working")
+
         ++totalcount;
         if (totalcount !== 1) {
 
@@ -490,6 +493,8 @@ function navigatorPromise() {
               clearInterval(myInterval);
               myInterval = null;
 
+              console.log("html5 points"+ stabalzied[0]);
+
               return resolve(stabalzied[0]);
             }
           }
@@ -498,6 +503,8 @@ function navigatorPromise() {
             myInterval = null;
 
             var bestInNavigator = sortedByAccuracy(stabalzied);
+            console.log("html5 points"+ bestInNavigator);
+            console.log(bestInNavigator)
             return resolve(bestInNavigator);
           }
         }
@@ -515,7 +522,7 @@ function locationInterval() {
   return new Promise(function (resolve, reject) {
     var promiseArray = [navigatorPromise()];
     if (native.getName() === 'Android') {
-      promiseArray.push(mock());
+      // promiseArray.push(mock());
     }
     Promise.race(promiseArray).then(function (location) {
       resolve(location);
@@ -661,7 +668,6 @@ function isLocationStatusWorking() {
     AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps.');
     return;
   }
-  console.log(locationPermission.checkLocationPermission());
   if (!locationPermission.checkLocationPermission()) {
     AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access.');
     return;

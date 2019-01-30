@@ -342,10 +342,11 @@ function useGeolocationApi(cellTower) {
       return;
     }
     
+    
     geoFetchPromise.then(function (geoData) {
-      initLocationInterval(geoData);
+      chooseBestLocation(geoData);
     }).catch(function (error) {
-      initLocationInterval(error);
+      chooseBestLocation(error);
     });
 
   });
@@ -359,7 +360,7 @@ function useHTML5Location() {
   });
 }
 
-function initLocationInterval(locationStatus) {
+function chooseBestLocation(locationStatus) {
   var singletonSuccess = [];
   var bestLocation = void 0;
   locationInterval().then(function (navigatorData) {
@@ -472,8 +473,9 @@ function navigatorPromise() {
   var count = 0;
   return new Promise(function (resolve, reject) {
 
-    var myInterval = setInterval(function () {
 
+    var myInterval = setInterval(function () {
+      
       navigator.geolocation.getCurrentPosition(function (position) {
         ++totalcount;
         if (totalcount !== 1) {

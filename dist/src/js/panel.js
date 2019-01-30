@@ -356,7 +356,6 @@ function activityListUI(data, secondLine) {
   var leftTextContainer = document.createElement('span');
   leftTextContainer.classList.add('mdc-list-item__text');
   var activityNameText = document.createElement('span');
-  console.log(data);
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold';
 
   activityNameText.textContent = data.activityName;
