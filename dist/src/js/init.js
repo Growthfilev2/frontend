@@ -717,29 +717,23 @@ function interation(start, end, step) {
 }
 
 function openListWithChecks() {
-  // listView();
-  // runAppChecks();
-
-  navigatorPromise().then(function (location) {
-    console.log(location);
-  }).catch(function (error) {
-      console.log(error);
-  });
-
-  // var fetchLocation = interation(1, Infinity, 1);
-  // var run = fetchLocation.next();
-  // while (!run.finish) {
-  //   manageLocation().then(function (location) {
-  //     updateLocationInRoot(location).then(function (locationObject) {
-  //       run = fetchLocation.next();
-  //       locationUpdationSuccess(locationObject);
-  //     }).catch(function (error) {
-  //       run = fetchLocation.next();
-  //       locationError();
-  //     });
-  //   }).catch(function (error) {
-  //     run = fetchLocation.next();
-  //     locationError(error);
-  //   });
-  // }
+  listView();
+  runAppChecks();
+  
+  var startIteration = interation(1, Infinity, 1);
+  var run = startIteration.next();
+  while (!run.finish) {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(function (locationObject) {
+        run = startIteration.next();
+        locationUpdationSuccess(locationObject);
+      }).catch(function (error) {
+        run = startIteration.next();
+        locationError();
+      });
+    }).catch(function (error) {
+      run = startIteration.next();
+      locationError(error);
+    });
+  }
 }

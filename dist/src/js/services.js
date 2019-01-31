@@ -510,6 +510,14 @@ function isLocationLessThanThreshold(distance) {
   return false;
 }
 
+function sortedByAccuracy(geoData) {
+  var result = geoData.sort(function (a, b) {
+    return a.accuracy - b.accuracy;
+  });
+  return result[0];
+}
+
+
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
     try {

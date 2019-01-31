@@ -1,4 +1,4 @@
-const notification = new Worker('src/js/notification.js')
+const notification = new Worker('js/notification.js')
 
 const scroll_namespace = {
   count: 0,

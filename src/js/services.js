@@ -1,4 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -254,9 +254,20 @@ function geolocationApi(req) {
           });
         }
 
-        if (!xhr.responseText) return;
+        if (!xhr.responseText) {
+          return reject({
+            message:'No response text from google',
+            cellular: data
+          })
+        };
         const response = JSON.parse(xhr.responseText);
-        if(!response) return;
+        if(!response) {
+          return reject({
+            message:'Response text is not parseable',
+            cellular: data
+          })
+        }
+
         resolve({
           'latitude': response.location.lat,
           'longitude': response.location.lng,
@@ -281,6 +292,7 @@ function getCellTowerInfo() {
       reject(coarseData);
       return
     }
+
     console.log(cellTower)
     var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
     const req = {
@@ -309,7 +321,6 @@ function manageLocation() {
       })
       return;
     }
-
     navigatorPromise().then(function (location) {
       resolve(location)
     }).catch(function (error) {
@@ -318,15 +329,10 @@ function manageLocation() {
   })
 }
 
-function shouldFetchCellTower(locationObject) {
-  if (locationObject.hasOwnProperty('useTowerInfo')) {
-    return locationObject.useTowerInfo;
-  }
-  return true;
-}
+
 
 function locationUpdationSuccess(location) {
-
+  console.log(location)
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
@@ -342,6 +348,14 @@ function locationUpdationSuccess(location) {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
+}
+
+function locationError(error){
+  console.log(error)
+  requestCreator('instant',JSON.stringify({
+    message:error,
+    deviceInfo:native.getInfo(),
+  }))
 }
 
 function showSuggestCheckInDialog() {
@@ -419,7 +433,6 @@ function navigatorPromise() {
           }
         }
       }, function (error) {
-
         clearInterval(myInterval);
         myInterval = null;
         reject(error.message);
@@ -437,7 +450,13 @@ function updateLocationInRoot(finalLocation) {
       return;
     };
     
-    var previousLocation;
+    var previousLocation = {
+      latitude:'',
+      longitude:'',
+      accuracy: '',
+      provider: '',
+      lastLocationTime: ''
+    };
       var dbName = firebase.auth().currentUser.uid;
       var req = indexedDB.open(dbName);
       req.onsuccess = function () {
@@ -447,27 +466,19 @@ function updateLocationInRoot(finalLocation) {
         rootStore.get(dbName).onsuccess = function (event) {
           var record = event.target.result;
           if(record.location) {
-            previousLocation = {
-              latitude: record.location.latitude,
-              longitude: record.location.longitude,
-              accuracy: record.location.accuracy,
-              provider: record.location.provider,
-              localStorage: record.location.lastLocationTime
-              }
+            previousLocation = record.location
           };
-        
-          record.location.latitude = finalLocation.latitude;
-          record.location.longitude = finalLocation.longitude;
-          record.location.accuracy = finalLocation.accuracy;
-          record.location.lastLocationTime = finalLocation.lastLocationTime,
-          record.location.provider = finalLocation.provider
+
+          record.location = finalLocation;
+          record.location.lastLocationTime = Date.now();
           rootStore.put(record);
         };
         tx.oncomplete = function () {
-          resolve({
-            prev: previousLocation,
-            new: finalLocation
-          });
+            resolve({
+              prev: previousLocation,
+              new: finalLocation
+            });
+        
         };
         tx.onerror = function(){
           reject(ex.error)
@@ -514,6 +525,13 @@ function isLocationLessThanThreshold(distance) {
   var THRESHOLD = 1; //km
   if (distance <= THRESHOLD) return true;
   return false;
+}
+
+function sortedByAccuracy(geoData) {
+  var result = geoData.sort(function (a, b) {
+    return a.accuracy - b.accuracy;
+  });
+  return result[0];
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
@@ -645,7 +663,6 @@ function sendRequest(location, requestGenerator) {
     appDialog('Fetching Location Please wait.', true);
     getRootRecord().then(function (record) {
       var cellTowerInfo = void 0;
-
       try {
         cellTowerInfo = AndroidInterface.getCellularData();
       } catch (e) {
@@ -753,7 +770,7 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-
+  localStorage.setItem('dbexist',firebase.auth().currentUser.uid);
   androidStopRefreshing();
 
   if (!history.state) {

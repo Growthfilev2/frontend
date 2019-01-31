@@ -1,4 +1,4 @@
-importScripts('../../external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -180,9 +180,9 @@ function instant(error,user) {
     token:user.token
   }
   console.log(error)
-  http(req).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(req).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 
@@ -230,7 +230,6 @@ function initializeIDB(data) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () { 
-        requestHandlerResponse('manageLocation');
         resolve({user:data.user,fromTime:data.fromTime})
       }
     }
@@ -306,6 +305,7 @@ function createObjectStores(request, data) {
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
   children.createIndex('templateStatus',['template','status']);
+  
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   })
