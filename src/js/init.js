@@ -716,7 +716,7 @@ function startInitializatioOfList(data) {
     }
   })
 }
-
+ // better than setInterval
 function interation(start,end,step){
  let nextIndex = start;
  let count = 0;
@@ -730,7 +730,6 @@ function interation(start,end,step){
         nextIndex = nextIndex + step;
         count++
         return result;
-
       }
       return {
         value:count,finish:true
@@ -743,6 +742,7 @@ function interation(start,end,step){
 function openListWithChecks() {
   listView();
   runAppChecks();
+  
   let fetchLocation = interation(1,Infinity,1);
   let run = fetchLocation.next();
   while(!run.finish){
@@ -750,7 +750,13 @@ function openListWithChecks() {
       updateLocationInRoot(location).then(function(locationObject){
        run = fetchLocation.next();
        locationUpdationSuccess(locationObject)
-      }).catch(locationError);
-    }).catch(locationError);
+      }).catch(function(error){
+        run = fetchLocation.next();
+        locationError()
+      });
+    }).catch(function(error){
+      run = fetchLocation.next();
+      locationError(error)
+    });
   }
 }
