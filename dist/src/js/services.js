@@ -238,7 +238,7 @@ function geolocationApi(req) {
             if (req.retry === 1) {
               return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
-                cellular: req.data,
+                cellular: req.body,
                 tries: 'Retried 3 times'
               });
             }
@@ -248,21 +248,21 @@ function geolocationApi(req) {
 
           return reject({
             message: JSON.parse(xhr.response).error.errors[0].message,
-            cellular: req.data
+            cellular: req.body
           });
         }
 
         if (!xhr.responseText) {
           return reject({
             message: 'No response text from google',
-            cellular: req.data
+            cellular: req.body
           });
         };
         var response = JSON.parse(xhr.responseText);
         if (!response) {
           return reject({
             message: 'Response text is not parseable',
-            cellular: req.data
+            cellular: req.body
           });
         }
 
@@ -274,7 +274,7 @@ function geolocationApi(req) {
         });
       }
     };
-    xhr.send(req.data);
+    xhr.send(req.body);
   });
 }
 
@@ -298,7 +298,7 @@ function getCellTowerInfo() {
     var req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
-      body: JSON.stringify(coarseData),
+      body: coarseData,
       retry: 3
     };
     geolocationApi(req).then(function (location) {
@@ -824,5 +824,10 @@ function getInputText(selector) {
 function runRead(value) {
   if (localStorage.getItem('dbexist')) {
     requestCreator('Null', value);
+  }
+}
+function removeChildNodes(parent) {
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild);
   }
 }

@@ -995,9 +995,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
           cursor.continue();
           return;
         }
-
         var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
           results.push(cursor.value);
         }
@@ -1237,6 +1235,8 @@ function createTempRecord(office, template, data) {
         getRootRecord().then(function (record) {
 
           var isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
+          console.log("location old " +isLocationOld)
+
           if (isLocationOld) {
             appDialog('Fetching Location Please wait', false);
             window.addEventListener('location', function _checkInLatest(e) {
@@ -1276,7 +1276,6 @@ function createTempRecord(office, template, data) {
 function prefillLocationForCheckIn(bareBonesRecord, venueDesc, currentLocation) {
 
   checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
-
     var locations = [];
     var bareBonesVenue = {};
     bareBonesVenue.venueDescriptor = venueDesc;
