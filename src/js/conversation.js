@@ -1044,7 +1044,6 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         cursor.continue();
       }
       tx.oncomplete = function () {
-
         resolve(results)
       }
       tx.onerror = function () {
@@ -1327,7 +1326,6 @@ function createTempRecord(office, template, data) {
 
 
 function prefillLocationForCheckIn(bareBonesRecord, venueDesc, currentLocation) {
-
 
   checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
 
@@ -3052,11 +3050,10 @@ function toggleActionables(id) {
       }
       const actions = document.querySelectorAll('.mdc-fab')
       if (!record.editable) return
-
+      
       if (document.querySelector('.loader')) {
         document.querySelector('.loader').remove()
         if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
-
           document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
         }
       }

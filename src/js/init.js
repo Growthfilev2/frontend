@@ -720,10 +720,9 @@ function startInitializatioOfList(data) {
 function openListWithChecks() {
   listView();
   setInterval(function () {
-  // if(locationPermission.checkLocationPermission()) {
-    manageLocation();
-  // }
+  manageLocation().then(function(location){
+    updateLocationInRoot(location).then(locationUpdationSuccess).catch(locationUpdationError);
+  }).catch(locationFetchError);
   }, 5000);
-
   runAppChecks();
 }
