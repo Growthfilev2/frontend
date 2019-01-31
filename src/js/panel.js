@@ -6,8 +6,6 @@ const scroll_namespace = {
   skip: false
 }
 
-
-
 function initDomLoad() {
 
   if (document.querySelector('.init-loader')) {
@@ -359,7 +357,7 @@ function activityListUI(data, secondLine) {
   const creator = document.createElement("img")
   creator.dataset.number = data.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
-  creator.setAttribute('onerror','handleImageError()');
+  // creator.setAttribute('onerror','handleImageError()');
   creator.src = data.creator.photo || './img/empty-user.jpg'
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
@@ -609,7 +607,6 @@ function scrollToActivity() {
 
 function notificationWorker(type, updateTimestamp) {
   return new Promise(function (resolve, reject) {
-
     notification.postMessage({
       dbName: firebase.auth().currentUser.uid,
       type: type,

@@ -352,7 +352,7 @@ function activityListUI(data, secondLine) {
   var creator = document.createElement("img");
   creator.dataset.number = data.creator.number;
   creator.className = 'mdc-list-item__graphic material-icons';
-  creator.setAttribute('onerror', 'handleImageError()');
+  // creator.setAttribute('onerror','handleImageError()');
   creator.src = data.creator.photo || './img/empty-user.jpg';
   var leftTextContainer = document.createElement('span');
   leftTextContainer.classList.add('mdc-list-item__text');
@@ -595,7 +595,6 @@ function scrollToActivity() {
 
 function notificationWorker(type, updateTimestamp) {
   return new Promise(function (resolve, reject) {
-
     notification.postMessage({
       dbName: firebase.auth().currentUser.uid,
       type: type,

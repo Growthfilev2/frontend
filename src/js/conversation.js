@@ -709,6 +709,7 @@ function fillUsersInSelector(data, dialog) {
     const db = req.result
     const transaction = db.transaction(['users']);
     const store = transaction.objectStore('users')
+    document.querySelector('.selector-send').classList.remove('hidden');
 
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
@@ -735,7 +736,6 @@ function fillUsersInSelector(data, dialog) {
       document.getElementById('selector--search').addEventListener('click', function () {
         initSearchForSelectors(db, 'users', data)
       })
-      document.querySelector('.selector-send').classList.remove('hidden');
 
       dialog['acceptButton_'].onclick = function () {
 
@@ -2662,7 +2662,7 @@ function insertInputsIntoActivity(record, activityStore) {
     if (imagesInAttachments[i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
       source = ''
     } else {
-      source = imagesInAttachments[i].src
+      source = imagesInAttachments[i].src 
     }
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
   }

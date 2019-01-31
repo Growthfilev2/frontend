@@ -682,6 +682,7 @@ function fillUsersInSelector(data, dialog) {
     var db = req.result;
     var transaction = db.transaction(['users']);
     var store = transaction.objectStore('users');
+    document.querySelector('.selector-send').classList.remove('hidden');
 
     store.openCursor().onsuccess = function (event) {
       var cursor = event.target.result;
@@ -708,7 +709,6 @@ function fillUsersInSelector(data, dialog) {
       document.getElementById('selector--search').addEventListener('click', function () {
         initSearchForSelectors(db, 'users', data);
       });
-      document.querySelector('.selector-send').classList.remove('hidden');
 
       dialog['acceptButton_'].onclick = function () {
 
@@ -2544,7 +2544,7 @@ function insertInputsIntoActivity(record, activityStore) {
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
     var source = '';
-    if (imagesInAttachments[_i].src === './img/placeholder.png') {
+    if (imagesInAttachments[_i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
       source = '';
     } else {
       source = imagesInAttachments[_i].src;

@@ -9,10 +9,12 @@ function handleImageError(img) {
     var usersObjectStoreTx = db.transaction('users', 'readwrite');
     var usersObjectStore = usersObjectStoreTx.objectStore('users');
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
+
       var record = event.target.result;
       if (!record) {
         return;
       };
+
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
       usersObjectStore.put(record);
@@ -309,19 +311,20 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    // if (native.getName() === 'Android') {
-    getCellTowerInfo().then(function (location) {
+    if (native.getName() === 'Android') {
+      getCellTowerInfo().then(function (location) {
+        resolve(location);
+      }).catch(function (error) {
+        reject(error);
+      });
+      return;
+    }
+
+    navigatorPromise().then(function (location) {
       resolve(location);
     }).catch(function (error) {
       reject(error);
     });
-    return;
-    // }
-    // navigatorPromise().then(function (location) {
-    //   resolve(location)
-    // }).catch(function (error) {
-    //   reject(error)
-    // });
   });
 }
 
@@ -403,7 +406,6 @@ function navigatorPromise() {
             'latitude': position.coords.latitude,
             'longitude': position.coords.longitude,
             'accuracy': position.coords.accuracy,
-            'lastLocationTime': Date.now(),
             'provider': 'HTML5'
           });
 
@@ -460,7 +462,6 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location;
         };
-
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -746,7 +747,7 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-  snacks(data.message);
+  snacks(data.msg);
 }
 
 function urlFromBase64Image(data) {

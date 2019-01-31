@@ -710,7 +710,7 @@ function startInitializatioOfList(data) {
 }
 
 function openListWithChecks() {
-  listView();
+  listView({urgent:false,nearby:false});
   runAppChecks();
   setInterval(function(){
   manageLocation().then(function (location) {

@@ -314,14 +314,14 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    // if (native.getName() === 'Android') {
-    // getCellTowerInfo().then(function (location) {
-    //   resolve(location)
-    // }).catch(function (error) {
-    //   reject(error)
-    // })
-    // return;
-    // }
+    if (native.getName() === 'Android') {
+    getCellTowerInfo().then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    })
+    return;
+    }
     navigatorPromise().then(function (location) {
       resolve(location)
     }).catch(function (error) {
@@ -754,7 +754,7 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-  snacks(data.message);
+  snacks(data.msg);
 }
 
 function urlFromBase64Image(data) {
