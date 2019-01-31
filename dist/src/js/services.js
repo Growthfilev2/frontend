@@ -3,7 +3,6 @@ var apiHandler = new Worker('src/js/apiHandler.js');
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
-
   var req = window.indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
@@ -253,9 +252,20 @@ function geolocationApi(req) {
           });
         }
 
-        if (!xhr.responseText) return;
+        if (!xhr.responseText) {
+          return reject({
+            message: 'No response text from google',
+            cellular: data
+          });
+        };
         var response = JSON.parse(xhr.responseText);
-        if (!response) return;
+        if (!response) {
+          return reject({
+            message: 'Response text is not parseable',
+            cellular: data
+          });
+        }
+
         resolve({
           'latitude': response.location.lat,
           'longitude': response.location.lng,
@@ -277,15 +287,18 @@ function getCellTowerInfo() {
       reject(e.message);
     }
     if (!coarseData) {
-      reject(coarseData);
+      reject({
+        message: 'empty cell tower from android.'
+      });
       return;
     }
-    console.log(cellTower);
+
+    console.log(coarseData);
     var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
     var req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
-      body: cellTower,
+      body: JSON.stringify(coarseData),
       retry: 3
     };
     geolocationApi(req).then(function (location) {
@@ -298,32 +311,24 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    if (native.getName() === 'Android') {
-      getCellTowerInfo().then(function (location) {
-        resolve(location);
-      }).catch(function (error) {
-        reject(error);
-      });
-      return;
-    }
-
-    navigatorPromise().then(function (location) {
+    // if (native.getName() === 'Android') {
+    getCellTowerInfo().then(function (location) {
       resolve(location);
     }).catch(function (error) {
       reject(error);
     });
+    return;
+    // }
+    // navigatorPromise().then(function (location) {
+    //   resolve(location)
+    // }).catch(function (error) {
+    //   reject(error)
+    // });
   });
 }
 
-function shouldFetchCellTower(locationObject) {
-  if (locationObject.hasOwnProperty('useTowerInfo')) {
-    return locationObject.useTowerInfo;
-  }
-  return true;
-}
-
 function locationUpdationSuccess(location) {
-
+  console.log(location);
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
@@ -339,6 +344,14 @@ function locationUpdationSuccess(location) {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
+}
+
+function locationError(error) {
+  console.log(error);
+  requestCreator('instant', JSON.stringify({
+    message: error,
+    deviceInfo: native.getInfo()
+  }));
 }
 
 function showSuggestCheckInDialog() {
@@ -415,7 +428,6 @@ function navigatorPromise() {
           }
         }
       }, function (error) {
-
         clearInterval(myInterval);
         myInterval = null;
         reject(error.message);
@@ -432,7 +444,13 @@ function updateLocationInRoot(finalLocation) {
       return;
     };
 
-    var previousLocation;
+    var previousLocation = {
+      latitude: '',
+      longitude: '',
+      accuracy: '',
+      provider: '',
+      lastLocationTime: ''
+    };
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
     req.onsuccess = function () {
@@ -442,19 +460,11 @@ function updateLocationInRoot(finalLocation) {
       rootStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
         if (record.location) {
-          previousLocation = {
-            latitude: record.location.latitude,
-            longitude: record.location.longitude,
-            accuracy: record.location.accuracy,
-            provider: record.location.provider,
-            localStorage: record.location.lastLocationTime
-          };
+          previousLocation = record.location;
         };
 
-        record.location.latitude = finalLocation.latitude;
-        record.location.longitude = finalLocation.longitude;
-        record.location.accuracy = finalLocation.accuracy;
-        record.location.lastLocationTime = finalLocation.lastLocationTime, record.location.provider = finalLocation.provider;
+        record.location = finalLocation;
+        record.location.lastLocationTime = Date.now();
         rootStore.put(record);
       };
       tx.oncomplete = function () {
@@ -516,7 +526,6 @@ function sortedByAccuracy(geoData) {
   });
   return result[0];
 }
-
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
@@ -647,7 +656,6 @@ function sendRequest(location, requestGenerator) {
     appDialog('Fetching Location Please wait.', true);
     getRootRecord().then(function (record) {
       var cellTowerInfo = void 0;
-
       try {
         cellTowerInfo = AndroidInterface.getCellularData();
       } catch (e) {
@@ -690,6 +698,7 @@ var receiverCaller = {
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
+
 function updateApp(data) {
   if (native.getName() === 'Android') {
     try {
@@ -715,6 +724,7 @@ function revokeSession() {
     requestCreator('instant', JSON.stringify(error));
   });
 }
+
 function apiFail(data) {
 
   if (document.getElementById('send-activity')) {
@@ -740,6 +750,7 @@ function apiFail(data) {
   }
   snacks(data.message);
 }
+
 function urlFromBase64Image(data) {
 
   if (data.code === 200) {
@@ -755,7 +766,7 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-
+  localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   androidStopRefreshing();
 
   if (!history.state) {

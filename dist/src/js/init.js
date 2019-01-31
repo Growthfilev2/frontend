@@ -1,4 +1,3 @@
-
 var native = function () {
   return {
     setFCMToken: function setFCMToken(token) {
@@ -184,15 +183,12 @@ window.addEventListener('load', function () {
       var originalCount = scroll_namespace.count;
       scroll_namespace.size = originalCount;
       scroll_namespace.count = 0;
-
       window[event.state[0]]();
       return;
     }
     window[event.state[0]](event.state[1], false);
   };
-
   layoutGrid();
-
   startApp();
 });
 
@@ -693,47 +689,13 @@ function startInitializatioOfList(data) {
     }
   });
 }
-// better than setInterval
-function interation(start, end, step) {
-  var nextIndex = start;
-  var count = 0;
-  var rangeIterator = {
-    next: function next() {
-      var result = void 0;
-      if (nextIndex <= end) {
-        result = {
-          value: nextIndex, finish: false
-        };
-        nextIndex = nextIndex + step;
-        count++;
-        return result;
-      }
-      return {
-        value: count, finish: true
-      };
-    }
-  };
-  return rangeIterator;
-}
 
 function openListWithChecks() {
   listView();
   runAppChecks();
-  
-  var startIteration = interation(1, Infinity, 1);
-  var run = startIteration.next();
-  while (!run.finish) {
+  setInterval(function () {
     manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(function (locationObject) {
-        run = startIteration.next();
-        locationUpdationSuccess(locationObject);
-      }).catch(function (error) {
-        run = startIteration.next();
-        locationError();
-      });
-    }).catch(function (error) {
-      run = startIteration.next();
-      locationError(error);
-    });
-  }
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(locationError);
+    }).catch(locationError);
+  }, 5000);
 }
