@@ -37,7 +37,6 @@ function loader(nameClass) {
 }
 
 function successDialog() {
-
   var aside = document.createElement('aside');
   aside.className = 'mdc-dialog mdc-dialog--open success--dialog';
   aside.id = 'success--dialog';
@@ -78,7 +77,6 @@ function successDialog() {
 
 function appDialog(messageString, showButton) {
   if (!document.getElementById('enable-gps')) {
-
     var aside = document.createElement('aside');
     aside.className = 'mdc-dialog mdc-dialog--open';
     aside.id = 'enable-gps';
@@ -238,20 +236,27 @@ function geolocationApi(req) {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
-          if (JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
-
-            reject({
-              message: JSON.parse(xhr.response).error.errors[0].message,
-              cellular: data,
-            });
+          if (JSON.parse(xhr.response).error.errors[0].reason === 'notFound') {
+            if(req.retry === 1) {
+              return reject({
+                message: JSON.parse(xhr.response).error.errors[0].message,
+                cellular: data,
+                tries:'Retried 3 times'
+              });
+            }
+            req.retry--
+            geolocationApi(req)
           }
-          return;
+
+          return reject({
+            message: JSON.parse(xhr.response).error.errors[0].message,
+            cellular: data,
+          });
         }
 
         if (!xhr.responseText) return;
         const response = JSON.parse(xhr.responseText);
         if(!response) return;
-
         resolve({
           'latitude': response.location.lat,
           'longitude': response.location.lng,
@@ -475,7 +480,9 @@ function updateLocationInRoot(finalLocation) {
 }
 
 function locationFetchError(error){
-
+  requestCreator('instnat',JSON.stringify({
+    message:error
+  }))
 }
   
 function toRad(value) {
