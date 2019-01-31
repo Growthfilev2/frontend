@@ -190,17 +190,13 @@ window.addEventListener('load', function () {
       const originalCount = scroll_namespace.count;
       scroll_namespace.size = originalCount
       scroll_namespace.count = 0;
-
       window[event.state[0]]()
       return;
     }
     window[event.state[0]](event.state[1], false)
   }
-
   layoutGrid()
-
   startApp()
-
 })
 
 

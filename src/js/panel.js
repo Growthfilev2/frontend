@@ -116,7 +116,6 @@ function startCursor(currentLocation) {
       } else {
      
         getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
-          console.log(dom)
           fragment.appendChild(dom)
           iterator++
         })
@@ -360,7 +359,7 @@ function activityListUI(data, secondLine) {
   const creator = document.createElement("img")
   creator.dataset.number = data.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
-  creator.onerror=handleImageError();
+  creator.setAttribute('onerror','handleImageError()');
   creator.src = data.creator.photo || './img/empty-user.jpg'
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')

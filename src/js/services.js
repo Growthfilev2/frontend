@@ -3,7 +3,6 @@ var apiHandler = new Worker('js/apiHandler.js');
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
-
   var req = window.indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
@@ -237,11 +236,11 @@ function geolocationApi(req) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           if (JSON.parse(xhr.response).error.errors[0].reason === 'notFound') {
-            if(req.retry === 1) {
+            if (req.retry === 1) {
               return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
                 cellular: data,
-                tries:'Retried 3 times'
+                tries: 'Retried 3 times'
               });
             }
             req.retry--
@@ -256,14 +255,14 @@ function geolocationApi(req) {
 
         if (!xhr.responseText) {
           return reject({
-            message:'No response text from google',
+            message: 'No response text from google',
             cellular: data
           })
         };
         const response = JSON.parse(xhr.responseText);
-        if(!response) {
+        if (!response) {
           return reject({
-            message:'Response text is not parseable',
+            message: 'Response text is not parseable',
             cellular: data
           })
         }
@@ -289,17 +288,19 @@ function getCellTowerInfo() {
       reject(e.message);
     }
     if (!coarseData) {
-      reject(coarseData);
+      reject({
+        message: 'empty cell tower from android.'
+      });
       return
     }
 
-    console.log(cellTower)
+    console.log(coarseData)
     var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
-      body: cellTower,
-      retry:3
+      body: JSON.stringify(coarseData),
+      retry: 3
     }
     geolocationApi(req).then(function (location) {
       resolve(location)
@@ -313,19 +314,19 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    if (native.getName() === 'Android') {
-      getCellTowerInfo().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
-      })
-      return;
-    }
-    navigatorPromise().then(function (location) {
+    // if (native.getName() === 'Android') {
+    getCellTowerInfo().then(function (location) {
       resolve(location)
     }).catch(function (error) {
       reject(error)
-    });
+    })
+    return;
+    // }
+    // navigatorPromise().then(function (location) {
+    //   resolve(location)
+    // }).catch(function (error) {
+    //   reject(error)
+    // });
   })
 }
 
@@ -350,11 +351,11 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationChanged);
 }
 
-function locationError(error){
+function locationError(error) {
   console.log(error)
-  requestCreator('instant',JSON.stringify({
-    message:error,
-    deviceInfo:native.getInfo(),
+  requestCreator('instant', JSON.stringify({
+    message: error,
+    deviceInfo: native.getInfo(),
   }))
 }
 
@@ -443,59 +444,59 @@ function navigatorPromise() {
 
 
 function updateLocationInRoot(finalLocation) {
- 
-  return new Promise(function(resolve,reject){ 
+
+  return new Promise(function (resolve, reject) {
     if (!finalLocation) {
       reject(finalLocation);
       return;
     };
-    
+
     var previousLocation = {
-      latitude:'',
-      longitude:'',
+      latitude: '',
+      longitude: '',
       accuracy: '',
       provider: '',
       lastLocationTime: ''
     };
-      var dbName = firebase.auth().currentUser.uid;
-      var req = indexedDB.open(dbName);
-      req.onsuccess = function () {
-        var db = req.result;
-        var tx = db.transaction(['root'], 'readwrite');
-        var rootStore = tx.objectStore('root');
-        rootStore.get(dbName).onsuccess = function (event) {
-          var record = event.target.result;
-          if(record.location) {
-            previousLocation = record.location
-          };
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var rootStore = tx.objectStore('root');
+      rootStore.get(dbName).onsuccess = function (event) {
+        var record = event.target.result;
+        if (record.location) {
+          previousLocation = record.location
+        };
 
-          record.location = finalLocation;
-          record.location.lastLocationTime = Date.now();
-          rootStore.put(record);
-        };
-        tx.oncomplete = function () {
-            resolve({
-              prev: previousLocation,
-              new: finalLocation
-            });
-        
-        };
-        tx.onerror = function(){
-          reject(ex.error)
-        }
+        record.location = finalLocation;
+        record.location.lastLocationTime = Date.now();
+        rootStore.put(record);
       };
-      req.onerror = function () {
-        reject(req.error);
+      tx.oncomplete = function () {
+        resolve({
+          prev: previousLocation,
+          new: finalLocation
+        });
+
       };
-    });
+      tx.onerror = function () {
+        reject(ex.error)
+      }
+    };
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
 }
 
-function locationFetchError(error){
-  requestCreator('instnat',JSON.stringify({
-    message:error
+function locationFetchError(error) {
+  requestCreator('instnat', JSON.stringify({
+    message: error
   }))
 }
-  
+
 function toRad(value) {
   return value * Math.PI / 180;
 }
@@ -698,13 +699,14 @@ var receiverCaller = {
   'notification': successDialog,
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
-  'apiFail':apiFail,
+  'apiFail': apiFail,
   'backblazeRequest': urlFromBase64Image
 };
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
+
 function updateApp(data) {
   if (native.getName() === 'Android') {
     try {
@@ -730,10 +732,11 @@ function revokeSession() {
     requestCreator('instant', JSON.stringify(error));
   });
 }
+
 function apiFail(data) {
 
   if (document.getElementById('send-activity')) {
-      document.getElementById('send-activity').style.display = 'block';
+    document.getElementById('send-activity').style.display = 'block';
   }
 
   if (document.querySelector('header .mdc-linear-progress')) {
@@ -755,6 +758,7 @@ function apiFail(data) {
   }
   snacks(data.message);
 }
+
 function urlFromBase64Image(data) {
 
   if (data.code === 200) {
@@ -770,7 +774,7 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-  localStorage.setItem('dbexist',firebase.auth().currentUser.uid);
+  localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   androidStopRefreshing();
 
   if (!history.state) {
@@ -820,7 +824,7 @@ function onErrorMessage(error) {
     }
   };
   requestCreator('instant', JSON.stringify(logs));
-  
+
 }
 
 function getInputText(selector) {
