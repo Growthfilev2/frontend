@@ -351,27 +351,23 @@ function activityListUI(data, secondLine) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
-  li.setAttribute('onclick', `localStorage.setItem('clickedActivity',this.dataset.id);conversation(this.dataset.id,true)`)
+  li.onclick = function(){
+    localStorage.setItem('clickedActivity',this.dataset.id);
+    conversation(this.dataset.id,true);
+  }
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-
   const creator = document.createElement("img")
   creator.dataset.number = data.creator.number
   creator.className = 'mdc-list-item__graphic material-icons'
-  creator.setAttribute('onerror', `handleImageError(this)`)
+  creator.onerror=handleImageError();
   creator.src = data.creator.photo || './img/empty-user.jpg'
-
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const activityNameText = document.createElement('span')
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
-
   activityNameText.textContent = data.activityName;
-
-  leftTextContainer.appendChild(activityNameText);
-  
-  
+  leftTextContainer.appendChild(activityNameText);  
   leftTextContainer.appendChild(secondLine);
-
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
   metaTextContainer.appendChild(generateIconByCondition(data, li));
