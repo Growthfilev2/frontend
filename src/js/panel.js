@@ -26,9 +26,7 @@ function initDomLoad() {
 function listView(filter, updatedActivities) {
   history.pushState(['listView'], null, null)
   initDomLoad()
-
   getRootRecord().then(function (record) {
-
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
@@ -100,7 +98,7 @@ function startCursor(currentLocation) {
 
       const cursor = event.target.result;
       if (!cursor) return;
-
+     
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true
@@ -108,6 +106,7 @@ function startCursor(currentLocation) {
         } else {
           
           getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+            console.log(dom)
             fragment.appendChild(dom)
             iterator++
           })
@@ -117,6 +116,7 @@ function startCursor(currentLocation) {
       } else {
      
         getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+          console.log(dom)
           fragment.appendChild(dom)
           iterator++
         })
@@ -132,6 +132,7 @@ function startCursor(currentLocation) {
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
       if(!ul) return
+      console.log(fragment)
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false
