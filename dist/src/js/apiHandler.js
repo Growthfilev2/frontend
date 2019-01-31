@@ -88,13 +88,16 @@ function http(request) {
 
         if (xhr.status > 226) {
           var errorObject = JSON.parse(xhr.response);
-          requestHandlerResponse('error', errorObject.code, errorObject.message);
-          return reject({
+          var apiFailBody = {
             res: JSON.parse(xhr.response),
             url: request.url,
             data: request.data,
-            device: currentDevice
-          });
+            device: currentDevice,
+            message: errorObject.message,
+            code: errorObject.code
+          };
+          requestHandlerResponse('apiFail', errorObject.code, apiFailBody);
+          return reject(apiFailBody);
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
       }
@@ -173,9 +176,9 @@ function instant(error, user) {
     token: user.token
   };
   console.log(error);
-  // http(req).then(function (response) {
-  //   console.log(response);
-  // }).catch(console.log);
+  http(req).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
 }
 
 /**
@@ -220,7 +223,7 @@ function initializeIDB(data) {
         rootObjectStore.put(record);
       };
       rootTx.oncomplete = function () {
-        // requestHandlerResponse('manageLocation');
+        requestHandlerResponse('manageLocation');
         resolve({ user: data.user, fromTime: data.fromTime });
       };
     };

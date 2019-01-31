@@ -683,7 +683,6 @@ function runAppChecks() {
 }
 
 function startInitializatioOfList(data) {
-  console.log(data);
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
     if (history.state[0] === 'listView' || !history.state) {
@@ -694,14 +693,53 @@ function startInitializatioOfList(data) {
     }
   });
 }
+// better than setInterval
+function interation(start, end, step) {
+  var nextIndex = start;
+  var count = 0;
+  var rangeIterator = {
+    next: function next() {
+      var result = void 0;
+      if (nextIndex <= end) {
+        result = {
+          value: nextIndex, finish: false
+        };
+        nextIndex = nextIndex + step;
+        count++;
+        return result;
+      }
+      return {
+        value: count, finish: true
+      };
+    }
+  };
+  return rangeIterator;
+}
 
 function openListWithChecks() {
-  listView();
-  setInterval(function () {
-    // if(locationPermission.checkLocationPermission()) {
+  // listView();
+  // runAppChecks();
 
-     manageLocation();
-    // }
-  }, 5000);
-  runAppChecks();
+  navigatorPromise().then(function (location) {
+    console.log(location);
+  }).catch(function (error) {
+      console.log(error);
+  });
+
+  // var fetchLocation = interation(1, Infinity, 1);
+  // var run = fetchLocation.next();
+  // while (!run.finish) {
+  //   manageLocation().then(function (location) {
+  //     updateLocationInRoot(location).then(function (locationObject) {
+  //       run = fetchLocation.next();
+  //       locationUpdationSuccess(locationObject);
+  //     }).catch(function (error) {
+  //       run = fetchLocation.next();
+  //       locationError();
+  //     });
+  //   }).catch(function (error) {
+  //     run = fetchLocation.next();
+  //     locationError(error);
+  //   });
+  // }
 }
