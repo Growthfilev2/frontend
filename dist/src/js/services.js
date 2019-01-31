@@ -9,12 +9,10 @@ function handleImageError(img) {
     var usersObjectStoreTx = db.transaction('users', 'readwrite');
     var usersObjectStore = usersObjectStoreTx.objectStore('users');
     usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-
       var record = event.target.result;
       if (!record) {
         return;
       };
-
       if (record.isUpdated == 0) return;
       record.isUpdated = 0;
       usersObjectStore.put(record);
@@ -238,7 +236,7 @@ function geolocationApi(req) {
             if (req.retry === 1) {
               return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
-                cellular: data,
+                cellular: req.data,
                 tries: 'Retried 3 times'
               });
             }
@@ -248,21 +246,21 @@ function geolocationApi(req) {
 
           return reject({
             message: JSON.parse(xhr.response).error.errors[0].message,
-            cellular: data
+            cellular: req.data
           });
         }
 
         if (!xhr.responseText) {
           return reject({
             message: 'No response text from google',
-            cellular: data
+            cellular: req.data
           });
         };
         var response = JSON.parse(xhr.responseText);
         if (!response) {
           return reject({
             message: 'Response text is not parseable',
-            cellular: data
+            cellular: req.data
           });
         }
 

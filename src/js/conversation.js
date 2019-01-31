@@ -2659,7 +2659,7 @@ function insertInputsIntoActivity(record, activityStore) {
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
     let source = ''
-    if (imagesInAttachments[i].src === './img/placeholder.png') {
+    if (imagesInAttachments[i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
       source = ''
     } else {
       source = imagesInAttachments[i].src

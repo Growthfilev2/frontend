@@ -97,7 +97,7 @@ function http(request) {
             message:errorObject.message,
             code:errorObject.code
           }
-          requestHandlerResponse('apiFail', errorObject.code, apiFailBody);
+          requestHandlerResponse('apiFail', errorObject.code, apiFailBody.message);
           return reject(apiFailBody)
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')

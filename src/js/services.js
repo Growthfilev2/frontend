@@ -239,7 +239,7 @@ function geolocationApi(req) {
             if (req.retry === 1) {
               return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
-                cellular: data,
+                cellular: req.data,
                 tries: 'Retried 3 times'
               });
             }
@@ -249,21 +249,21 @@ function geolocationApi(req) {
 
           return reject({
             message: JSON.parse(xhr.response).error.errors[0].message,
-            cellular: data,
+            cellular: req.data,
           });
         }
 
         if (!xhr.responseText) {
           return reject({
             message: 'No response text from google',
-            cellular: data
+            cellular: req.data
           })
         };
         const response = JSON.parse(xhr.responseText);
         if (!response) {
           return reject({
             message: 'Response text is not parseable',
-            cellular: data
+            cellular: req.data
           })
         }
 
@@ -315,18 +315,18 @@ function getCellTowerInfo() {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     // if (native.getName() === 'Android') {
-    getCellTowerInfo().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
-    return;
-    // }
-    // navigatorPromise().then(function (location) {
+    // getCellTowerInfo().then(function (location) {
     //   resolve(location)
     // }).catch(function (error) {
     //   reject(error)
-    // });
+    // })
+    // return;
+    // }
+    navigatorPromise().then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    });
   })
 }
 
@@ -411,7 +411,6 @@ function navigatorPromise() {
             'latitude': position.coords.latitude,
             'longitude': position.coords.longitude,
             'accuracy': position.coords.accuracy,
-            'lastLocationTime': Date.now(),
             'provider': 'HTML5'
           });
 
@@ -469,7 +468,6 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -658,7 +656,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 function sendRequest(location, requestGenerator) {
 
   if (location.latitude && location.longitude && location.accuracy) {
-
+   
     apiHandler.postMessage(requestGenerator);
   } else {
     appDialog('Fetching Location Please wait.', true);
