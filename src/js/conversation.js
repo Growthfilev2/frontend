@@ -3037,23 +3037,6 @@ function createSelectMenu(key, value, canEdit) {
 }
 
 
-
-function showSendActivity(evt) {
-  const sendActivity = document.getElementById('send-activity')
-  const rect1 = sendActivity.getBoundingClientRect();
-  const rect2 = document.querySelector('.status--cancel-cont').getBoundingClientRect()
-  var isOverlap = !(rect1.right < rect2.left ||
-    rect1.left > rect2.right ||
-    rect1.bottom < rect2.top ||
-    rect1.top > rect2.bottom)
-  if (isOverlap) {
-    sendActivity.classList.add('hidden')
-    return
-  }
-  sendActivity.classList.remove('hidden');
-}
-
-
 function toggleActionables(id) {
   if (!id) return;
   if (document.getElementById('app-current-panel').dataset.view === 'create') return
