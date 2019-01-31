@@ -89,13 +89,16 @@ function http(request) {
 
         if (xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)
-          requestHandlerResponse('error', errorObject.code, errorObject.message)
-          return reject({
+          const apiFailBody = {
             res: JSON.parse(xhr.response),
             url: request.url,
             data: request.data,
-            device: currentDevice
-          })
+            device: currentDevice,
+            message:errorObject.message,
+            code:errorObject.code
+          }
+          requestHandlerResponse('apiFail', errorObject.code, apiFailBody);
+          return reject(apiFailBody)
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
       }

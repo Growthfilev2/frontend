@@ -665,7 +665,6 @@ function isLastLocationOlderThanThreshold(test, threshold) {
   if (difference > threshold) {
     return true;
   }
-
   return false;
 }
 
@@ -675,13 +674,13 @@ var receiverCaller = {
   'notification': successDialog,
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
+  'apiFail':apiFail,
   'backblazeRequest': urlFromBase64Image
 };
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
-
 function updateApp(data) {
   if (native.getName() === 'Android') {
     try {
@@ -707,7 +706,31 @@ function revokeSession() {
     requestCreator('instant', JSON.stringify(error));
   });
 }
+function apiFail(data) {
 
+  if (document.getElementById('send-activity')) {
+      document.getElementById('send-activity').style.display = 'block';
+  }
+
+  if (document.querySelector('header .mdc-linear-progress')) {
+    document.querySelector('header .mdc-linear-progress').remove();
+  }
+  if (document.querySelector('.loader')) {
+    document.querySelector('.loader').remove();
+  }
+  if (document.querySelector('.delete-activity')) {
+    document.querySelector('.delete-activity').style.display = 'block';
+  }
+  if (document.querySelector('.undo-delete-loader')) {
+    document.querySelector('.undo-delete-loader').style.display = 'block';
+  }
+  if (document.querySelector('.form-field-status')) {
+    if (document.querySelector('.form-field-status').classList.contains('hidden')) {
+      document.querySelector('.form-field-status').classList.remove('hidden');
+    }
+  }
+  snacks(data.message);
+}
 function urlFromBase64Image(data) {
 
   if (data.code === 200) {
