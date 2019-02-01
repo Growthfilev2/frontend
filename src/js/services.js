@@ -287,6 +287,8 @@ function getCellTowerInfo() {
     } catch (e) {
       reject(e.message);
     }
+
+
     if (!coarseData) {
       reject({
         message: 'empty cell tower from android.'
@@ -315,21 +317,75 @@ function getCellTowerInfo() {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
-    getCellTowerInfo().then(function (location) {
+      getCellTowerInfo().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        requestCreator('instant', JSON.stringify({
+          message: error
+        }))
+      }).then(html5Geolocation).then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject({
+          error: error,
+          meta: 'Both geolocation and html5 failed to get location'
+        });
+      })
+      return;
+    }
+
+    html5Geolocation().then(function (location) {
       resolve(location)
     }).catch(function (error) {
       reject(error)
     })
-    return;
-    }
-    navigatorPromise().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    });
   })
 }
 
+function html5Geolocation() {
+  return new Promise(function (resolve, reject) {
+    var stabalzied = [];
+    var totalcount = 0;
+    var count = 0;
+    return new Promise(function (resolve, reject) {
+      var myInterval = setInterval(function () {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          ++totalcount;
+          if (totalcount !== 1) {
+            stabalzied.push({
+              'latitude': position.coords.latitude,
+              'longitude': position.coords.longitude,
+              'accuracy': position.coords.accuracy,
+              'provider': 'HTML5'
+            });
+
+            if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+              ++count;
+
+              if (count == 3) {
+                clearInterval(myInterval);
+                myInterval = null;
+
+                return resolve(stabalzied[0]);
+              }
+            }
+            if (totalcount >= 5) {
+              clearInterval(myInterval);
+              myInterval = null;
+
+              var bestInNavigator = sortedByAccuracy(stabalzied);
+              return resolve(bestInNavigator);
+            }
+          }
+        }, function (error) {
+          clearInterval(myInterval);
+          myInterval = null;
+          reject(error.message);
+        });
+      }, 500);
+    });
+  });
+}
 
 
 function locationUpdationSuccess(location) {
@@ -394,52 +450,7 @@ function isDialogOpened(id) {
   return isOpen;
 }
 
-function navigatorPromise() {
-  var stabalzied = [];
-  var totalcount = 0;
-  var count = 0;
-  return new Promise(function (resolve, reject) {
 
-
-    var myInterval = setInterval(function () {
-
-      navigator.geolocation.getCurrentPosition(function (position) {
-        ++totalcount;
-        if (totalcount !== 1) {
-
-          stabalzied.push({
-            'latitude': position.coords.latitude,
-            'longitude': position.coords.longitude,
-            'accuracy': position.coords.accuracy,
-            'provider': 'HTML5'
-          });
-
-          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            ++count;
-
-            if (count == 3) {
-              clearInterval(myInterval);
-              myInterval = null;
-
-              return resolve(stabalzied[0]);
-            }
-          }
-          if (totalcount >= 5) {
-            clearInterval(myInterval);
-            myInterval = null;
-
-            var bestInNavigator = sortedByAccuracy(stabalzied);
-            return resolve(bestInNavigator);
-          }
-        }
-      }, function (error) {
-        clearInterval(myInterval);
-        myInterval = null;
-        reject(error.message);
-      });
-    }, 500);
-  });
-}
 
 
 function updateLocationInRoot(finalLocation) {
@@ -656,7 +667,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
 function sendRequest(location, requestGenerator) {
 
   if (location.latitude && location.longitude && location.accuracy) {
-   
+
     apiHandler.postMessage(requestGenerator);
   } else {
     appDialog('Fetching Location Please wait.', true);
@@ -834,6 +845,7 @@ function runRead(value) {
     requestCreator('Null', value);
   }
 }
+
 function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
