@@ -301,7 +301,7 @@ function getCellTowerInfo() {
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
-      body: JSON.stringify(coarseData),
+      body: coarseData,
       retry: 3
     }
     geolocationApi(req).then(function (location) {
@@ -312,8 +312,6 @@ function getCellTowerInfo() {
   })
 }
 
-
-
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
@@ -323,7 +321,8 @@ function manageLocation() {
         requestCreator('instant', JSON.stringify({
           message: error
         }))
-      }).then(html5Geolocation).then(function (location) {
+        return html5Geolocation();
+      }).then(function (location) {
         resolve(location)
       }).catch(function (error) {
         reject({
@@ -464,6 +463,8 @@ function updateLocationInRoot(finalLocation) {
       provider: '',
       lastLocationTime: ''
     };
+
+
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
     req.onsuccess = function () {
@@ -497,7 +498,7 @@ function updateLocationInRoot(finalLocation) {
 }
 
 function locationFetchError(error) {
-  requestCreator('instnat', JSON.stringify({
+  requestCreator('instant', JSON.stringify({
     message: error
   }))
 }

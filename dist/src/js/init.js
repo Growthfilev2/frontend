@@ -672,7 +672,6 @@ function runAppChecks() {
         }
         return;
       }
-
       return;
     });
   }, true);
