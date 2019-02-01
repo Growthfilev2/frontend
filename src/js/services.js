@@ -450,11 +450,7 @@ function isDialogOpened(id) {
   return isOpen;
 }
 
-
-
-
 function updateLocationInRoot(finalLocation) {
-
   return new Promise(function (resolve, reject) {
     if (!finalLocation) {
       reject(finalLocation);
