@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('src/js/apiHandler.js');
 
 function handleImageError(img) {
   img.onerror = null;
@@ -243,7 +243,10 @@ function geolocationApi(req) {
               });
             }
             req.retry--;
-            geolocationApi(req);
+            geolocationApi(req).then().catch(function (error) {
+              reject(error);
+            });
+            return;
           }
 
           return reject({
@@ -294,7 +297,6 @@ function getCellTowerInfo() {
       return;
     }
 
-    console.log(coarseData);
     var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
     var req = {
       method: 'POST',
@@ -302,6 +304,7 @@ function getCellTowerInfo() {
       body: coarseData,
       retry: 3
     };
+
     geolocationApi(req).then(function (location) {
       resolve(location);
     }).catch(function (error) {
@@ -312,6 +315,7 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
+
     if (native.getName() === 'Android') {
       getCellTowerInfo().then(function (location) {
         resolve(location);
@@ -344,43 +348,42 @@ function html5Geolocation() {
     var stabalzied = [];
     var totalcount = 0;
     var count = 0;
-    return new Promise(function (resolve, reject) {
-      var myInterval = setInterval(function () {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          ++totalcount;
-          if (totalcount !== 1) {
-            stabalzied.push({
-              'latitude': position.coords.latitude,
-              'longitude': position.coords.longitude,
-              'accuracy': position.coords.accuracy,
-              'provider': 'HTML5'
-            });
 
-            if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-              ++count;
+    var myInterval = setInterval(function () {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        ++totalcount;
+        if (totalcount !== 1) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'provider': 'HTML5'
+          });
 
-              if (count == 3) {
-                clearInterval(myInterval);
-                myInterval = null;
+          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+            ++count;
 
-                return resolve(stabalzied[0]);
-              }
-            }
-            if (totalcount >= 5) {
+            if (count == 3) {
               clearInterval(myInterval);
               myInterval = null;
 
-              var bestInNavigator = sortedByAccuracy(stabalzied);
-              return resolve(bestInNavigator);
+              return resolve(stabalzied[0]);
             }
           }
-        }, function (error) {
-          clearInterval(myInterval);
-          myInterval = null;
-          reject(error.message);
-        });
-      }, 500);
-    });
+          if (totalcount >= 5) {
+            clearInterval(myInterval);
+            myInterval = null;
+
+            var bestInNavigator = sortedByAccuracy(stabalzied);
+            return resolve(bestInNavigator);
+          }
+        }
+      }, function (error) {
+        clearInterval(myInterval);
+        myInterval = null;
+        reject(error.message);
+      });
+    }, 500);
   });
 }
 
@@ -723,14 +726,10 @@ function updateApp(data) {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function () {
-    removeIDBInstance(firebase.auth().currentUser).then(function () {}).catch(function (error) {
-      var removalError = error;
-      removalError.message = '';
-      requestCreator('instant', JSON.stringify(removalError));
-    });
-  }, function (error) {
-    requestCreator('instant', JSON.stringify(error));
+  firebase.auth().signOut().then(function () {}).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      error: error
+    }));
   });
 }
 

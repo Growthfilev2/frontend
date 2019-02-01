@@ -31,12 +31,9 @@ var native = function () {
     },
     getInfo: function getInfo() {
       if (!this.getName()) {
-        return JSON.stringify({
-          'id': '123',
-          'appVersion': 5,
-          'baseOs': 'macOs'
-        });
+        return false;
       }
+
       if (this.getName() === 'Android') {
         try {
           return AndroidInterface.getDeviceId();
@@ -396,6 +393,7 @@ function imageViewDialog() {
 }
 
 function startApp() {
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -558,6 +556,10 @@ function removeIDBInstance(auth) {
 }
 
 function init(auth) {
+  // if(!native.getName()) {
+  //   redirect();
+  //   return
+  // }
   document.getElementById("main-layout-app").style.display = 'block';
   idbVersionLessThan3(auth).then(function (reset) {
 
@@ -572,11 +574,9 @@ function init(auth) {
         from: '',
         registerToken: native.getFCMToken()
       });
-
       openListWithChecks();
       return;
     }
-
     resetApp(auth, 0);
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({

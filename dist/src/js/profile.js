@@ -90,7 +90,7 @@ function createProfilePanel() {
   }
 
   var label = document.createElement('label');
-  // label.setAttribute('for', 'uploadProfileImage');
+  label.setAttribute('for', 'uploadProfileImage');
   var btnText = document.createElement('span');
   btnText.className = 'mdc-fab__icon material-icons';
   btnText.textContent = 'add_a_photo';
@@ -103,7 +103,7 @@ function createProfilePanel() {
     fileInput.type = 'file';
     fileInput.style.display = 'none';
     fileInput.id = 'uploadProfileImage';
-    fileInput.accept = 'accept="image/png,image/jpeg;';
+    fileInput.accept = 'image/jpeg;';
   }
 
   var profileImgCont = document.createElement('div');
@@ -122,7 +122,7 @@ function createProfilePanel() {
   profileImgCont.appendChild(overlay);
   profileImgCont.appendChild(uploadBtn);
   if (native.getName() !== 'Android') {
-    profileImgCont.appendChild(fileInput);
+    label.appendChild(fileInput);
   }
 
   var nameChangeCont = document.createElement('div');

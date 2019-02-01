@@ -1,4 +1,4 @@
-var notification = new Worker('js/notification.js');
+var notification = new Worker('src/js/notification.js');
 
 var scroll_namespace = {
   count: 0,

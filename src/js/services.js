@@ -244,7 +244,10 @@ function geolocationApi(req) {
               });
             }
             req.retry--
-            geolocationApi(req)
+            geolocationApi(req).then().catch(function(error){
+              reject(error)
+            })
+            return;
           }
 
           return reject({
@@ -287,8 +290,7 @@ function getCellTowerInfo() {
     } catch (e) {
       reject(e.message);
     }
-
-
+    
     if (!coarseData) {
       reject({
         message: 'empty cell tower from android.'
@@ -296,7 +298,6 @@ function getCellTowerInfo() {
       return
     }
 
-    console.log(coarseData)
     var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
     const req = {
       method: 'POST',
@@ -304,6 +305,7 @@ function getCellTowerInfo() {
       body: coarseData,
       retry: 3
     }
+
     geolocationApi(req).then(function (location) {
       resolve(location)
     }).catch(function (error) {
@@ -314,6 +316,7 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
+
     if (native.getName() === 'Android') {
       getCellTowerInfo().then(function (location) {
         resolve(location)
@@ -346,7 +349,8 @@ function html5Geolocation() {
     var stabalzied = [];
     var totalcount = 0;
     var count = 0;
-    return new Promise(function (resolve, reject) {
+    
+
       var myInterval = setInterval(function () {
         navigator.geolocation.getCurrentPosition(function (position) {
           ++totalcount;
@@ -383,7 +387,7 @@ function html5Geolocation() {
         });
       }, 500);
     });
-  });
+  
 }
 
 
@@ -728,16 +732,15 @@ function updateApp(data) {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function () {
-    removeIDBInstance(firebase.auth().currentUser).then(function () {}).catch(function (error) {
-      var removalError = error;
-      removalError.message = '';
-      requestCreator('instant', JSON.stringify(removalError));
-    });
-  }, function (error) {
-    requestCreator('instant', JSON.stringify(error));
+  firebase.auth().signOut().then(function(){
+   
+  }).catch(function (error) {
+    requestCreator('instant',JSON.stringify({
+      error:error
+    }));
   });
 }
+
 
 function apiFail(data) {
 
