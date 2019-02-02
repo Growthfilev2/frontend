@@ -1901,7 +1901,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   } else if (record.template === 'check-in' && !showMetaInput) {
     if (!venue.showIcon) {
       secondaryText.style.paddingTop = '3px';
-      secondaryText.textContent = 'No Locations Found for Check-In'
+      secondaryText.textContent = 'Not A Known Location'
     } else {
       secondaryText.textContent = venue.address
     }
