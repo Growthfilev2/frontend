@@ -1,4 +1,3 @@
-
 var native = function () {
   return {
     setFCMToken: function setFCMToken(token) {
@@ -32,15 +31,12 @@ var native = function () {
     },
     getInfo: function getInfo() {
       if (!this.getName()) {
-        return JSON.stringify({
-          'id': '123',
-          'appVersion': 5,
-          'baseOs': 'macOs'
-        });
+        return false;
       }
+
       if (this.getName() === 'Android') {
         try {
-          return AndroidId.getDeviceId();
+          return AndroidInterface.getDeviceId();
         } catch (e) {
           requestCreator('instant', JSON.stringify({
             message: e.message
@@ -49,7 +45,7 @@ var native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 4,
+            appVersion: 5,
             osVersion: '',
             id: ''
           });
@@ -184,15 +180,12 @@ window.addEventListener('load', function () {
       var originalCount = scroll_namespace.count;
       scroll_namespace.size = originalCount;
       scroll_namespace.count = 0;
-
       window[event.state[0]]();
       return;
     }
     window[event.state[0]](event.state[1], false);
   };
-
   layoutGrid();
-
   startApp();
 });
 
@@ -291,11 +284,11 @@ function createCheckInDialog() {
   header.className = 'mdc-dialog__header';
   var headerText = document.createElement('h2');
   headerText.className = 'mdc-dialog__header__title';
-  headerText.textContent = 'New Location Detected';
+  headerText.textContent = 'Reminder';
   header.appendChild(headerText);
   var section = document.createElement('section');
   section.className = 'mdc-dialog__body';
-  section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
+  section.textContent = 'Check-in ?';
 
   var footer = document.createElement('footer');
   footer.className = 'mdc-dialog__footer';
@@ -400,6 +393,7 @@ function imageViewDialog() {
 }
 
 function startApp() {
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -561,7 +555,23 @@ function removeIDBInstance(auth) {
   });
 }
 
+function redirect() {
+  firebase.auth().signOut().then(function () {
+    window.location = 'https://www.growthfile.com';
+  }).catch(function (error) {
+    window.location = 'https://www.growthfile.com';
+
+    requestCreator('instant', JSON.stringify({
+      error: error
+    }));
+  });
+}
+
 function init(auth) {
+  if (!native.getName()) {
+    redirect();
+    return;
+  }
   document.getElementById("main-layout-app").style.display = 'block';
   idbVersionLessThan3(auth).then(function (reset) {
 
@@ -576,11 +586,9 @@ function init(auth) {
         from: '',
         registerToken: native.getFCMToken()
       });
-
       openListWithChecks();
       return;
     }
-
     resetApp(auth, 0);
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -676,14 +684,12 @@ function runAppChecks() {
         }
         return;
       }
-
       return;
     });
   }, true);
 }
 
 function startInitializatioOfList(data) {
-  console.log(data);
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
     if (history.state[0] === 'listView' || !history.state) {
@@ -696,11 +702,11 @@ function startInitializatioOfList(data) {
 }
 
 function openListWithChecks() {
-  manageLocation();
-  setInterval(function () {
-    manageLocation();
-  }, 5000);
-
-  listView();
+  listView({ urgent: false, nearby: false });
   runAppChecks();
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(locationError);
+    }).catch(locationError);
+  }, 5000);
 }

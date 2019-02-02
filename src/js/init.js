@@ -1,4 +1,3 @@
-
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -32,15 +31,12 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return JSON.stringify({
-          'id': '123',
-          'appVersion': 5,
-          'baseOs': 'macOs'
-        })
+        return false;
       }
+      
       if (this.getName() === 'Android') {
         try {
-          return AndroidId.getDeviceId();
+          return AndroidInterface.getDeviceId();
         } catch (e) {
           requestCreator('instant', JSON.stringify({
             message: e.message
@@ -49,7 +45,7 @@ let native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 4,
+            appVersion: 5,
             osVersion: '',
             id: '',
           })
@@ -78,13 +74,12 @@ let app = function () {
         return true;
       }
       const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
-      if(isSame) {
+      if (isSame) {
         return false;
-      }
-      else {
-        localStorage.setItem('today',moment().format('YYYY-MM-DD'))
+      } else {
+        localStorage.setItem('today', moment().format('YYYY-MM-DD'))
         return true
-      }      
+      }
     },
     isCurrentTimeNearStart: function (emp) {
       const startTime = emp.attachment['Daily Start Time'].value
@@ -93,7 +88,7 @@ let app = function () {
       const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
       return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
     },
-    isCurrentTimeNearEnd: function (emp) {      
+    isCurrentTimeNearEnd: function (emp) {
       const endTime = emp.attachment['Daily End Time'].value
       const format = 'hh:mm'
       const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
@@ -105,7 +100,7 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-  
+
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
@@ -183,7 +178,7 @@ window.addEventListener('load', function () {
     }
     requestCreator('instant', JSON.stringify(errorJS))
   }
-  
+
   window.onpopstate = function (event) {
 
     if (!event.state) return;
@@ -192,22 +187,18 @@ window.addEventListener('load', function () {
       const originalCount = scroll_namespace.count;
       scroll_namespace.size = originalCount
       scroll_namespace.count = 0;
-  
       window[event.state[0]]()
       return;
     }
     window[event.state[0]](event.state[1], false)
   }
-  
   layoutGrid()
-
   startApp()
-
 })
 
 
-window.addEventListener('onMessage', function _onMessage(e){
-    requestCreator('Null',false)
+window.addEventListener('onMessage', function _onMessage(e) {
+  requestCreator('Null', false)
 })
 
 function backNav() {
@@ -226,13 +217,11 @@ function firebaseUiConfig(value) {
         }
         return false;
       },
-      signInFailure : function(error){
-        
+      signInFailure: function (error) {
+
         return handleUIError(error)
       },
-      uiShown: function () {
-       
-      }
+      uiShown: function () {}
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
@@ -306,11 +295,11 @@ function createCheckInDialog() {
   header.className = 'mdc-dialog__header'
   const headerText = document.createElement('h2')
   headerText.className = 'mdc-dialog__header__title'
-  headerText.textContent = 'New Location Detected'
+  headerText.textContent = 'Reminder'
   header.appendChild(headerText)
   var section = document.createElement('section');
   section.className = 'mdc-dialog__body';
-  section.textContent = 'Growthfile detected a new location. Do you want to create a check-in ?';
+  section.textContent = 'Check-in ?';
 
   var footer = document.createElement('footer');
   footer.className = 'mdc-dialog__footer';
@@ -408,7 +397,7 @@ function imageViewDialog() {
   footer.appendChild(cancel)
   dialogSurface.appendChild(footer)
   aside.appendChild(dialogSurface)
-  
+
   const backdrop = document.createElement('div')
   backdrop.className = 'mdc-dialog__backdrop'
   aside.appendChild(backdrop)
@@ -417,6 +406,7 @@ function imageViewDialog() {
 }
 
 function startApp() {
+  
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -466,12 +456,12 @@ function isEmployeeOnLeave() {
   return new Promise(function (resolve, reject) {
 
     getEmployeeDetails().then(function (empDetails) {
-     
-      if(!empDetails) {
+
+      if (!empDetails) {
         return resolve(false)
       }
-     
-     empDetails.onLeave = false
+
+      empDetails.onLeave = false
       const req = indexedDB.open(firebase.auth().currentUser.uid);
       req.onsuccess = function () {
         const db = req.result;
@@ -528,8 +518,8 @@ function idbVersionLessThan3(auth) {
           const children = req.transaction.objectStore('children');
           children.createIndex('templateStatus', ['template', 'status']);
           const map = req.transaction.objectStore('map');
-          map.createIndex('byOffice',['office','location']);
-          
+          map.createIndex('byOffice', ['office', 'location']);
+
           break;
         case 3:
           value = false;
@@ -582,7 +572,23 @@ function removeIDBInstance(auth) {
   })
 }
 
+function redirect(){
+  firebase.auth().signOut().then(function () {
+    window.location = 'https://www.growthfile.com';
+  }).catch(function (error) {
+    window.location = 'https://www.growthfile.com';
+
+    requestCreator('instant', JSON.stringify({
+      error: error
+    }));
+  });
+}
+
 function init(auth) {
+  if(!native.getName()) {
+    redirect();
+    return
+  }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
 
@@ -597,11 +603,9 @@ function init(auth) {
         from: '',
         registerToken: native.getFCMToken()
       })
-
       openListWithChecks()
       return;
     }
-    
     resetApp(auth, 0)
   }).catch(function (error) {
     requestCreator('instant', JSON.stringify({
@@ -619,7 +623,7 @@ function resetApp(auth, from) {
     setTimeout(function () {
       snacks('Growthfile is Loading. Please Wait');
     }, 1000)
-
+ 
     requestCreator('now', {
       device: native.getInfo(),
       from: from,
@@ -634,80 +638,78 @@ function resetApp(auth, from) {
   })
 }
 
+
 function runAppChecks() {
- // suggest check in false
+  // suggest check in false
 
- window.addEventListener('locationChanged', function _locationChanged(e) {
-  isEmployeeOnLeave().then(function (emp) {
+  window.addEventListener('locationChanged', function _locationChanged(e) {
+    isEmployeeOnLeave().then(function (emp) {
 
-    var dataObject = {
-      urgent: false,
-      nearby: false,
-    };
-    if(emp) {
-      dataObject['checkin'] = !emp.onLeave
-    }
-    else {
-      dataObject['checkin'] = false
-    }
-    
+      var dataObject = {
+        urgent: false,
+        nearby: false,
+      };
+      if (emp) {
+        dataObject['checkin'] = !emp.onLeave
+      } else {
+        dataObject['checkin'] = false
+      }
 
-    var changed = e.detail;
-    var newDay = app.isNewDay();
-    if(changed && newDay){
-      dataObject.nearby = true;
-      dataObject.urgent = true;
-      startInitializatioOfList(dataObject);
-      return;
-    }
 
-    if(changed) {
-      dataObject.nearby = true;
-      startInitializatioOfList(dataObject);
-      return;
-    }
-
-    if (newDay) {
-      dataObject.urgent = true;
-      localStorage.removeItem('dailyStartTimeCheckIn');
-      localStorage.removeItem('dailyEndTimeCheckIn');
-      startInitializatioOfList(dataObject);
-      return;
-    };
-
-    if(!emp) return
-
-    if(app.isCurrentTimeNearStart(emp)) {
-      const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-      if(hasAlreadyCheckedIn == null) {
-        localStorage.setItem('dailyStartTimeCheckIn',true);
-        if(!emp.onLeave) {
-            dataObject.checkin = true;
-        }
+      var changed = e.detail;
+      var newDay = app.isNewDay();
+      if (changed && newDay) {
+        dataObject.nearby = true;
+        dataObject.urgent = true;
         startInitializatioOfList(dataObject);
+        return;
+      }
+
+      if (changed) {
+        dataObject.nearby = true;
+        startInitializatioOfList(dataObject);
+        return;
+      }
+
+      if (newDay) {
+        dataObject.urgent = true;
+        localStorage.removeItem('dailyStartTimeCheckIn');
+        localStorage.removeItem('dailyEndTimeCheckIn');
+        startInitializatioOfList(dataObject);
+        return;
+      };
+
+      if (!emp) return
+
+      if (app.isCurrentTimeNearStart(emp)) {
+        const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+        if (hasAlreadyCheckedIn == null) {
+          localStorage.setItem('dailyStartTimeCheckIn', true);
+          if (!emp.onLeave) {
+            dataObject.checkin = true;
+          }
+          startInitializatioOfList(dataObject);
+        }
+        return;
+      }
+
+      if (app.isCurrentTimeNearEnd(emp)) {
+        const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+        if (hasAlreadyCheckedIn == null) {
+          localStorage.setItem('dailyEndTimeCheckIn', true);
+          if (!emp.onLeave) {
+            dataObject.checkin = true;
+          }
+          startInitializatioOfList(dataObject);
+        }
+        return;
       }
       return;
-    }
-    
-    if(app.isCurrentTimeNearEnd(emp)){
-      const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-      if(hasAlreadyCheckedIn == null) {
-        localStorage.setItem('dailyEndTimeCheckIn',true);
-        if(!emp.onLeave) {
-            dataObject.checkin = true;
-        }
-        startInitializatioOfList(dataObject);
-      }
-      return;
-    }
-    
-    return;
-  })
+    })
   }, true);
 }
 
 function startInitializatioOfList(data) {
-  console.log(data)
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
     if (history.state[0] === 'listView' || !history.state) {
@@ -719,12 +721,13 @@ function startInitializatioOfList(data) {
   })
 }
 
+
 function openListWithChecks() {
-  manageLocation();
-  setInterval(function () {
-    manageLocation();
-  }, 5000);
-  
-  listView();
+  listView({urgent:false,nearby:false});
   runAppChecks();
+  setInterval(function(){
+  manageLocation().then(function (location) {
+    updateLocationInRoot(location).then(locationUpdationSuccess).catch(locationError);
+  }).catch(locationError);
+  },5000);
 }

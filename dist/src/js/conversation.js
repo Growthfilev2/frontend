@@ -5,12 +5,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function conversation(id, pushState) {
-
   window.removeEventListener('scroll', handleScroll, false);
-
-  console.log(id);
   checkIfRecordExists('activity', id).then(function (id) {
-    console.log(id);
     if (id) {
       if (pushState) {
         history.pushState(['conversation', id], null, null);
@@ -145,8 +141,8 @@ function commentPanel(id) {
   };
 
   document.getElementById('send-chat--input').onclick = function () {
+    if (isLocationStatusWorking()) {
 
-    if (isLocationVerified()) {
       sendComment(id);
     }
   };
@@ -241,7 +237,7 @@ function statusChange(db, id) {
       switchControl.checked = true;
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
-      if (isLocationVerified()) {
+      if (isLocationStatusWorking()) {
         changeStatusRequest(switchControl, record);
       } else {
         resetStatusConfirmation(switchControl, record);
@@ -277,7 +273,6 @@ function changeStatusRequest(switchControl, record) {
 }
 
 function createComment(db, addendum, currentUser) {
-  // console.log(addendum)
   var showMap = false;
   return new Promise(function (resolve) {
 
@@ -295,7 +290,6 @@ function createComment(db, addendum, currentUser) {
     user.classList.add('user-name--comment', 'mdc-typography--subtitle2');
 
     getUserRecord(db, addendum.user).then(function (record) {
-      // console.log(nameOrNumber)
       if (record.displayName) {
         user.textContent = record.displayName;
       } else {
@@ -376,7 +370,6 @@ function maps(evt, show, id, location) {
   var selector = '';
   evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector('.map-detail.' + id);
 
-  console.log(show);
   if (!show) {
     selector.style.height = '0px';
     evt ? evt.target.textContent = 'location_on' : '';
@@ -519,9 +512,7 @@ function reinitCount(db, id) {
     record.count = 0;
     store.put(record);
   };
-  transaction.oncomplete = function () {
-    console.log("done");
-  };
+  transaction.oncomplete = function () {};
 }
 
 function getImageFromNumber(db, number) {
@@ -529,11 +520,7 @@ function getImageFromNumber(db, number) {
     var userObjStore = db.transaction('users').objectStore('users');
     userObjStore.get(number).onsuccess = function (event) {
       var record = event.target.result;
-      if (number === firebase.auth().currentUser.phoneNumber) {
-        resolve(firebase.auth().currentUser.photoURL || './img/empty-user.jpg');
-      } else {
-        resolve(record ? record.photoURL : './img/empty-user.jpg');
-      }
+      resolve(record ? record.photoURL : './img/empty-user.jpg');
     };
   });
 }
@@ -643,7 +630,6 @@ function handleRemoveDialogEvt(evt, data) {
 }
 
 function initializeSelectorWithData(evt, data) {
-  console.log(data);
   //init dialog
   var dialog = new mdc.dialog.MDCDialog(document.querySelector('#dialog--component'));
   var activityRecord = data.record;
@@ -692,6 +678,7 @@ function fillUsersInSelector(data, dialog) {
     var db = req.result;
     var transaction = db.transaction(['users']);
     var store = transaction.objectStore('users');
+    document.querySelector('.selector-send').classList.remove('hidden');
 
     store.openCursor().onsuccess = function (event) {
       var cursor = event.target.result;
@@ -704,6 +691,7 @@ function fillUsersInSelector(data, dialog) {
       }
       cursor.continue();
     };
+
     transaction.oncomplete = function () {
       var selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
@@ -718,7 +706,6 @@ function fillUsersInSelector(data, dialog) {
       document.getElementById('selector--search').addEventListener('click', function () {
         initSearchForSelectors(db, 'users', data);
       });
-      document.querySelector('.selector-send').classList.remove('hidden');
 
       dialog['acceptButton_'].onclick = function () {
 
@@ -733,8 +720,6 @@ function fillUsersInSelector(data, dialog) {
 
         if (data.attachment.present) {
           var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
-          console.log(radio);
-          console.log("run");
           updateDomFromIDB(data.record, {
             hash: '',
             key: data.attachment.key
@@ -761,8 +746,7 @@ function fillUsersInSelector(data, dialog) {
           });
           return;
         }
-        if (isLocationVerified()) {
-
+        if (isLocationStatusWorking()) {
           shareReq(data);
         }
       };
@@ -774,7 +758,6 @@ function shareReq(data) {
   document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
   document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none';
   resetSelectedContacts().then(function (people) {
-    console.log(people);
     var reqBody = {
       'activityId': data.record.activityId,
       'share': people
@@ -801,7 +784,6 @@ function addNewNumber(data) {
 
   input.oninput = function () {
     if (this.value.length > this.maxLength) {
-      console.log(this);
       this.value = this.value.slice(0, this.maxLength);
     } else if (this.value.length === this.maxLength) {
       document.querySelector('.message-field').classList.remove('error-message');
@@ -941,7 +923,6 @@ function resetSelectedContacts() {
 }
 
 function fillMapInSelector(db, tx, dialog, data) {
-  console.log(data);
 
   if (data.record.template === 'check-in') {
     var searchIcon = document.getElementById('selector--search');
@@ -1020,7 +1001,6 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         cursor.continue();
       };
       tx.oncomplete = function () {
-
         resolve(results);
       };
       tx.onerror = function () {
@@ -1057,7 +1037,6 @@ function handleClickListnersForMap(db, dialog, data) {
         geopoint: selectedField.geopoint
       }
     }).then(removeDialog).catch(function (error) {
-      console.log(error);
       requestCreator('instant', JSON.stringify({
         message: error
       }));
@@ -1067,7 +1046,6 @@ function handleClickListnersForMap(db, dialog, data) {
 
 function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
   var ul = document.getElementById('data-list--container');
-  console.log(data);
   selectorStore.openCursor().onsuccess = function (event) {
     var cursor = event.target.result;
     if (!cursor) return;
@@ -1101,7 +1079,6 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 }
 
 function fillSubscriptionInSelector(db, dialog, data) {
-  console.log(data);
   var mainUL = document.getElementById('data-list--container');
   var grp = document.createElement('div');
   grp.className = 'mdc-list-group';
@@ -1152,16 +1129,15 @@ function fillSubscriptionInSelector(db, dialog, data) {
     mainUL.appendChild(grp);
 
     dialog['acceptButton_'].onclick = function () {
+      if (isLocationStatusWorking()) {
 
-      if (document.querySelector('.mdc-radio.radio-selected')) {
+        if (document.querySelector('.mdc-radio.radio-selected')) {
 
-        var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
-        console.log(radio);
-        var selectedField = JSON.parse(radio.value);
-        console.log(selectedField.office);
-        console.log(selectedField.template);
-        document.getElementById('app-current-panel').dataset.view = 'create';
-        createTempRecord(selectedField.office, selectedField.template, data);
+          var radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'));
+          var selectedField = JSON.parse(radio.value);
+          document.getElementById('app-current-panel').dataset.view = 'create';
+          createTempRecord(selectedField.office, selectedField.template, data);
+        }
       }
     };
   };
@@ -1216,7 +1192,6 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 
 function createTempRecord(office, template, data) {
 
-  console.log(data);
   var dbName = firebase.auth().currentUser.uid;
   var req = indexedDB.open(dbName);
   req.onsuccess = function () {
@@ -1228,12 +1203,10 @@ function createTempRecord(office, template, data) {
     officeTemplateCombo.get(range).onsuccess = function (event) {
       var selectedCombo = event.target.result;
       if (!selectedCombo) {
-        console.log("no such combo");
         return;
       }
 
       var bareBonesScheduleArray = [];
-      console.log(selectedCombo);
       selectedCombo.schedule.forEach(function (schedule) {
         var bareBonesSchedule = {};
         bareBonesSchedule.name = schedule;
@@ -1378,7 +1351,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
         updateLocalRecord(thisActivity, db).then(function (message) {
           resolve(message);
         }).catch(function (error) {
-          console.log(error);
           reject(error);
         });
         return;
@@ -1471,7 +1443,6 @@ function updateVenue(updatedActivity, attr, data) {
       field.address = data.secondary.address;
       field.geopoint['_latitude'] = data.secondary.geopoint['_latitude'];
       field.geopoint['_longitude'] = data.secondary.geopoint['_longitude'];
-      console.log(field);
     }
   });
   return updatedActivity;
@@ -1514,7 +1485,6 @@ function updateCreateContainer(recordCopy, db) {
   });
 
   document.getElementById('backToConv').addEventListener('click', function () {
-    console.log(record);
     updateLocalRecord(record, db).then(function () {
       backNav();
     }).catch(function (error) {
@@ -1605,7 +1575,8 @@ function updateCreateActivity(record) {
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        if (isLocationVerified()) {
+        if (isLocationStatusWorking()) {
+
           this.dataset.progress = true;
           sendActivity(record);
         }
@@ -1627,7 +1598,6 @@ function updateCreateActivity(record) {
     if (document.querySelector('.mdc-select')) {
       var select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
       select.listen('change', function () {
-        console.log(select);
         updateDomFromIDB(record, {
           hash: 'weekday',
           key: select['root_'].dataset.value
@@ -1708,8 +1678,8 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted';
     undo.textContent = 'Undo';
     undo.onclick = function () {
+      if (isLocationStatusWorking()) {
 
-      if (isLocationVerified()) {
         document.querySelector('.undo-deleted').style.display = 'none';
         listItem.appendChild(loader('undo-delete-loader'));
         reqForUndoDeleted(data.id);
@@ -1753,7 +1723,6 @@ function createGroupList(office, template) {
 }
 
 function createVenueSection(record) {
-  console.log(record);
   var venueSection = document.getElementById('venue--list');
 
   record.venue.forEach(function (venue) {
@@ -1843,7 +1812,6 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     metaInput.appendChild(createRadioInput());
     listItem.onclick = function () {
-      console.log(venue);
       checkRadioInput(this, {
         location: venue.location,
         address: venue.address,
@@ -1896,7 +1864,6 @@ function createScheduleTable(data) {
   var count = 0;
   data.schedule.forEach(function (schedule) {
     count++;
-    console.log(schedule.startTime);
     var scheduleName = document.createElement('h5');
     scheduleName.className = 'mdc-list-group__subheader label--text';
     scheduleName.textContent = schedule.name;
@@ -2125,7 +2092,6 @@ function createAttachmentContainer(data) {
       if (data.canEdit) {
         hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
           if (hasValue) {
-            console.log(hasValue);
             div.appendChild(addButtonName);
             div.classList.add('selector--margin');
             addButtonName.onclick = function (evt) {
@@ -2349,7 +2315,6 @@ function checkRadioInput(inherit, value) {
     document.querySelector('.selector-send span').textContent = 'send';
     document.querySelector('.selector-send').dataset.clicktype = '';
     radio.value = JSON.stringify(value);
-    console.log(value);
   }
 }
 
@@ -2401,7 +2366,7 @@ function setFilePath(str, key, show) {
 function readCameraFile() {
   if (native.getName() === 'Android') {
     try {
-      FetchCameraForAttachment.startCamera();
+      AndroidInterface.startCamera();
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: e.message,
@@ -2414,7 +2379,6 @@ function readCameraFile() {
 }
 
 function openImage(imageSrc) {
-  // sendCurrentViewNameToAndroid('selector')
 
   if (!imageSrc) return;
 
@@ -2457,15 +2421,12 @@ function createActivityCancellation(record) {
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
 
     document.getElementById('delete-allow').onclick = function () {
-      if (isLocationVerified()) {
-
+      if (isLocationStatusWorking()) {
         deleteActivityReq(record.activityId);
       }
     };
 
-    dialog.listen('MDCDialog:cancel', function () {
-      console.log('canceled');
-    });
+    dialog.listen('MDCDialog:cancel', function () {});
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
       dialog.lastFocusedTarget = evt.target;
       dialog.show();
@@ -2547,7 +2508,6 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, activityStore) {
-  console.log(record);
   var allStringTypes = document.querySelectorAll('.string');
   for (var i = 0; i < allStringTypes.length; i++) {
     var inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value;
@@ -2556,7 +2516,6 @@ function insertInputsIntoActivity(record, activityStore) {
       snacks('Please provide an input for the field “Name” ');
       return;
     }
-    console.log(convertIdToKey(allStringTypes[i].id));
 
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue;
   }
@@ -2582,7 +2541,7 @@ function insertInputsIntoActivity(record, activityStore) {
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
     var source = '';
-    if (imagesInAttachments[_i].src === './img/placeholder.png') {
+    if (imagesInAttachments[_i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
       source = '';
     } else {
       source = imagesInAttachments[_i].src;
@@ -2601,8 +2560,6 @@ function insertInputsIntoActivity(record, activityStore) {
     st = getInputText('.start--time' + i).value;
     ed = getInputText('.end--date' + i).value;
     et = getInputText('.end--time' + i).value;
-
-    console.log(concatDateWithTime(sd, st));
 
     if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
       snacks('Please Select A Start Date and End Date');
@@ -2762,7 +2719,6 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
       address = [place.address_components[0] && place.address_components[0].short_name || '', place.address_components[1] && place.address_components[1].short_name || '', place.address_components[2] && place.address_components[2].short_name || ''].join(' ');
     }
 
-    console.log(address);
     var selectedAreaAttributes = {
       primary: place.name,
       secondary: {
@@ -2831,6 +2787,7 @@ function createNumberInput(value, canEdit) {
     simeplText.textContent = value;
     return simeplText;
   }
+
   var textField = document.createElement('div');
   textField.className = 'mdc-text-field data--value-list';
   var input = document.createElement('input');
@@ -2880,7 +2837,6 @@ function createTimeInput(value, canEdit, attr) {
 
     return simeplText;
   }
-  console.log(canEdit);
 
   var textField = document.createElement('div');
   textField.className = 'mdc-text-field';
@@ -2947,22 +2903,7 @@ function createSelectMenu(key, value, canEdit) {
   return div;
 }
 
-function showSendActivity(evt) {
-  console.log(evt);
-  var sendActivity = document.getElementById('send-activity');
-  var rect1 = sendActivity.getBoundingClientRect();
-  var rect2 = document.querySelector('.status--cancel-cont').getBoundingClientRect();
-  var isOverlap = !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
-  console.log(isOverlap);
-  if (isOverlap) {
-    sendActivity.classList.add('hidden');
-    return;
-  }
-  sendActivity.classList.remove('hidden');
-}
-
 function toggleActionables(id) {
-  console.log(id);
   if (!id) return;
   if (document.getElementById('app-current-panel').dataset.view === 'create') return;
   var req = indexedDB.open(firebase.auth().currentUser.uid);
@@ -2981,7 +2922,6 @@ function toggleActionables(id) {
       if (document.querySelector('.loader')) {
         document.querySelector('.loader').remove();
         if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
-
           document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block';
         }
       }

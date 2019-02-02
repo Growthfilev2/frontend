@@ -24,9 +24,7 @@ function initDomLoad() {
 function listView(filter, updatedActivities) {
   history.pushState(['listView'], null, null);
   initDomLoad();
-
   getRootRecord().then(function (record) {
-
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML;
       showSuggestCheckInDialog();
@@ -105,6 +103,7 @@ function startCursor(currentLocation) {
         } else {
 
           getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+            console.log(dom);
             fragment.appendChild(dom);
             iterator++;
           });
@@ -129,6 +128,7 @@ function startCursor(currentLocation) {
     transaction.oncomplete = function () {
       var ul = document.getElementById('activity--list');
       if (!ul) return;
+      console.log(fragment);
       ul.appendChild(fragment);
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
       scroll_namespace.skip = false;
@@ -168,10 +168,26 @@ function getActivityDataForList(activity, value, currentLocation) {
           secondLine.appendChild(el);
         }
       }
+
       secondLine.appendChild(generateLatestVenue(venues, currentLocation));
-      resolve(activityListUI(value, secondLine));
+      var secondLineCss = setMarginForSecondLine(secondLine);
+      resolve(activityListUI(value, secondLineCss));
     };
   });
+}
+
+function setMarginForSecondLine(secondLine) {
+  var nodes = secondLine.childNodes;
+  if (nodes.length > 1) {
+    if (nodes[0].innerHTML && nodes[1].innerHTML) {
+      secondLine.style.marginTop = '-42px';
+      return secondLine;
+    }
+    secondLine.style.marginTop = '-35px';
+    return secondLine;
+  }
+  secondLine.style.marginTop = '-35px';
+  return secondLine;
 }
 
 function generateTextIfActivityIsNotPending(status) {
@@ -328,37 +344,23 @@ function activityListUI(data, secondLine) {
 
   var li = document.createElement('li');
   li.dataset.id = data.activityId;
-  li.setAttribute('onclick', 'localStorage.setItem(\'clickedActivity\',this.dataset.id);conversation(this.dataset.id,true)');
+  li.onclick = function () {
+    localStorage.setItem('clickedActivity', this.dataset.id);
+    conversation(this.dataset.id, true);
+  };
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-
   var creator = document.createElement("img");
   creator.dataset.number = data.creator.number;
   creator.className = 'mdc-list-item__graphic material-icons';
-  creator.setAttribute('onerror', 'handleImageError(this)');
+  // creator.setAttribute('onerror','handleImageError()');
   creator.src = data.creator.photo || './img/empty-user.jpg';
-
   var leftTextContainer = document.createElement('span');
   leftTextContainer.classList.add('mdc-list-item__text');
   var activityNameText = document.createElement('span');
-
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold';
-
   activityNameText.textContent = data.activityName;
-
-  // if (data.urgent || data.nearby) {
-  //   secondLine.textContent = data.secondLine;
-  // }
-  // else {
-  //   if(data.lastComment.user && data.lastComment.text) {
-  //     secondLine.textContent = `${data.lastComment.user} : ${data.lastComment.text}`;
-  //   }
-  // }
-
   leftTextContainer.appendChild(activityNameText);
-
   leftTextContainer.appendChild(secondLine);
-  // leftTextContainer.appendChild(lastComment)
-
   var metaTextContainer = document.createElement('span');
   metaTextContainer.classList.add('mdc-list-item__meta');
   metaTextContainer.appendChild(generateIconByCondition(data, li));
@@ -416,8 +418,8 @@ function generateIconByCondition(data, li) {
   }
   var timeCustomText = document.createElement('div');
   timeCustomText.className = 'mdc-meta__custom-text';
-  timeCustomText.style.width = '80px';
-  timeCustomText.style.fontSize = '14px';
+  timeCustomText.style.width = '76px';
+  timeCustomText.style.fontSize = '16px';
   timeCustomText.textContent = moment(data.timestamp).calendar();
   return timeCustomText;
 }
@@ -546,36 +548,44 @@ function listPanel() {
 }
 
 function creatListHeader(headerName) {
-  var parentIconDiv = document.createElement('div');
-  parentIconDiv.className = 'profile--icon-header';
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
+    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
 
-  var menuIcon = document.createElement('span');
-  menuIcon.id = 'menu--panel';
+      var parentIconDiv = document.createElement('div');
+      parentIconDiv.className = 'profile--icon-header';
 
-  var icon = document.createElement('img');
-  icon.src = firebase.auth().currentUser.photoURL;
-  icon.className = 'list-photo-header';
-  menuIcon.appendChild(icon);
+      var menuIcon = document.createElement('span');
+      menuIcon.id = 'menu--panel';
 
-  var headerText = document.createElement('p');
-  headerText.textContent = headerName;
-  menuIcon.appendChild(headerText);
-  parentIconDiv.appendChild(menuIcon);
+      var icon = document.createElement('img');
+      icon.src = uri;
+      icon.className = 'list-photo-header';
+      menuIcon.appendChild(icon);
+      var headerText = document.createElement('p');
+      headerText.textContent = headerName;
+      menuIcon.appendChild(headerText);
+      parentIconDiv.appendChild(menuIcon);
 
-  var searchIcon = document.createElement('span');
-  searchIcon.id = 'search--panel';
-  var sicon = document.createElement('i');
-  sicon.className = 'material-icons';
-  sicon.textContent = 'search';
-  searchIcon.appendChild(sicon);
-  modifyHeader({
-    id: 'app-main-header',
-    left: parentIconDiv.outerHTML,
-    right: ''
-  });
-  document.querySelector('.list-photo-header').addEventListener('click', function () {
-    profileView(true);
-  });
+      var searchIcon = document.createElement('span');
+      searchIcon.id = 'search--panel';
+      var sicon = document.createElement('i');
+      sicon.className = 'material-icons';
+      sicon.textContent = 'search';
+      searchIcon.appendChild(sicon);
+
+      modifyHeader({
+        id: 'app-main-header',
+        left: parentIconDiv.outerHTML,
+        right: ''
+      });
+
+      document.querySelector('.list-photo-header').addEventListener('click', function () {
+        profileView(true);
+      });
+    });
+  };
 }
 
 function scrollToActivity() {
@@ -593,7 +603,6 @@ function scrollToActivity() {
 
 function notificationWorker(type, updateTimestamp) {
   return new Promise(function (resolve, reject) {
-
     notification.postMessage({
       dbName: firebase.auth().currentUser.uid,
       type: type,

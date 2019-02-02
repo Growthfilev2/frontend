@@ -1,6 +1,18 @@
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _typeof2 = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+var _typeof = typeof Symbol === "function" && _typeof2(Symbol.iterator) === "symbol" ? function (obj) {
+  return typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj === "undefined" ? "undefined" : _typeof2(obj);
+};
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true });
+  } else {
+    obj[key] = value;
+  }return obj;
+}
 
 function profileView(pushState) {
   if (pushState) {
@@ -24,18 +36,30 @@ function profileView(pushState) {
       rootObjectStore.put(record);
       rootTx.oncomplete = function () {
         createProfileHeader();
-        createProfilePanel();
-        disableInputs();
-        document.getElementById('close-profile--panel').addEventListener('click', function () {
-          backNav();
+        createProfilePanel(db).then(function (view) {
+          if (!document.getElementById('app-current-panel')) return;
+
+          document.getElementById('app-current-panel').innerHTML = view.outerHTML;
+          disableInputs();
+          document.getElementById('close-profile--panel').addEventListener('click', function () {
+            backNav();
+          });
+
+          showProfilePicture(firebase.auth().currentUser.photoURL);
+
+          if (native.getName() === 'Android') {
+            document.getElementById('uploadProfileImage').addEventListener('click', function () {
+              AndroidInterface.openImagePicker();
+            });
+          } else {
+            inputFile('uploadProfileImage').addEventListener('change', function () {
+              readUploadedFile();
+            });
+          }
+
+          changeDisplayName(user);
+          changeEmailAddress(user);
         });
-
-        showProfilePicture(firebase.auth().currentUser.photoURL);
-
-        inputFile('uploadProfileImage').addEventListener('change', readUploadedFile);
-
-        changeDisplayName(user);
-        changeEmailAddress(user);
       };
     };
   };
@@ -58,106 +82,118 @@ function createProfileHeader() {
   modifyHeader({ id: 'app-main-header', left: backSpan.outerHTML });
 }
 
-function createProfilePanel() {
-  var profileView = document.createElement('div');
-  profileView.id = 'profile-view--container';
-  profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
+function createProfilePanel(db) {
+  return new Promise(function (resolve) {
+    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
 
-  var uploadBtn = document.createElement('button');
-  uploadBtn.className = 'mdc-fab';
+      var profileView = document.createElement('div');
+      profileView.id = 'profile-view--container';
+      profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
 
-  var label = document.createElement('label');
-  label.setAttribute('for', 'uploadProfileImage');
-  var btnText = document.createElement('span');
-  btnText.className = 'mdc-fab__icon material-icons';
-  btnText.textContent = 'add_a_photo';
+      var uploadBtn = document.createElement('button');
+      uploadBtn.className = 'mdc-fab';
+      if (native.getName() === 'Android') {
+        uploadBtn.id = 'uploadProfileImage';
+      }
 
-  label.appendChild(btnText);
-  uploadBtn.appendChild(label);
+      var label = document.createElement('label');
+      label.setAttribute('for', 'uploadProfileImage');
+      var btnText = document.createElement('span');
+      btnText.className = 'mdc-fab__icon material-icons';
+      btnText.textContent = 'add_a_photo';
 
-  var fileInput = document.createElement('input');
+      label.appendChild(btnText);
+      uploadBtn.appendChild(label);
+      var fileInput = void 0;
+      if (native.getName() !== 'Android') {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.style.display = 'none';
+        fileInput.id = 'uploadProfileImage';
+        fileInput.accept = 'image/jpeg;';
+      }
 
-  fileInput.type = 'file';
-  fileInput.style.display = 'none';
-  fileInput.id = 'uploadProfileImage';
-  fileInput.accept = 'accept="image/png,image/jpeg;';
-  var profileImgCont = document.createElement('div');
-  profileImgCont.id = 'profile--image-container';
-  profileImgCont.className = 'profile-container--main';
+      var profileImgCont = document.createElement('div');
+      profileImgCont.id = 'profile--image-container';
+      profileImgCont.className = 'profile-container--main';
 
-  var profileImg = document.createElement('img');
+      var profileImg = document.createElement('img');
 
-  profileImg.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-  profileImg.id = 'user-profile--image';
+      profileImg.src = uri || './img/empty-user.jpg';
+      profileImg.id = 'user-profile--image';
 
-  var overlay = document.createElement('div');
-  overlay.className = 'insert-overlay';
+      var overlay = document.createElement('div');
+      overlay.className = 'insert-overlay';
 
-  profileImgCont.appendChild(profileImg);
-  profileImgCont.appendChild(overlay);
-  profileImgCont.appendChild(uploadBtn);
-  profileImgCont.appendChild(fileInput);
+      profileImgCont.appendChild(profileImg);
+      profileImgCont.appendChild(overlay);
+      profileImgCont.appendChild(uploadBtn);
+      if (native.getName() !== 'Android') {
+        label.appendChild(fileInput);
+      }
 
-  var nameChangeCont = document.createElement('div');
-  nameChangeCont.id = 'name--change-container';
-  nameChangeCont.className = 'profile-psuedo-card';
+      var nameChangeCont = document.createElement('div');
+      nameChangeCont.id = 'name--change-container';
+      nameChangeCont.className = 'profile-psuedo-card';
 
-  var toggleBtnName = document.createElement('button');
-  toggleBtnName.className = 'mdc-icon-button material-icons';
-  toggleBtnName.id = 'edit--name';
+      var toggleBtnName = document.createElement('button');
+      toggleBtnName.className = 'mdc-icon-button material-icons';
+      toggleBtnName.id = 'edit--name';
 
-  toggleBtnName.setAttribute('aria-hidden', 'true');
-  toggleBtnName.setAttribute('aria-pressed', 'false');
-  toggleBtnName.setAttribute('data-toggle-on-content', 'check');
-  toggleBtnName.setAttribute('data-toggle-on-label', 'check');
-  toggleBtnName.setAttribute('data-toggle-off-content', 'edit');
-  toggleBtnName.setAttribute('data-toggle-off-label', 'displayName');
+      toggleBtnName.setAttribute('aria-hidden', 'true');
+      toggleBtnName.setAttribute('aria-pressed', 'false');
+      toggleBtnName.setAttribute('data-toggle-on-content', 'check');
+      toggleBtnName.setAttribute('data-toggle-on-label', 'check');
+      toggleBtnName.setAttribute('data-toggle-off-content', 'edit');
+      toggleBtnName.setAttribute('data-toggle-off-label', 'displayName');
 
-  toggleBtnName.textContent = 'edit';
+      toggleBtnName.textContent = 'edit';
 
-  nameChangeCont.appendChild(createInputForProfile('displayName', 'Name'));
-  nameChangeCont.appendChild(toggleBtnName);
+      nameChangeCont.appendChild(createInputForProfile('displayName', 'Name'));
+      nameChangeCont.appendChild(toggleBtnName);
 
-  var emailCont = document.createElement('div');
-  emailCont.id = 'email--change-container';
-  emailCont.className = 'profile-psuedo-card';
+      var emailCont = document.createElement('div');
+      emailCont.id = 'email--change-container';
+      emailCont.className = 'profile-psuedo-card';
 
-  var toggleBtnEmail = document.createElement('button');
-  toggleBtnEmail.className = 'mdc-icon-button material-icons';
-  toggleBtnEmail.id = 'edit--email';
-  toggleBtnEmail.setAttribute('aria-hidden', 'true');
-  toggleBtnEmail.setAttribute('aria-pressed', 'false');
-  toggleBtnEmail.setAttribute('data-toggle-on-content', 'check');
-  toggleBtnEmail.setAttribute('data-toggle-on-label', 'check');
-  toggleBtnEmail.setAttribute('data-toggle-off-content', 'edit');
-  toggleBtnEmail.setAttribute('data-toggle-off-label', 'updateEmail');
+      var toggleBtnEmail = document.createElement('button');
+      toggleBtnEmail.className = 'mdc-icon-button material-icons';
+      toggleBtnEmail.id = 'edit--email';
+      toggleBtnEmail.setAttribute('aria-hidden', 'true');
+      toggleBtnEmail.setAttribute('aria-pressed', 'false');
+      toggleBtnEmail.setAttribute('data-toggle-on-content', 'check');
+      toggleBtnEmail.setAttribute('data-toggle-on-label', 'check');
+      toggleBtnEmail.setAttribute('data-toggle-off-content', 'edit');
+      toggleBtnEmail.setAttribute('data-toggle-off-label', 'updateEmail');
 
-  toggleBtnEmail.textContent = 'email';
+      toggleBtnEmail.textContent = 'email';
 
-  emailCont.appendChild(createInputForProfile('email', 'Email'));
-  emailCont.appendChild(toggleBtnEmail);
+      emailCont.appendChild(createInputForProfile('email', 'Email'));
+      emailCont.appendChild(toggleBtnEmail);
 
-  var refreshAuth = document.createElement('div');
-  refreshAuth.id = 'ui-auth';
-  refreshAuth.className = '';
+      var refreshAuth = document.createElement('div');
+      refreshAuth.id = 'ui-auth';
+      refreshAuth.className = '';
 
-  var changeNumCont = document.createElement('div');
-  changeNumCont.id = 'change--number-container';
+      var changeNumCont = document.createElement('div');
+      changeNumCont.id = 'change--number-container';
 
-  var mainChange = document.createElement('div');
-  mainChange.id = 'phone-number--change-container';
-  mainChange.className = 'mdc-layout-grid__inner';
+      var mainChange = document.createElement('div');
+      mainChange.id = 'phone-number--change-container';
+      mainChange.className = 'mdc-layout-grid__inner';
 
-  changeNumCont.appendChild(mainChange);
-  // changeNumCont.appendChild(submitCont)
+      changeNumCont.appendChild(mainChange);
+      // changeNumCont.appendChild(submitCont)
 
-  profileView.appendChild(profileImgCont);
-  profileView.appendChild(nameChangeCont);
-  profileView.appendChild(emailCont);
-  profileView.appendChild(refreshAuth);
-  profileView.appendChild(changeNumCont);
+      profileView.appendChild(profileImgCont);
+      profileView.appendChild(nameChangeCont);
+      profileView.appendChild(emailCont);
+      profileView.appendChild(refreshAuth);
+      profileView.appendChild(changeNumCont);
 
-  document.getElementById('app-current-panel').innerHTML = profileView.outerHTML;
+      resolve(profileView);
+    });
+  });
 }
 
 function toggleIconData(icon, inputField) {
@@ -180,7 +216,7 @@ function toggleIconData(icon, inputField) {
       inputField['input_'].disabled = false;
       inputField['lineRipple_'].activate();
 
-      localStorage.getItem('deviceType') === 'Android' ? openAndroidKeyboard.startKeyboard() : '';
+      localStorage.getItem('deviceType') === 'Android' ? AndroidInterface.startKeyboard() : '';
       inputField['input_'].focus();
     }
   });
@@ -237,22 +273,55 @@ function newSignIn(value) {
   }, 300);
 }
 
-function readUploadedFile(event) {
+function readUploadedFile(image) {
+  if (native.getName() === 'Android') {
+    sendBase64ImageToBackblaze(image);
+    return;
+  }
+
   var file = inputFile('uploadProfileImage').files[0];
   var reader = new FileReader();
 
   reader.addEventListener("load", function () {
-    var body = {
-      'imageBase64': reader.result
-    };
-    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
-    requestCreator('backblaze', body);
+    sendBase64ImageToBackblaze(reader.result);
     return;
   }, false);
 
   if (file) {
     reader.readAsDataURL(file);
   }
+}
+function sendBase64ImageToBackblaze(base64) {
+  var selector = document.getElementById('user-profile--image');
+  var container = document.getElementById('profile--image-container');
+  var pre = 'data:image/jpeg;base64,';
+  if (selector) {
+    selector.src = pre + base64;
+  }
+  if (container) {
+    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
+  }
+  var body = {
+    'imageBase64': pre + base64
+  };
+  changeUserUpdateFlag(firebase.auth().currentUser.phoneNumber).then(function () {
+    requestCreator('backblaze', body);
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
+    requestCreator('backblaze', body);
+  });
+}
+
+function updateAuth(url) {
+  console.log(url);
+  var user = firebase.auth().currentUser;
+  user.updateProfile({
+    photoURL: url
+  }).then(function () {
+    removeLoader(url);
+  }).catch(authUpdatedError);
 }
 
 function removeLoader(url) {

@@ -705,26 +705,34 @@ footer.mdc-dialog__footer {
 .activity--list-item {
   padding-bottom: 5px;
   padding-top: 5px;
+  padding-right: 8px;
+    padding-left: 8px;
 }
+
 #activity--list .mdc-list-item__graphic {
-  height: 50px;
-  width:50px;
+  height: 55px;
+  width:55px;
 
 }
 
 #activity--list .mdc-list-item__text {
-  margin-top: -6px;
+  font-size: 18px;
 }
 
 .activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text {
-  padding-top: 8px;
+  /* margin-top: -40px; */
+  font-size: inherit !important;
 }
 
 .activity--list-item .mdc-list-item__meta {
-  margin-top: 6px;
+  margin-top: 4px;
   text-align: right;
 }
 
+.status-in-activity i {
+  font-size: 1.8rem;
+  margin-top: 5px;
+}
 .activity-detail-page,
 #create-activity--container {
   padding-left: 20px;
@@ -994,10 +1002,8 @@ input[type="datetime-local"] {
   }
 
   .bigBlackBold {
-    font-size: 1rem;
     font-weight: 500;
-    margin-bottom: -44px;  
-
+    margin-top: -4px;
   }
 
   .header--icon-creator {
@@ -1512,7 +1518,7 @@ input[type="datetime-local"] {
 .count-active .mdc-primary__custom-text {
   font-weight: 500; }
 .count-active .mdc-list-item__meta {
-  margin-top: 0px; }
+  margin-top: 10px; }
   .count-active .mdc-list-item__meta .mdc-meta__custom-text,
   .count-active .mdc-list-item__meta .mdc-list-item__secondary-text {
     float: right; }
@@ -1525,17 +1531,14 @@ input[type="datetime-local"] {
   padding: 0px 5px 0px 5px;
   text-align: center;
   color: #fff;
-  font-size: 12px;
+  /* font-size: 12px; */
   font-weight: 500;
-  height: 19px;
-  line-height: 20px;
-  min-width: 9px;
+  /* height: 19px; */
+  /* line-height: 20px; */
+  min-width: 14px;
   vertical-align: top;
   margin-right: 0;
-  vertical-align: top;
-  margin-left: 56px;
-  margin-top: 5px;
-  margin-bottom: 2px; }
+  vertical-align: top;}
 
   #app-main-header {
     --webkit-transform: translateZ(0);
@@ -1563,6 +1566,7 @@ input[type="datetime-local"] {
 
   .notification {
     color: #0399f4;
+    font-size: 1.8rem;
   }
 
   #search--bar-selector {
@@ -1577,13 +1581,13 @@ input[type="datetime-local"] {
     color: white;
   }
   .profile--icon-header {
-    padding-left: 5px;
+    margin-left: -2px;
     margin-top: -2px;
   }
   .list-photo-header {
     border-radius: 50%;
-    width:40px;
-    height: 40px;
+    width:45px;
+    height: 45px;
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -1594,3 +1598,11 @@ input[type="datetime-local"] {
   #enable-gps {
     background-color: rgba(0,0,0,0.5);
   }
+
+  .mt-50  {
+    margin-top: 50px;
+  }
+  .mt-40{
+    margin-top: 40px;
+  }
+

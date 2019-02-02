@@ -3,25 +3,39 @@ var apiHandler = new Worker('src/js/apiHandler.js');
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
-
-  var req = window.indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    var usersObjectStoreTx = db.transaction('users', 'readwrite');
-    var usersObjectStore = usersObjectStoreTx.objectStore('users');
-    usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-
-      var record = event.target.result;
-      if (!record) {
-        return;
-      };
-
-      if (record.isUpdated == 0) return;
-      record.isUpdated = 0;
-      usersObjectStore.put(record);
-    };
-  };
+  changeUserUpdateFlag(img.dataset.number).then().catch(function(error){
+    requestCreator('instant',JSON.stringify({
+      message:error
+    }))
+  })
   return true;
+}
+
+function changeUserUpdateFlag(number) {
+  return new Promise(function (resolve, reject) {
+    var req = window.indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var usersObjectStoreTx = db.transaction(['users'], 'readwrite');
+      var usersObjectStore = usersObjectStoreTx.objectStore('users');
+ 
+      usersObjectStore.get(number).onsuccess = function (event) {
+        var record = event.target.result;
+        if (!record) {
+          return resolve(false);
+        };
+        if (record.isUpdated == 0) return resolve(true);
+        record.isUpdated = 0;
+        usersObjectStore.put(record);
+      };
+      usersObjectStoreTx.oncomplete = function () {
+        resolve(true)
+      }
+      usersObjectStoreTx.onerror = function () {
+        reject(usersObjectStoreTx.error)
+      }
+    };
+  })
 }
 
 function handleImageErrorAttachment(img) {
@@ -37,7 +51,6 @@ function loader(nameClass) {
 }
 
 function successDialog() {
-
   var aside = document.createElement('aside');
   aside.className = 'mdc-dialog mdc-dialog--open success--dialog';
   aside.id = 'success--dialog';
@@ -67,19 +80,17 @@ function successDialog() {
     document.getElementById('success--dialog').remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1200);
-  scroll_namespace.count = 0
-  scroll_namespace.size = 20
-  localStorage.removeItem('clickedActivity')
+  scroll_namespace.count = 0;
+  scroll_namespace.size = 20;
+  localStorage.removeItem('clickedActivity');
   listView({
     urgent: false,
     nearBy: false
-  })
-
+  });
 }
 
-function appDialog(messageString,showButton) {
+function appDialog(messageString, showButton) {
   if (!document.getElementById('enable-gps')) {
-
     var aside = document.createElement('aside');
     aside.className = 'mdc-dialog mdc-dialog--open';
     aside.id = 'enable-gps';
@@ -100,10 +111,10 @@ function appDialog(messageString,showButton) {
     ok.type = 'button';
     ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
     ok.textContent = 'Ok';
-    if(!showButton) {
-      ok.classList.add('hidden')
+    if (!showButton) {
+      ok.classList.add('hidden');
     }
-    
+
     ok.style.backgroundColor = '#3498db';
 
     footer.appendChild(ok);
@@ -115,14 +126,16 @@ function appDialog(messageString,showButton) {
   }
 
   var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
-  
-  gpsDialog.listen('MDCDialog:accept',function(){
-    listView({nearby:false,urgent:false})
+
+  gpsDialog.listen('MDCDialog:accept', function () {
+    listView({
+      nearby: false,
+      urgent: false
+    });
   });
 
   gpsDialog.show();
 }
-
 
 function appUpdateDialog(messageString, title) {
   if (!document.getElementById('app-update-dialog')) {
@@ -135,12 +148,12 @@ function appUpdateDialog(messageString, title) {
     surface.style.width = '90%';
     surface.style.height = 'auto';
 
-    const header = document.createElement('header');
-    header.className = 'mdc-dialog__header'
-    const headerText = document.createElement('h2')
-    headerText.className = 'mdc-dialog__header__title'
-    headerText.textContent = title
-    header.appendChild(headerText)
+    var header = document.createElement('header');
+    header.className = 'mdc-dialog__header';
+    var headerText = document.createElement('h2');
+    headerText.className = 'mdc-dialog__header__title';
+    headerText.textContent = title;
+    header.appendChild(headerText);
     var section = document.createElement('section');
     section.className = 'mdc-dialog__body';
     section.textContent = messageString;
@@ -148,19 +161,16 @@ function appUpdateDialog(messageString, title) {
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
 
-
-    surface.appendChild(header)
+    surface.appendChild(header);
     surface.appendChild(section);
     surface.appendChild(footer);
     aside.appendChild(surface);
     document.body.appendChild(aside);
-
   }
 
   var appUpdate = new mdc.dialog.MDCDialog(document.querySelector('#app-update-dialog'));
   appUpdate.show();
 }
-
 
 function progressBar() {
   var div = document.createElement('div');
@@ -214,6 +224,7 @@ function snacks(message, type) {
   document.getElementById('snackbar-container').innerHTML = snack.outerHTML;
 
   var data = {
+
     message: message,
     actionText: type ? type.btn : 'OK',
     timeout: 10000,
@@ -226,185 +237,201 @@ function snacks(message, type) {
 }
 
 function fetchCurrentTime(serverTime) {
-  console.log(serverTime)
   return Date.now() + serverTime;
 }
 
 
-function sendLocationServiceCrashRequest(rejection) {
-  return {
-    'message': rejection,
-
-    'phoneProp': native.getInfo()
-  }
-}
-
-function geolocationApi(method, url, data) {
+function geolocationApi(req) {
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
-
-    xhr.open(method, url, true);
+    xhr.open(req.method, req.url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
-        console.log(xhr);
-
         if (xhr.status >= 400) {
-          if (JSON.parse(xhr.response).error.errors[0].reason !== 'notFound') {
-            setGeolocationApiUsage(false).then(function () {
-              reject({
+          if (JSON.parse(xhr.response).error.errors[0].reason === 'notFound') {
+            if (req.retry === 1) {
+              return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
-                cellular: data,
-                success: false
+                cellular: req.body,
+                tries: 'Retried 3 times'
               });
+            }
+            req.retry--
+            geolocationApi(req).then().catch(function (error) {
+              reject(error)
             })
+            return;
           }
-          return;
+
+          return reject({
+            message: JSON.parse(xhr.response).error.errors[0].message,
+            cellular: req.body,
+          });
         }
 
-        if (!xhr.responseText) return;
-        if (!JSON.parse(xhr.responseText)) return;
+        if (!xhr.responseText) {
+          return reject({
+            message: 'No response text from google',
+            cellular: req.body
+          })
+        };
+        const response = JSON.parse(xhr.responseText);
+        if (!response) {
+          return reject({
+            message: 'Response text is not parseable',
+            cellular: req.body
+          })
+        }
 
-        var result = JSON.parse(xhr.responseText);
         resolve({
-          'latitude': result.location.lat,
-          'longitude': result.location.lng,
-          'accuracy': result.accuracy,
+          'latitude': response.location.lat,
+          'longitude': response.location.lng,
+          'accuracy': response.accuracy,
           'provider': 'Cellular',
-          'lastLocationTime': Date.now(),
-          'success': true,
-          'useTowerInfo': true
-        })
+        });
       }
     };
-    xhr.send(data);
+    xhr.send(req.body);
+  });
+}
+
+function getCellTowerInfo() {
+  return new Promise(function (resolve, reject) {
+    let coarseData = "";
+    try {
+      coarseData = AndroidInterface.getCellularData();
+    } catch (e) {
+      reject(e.message);
+    }
+
+    if (!coarseData) {
+      reject({
+        message: 'empty cell tower from android.'
+      });
+      return
+    }
+
+    var apiKey = 'AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w';
+    const req = {
+      method: 'POST',
+      url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
+      body: coarseData,
+      retry: 3
+    }
+
+    geolocationApi(req).then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    });
   })
 }
 
 function manageLocation() {
-  if (!localStorage.getItem('dbexist')) {
-    localStorage.setItem('dbexist', firebase.auth().currentUser.uid)
-  };
-
-  if (native.getName() === 'Android') {
-    getRootRecord().then(function (rootRecord) {
-      if (shouldFetchCellTower(rootRecord.location)) {
-        useGeolocationApi(rootRecord.location.provider);
-        return;
-      }
-      useHTML5Location();
-    });
-    return;
-  }
-  useHTML5Location();
-}
-
-function shouldFetchCellTower(locationObject) {
-  if (locationObject.hasOwnProperty('useTowerInfo')) {
-    return locationObject.useTowerInfo;
-  }
-  return true
-}
-
-function useGeolocationApi(provider){
-  var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo';
-  var CelllarJson = false;
-
-  try {
-    CelllarJson = Towers.getCellularData();
-
-    if (!Object.keys(JSON.parse(CelllarJson)).length) return;
-
-    geoFetchPromise = geolocationApi('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey, CelllarJson);
-
-    if (provider === 'MOCK') {
-      geoFetchPromise.then(function (geoData) {
-        updateLocationInRoot(geoData).then(locationUpdationSuccess, locationUpdationError);
+  return new Promise(function (resolve, reject) {
+    if (native.getName() === 'Android') {
+      getCellTowerInfo().then(function (location) {
+        resolve(location)
       }).catch(function (error) {
-        requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
+        requestCreator('instant', JSON.stringify({
+          message: error
+        }))
+        return html5Geolocation();
+      }).then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject({
+          error: error,
+          meta: 'Both geolocation and html5 failed to get location'
+        });
       })
       return;
     }
 
-    geoFetchPromise.then(function (geoData) {
-      initLocationInterval(geoData)
+    html5Geolocation().then(function (location) {
+      resolve(location)
     }).catch(function (error) {
-      initLocationInterval(error)
+      reject(error)
     })
-
-  } catch (e) {
-    requestCreator('instant', JSON.stringify({
-      message: {
-        error: e.message,
-        file: 'services.js',
-        lineNo: 231,
-        device: JSON.parse(native.getInfo()),
-        help: 'Problem in calling method for fetching cellular towers.'
-      }
-    }));
-
-    if (provider === 'MOCK') return;
-    useHTML5Location()
-  }
-}
-
-function useHTML5Location() {
-  locationInterval().then(function (navigatorData) {
-    updateLocationInRoot(navigatorData).then(locationUpdationSuccess, locationUpdationError);
-  }).catch(function (error) {
-    requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
   })
 }
 
+function html5Geolocation() {
+  return new Promise(function (resolve, reject) {
+    var stabalzied = [];
+    var totalcount = 0;
+    var count = 0;
 
-function initLocationInterval(locationStatus) {
-  const singletonSuccess = []
-  let bestLocation;
-  locationInterval().then(function (navigatorData) {
-    
-    if (locationStatus.success) {
-      singletonSuccess.push(locationStatus, navigatorData)
-      bestLocation = sortedByAccuracy(singletonSuccess)
+    var myInterval = setInterval(function () {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        ++totalcount;
+        if (totalcount !== 1) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'provider': 'HTML5'
+          });
 
-    } else {
-      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
-      bestLocation = navigatorData
-    }
-    updateLocationInRoot(bestLocation).then(locationUpdationSuccess, locationUpdationError);
+          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+            ++count;
+            if (count == 3) {
+              clearInterval(myInterval);
+              myInterval = null;
+              return resolve(stabalzied[0]);
+            }
+          }
+          if (totalcount >= 5) {
+            clearInterval(myInterval);
+            myInterval = null;
+            var bestInNavigator = sortedByAccuracy(stabalzied);
+            return resolve(bestInNavigator);
+          }
+        }
+      }, function (error) {
+        clearInterval(myInterval);
+        myInterval = null;
+        reject(error.message);
+      });
+    }, 500);
+  });
 
-  }).catch(function (error) {
-    if (locationStatus.success) {
-      updateLocationInRoot(locationStatus).then(locationUpdationSuccess, locationUpdationError)
-    } else {
-      requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(locationStatus)));
-    }
-    requestCreator('instant', JSON.stringify(sendLocationServiceCrashRequest(error)));
-  })
 }
+
 
 function locationUpdationSuccess(location) {
-
+  console.log(location)
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
 
-  const locationEvent = new CustomEvent("location", {
+  var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
-  const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-  const locationChanged = new CustomEvent("locationChanged", {
+  var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  var locationChanged = new CustomEvent("locationChanged", {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
+}
 
+function locationError(error) {
+  console.log(error)
+  requestCreator('instant', JSON.stringify({
+    message: error,
+    deviceInfo: native.getInfo(),
+  }))
 }
 
 function showSuggestCheckInDialog() {
-  var dialog = new mdc.dialog.MDCDialog(document.querySelector('#suggest-checkIn-dialog'));
+  const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
+  if (!checkInDialog) return;
+  var dialog = new mdc.dialog.MDCDialog(checkInDialog);
   if (!dialog) return;
   if (document.getElementById('dialog--component')) return;
   dialog['root_'].classList.remove('hidden');
@@ -412,123 +439,46 @@ function showSuggestCheckInDialog() {
   dialog.listen('MDCDialog:accept', function (evt) {
     getRootRecord().then(function (rootRecord) {
       suggestCheckIn(false).then(function () {
-        if (rootRecord.offices.length === 1) {
-          createTempRecord(rootRecord.offices[0], 'check-in', {
-            suggestCheckIn: true
-          })
-        } else {
-          callSubscriptionSelectorUI(evt, true)
+        if (isLocationStatusWorking()) {
+          if (rootRecord.offices.length === 1) {
+            createTempRecord(rootRecord.offices[0], 'check-in', {
+              suggestCheckIn: true
+            });
+          } else {
+            callSubscriptionSelectorUI(evt, true);
+          }
         }
-      })
-    }).catch(console.log)
-  })
+      });
+    }).catch(console.log);
+  });
   dialog.listen('MDCDialog:cancel', function (evt) {
-    suggestCheckIn(false).then(console.log).catch(console.log)
-
-  })
+    suggestCheckIn(false).then(console.log).catch(console.log);
+  });
 }
 
 function isDialogOpened(id) {
-  const currentDialog = document.querySelector(id)
+  var currentDialog = document.querySelector(id);
   if (!currentDialog) return false;
-  const isOpen = currentDialog.classList.contains('mdc-dialog--open');
+  var isOpen = currentDialog.classList.contains('mdc-dialog--open');
   return isOpen;
 }
 
-function locationUpdationError(error) {
-  requestCreator('instant', JSON.stringify({
-    'message': error
-  }))
-}
-
-function mock() {
-  return new Promise(function (resolve) {
-    setTimeout(function () {
-      resolve({
-        'latitude': '',
-        'longitude': '',
-        'accuracy': 99999999,
-        'lastLocationTime': Date.now(),
-        'provider': 'Mock'
-      })
-    }, 6000);
-  })
-}
-
-function navigatorPromise() {
-  var stabalzied = [];
-  var totalcount = 0;
-  var count = 0;
-  return new Promise(function (resolve, reject) {
-
-    var myInterval = setInterval(function () {
-
-      navigator.geolocation.getCurrentPosition(function (position) {
-        ++totalcount;
-        if (totalcount !== 1) {
-
-          stabalzied.push({
-            'latitude': position.coords.latitude,
-            'longitude': position.coords.longitude,
-            'accuracy': position.coords.accuracy,
-            'lastLocationTime': Date.now(),
-            'provider': 'HTML5'
-          });
-
-          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            ++count;
-
-            if (count == 3) {
-              clearInterval(myInterval)
-              myInterval = null;
-
-              return resolve(stabalzied[0])
-            }
-          }
-          if (totalcount >= 5) {
-            clearInterval(myInterval)
-            myInterval = null;
-
-            const bestInNavigator = sortedByAccuracy(stabalzied)
-            return resolve(bestInNavigator)
-          }
-        }
-      }, function (error) {
-
-        clearInterval(myInterval)
-        myInterval = null;
-        reject(error.message);
-      });
-    }, 500);
-  })
-}
-
-function locationInterval() {
-  return new Promise(function (resolve, reject) {
-    const promiseArray = [navigatorPromise()]
-    if (native.getName() === 'Android') {
-      promiseArray.push(mock());
-    }
-    Promise.race(promiseArray).then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
-  });
-}
-
-function sortedByAccuracy(geoData) {
-  var result = geoData.sort(function (a, b) {
-    return a.accuracy - b.accuracy;
-  });
-  return result[0];
-}
-
 function updateLocationInRoot(finalLocation) {
-  if (!finalLocation) return;
-
-  let previousLocation;
   return new Promise(function (resolve, reject) {
+    if (!finalLocation) {
+      reject(finalLocation);
+      return;
+    };
+
+    var previousLocation = {
+      latitude: '',
+      longitude: '',
+      accuracy: '',
+      provider: '',
+      lastLocationTime: ''
+    };
+
+
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
     req.onsuccess = function () {
@@ -536,62 +486,35 @@ function updateLocationInRoot(finalLocation) {
       var tx = db.transaction(['root'], 'readwrite');
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
-
         var record = event.target.result;
-        previousLocation = {
-          latitude: record.location.latitude,
-          longitude: record.location.longitude,
-          accuracy: record.location.accuracy,
-          provider: record.location.provider,
-          localStorage: record.location.lastLocationTime
+        if (record.location) {
+          previousLocation = record.location
         };
-        if (!record.location) {
-          record.location = finalLocation
-        } else {
-          record.location.latitude = finalLocation.latitude;
-          record.location.longitude = finalLocation.longitude
-          record.location.accuracy = finalLocation.accuracy;
-          record.location.lastLocationTime = finalLocation.lastLocationTime,
-            record.location.provider = finalLocation.provider
-        }
+        record.location = finalLocation;
+        record.location.lastLocationTime = Date.now();
         rootStore.put(record);
       };
       tx.oncomplete = function () {
         resolve({
           prev: previousLocation,
           new: finalLocation
-        })
+        });
+
+      };
+      tx.onerror = function () {
+        reject(ex.error)
       }
     };
-    req.onerror = function (error) {
-      reject(error)
-    }
-  })
+    req.onerror = function () {
+      reject(req.error);
+    };
+  });
 }
 
-function setGeolocationApiUsage(useApi) {
-  return new Promise(function (resolve, reject) {
-    var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName);
-    req.onsuccess = function () {
-      var db = req.result;
-      var tx = db.transaction(['root'], 'readwrite');
-      var rootStore = tx.objectStore('root');
-      rootStore.get(dbName).onsuccess = function (event) {
-        const record = event.target.result;
-        record.location.useTowerInfo = useApi;
-        rootStore.put(record)
-      }
-
-      tx.oncomplete = function () {
-
-        resolve('useGeolocationApi is set to ' + useApi)
-      }
-      tx.onerror = function () {
-        reject(JSON.stringify(tx.error));
-      }
-    }
-  })
+function locationFetchError(error) {
+  requestCreator('instant', JSON.stringify({
+    message: error
+  }))
 }
 
 function toRad(value) {
@@ -601,103 +524,238 @@ function toRad(value) {
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   var R = 6371; // km
 
-  const dLat = toRad(newLocation.latitude - oldLocation.latitude);
-  const dLon = toRad(newLocation.longitude - oldLocation.longitude);
-  const lat1 = toRad(newLocation.latitude);
-  const lat2 = toRad(oldLocation.latitude);
+  var dLat = toRad(newLocation.latitude - oldLocation.latitude);
+  var dLon = toRad(newLocation.longitude - oldLocation.longitude);
+  var lat1 = toRad(newLocation.latitude);
+  var lat2 = toRad(oldLocation.latitude);
 
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  return distance
-
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var distance = R * c;
+  return distance;
 }
 
 function isLocationMoreThanThreshold(distance) {
-  const THRESHOLD = 1; //km
+  var THRESHOLD = 1; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
 
 function isLocationLessThanThreshold(distance) {
-  const THRESHOLD =1; //km
-  if (distance <= THRESHOLD) return true
-  return false
+  var THRESHOLD = 1; //km
+  if (distance <= THRESHOLD) return true;
+  return false;
+}
+
+function sortedByAccuracy(geoData) {
+  var result = geoData.sort(function (a, b) {
+    return a.accuracy - b.accuracy;
+  });
+  return result[0];
 }
 
 function sendCurrentViewNameToAndroid(viewName) {
   if (native.getName() === 'Android') {
     try {
-      Fetchview.startConversation(viewName);
+      AndroidInterface.startConversation(viewName);
     } catch (e) {
       requestCreator('instant', JSON.stringify({
         message: e.message
-      }))
+      }));
     }
   }
 }
 
+var locationPermission = function () {
+  return {
+    checkGps: function checkGps() {
+      return AndroidInterface.isGpsEnabled();
+    },
+    checkLocationPermission: function checkLocationPermission() {
+      return AndroidInterface.isLocationPermissionGranted();
+    }
+  };
+}();
 
-function getNonLocationmessageString(name) {
-  if (name === 'gps') {
-    return 'Please Enable GPS to use Growthfile';
+function isLocationStatusWorking() {
+  if (native.getName() !== 'Android') return true;
+  if (!locationPermission.checkGps()) {
+    AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps.');
+    return;
   }
-  return 'Please Allow Location services To Use Growthfile';
+  if (!locationPermission.checkLocationPermission()) {
+    AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access.')
+    return;
+  }
+  if (!AndroidInterface.isConnectionActive()) {
+    AndroidInterface.showDialog('No Connectivity', 'Please Check your Internet Connectivity');
+    return;
+  }
+  return true
 }
 
-function isLocationVerified(reqType) {
-  if (native.getName() === 'Android') {
-    var title = 'Message';
-    var messageData = {
-      title: title,
-      message: '',
-      cancelable: true,
-      button: {
-        text: 'Okay',
-        show: true,
-        clickAction: {
-          redirection: {
-            text: '',
-            value: false
-          }
-        }
+function requestCreator(requestType, requestBody) {
+  var auth = firebase.auth().currentUser;
+
+  var requestGenerator = {
+    type: requestType,
+    body: '',
+    user: {
+      token: '',
+      uid: auth.uid,
+      displayName: auth.displayName,
+      photoURL: auth.photoURL,
+      phoneNumber: auth.phoneNumber
+    }
+  };
+
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
+    auth.getIdToken(false).then(function (token) {
+      requestGenerator.body = requestBody;
+      requestGenerator.user.token = token;
+      apiHandler.postMessage(requestGenerator);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error));
+    });
+  } else {
+
+    getRootRecord().then(function (rootRecord) {
+
+      var location = rootRecord.location;
+      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
+
+      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+      if (isLocationOld) {
+        handleWaitForLocation(requestBody, requestGenerator);
+      } else {
+        auth.getIdToken(false).then(function (token) {
+
+          var geopoints = {
+            'latitude': location.latitude,
+            'longitude': location.longitude,
+            'accuracy': location.accuracy
+          };
+
+          requestBody['geopoint'] = geopoints;
+          requestGenerator.body = requestBody;
+          requestGenerator.user.token = token;
+          sendRequest(location, requestGenerator);
+        }).catch(function (error) {
+          requestCreator('instant', JSON.stringify(error));
+        });
       }
-    };
+    });
+  };
 
-    if (!Internet.isConnectionActive()) {
-      messageData.message = 'Please Check Your Internet Connection';
-      Android.notification(JSON.stringify(messageData));
-      return false;
-    }
+  // handle the response from apiHandler when operation is completed
+  apiHandler.onmessage = messageReceiver;
+  apiHandler.onerror = onErrorMessage;
+}
 
-    var locationStatus = JSON.parse(gps.isEnabled());
+function handleWaitForLocation(requestBody, requestGenerator) {
 
-    if (!locationStatus.active) {
-      messageData.message = getNonLocationmessageString(locationStatus.name);
-      Android.notification(JSON.stringify(messageData));
-      return false;
-    }
+  window.addEventListener('location', function _listener(e) {
+    firebase.auth().currentUser.getIdToken(false).then(function (token) {
+
+      var data = e.detail;
+      var geopoints = {
+        'latitude': data.latitude,
+        'longitude': data.longitude,
+        'accuracy': data.accuracy
+      };
+      requestBody['geopoint'] = geopoints;
+      requestGenerator.body = requestBody;
+      requestGenerator.user.token = token;
+      sendRequest(geopoints, requestGenerator);
+    }).catch(function (error) {
+      requestCreator('instant', JSON.stringify(error));
+    });
+    window.removeEventListener('location', _listener, true);
+  }, true);
+}
+
+function sendRequest(location, requestGenerator) {
+
+  if (location.latitude && location.longitude && location.accuracy) {
+
+    apiHandler.postMessage(requestGenerator);
+  } else {
+    appDialog('Fetching Location Please wait.', true);
+    getRootRecord().then(function (record) {
+      var cellTowerInfo = void 0;
+      try {
+        cellTowerInfo = AndroidInterface.getCellularData();
+      } catch (e) {
+        cellTowerInfo = e.message;
+      }
+
+      var locationNotFound = {
+        message: {
+          deviceInfo: native.getInfo(),
+          storedLocation: record.location,
+          cellTower: cellTowerInfo
+        }
+      };
+      requestCreator('instant', JSON.stringify(locationNotFound));
+    });
+  }
+}
+
+function isLastLocationOlderThanThreshold(test, threshold) {
+  var currentTime = moment(moment().valueOf());
+  var lastLocationTime = test;
+  var duration = moment.duration(currentTime.diff(lastLocationTime));
+  var difference = duration.asSeconds();
+  if (difference > threshold) {
     return true;
   }
-  // webkit.messageHandlers.checkInternet.postMessage(reqType);
-  return true;
+  return false;
 }
 
-function iosConnectivity(connectivity) {
-  // for future implementation
-  if (!connectivity.connected) {
-    // resetLoaders()
-  }
+var receiverCaller = {
+  'update-app': updateApp,
+  'revoke-session': revokeSession,
+  'notification': successDialog,
+  'android-stop-refreshing': androidStopRefreshing,
+  'loadView': loadView,
+  'apiFail': apiFail,
+  'backblazeRequest': urlFromBase64Image
+};
+
+function messageReceiver(response) {
+  receiverCaller[response.data.type](response.data);
 }
 
-function resetLoaders(data) {
+function updateApp(data) {
   if (native.getName() === 'Android') {
-
-    if (document.getElementById('send-activity')) {
-      document.getElementById('send-activity').style.display = 'block';
+    try {
+      AndroidInterface.updateApp(data.msg);
+    } catch (e) {
+      var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
+      var title = JSON.parse(data.msg).message;
+      appUpdateDialog('' + message, title);
     }
+    return;
+  }
+  webkit.messageHandlers.updateApp.postMessage();
+}
+
+function revokeSession() {
+  firebase.auth().signOut().then(function () {
+
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      error: error
+    }));
+  });
+}
+
+
+function apiFail(data) {
+
+  if (document.getElementById('send-activity')) {
+    document.getElementById('send-activity').style.display = 'block';
   }
 
   if (document.querySelector('header .mdc-linear-progress')) {
@@ -720,213 +778,27 @@ function resetLoaders(data) {
   snacks(data.msg);
 }
 
-function requestCreator(requestType, requestBody) {
-  const auth = firebase.auth().currentUser;
-
-  var requestGenerator = {
-    type: requestType,
-    body: '',
-    user: {
-      token: '',
-      uid: auth.uid,
-      displayName: auth.displayName,
-      photoURL: auth.photoURL,
-      phoneNumber: auth.phoneNumber
-    }
-  };
-
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
-    auth.getIdToken(false).then(function (token) {
-      requestGenerator.body = requestBody;
-      requestGenerator.user.token = token;
-      apiHandler.postMessage(requestGenerator);
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify(error))
-    })
-  } else {
-
-
-
-    getRootRecord().then(function (rootRecord) {
-
-      const location = rootRecord.location
-      const isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
-
-      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-      if (isLocationOld) {
-        handleWaitForLocation(requestBody, requestGenerator)
-      } else {
-        auth.getIdToken(false).then(function (token) {
-
-          var geopoints = {
-            'latitude': location.latitude,
-            'longitude': location.longitude,
-            'accuracy': location.accuracy
-          };
-
-          requestBody['geopoint'] = geopoints;
-          requestGenerator.body = requestBody;
-          requestGenerator.user.token = token;
-          console.log(requestGenerator)
-          sendRequest(location, requestGenerator)
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify(error))
-        })
-      }
-    })
-  };
-
-
-  // handle the response from apiHandler when operation is completed
-  apiHandler.onmessage = messageReceiver;
-  apiHandler.onerror = onErrorMessage;
-}
-
-
-
-function handleWaitForLocation(requestBody, requestGenerator) {
-
-
-  window.addEventListener('location', function _listener(e) {
-    firebase.auth().currentUser.getIdToken(false).then(function (token) {
-
-      const data = e.detail;
-      var geopoints = {
-        'latitude': data.latitude,
-        'longitude': data.longitude,
-        'accuracy': data.accuracy
-      };
-      requestBody['geopoint'] = geopoints;
-      requestGenerator.body = requestBody;
-      requestGenerator.user.token = token;
-      sendRequest(geopoints, requestGenerator);
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify(error))
-    })
-    window.removeEventListener('location', _listener, true);
-  }, true);
-}
-
-function sendRequest(location, requestGenerator) {
-
-
-  if (location.latitude && location.longitude && location.accuracy) {
-
-    apiHandler.postMessage(requestGenerator);
-    
-  } else {
-    appDialog('Fetching Location Please wait.',true);
-    getRootRecord().then(function(record){
-      let cellTowerInfo;
-
-      try {
-        cellTowerInfo = Towers.getCellularData()
-      }
-      catch(e){
-        cellTowerInfo = e.message
-      }
-      
-      const locationNotFound = {
-        message : {
-          deviceInfo : native.getInfo(),
-          storedLocation:record.location,
-          cellTower :cellTowerInfo
-        }
-      }
-      requestCreator('instant',JSON.stringify(locationNotFound))
-    })
-
-  }
-}
-
-function isLastLocationOlderThanThreshold(test, threshold) {
-  const currentTime = moment(moment().valueOf());
-  const lastLocationTime = test
-  const duration = moment.duration(currentTime.diff(lastLocationTime));
-  const difference = duration.asSeconds();
-  console.log(difference);
-  if (difference > threshold) {
-    return true
-  }
-  return false;
-}
-
-
-const receiverCaller = {
-  'update-app': updateApp,
-  'revoke-session': revokeSession,
-  'notification': successDialog,
-  'manageLocation': manageLocation,
-  'error': resetLoaders,
-  'android-stop-refreshing': androidStopRefreshing,
-  'loadView': loadView,
-  'redirect-to-list': changeState,
-  'backblazeRequest': urlFromBase64Image
-}
-
-
-function messageReceiver(response) {
-  receiverCaller[response.data.type](response.data)
-}
-
-
-function updateApp(data) {
-  if (native.getName() === 'Android') {
-    console.log("update App");
-    try {
-      Android.notification(data.msg);
-    } catch (e) {
-      const message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again '
-      const title = JSON.parse(data.msg).message
-      appUpdateDialog(`${message}`, title);
-    }
-    return;
-  }
-  webkit.messageHandlers.updateApp.postMessage();
-}
-
-function revokeSession() {
-  firebase.auth().signOut().then(function () {
-    removeIDBInstance(firebase.auth().currentUser).then(function () {
-      console.log("session revoked")
-    }).catch(function (error) {
-      const removalError = error;
-      removalError.message = ''
-      requestCreator('instant', JSON.stringify(removalError))
-    })
-  }, function (error) {
-    requestCreator('instant', JSON.stringify(error))
-  });
-}
-
-
-function changeState(data) {
-  history.pushState(['listView'], null, null);
-
-}
-
 function urlFromBase64Image(data) {
 
   if (data.code === 200) {
     if (history.state[0] === 'profileView') {
-      const selector = document.querySelector('#profile--image-container .profile--loader ');
+      var selector = document.querySelector('#profile--image-container .profile--loader ');
       if (selector) {
         selector.remove();
       }
       document.getElementById('user-profile--image').src = firebase.auth().currentUser.photoURL;
-      return
+      return;
     }
   }
-  // to do update
 }
 
 function loadView(data) {
-
+  localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   androidStopRefreshing();
 
   if (!history.state) {
     localStorage.setItem('today', null);
-    openListWithChecks()
+    openListWithChecks();
     return;
   }
 
@@ -938,34 +810,31 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
-    if (!data.msg.length) return
-    getRootRecord().then(function(record){
-      updateEl(data.msg, record.location)
-    })
+    if (!data.msg.length) return;
+    getRootRecord().then(function (record) {
+      updateEl(data.msg, record.location);
+    });
     return;
   }
 
   window[history.state[0]](history.state[1], false);
 }
 
-
 function androidStopRefreshing() {
   if (native.getName() === 'Android') {
     try {
-      AndroidRefreshing.stopRefreshing(true);
+      AndroidInterface.stopRefreshing(true);
     } catch (e) {
-
-      const instantBody = {
+      var instantBody = {
         message: e.message,
         device: native.getInfo()
-      }
-      requestCreator('instant', JSON.stringify(instantBody))
+      };
+      requestCreator('instant', JSON.stringify(instantBody));
     }
   }
 }
 
 function onErrorMessage(error) {
-
   var logs = {
     message: error.message,
     body: {
@@ -973,14 +842,8 @@ function onErrorMessage(error) {
       'file': error.filename
     }
   };
-
   requestCreator('instant', JSON.stringify(logs));
 
-  console.table({
-    'line-number': error.lineno,
-    'error': error.message,
-    'file': error.filename
-  });  
 }
 
 function getInputText(selector) {
@@ -992,7 +855,6 @@ function runRead(value) {
     requestCreator('Null', value);
   }
 }
-
 
 function removeChildNodes(parent) {
   while (parent.firstChild) {

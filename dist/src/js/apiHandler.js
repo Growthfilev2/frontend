@@ -2,7 +2,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 importScripts('../../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfile-207204.cloudfunctions.net/api/';
-
 var deviceInfo = void 0;
 
 // get Device time
@@ -49,7 +48,9 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB({ user: event.data.user });
+    updateIDB({
+      user: event.data.user
+    });
     return;
   }
 
@@ -88,13 +89,16 @@ function http(request) {
 
         if (xhr.status > 226) {
           var errorObject = JSON.parse(xhr.response);
-          requestHandlerResponse('error', errorObject.code, errorObject.message);
-          return reject({
+          var apiFailBody = {
             res: JSON.parse(xhr.response),
             url: request.url,
             data: request.data,
-            device: currentDevice
-          });
+            device: currentDevice,
+            message: errorObject.message,
+            code: errorObject.code
+          };
+          requestHandlerResponse('apiFail', errorObject.code, apiFailBody.message);
+          return reject(apiFailBody);
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
       }
@@ -157,7 +161,6 @@ function fetchServerTime(body, user) {
         ts: response.timestamp,
         fromTime: body.from,
         user: user
-
       });
     }).catch(function (error) {
       instant(createLog(error));
@@ -174,9 +177,9 @@ function instant(error, user) {
     token: user.token
   };
   console.log(error);
-  http(req).then(function (response) {
-    console.log(response);
-  }).catch(console.log);
+  // http(req).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**
@@ -221,8 +224,10 @@ function initializeIDB(data) {
         rootObjectStore.put(record);
       };
       rootTx.oncomplete = function () {
-        requestHandlerResponse('manageLocation');
-        resolve({ user: data.user, fromTime: data.fromTime });
+        resolve({
+          user: data.user,
+          fromTime: data.fromTime
+        });
       };
     };
   });
@@ -295,6 +300,7 @@ function createObjectStores(request, data) {
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
   children.createIndex('templateStatus', ['template', 'status']);
+
   var root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
@@ -317,7 +323,9 @@ function comment(body, auth) {
     };
     http(req).then(function () {
       setTimeout(function () {
-        updateIDB({ user: auth });
+        updateIDB({
+          user: auth
+        });
       }, 1000);
       resolve(true);
     }).catch(function (error) {
@@ -688,6 +696,7 @@ function createUsersApiUrl(db, user) {
       var cursor = event.target.result;
 
       if (!cursor) return;
+
       var assigneeFormat = '%2B' + cursor.value.mobile + '&q=';
       assigneeString += '' + assigneeFormat.replace('+', '');
       cursor.continue();
@@ -709,43 +718,51 @@ function createUsersApiUrl(db, user) {
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(requestPayload) {
-  var req = {
-    method: 'GET',
-    url: requestPayload.url,
-    data: null,
-    token: requestPayload.user.token
-  };
-  http(req).then(function (userProfile) {
-    if (!Object.keys(userProfile).length) return;
+  return new Promise(function (resolve, reject) {
 
-    var tx = requestPayload.db.transaction(['users'], 'readwrite');
-    var usersObjectStore = tx.objectStore('users');
-    var isUpdatedIndex = usersObjectStore.index('isUpdated');
-    var USER_NOT_UPDATED = 0;
-    var USER_UPDATED = 1;
-
-    isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
-      var cursor = event.target.result;
-
-      if (!cursor) return;
-
-      if (!userProfile.hasOwnProperty(cursor.primaryKey)) return;
-
-      if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-        var record = cursor.value;
-        record.photoURL = userProfile[cursor.primaryKey].photoURL;
-        record.displayName = userProfile[cursor.primaryKey].displayName;
-        record.isUpdated = USER_UPDATED;
-        console.log(record);
-        usersObjectStore.put(record);
+    var req = {
+      method: 'GET',
+      url: requestPayload.url,
+      data: null,
+      token: requestPayload.user.token
+    };
+    http(req).then(function (userProfile) {
+      if (!Object.keys(userProfile).length) {
+        return resolve(true);
       }
-      cursor.continue();
-    };
-    tx.oncomplete = function () {
-      console.log("all users updated");
-    };
-  }).catch(function (error) {
-    instant(createLog(error));
+
+      var tx = requestPayload.db.transaction(['users'], 'readwrite');
+      var usersObjectStore = tx.objectStore('users');
+      var isUpdatedIndex = usersObjectStore.index('isUpdated');
+      var USER_NOT_UPDATED = 0;
+      var USER_UPDATED = 1;
+
+      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
+        var cursor = event.target.result;
+
+        if (!cursor) return;
+
+        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return;
+
+        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
+          var record = cursor.value;
+          record.photoURL = userProfile[cursor.primaryKey].photoURL;
+          record.displayName = userProfile[cursor.primaryKey].displayName;
+          record.isUpdated = USER_UPDATED;
+
+          usersObjectStore.put(record);
+        }
+        cursor.continue();
+      };
+      tx.oncomplete = function () {
+        resolve(true);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+    }).catch(function (error) {
+      reject(error);
+    });
   });
 }
 
@@ -831,9 +848,7 @@ function createListStore(activity, counter, param) {
 function updateListStoreWithCreatorImage(param) {
   return new Promise(function (resolve, reject) {
     var req = indexedDB.open(param.user.uid);
-
     req.onsuccess = function () {
-
       var db = req.result;
       var transaction = db.transaction(['list', 'users'], 'readwrite');
       var listStore = transaction.objectStore('list');
@@ -843,19 +858,14 @@ function updateListStoreWithCreatorImage(param) {
         var cursor = event.target.result;
         if (!cursor) return;
         var creator = cursor.value.creator;
+        userStore.get(creator.number).onsuccess = function (userEvent) {
+          var record = userEvent.target.result;
+          if (record) {
+            creator.photo = record.photoURL;
+            listStore.put(cursor.value);
+          }
+        };
 
-        if (creator.number === param.user.phoneNumber) {
-          creator.photo = param.user.photoURL;
-          listStore.put(cursor.value);
-        } else {
-          userStore.get(creator.number).onsuccess = function (userEvent) {
-            var record = userEvent.target.result;
-            if (record) {
-              creator.photo = record.photoURL;
-              listStore.put(cursor.value);
-            }
-          };
-        }
         cursor.continue();
       };
 
@@ -934,7 +944,6 @@ function successResponse(read, param) {
     });
 
     rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-      createUsersApiUrl(db, param.user).then(updateUserObjectStore);
       getUniqueOfficeCount(param).then(function (offices) {
         setUniqueOffice(offices, param);
       }).catch(console.log);
@@ -943,10 +952,16 @@ function successResponse(read, param) {
       record.fromTime = read.upto;
       rootObjectStore.put(record);
 
-      updateListStoreWithCreatorImage(param).then(function () {
-
-        var updatedActivities = read.activities;
-        requestHandlerResponse('loadView', 200, updatedActivities);
+      createUsersApiUrl(db, param.user).then(function (data) {
+        updateUserObjectStore(data).then(function (updated) {
+          updateListStoreWithCreatorImage(param).then(function () {
+            var updatedActivities = read.activities;
+            requestHandlerResponse('loadView', 200, updatedActivities);
+          });
+        }).catch(function (error) {
+          instant(createLog(error));
+          requestHandlerResponse('loadView', 200, updatedActivities);
+        });
       });
     };
   };
