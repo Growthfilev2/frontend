@@ -349,7 +349,6 @@ function html5Geolocation() {
     var stabalzied = [];
     var totalcount = 0;
     var count = 0;
-    
 
       var myInterval = setInterval(function () {
         navigator.geolocation.getCurrentPosition(function (position) {
@@ -364,18 +363,15 @@ function html5Geolocation() {
 
             if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
               ++count;
-
               if (count == 3) {
                 clearInterval(myInterval);
                 myInterval = null;
-
                 return resolve(stabalzied[0]);
               }
             }
             if (totalcount >= 5) {
               clearInterval(myInterval);
               myInterval = null;
-
               var bestInNavigator = sortedByAccuracy(stabalzied);
               return resolve(bestInNavigator);
             }
@@ -720,7 +716,7 @@ function messageReceiver(response) {
 function updateApp(data) {
   if (native.getName() === 'Android') {
     try {
-      Android.notification(data.msg);
+      AndroidInterface.updateApp(data.msg);
     } catch (e) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;

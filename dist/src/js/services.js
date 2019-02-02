@@ -714,7 +714,7 @@ function messageReceiver(response) {
 function updateApp(data) {
   if (native.getName() === 'Android') {
     try {
-      Android.notification(data.msg);
+      AndroidInterface.updateApp(data.msg);
     } catch (e) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;
