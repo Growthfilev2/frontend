@@ -727,6 +727,7 @@ function createUsersApiUrl(db, user) {
       const cursor = event.target.result
 
       if (!cursor) return
+    
       const assigneeFormat = `%2B${cursor.value.mobile}&q=`
       assigneeString += `${assigneeFormat.replace('+', '')}`
       cursor.continue()
@@ -749,6 +750,8 @@ function createUsersApiUrl(db, user) {
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(requestPayload) {
+  return new Promise(function(resolve,reject){
+
   const req = {
     method: 'GET',
     url: requestPayload.url,
@@ -757,7 +760,9 @@ function updateUserObjectStore(requestPayload) {
   }
   http(req)
     .then(function (userProfile) {
-      if (!Object.keys(userProfile).length) return
+      if (!Object.keys(userProfile).length) {
+        return resolve(true)
+      }
 
       const tx = requestPayload.db.transaction(['users'], 'readwrite');
       const usersObjectStore = tx.objectStore('users');
@@ -777,18 +782,22 @@ function updateUserObjectStore(requestPayload) {
           record.photoURL = userProfile[cursor.primaryKey].photoURL
           record.displayName = userProfile[cursor.primaryKey].displayName
           record.isUpdated = USER_UPDATED
-          console.log(record)
+         
           usersObjectStore.put(record)
         }
         cursor.continue()
       }
       tx.oncomplete = function () {
-        console.log("all users updated")
+          resolve(true)
+      }
+      tx.onerror = function(){
+        reject(tx.error)
       }
 
     }).catch(function (error) {
-      instant(createLog(error))
+      reject(error)
     })
+  });
 }
 
 function findSubscriptionCount(db) {
@@ -875,9 +884,7 @@ function createListStore(activity, counter, param) {
 function updateListStoreWithCreatorImage(param) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(param.user.uid)
-
     req.onsuccess = function () {
-
       const db = req.result
       const transaction = db.transaction(['list', 'users'], 'readwrite')
       const listStore = transaction.objectStore('list');
@@ -977,7 +984,6 @@ function successResponse(read, param) {
     })
 
     rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-      createUsersApiUrl(db, param.user).then(updateUserObjectStore);
       getUniqueOfficeCount(param).then(function (offices) {
         setUniqueOffice(offices, param);
       }).catch(console.log);
@@ -985,12 +991,18 @@ function successResponse(read, param) {
       const record = event.target.result
       record.fromTime = read.upto
       rootObjectStore.put(record);
-
-      updateListStoreWithCreatorImage(param).then(function () {
-
-        const updatedActivities = read.activities
-        requestHandlerResponse('loadView', 200, updatedActivities);
-      })
+      
+      createUsersApiUrl(db, param.user).then(function(data){
+        updateUserObjectStore(data).then(function(updated){
+          updateListStoreWithCreatorImage(param).then(function () {
+            const updatedActivities = read.activities
+            requestHandlerResponse('loadView', 200, updatedActivities);
+          })
+        }).catch(function(error){
+          instant(createLog(error))
+          requestHandlerResponse('loadView', 200, updatedActivities);
+        })
+      });
     }
   }
 }

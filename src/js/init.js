@@ -31,7 +31,14 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return false;
+        return JSON.stringify({
+          baseOs: '2',
+          deviceBrand: '',
+          deviceModel: '',
+          appVersion: 5,
+          osVersion: '',
+          id: '234',
+        })
       }
       
       if (this.getName() === 'Android') {
@@ -585,10 +592,10 @@ function redirect(){
 }
 
 function init(auth) {
-  if(!native.getName()) {
-    redirect();
-    return
-  }
+  // if(!native.getName()) {
+  //   redirect();
+  //   return
+  // }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
 

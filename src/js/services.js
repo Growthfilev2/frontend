@@ -3,24 +3,40 @@ var apiHandler = new Worker('js/apiHandler.js');
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
-  var req = window.indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    var usersObjectStoreTx = db.transaction('users', 'readwrite');
-    var usersObjectStore = usersObjectStoreTx.objectStore('users');
-    usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-
-      var record = event.target.result;
-      if (!record) {
-        return;
-      };
-
-      if (record.isUpdated == 0) return;
-      record.isUpdated = 0;
-      usersObjectStore.put(record);
-    };
-  };
+  changeUserUpdateFlag(img.dataset.number).then().catch(function(error){
+    requestCreator('instant',JSON.stringify({
+      message:error
+    }))
+  })
   return true;
+}
+
+function changeUserUpdateFlag(number) {
+  return new Promise(function (resolve, reject) {
+    var req = window.indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var usersObjectStoreTx = db.transaction(['users'], 'readwrite');
+      var usersObjectStore = usersObjectStoreTx.objectStore('users');
+ 
+      usersObjectStore.get(number).onsuccess = function (event) {
+        var record = event.target.result;
+        if (!record) {
+          return resolve(false);
+        };
+
+        if (record.isUpdated == 0) return resolve(true);
+        record.isUpdated = 0;
+        usersObjectStore.put(record);
+      };
+      usersObjectStoreTx.oncomplete = function () {
+        resolve(true)
+      }
+      usersObjectStoreTx.onerror = function () {
+        reject(usersObjectStoreTx.error)
+      }
+    };
+  })
 }
 
 function handleImageErrorAttachment(img) {
@@ -244,7 +260,7 @@ function geolocationApi(req) {
               });
             }
             req.retry--
-            geolocationApi(req).then().catch(function(error){
+            geolocationApi(req).then().catch(function (error) {
               reject(error)
             })
             return;
@@ -290,7 +306,7 @@ function getCellTowerInfo() {
     } catch (e) {
       reject(e.message);
     }
-    
+
     if (!coarseData) {
       reject({
         message: 'empty cell tower from android.'
@@ -349,40 +365,40 @@ function html5Geolocation() {
     var totalcount = 0;
     var count = 0;
 
-      var myInterval = setInterval(function () {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          ++totalcount;
-          if (totalcount !== 1) {
-            stabalzied.push({
-              'latitude': position.coords.latitude,
-              'longitude': position.coords.longitude,
-              'accuracy': position.coords.accuracy,
-              'provider': 'HTML5'
-            });
+    var myInterval = setInterval(function () {
+      navigator.geolocation.getCurrentPosition(function (position) {
+        ++totalcount;
+        if (totalcount !== 1) {
+          stabalzied.push({
+            'latitude': position.coords.latitude,
+            'longitude': position.coords.longitude,
+            'accuracy': position.coords.accuracy,
+            'provider': 'HTML5'
+          });
 
-            if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-              ++count;
-              if (count == 3) {
-                clearInterval(myInterval);
-                myInterval = null;
-                return resolve(stabalzied[0]);
-              }
-            }
-            if (totalcount >= 5) {
+          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+            ++count;
+            if (count == 3) {
               clearInterval(myInterval);
               myInterval = null;
-              var bestInNavigator = sortedByAccuracy(stabalzied);
-              return resolve(bestInNavigator);
+              return resolve(stabalzied[0]);
             }
           }
-        }, function (error) {
-          clearInterval(myInterval);
-          myInterval = null;
-          reject(error.message);
-        });
-      }, 500);
-    });
-  
+          if (totalcount >= 5) {
+            clearInterval(myInterval);
+            myInterval = null;
+            var bestInNavigator = sortedByAccuracy(stabalzied);
+            return resolve(bestInNavigator);
+          }
+        }
+      }, function (error) {
+        clearInterval(myInterval);
+        myInterval = null;
+        reject(error.message);
+      });
+    }, 500);
+  });
+
 }
 
 
@@ -727,11 +743,11 @@ function updateApp(data) {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function(){
-   
+  firebase.auth().signOut().then(function () {
+
   }).catch(function (error) {
-    requestCreator('instant',JSON.stringify({
-      error:error
+    requestCreator('instant', JSON.stringify({
+      error: error
     }));
   });
 }

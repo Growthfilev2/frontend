@@ -3,24 +3,40 @@ var apiHandler = new Worker('src/js/apiHandler.js');
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
-  var req = window.indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    var usersObjectStoreTx = db.transaction('users', 'readwrite');
-    var usersObjectStore = usersObjectStoreTx.objectStore('users');
-    usersObjectStore.get(img.dataset.number).onsuccess = function (event) {
-
-      var record = event.target.result;
-      if (!record) {
-        return;
-      };
-
-      if (record.isUpdated == 0) return;
-      record.isUpdated = 0;
-      usersObjectStore.put(record);
-    };
-  };
+  changeUserUpdateFlag(img.dataset.number).then().catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      message: error
+    }));
+  });
   return true;
+}
+
+function changeUserUpdateFlag(number) {
+  return new Promise(function (resolve, reject) {
+    var req = window.indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      var db = req.result;
+      var usersObjectStoreTx = db.transaction(['users'], 'readwrite');
+      var usersObjectStore = usersObjectStoreTx.objectStore('users');
+
+      usersObjectStore.get(number).onsuccess = function (event) {
+        var record = event.target.result;
+        if (!record) {
+          return resolve(false);
+        };
+
+        if (record.isUpdated == 0) return resolve(true);
+        record.isUpdated = 0;
+        usersObjectStore.put(record);
+      };
+      usersObjectStoreTx.oncomplete = function () {
+        resolve(true);
+      };
+      usersObjectStoreTx.onerror = function () {
+        reject(usersObjectStoreTx.error);
+      };
+    };
+  });
 }
 
 function handleImageErrorAttachment(img) {
