@@ -177,9 +177,9 @@ function instant(error, user) {
     token: user.token
   };
   console.log(error);
-  // http(req).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(req).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 /**
