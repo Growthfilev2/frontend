@@ -572,11 +572,21 @@ function removeIDBInstance(auth) {
   })
 }
 
+function redirect(){
+  firebase.auth().signOut().then(function () {
+    window.location = 'https://www.growthfile.com';
+  }).catch(function (error) {
+    requestCreator('instant', JSON.stringify({
+      error: error
+    }));
+  });
+}
+
 function init(auth) {
-  // if(!native.getName()) {
-  //   redirect();
-  //   return
-  // }
+  if(!native.getName()) {
+    redirect();
+    return
+  }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
 

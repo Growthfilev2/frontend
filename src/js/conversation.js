@@ -722,6 +722,7 @@ function fillUsersInSelector(data, dialog) {
       }
       cursor.continue()
     }
+    
     transaction.oncomplete = function () {
       const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
