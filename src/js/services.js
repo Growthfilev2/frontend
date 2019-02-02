@@ -316,7 +316,6 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-
     if (native.getName() === 'Android') {
       getCellTowerInfo().then(function (location) {
         resolve(location)

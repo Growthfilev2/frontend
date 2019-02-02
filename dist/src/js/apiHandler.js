@@ -49,7 +49,9 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB({ user: event.data.user });
+    updateIDB({
+      user: event.data.user
+    });
     return;
   }
 
@@ -223,7 +225,10 @@ function initializeIDB(data) {
         rootObjectStore.put(record);
       };
       rootTx.oncomplete = function () {
-        resolve({ user: data.user, fromTime: data.fromTime });
+        resolve({
+          user: data.user,
+          fromTime: data.fromTime
+        });
       };
     };
   });
@@ -319,7 +324,9 @@ function comment(body, auth) {
     };
     http(req).then(function () {
       setTimeout(function () {
-        updateIDB({ user: auth });
+        updateIDB({
+          user: auth
+        });
       }, 1000);
       resolve(true);
     }).catch(function (error) {
@@ -845,19 +852,14 @@ function updateListStoreWithCreatorImage(param) {
         var cursor = event.target.result;
         if (!cursor) return;
         var creator = cursor.value.creator;
+        userStore.get(creator.number).onsuccess = function (userEvent) {
+          var record = userEvent.target.result;
+          if (record) {
+            creator.photo = record.photoURL;
+            listStore.put(cursor.value);
+          }
+        };
 
-        if (creator.number === param.user.phoneNumber) {
-          creator.photo = param.user.photoURL;
-          listStore.put(cursor.value);
-        } else {
-          userStore.get(creator.number).onsuccess = function (userEvent) {
-            var record = userEvent.target.result;
-            if (record) {
-              creator.photo = record.photoURL;
-              listStore.put(cursor.value);
-            }
-          };
-        }
         cursor.continue();
       };
 

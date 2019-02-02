@@ -535,11 +535,7 @@ function getImageFromNumber(db, number) {
     const userObjStore = db.transaction('users').objectStore('users')
     userObjStore.get(number).onsuccess = function (event) {
       const record = event.target.result
-      if (number === firebase.auth().currentUser.phoneNumber) {
-        resolve(firebase.auth().currentUser.photoURL || './img/empty-user.jpg')
-      } else {
-        resolve(record ? record.photoURL : './img/empty-user.jpg')
-      }
+      resolve(record ? record.photoURL : './img/empty-user.jpg')
     }
   })
 }

@@ -576,6 +576,8 @@ function redirect(){
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
+    window.location = 'https://www.growthfile.com';
+
     requestCreator('instant', JSON.stringify({
       error: error
     }));

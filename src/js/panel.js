@@ -15,7 +15,7 @@ function initDomLoad() {
   if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
   }
-  
+
   listPanel()
   creatListHeader('Activities');
   createActivityIcon();
@@ -30,7 +30,7 @@ function listView(filter, updatedActivities) {
       showSuggestCheckInDialog()
     }
 
-    window.addEventListener('scroll', handleScroll,false)
+    window.addEventListener('scroll', handleScroll, false)
 
     if (!filter) {
       startCursor(record.location);
@@ -61,7 +61,7 @@ function updateEl(activities, currentLocation) {
         if (existingEl) {
           existingEl.remove();
         }
-        if(!record) return;
+        if (!record) return;
         getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
           ul.insertBefore(li, ul.childNodes[0])
         })
@@ -70,16 +70,16 @@ function updateEl(activities, currentLocation) {
   }
 }
 
-function handleScroll(ev) { 
-  getRootRecord().then(function(record){
-    if(window.innerHeight + window.scrollY === document.body.scrollHeight) {
+function handleScroll(ev) {
+  getRootRecord().then(function (record) {
+    if (window.innerHeight + window.scrollY === document.body.scrollHeight) {
       const ul = document.getElementById('activity--list')
-      if(!ul) return
+      if (!ul) return
       startCursor(record.location);
     }
   })
 };
- 
+
 
 function startCursor(currentLocation) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -96,28 +96,28 @@ function startCursor(currentLocation) {
 
       const cursor = event.target.result;
       if (!cursor) return;
-     
+
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true
           cursor.advance(advanceCount)
         } else {
-          
+
           getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
             console.log(dom)
             fragment.appendChild(dom)
             iterator++
           })
-         
+
           runCursor(cursor, iterator)
         }
       } else {
-     
+
         getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
           fragment.appendChild(dom)
           iterator++
         })
-      
+
         runCursor(cursor, iterator)
       }
     }
@@ -128,7 +128,7 @@ function startCursor(currentLocation) {
 
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if(!ul) return
+      if (!ul) return
       console.log(fragment)
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
@@ -170,7 +170,7 @@ function getActivityDataForList(activity, value, currentLocation) {
           secondLine.appendChild(el);
         }
       }
-      
+
       secondLine.appendChild(generateLatestVenue(venues, currentLocation));
       const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineCss))
@@ -178,15 +178,15 @@ function getActivityDataForList(activity, value, currentLocation) {
   })
 }
 
-function setMarginForSecondLine(secondLine){
+function setMarginForSecondLine(secondLine) {
   const nodes = secondLine.childNodes
-  if(nodes.length > 1) {
-    if(nodes[0].innerHTML && nodes[1].innerHTML){
+  if (nodes.length > 1) {
+    if (nodes[0].innerHTML && nodes[1].innerHTML) {
       secondLine.style.marginTop = '-42px'
       return secondLine;
     }
-     secondLine.style.marginTop = '-35px'
-     return secondLine
+    secondLine.style.marginTop = '-35px'
+    return secondLine
   }
   secondLine.style.marginTop = '-35px'
   return secondLine
@@ -349,9 +349,9 @@ function activityListUI(data, secondLine) {
 
   const li = document.createElement('li')
   li.dataset.id = data.activityId
-  li.onclick = function(){
-    localStorage.setItem('clickedActivity',this.dataset.id);
-    conversation(this.dataset.id,true);
+  li.onclick = function () {
+    localStorage.setItem('clickedActivity', this.dataset.id);
+    conversation(this.dataset.id, true);
   }
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
   const creator = document.createElement("img")
@@ -364,7 +364,7 @@ function activityListUI(data, secondLine) {
   const activityNameText = document.createElement('span')
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
   activityNameText.textContent = data.activityName;
-  leftTextContainer.appendChild(activityNameText);  
+  leftTextContainer.appendChild(activityNameText);
   leftTextContainer.appendChild(secondLine);
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
@@ -559,37 +559,47 @@ function listPanel() {
 
 }
 
+
+
 function creatListHeader(headerName) {
-  const parentIconDiv = document.createElement('div')
-  parentIconDiv.className = 'profile--icon-header'
+  const req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    const db = req.result;
+    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
 
-  const menuIcon = document.createElement('span')
-  menuIcon.id = 'menu--panel'
+      const parentIconDiv = document.createElement('div')
+      parentIconDiv.className = 'profile--icon-header'
 
-  const icon = document.createElement('img')
-  icon.src = firebase.auth().currentUser.photoURL
-  icon.className = 'list-photo-header'
-  menuIcon.appendChild(icon)
+      const menuIcon = document.createElement('span')
+      menuIcon.id = 'menu--panel'
 
-  const headerText = document.createElement('p');
-  headerText.textContent = headerName;
-  menuIcon.appendChild(headerText)
-  parentIconDiv.appendChild(menuIcon)
+      const icon = document.createElement('img');
+      icon.src = uri;
+      icon.className = 'list-photo-header'
+      menuIcon.appendChild(icon)
+      const headerText = document.createElement('p');
+      headerText.textContent = headerName;
+      menuIcon.appendChild(headerText)
+      parentIconDiv.appendChild(menuIcon)
 
-  const searchIcon = document.createElement('span')
-  searchIcon.id = 'search--panel'
-  const sicon = document.createElement('i')
-  sicon.className = 'material-icons'
-  sicon.textContent = 'search'
-  searchIcon.appendChild(sicon);
-  modifyHeader({
-    id: 'app-main-header',
-    left: parentIconDiv.outerHTML,
-    right: ''
-  });
-  document.querySelector('.list-photo-header').addEventListener('click', function () {
-    profileView(true)
-  })
+      const searchIcon = document.createElement('span')
+      searchIcon.id = 'search--panel'
+      const sicon = document.createElement('i')
+      sicon.className = 'material-icons'
+      sicon.textContent = 'search'
+      searchIcon.appendChild(sicon);
+    
+      modifyHeader({
+        id: 'app-main-header',
+        left: parentIconDiv.outerHTML,
+        right: ''
+      });
+
+      document.querySelector('.list-photo-header').addEventListener('click', function () {
+        profileView(true)
+      })
+    })
+  }
 }
 
 function scrollToActivity() {

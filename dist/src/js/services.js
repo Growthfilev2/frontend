@@ -315,7 +315,6 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-
     if (native.getName() === 'Android') {
       getCellTowerInfo().then(function (location) {
         resolve(location);
@@ -362,18 +361,15 @@ function html5Geolocation() {
 
           if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
             ++count;
-
             if (count == 3) {
               clearInterval(myInterval);
               myInterval = null;
-
               return resolve(stabalzied[0]);
             }
           }
           if (totalcount >= 5) {
             clearInterval(myInterval);
             myInterval = null;
-
             var bestInNavigator = sortedByAccuracy(stabalzied);
             return resolve(bestInNavigator);
           }

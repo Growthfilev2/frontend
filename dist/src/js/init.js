@@ -555,10 +555,12 @@ function removeIDBInstance(auth) {
   });
 }
 
-function redirect(){
+function redirect() {
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
+    window.location = 'https://www.growthfile.com';
+
     requestCreator('instant', JSON.stringify({
       error: error
     }));
@@ -566,9 +568,9 @@ function redirect(){
 }
 
 function init(auth) {
-  if(!native.getName()) {
+  if (!native.getName()) {
     redirect();
-    return
+    return;
   }
   document.getElementById("main-layout-app").style.display = 'block';
   idbVersionLessThan3(auth).then(function (reset) {

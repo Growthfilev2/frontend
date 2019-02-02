@@ -548,36 +548,44 @@ function listPanel() {
 }
 
 function creatListHeader(headerName) {
-  var parentIconDiv = document.createElement('div');
-  parentIconDiv.className = 'profile--icon-header';
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
+  req.onsuccess = function () {
+    var db = req.result;
+    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
 
-  var menuIcon = document.createElement('span');
-  menuIcon.id = 'menu--panel';
+      var parentIconDiv = document.createElement('div');
+      parentIconDiv.className = 'profile--icon-header';
 
-  var icon = document.createElement('img');
-  icon.src = firebase.auth().currentUser.photoURL;
-  icon.className = 'list-photo-header';
-  menuIcon.appendChild(icon);
+      var menuIcon = document.createElement('span');
+      menuIcon.id = 'menu--panel';
 
-  var headerText = document.createElement('p');
-  headerText.textContent = headerName;
-  menuIcon.appendChild(headerText);
-  parentIconDiv.appendChild(menuIcon);
+      var icon = document.createElement('img');
+      icon.src = uri;
+      icon.className = 'list-photo-header';
+      menuIcon.appendChild(icon);
+      var headerText = document.createElement('p');
+      headerText.textContent = headerName;
+      menuIcon.appendChild(headerText);
+      parentIconDiv.appendChild(menuIcon);
 
-  var searchIcon = document.createElement('span');
-  searchIcon.id = 'search--panel';
-  var sicon = document.createElement('i');
-  sicon.className = 'material-icons';
-  sicon.textContent = 'search';
-  searchIcon.appendChild(sicon);
-  modifyHeader({
-    id: 'app-main-header',
-    left: parentIconDiv.outerHTML,
-    right: ''
-  });
-  document.querySelector('.list-photo-header').addEventListener('click', function () {
-    profileView(true);
-  });
+      var searchIcon = document.createElement('span');
+      searchIcon.id = 'search--panel';
+      var sicon = document.createElement('i');
+      sicon.className = 'material-icons';
+      sicon.textContent = 'search';
+      searchIcon.appendChild(sicon);
+
+      modifyHeader({
+        id: 'app-main-header',
+        left: parentIconDiv.outerHTML,
+        right: ''
+      });
+
+      document.querySelector('.list-photo-header').addEventListener('click', function () {
+        profileView(true);
+      });
+    });
+  };
 }
 
 function scrollToActivity() {

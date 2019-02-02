@@ -520,11 +520,7 @@ function getImageFromNumber(db, number) {
     var userObjStore = db.transaction('users').objectStore('users');
     userObjStore.get(number).onsuccess = function (event) {
       var record = event.target.result;
-      if (number === firebase.auth().currentUser.phoneNumber) {
-        resolve(firebase.auth().currentUser.photoURL || './img/empty-user.jpg');
-      } else {
-        resolve(record ? record.photoURL : './img/empty-user.jpg');
-      }
+      resolve(record ? record.photoURL : './img/empty-user.jpg');
     };
   });
 }
@@ -695,6 +691,7 @@ function fillUsersInSelector(data, dialog) {
       }
       cursor.continue();
     };
+
     transaction.oncomplete = function () {
       var selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
