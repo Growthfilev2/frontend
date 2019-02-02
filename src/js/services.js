@@ -24,7 +24,6 @@ function changeUserUpdateFlag(number) {
         if (!record) {
           return resolve(false);
         };
-
         if (record.isUpdated == 0) return resolve(true);
         record.isUpdated = 0;
         usersObjectStore.put(record);
