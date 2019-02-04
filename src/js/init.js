@@ -40,9 +40,7 @@ let native = function () {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          requestCreator('instant', JSON.stringify({
-            message: e.message
-          }))
+          handleError(e.message)
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -125,9 +123,7 @@ window.addEventListener('load', function () {
     try {
       Android.notification(JSON.stringify(messageData))
     } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: e.message
-      }))
+      handleError(e.message)
       appDialog(message);
     }
     return
@@ -582,10 +578,7 @@ function redirect(){
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
     window.location = 'https://www.growthfile.com';
-
-    requestCreator('instant', JSON.stringify({
-      error: error
-    }));
+   handleError(error)
   });
 }
 
@@ -613,9 +606,7 @@ function init(auth) {
     }
     resetApp(auth, 0)
   }).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
+    handleError(error)
   });
 }
 
@@ -637,9 +628,7 @@ function resetApp(auth, from) {
 
   }).catch(function (error) {
     snacks(error.message);
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
+    handleError(error)
   })
 }
 
