@@ -1,7 +1,5 @@
 var apiHandler = new Worker('js/apiHandler.js');
 
-
-
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
@@ -14,9 +12,7 @@ function handleError(error) {
   if (!errorInStorage.hasOwnProperty(error.message)) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }))
+    requestCreator('instant', JSON.stringify(error))
     return
   }
 }
@@ -268,8 +264,10 @@ function geolocationApi(req) {
             if (req.retry === 1) {
               return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
-                cellular: req.body,
-                tries: 'Retried 3 times'
+                body: {
+                  cellular: req.body,
+                  tries: 'Retried 3 times'
+                }
               });
             }
             req.retry--
@@ -291,14 +289,14 @@ function geolocationApi(req) {
         if (!xhr.responseText) {
           return reject({
             message: 'No response text from google',
-            cellular: req.body
+            body: req.body
           })
         };
         const response = JSON.parse(xhr.responseText);
         if (!response) {
           return reject({
             message: 'Response text is not parseable',
-            cellular: req.body
+            body: req.body
           })
         }
 
@@ -354,9 +352,7 @@ function manageLocation() {
       getCellTowerInfo().then(function (location) {
         resolve(location)
       }).catch(function (error) {
-        handleError({
-          message: error
-        })
+        handleError(error);
         return html5Geolocation();
       }).then(function (location) {
         resolve(location)
@@ -413,7 +409,7 @@ function html5Geolocation() {
         clearInterval(myInterval);
         myInterval = null;
         reject({
-          message: error.message
+          message: `${error.message} from html5Geolocation`
         });
       });
     }, 500);
@@ -479,10 +475,6 @@ function isDialogOpened(id) {
 
 function updateLocationInRoot(finalLocation) {
   return new Promise(function (resolve, reject) {
-    if (!finalLocation) {
-      reject(finalLocation);
-      return;
-    };
 
     var previousLocation = {
       latitude: '',
@@ -492,7 +484,7 @@ function updateLocationInRoot(finalLocation) {
       lastLocationTime: ''
     };
 
-
+    
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName, 3);
     req.onsuccess = function () {
@@ -507,7 +499,7 @@ function updateLocationInRoot(finalLocation) {
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
-        rootStore.put(asd)
+        
       };
       tx.oncomplete = function () {
         resolve({
@@ -597,9 +589,9 @@ var locationPermission = function () {
       try {
         return AndroidInterface.isLocationPermissionGranted();
       } catch (e) {
-        handleError(({
+        handleError({
           message: `${e.message} from isLocationPermissionGranted`
-        }))
+        });
         return true;
       }
     }
@@ -610,7 +602,7 @@ function createAndroidDialog(title, body) {
   try {
     AndroidInterface.showDialog(title, body);
   } catch (e) {
-    handleError(`${e.message} from showDialog`);
+    handleError({message:`${e.message} from showDialog`});
     appDialog(body, true);
   }
 }
@@ -878,7 +870,6 @@ function androidStopRefreshing() {
     try {
       AndroidInterface.stopRefreshing(true);
     } catch (e) {
-
       handleError({
         message: `${e.message} from androidStopRefreshing`
       })
