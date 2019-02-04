@@ -40,8 +40,8 @@ function listView(filter, updatedActivities) {
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
         startCursor(record.location);
-      });
-    });
+      }).catch(handleError);
+    }).catch(handleError);
   });
 }
 
@@ -449,12 +449,15 @@ function getRootRecord() {
         if (record) {
           resolve(record);
         } else {
-          reject('No root record found');
+          reject({ message: 'No root record found from getRootRecord' });
         }
+      };
+      rootTx.onerror = function () {
+        reject({ message: rootTx.error.message + ' from getRootRecord' });
       };
     };
     req.onerror = function () {
-      reject(req.error);
+      reject({ message: req.error + ' from getRootRecord' });
     };
   });
 }
@@ -466,7 +469,7 @@ function createActivityIcon() {
       createActivityIconDom();
       return;
     }
-  }).catch(console.log);
+  }).catch(handleError);
 }
 
 function getCountOfTemplates() {
@@ -491,9 +494,12 @@ function getCountOfTemplates() {
       tx.oncomplete = function () {
         resolve(officeByTemplate);
       };
+      tx.onerror = function () {
+        reject({ message: tx.error.message + ' from getCountOfTemplates' });
+      };
     };
     req.onerror = function () {
-      reject(req.error);
+      reject({ message: req.error.message + ' from getCountOfTemplates' });
     };
   });
 }
@@ -608,12 +614,12 @@ function notificationWorker(type, updateTimestamp) {
       type: type,
       updateTimestamp: updateTimestamp
     });
-
     notification.onmessage = function (message) {
       resolve(message.data);
     };
+
     notification.onerror = function (error) {
-      reject(error);
+      reject({ message: error.message + ' from notificationWorker at ' + error.lineno });
     };
   });
 }
@@ -675,11 +681,11 @@ function suggestCheckIn(value) {
           resolve(true);
         };
         tx.onerror = function () {
-          reject(tx.error);
+          reject({ message: tx.error.message + ' from suggestCheckIn' });
         };
       };
       req.onerror = function () {
-        reject(req.error);
+        reject({ message: req.error + ' from suggestCheckIn' });
       };
     }).catch(function (error) {
       reject(error);

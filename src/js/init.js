@@ -634,7 +634,7 @@ function resetApp(auth, from) {
 function runAppChecks() {
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
-      detectSuggestCheckIn(e.detail,emp);
+      detectSuggestCheckinEvent(e.detail,emp);
       return;
     }).catch(function(error){
       handleError(error);

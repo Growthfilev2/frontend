@@ -1,5 +1,3 @@
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 importScripts('../../external/js/moment.min.js');
 var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
@@ -30,12 +28,12 @@ function requestHandlerResponse(type, code, message, params) {
   });
 }
 
-function createLog(body) {
-
-  return JSON.stringify(body);
+function sendApiFailToMainThread(error) {
+  requestHandlerResponse('apiFail', errorObject.code, error);
 }
 
 // when worker receives the request body from the main thread
+
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
@@ -89,16 +87,15 @@ function http(request) {
         }
 
         if (xhr.status > 226) {
-          var errorObject = JSON.parse(xhr.response);
+          var _errorObject = JSON.parse(xhr.response);
           var apiFailBody = {
             res: JSON.parse(xhr.response),
             url: request.url,
             data: request.data,
             device: currentDevice,
-            message: errorObject.message,
-            code: errorObject.code
+            message: _errorObject.message,
+            code: _errorObject.code
           };
-          requestHandlerResponse('apiFail', errorObject.code, apiFailBody.message);
           return reject(apiFailBody);
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
@@ -106,9 +103,6 @@ function http(request) {
     };
 
     xhr.send(request.body || null);
-  }).catch(function (error) {
-
-    instant(createLog(error));
   });
 }
 
@@ -116,7 +110,6 @@ function fetchServerTime(body, user) {
   currentDevice = body.device;
   var parsedDeviceInfo = JSON.parse(currentDevice);
 
-  console.log(_typeof(parsedDeviceInfo.appVersion));
   return new Promise(function (resolve) {
     var url = apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&registrationToken=' + body.registerToken;
     var httpReq = {
@@ -163,9 +156,7 @@ function fetchServerTime(body, user) {
         fromTime: body.from,
         user: user
       });
-    }).catch(function (error) {
-      instant(createLog(error));
-    });
+    }).catch(sendApiFailToMainThread);
   });
 }
 
@@ -329,9 +320,7 @@ function comment(body, auth) {
         });
       }, 1000);
       resolve(true);
-    }).catch(function (error) {
-      instant(createLog(error));
-    });
+    }).catch(sendApiFailToMainThread);
   });
 }
 
@@ -349,9 +338,7 @@ function statusChange(body, user) {
         instantUpdateDB(body, 'status', user).then(function () {
           resolve(true);
         }).catch(console.log);
-      }).catch(function (error) {
-        instant(createLog(error));
-      });
+      }).catch(sendApiFailToMainThread);
     });
   });
 }
@@ -368,9 +355,7 @@ function share(body, user) {
       instantUpdateDB(body, 'share', user).then(function () {
         resolve(true);
       });
-    }).catch(function (error) {
-      instant(createLog(error));
-    });
+    }).catch(sendApiFailToMainThread);
   });
 }
 
@@ -386,9 +371,7 @@ function update(body, user) {
       instantUpdateDB(body, 'update', user).then(function () {
         resolve(true);
       });
-    }).catch(function (error) {
-      instant(createLog(error));
-    });
+    }).catch(sendApiFailToMainThread);
   });
 }
 
@@ -403,9 +386,7 @@ function create(body, user) {
     };
     http(req).then(function (success) {
       resolve(true);
-    }).catch(function (error) {
-      instant(createLog(error));
-    });
+    }).catch(sendApiFailToMainThread);
   });
 }
 
@@ -420,10 +401,7 @@ function getUrlFromPhoto(body, user) {
 
   http(req).then(function (url) {
     requestHandlerResponse('backblazeRequest', 200);
-  }).catch(function (error) {
-    console.log(error);
-    requestHandlerResponse('backblazeRequest', 400);
-  });
+  }).catch(sendApiFailToMainThread);
 }
 
 function instantUpdateDB(data, type, user) {
@@ -628,18 +606,9 @@ function removeActivityFromDB(db, myActivities, param) {
   var listStore = transaction.objectStore('list');
   var chidlrenObjectStore = transaction.objectStore('children');
   myActivities.forEach(function (id) {
-    var deleteReqActivity = activityObjectStore.delete(id);
-    var deleteReqList = listStore.delete(id);
-    var deleteReqChildren = chidlrenObjectStore.delete(id);
-    deleteReqActivity.onerror = function () {
-      instant(createLog(deleteReqActivity.error));
-    };
-    deleteReqList.onerror = function () {
-      instant(createLog(deleteReqList.error));
-    };
-    deleteReqChildren.onerror = function () {
-      instant(createLog(deleteReqChildren.error));
-    };
+    activityObjectStore.delete(id);
+    listStore.delete(id);
+    chidlrenObjectStore.delete(id);
   });
 
   transaction.oncomplete = function () {
@@ -676,9 +645,6 @@ function deleteByIndex(store, activitiesToRemove) {
       cursor.delete();
     }
     cursor.continue();
-  };
-  store.onerror = function () {
-    instant(createLog(store.error));
   };
 }
 
@@ -960,7 +926,7 @@ function successResponse(read, param) {
             requestHandlerResponse('loadView', 200, updatedActivities);
           });
         }).catch(function (error) {
-          instant(createLog(error));
+
           requestHandlerResponse('loadView', 200, updatedActivities);
         });
       });
@@ -1015,9 +981,7 @@ function setUniqueOffice(offices, param) {
 }
 
 function updateIDB(param) {
-
   var req = indexedDB.open(param.user.uid);
-
   req.onsuccess = function () {
     var db = req.result;
     var tx = db.transaction(['root']);
@@ -1043,9 +1007,7 @@ function updateIDB(param) {
       http(req).then(function (response) {
         if (!response) return;
         successResponse(response, param);
-      }).catch(function (error) {
-        instant(createLog(error));
-      });
+      }).catch(sendApiFailToMainThread);
     };
   };
 }

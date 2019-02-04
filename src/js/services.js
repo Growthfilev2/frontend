@@ -13,6 +13,9 @@ function handleError(error) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
     error.device = native.getInfo();
+    if(error.stack) {
+      error.stack = error.stack;
+    }
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -273,10 +276,7 @@ function geolocationApi(req) {
             }
             req.retry--
             geolocationApi(req).then().catch(function (error) {
-              reject({
-                message: errorMessage,
-                body: error
-              })
+              reject(error)
             })
             return;
           }
@@ -884,7 +884,7 @@ function onErrorMessage(error) {
     'file': error.filename
   }
   handleError({
-    message: error.message,
+    message: `${error.message} from apiHandler.js at ${error.lineno}`,
     body: body
   });
 }

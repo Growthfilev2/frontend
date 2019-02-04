@@ -35,7 +35,10 @@ function sendApiFailToMainThread(error){
   requestHandlerResponse('apiFail', errorObject.code, error);
 }
 
+
+
 // when worker receives the request body from the main thread
+
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
@@ -1024,9 +1027,7 @@ function setUniqueOffice(offices, param) {
 }
 
 function updateIDB(param) {
-
   const req = indexedDB.open(param.user.uid)
-
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction(['root']);

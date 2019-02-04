@@ -633,7 +633,7 @@ function notificationWorker(type, updateTimestamp) {
     }
 
     notification.onerror = function (error) {
-      reject({message:`${error.message} from notificationWorker`})
+      reject({message:`${error.message} from notificationWorker at ${error.lineno}`})
     }
   })
 }
@@ -656,7 +656,7 @@ function modifyHeader(attr) {
 
 
 function createInputForProfile(key, type, classtype) {
-  const mainTextField = document.createElement('div')
+  const mainTextField = document.createElement('div');
   mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype} attachment--text-field`
 
   mainTextField.dataset.key = key

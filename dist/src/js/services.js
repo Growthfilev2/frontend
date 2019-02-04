@@ -3,12 +3,22 @@ var apiHandler = new Worker('src/js/apiHandler.js');
 function handleImageError(img) {
   img.onerror = null;
   img.src = './img/empty-user.jpg';
-  changeUserUpdateFlag(img.dataset.number).then().catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
-  });
+  changeUserUpdateFlag(img.dataset.number).then().catch(handleError);
   return true;
+}
+
+function handleError(error) {
+  var errorInStorage = JSON.parse(localStorage.getItem('error'));
+  if (!errorInStorage.hasOwnProperty(error.message)) {
+    errorInStorage[error.message] = true;
+    localStorage.setItem('error', JSON.stringify(errorInStorage));
+    error.device = native.getInfo();
+    if (error.stack) {
+      error.stack = error.stack;
+    }
+    requestCreator('instant', JSON.stringify(error));
+    return;
+  }
 }
 
 function changeUserUpdateFlag(number) {
@@ -24,7 +34,6 @@ function changeUserUpdateFlag(number) {
         if (!record) {
           return resolve(false);
         };
-
         if (record.isUpdated == 0) return resolve(true);
         record.isUpdated = 0;
         usersObjectStore.put(record);
@@ -33,7 +42,9 @@ function changeUserUpdateFlag(number) {
         resolve(true);
       };
       usersObjectStoreTx.onerror = function () {
-        reject(usersObjectStoreTx.error);
+        reject({
+          message: usersObjectStoreTx.error.message + ' from changeUserUpdateFlag'
+        });
       };
     };
   });
@@ -250,12 +261,15 @@ function geolocationApi(req) {
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
-          if (JSON.parse(xhr.response).error.errors[0].reason === 'notFound') {
+          var errorMessage = JSON.parse(xhr.response).error.errors[0].reason;
+          if (errorMessage === 'notFound') {
             if (req.retry === 1) {
               return reject({
                 message: JSON.parse(xhr.response).error.errors[0].message,
-                cellular: req.body,
-                tries: 'Retried 3 times'
+                body: {
+                  cellular: req.body,
+                  tries: 'Retried 3 times'
+                }
               });
             }
             req.retry--;
@@ -267,21 +281,21 @@ function geolocationApi(req) {
 
           return reject({
             message: JSON.parse(xhr.response).error.errors[0].message,
-            cellular: req.body
+            body: req.body
           });
         }
 
         if (!xhr.responseText) {
           return reject({
             message: 'No response text from google',
-            cellular: req.body
+            body: req.body
           });
         };
         var response = JSON.parse(xhr.responseText);
         if (!response) {
           return reject({
             message: 'Response text is not parseable',
-            cellular: req.body
+            body: req.body
           });
         }
 
@@ -303,7 +317,9 @@ function getCellTowerInfo() {
     try {
       coarseData = AndroidInterface.getCellularData();
     } catch (e) {
-      reject(e.message);
+      reject({
+        message: e.message + ' from getCellularData'
+      });
     }
 
     if (!coarseData) {
@@ -335,9 +351,7 @@ function manageLocation() {
       getCellTowerInfo().then(function (location) {
         resolve(location);
       }).catch(function (error) {
-        requestCreator('instant', JSON.stringify({
-          message: error
-        }));
+        handleError(error);
         return html5Geolocation();
       }).then(function (location) {
         resolve(location);
@@ -393,7 +407,9 @@ function html5Geolocation() {
       }, function (error) {
         clearInterval(myInterval);
         myInterval = null;
-        reject(error.message);
+        reject({
+          message: error.message + ' from html5Geolocation'
+        });
       });
     }, 500);
   });
@@ -416,14 +432,6 @@ function locationUpdationSuccess(location) {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
   });
   window.dispatchEvent(locationChanged);
-}
-
-function locationError(error) {
-  console.log(error);
-  requestCreator('instant', JSON.stringify({
-    message: error,
-    deviceInfo: native.getInfo()
-  }));
 }
 
 function showSuggestCheckInDialog() {
@@ -463,10 +471,6 @@ function isDialogOpened(id) {
 
 function updateLocationInRoot(finalLocation) {
   return new Promise(function (resolve, reject) {
-    if (!finalLocation) {
-      reject(finalLocation);
-      return;
-    };
 
     var previousLocation = {
       latitude: '',
@@ -477,7 +481,7 @@ function updateLocationInRoot(finalLocation) {
     };
 
     var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName);
+    var req = indexedDB.open(dbName, 3);
     req.onsuccess = function () {
       var db = req.result;
       var tx = db.transaction(['root'], 'readwrite');
@@ -498,19 +502,19 @@ function updateLocationInRoot(finalLocation) {
         });
       };
       tx.onerror = function () {
-        reject(ex.error);
+        reject({
+          message: tx.error.message + ' from updateLocationInRoot',
+          body: tx.error.name
+        });
       };
     };
     req.onerror = function () {
-      reject(req.error);
+      reject({
+        message: req.error.message + ' from updateLocationInRoot',
+        body: req.error.name
+      });
     };
   });
-}
-
-function locationFetchError(error) {
-  requestCreator('instant', JSON.stringify({
-    message: error
-  }));
 }
 
 function toRad(value) {
@@ -556,9 +560,9 @@ function sendCurrentViewNameToAndroid(viewName) {
     try {
       AndroidInterface.startConversation(viewName);
     } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: e.message
-      }));
+      handleError({
+        message: e.message + ' from startConversation'
+      });
     }
   }
 }
@@ -566,26 +570,50 @@ function sendCurrentViewNameToAndroid(viewName) {
 var locationPermission = function () {
   return {
     checkGps: function checkGps() {
-      return AndroidInterface.isGpsEnabled();
+      try {
+        return AndroidInterface.isGpsEnabled();
+      } catch (e) {
+        handleError({
+          message: e.message + ' from isGpsEnabled'
+        });
+        return true;
+      }
     },
     checkLocationPermission: function checkLocationPermission() {
-      return AndroidInterface.isLocationPermissionGranted();
+      try {
+        return AndroidInterface.isLocationPermissionGranted();
+      } catch (e) {
+        handleError({
+          message: e.message + ' from isLocationPermissionGranted'
+        });
+        return true;
+      }
     }
   };
 }();
 
+function createAndroidDialog(title, body) {
+  try {
+    AndroidInterface.showDialog(title, body);
+  } catch (e) {
+    handleError({ message: e.message + ' from showDialog' });
+    appDialog(body, true);
+  }
+}
+
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
   if (!locationPermission.checkGps()) {
-    AndroidInterface.showDialog('GPS Unavailable', 'Please Turn on Gps.');
+    createAndroidDialog('GPS Unavailable', 'Please Turn on Gps.');
+
     return;
   }
   if (!locationPermission.checkLocationPermission()) {
-    AndroidInterface.showDialog('Location Permission', 'Please Allow Growthfile location access.');
+    createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.');
     return;
   }
   if (!AndroidInterface.isConnectionActive()) {
-    AndroidInterface.showDialog('No Connectivity', 'Please Check your Internet Connectivity');
+    createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
     return;
   }
   return true;
@@ -612,7 +640,9 @@ function requestCreator(requestType, requestBody) {
       requestGenerator.user.token = token;
       apiHandler.postMessage(requestGenerator);
     }).catch(function (error) {
-      requestCreator('instant', JSON.stringify(error));
+      handleError({
+        message: error.code
+      });
     });
   } else {
 
@@ -638,7 +668,9 @@ function requestCreator(requestType, requestBody) {
           requestGenerator.user.token = token;
           sendRequest(location, requestGenerator);
         }).catch(function (error) {
-          requestCreator('instant', JSON.stringify(error));
+          handleError({
+            message: error.code
+          });
         });
       }
     });
@@ -665,7 +697,9 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       requestGenerator.user.token = token;
       sendRequest(geopoints, requestGenerator);
     }).catch(function (error) {
-      requestCreator('instant', JSON.stringify(error));
+      handleError({
+        message: error.code
+      });
     });
     window.removeEventListener('location', _listener, true);
   }, true);
@@ -686,14 +720,17 @@ function sendRequest(location, requestGenerator) {
         cellTowerInfo = e.message;
       }
 
-      var locationNotFound = {
-        message: {
-          deviceInfo: native.getInfo(),
-          storedLocation: record.location,
-          cellTower: cellTowerInfo
-        }
+      var body = {
+
+        deviceInfo: native.getInfo(),
+        storedLocation: record.location,
+        cellTower: cellTowerInfo
+
       };
-      requestCreator('instant', JSON.stringify(locationNotFound));
+      handleError({
+        message: 'No location found in indexedDB',
+        body: body
+      });
     });
   }
 }
@@ -739,18 +776,18 @@ function updateApp(data) {
 
 function revokeSession() {
   firebase.auth().signOut().then(function () {}).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      error: error
-    }));
+
+    handleError({
+      message: 'Sign out error',
+      body: error
+    });
   });
 }
 
 function apiFail(data) {
-
   if (document.getElementById('send-activity')) {
     document.getElementById('send-activity').style.display = 'block';
   }
-
   if (document.querySelector('header .mdc-linear-progress')) {
     document.querySelector('header .mdc-linear-progress').remove();
   }
@@ -768,7 +805,13 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-  snacks(data.msg);
+
+  handleError({
+    message: data.msg.message,
+    body: data.msg
+  });
+
+  snacks(data.msg.message);
 }
 
 function urlFromBase64Image(data) {
@@ -818,24 +861,22 @@ function androidStopRefreshing() {
     try {
       AndroidInterface.stopRefreshing(true);
     } catch (e) {
-      var instantBody = {
-        message: e.message,
-        device: native.getInfo()
-      };
-      requestCreator('instant', JSON.stringify(instantBody));
+      handleError({
+        message: e.message + ' from androidStopRefreshing'
+      });
     }
   }
 }
 
 function onErrorMessage(error) {
-  var logs = {
-    message: error.message,
-    body: {
-      'line-number': error.lineno,
-      'file': error.filename
-    }
+  var body = {
+    'line-number': error.lineno,
+    'file': error.filename
   };
-  requestCreator('instant', JSON.stringify(logs));
+  handleError({
+    message: error.message + ' from apiHandler.js at ' + error.lineno,
+    body: body
+  });
 }
 
 function getInputText(selector) {
