@@ -427,7 +427,6 @@ function getEmployeeDetails() {
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
       let details;
-      const phoneNumberEmp = auth.phoneNumber;
       const range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
 
       store.index('templateStatus').openCursor(range).onsuccess = function (event) {
@@ -444,6 +443,12 @@ function getEmployeeDetails() {
       tx.oncomplete = function () {
         resolve(details);
       }
+      tx.onerror = function(){
+        reject({message:`${tx.error.message} from getEmployeeDetails`})
+      }
+    }
+    req.onerror = function(){
+      reject({message:`${req.error.message} from getEmployeeDetails`})
     }
   })
 }
@@ -480,13 +485,15 @@ function isEmployeeOnLeave() {
           resolve(empDetails)
         }
         tx.onerror = function () {
-          reject(tx.error)
+          reject({message:`${tx.error.message} from isEmployeeOnLeave`})
         }
       }
       req.onerror = function () {
-        reject(req.error)
+        reject({message:`${req.error.message} from isEmployeeOnLeave`});
       }
 
+    }).catch(function(error){
+      reject(error)
     })
   })
 }
@@ -533,8 +540,7 @@ function idbVersionLessThan3(auth) {
     }
     req.onerror = function () {
       reject({
-        error: req.error.message,
-        device: native.getInfo()
+        message: `${req.error.message} from idbVersionLessThan3` 
       })
     }
   })
@@ -548,9 +554,8 @@ function removeIDBInstance(auth) {
 
   return new Promise(function (resolve, reject) {
     const failure = {
-      message: 'Please Restart The App',
-      error: '',
-      device: native.getInfo()
+      userMessage: 'Please Restart The App',
+      message: '',
     };
 
     const req = indexedDB.deleteDatabase(auth.uid)
@@ -558,11 +563,11 @@ function removeIDBInstance(auth) {
       resolve(true)
     }
     req.onblocked = function () {
-      failure.error = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
+      failure.message = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
       reject(failure)
     }
     req.onerror = function () {
-      failure.error = req.error
+      failure.message = `${req.error.message} from removeIDBInstance`
       reject(failure)
     }
   })
@@ -600,9 +605,7 @@ function init(auth) {
       return;
     }
     resetApp(auth, 0)
-  }).catch(function (error) {
-    handleError(error)
-  });
+  }).catch(handleError);
 }
 
 function resetApp(auth, from) {
@@ -622,80 +625,83 @@ function resetApp(auth, from) {
     });
 
   }).catch(function (error) {
-    snacks(error.message);
+    snacks(error.userMessage);
     handleError(error)
   })
 }
 
 
 function runAppChecks() {
-  // suggest check in false
-
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
-
-      var dataObject = {
-        urgent: false,
-        nearby: false,
-      };
-      if (emp) {
-        dataObject['checkin'] = !emp.onLeave
-      } else {
-        dataObject['checkin'] = false
-      }
-
-
-      var changed = e.detail;
-      var newDay = app.isNewDay();
-      if (changed && newDay) {
-        dataObject.nearby = true;
-        dataObject.urgent = true;
-        startInitializatioOfList(dataObject);
-        return;
-      }
-
-      if (changed) {
-        dataObject.nearby = true;
-        startInitializatioOfList(dataObject);
-        return;
-      }
-
-      if (newDay) {
-        dataObject.urgent = true;
-        localStorage.removeItem('dailyStartTimeCheckIn');
-        localStorage.removeItem('dailyEndTimeCheckIn');
-        startInitializatioOfList(dataObject);
-        return;
-      };
-
-      if (!emp) return
-
-      if (app.isCurrentTimeNearStart(emp)) {
-        const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-        if (hasAlreadyCheckedIn == null) {
-          localStorage.setItem('dailyStartTimeCheckIn', true);
-          if (!emp.onLeave) {
-            dataObject.checkin = true;
-          }
-          startInitializatioOfList(dataObject);
-        }
-        return;
-      }
-
-      if (app.isCurrentTimeNearEnd(emp)) {
-        const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-        if (hasAlreadyCheckedIn == null) {
-          localStorage.setItem('dailyEndTimeCheckIn', true);
-          if (!emp.onLeave) {
-            dataObject.checkin = true;
-          }
-          startInitializatioOfList(dataObject);
-        }
-        return;
-      }
+      detectSuggestCheckIn(e.detail,emp);
       return;
+    }).catch(function(error){
+      handleError(error);
+      detectSuggestCheckinEvent(e.detail);
     })
   }, true);
+}
+
+function detectSuggestCheckinEvent(changed,emp){
+  
+  var dataObject = {
+    urgent: false,
+    nearby: false,
+  };
+  if (emp) {
+    dataObject['checkin'] = !emp.onLeave
+  } else {
+    dataObject['checkin'] = false
+  }
+
+  var newDay = app.isNewDay();
+  if (changed && newDay) {
+    dataObject.nearby = true;
+    dataObject.urgent = true;
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (changed) {
+    dataObject.nearby = true;
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (newDay) {
+    dataObject.urgent = true;
+    localStorage.removeItem('dailyStartTimeCheckIn');
+    localStorage.removeItem('dailyEndTimeCheckIn');
+    startInitializatioOfList(dataObject);
+    return;
+  };
+
+  if (!emp) return
+
+  if (app.isCurrentTimeNearStart(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+    if (hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyStartTimeCheckIn', true);
+      if (!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+
+  if (app.isCurrentTimeNearEnd(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+    if (hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyEndTimeCheckIn', true);
+      if (!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
 }
 
 function startInitializatioOfList(data) {
@@ -707,12 +713,81 @@ function startInitializatioOfList(data) {
         nearby: data.nearby
       });
     }
+  }).catch(function(error){
+    handleError(error);
+    listView({
+      urgent: false,
+      nearby:false
+    });
   })
 }
 
+function detectSuggestCheckIn(){
+  var dataObject = {
+    urgent: false,
+    nearby: false,
+  };
+  if (emp) {
+    dataObject['checkin'] = !emp.onLeave
+  } else {
+    dataObject['checkin'] = false
+  }
+
+
+  var changed = e.detail;
+  var newDay = app.isNewDay();
+  if (changed && newDay) {
+    dataObject.nearby = true;
+    dataObject.urgent = true;
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (changed) {
+    dataObject.nearby = true;
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (newDay) {
+    dataObject.urgent = true;
+    localStorage.removeItem('dailyStartTimeCheckIn');
+    localStorage.removeItem('dailyEndTimeCheckIn');
+    startInitializatioOfList(dataObject);
+    return;
+  };
+
+  if (!emp) return
+
+  if (app.isCurrentTimeNearStart(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+    if (hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyStartTimeCheckIn', true);
+      if (!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+
+  if (app.isCurrentTimeNearEnd(emp)) {
+    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+    if (hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyEndTimeCheckIn', true);
+      if (!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+  return;
+}
 
 function openListWithChecks() {
   listView({urgent:false,nearby:false});
+  
   runAppChecks();
   setInterval(function(){
   manageLocation().then(function (location) {

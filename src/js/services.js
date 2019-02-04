@@ -12,6 +12,7 @@ function handleError(error) {
   if (!errorInStorage.hasOwnProperty(error.message)) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
+    error.device = native.getInfo();
     requestCreator('instant', JSON.stringify(error))
     return
   }
