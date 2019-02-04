@@ -9,7 +9,9 @@ function conversation(id, pushState) {
     } else {
       listView()
     }
-  }).catch(handleError)
+  }).catch(function(error){
+    handleError({message:error})
+  })
 }
 
 function checkIfRecordExists(store, id) {
@@ -29,8 +31,10 @@ function checkIfRecordExists(store, id) {
         }
       }
     }
-    req.onerror = function () {
-      reject(req.error)
+    req.onerror = function (){
+      if(req.error.code !== 'NoError') {
+        reject({message:req.error.code})
+      }
     }
   })
 

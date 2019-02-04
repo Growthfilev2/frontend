@@ -33,7 +33,14 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return false;
+        return JSON.stringify({
+          baseOs: 'asd',
+          deviceBrand: '',
+          deviceModel: '',
+          appVersion: 5,
+          osVersion: '',
+          id: '123',
+        });
       }
       
       if (this.getName() === 'Android') {
@@ -100,7 +107,9 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-  this.localStorage.setItem('error',JSON.stringify({}));
+  if(!this.localStorage.getItem('error')) {
+    this.localStorage.setItem('error',JSON.stringify({}));
+  }
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
@@ -163,27 +172,11 @@ window.addEventListener('load', function () {
 
   })
 
-  window.onerror = function (msg, url, lineNo, columnNo, error) {
-    
-    const errorJS = {
-      message: {
-        msg: error.message,
-        url: url,
-        lineNo: lineNo,
-        columnNo: columnNo,
-        stack: error.stack,
-        name: error.name,
-        device: native.getInfo(),
-      }
-    }
-    handleError(errorJS)
-  }
-
   window.onpopstate = function (event) {
 
     if (!event.state) return;
     if (event.state[0] === 'listView') {
-      document.getElementById('growthfile').appendChild(loader('init-loader'))
+      document.getElementById('growthfile').appendChild(loader('init-loader'));
       const originalCount = scroll_namespace.count;
       scroll_namespace.size = originalCount
       scroll_namespace.count = 0;
@@ -200,6 +193,7 @@ window.addEventListener('load', function () {
 window.addEventListener('onMessage', function _onMessage(e) {
   requestCreator('Null', false)
 })
+
 
 function backNav() {
   history.back();
@@ -584,10 +578,10 @@ function redirect(){
 }
 
 function init(auth) {
-  if(!native.getName()) {
-    redirect();
-    return
-  }
+  // if(!native.getName()) {
+  //   redirect();
+  //   return
+  // }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
 

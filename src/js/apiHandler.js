@@ -113,7 +113,6 @@ function fetchServerTime(body, user) {
   currentDevice = body.device;
   const parsedDeviceInfo = JSON.parse(currentDevice);
 
-  console.log(typeof parsedDeviceInfo.appVersion)
   return new Promise(function (resolve) {
     const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
     const httpReq = {
