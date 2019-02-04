@@ -295,11 +295,11 @@ function sendBase64ImageToBackblaze(base64) {
   var body = {
     'imageBase64': pre+base64
   };
+  
   changeUserUpdateFlag(firebase.auth().currentUser.phoneNumber).then(function(){
     requestCreator('backblaze', body);
   }).catch(function(error){
-
-    handleError(error)
+    handleError(error);
     requestCreator('backblaze', body);
   })
 }
