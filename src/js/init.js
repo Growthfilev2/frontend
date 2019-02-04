@@ -176,6 +176,7 @@ window.addEventListener('load', function () {
         device: native.getInfo(),
       }
     }
+    handleError(errorJS)
   }
 
   window.onpopstate = function (event) {
