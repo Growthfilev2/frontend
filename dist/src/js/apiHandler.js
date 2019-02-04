@@ -105,10 +105,7 @@ function http(request) {
     };
 
     xhr.send(request.body || null);
-  }).catch(function (error) {
-
-    instant(createLog(error));
-  });
+  })
 }
 
 function fetchServerTime(body, user) {
@@ -163,7 +160,7 @@ function fetchServerTime(body, user) {
         user: user
       });
     }).catch(function (error) {
-      instant(createLog(error));
+     
     });
   });
 }
@@ -329,7 +326,7 @@ function comment(body, auth) {
       }, 1000);
       resolve(true);
     }).catch(function (error) {
-      instant(createLog(error));
+      
     });
   });
 }
@@ -349,7 +346,7 @@ function statusChange(body, user) {
           resolve(true);
         }).catch(console.log);
       }).catch(function (error) {
-        instant(createLog(error));
+       
       });
     });
   });
@@ -368,7 +365,6 @@ function share(body, user) {
         resolve(true);
       });
     }).catch(function (error) {
-      instant(createLog(error));
     });
   });
 }
@@ -386,7 +382,6 @@ function update(body, user) {
         resolve(true);
       });
     }).catch(function (error) {
-      instant(createLog(error));
     });
   });
 }
@@ -403,7 +398,7 @@ function create(body, user) {
     http(req).then(function (success) {
       resolve(true);
     }).catch(function (error) {
-      instant(createLog(error));
+    
     });
   });
 }
@@ -1043,7 +1038,7 @@ function updateIDB(param) {
         if (!response) return;
         successResponse(response, param);
       }).catch(function (error) {
-        instant(createLog(error));
+       
       });
     };
   };
