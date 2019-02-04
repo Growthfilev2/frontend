@@ -806,10 +806,6 @@ function apiFail(data) {
     }
   }
 
-  handleError({
-    message: data.msg.message,
-    body: data.msg
-  });
 
   snacks(data.msg.message);
 }
