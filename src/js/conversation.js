@@ -9,9 +9,7 @@ function conversation(id, pushState) {
     } else {
       listView()
     }
-  }).catch(function(error){
-    handleError({message:error})
-  })
+  }).catch(handleError)
 }
 
 function checkIfRecordExists(store, id) {
@@ -32,9 +30,7 @@ function checkIfRecordExists(store, id) {
       }
     }
     req.onerror = function (){
-      if(req.error.code !== 'NoError') {
-        reject({message:req.error.code})
-      }
+      reject({message:`${req.error.message} from checkIfRecordExists`});
     }
   })
 
@@ -345,13 +341,14 @@ function createComment(db, addendum, currentUser) {
       commentBox.appendChild(textContainer)
       commentBox.appendChild(mapDom);
       resolve(commentBox)
-    }).catch(console.log)
+    })
   })
 }
 
 function getUserRecord(db, number) {
   return new Promise(function (resolve, reject) {
-    const usersObjectStore = db.transaction('users').objectStore('users')
+    const usersObjectStore = db.transaction('users').objectStore('users');
+
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       if (!record) return resolve({
@@ -360,9 +357,6 @@ function getUserRecord(db, number) {
         photoURL: ''
       })
       return resolve(record)
-    }
-    usersObjectStore.get(number).onerror = function (event) {
-      reject(event)
     }
   })
 }
@@ -1394,17 +1388,12 @@ function updateDomFromIDB(activityRecord, attr, data) {
             if (assigneeList) {
               assigneeList.appendChild(createSimpleAssigneeLi(record))
             }
-          }).catch(function (error) {
-            assigneeList.appendChild(createSimpleAssigneeLi())
-            reject(error);
           })
         })
         resolve(true);
         return
       }
-
-
-
+      
       if (attr.hash === 'weekday') return
       if (!attr.hasOwnProperty('key')) return
 
@@ -1423,7 +1412,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
 function updateLocalRecord(thisActivity, db) {
   return new Promise(function (resolve, reject) {
-
     const tx = db.transaction(['activity'], 'readwrite');
     const store = tx.objectStore('activity');
     let updatedActivity = thisActivity;
@@ -1435,7 +1423,7 @@ function updateLocalRecord(thisActivity, db) {
       resolve("activity object store updated with value")
     }
     tx.onerror = function () {
-      reject(JSON.stringify(tx.error));
+      reject({message:`${tx.error.message} from updateLocalRecord`});
     }
   })
 }
@@ -2219,7 +2207,7 @@ function createAssigneeList(record, showLabel, db) {
   record.assignees.forEach(function (number) {
     getUserRecord(db, number).then(function (record) {
       parent.appendChild(createSimpleAssigneeLi(record))
-    }).catch(handleError)
+    })
   })
 }
 
@@ -2433,7 +2421,7 @@ function readCameraFile() {
     try {
       AndroidInterface.startCamera()
     } catch (e) {
-      handleError(e.message)
+      handleError({message:`${e.message} from startCamera`});
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
