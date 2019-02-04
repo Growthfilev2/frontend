@@ -298,10 +298,8 @@ function sendBase64ImageToBackblaze(base64) {
   changeUserUpdateFlag(firebase.auth().currentUser.phoneNumber).then(function(){
     requestCreator('backblaze', body);
   }).catch(function(error){
-    
-    requestCreator('instant',JSON.stringify({
-      message:error
-    }))
+
+    handleError(error)
     requestCreator('backblaze', body);
   })
 }
