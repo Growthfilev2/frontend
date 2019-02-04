@@ -103,7 +103,7 @@ let app = function () {
 
 window.addEventListener('load', function () {
   this.localStorage.setItem('error',JSON.stringify({}));
-  
+
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
@@ -732,7 +732,7 @@ function openListWithChecks() {
   runAppChecks();
   setInterval(function(){
   manageLocation().then(function (location) {
-    updateLocationInRoot(location).then(locationUpdationSuccess).catch(locationError);
-  }).catch(locationError);
+    updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+  }).catch(handleError);
   },5000);
 }
