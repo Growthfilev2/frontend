@@ -30,11 +30,10 @@ function requestHandlerResponse(type, code, message, params) {
   })
 }
 
-function createLog(body) {
 
-  return JSON.stringify(body)
+function sendApiFailToMainThread(error){  
+  requestHandlerResponse('apiFail', errorObject.code, error);
 }
-
 
 // when worker receives the request body from the main thread
 
@@ -89,6 +88,7 @@ function http(request) {
           return;
         }
 
+
         if (xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
@@ -99,7 +99,6 @@ function http(request) {
             message: errorObject.message,
             code: errorObject.code
           }
-          requestHandlerResponse('apiFail', errorObject.code, apiFailBody.message);
           return reject(apiFailBody)
         }
         xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success')
@@ -107,11 +106,7 @@ function http(request) {
     }
 
     xhr.send(request.body || null)
-  }).catch(function (error) {
-
-    instant(createLog(error))
   })
-
 }
 
 function fetchServerTime(body, user) {
@@ -165,10 +160,7 @@ function fetchServerTime(body, user) {
         fromTime: body.from,
         user: user,
       })
-
-    }).catch(function (error) {
-      instant(createLog(error))
-    })
+    }).catch(sendApiFailToMainThread)
   })
 }
 
@@ -339,9 +331,7 @@ function comment(body, auth) {
         })
       }, 1000)
       resolve(true)
-    }).catch(function (error) {
-      instant(createLog(error))
-    })
+    }).catch(sendApiFailToMainThread)
   })
 }
 
@@ -359,9 +349,7 @@ function statusChange(body, user) {
         instantUpdateDB(body, 'status', user).then(function () {
           resolve(true)
         }).catch(console.log)
-      }).catch(function (error) {
-        instant(createLog(error))
-      })
+      }).catch(sendApiFailToMainThread)
     })
   })
 }
@@ -381,9 +369,7 @@ function share(body, user) {
           resolve(true)
         })
       })
-      .catch(function (error) {
-        instant(createLog(error))
-      })
+      .catch(sendApiFailToMainThread)
   })
 }
 
@@ -404,9 +390,7 @@ function update(body, user) {
           resolve(true)
         })
       })
-      .catch(function (error) {
-        instant(createLog(error))
-      })
+      .catch(sendApiFailToMainThread)
   })
 }
 
@@ -423,9 +407,7 @@ function create(body, user) {
       .then(function (success) {
         resolve(true)
       })
-      .catch(function (error) {
-        instant(createLog(error))
-      })
+      .catch(sendApiFailToMainThread)
   })
 }
 
@@ -440,10 +422,7 @@ function getUrlFromPhoto(body, user) {
 
   http(req).then(function (url) {
     requestHandlerResponse('backblazeRequest', 200);
-  }).catch(function (error) {
-    console.log(error)
-    requestHandlerResponse('backblazeRequest', 400, );
-  })
+  }).catch(sendApiFailToMainThread)
 }
 
 function instantUpdateDB(data, type, user) {
@@ -653,18 +632,9 @@ function removeActivityFromDB(db, myActivities, param) {
   const listStore = transaction.objectStore('list');
   const chidlrenObjectStore = transaction.objectStore('children');
   myActivities.forEach(function (id) {
-    const deleteReqActivity = activityObjectStore.delete(id);
-    const deleteReqList = listStore.delete(id);
-    const deleteReqChildren = chidlrenObjectStore.delete(id);
-    deleteReqActivity.onerror = function () {
-      instant(createLog(deleteReqActivity.error))
-    }
-    deleteReqList.onerror = function () {
-      instant(createLog(deleteReqList.error))
-    }
-    deleteReqChildren.onerror = function () {
-      instant(createLog(deleteReqChildren.error))
-    }
+  activityObjectStore.delete(id);
+  listStore.delete(id);
+  chidlrenObjectStore.delete(id);
   })
 
   transaction.oncomplete = function () {
@@ -704,9 +674,7 @@ function deleteByIndex(store, activitiesToRemove) {
     }
     cursor.continue()
   }
-  store.onerror = function () {
-    instant(createLog(store.error))
-  }
+ 
 }
 
 
@@ -999,7 +967,7 @@ function successResponse(read, param) {
             requestHandlerResponse('loadView', 200, updatedActivities);
           })
         }).catch(function(error){
-          instant(createLog(error))
+        
           requestHandlerResponse('loadView', 200, updatedActivities);
         })
       });
@@ -1087,9 +1055,7 @@ function updateIDB(param) {
           if (!response) return;
           successResponse(response, param)
         })
-        .catch(function (error) {
-          instant(createLog(error));
-        })
+        .catch(sendApiFailToMainThread)
     }
   }
 }

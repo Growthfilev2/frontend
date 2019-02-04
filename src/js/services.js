@@ -11,6 +11,24 @@ function handleImageError(img) {
   return true;
 }
 
+function handleError(error){
+ const errorInStorage = JSON.parse(localStorage.getItem('error'));
+  if(!errorInStorage.hasOwnProperty(error.message)) {
+    errorInStorage[error.message] = false
+  }
+  else {
+    errorInStorage[error.message] = true
+  }
+  localStorage.setItem('error',JSON.stringify(errorInStorage));
+
+  if(!JSON.stringify(localStorage.getItem('error'))[error.message]) {
+    requestCreator('instant',JSON.stringify({
+      message:error
+    }))
+  }
+}
+
+
 function changeUserUpdateFlag(number) {
   return new Promise(function (resolve, reject) {
     var req = window.indexedDB.open(firebase.auth().currentUser.uid);
@@ -775,7 +793,9 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-  snacks(data.msg);
+  handleError(data.msg);
+  
+  snacks(data.msg.message);
 }
 
 function urlFromBase64Image(data) {

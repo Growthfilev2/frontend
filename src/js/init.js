@@ -1,3 +1,5 @@
+const globalError= {}
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -100,7 +102,8 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-
+  this.localStorage.setItem('error',JSON.stringify({}));
+  
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
@@ -165,6 +168,7 @@ window.addEventListener('load', function () {
   })
 
   window.onerror = function (msg, url, lineNo, columnNo, error) {
+    
     const errorJS = {
       message: {
         msg: error.message,
@@ -176,7 +180,6 @@ window.addEventListener('load', function () {
         device: native.getInfo(),
       }
     }
-    requestCreator('instant', JSON.stringify(errorJS))
   }
 
   window.onpopstate = function (event) {
@@ -240,6 +243,8 @@ function firebaseUiConfig(value) {
 
   };
 }
+
+
 
 function userSignedOut() {
   const login = document.createElement('div')
