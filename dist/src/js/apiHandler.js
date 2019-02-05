@@ -1,5 +1,5 @@
 importScripts('../../external/js/moment.min.js');
-var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
+var apiUrl = 'https://api2.growthfile.com/';
 
 var deviceInfo = void 0;
 
@@ -169,9 +169,9 @@ function instant(error, user) {
     token: user.token
   };
   console.log(error);
-  http(req).then(function (response) {
-    console.log(response)
-  }).catch(console.log)
+  // http(req).then(function (response) {
+  //   console.log(response)
+  // }).catch(console.log)
 }
 
 /**
