@@ -37,7 +37,7 @@ var native = function () {
           baseOs: 'asd',
           deviceBrand: '',
           deviceModel: '',
-          appVersion: 5,
+          appVersion: 6,
           osVersion: '',
           id: '123'
         });
@@ -698,68 +698,6 @@ function startInitializatioOfList(data) {
       nearby: false
     });
   });
-}
-
-function detectSuggestCheckIn() {
-  var dataObject = {
-    urgent: false,
-    nearby: false
-  };
-  if (emp) {
-    dataObject['checkin'] = !emp.onLeave;
-  } else {
-    dataObject['checkin'] = false;
-  }
-
-  var changed = e.detail;
-  var newDay = app.isNewDay();
-  if (changed && newDay) {
-    dataObject.nearby = true;
-    dataObject.urgent = true;
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (changed) {
-    dataObject.nearby = true;
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (newDay) {
-    dataObject.urgent = true;
-    localStorage.removeItem('dailyStartTimeCheckIn');
-    localStorage.removeItem('dailyEndTimeCheckIn');
-    startInitializatioOfList(dataObject);
-    return;
-  };
-
-  if (!emp) return;
-
-  if (app.isCurrentTimeNearStart(emp)) {
-    var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-    if (hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyStartTimeCheckIn', true);
-      if (!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      startInitializatioOfList(dataObject);
-    }
-    return;
-  }
-
-  if (app.isCurrentTimeNearEnd(emp)) {
-    var _hasAlreadyCheckedIn2 = localStorage.getItem('dailyEndTimeCheckIn');
-    if (_hasAlreadyCheckedIn2 == null) {
-      localStorage.setItem('dailyEndTimeCheckIn', true);
-      if (!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      startInitializatioOfList(dataObject);
-    }
-    return;
-  }
-  return;
 }
 
 function openListWithChecks() {

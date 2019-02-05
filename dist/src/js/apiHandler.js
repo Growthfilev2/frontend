@@ -1,5 +1,5 @@
 importScripts('../../external/js/moment.min.js');
-var apiUrl = 'https://api2.growthfile.com/api';
+var apiUrl = 'https://api2.growthfile.com/api/';
 
 var deviceInfo = void 0;
 
@@ -29,7 +29,7 @@ function requestHandlerResponse(type, code, message, params) {
 }
 
 function sendApiFailToMainThread(error) {
-  requestHandlerResponse('apiFail', errorObject.code, error);
+  requestHandlerResponse('apiFail', error.code, error);
 }
 
 // when worker receives the request body from the main thread
@@ -87,14 +87,14 @@ function http(request) {
         }
 
         if (xhr.status > 226) {
-          var _errorObject = JSON.parse(xhr.response);
+          var errorObject = JSON.parse(xhr.response);
           var apiFailBody = {
             res: JSON.parse(xhr.response),
             url: request.url,
             data: request.data,
             device: currentDevice,
-            message: _errorObject.message,
-            code: _errorObject.code
+            message: errorObject.message,
+            code: errorObject.code
           };
           return reject(apiFailBody);
         }
@@ -314,11 +314,7 @@ function comment(body, auth) {
       token: auth.token
     };
     http(req).then(function () {
-      setTimeout(function () {
-        updateIDB({
-          user: auth
-        });
-      }, 1000);
+
       resolve(true);
     }).catch(sendApiFailToMainThread);
   });
