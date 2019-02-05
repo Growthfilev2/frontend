@@ -1,5 +1,3 @@
-var globalError = {};
-
 var native = function () {
   return {
     setFCMToken: function setFCMToken(token) {
