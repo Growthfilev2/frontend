@@ -1,5 +1,5 @@
 importScripts('../external/js/moment.min.js');
-const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+const apiUrl = 'https://api2.growthfile.com/api/'
 
 let deviceInfo;
 
@@ -32,7 +32,7 @@ function requestHandlerResponse(type, code, message, params) {
 
 
 function sendApiFailToMainThread(error){  
-  requestHandlerResponse('apiFail', errorObject.code, error);
+  requestHandlerResponse('apiFail', error.code, error);
 }
 
 
@@ -327,11 +327,7 @@ function comment(body, auth) {
       token: auth.token
     }
     http(req).then(function () {
-      setTimeout(function () {
-        updateIDB({
-          user: auth
-        })
-      }, 1000)
+     
       resolve(true)
     }).catch(sendApiFailToMainThread)
   })

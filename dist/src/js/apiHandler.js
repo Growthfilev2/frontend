@@ -1,5 +1,5 @@
 importScripts('../../external/js/moment.min.js');
-var apiUrl = 'https://api2.growthfile.com/';
+var apiUrl = 'https://api2.growthfile.com/api';
 
 var deviceInfo = void 0;
 

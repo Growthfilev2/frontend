@@ -37,7 +37,7 @@ let native = function () {
           baseOs: 'asd',
           deviceBrand: '',
           deviceModel: '',
-          appVersion: 5,
+          appVersion: 6,
           osVersion: '',
           id: '123',
         });
