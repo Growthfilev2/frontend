@@ -561,10 +561,10 @@ function redirect() {
 }
 
 function init(auth) {
-  // if(!native.getName()) {
-  //   redirect();
-  //   return
-  // }
+  if(!native.getName()) {
+    redirect();
+    return
+  }
   document.getElementById("main-layout-app").style.display = 'block';
   idbVersionLessThan3(auth).then(function (reset) {
 
