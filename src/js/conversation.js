@@ -9,11 +9,7 @@ function conversation(id, pushState) {
     } else {
       listView()
     }
-  }).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }))
-  })
+  }).catch(handleError)
 }
 
 function checkIfRecordExists(store, id) {
@@ -33,8 +29,8 @@ function checkIfRecordExists(store, id) {
         }
       }
     }
-    req.onerror = function () {
-      reject(req.error)
+    req.onerror = function (){
+      reject({message:`${req.error.message} from checkIfRecordExists`});
     }
   })
 
@@ -345,13 +341,14 @@ function createComment(db, addendum, currentUser) {
       commentBox.appendChild(textContainer)
       commentBox.appendChild(mapDom);
       resolve(commentBox)
-    }).catch(console.log)
+    })
   })
 }
 
 function getUserRecord(db, number) {
   return new Promise(function (resolve, reject) {
-    const usersObjectStore = db.transaction('users').objectStore('users')
+    const usersObjectStore = db.transaction('users').objectStore('users');
+
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       if (!record) return resolve({
@@ -360,9 +357,6 @@ function getUserRecord(db, number) {
         photoURL: ''
       })
       return resolve(record)
-    }
-    usersObjectStore.get(number).onerror = function (event) {
-      reject(event)
     }
   })
 }
@@ -506,11 +500,7 @@ function createHeaderContent(db, id) {
           } else {
             listView()
           }
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: error
-          }))
-        })
+        }).catch(handleError)
       })
     })
   }
@@ -752,12 +742,7 @@ function fillUsersInSelector(data, dialog) {
             key: data.attachment.key
           }, {
             primary: JSON.parse(radio.value)
-          }).then(removeDialog).catch(function (error) {
-            requestCreator('instant', JSON.stringify({
-              message: error
-            }))
-
-          })
+          }).then(removeDialog).catch(handleError)
           return;
         }
         if (data.record.hasOwnProperty('create')) {
@@ -766,11 +751,7 @@ function fillUsersInSelector(data, dialog) {
               hash: 'addOnlyAssignees',
             }, {
               primary: selectedPeople
-            }).then(removeDialog).catch(function (error) {
-              requestCreator('instant', JSON.stringify({
-                message: error
-              }))
-            })
+            }).then(removeDialog).catch(handleError)
 
           })
           return
@@ -856,11 +837,7 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(function (error) {
-            requestCreator('instant', JSON.stringify({
-              message: error
-            }))
-          })
+          }).then(removeDialog).catch(handleError)
           return
         }
 
@@ -869,11 +846,7 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees',
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(function (error) {
-            requestCreator('instant', JSON.stringify({
-              message: error
-            }))
-          })
+          }).then(removeDialog).catch(handleError)
           return
         }
         if (isLocationVerified()) {
@@ -1076,11 +1049,7 @@ function handleClickListnersForMap(db, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-    }).then(removeDialog).catch(function (error) {
-      requestCreator('instant', JSON.stringify({
-        message: error
-      }))
-    })
+    }).then(removeDialog).catch(handleError)
   }
 }
 
@@ -1110,11 +1079,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
       key: data.attachment.key
     }, {
       primary: selectedField.name
-    }).then(removeDialog).catch(function (error) {
-      requestCreator('instant', JSON.stringify({
-        message: error
-      }))
-    })
+    }).then(removeDialog).catch(handleError)
   }
 }
 
@@ -1423,17 +1388,12 @@ function updateDomFromIDB(activityRecord, attr, data) {
             if (assigneeList) {
               assigneeList.appendChild(createSimpleAssigneeLi(record))
             }
-          }).catch(function (error) {
-            assigneeList.appendChild(createSimpleAssigneeLi())
-            reject(error);
           })
         })
         resolve(true);
         return
       }
-
-
-
+      
       if (attr.hash === 'weekday') return
       if (!attr.hasOwnProperty('key')) return
 
@@ -1452,7 +1412,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
 function updateLocalRecord(thisActivity, db) {
   return new Promise(function (resolve, reject) {
-
     const tx = db.transaction(['activity'], 'readwrite');
     const store = tx.objectStore('activity');
     let updatedActivity = thisActivity;
@@ -1464,7 +1423,7 @@ function updateLocalRecord(thisActivity, db) {
       resolve("activity object store updated with value")
     }
     tx.onerror = function () {
-      reject(JSON.stringify(tx.error));
+      reject({message:`${tx.error.message} from updateLocalRecord`});
     }
   })
 }
@@ -1546,11 +1505,7 @@ function updateCreateContainer(recordCopy, db) {
   document.getElementById('backToConv').addEventListener('click', function () {
     updateLocalRecord(record, db).then(function () {
       backNav()
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify({
-        message: error
-      }))
-    })
+    }).catch(handleError)
   })
 
 
@@ -1674,11 +1629,7 @@ function updateCreateActivity(record) {
               document.getElementById('send-activity').classList.remove('hidden')
             }
           }
-        }).catch(function (error) {
-          requestCreator('instant', JSON.stringify({
-            message: error
-          }))
-        })
+        }).catch(handleError)
       });
     }
 
@@ -2256,8 +2207,6 @@ function createAssigneeList(record, showLabel, db) {
   record.assignees.forEach(function (number) {
     getUserRecord(db, number).then(function (record) {
       parent.appendChild(createSimpleAssigneeLi(record))
-    }).catch(function (error) {
-      requestCreator('instant', JSON.stringify(error))
     })
   })
 }
@@ -2472,10 +2421,7 @@ function readCameraFile() {
     try {
       AndroidInterface.startCamera()
     } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: e.message,
-        device: native.getInfo()
-      }));
+      handleError({message:`${e.message} from startCamera`});
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
@@ -2857,12 +2803,7 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes).then(removeDialog).catch(function (error) {
-      requestCreator('instant', JSON.stringify({
-        message: error
-      }))
-    })
-
+    }, selectedAreaAttributes).then(removeDialog).catch(handleError)
   })
 }
 

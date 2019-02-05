@@ -1,3 +1,5 @@
+var globalError = {};
+
 var native = function () {
   return {
     setFCMToken: function setFCMToken(token) {
@@ -31,16 +33,21 @@ var native = function () {
     },
     getInfo: function getInfo() {
       if (!this.getName()) {
-        return false;
+        return JSON.stringify({
+          baseOs: 'asd',
+          deviceBrand: '',
+          deviceModel: '',
+          appVersion: 6,
+          osVersion: '',
+          id: '123'
+        });
       }
 
       if (this.getName() === 'Android') {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          requestCreator('instant', JSON.stringify({
-            message: e.message
-          }));
+          handleError(e.message);
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -99,6 +106,9 @@ var app = function () {
 }();
 
 window.addEventListener('load', function () {
+  if (!this.localStorage.getItem('error')) {
+    this.localStorage.setItem('error', JSON.stringify({}));
+  }
 
   var title = 'Device Incompatibility';
   var message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version';
@@ -121,9 +131,7 @@ window.addEventListener('load', function () {
     try {
       Android.notification(JSON.stringify(messageData));
     } catch (e) {
-      requestCreator('instant', JSON.stringify({
-        message: e.message
-      }));
+      handleError(e.message);
       appDialog(message);
     }
     return;
@@ -156,21 +164,6 @@ window.addEventListener('load', function () {
     months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
   });
-
-  window.onerror = function (msg, url, lineNo, columnNo, error) {
-    var errorJS = {
-      message: {
-        msg: error.message,
-        url: url,
-        lineNo: lineNo,
-        columnNo: columnNo,
-        stack: error.stack,
-        name: error.name,
-        device: native.getInfo()
-      }
-    };
-    requestCreator('instant', JSON.stringify(errorJS));
-  };
 
   window.onpopstate = function (event) {
 
@@ -417,7 +410,6 @@ function getEmployeeDetails() {
       var tx = db.transaction(['children']);
       var store = tx.objectStore('children');
       var details = void 0;
-      var phoneNumberEmp = auth.phoneNumber;
       var range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
 
       store.index('templateStatus').openCursor(range).onsuccess = function (event) {
@@ -434,6 +426,12 @@ function getEmployeeDetails() {
       tx.oncomplete = function () {
         resolve(details);
       };
+      tx.onerror = function () {
+        reject({ message: tx.error.message + ' from getEmployeeDetails' });
+      };
+    };
+    req.onerror = function () {
+      reject({ message: req.error.message + ' from getEmployeeDetails' });
     };
   });
 }
@@ -470,12 +468,14 @@ function isEmployeeOnLeave() {
           resolve(empDetails);
         };
         tx.onerror = function () {
-          reject(tx.error);
+          reject({ message: tx.error.message + ' from isEmployeeOnLeave' });
         };
       };
       req.onerror = function () {
-        reject(req.error);
+        reject({ message: req.error.message + ' from isEmployeeOnLeave' });
       };
+    }).catch(function (error) {
+      reject(error);
     });
   });
 }
@@ -522,8 +522,7 @@ function idbVersionLessThan3(auth) {
     };
     req.onerror = function () {
       reject({
-        error: req.error.message,
-        device: native.getInfo()
+        message: req.error.message + ' from idbVersionLessThan3'
       });
     };
   });
@@ -535,9 +534,8 @@ function removeIDBInstance(auth) {
 
   return new Promise(function (resolve, reject) {
     var failure = {
-      message: 'Please Restart The App',
-      error: '',
-      device: native.getInfo()
+      userMessage: 'Please Restart The App',
+      message: ''
     };
 
     var req = indexedDB.deleteDatabase(auth.uid);
@@ -545,11 +543,11 @@ function removeIDBInstance(auth) {
       resolve(true);
     };
     req.onblocked = function () {
-      failure.error = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
+      failure.message = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
       reject(failure);
     };
     req.onerror = function () {
-      failure.error = req.error;
+      failure.message = req.error.message + ' from removeIDBInstance';
       reject(failure);
     };
   });
@@ -560,18 +558,15 @@ function redirect() {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
     window.location = 'https://www.growthfile.com';
-
-    requestCreator('instant', JSON.stringify({
-      error: error
-    }));
+    handleError(error);
   });
 }
 
 function init(auth) {
-  if (!native.getName()) {
-    redirect();
-    return;
-  }
+  // if(!native.getName()) {
+  //   redirect();
+  //   return
+  // }
   document.getElementById("main-layout-app").style.display = 'block';
   idbVersionLessThan3(auth).then(function (reset) {
 
@@ -590,11 +585,7 @@ function init(auth) {
       return;
     }
     resetApp(auth, 0);
-  }).catch(function (error) {
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
-  });
+  }).catch(handleError);
 }
 
 function resetApp(auth, from) {
@@ -613,80 +604,82 @@ function resetApp(auth, from) {
       registerToken: native.getFCMToken()
     });
   }).catch(function (error) {
-    snacks(error.message);
-    requestCreator('instant', JSON.stringify({
-      message: error
-    }));
+    snacks(error.userMessage);
+    handleError(error);
   });
 }
 
 function runAppChecks() {
-  // suggest check in false
-
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
-
-      var dataObject = {
-        urgent: false,
-        nearby: false
-      };
-      if (emp) {
-        dataObject['checkin'] = !emp.onLeave;
-      } else {
-        dataObject['checkin'] = false;
-      }
-
-      var changed = e.detail;
-      var newDay = app.isNewDay();
-      if (changed && newDay) {
-        dataObject.nearby = true;
-        dataObject.urgent = true;
-        startInitializatioOfList(dataObject);
-        return;
-      }
-
-      if (changed) {
-        dataObject.nearby = true;
-        startInitializatioOfList(dataObject);
-        return;
-      }
-
-      if (newDay) {
-        dataObject.urgent = true;
-        localStorage.removeItem('dailyStartTimeCheckIn');
-        localStorage.removeItem('dailyEndTimeCheckIn');
-        startInitializatioOfList(dataObject);
-        return;
-      };
-
-      if (!emp) return;
-
-      if (app.isCurrentTimeNearStart(emp)) {
-        var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-        if (hasAlreadyCheckedIn == null) {
-          localStorage.setItem('dailyStartTimeCheckIn', true);
-          if (!emp.onLeave) {
-            dataObject.checkin = true;
-          }
-          startInitializatioOfList(dataObject);
-        }
-        return;
-      }
-
-      if (app.isCurrentTimeNearEnd(emp)) {
-        var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-        if (_hasAlreadyCheckedIn == null) {
-          localStorage.setItem('dailyEndTimeCheckIn', true);
-          if (!emp.onLeave) {
-            dataObject.checkin = true;
-          }
-          startInitializatioOfList(dataObject);
-        }
-        return;
-      }
+      detectSuggestCheckinEvent(e.detail, emp);
       return;
+    }).catch(function (error) {
+      handleError(error);
+      detectSuggestCheckinEvent(e.detail);
     });
   }, true);
+}
+
+function detectSuggestCheckinEvent(changed, emp) {
+
+  var dataObject = {
+    urgent: false,
+    nearby: false
+  };
+  if (emp) {
+    dataObject['checkin'] = !emp.onLeave;
+  } else {
+    dataObject['checkin'] = false;
+  }
+
+  var newDay = app.isNewDay();
+  if (changed && newDay) {
+    dataObject.nearby = true;
+    dataObject.urgent = true;
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (changed) {
+    dataObject.nearby = true;
+    startInitializatioOfList(dataObject);
+    return;
+  }
+
+  if (newDay) {
+    dataObject.urgent = true;
+    localStorage.removeItem('dailyStartTimeCheckIn');
+    localStorage.removeItem('dailyEndTimeCheckIn');
+    startInitializatioOfList(dataObject);
+    return;
+  };
+
+  if (!emp) return;
+
+  if (app.isCurrentTimeNearStart(emp)) {
+    var hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
+    if (hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyStartTimeCheckIn', true);
+      if (!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
+
+  if (app.isCurrentTimeNearEnd(emp)) {
+    var _hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
+    if (_hasAlreadyCheckedIn == null) {
+      localStorage.setItem('dailyEndTimeCheckIn', true);
+      if (!emp.onLeave) {
+        dataObject.checkin = true;
+      }
+      startInitializatioOfList(dataObject);
+    }
+    return;
+  }
 }
 
 function startInitializatioOfList(data) {
@@ -698,15 +691,22 @@ function startInitializatioOfList(data) {
         nearby: data.nearby
       });
     }
+  }).catch(function (error) {
+    handleError(error);
+    listView({
+      urgent: false,
+      nearby: false
+    });
   });
 }
 
 function openListWithChecks() {
   listView({ urgent: false, nearby: false });
+
   runAppChecks();
   setInterval(function () {
     manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(locationUpdationSuccess).catch(locationError);
-    }).catch(locationError);
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+    }).catch(handleError);
   }, 5000);
 }
