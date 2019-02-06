@@ -2372,6 +2372,7 @@ function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
     document.getElementById('attachment-picture').src = `data:image/jpg;base64,${str}`
+    document.getElementById('attachment-picture').dataset.value = `data:image/jpg;base64,${str}`
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden')
@@ -2392,8 +2393,10 @@ function setFilePath(str, key, show) {
   img.setAttribute('onerror', 'handleImageErrorAttachment(this)')
   if (!str) {
     img.src = './img/placeholder.png'
+    img.dataset.value = ''
   } else {
     img.src = str;
+    img.dataset.value = str
   }
   img.onclick = function () {
     openImage(this.src)
@@ -2601,13 +2604,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    let source = ''
-    if (imagesInAttachments[i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
-      source = ''
-    } else {
-      source = imagesInAttachments[i].src 
-    }
-    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
+  
+    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
 
   let sd;

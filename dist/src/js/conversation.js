@@ -2274,6 +2274,7 @@ function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
     document.getElementById('attachment-picture').src = 'data:image/jpg;base64,' + str;
+    document.getElementById('attachment-picture').dataset.value = 'data:image/jpg;base64,' + str;
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden');
@@ -2294,8 +2295,10 @@ function setFilePath(str, key, show) {
   img.setAttribute('onerror', 'handleImageErrorAttachment(this)');
   if (!str) {
     img.src = './img/placeholder.png';
+    img.dataset.value = '';
   } else {
     img.src = str;
+    img.dataset.value = str;
   }
   img.onclick = function () {
     openImage(this.src);
@@ -2489,13 +2492,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
-    var source = '';
-    if (imagesInAttachments[_i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
-      source = '';
-    } else {
-      source = imagesInAttachments[_i].src;
-    }
-    record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = source;
+
+    record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = imagesInAttachments[_i].dataset.value;
   }
 
   var sd = void 0;
