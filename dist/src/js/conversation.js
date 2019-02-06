@@ -2492,8 +2492,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
-
     record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = imagesInAttachments[_i].dataset.value;
+
   }
 
   var sd = void 0;
