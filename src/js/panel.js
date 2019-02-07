@@ -354,11 +354,19 @@ function activityListUI(data, secondLine) {
     conversation(this.dataset.id, true);
   }
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-  const creator = document.createElement("img")
-  creator.dataset.number = data.creator.number
-  creator.className = 'mdc-list-item__graphic material-icons'
+  const dataObject = document.createElement('object');
+  dataObject.data = data.creator.photo || './img/empty-user.jpg';
+  dataObject.type = 'image/jpeg';
+  dataObject.className = 'mdc-list-item__graphic material-icons'
+
+  var creator = document.createElement("img");
+  // creator.dataset.number = data.creator.number;
+  // creator.className = 'mdc-list-item__graphic material-icons'
+
   // creator.setAttribute('onerror','handleImageError()');
-  creator.src = data.creator.photo || './img/empty-user.jpg'
+  creator.src = './img/empty-user.jpg';
+  dataObject.appendChild(creator);
+  
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const activityNameText = document.createElement('span')
@@ -392,7 +400,7 @@ function activityListUI(data, secondLine) {
 
   metaTextContainer.appendChild(metaTextActivityStatus)
 
-  li.appendChild(creator);
+  li.appendChild(dataObject);
   li.appendChild(leftTextContainer);
   li.appendChild(metaTextContainer);
   return li
@@ -576,25 +584,24 @@ function creatListHeader(headerName) {
       const parentIconDiv = document.createElement('div')
       parentIconDiv.className = 'profile--icon-header'
 
-      const menuIcon = document.createElement('span')
+      const menuIcon = document.createElement('div')
       menuIcon.id = 'menu--panel'
 
+      const object = document.createElement('object');
+      object.className = 'list-photo-header';
+      object.type = 'image/jpeg';
+      object.data = uri;
+
       const icon = document.createElement('img');
-      icon.src = uri;
-      icon.className = 'list-photo-header'
-      menuIcon.appendChild(icon)
+      icon.src = './img/empty-user.jpg';
+      object.appendChild(icon);
+
+      menuIcon.appendChild(object)
+
       const headerText = document.createElement('p');
       headerText.textContent = headerName;
       menuIcon.appendChild(headerText)
       parentIconDiv.appendChild(menuIcon)
-
-      const searchIcon = document.createElement('span')
-      searchIcon.id = 'search--panel'
-      const sicon = document.createElement('i')
-      sicon.className = 'material-icons'
-      sicon.textContent = 'search'
-      searchIcon.appendChild(sicon);
-    
       modifyHeader({
         id: 'app-main-header',
         left: parentIconDiv.outerHTML,

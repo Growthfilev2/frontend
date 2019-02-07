@@ -2132,16 +2132,15 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   assigneeLi.classList.add('mdc-list-item', 'assignee-li');
   if (!userRecord) return assigneeLi;
   assigneeLi.dataset.value = userRecord.mobile;
-  var photoGraphic = document.createElement('img');
-  photoGraphic.classList.add('mdc-list-item__graphic');
-  photoGraphic.dataset.number = userRecord.mobile;
-  if (userRecord.mobile === firebase.auth().currentUser.phoneNumber) {
-    photoGraphic.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-  } else {
-    photoGraphic.src = userRecord.photoURL || './img/empty-user.jpg';
-  }
-  photoGraphic.setAttribute('onerror', 'handleImageError(this)');
+  var dataObject = document.createElement('object');
+  dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
+  dataObject.type = 'image/jpeg';
+  dataObject.className = 'mdc-list-item__graphic';
 
+  var photoGraphic = document.createElement('img');
+  photoGraphic.dataset.number = userRecord.mobile;
+  photoGraphic.src = './img/empty-user.jpg';
+  dataObject.appendChild(photoGraphic);
   var assigneeListText = document.createElement('span');
   assigneeListText.classList.add('mdc-list-item__text');
   var assigneeName = document.createElement('span');
@@ -2172,7 +2171,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
       };
     }
   }
-  assigneeLi.appendChild(photoGraphic);
+  assigneeLi.appendChild(dataObject);
   assigneeLi.appendChild(assigneeListText);
   assigneeLi.appendChild(metaInput);
   return assigneeLi;

@@ -1606,3 +1606,12 @@ input[type="datetime-local"] {
     margin-top: 40px;
   }
 
+
+  .empty-user-profile {
+  border-radius: 50%;
+  width: 300px;
+  height: 300px;
+  display: block;
+  margin: 0 auto;
+  object-fit: cover;
+  }

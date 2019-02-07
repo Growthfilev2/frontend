@@ -1,5 +1,5 @@
 importScripts('../../external/js/moment.min.js');
-var apiUrl = 'https://api2.growthfile.com/api/';
+var apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/';
 
 var deviceInfo = void 0;
 
@@ -648,14 +648,14 @@ function createUsersApiUrl(db, user) {
   return new Promise(function (resolve) {
     var tx = db.transaction(['users'], 'readwrite');
     var usersObjectStore = tx.objectStore('users');
-    var isUpdatedIndex = usersObjectStore.index('isUpdated');
-    var NON_UPDATED_USERS = 0;
+    // const isUpdatedIndex = usersObjectStore.index('isUpdated')
+    // const NON_UPDATED_USERS = 0
     var assigneeString = '';
 
     var defaultReadUserString = apiUrl + 'services/users?q=';
     var fullReadUserString = '';
 
-    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+    usersObjectStore.openCursor().onsuccess = function (event) {
       var cursor = event.target.result;
 
       if (!cursor) return;
@@ -667,7 +667,6 @@ function createUsersApiUrl(db, user) {
     tx.oncomplete = function () {
       fullReadUserString = '' + defaultReadUserString + assigneeString;
       if (assigneeString) {
-
         resolve({
           db: db,
           url: fullReadUserString,
@@ -696,11 +695,11 @@ function updateUserObjectStore(requestPayload) {
 
       var tx = requestPayload.db.transaction(['users'], 'readwrite');
       var usersObjectStore = tx.objectStore('users');
-      var isUpdatedIndex = usersObjectStore.index('isUpdated');
-      var USER_NOT_UPDATED = 0;
-      var USER_UPDATED = 1;
+      // const isUpdatedIndex = usersObjectStore.index('isUpdated')
+      // const USER_NOT_UPDATED = 0
+      // const USER_UPDATED = 1
 
-      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
+      usersObjectStore.openCursor().onsuccess = function (event) {
         var cursor = event.target.result;
 
         if (!cursor) return;
@@ -711,7 +710,7 @@ function updateUserObjectStore(requestPayload) {
           var record = cursor.value;
           record.photoURL = userProfile[cursor.primaryKey].photoURL;
           record.displayName = userProfile[cursor.primaryKey].displayName;
-          record.isUpdated = USER_UPDATED;
+          // record.isUpdated = USER_UPDATED
 
           usersObjectStore.put(record);
         }

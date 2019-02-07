@@ -1,12 +1,5 @@
 var apiHandler = new Worker('src/js/apiHandler.js');
 
-function handleImageError(img) {
-  img.onerror = null;
-  img.src = './img/empty-user.jpg';
-  changeUserUpdateFlag(img.dataset.number).then().catch(handleError);
-  return true;
-}
-
 function handleError(error) {
   var errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (!errorInStorage.hasOwnProperty(error.message)) {
@@ -19,41 +12,6 @@ function handleError(error) {
     requestCreator('instant', JSON.stringify(error));
     return;
   }
-}
-
-function changeUserUpdateFlag(number) {
-  return new Promise(function (resolve, reject) {
-    var req = window.indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      var db = req.result;
-      var usersObjectStoreTx = db.transaction(['users'], 'readwrite');
-      var usersObjectStore = usersObjectStoreTx.objectStore('users');
-
-      usersObjectStore.get(number).onsuccess = function (event) {
-        var record = event.target.result;
-        if (!record) {
-          return resolve(false);
-        };
-        if (record.isUpdated == 0) return resolve(true);
-        record.isUpdated = 0;
-        usersObjectStore.put(record);
-      };
-      usersObjectStoreTx.oncomplete = function () {
-        resolve(true);
-      };
-      usersObjectStoreTx.onerror = function () {
-        reject({
-          message: usersObjectStoreTx.error.message + ' from changeUserUpdateFlag'
-        });
-      };
-    };
-  });
-}
-
-function handleImageErrorAttachment(img) {
-  img.onerror = null;
-  img.src = './img/placeholder.png';
-  return true;
 }
 
 function loader(nameClass) {
