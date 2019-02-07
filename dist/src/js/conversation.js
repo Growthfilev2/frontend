@@ -2274,49 +2274,58 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
-    document.getElementById('attachment-picture').src = 'data:image/jpg;base64,' + str;
-    document.getElementById('attachment-picture').dataset.value = 'data:image/jpg;base64,' + str;
+    document.getElementById('attachment-picture').data = `data:image/jpg;base64,${str}`
+    document.getElementById('attachment-picture').dataset.value = `data:image/jpg;base64,${str}`
 
     if (!document.getElementById('send-activity').dataset.progress) {
-      document.getElementById('send-activity').classList.remove('hidden');
+      document.getElementById('send-activity').classList.remove('hidden')
     }
-    return;
+    return
   }
 
-  var li = document.createElement('li');
-  li.className = 'mdc-image-list__item image--list-li';
+  const li = document.createElement('li')
+  li.className = 'mdc-image-list__item image--list-li'
 
-  var container = document.createElement('div');
+  const container = document.createElement('div')
 
-  var img = document.createElement('img');
-  img.className = 'profile-container--main mdc-image-list__image ';
-  img.id = 'attachment-picture';
-  img.dataset.photoKey = key;
+  const dataObject = document.createElement('object');
+  dataObject.data = str || './img/placeholder.png';
+  dataObject.type = 'image/jpeg';
+  dataObject.id = 'attachment-picture';
+  dataObject.dataset.photoKey = key;
+  dataObject.className = 'profile-container--main mdc-image-list__image';
 
-  img.setAttribute('onerror', 'handleImageErrorAttachment(this)');
+  const img = document.createElement('img')
+  img.src = './img/placeholder.png';
+  img.className = 'profile-container--main mdc-image-list__image'
   if (!str) {
-    img.src = './img/placeholder.png';
-    img.dataset.value = '';
+    dataObject.data = './img/placeholder.png'
+    dataObject.dataset.value = ''
   } else {
-    img.src = str;
-    img.dataset.value = str;
+    dataObject.src = str;
+    dataObject.dataset.value = str
   }
-  img.onclick = function () {
-    openImage(this.src);
-  };
-  container.appendChild(img);
-  li.appendChild(container);
+  dataObject.appendChild(img);
 
-  var textCont = document.createElement('div');
-  textCont.className = 'mdc-image-list__supporting';
+  dataObject.onclick = function () {
+    openImage(this.data)
+  }
+  container.appendChild(dataObject)
+  li.appendChild(container)
 
-  var span = document.createElement('span');
-  span.textContent = key;
-  span.className = 'mdc-image-list__label';
-  span.id = 'label--image';
-  textCont.appendChild(span);
-  li.appendChild(textCont);
-  if (show) return li;
+  const textCont = document.createElement('div')
+  textCont.className = 'mdc-image-list__supporting'
+
+  const span = document.createElement('span')
+  span.textContent = key
+  span.className = 'mdc-image-list__label'
+  span.id = 'label--image'
+  textCont.appendChild(span)
+  li.appendChild(textCont)
+  if (show) return li
+
+
+
 }
 
 function readCameraFile() {
@@ -2491,7 +2500,7 @@ function insertInputsIntoActivity(record, activityStore) {
     record.attachment[convertIdToKey(allTimeTypes[i].id)].value = _inputValue3;
   }
 
-  var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
+  var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
 
     record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = imagesInAttachments[_i].dataset.value;

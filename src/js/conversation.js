@@ -2372,7 +2372,7 @@ function checkRadioInput(inherit, value) {
 function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
-    document.getElementById('attachment-picture').src = `data:image/jpg;base64,${str}`
+    document.getElementById('attachment-picture').data = `data:image/jpg;base64,${str}`
     document.getElementById('attachment-picture').dataset.value = `data:image/jpg;base64,${str}`
 
     if (!document.getElementById('send-activity').dataset.progress) {
@@ -2386,23 +2386,30 @@ function setFilePath(str, key, show) {
 
   const container = document.createElement('div')
 
-  const img = document.createElement('img')
-  img.className = 'profile-container--main mdc-image-list__image '
-  img.id = 'attachment-picture'
-  img.dataset.photoKey = key
+  const dataObject = document.createElement('object');
+  dataObject.data = str || './img/placeholder.png';
+  dataObject.type = 'image/jpeg';
+  dataObject.id = 'attachment-picture';
+  dataObject.dataset.photoKey = key;
+  dataObject.className = 'profile-container--main mdc-image-list__image';
 
-  img.setAttribute('onerror', 'handleImageErrorAttachment(this)')
+  const img = document.createElement('img')
+  img.src = './img/placeholder.png';
+  img.className = 'profile-container--main mdc-image-list__image'
+
   if (!str) {
-    img.src = './img/placeholder.png'
-    img.dataset.value = ''
+    dataObject.data = './img/placeholder.png'
+    dataObject.dataset.value = ''
   } else {
-    img.src = str;
-    img.dataset.value = str
+    dataObject.src = str;
+    dataObject.dataset.value = str
   }
-  img.onclick = function () {
-    openImage(this.src)
+  dataObject.appendChild(img);
+
+  dataObject.onclick = function () {
+    openImage(this.data)
   }
-  container.appendChild(img)
+  container.appendChild(dataObject)
   li.appendChild(container)
 
   const textCont = document.createElement('div')
