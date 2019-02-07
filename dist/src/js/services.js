@@ -731,7 +731,7 @@ function updateApp(data) {
     }
     return;
   }
-  webkit.messageHandlers.updateApp.postMessage();
+  webkit.messageHandlers.updateApp.postMessage('update App');
 }
 
 function revokeSession() {
