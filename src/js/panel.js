@@ -590,7 +590,7 @@ function creatListHeader(headerName) {
       const object = document.createElement('object');
       object.className = 'list-photo-header';
       object.type = 'image/jpeg';
-      object.data = uri;
+      object.data = uri || './img/empty-user.jpg';
 
       const icon = document.createElement('img');
       icon.src = './img/empty-user.jpg';

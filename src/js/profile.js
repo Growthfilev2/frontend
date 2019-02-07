@@ -32,9 +32,7 @@ function profileView(pushState) {
           document.getElementById('close-profile--panel').addEventListener('click', function () {
             backNav();
           });
-  
-          showProfilePicture(firebase.auth().currentUser.photoURL);
-          
+            
           if(native.getName() === 'Android') {
             document.getElementById('uploadProfileImage').addEventListener('click',function(){
              AndroidInterface.openImagePicker();
@@ -109,7 +107,7 @@ function createProfilePanel(db) {
       
       const dataObject = document.createElement('object');
       dataObject.type = 'image/jpeg';
-      dataObject.data  = uri;
+      dataObject.data = uri || './img/empty-user-big.jpg';
       dataObject.id = 'user-profile--image';
 
       var profileImg = document.createElement('img');
@@ -301,29 +299,6 @@ function sendBase64ImageToBackblaze(base64) {
     'imageBase64': pre+base64
   };
   requestCreator('backblaze', body);
-}
-
-function updateAuth(url) {
-  console.log(url);
-  var user = firebase.auth().currentUser;
-  user.updateProfile({
-    photoURL: url
-  }).then(function () {
-    removeLoader(url);
-  }).catch(authUpdatedError);
-}
-
-function removeLoader(url) {
-  document.querySelector('.insert-overlay').classList.remove('middle');
-  var container = document.getElementById('profile--image-container');
-  container.children[0].classList.add('reset-opacity');
-
-  container.removeChild(container.lastChild);
-  showProfilePicture(url);
-}
-
-function showProfilePicture(url) {
-  document.getElementById('user-profile--image').data = url || './img/empty-user-big.jpg';
 }
 
 function authUpdatedError(error) {

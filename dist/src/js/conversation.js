@@ -432,7 +432,6 @@ function createHeaderContent(db, id) {
 
   var activityObjectStore = db.transaction('activity').objectStore('activity');
   var leftDiv = document.createElement('div');
-  // leftDiv.style.display = 'inline-flex'
 
   var backDiv = document.createElement('div');
   backDiv.className = 'back-icon';
@@ -449,13 +448,15 @@ function createHeaderContent(db, id) {
 
     var record = event.target.result;
     getImageFromNumber(db, record.creator).then(function (uri) {
+      var dataObject = document.createElement('object');
+      dataObject.data = uri || './img/empty-user.jpg';
+      dataObject.className = 'header--icon-creator';
+      dataObject.type = 'image/jpeg';
 
       var creatorImg = document.createElement("img");
-      creatorImg.className = 'header--icon-creator';
-      creatorImg.dataset.number = record.creator;
-      creatorImg.src = uri;
-      creatorImg.setAttribute('onerror', 'handleImageError(this)');
-      backDiv.appendChild(creatorImg);
+      creatorImg.src = './img/empty-user.jpg';
+      dataObject.appendChild(creatorImg);
+      backDiv.appendChild(dataObject);
 
       var primarySpan = document.createElement('div');
       primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
