@@ -2292,8 +2292,6 @@ function setFilePath(str, key, show) {
   img.className = 'profile-container--main mdc-image-list__image ';
   img.id = 'attachment-picture';
   img.dataset.photoKey = key;
-
-  img.setAttribute('onerror', 'handleImageErrorAttachment(this)');
   if (!str) {
     img.src = './img/placeholder.png';
     img.dataset.value = '';
