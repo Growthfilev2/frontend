@@ -267,7 +267,7 @@ function geolocationApi(req) {
           'latitude': response.location.lat,
           'longitude': response.location.lng,
           'accuracy': response.accuracy,
-          'provider': {'cellular':req.body},
+          'provider': {'cellular':JSON.parse(req.body)},
         });
       }
     };
