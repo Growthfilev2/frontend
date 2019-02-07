@@ -445,7 +445,6 @@ function createHeaderContent(db, id) {
 
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   const leftDiv = document.createElement('div')
-  // leftDiv.style.display = 'inline-flex'
 
   const backDiv = document.createElement('div')
   backDiv.className = 'back-icon'
@@ -463,46 +462,49 @@ function createHeaderContent(db, id) {
 
     const record = event.target.result
     getImageFromNumber(db, record.creator).then(function (uri) {
-
-      const creatorImg = document.createElement("img")
+      const dataObject = document.createElement('object');
+      dataObject.data = uri || './img/empty-user.jpg';
+      dataObject.className = 'header--icon-creator';
+      dataObject.type = 'image/jpeg';
+      
+      var creatorImg = document.createElement("img");
+      creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator'
-      creatorImg.dataset.number = record.creator
-      creatorImg.src = uri
-      creatorImg.setAttribute('onerror', 'handleImageError(this)');
-      backDiv.appendChild(creatorImg);
+      dataObject.appendChild(creatorImg);
+      backDiv.appendChild(dataObject);
 
-      const primarySpan = document.createElement('div')
-      primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2'
-      primarySpan.textContent = record.activityName
+      var primarySpan = document.createElement('div');
+      primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
+      primarySpan.textContent = record.activityName;
 
-      const secondarySpan = document.createElement('span')
-      secondarySpan.className = 'mdc-list-item__secondary-text'
-      secondarySpan.textContent = 'Click here to see details'
+      var secondarySpan = document.createElement('span');
+      secondarySpan.className = 'mdc-list-item__secondary-text';
+      secondarySpan.textContent = 'Click here to see details';
 
-      primarySpan.appendChild(secondarySpan)
+      primarySpan.appendChild(secondarySpan);
 
-      leftDiv.appendChild(backDiv)
-      leftDiv.appendChild(primarySpan)
+      leftDiv.appendChild(backDiv);
+      leftDiv.appendChild(primarySpan);
       modifyHeader({
         id: 'app-main-header',
         left: leftDiv.outerHTML
-      })
+      });
 
       document.getElementById('back-conv').addEventListener('click', function () {
         backNav();
-      })
+      });
 
       document.querySelector('.comment-header-primary').addEventListener('click', function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
 
           if (id) {
-            updateCreateActivity(record)
+            updateCreateActivity(record);
           } else {
-            listView()
+            listView();
           }
-        }).catch(handleError)
-      })
-    })
+        }).catch(handleError);
+      });
+    });
   }
 }
 
@@ -2218,16 +2220,15 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   assigneeLi.classList.add('mdc-list-item', 'assignee-li')
   if (!userRecord) return assigneeLi
   assigneeLi.dataset.value = userRecord.mobile
-  const photoGraphic = document.createElement('img')
-  photoGraphic.classList.add('mdc-list-item__graphic')
-  photoGraphic.dataset.number = userRecord.mobile
-  if (userRecord.mobile === firebase.auth().currentUser.phoneNumber) {
-    photoGraphic.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
-  } else {
-    photoGraphic.src = userRecord.photoURL || './img/empty-user.jpg'
-  }
-  photoGraphic.setAttribute('onerror', 'handleImageError(this)')
+  const dataObject = document.createElement('object');
+  dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
+  dataObject.type = 'image/jpeg';
+  dataObject.className = 'mdc-list-item__graphic';
 
+  const photoGraphic = document.createElement('img')
+  photoGraphic.src = './img/empty-user.jpg'
+  photoGraphic.className = 'empty-user-assignee'
+  dataObject.appendChild(photoGraphic)
   const assigneeListText = document.createElement('span')
   assigneeListText.classList.add('mdc-list-item__text')
   const assigneeName = document.createElement('span')
@@ -2258,7 +2259,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
       }
     }
   }
-  assigneeLi.appendChild(photoGraphic)
+  assigneeLi.appendChild(dataObject)
   assigneeLi.appendChild(assigneeListText)
   assigneeLi.appendChild(metaInput)
   return assigneeLi
@@ -2372,6 +2373,7 @@ function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
     document.getElementById('attachment-picture').src = `data:image/jpg;base64,${str}`
+    document.getElementById('attachment-picture').dataset.value = `data:image/jpg;base64,${str}`
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden')
@@ -2392,8 +2394,10 @@ function setFilePath(str, key, show) {
   img.setAttribute('onerror', 'handleImageErrorAttachment(this)')
   if (!str) {
     img.src = './img/placeholder.png'
+    img.dataset.value = ''
   } else {
     img.src = str;
+    img.dataset.value = str
   }
   img.onclick = function () {
     openImage(this.src)
@@ -2601,13 +2605,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-    let source = ''
-    if (imagesInAttachments[i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
-      source = ''
-    } else {
-      source = imagesInAttachments[i].src 
-    }
-    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = source
+  
+    record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
 
   let sd;

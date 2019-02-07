@@ -1,5 +1,5 @@
 importScripts('../external/js/moment.min.js');
-const apiUrl = 'https://api2.growthfile.com/api/'
+const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
 
@@ -176,9 +176,9 @@ function instant(error, user) {
     token: user.token
   }
   console.log(error)
-  // http(req).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(req).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 
@@ -682,14 +682,14 @@ function createUsersApiUrl(db, user) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['users'], 'readwrite');
     const usersObjectStore = tx.objectStore('users');
-    const isUpdatedIndex = usersObjectStore.index('isUpdated')
-    const NON_UPDATED_USERS = 0
+    // const isUpdatedIndex = usersObjectStore.index('isUpdated')
+    // const NON_UPDATED_USERS = 0
     let assigneeString = ''
 
     const defaultReadUserString = `${apiUrl}services/users?q=`
     let fullReadUserString = ''
 
-    isUpdatedIndex.openCursor(NON_UPDATED_USERS).onsuccess = function (event) {
+    usersObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
 
       if (!cursor) return
@@ -701,7 +701,6 @@ function createUsersApiUrl(db, user) {
     tx.oncomplete = function () {
       fullReadUserString = `${defaultReadUserString}${assigneeString}`
       if (assigneeString) {
-
         resolve({
           db: db,
           url: fullReadUserString,
@@ -732,11 +731,11 @@ function updateUserObjectStore(requestPayload) {
 
       const tx = requestPayload.db.transaction(['users'], 'readwrite');
       const usersObjectStore = tx.objectStore('users');
-      const isUpdatedIndex = usersObjectStore.index('isUpdated')
-      const USER_NOT_UPDATED = 0
-      const USER_UPDATED = 1
+      // const isUpdatedIndex = usersObjectStore.index('isUpdated')
+      // const USER_NOT_UPDATED = 0
+      // const USER_UPDATED = 1
 
-      isUpdatedIndex.openCursor(USER_NOT_UPDATED).onsuccess = function (event) {
+      usersObjectStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result
 
         if (!cursor) return;
@@ -747,7 +746,7 @@ function updateUserObjectStore(requestPayload) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL
           record.displayName = userProfile[cursor.primaryKey].displayName
-          record.isUpdated = USER_UPDATED
+          // record.isUpdated = USER_UPDATED
          
           usersObjectStore.put(record)
         }

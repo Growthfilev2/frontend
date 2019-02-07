@@ -45,8 +45,6 @@ function profileView(pushState) {
             backNav();
           });
 
-          showProfilePicture(firebase.auth().currentUser.photoURL);
-
           if (native.getName() === 'Android') {
             document.getElementById('uploadProfileImage').addEventListener('click', function () {
               AndroidInterface.openImagePicker();
@@ -117,15 +115,20 @@ function createProfilePanel(db) {
       profileImgCont.id = 'profile--image-container';
       profileImgCont.className = 'profile-container--main';
 
-      var profileImg = document.createElement('img');
+      var dataObject = document.createElement('object');
+      dataObject.type = 'image/jpeg';
+      dataObject.data = uri || './img/empty-user-big.jpg';
+      dataObject.id = 'user-profile--image';
 
-      profileImg.src = uri || './img/empty-user.jpg';
-      profileImg.id = 'user-profile--image';
+      var profileImg = document.createElement('img');
+      profileImg.src = './img/empty-user-big.jpg';
+      profileImg.className = 'empty-user-profile';
+      dataObject.appendChild(profileImg);
 
       var overlay = document.createElement('div');
       overlay.className = 'insert-overlay';
 
-      profileImgCont.appendChild(profileImg);
+      profileImgCont.appendChild(dataObject);
       profileImgCont.appendChild(overlay);
       profileImgCont.appendChild(uploadBtn);
       if (native.getName() !== 'Android') {
@@ -296,7 +299,7 @@ function sendBase64ImageToBackblaze(base64) {
   var container = document.getElementById('profile--image-container');
   var pre = 'data:image/jpeg;base64,';
   if (selector) {
-    selector.src = pre + base64;
+    selector.data = pre + base64;
   }
   if (container) {
     document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
@@ -304,37 +307,7 @@ function sendBase64ImageToBackblaze(base64) {
   var body = {
     'imageBase64': pre + base64
   };
-
-  changeUserUpdateFlag(firebase.auth().currentUser.phoneNumber).then(function () {
-    requestCreator('backblaze', body);
-  }).catch(function (error) {
-    handleError(error);
-    requestCreator('backblaze', body);
-  });
-}
-
-function updateAuth(url) {
-  console.log(url);
-  var user = firebase.auth().currentUser;
-  user.updateProfile({
-    photoURL: url
-  }).then(function () {
-    removeLoader(url);
-  }).catch(authUpdatedError);
-}
-
-function removeLoader(url) {
-  document.querySelector('.insert-overlay').classList.remove('middle');
-  var container = document.getElementById('profile--image-container');
-  container.children[0].classList.add('reset-opacity');
-
-  container.removeChild(container.lastChild);
-  showProfilePicture(url);
-}
-
-function showProfilePicture(url) {
-  document.getElementById('user-profile--image').src = url || './img/empty-user.jpg';
-  // document.querySelector('.drawer-header-icon').src = url  || './img/empty-user.jpg'
+  requestCreator('backblaze', body);
 }
 
 function authUpdatedError(error) {

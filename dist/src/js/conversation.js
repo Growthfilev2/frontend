@@ -432,7 +432,6 @@ function createHeaderContent(db, id) {
 
   var activityObjectStore = db.transaction('activity').objectStore('activity');
   var leftDiv = document.createElement('div');
-  // leftDiv.style.display = 'inline-flex'
 
   var backDiv = document.createElement('div');
   backDiv.className = 'back-icon';
@@ -449,13 +448,16 @@ function createHeaderContent(db, id) {
 
     var record = event.target.result;
     getImageFromNumber(db, record.creator).then(function (uri) {
+      var dataObject = document.createElement('object');
+      dataObject.data = uri || './img/empty-user.jpg';
+      dataObject.className = 'header--icon-creator';
+      dataObject.type = 'image/jpeg';
 
       var creatorImg = document.createElement("img");
+      creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator';
-      creatorImg.dataset.number = record.creator;
-      creatorImg.src = uri;
-      creatorImg.setAttribute('onerror', 'handleImageError(this)');
-      backDiv.appendChild(creatorImg);
+      dataObject.appendChild(creatorImg);
+      backDiv.appendChild(dataObject);
 
       var primarySpan = document.createElement('div');
       primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
@@ -2132,16 +2134,15 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   assigneeLi.classList.add('mdc-list-item', 'assignee-li');
   if (!userRecord) return assigneeLi;
   assigneeLi.dataset.value = userRecord.mobile;
-  var photoGraphic = document.createElement('img');
-  photoGraphic.classList.add('mdc-list-item__graphic');
-  photoGraphic.dataset.number = userRecord.mobile;
-  if (userRecord.mobile === firebase.auth().currentUser.phoneNumber) {
-    photoGraphic.src = firebase.auth().currentUser.photoURL || './img/empty-user.jpg';
-  } else {
-    photoGraphic.src = userRecord.photoURL || './img/empty-user.jpg';
-  }
-  photoGraphic.setAttribute('onerror', 'handleImageError(this)');
+  var dataObject = document.createElement('object');
+  dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
+  dataObject.type = 'image/jpeg';
+  dataObject.className = 'mdc-list-item__graphic';
 
+  var photoGraphic = document.createElement('img');
+  photoGraphic.src = './img/empty-user.jpg';
+  photoGraphic.className = 'empty-user-assignee';
+  dataObject.appendChild(photoGraphic);
   var assigneeListText = document.createElement('span');
   assigneeListText.classList.add('mdc-list-item__text');
   var assigneeName = document.createElement('span');
@@ -2172,7 +2173,7 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
       };
     }
   }
-  assigneeLi.appendChild(photoGraphic);
+  assigneeLi.appendChild(dataObject);
   assigneeLi.appendChild(assigneeListText);
   assigneeLi.appendChild(metaInput);
   return assigneeLi;
@@ -2274,6 +2275,7 @@ function setFilePath(str, key, show) {
 
   if (document.querySelector('.image--list-li')) {
     document.getElementById('attachment-picture').src = 'data:image/jpg;base64,' + str;
+    document.getElementById('attachment-picture').dataset.value = 'data:image/jpg;base64,' + str;
 
     if (!document.getElementById('send-activity').dataset.progress) {
       document.getElementById('send-activity').classList.remove('hidden');
@@ -2294,8 +2296,10 @@ function setFilePath(str, key, show) {
   img.setAttribute('onerror', 'handleImageErrorAttachment(this)');
   if (!str) {
     img.src = './img/placeholder.png';
+    img.dataset.value = '';
   } else {
     img.src = str;
+    img.dataset.value = str;
   }
   img.onclick = function () {
     openImage(this.src);
@@ -2489,13 +2493,8 @@ function insertInputsIntoActivity(record, activityStore) {
 
   var imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img');
   for (var _i = 0; _i < imagesInAttachments.length; _i++) {
-    var source = '';
-    if (imagesInAttachments[_i].src == 'https://growthfile-testing.firebaseapp.com/img/placeholder.png') {
-      source = '';
-    } else {
-      source = imagesInAttachments[_i].src;
-    }
-    record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = source;
+
+    record.attachment[convertKeyToId(imagesInAttachments[_i].dataset.photoKey)].value = imagesInAttachments[_i].dataset.value;
   }
 
   var sd = void 0;
