@@ -267,7 +267,7 @@ function geolocationApi(req) {
           'latitude': response.location.lat,
           'longitude': response.location.lng,
           'accuracy': response.accuracy,
-          'provider': 'Cellular',
+          'provider': {'cellular':req.body},
         });
       }
     };
@@ -629,7 +629,8 @@ function requestCreator(requestType, requestBody) {
           var geopoints = {
             'latitude': location.latitude,
             'longitude': location.longitude,
-            'accuracy': location.accuracy
+            'accuracy': location.accuracy,
+            'provider':location.provider
           };
 
           requestBody['geopoint'] = geopoints;
@@ -659,7 +660,8 @@ function handleWaitForLocation(requestBody, requestGenerator) {
       var geopoints = {
         'latitude': data.latitude,
         'longitude': data.longitude,
-        'accuracy': data.accuracy
+        'accuracy': data.accuracy,
+        'provider':data.provider 
       };
       requestBody['geopoint'] = geopoints;
       requestGenerator.body = requestBody;
@@ -740,7 +742,7 @@ function updateApp(data) {
     }
     return;
   }
-  //webkit.messageHandlers.updateApp.postMessage();
+  webkit.messageHandlers.updateApp.postMessage();
 }
 
 function revokeSession() {
