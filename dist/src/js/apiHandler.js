@@ -168,10 +168,9 @@ function instant(error, user) {
     body: error,
     token: user.token
   };
-  console.log(error);
-  // http(req).then(function (response) {
-  //   console.log(response)
-  // }).catch(console.log)
+  http(req).then(function (response) {
+    console.log(response)
+  }).catch(console.log)
 }
 
 /**
