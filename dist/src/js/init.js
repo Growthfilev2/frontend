@@ -33,14 +33,7 @@ var native = function () {
     },
     getInfo: function getInfo() {
       if (!this.getName()) {
-        return JSON.stringify({
-          baseOs: 'asd',
-          deviceBrand: '',
-          deviceModel: '',
-          appVersion: 6,
-          osVersion: '',
-          id: '123'
-        });
+        return false;
       }
 
       if (this.getName() === 'Android') {
