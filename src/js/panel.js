@@ -360,11 +360,8 @@ function activityListUI(data, secondLine) {
   dataObject.className = 'mdc-list-item__graphic material-icons'
 
   var creator = document.createElement("img");
-  // creator.dataset.number = data.creator.number;
-  // creator.className = 'mdc-list-item__graphic material-icons'
-
-  // creator.setAttribute('onerror','handleImageError()');
   creator.src = './img/empty-user.jpg';
+  creator.className = 'empty-user-list'
   dataObject.appendChild(creator);
   
   const leftTextContainer = document.createElement('span')
@@ -594,6 +591,7 @@ function creatListHeader(headerName) {
 
       const icon = document.createElement('img');
       icon.src = './img/empty-user.jpg';
+      icon.className = 'list-photo-header'
       object.appendChild(icon);
 
       menuIcon.appendChild(object)

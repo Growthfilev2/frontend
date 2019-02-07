@@ -455,6 +455,7 @@ function createHeaderContent(db, id) {
 
       var creatorImg = document.createElement("img");
       creatorImg.src = './img/empty-user.jpg';
+      creatorImg.className = 'header--icon-creator';
       dataObject.appendChild(creatorImg);
       backDiv.appendChild(dataObject);
 
@@ -2139,8 +2140,8 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   dataObject.className = 'mdc-list-item__graphic';
 
   var photoGraphic = document.createElement('img');
-  photoGraphic.dataset.number = userRecord.mobile;
   photoGraphic.src = './img/empty-user.jpg';
+  photoGraphic.className = 'empty-user-assignee';
   dataObject.appendChild(photoGraphic);
   var assigneeListText = document.createElement('span');
   assigneeListText.classList.add('mdc-list-item__text');
