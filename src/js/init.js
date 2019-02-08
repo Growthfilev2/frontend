@@ -726,11 +726,21 @@ function startInitializatioOfList(data) {
 
 function openListWithChecks() {
   listView({urgent:false,nearby:false});
-  
   runAppChecks();
+  
   setInterval(function(){
-  manageLocation().then(function (location) {
-    updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-  }).catch(handleError);
-  },5000);
+    if(native.getName() === 'Android') {
+      manageLocation().then(function (location) {
+        updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+      }).catch(handleError);
+        return;
+      }
+      webkit.messageHandlers.startLocationService.postMessage('start ios location');
+    },5000);
+
+}
+
+function putIosLocationInRoot(location){
+  updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+  return;
 }

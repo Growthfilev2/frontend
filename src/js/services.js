@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -324,12 +324,6 @@ function manageLocation() {
       })
       return;
     }
-
-    html5Geolocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
   })
 }
 
@@ -740,7 +734,7 @@ function updateApp(data) {
     }
     return;
   }
-  webkit.messageHandlers.updateApp.postMessage();
+  webkit.messageHandlers.updateApp.postMessage('Update App');
 }
 
 function revokeSession() {
