@@ -2610,9 +2610,9 @@ function insertInputsIntoActivity(record, activityStore) {
     record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
   }
 
-  const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  img')
+  const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-  
+
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
 
