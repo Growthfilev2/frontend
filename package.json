@@ -4,11 +4,12 @@
   "description": "## File structure ``` |   index.html |   .gitignore |   package.json |   README.md | +---css |   |   conversation.css | +---js |   |   apiHandler.js |   |   conversation.js |   |   init.js |   |   panel.js |   |   services.js | ```",
   "main": "index.js",
   "scripts": {
-    "clean": "rm -rf dist/src/js/*.js && rm -rf dist/src/css/*.css",
-    "build": "babel src/js/* -d dist --ignore 'src/js/apiHandler.js','src/js/notification.js'",
-    "worker": "babel src/js/apiHandler.js -d dist && babel src/js/notification.js -d dist",
-    "build-css": "uglifycss src/css/app.css > dist/src/css/bundle.css",
-    "compile" :"npm run clean && npm run build && npm run worker && npm run build-css"
+    "clean": "rm -r dist/*.js && rm -r dist/*.css",
+    "babel": "babel src/js --out-file dist/compiled.js --ignore 'src/js/apiHandler.js','src/js/notification.js'",
+    "worker": "babel src/js/apiHandler.js --out-file dist/apiHandler.js && babel src/js/notification.js --out-file dist/notification.js",
+    "uglify":"uglifyjs dist/compiled.js -o dist/bundle.min.js -c -m  && uglifyjs dist/apiHandler.js -o dist/apiHandler.js -c -m && uglifyjs dist/notification.js -o dist/notification.js -c -m",
+    "build-css": "uglifycss src/css/app.css > dist/bundle.css",
+    "compile": "npm run clean && npm run babel && npm run worker && npm run uglify && npm run build-css && rm dist/compiled.js"
   },
   "repository": {
     "type": "git",
@@ -30,6 +31,7 @@
     "uglifycss": "0.0.29"
   },
   "dependencies": {
-    "babel-plugin-transform-remove-strict-mode": "0.0.2"
+    "babel-plugin-transform-remove-strict-mode": "0.0.2",
+    "uglify-js": "^3.4.9"
   }
 }

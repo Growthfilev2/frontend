@@ -1,6 +1,4 @@
-var apiHandler = new Worker('src/js/apiHandler.js');
-
-
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -8,16 +6,13 @@ function handleError(error) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
     error.device = native.getInfo();
-    if(error.stack) {
+    if (error.stack) {
       error.stack = error.stack;
     }
     requestCreator('instant', JSON.stringify(error))
     return
   }
 }
-
-
-
 
 function loader(nameClass) {
   var div = document.createElement('div');
@@ -267,7 +262,9 @@ function geolocationApi(req) {
           'latitude': response.location.lat,
           'longitude': response.location.lng,
           'accuracy': response.accuracy,
-          'provider': {'cellular':JSON.parse(req.body)},
+          'provider': {
+            'cellular': JSON.parse(req.body)
+          },
         });
       }
     };
@@ -327,12 +324,6 @@ function manageLocation() {
       })
       return;
     }
-
-    html5Geolocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
   })
 }
 
@@ -400,7 +391,6 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationChanged);
 }
 
-
 function showSuggestCheckInDialog() {
   const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
   if (!checkInDialog) return;
@@ -447,7 +437,7 @@ function updateLocationInRoot(finalLocation) {
       lastLocationTime: ''
     };
 
-    
+
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName, 3);
     req.onsuccess = function () {
@@ -462,7 +452,7 @@ function updateLocationInRoot(finalLocation) {
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
-        
+
       };
       tx.oncomplete = function () {
         resolve({
@@ -565,7 +555,9 @@ function createAndroidDialog(title, body) {
   try {
     AndroidInterface.showDialog(title, body);
   } catch (e) {
-    handleError({message:`${e.message} from showDialog`});
+    handleError({
+      message: `${e.message} from showDialog`
+    });
     appDialog(body, true);
   }
 }
@@ -630,7 +622,7 @@ function requestCreator(requestType, requestBody) {
             'latitude': location.latitude,
             'longitude': location.longitude,
             'accuracy': location.accuracy,
-            'provider':location.provider
+            'provider': location.provider
           };
 
           requestBody['geopoint'] = geopoints;
@@ -661,7 +653,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
         'latitude': data.latitude,
         'longitude': data.longitude,
         'accuracy': data.accuracy,
-        'provider':data.provider 
+        'provider': data.provider
       };
       requestBody['geopoint'] = geopoints;
       requestGenerator.body = requestBody;
@@ -742,7 +734,7 @@ function updateApp(data) {
     }
     return;
   }
-  webkit.messageHandlers.updateApp.postMessage();
+  webkit.messageHandlers.updateApp.postMessage('Update App');
 }
 
 function revokeSession() {
