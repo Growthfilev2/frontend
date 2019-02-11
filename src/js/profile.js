@@ -310,9 +310,7 @@ function changeDisplayName() {
   nameField.addEventListener('click',function(){
     nameChangeButton.classList.remove('hidden')
     nameField.classList.add('short');
-    if(native.getInfo() === 'Android'){
-      AndroidInterface.startKeyboard();
-    }
+    
   })
 
   nameField.addEventListener('keydown',function(event){
@@ -351,9 +349,7 @@ function changeEmailAddress() {
   emailField.addEventListener('click',function(){
     editEmail.classList.remove('hidden');
     emailField.classList.add('short');
-    if(native.getInfo() === 'Android'){
-      AndroidInterface.startKeyboard();
-    }
+   
   })
  
   emailField.addEventListener('keydown',function(event){
