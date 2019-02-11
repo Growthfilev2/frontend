@@ -33,14 +33,7 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return JSON.stringify({
-          baseOs: 'asd',
-          deviceBrand: '',
-          deviceModel: '',
-          appVersion: 6,
-          osVersion: '',
-          id: '123',
-        });
+        return false;
       }
       
       if (this.getName() === 'Android') {
@@ -583,10 +576,10 @@ function redirect(){
 }
 
 function init(auth) {
-  // if(!native.getName()) {
-  //   redirect();
-  //   return
-  // }
+  if(!native.getName()) {
+    redirect();
+    return
+  }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
@@ -730,7 +723,6 @@ function openListWithChecks() {
       manageLocation().then(function (location) {
         updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
       }).catch(handleError);
-        return;
     },5000);
   }
 

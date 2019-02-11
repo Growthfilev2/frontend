@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -925,10 +925,16 @@ function successResponse(read, param) {
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
 
 
+    let length;
+    if(read.activities.length > 10) {
+      length = 10
+    }
+    else {
+      length = read.activities.length
+    }
 
-    read.activities.forEach(function (activity) {
-      // put activity in activity object store
-
+    for (let index = 0; index < length; index++) {
+      const activity = read.activities[index];
       if (activity.canEdit) {
         activity.editable = 1
         activityObjectStore.put(activity)
@@ -948,7 +954,31 @@ function successResponse(read, param) {
       putAssignessInStore(db, activity.assignees)
       // put attachemnt in the attachment object store
       putAttachment(db, activity)
-    })
+      
+    }
+    // read.activities.forEach(function (activity) {
+      // put activity in activity object store
+
+      // if (activity.canEdit) {
+      //   activity.editable = 1
+      //   activityObjectStore.put(activity)
+      // } else {
+      //   activity.editable = 0
+      //   activityObjectStore.put(activity)
+      // }
+      // if (activity.hidden === 0) {
+      //   createListStore(activity, counter, param)
+      // }
+
+      // updateMap(activity, param)
+
+      // updateCalendar(activity, param)
+      // // put each assignee (number) in the users object store
+
+      // putAssignessInStore(db, activity.assignees)
+      // // put attachemnt in the attachment object store
+      // putAttachment(db, activity)
+    // })
 
 
     read.templates.forEach(function (subscription) {

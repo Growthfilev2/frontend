@@ -136,7 +136,7 @@ function createProfilePanel(db) {
 
 
       nameChangeCont.innerHTML = `<div class="mdc-text-field" id='name-change-field'>
-        <input type="text"  placeholder="${currentName ? '' : 'Enter Your Name'}"  id="pre-filled-name" class="mdc-text-field__input" value="${currentName ? currentName : ''}">
+        <input autocomplete="off" type="text"  placeholder="${currentName ? '' : 'Enter Your Name'}"  id="pre-filled-name" class="mdc-text-field__input" value="${currentName ? currentName : ''}">
         <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-name">
          Your Name
         </label>
@@ -159,7 +159,7 @@ function createProfilePanel(db) {
       const currentEmail = firebase.auth().currentUser.email;
 
       emailCont.innerHTML = `<div class="mdc-text-field" id='email-change-field'>
-        <input type="text" id="pre-filled-email" class="mdc-text-field__input" value="${currentEmail ? currentEmail : ''}" placeholder="${currentEmail ? '' : 'Enter your Email'}">
+        <input  autocomplete="off" type="text" id="pre-filled-email" class="mdc-text-field__input" value="${currentEmail ? currentEmail : ''}" placeholder="${currentEmail ? '' : 'Enter your Email'}">
         <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-email">
          Your Email
         </label>
@@ -382,7 +382,7 @@ function emailValidation(emailField) {
     snacks('You have already set this as your email address');
     return;
   }
-  if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
+  if (timeDiff(auth.metadata.lastSignInTime) <= 2) {
     updateEmail(auth, value);
   } else {
     newSignIn(value, emailField);

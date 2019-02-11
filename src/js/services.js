@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -382,7 +382,7 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
-
+  
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
