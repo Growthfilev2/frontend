@@ -923,18 +923,9 @@ function successResponse(read, param) {
 
     removeActivityFromDB(db, removeActivitiesForUser, param);
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
+   
+    read.activities.forEach(function (activity) {
 
-
-    let length;
-    if(read.activities.length > 10) {
-      length = 10
-    }
-    else {
-      length = read.activities.length
-    }
-
-    for (let index = 0; index < length; index++) {
-      const activity = read.activities[index];
       if (activity.canEdit) {
         activity.editable = 1
         activityObjectStore.put(activity)
@@ -954,31 +945,7 @@ function successResponse(read, param) {
       putAssignessInStore(db, activity.assignees)
       // put attachemnt in the attachment object store
       putAttachment(db, activity)
-      
-    }
-    // read.activities.forEach(function (activity) {
-      // put activity in activity object store
-
-      // if (activity.canEdit) {
-      //   activity.editable = 1
-      //   activityObjectStore.put(activity)
-      // } else {
-      //   activity.editable = 0
-      //   activityObjectStore.put(activity)
-      // }
-      // if (activity.hidden === 0) {
-      //   createListStore(activity, counter, param)
-      // }
-
-      // updateMap(activity, param)
-
-      // updateCalendar(activity, param)
-      // // put each assignee (number) in the users object store
-
-      // putAssignessInStore(db, activity.assignees)
-      // // put attachemnt in the attachment object store
-      // putAttachment(db, activity)
-    // })
+    })
 
 
     read.templates.forEach(function (subscription) {
