@@ -310,6 +310,9 @@ function changeDisplayName() {
   nameField.addEventListener('click',function(){
     nameChangeButton.classList.remove('hidden')
     nameField.classList.add('short');
+    if(native.getInfo() === 'Android'){
+      AndroidInterface.startKeyboard();
+    }
   })
   
   nameChangeButton.addEventListener('click',function(){
@@ -333,7 +336,10 @@ function changeEmailAddress() {
   const editEmail = document.getElementById('edit--email');
   emailField.addEventListener('click',function(){
     editEmail.classList.remove('hidden');
-    emailField.classList.add('short')
+    emailField.classList.add('short');
+    if(native.getInfo() === 'Android'){
+      AndroidInterface.startKeyboard();
+    }
   })
   const auth =firebase.auth().currentUser;
   editEmail.addEventListener('click',function(){
