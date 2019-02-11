@@ -1682,3 +1682,9 @@ input[type="datetime-local"] {
     color: #0399f4;
     font-weight: 600;
   }
+
+  .no-activity {
+    text-align: center;
+    font-size: 20px;
+    color: gray;
+  }

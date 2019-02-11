@@ -21,27 +21,82 @@ function initDomLoad() {
   createActivityIcon();
 }
 
-function listView(filter, updatedActivities) {
+function listView(filter) {
   history.pushState(['listView'], null, null)
-  initDomLoad()
+  initDomLoad();
+  getSizeOfListStore().then(function (size) {
+    if (!size) {
+      const p = document.createElement('p')
+      p.textContent = 'No Activities Found';
+      p.className = 'no-activity'
+      document.getElementById('activity-list-main').appendChild(p)
+      document.getElementById('activity-list-main').style.boxShadow = 'none';
+      return;
+    }
+    
+    getListViewData(filter, size);
+  }).catch(function (error) {
+    handleError({
+      message: `${error} from getSizeOfListStore`
+    })
+    getListViewData(filter);
+  })
+
+}
+
+function getListViewData(filter, size) {
   getRootRecord().then(function (record) {
+
     if (record.suggestCheckIn) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
 
+
     window.addEventListener('scroll', handleScroll, false)
 
     if (!filter) {
+
+      if (size && size <= 20) {
+        loadActivitiesFromListStore(record.location)
+        return;
+      }
+
       startCursor(record.location);
       return;
     }
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
-          startCursor(record.location);
+        if (size && size <= 20) {
+          loadActivitiesFromListStore(record.location)
+          return;
+        }
+        startCursor(record.location);
       }).catch(handleError)
     }).catch(handleError)
+  })
+}
+
+
+function getSizeOfListStore() {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['list'])
+      const store = tx.objectStore('list');
+      var countReq = store.count();
+      countReq.onsuccess = function () {
+        resolve(countReq.result)
+      }
+      countReq.onerror = function () {
+        reject(countReq.error)
+      }
+    }
+    req.onerror = function () {
+      reject(req.error);
+    }
   })
 }
 
@@ -80,9 +135,34 @@ function handleScroll(ev) {
   })
 };
 
+function loadActivitiesFromListStore(currentLocation) {
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
+    const db = req.result;
+    const transaction = db.transaction(['list', 'activity', 'root'])
+    const activity = transaction.objectStore('activity');
+    const store = transaction.objectStore('list')
+    const index = store.index('timestamp');
+    let fragment = document.createDocumentFragment();
+    index.openCursor(null, 'prev').onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+        fragment.appendChild(dom)
+      })
+      cursor.continue();
+    }
+    transaction.oncomplete = function () {
+      const ul = document.getElementById('activity--list')
+      if (!ul) return
+      ul.appendChild(fragment)
+      scrollToActivity()
+    }
+  }
+}
 
 function startCursor(currentLocation) {
-  
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -129,16 +209,13 @@ function startCursor(currentLocation) {
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
       if (!ul) return
-      let inifiniteScroll = true;
-      if(fragment.children.length <= 20 ) {
-          inifiniteScroll = false
-      }
+
       ul.appendChild(fragment)
-        if(inifiniteScroll){
-          scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
-          scroll_namespace.skip = false
-          scroll_namespace.size = 20
-        }
+
+      scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
+      scroll_namespace.skip = false
+      scroll_namespace.size = 20
+
       scrollToActivity()
     }
   }
@@ -368,7 +445,7 @@ function activityListUI(data, secondLine) {
   creator.src = './img/empty-user.jpg';
   creator.className = 'empty-user-list'
   dataObject.appendChild(creator);
-  
+
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
   const activityNameText = document.createElement('span')
@@ -466,15 +543,21 @@ function getRootRecord() {
         if (record) {
           resolve(record)
         } else {
-          reject({message:'No root record found from getRootRecord'});
+          reject({
+            message: 'No root record found from getRootRecord'
+          });
         }
       }
-      rootTx.onerror = function(){
-        reject({message:`${rootTx.error.message} from getRootRecord`})
+      rootTx.onerror = function () {
+        reject({
+          message: `${rootTx.error.message} from getRootRecord`
+        })
       }
     }
     req.onerror = function () {
-      reject({message:`${req.error} from getRootRecord`})
+      reject({
+        message: `${req.error} from getRootRecord`
+      })
     }
   })
 }
@@ -482,10 +565,10 @@ function getRootRecord() {
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (officeTemplateObject) {
-  if (Object.keys(officeTemplateObject).length) {
-    createActivityIconDom()
-    return;
-  }
+    if (Object.keys(officeTemplateObject).length) {
+      createActivityIconDom()
+      return;
+    }
   }).catch(handleError);
 }
 
@@ -512,12 +595,16 @@ function getCountOfTemplates() {
       tx.oncomplete = function () {
         resolve(officeByTemplate)
       }
-      tx.onerror = function(){
-        reject({message:`${tx.error.message} from getCountOfTemplates`});
+      tx.onerror = function () {
+        reject({
+          message: `${tx.error.message} from getCountOfTemplates`
+        });
       }
     }
     req.onerror = function () {
-      reject({message:`${req.error.message} from getCountOfTemplates`});
+      reject({
+        message: `${req.error.message} from getCountOfTemplates`
+      });
     }
   })
 }
@@ -643,7 +730,9 @@ function notificationWorker(type, updateTimestamp) {
     }
 
     notification.onerror = function (error) {
-      reject({message:`${error.message} from notificationWorker at ${error.lineno}`})
+      reject({
+        message: `${error.message} from notificationWorker at ${error.lineno}`
+      })
     }
   })
 }
@@ -682,11 +771,15 @@ function suggestCheckIn(value) {
           resolve(true);
         };
         tx.onerror = function () {
-          reject({message:`${tx.error.message} from suggestCheckIn`});
+          reject({
+            message: `${tx.error.message} from suggestCheckIn`
+          });
         };
       };
       req.onerror = function () {
-        reject({message:`${req.error} from suggestCheckIn`});
+        reject({
+          message: `${req.error} from suggestCheckIn`
+        });
       };
     }).catch(function (error) {
       reject(error);
