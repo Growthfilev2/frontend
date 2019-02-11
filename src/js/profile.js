@@ -254,6 +254,7 @@ function newSignIn(value,field) {
       dialogSelector.remove();
     });
   } catch (e) {
+    dialogSelector.remove();
     handleError({
       message: `${e.message} from newSignIn function during email updation`
     });
@@ -373,11 +374,11 @@ function emailValidation(emailField){
       snacks('You have already set this as your email address');
       return;
     }
-    if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
-      updateEmail(auth, value);
-    } else {
+    // if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
+    //   updateEmail(auth, value);
+    // } else {
       newSignIn(value,emailField);
-    }
+    // }
 }
 
 function updateEmail(user, email) {
