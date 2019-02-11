@@ -204,13 +204,11 @@ function firebaseUiConfig(value) {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        if (value) {
+        if(value) {
           document.querySelector('#updateEmailDialog').remove();
           updateEmail(authResult.user, value);
-        } else {
-          init(authResult.user);
+          return false;
         }
-        return false;
       },
       signInFailure: function (error) {
 
@@ -729,15 +727,14 @@ function startInitializatioOfList(data) {
 function openListWithChecks() {
   listView({urgent:false,nearby:false});
   runAppChecks();
-  // setInterval(function(){
-  //   if(native.getName() === 'Android') {
-  //     manageLocation().then(function (location) {
-  //       updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-  //     }).catch(handleError);
-  //       return;
-  //     }
-  //     // webkit.messageHandlers.startLocationService.postMessage('start ios location');
-  //   },5000);
+  setInterval(function(){
+   
+      manageLocation().then(function (location) {
+        updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+      }).catch(handleError);
+        return;
+    
+    },5000);
 
 }
 

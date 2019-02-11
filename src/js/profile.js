@@ -128,7 +128,7 @@ function createProfilePanel(db) {
       nameChangeCont.className = 'profile-psuedo-card';
 
       var toggleBtnName = document.createElement('button');
-      toggleBtnName.className = 'mdc-icon-button material-icons';
+      toggleBtnName.className = 'mdc-icon-button material-icons hidden';
       toggleBtnName.id = 'edit--name';
 
       toggleBtnName.setAttribute('aria-hidden', 'true');
@@ -155,7 +155,7 @@ function createProfilePanel(db) {
       emailCont.className = 'profile-psuedo-card';
 
       var toggleBtnEmail = document.createElement('button');
-      toggleBtnEmail.className = 'mdc-icon-button material-icons';
+      toggleBtnEmail.className = 'mdc-icon-button material-icons hidden';
       toggleBtnEmail.id = 'edit--email';
       toggleBtnEmail.setAttribute('aria-hidden', 'true');
       toggleBtnEmail.setAttribute('aria-pressed', 'false');
@@ -297,13 +297,26 @@ function sendBase64ImageToBackblaze(base64) {
 }
 
 function authUpdatedError(error) {
+  if(error.message !== 'auth/invalid-email') {
+    handleError({message:`${error.message} from authUpdatedError`})
+  }
   snacks(error.message);
 }
 
 function changeDisplayName() {
-  const name = new mdc.textField.MDCTextField(document.getElementById('name-change-field'))
+  const nameField = document.getElementById('name-change-field')
+  const name = new mdc.textField.MDCTextField(nameField)
   const nameChangeButton = document.getElementById('edit--name')
+  nameField.addEventListener('click',function(){
+    nameChangeButton.classList.remove('hidden')
+    nameField.classList.add('short');
+  })
+  
   nameChangeButton.addEventListener('click',function(){
+    if(!name.value) {
+      snacks('Please Enter a Name');
+      return;
+    }
     nameChangeButton.color = '0399f4'
     firebase.auth().currentUser.updateProfile({
       displayName:name.value
@@ -315,11 +328,20 @@ function changeDisplayName() {
 }
 
 function changeEmailAddress() {
-  const email = new mdc.textField.MDCTextField(document.getElementById('email-change-field'))
-  const auth =firebase.auth().currentUser;
+  const emailField = document.getElementById('email-change-field')
+  const email = new mdc.textField.MDCTextField(emailField)
   const editEmail = document.getElementById('edit--email');
+  emailField.addEventListener('click',function(){
+    editEmail.classList.remove('hidden');
+    emailField.classList.add('short')
+  })
+  const auth =firebase.auth().currentUser;
   editEmail.addEventListener('click',function(){
     const value = email.value;
+    if(!value) {
+      snacks('Enter a valid Email Id');
+      return;
+    }
     if (value === auth.email) {
       snacks('You have already set this as your email address');
       return;

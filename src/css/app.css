@@ -1669,8 +1669,11 @@ input[type="datetime-local"] {
     }
   }
   @media (max-width:568px) {
-    #name-change-field , #email-change-field {
+    #name-change-field.short , #email-change-field.short {
       width: 83%;
+    }
+    #name-change-field , #email-change-field {
+      width: 100%;
     }
   }
 

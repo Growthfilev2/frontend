@@ -324,6 +324,11 @@ function manageLocation() {
       })
       return;
     }
+    html5Geolocation().then(function(location){
+      resolve(location)
+    }).catch(function(error){
+      reject(error)
+    })
   })
 }
 
