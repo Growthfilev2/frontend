@@ -314,19 +314,31 @@ function changeDisplayName() {
       AndroidInterface.startKeyboard();
     }
   })
+
+  nameField.addEventListener('keydown',function(event){
+  
+    if(event.keyCode == 13) {
+        updateName(name.value); 
+    }
+  })
   
   nameChangeButton.addEventListener('click',function(){
-    if(!name.value) {
-      snacks('Please Enter a Name');
-      return;
-    }
-    nameChangeButton.color = '0399f4'
-    firebase.auth().currentUser.updateProfile({
-      displayName:name.value
-    }).then(successDialog).catch(function(error){
-      snacks('Please Try again later');
-      handleError({message:`${error} at updateProfile in changeDisplayName`})
-    })
+   
+     updateName(name.value)
+  })
+}
+
+function updateName (name) {
+  if(!name) {
+    snacks('Please Enter a Name');
+    return;
+  }
+  
+  firebase.auth().currentUser.updateProfile({
+    displayName:name
+  }).then(successDialog).catch(function(error){
+    snacks('Please Try again later');
+    handleError({message:`${error} at updateProfile in changeDisplayName`})
   })
 }
 
@@ -334,6 +346,8 @@ function changeEmailAddress() {
   const emailField = document.getElementById('email-change-field')
   const email = new mdc.textField.MDCTextField(emailField)
   const editEmail = document.getElementById('edit--email');
+ 
+
   emailField.addEventListener('click',function(){
     editEmail.classList.remove('hidden');
     emailField.classList.add('short');
@@ -341,9 +355,21 @@ function changeEmailAddress() {
       AndroidInterface.startKeyboard();
     }
   })
-  const auth =firebase.auth().currentUser;
+ 
+  emailField.addEventListener('keydown',function(event){
+    if(event.keyCode == 13) {
+      emailValidation(email)
+    }
+  })
+
   editEmail.addEventListener('click',function(){
-    const value = email.value;
+    emailValidation(email)
+  })
+}
+
+function emailValidation(emailField){
+  const auth =firebase.auth().currentUser;
+  const value = emailField.value
     if(!value) {
       snacks('Enter a valid Email Id');
       return;
@@ -355,9 +381,8 @@ function changeEmailAddress() {
     if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
       updateEmail(auth, value);
     } else {
-      newSignIn(value,email);
+      newSignIn(value,emailField);
     }
-  })
 }
 
 function updateEmail(user, email) {
