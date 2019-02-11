@@ -836,7 +836,7 @@ footer.mdc-dialog__footer {
   background-color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   animation: _1hBRh 1s cubic-bezier(0.1, 0.82, 0.25, 1);
-  padding: 20px 14px 10px 14px;
+  padding: 20px 14px 10px 20px;
   margin: 20px 0px 20px 0px;
 }
 
@@ -1670,7 +1670,7 @@ input[type="datetime-local"] {
   }
   @media (max-width:568px) {
     #name-change-field , #email-change-field {
-      width: 85%;
+      width: 83%;
     }
   }
 

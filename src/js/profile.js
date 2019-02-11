@@ -230,7 +230,7 @@ function timeDiff(lastSignInTime) {
   return moment(currentDate).diff(moment(authSignInTime), 'minutes');
 }
 
-function newSignIn(value) {
+function newSignIn(value,field) {
   updateEmailDialog()
   const dialogSelector = document.querySelector('#updateEmailDialog')
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
@@ -250,8 +250,7 @@ function newSignIn(value) {
 
     emailDialog.listen('MDCDialog:cancel', function () {
       ui.delete();
-      const emailField = new mdc.textField.MDCTextField(document.getElementById('email'));
-      emailField.value = firebase.auth().currentUser.email;
+      field.value = firebase.auth().currentUser.email;
       dialogSelector.remove();
     });
   } catch (e) {
@@ -318,9 +317,9 @@ function changeDisplayName() {
 function changeEmailAddress() {
   const email = new mdc.textField.MDCTextField(document.getElementById('email-change-field'))
   const auth =firebase.auth().currentUser;
-  const value = email.value;
   const editEmail = document.getElementById('edit--email');
   editEmail.addEventListener('click',function(){
+    const value = email.value;
     if (value === auth.email) {
       snacks('You have already set this as your email address');
       return;
@@ -328,7 +327,7 @@ function changeEmailAddress() {
     if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
       updateEmail(auth, value);
     } else {
-      newSignIn(value);
+      newSignIn(value,email);
     }
   })
 }
