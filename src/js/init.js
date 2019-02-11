@@ -745,3 +745,4 @@ function putIosLocationInRoot(location){
   updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
   return;
 }
+

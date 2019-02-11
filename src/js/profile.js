@@ -41,14 +41,14 @@ function profileView(pushState) {
       rootTx.oncomplete = function () {
         createProfileHeader();
         createProfilePanel(db).then(function (view) {
+
           if (!document.getElementById('app-current-panel')) return;
 
           document.getElementById('app-current-panel').innerHTML = view.outerHTML;
-          disableInputs();
           document.getElementById('close-profile--panel').addEventListener('click', function () {
             backNav();
           });
-
+         
           if (native.getName() === 'Android') {
             document.getElementById('uploadProfileImage').addEventListener('click', function () {
               AndroidInterface.openImagePicker();
@@ -66,7 +66,6 @@ function profileView(pushState) {
       };
     };
   };
-  sendCurrentViewNameToAndroid('profile');
 }
 
 function inputFile(selector) {
@@ -153,14 +152,21 @@ function createProfilePanel(db) {
 
       toggleBtnName.setAttribute('aria-hidden', 'true');
       toggleBtnName.setAttribute('aria-pressed', 'false');
-      toggleBtnName.setAttribute('data-toggle-on-content', 'check');
-      toggleBtnName.setAttribute('data-toggle-on-label', 'check');
-      toggleBtnName.setAttribute('data-toggle-off-content', 'edit');
-      toggleBtnName.setAttribute('data-toggle-off-label', 'displayName');
+      toggleBtnName.textContent = 'check';
 
-      toggleBtnName.textContent = 'edit';
+      if (firebase.auth().currentUser.displayName) {
+        nameChangeCont.innerHTML = `<div class="mdc-text-field" id='name-change-field'>
+        <input type="text" id="pre-filled" class="mdc-text-field__input" value="${firebase.auth().currentUser.displayName}">
+        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled">
+         Your Name
+        </label>
+        <div class="mdc-line-ripple"></div>
+      </div>
+      `
+      } else {
+        nameChangeCont.appendChild(createInputForProfile('displayName', 'Name'));
+      }
 
-      nameChangeCont.appendChild(createInputForProfile('displayName', 'Name'));
       nameChangeCont.appendChild(toggleBtnName);
 
       var emailCont = document.createElement('div');
@@ -172,31 +178,29 @@ function createProfilePanel(db) {
       toggleBtnEmail.id = 'edit--email';
       toggleBtnEmail.setAttribute('aria-hidden', 'true');
       toggleBtnEmail.setAttribute('aria-pressed', 'false');
-      toggleBtnEmail.setAttribute('data-toggle-on-content', 'check');
-      toggleBtnEmail.setAttribute('data-toggle-on-label', 'check');
-      toggleBtnEmail.setAttribute('data-toggle-off-content', 'edit');
-      toggleBtnEmail.setAttribute('data-toggle-off-label', 'updateEmail');
+      toggleBtnEmail.textContent = 'check';
 
-      toggleBtnEmail.textContent = 'email';
-
-      emailCont.appendChild(createInputForProfile('email', 'Email'));
+      if(firebase.auth().currentUser.email) {
+        emailCont.innerHTML = `<div class="mdc-text-field" id='email-change-field'>
+        <input type="text" id="pre-filled" class="mdc-text-field__input" value="${firebase.auth().currentUser.email}">
+        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled">
+         Your Email
+        </label>
+        <div class="mdc-line-ripple"></div>
+      </div>
+      `
+      }
+      else {
+        emailCont.appendChild(createInputForProfile('email', 'Email'));
+      }
+    
       emailCont.appendChild(toggleBtnEmail);
 
-
-      var changeNumCont = document.createElement('div');
-      changeNumCont.id = 'change--number-container';
-
-      var mainChange = document.createElement('div');
-      mainChange.id = 'phone-number--change-container';
-      mainChange.className = 'mdc-layout-grid__inner';
-
-      changeNumCont.appendChild(mainChange);
-      // changeNumCont.appendChild(submitCont)
-
+      
       profileView.appendChild(profileImgCont);
       profileView.appendChild(nameChangeCont);
       profileView.appendChild(emailCont);
-      profileView.appendChild(changeNumCont);
+  
 
 
       resolve(profileView)
@@ -220,7 +224,7 @@ function updateEmailDialog() {
 
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
-    
+
     var canel = document.createElement('button');
     canel.type = 'button';
     canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel update-email-cancel';
@@ -228,63 +232,15 @@ function updateEmailDialog() {
     canel.style.backgroundColor = '#3498db';
 
     footer.appendChild(canel);
-   
+
     surface.appendChild(section);
     surface.appendChild(footer)
     aside.appendChild(surface);
-   document.body.appendChild(aside);
-   
+    document.body.appendChild(aside);
+
   }
 }
 
-function toggleIconData(icon, inputField) {
-  var iconEl = document.getElementById(icon);
-
-  var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl);
-  toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function (_ref) {
-    var detail = _ref.detail;
-
-    if (!detail.isOn) {
-      inputField['input_'].disabled = true;
-      inputField['input_'].style.borderBottom = 'none';
-      var key = this.dataset.toggleOffLabel;
-      var text = inputField.value;
-      handleFieldInput(key, text);
-      inputField['lineRipple_'].deactivate();
-    } else {
-      console.log(inputField);
-      inputField['input_'].style.borderBottom = '1px solid rgba(0,0,0,.42)';
-      inputField['input_'].disabled = false;
-      inputField['lineRipple_'].activate();
-
-      localStorage.getItem('deviceType') === 'Android' ? AndroidInterface.startKeyboard() : '';
-      inputField['input_'].focus();
-    }
-  });
-}
-
-function handleFieldInput(key, value) {
-  var user = firebase.auth().currentUser;
-  console.log(typeof value === 'undefined' ? 'undefined' : _typeof(value));
-  if (key === 'displayName') {
-    user.updateProfile(_defineProperty({}, key, value)).then(function () {
-      successDialog();
-    }).catch(authUpdatedError);
-  }
-
-  if (key === 'updateEmail') {
-    if (value === firebase.auth().currentUser.email) {
-      snacks('This email address already exists');
-      return;
-    }
-    if (timeDiff(firebase.auth().currentUser.metadata.lastSignInTime) <= 5) {
-
-      updateEmail(firebase.auth().currentUser, value);
-    } else {
-    newSignIn(value);
-    }
-  }
-}
 
 function timeDiff(lastSignInTime) {
   var currentDate = moment().format('YYY-MM-DD HH:mm');
@@ -298,19 +254,19 @@ function newSignIn(value) {
   const dialogSelector = document.querySelector('#updateEmailDialog')
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
   emailDialog.show();
- 
+
 
   try {
     ui = new firebaseui.auth.AuthUI(firebase.auth());
     ui.start('#refresh-login', firebaseUiConfig(value));
-   setTimeout(function(){
+    setTimeout(function () {
 
       document.querySelector('.firebaseui-id-phone-number').disabled = true;
       document.querySelector('.firebaseui-label').remove();
-      document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';    
-    
-    },500)
-    
+      document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
+
+    }, 500)
+
     emailDialog.listen('MDCDialog:cancel', function () {
       ui.delete();
       const emailField = new mdc.textField.MDCTextField(document.getElementById('email'));
@@ -318,7 +274,9 @@ function newSignIn(value) {
       dialogSelector.remove();
     });
   } catch (e) {
-    handleError({message:`${e.message} from newSignIn function during email updation`});
+    handleError({
+      message: `${e.message} from newSignIn function during email updation`
+    });
     snacks('Please try again later');
   }
 }
@@ -362,27 +320,40 @@ function authUpdatedError(error) {
   snacks(error.message);
 }
 
-function changeDisplayName(user) {
-  var displayNameField = getInputText('#displayName');
-
-  if (user.displayName) {
-    displayNameField.value = user.displayName;
-  }
-
-  toggleIconData('edit--name', displayNameField);
+function changeDisplayName() {
+  const name = new mdc.textField.MDCTextField(document.getElementById('name-change-field'))
+  const nameChangeButton = document.getElementById('edit--name')
+  nameChangeButton.addEventListener('click',function(){
+    nameChangeButton.color = '0399f4'
+    firebase.auth().currentUser.updateProfile({
+      displayName:name.value
+    }).then(successDialog).catch(function(error){
+      snacks('Please Try again later');
+      handleError({message:`${error} at updateProfile in changeDisplayName`})
+    })
+  })
 }
 
-function changeEmailAddress(user) {
-  var emailField = getInputText('#email');
-  if (user.email) {
-    emailField.value = user.email;
-  }
-
-  toggleIconData('edit--email', emailField);
+function changeEmailAddress() {
+  const email = new mdc.textField.MDCTextField(document.getElementById('email-change-field'))
+  const auth =firebase.auth().currentUser;
+  const value = email.value;
+  const editEmail = document.getElementById('edit--email');
+  editEmail.addEventListener('click',function(){
+    if (value === auth.email) {
+      snacks('You have already set this as your email address');
+      return;
+    }
+    if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
+      updateEmail(auth, value);
+    } else {
+      newSignIn(value);
+    }
+  })
 }
 
 function updateEmail(user, email) {
-  console.log(email);
+
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError);
 }
 
@@ -405,7 +376,27 @@ function handleReauthError(error) {
   console.log(error);
 }
 
-function disableInputs() {
-  getInputText('#displayName')['input_'].disabled = true;
-  getInputText('#email')['input_'].disabled = true;
+function createInputForProfile(key, type, classtype) {
+  const mainTextField = document.createElement('div');
+  mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype} attachment--text-field`
+
+  mainTextField.dataset.key = key
+  mainTextField.dataset.type = type
+  mainTextField.id = key.replace(/\s/g, '')
+  const mainInput = document.createElement('input')
+  mainInput.className = 'mdc-text-field__input'
+
+  if (type && key === 'displayName') {
+    mainInput.placeholder = 'Your Name'
+  }
+  if (type && key === 'email') {
+    mainInput.placeholder = 'Your Email'
+  }
+
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+
+  mainTextField.appendChild(mainInput)
+  mainTextField.appendChild(ripple)
+  return mainTextField
 }

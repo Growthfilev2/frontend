@@ -658,33 +658,6 @@ function modifyHeader(attr) {
 
 }
 
-
-
-function createInputForProfile(key, type, classtype) {
-  const mainTextField = document.createElement('div');
-  mainTextField.className = `mdc-text-field mdc-text-field--dense ${classtype} attachment--text-field`
-
-  mainTextField.dataset.key = key
-  mainTextField.dataset.type = type
-  mainTextField.id = key.replace(/\s/g, '')
-  const mainInput = document.createElement('input')
-  mainInput.className = 'mdc-text-field__input'
-
-  if (type && key === 'displayName') {
-    mainInput.placeholder = 'Your Name'
-  }
-  if (type && key === 'email') {
-    mainInput.placeholder = 'Your Email'
-  }
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  mainTextField.appendChild(mainInput)
-  mainTextField.appendChild(ripple)
-  return mainTextField
-}
-
 function suggestCheckIn(value) {
   return new Promise(function (resolve, reject) {
     getRootRecord().then(function (record) {
