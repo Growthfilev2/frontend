@@ -413,7 +413,7 @@ padding: 8px 20px 8px 30px;
 }
 
 #email--change-container {
-  padding-bottom: 20px;
+  padding-top: 10px;
 }
 
 #change--number-container {
@@ -836,9 +836,11 @@ footer.mdc-dialog__footer {
   background-color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   animation: _1hBRh 1s cubic-bezier(0.1, 0.82, 0.25, 1);
-  padding: 14px 30px 10px 30px;
-  margin: 35px 0px 20px 0px;
+  padding: 20px 14px 10px 14px;
+  margin: 20px 0px 20px 0px;
 }
+
+
 
 .profile-psuedo-card .mdc-text-field {
   width: 80%;
@@ -1654,4 +1656,26 @@ input[type="datetime-local"] {
   .mdl-button--raised.mdl-button--colored {
     background: #0399f4;
     color: white;
+  }
+
+  @media (min-width:568px){
+    #name-change-field , #email-change-field {
+      width: 90%;
+    }
+  }
+  @media(max-width: 320px) {
+    #name-change-field , #email-change-field {
+      width: 75%;
+    }
+  }
+  @media (max-width:568px) {
+    #name-change-field , #email-change-field {
+      width: 85%;
+    }
+  }
+
+  
+  #edit--name , #edit--email {
+    color: #0399f4;
+    font-weight: 600;
   }

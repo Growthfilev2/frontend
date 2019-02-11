@@ -137,8 +137,8 @@ function createProfilePanel(db) {
 
       if (firebase.auth().currentUser.displayName) {
         nameChangeCont.innerHTML = `<div class="mdc-text-field" id='name-change-field'>
-        <input type="text" id="pre-filled" class="mdc-text-field__input" value="${firebase.auth().currentUser.displayName}">
-        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled">
+        <input type="text" id="pre-filled-name" class="mdc-text-field__input" value="${firebase.auth().currentUser.displayName}">
+        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-name">
          Your Name
         </label>
         <div class="mdc-line-ripple"></div>
@@ -163,8 +163,8 @@ function createProfilePanel(db) {
 
       if(firebase.auth().currentUser.email) {
         emailCont.innerHTML = `<div class="mdc-text-field" id='email-change-field'>
-        <input type="text" id="pre-filled" class="mdc-text-field__input" value="${firebase.auth().currentUser.email}">
-        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled">
+        <input type="text" id="pre-filled-email" class="mdc-text-field__input" value="${firebase.auth().currentUser.email}">
+        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-email">
          Your Email
         </label>
         <div class="mdc-line-ripple"></div>
@@ -340,7 +340,6 @@ function updateEmail(user, email) {
 
 function emailUpdateSuccess() {
   var user = firebase.auth().currentUser;
-  console.log(user);
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
 }
 
@@ -351,11 +350,9 @@ function emailVerificationSuccess() {
 
 function emailVerificationError(error) {
   snacks(error.message);
+  handleError({message:`${error.message} from emailVerificationError`})
 }
 
-function handleReauthError(error) {
-  console.log(error);
-}
 
 function createInputForProfile(key, type, classtype) {
   const mainTextField = document.createElement('div');
