@@ -104,7 +104,6 @@ function startCursor(currentLocation) {
         } else {
 
           getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
-            console.log(dom)
             fragment.appendChild(dom)
             iterator++
           })

@@ -114,6 +114,7 @@ function http(request) {
 
 function fetchServerTime(body, user) {
   currentDevice = body.device;
+  console.log(currentDevice);
   const parsedDeviceInfo = JSON.parse(currentDevice);
 
   return new Promise(function (resolve) {

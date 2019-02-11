@@ -238,6 +238,7 @@ function newSignIn(value,field) {
 
 
   try {
+  
     ui = new firebaseui.auth.AuthUI(firebase.auth());
     ui.start('#refresh-login', firebaseUiConfig(value));
     setTimeout(function () {
@@ -249,7 +250,7 @@ function newSignIn(value,field) {
     }, 500)
 
     emailDialog.listen('MDCDialog:cancel', function () {
-      ui.delete();
+    
       field.value = firebase.auth().currentUser.email;
       dialogSelector.remove();
     });
@@ -300,6 +301,9 @@ function sendBase64ImageToBackblaze(base64) {
 function authUpdatedError(error) {
   if(error.message !== 'auth/invalid-email') {
     handleError({message:`${error.message} from authUpdatedError`})
+  }
+  if(document.querySelector('.init-loader')) {
+    document.querySelector('.init-loader').remove()
   }
   snacks(error.message);
 }
@@ -374,15 +378,15 @@ function emailValidation(emailField){
       snacks('You have already set this as your email address');
       return;
     }
-    // if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
-    //   updateEmail(auth, value);
-    // } else {
+    if (timeDiff(auth.metadata.lastSignInTime) <= 5) {
+      updateEmail(auth, value);
+    } else {
       newSignIn(value,emailField);
-    // }
+    }
 }
 
 function updateEmail(user, email) {
-
+  document.getElementById('growthfile').appendChild(loader('init-loader'));
   user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError);
 }
 
@@ -398,6 +402,9 @@ function emailVerificationSuccess() {
 
 function emailVerificationError(error) {
   snacks(error.message);
+  if(document.querySelector('.init-loader')) {
+    document.querySelector('.init-loader').remove()
+  }
   handleError({message:`${error.message} from emailVerificationError`})
 }
 

@@ -378,7 +378,6 @@ function html5Geolocation() {
 
 
 function locationUpdationSuccess(location) {
-  console.log(location)
   if (!location.prev.latitude) return;
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
