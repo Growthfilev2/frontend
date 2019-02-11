@@ -1,4 +1,4 @@
-const globalError= {}
+let ui;
 
 let native = function () {
   return {
@@ -186,7 +186,7 @@ window.addEventListener('load', function () {
     window[event.state[0]](event.state[1], false)
   }
   layoutGrid()
-  startApp()
+  startApp(true)
 })
 
 
@@ -205,6 +205,7 @@ function firebaseUiConfig(value) {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         if (value) {
+          document.querySelector('#updateEmailDialog').remove();
           updateEmail(authResult.user, value);
         } else {
           init(authResult.user);
@@ -229,6 +230,7 @@ function firebaseUiConfig(value) {
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
+        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '' ,
       }
     ]
 
@@ -242,7 +244,7 @@ function userSignedOut() {
   login.id = 'login-container'
   document.body.appendChild(login)
 
-  const ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
+  ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
   ui.start('#login-container', firebaseUiConfig());
 
 }
@@ -401,7 +403,7 @@ function imageViewDialog() {
   document.body.appendChild(aside)
 }
 
-function startApp() {
+function startApp(start) {
   
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -410,10 +412,11 @@ function startApp() {
       userSignedOut()
       return
     }
-
-    if (localStorage.getItem('dbexist')) {
+    if(start) {
       init(auth)
+      return;
     }
+
   })
 }
 
@@ -589,7 +592,6 @@ function init(auth) {
   // }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
-
     if (localStorage.getItem('dbexist')) {
       from = 1;
       if (reset.value) {
@@ -727,16 +729,15 @@ function startInitializatioOfList(data) {
 function openListWithChecks() {
   listView({urgent:false,nearby:false});
   runAppChecks();
-  
-  setInterval(function(){
-    if(native.getName() === 'Android') {
-      manageLocation().then(function (location) {
-        updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-      }).catch(handleError);
-        return;
-      }
-      webkit.messageHandlers.startLocationService.postMessage('start ios location');
-    },5000);
+  // setInterval(function(){
+  //   if(native.getName() === 'Android') {
+  //     manageLocation().then(function (location) {
+  //       updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+  //     }).catch(handleError);
+  //       return;
+  //     }
+  //     // webkit.messageHandlers.startLocationService.postMessage('start ios location');
+  //   },5000);
 
 }
 

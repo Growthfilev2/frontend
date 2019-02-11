@@ -1625,3 +1625,33 @@ input[type="datetime-local"] {
     width:40px;
     height: 40px;
   }
+
+  #updateEmailDialog {
+    background: rgba(0, 0, 0, 0.47);
+  }
+  #refresh-login {
+    padding:0px;
+    border-bottom: 1px solid gray;
+  }
+  .custom-backdrop {
+    background-color:  rgba(0, 0, 0, 0.87);
+    position: fixed;
+    top: 0;
+    left: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    z-index: -1;
+  }
+  .update-email-cancel {
+    width: 100%;
+  }
+  .mdl-button--primary.mdl-button--primary {
+    color: #0399f4;
+  }
+  .mdl-button--raised.mdl-button--colored {
+    background: #0399f4;
+    color: white;
+  }

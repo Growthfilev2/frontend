@@ -1,15 +1,31 @@
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
 
 function profileView(pushState) {
   if (pushState) {
     history.pushState(['profileView'], null, null);
   }
-  if(window.addEventListener) {
-    window.removeEventListener('scroll',handleScroll,false)
-  }  
-  
+  if (window.addEventListener) {
+    window.removeEventListener('scroll', handleScroll, false)
+  }
+
   document.body.style.backgroundColor = '#eeeeee';
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
@@ -24,30 +40,29 @@ function profileView(pushState) {
       rootObjectStore.put(record);
       rootTx.oncomplete = function () {
         createProfileHeader();
-        createProfilePanel(db).then(function(view){
-          if(!document.getElementById('app-current-panel'))  return;
-        
+        createProfilePanel(db).then(function (view) {
+          if (!document.getElementById('app-current-panel')) return;
+
           document.getElementById('app-current-panel').innerHTML = view.outerHTML;
           disableInputs();
           document.getElementById('close-profile--panel').addEventListener('click', function () {
             backNav();
           });
-            
-          if(native.getName() === 'Android') {
-            document.getElementById('uploadProfileImage').addEventListener('click',function(){
-             AndroidInterface.openImagePicker();
+
+          if (native.getName() === 'Android') {
+            document.getElementById('uploadProfileImage').addEventListener('click', function () {
+              AndroidInterface.openImagePicker();
             })
-          }
-          else {
-            inputFile('uploadProfileImage').addEventListener('change', function(){
+          } else {
+            inputFile('uploadProfileImage').addEventListener('change', function () {
               readUploadedFile()
             });
           }
-          
+
           changeDisplayName(user);
           changeEmailAddress(user);
         })
-     
+
       };
     };
   };
@@ -67,44 +82,47 @@ function createProfileHeader() {
 
   backIcon.textContent = 'arrow_back';
   backSpan.appendChild(backIcon);
-  modifyHeader({ id: 'app-main-header', left: backSpan.outerHTML });
+  modifyHeader({
+    id: 'app-main-header',
+    left: backSpan.outerHTML
+  });
 }
 
 function createProfilePanel(db) {
-  return new Promise(function(resolve){
-    getImageFromNumber(db,firebase.auth().currentUser.phoneNumber).then(function(uri){
-  
+  return new Promise(function (resolve) {
+    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
+
       var profileView = document.createElement('div');
       profileView.id = 'profile-view--container';
       profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
-      
+
       var uploadBtn = document.createElement('button');
       uploadBtn.className = 'mdc-fab';
-      if(native.getName() === 'Android'){
+      if (native.getName() === 'Android') {
         uploadBtn.id = 'uploadProfileImage'
       }
-      
+
       var label = document.createElement('label');
       label.setAttribute('for', 'uploadProfileImage');
       var btnText = document.createElement('span');
       btnText.className = 'mdc-fab__icon material-icons';
       btnText.textContent = 'add_a_photo';
-      
+
       label.appendChild(btnText);
       uploadBtn.appendChild(label);
       let fileInput;
-      if(native.getName() !== 'Android') {
+      if (native.getName() !== 'Android') {
         fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.style.display = 'none';
         fileInput.id = 'uploadProfileImage';
-        fileInput.accept = 'image/jpeg;'; 
+        fileInput.accept = 'image/jpeg;';
       }
-      
+
       var profileImgCont = document.createElement('div');
       profileImgCont.id = 'profile--image-container';
       profileImgCont.className = 'profile-container--main';
-      
+
       const dataObject = document.createElement('object');
       dataObject.type = 'image/jpeg';
       dataObject.data = uri || './img/empty-user-big.jpg';
@@ -117,38 +135,38 @@ function createProfilePanel(db) {
 
       var overlay = document.createElement('div');
       overlay.className = 'insert-overlay';
-      
+
       profileImgCont.appendChild(dataObject);
       profileImgCont.appendChild(overlay);
       profileImgCont.appendChild(uploadBtn);
-      if(native.getName() !== 'Android') {
+      if (native.getName() !== 'Android') {
         label.appendChild(fileInput);
       }
-      
+
       var nameChangeCont = document.createElement('div');
       nameChangeCont.id = 'name--change-container';
       nameChangeCont.className = 'profile-psuedo-card';
-      
+
       var toggleBtnName = document.createElement('button');
       toggleBtnName.className = 'mdc-icon-button material-icons';
       toggleBtnName.id = 'edit--name';
-      
+
       toggleBtnName.setAttribute('aria-hidden', 'true');
       toggleBtnName.setAttribute('aria-pressed', 'false');
       toggleBtnName.setAttribute('data-toggle-on-content', 'check');
       toggleBtnName.setAttribute('data-toggle-on-label', 'check');
       toggleBtnName.setAttribute('data-toggle-off-content', 'edit');
       toggleBtnName.setAttribute('data-toggle-off-label', 'displayName');
-      
+
       toggleBtnName.textContent = 'edit';
-      
+
       nameChangeCont.appendChild(createInputForProfile('displayName', 'Name'));
       nameChangeCont.appendChild(toggleBtnName);
-      
+
       var emailCont = document.createElement('div');
       emailCont.id = 'email--change-container';
       emailCont.className = 'profile-psuedo-card';
-      
+
       var toggleBtnEmail = document.createElement('button');
       toggleBtnEmail.className = 'mdc-icon-button material-icons';
       toggleBtnEmail.id = 'edit--email';
@@ -158,40 +176,69 @@ function createProfilePanel(db) {
       toggleBtnEmail.setAttribute('data-toggle-on-label', 'check');
       toggleBtnEmail.setAttribute('data-toggle-off-content', 'edit');
       toggleBtnEmail.setAttribute('data-toggle-off-label', 'updateEmail');
-      
+
       toggleBtnEmail.textContent = 'email';
-      
+
       emailCont.appendChild(createInputForProfile('email', 'Email'));
       emailCont.appendChild(toggleBtnEmail);
-      
-      var refreshAuth = document.createElement('div');
-      refreshAuth.id = 'ui-auth';
-      refreshAuth.className = '';
-      
+
+
       var changeNumCont = document.createElement('div');
       changeNumCont.id = 'change--number-container';
-      
+
       var mainChange = document.createElement('div');
       mainChange.id = 'phone-number--change-container';
       mainChange.className = 'mdc-layout-grid__inner';
-      
+
       changeNumCont.appendChild(mainChange);
       // changeNumCont.appendChild(submitCont)
-      
+
       profileView.appendChild(profileImgCont);
       profileView.appendChild(nameChangeCont);
       profileView.appendChild(emailCont);
-      profileView.appendChild(refreshAuth);
       profileView.appendChild(changeNumCont);
-      
-     
+
+
       resolve(profileView)
     });
   })
 }
-  
-  function toggleIconData(icon, inputField) {
-    var iconEl = document.getElementById(icon);
+
+function updateEmailDialog() {
+
+  if (!document.getElementById('updateEmailDialog')) {
+    var aside = document.createElement('aside');
+    aside.className = 'mdc-dialog mdc-dialog--open';
+    aside.id = 'updateEmailDialog';
+    var surface = document.createElement('div');
+    surface.className = 'mdc-dialog__surface';
+    surface.style.width = '90%';
+    surface.style.height = 'auto';
+    var section = document.createElement('section');
+    section.className = 'mdc-dialog__body';
+    section.id = 'refresh-login'
+
+    var footer = document.createElement('footer');
+    footer.className = 'mdc-dialog__footer';
+    
+    var canel = document.createElement('button');
+    canel.type = 'button';
+    canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel update-email-cancel';
+    canel.textContent = 'Cancel';
+    canel.style.backgroundColor = '#3498db';
+
+    footer.appendChild(canel);
+   
+    surface.appendChild(section);
+    surface.appendChild(footer)
+    aside.appendChild(surface);
+   document.body.appendChild(aside);
+   
+  }
+}
+
+function toggleIconData(icon, inputField) {
+  var iconEl = document.getElementById(icon);
 
   var toggleButton = new mdc.iconButton.MDCIconButtonToggle(iconEl);
   toggleButton['root_'].addEventListener('MDCIconButtonToggle:change', function (_ref) {
@@ -231,10 +278,10 @@ function handleFieldInput(key, value) {
       return;
     }
     if (timeDiff(firebase.auth().currentUser.metadata.lastSignInTime) <= 5) {
-      console.log('less than 5');
+
       updateEmail(firebase.auth().currentUser, value);
     } else {
-      newSignIn(value);
+    newSignIn(value);
     }
   }
 }
@@ -247,28 +294,37 @@ function timeDiff(lastSignInTime) {
 }
 
 function newSignIn(value) {
-  var login = document.createElement('div');
-  login.id = 'refresh-login';
-  login.className = 'mdc-elevation--z3';
+  updateEmailDialog()
+  const dialogSelector = document.querySelector('#updateEmailDialog')
+  var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
+  emailDialog.show();
+ 
 
-  document.getElementById('ui-auth').innerHTML = login.outerHTML;
+  try {
+    ui = new firebaseui.auth.AuthUI(firebase.auth());
+    ui.start('#refresh-login', firebaseUiConfig(value));
+   setTimeout(function(){
 
-  // document.querySelector('.app').style.display = 'none'
-
-  var ui = new firebaseui.auth.AuthUI(firebase.auth());
-
-  // DOM element to insert firebaseui login UI
-  ui.start('#refresh-login', firebaseUiConfig(value));
-
-  setTimeout(function () {
-    document.querySelector('.firebaseui-id-phone-number').value = firebase.auth().currentUser.phoneNumber;
-    document.querySelector('.firebaseui-id-phone-number').disabled = true;
-    document.querySelector('.firebaseui-label').remove();
-  }, 300);
+      document.querySelector('.firebaseui-id-phone-number').disabled = true;
+      document.querySelector('.firebaseui-label').remove();
+      document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';    
+    
+    },500)
+    
+    emailDialog.listen('MDCDialog:cancel', function () {
+      ui.delete();
+      const emailField = new mdc.textField.MDCTextField(document.getElementById('email'));
+      emailField.value = firebase.auth().currentUser.email;
+      dialogSelector.remove();
+    });
+  } catch (e) {
+    handleError({message:`${e.message} from newSignIn function during email updation`});
+    snacks('Please try again later');
+  }
 }
 
-function readUploadedFile(image){
-  if(native.getName() === 'Android'){
+function readUploadedFile(image) {
+  if (native.getName() === 'Android') {
     sendBase64ImageToBackblaze(image);
     return;
   }
@@ -285,18 +341,19 @@ function readUploadedFile(image){
     reader.readAsDataURL(file);
   }
 }
+
 function sendBase64ImageToBackblaze(base64) {
   var selector = document.getElementById('user-profile--image');
   var container = document.getElementById('profile--image-container');
   const pre = 'data:image/jpeg;base64,';
   if (selector) {
-    selector.data = pre+base64;
+    selector.data = pre + base64;
   }
   if (container) {
     document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
   }
   var body = {
-    'imageBase64': pre+base64
+    'imageBase64': pre + base64
   };
   requestCreator('backblaze', body);
 }
