@@ -708,6 +708,13 @@ function createUsersApiUrl(db, user) {
           user: user
         })
       }
+      else {
+        resolve({
+          db:db,
+          url:null,
+          user:user
+        })
+      }
     }
 
   })
@@ -874,7 +881,6 @@ function updateListStoreWithCreatorImage(param) {
       transaction.oncomplete = function () {
         resolve(true);
       }
-
       transaction.onerror = function () {
         reject(transaction.error);
       }
@@ -959,15 +965,24 @@ function successResponse(read, param) {
       rootObjectStore.put(record);
       
       createUsersApiUrl(db, param.user).then(function(data){
-        updateUserObjectStore(data).then(function(updated){
+        if(data.url) {
+          updateUserObjectStore(data).then(function(updated){
+            updateListStoreWithCreatorImage(param).then(function () {
+              const updatedActivities = read.activities
+              requestHandlerResponse('loadView', 200, updatedActivities);
+            })
+          }).catch(function(error){
+          
+            requestHandlerResponse('loadView', 200, updatedActivities);
+          })
+        }
+        else {
           updateListStoreWithCreatorImage(param).then(function () {
             const updatedActivities = read.activities
             requestHandlerResponse('loadView', 200, updatedActivities);
           })
-        }).catch(function(error){
-        
-          requestHandlerResponse('loadView', 200, updatedActivities);
-        })
+        }
+       
       });
     }
   }

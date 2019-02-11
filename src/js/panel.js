@@ -33,7 +33,7 @@ function listView(filter) {
       document.getElementById('activity-list-main').style.boxShadow = 'none';
       return;
     }
-    
+
     getListViewData(filter, size);
   }).catch(function (error) {
     handleError({
