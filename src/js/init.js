@@ -584,10 +584,10 @@ function redirect(){
 }
 
 function init(auth) {
-  // if(!native.getName()) {
-  //   redirect();
-  //   return
-  // }
+  if(!native.getName()) {
+    redirect();
+    return
+  }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
@@ -728,15 +728,12 @@ function openListWithChecks() {
   listView({urgent:false,nearby:false});
   runAppChecks();
   setInterval(function(){
-   
       manageLocation().then(function (location) {
         updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
       }).catch(handleError);
         return;
-    
     },5000);
-
-}
+  }
 
 function putIosLocationInRoot(location){
   updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);

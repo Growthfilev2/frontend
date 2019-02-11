@@ -344,7 +344,6 @@ function changeEmailAddress() {
   const emailField = document.getElementById('email-change-field')
   const email = new mdc.textField.MDCTextField(emailField)
   const editEmail = document.getElementById('edit--email');
- 
 
   emailField.addEventListener('click',function(){
     editEmail.classList.remove('hidden');
