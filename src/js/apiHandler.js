@@ -923,19 +923,8 @@ function successResponse(read, param) {
 
     removeActivityFromDB(db, removeActivitiesForUser, param);
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-
-
-    let length;
-    if(read.activities.length > 10) {
-      length = 10
-    }
-    else {
-      length = read.activities.length
-    }
-
-
+   
     read.activities.forEach(function (activity) {
-     
 
       if (activity.canEdit) {
         activity.editable = 1

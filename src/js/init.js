@@ -46,7 +46,7 @@ let native = function () {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          handleError(e.message)
+          handleError({message:`${e.message} from AndroidInterface.getDeviceId`})
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -113,31 +113,14 @@ window.addEventListener('load', function () {
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
-    const messageData = {
-      title: title,
-      message: message,
-      cancelable: false,
-      button: {
-        text: '',
-        show: false,
-        clickAction: {
-          redirection: {
-            value: false,
-            text: ''
-          }
-        }
-      }
-    }
     try {
-      Android.notification(JSON.stringify(messageData))
+      AndroidInterface.showDialog(title,message);
     } catch (e) {
-      handleError(e.message)
+      handleError({message:`${e.message} from showDialog during device Incompatibility check`})
       appDialog(message);
     }
     return
   }
-
-
 
   firebase.initializeApp({
     apiKey: "AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w",
@@ -578,7 +561,7 @@ function redirect(){
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
     window.location = 'https://www.growthfile.com';
-   handleError(error)
+   handleError({message:`${error} from redirect`})
   });
 }
 
@@ -731,10 +714,6 @@ function openListWithChecks() {
         updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
       }).catch(handleError);
     },5000);
-  }
-
-function putIosLocationInRoot(location){
-  updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-  return;
 }
+
 
