@@ -290,7 +290,7 @@ function getCellTowerInfo() {
       return
     }
 
-    var apiKey ='AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w'
+    var apiKey ='AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
