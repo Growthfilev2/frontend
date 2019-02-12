@@ -198,7 +198,7 @@ function updateEmailDialog() {
 
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
-
+     
     var canel = document.createElement('button');
     canel.type = 'button';
     canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel update-email-cancel';
@@ -229,13 +229,10 @@ function newSignIn(value, field) {
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
   emailDialog.show();
 
-
   try {
 
-    ui = new firebaseui.auth.AuthUI(firebase.auth());
     ui.start('#refresh-login', firebaseUiConfig(value));
     setTimeout(function () {
-
       document.querySelector('.firebaseui-id-phone-number').disabled = true;
       document.querySelector('.firebaseui-label').remove();
       document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
@@ -249,6 +246,7 @@ function newSignIn(value, field) {
     });
   } catch (e) {
     dialogSelector.remove();
+    console.log(e);
     handleError({
       message: `${e.message} from newSignIn function during email updation`
     });

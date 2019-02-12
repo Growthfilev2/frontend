@@ -1,5 +1,4 @@
-let ui;
-
+let ui = firebaseui.auth.AuthUI.getInstance();
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -33,7 +32,14 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return false;
+        return JSON.stringify({
+          baseOs: 'mac',
+          deviceBrand: '',
+          deviceModel: '',
+          appVersion: 6,
+          osVersion: '',
+          id: '123',
+        })
       }
       
       if (this.getName() === 'Android') {
@@ -45,7 +51,7 @@ let native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 5,
+            appVersion: 6,
             osVersion: '',
             id: '',
           })
@@ -233,10 +239,10 @@ function userSignedOut() {
   const login = document.createElement('div')
   login.id = 'login-container'
   document.body.appendChild(login)
-
-  ui = new firebaseui.auth.AuthUI(firebase.auth() || '')
+  if(!ui) {
+    ui = new firebaseui.auth.AuthUI(firebase.auth())
+  }
   ui.start('#login-container', firebaseUiConfig());
-
 }
 
 function layoutGrid() {
@@ -403,6 +409,7 @@ function startApp(start) {
       return
     }
     if(start) {
+     
       init(auth)
       return;
     }
@@ -576,10 +583,10 @@ function redirect(){
 }
 
 function init(auth) {
-  if(!native.getName()) {
-    redirect();
-    return
-  }
+  // if(!native.getName()) {
+  //   redirect();
+  //   return
+  // }
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
