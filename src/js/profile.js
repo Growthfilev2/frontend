@@ -230,7 +230,9 @@ function newSignIn(value, field) {
   emailDialog.show();
 
   try {
-
+    if(!ui) {
+      ui = new firebaseui.auth.AuthUI(firebase.auth())
+    }
     ui.start('#refresh-login', firebaseUiConfig(value));
     setTimeout(function () {
       document.querySelector('.firebaseui-id-phone-number').disabled = true;

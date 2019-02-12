@@ -1,4 +1,4 @@
-let ui = firebaseui.auth.AuthUI.getInstance();
+let ui;
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -32,14 +32,7 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return JSON.stringify({
-          baseOs: 'mac',
-          deviceBrand: '',
-          deviceModel: '',
-          appVersion: 6,
-          osVersion: '',
-          id: '123',
-        })
+        return false;
       }
       
       if (this.getName() === 'Android') {
@@ -51,7 +44,7 @@ let native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 6,
+            appVersion: 7,
             osVersion: '',
             id: '',
           })
@@ -131,6 +124,7 @@ window.addEventListener('load', function () {
     messagingSenderId: "1011478688238"
   })
 
+  ui = firebaseui.auth.AuthUI.getInstance();
 
   moment.updateLocale('en', {
     calendar: {
@@ -566,10 +560,11 @@ function redirect(){
 }
 
 function init(auth) {
-  // if(!native.getName()) {
-  //   redirect();
-  //   return
-  // }
+  if(!native.getName()) {
+    redirect();
+    return
+  }
+
   document.getElementById("main-layout-app").style.display = 'block'
   idbVersionLessThan3(auth).then(function (reset) {
     if (localStorage.getItem('dbexist')) {
@@ -603,7 +598,7 @@ function resetApp(auth, from) {
     requestCreator('now', {
       device: native.getInfo(),
       from: from,
-      registerToken: native.getFCMToken()
+      registerToken: native.getFCMToken() 
     });
 
   }).catch(function (error) {

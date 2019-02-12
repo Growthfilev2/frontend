@@ -1,4 +1,4 @@
-const notification = new Worker('js/notification.js')
+const notification = new Worker('notification.js')
 
 const scroll_namespace = {
   count: 0,
@@ -53,6 +53,13 @@ function getListViewData(filter, size) {
     }
 
     window.addEventListener('scroll', handleScroll, false)
+
+
+    if(!filter) {
+      fetchActivities(size,record.location)
+      return;
+    }
+
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {

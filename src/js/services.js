@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -735,7 +735,7 @@ function updateApp(data) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;
       appUpdateDialog('' + message, title);
-    }
+    } 
     return;
   }
   webkit.messageHandlers.updateApp.postMessage('Update App');
