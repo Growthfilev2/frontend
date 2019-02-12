@@ -52,32 +52,29 @@ function getListViewData(filter, size) {
       showSuggestCheckInDialog()
     }
 
-
     window.addEventListener('scroll', handleScroll, false)
-
-    if (!filter) {
-
-      if (size && size <= 20) {
-        loadActivitiesFromListStore(record.location)
-        return;
-      }
-
-      startCursor(record.location);
-      return;
-    }
 
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
-        if (size && size <= 20) {
-          loadActivitiesFromListStore(record.location)
-          return;
-        }
-        startCursor(record.location);
-      }).catch(handleError)
-    }).catch(handleError)
+        fetchActivities(size, record.location)
+      }).catch(function (error) {
+        handleError(error);
+        fetchActivities(size, record.location)
+      })
+    }).catch(function (error) {
+      handleError(error);
+      fetchActivities(size, record.location)
+    })
   })
 }
 
+function fetchActivities(size, location) {
+  if (size && size <= 20) {
+    loadActivitiesFromListStore(location)
+    return;
+  }
+  startCursor(location);
+}
 
 function getSizeOfListStore() {
   return new Promise(function (resolve, reject) {
