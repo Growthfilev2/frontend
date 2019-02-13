@@ -220,7 +220,8 @@ function firebaseUiConfig(value) {
 
 function userSignedOut() {
   const login = document.createElement('div')
-  login.id = 'login-container'
+    login.id = 'login-container'
+    localStorage.clear();
   document.body.appendChild(login)
   if(!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
@@ -592,7 +593,6 @@ function init(auth) {
 
 function resetApp(auth, from) {
   removeIDBInstance(auth).then(function () {
-    localStorage.removeItem('dbexist');
     history.pushState(null, null, null);
     document.getElementById('growthfile').appendChild(loader('init-loader'))
 
