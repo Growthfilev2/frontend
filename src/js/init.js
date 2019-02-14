@@ -569,14 +569,15 @@ function init(auth) {
   //   redirect();
   //   return
   // }
-
   document.getElementById("main-layout-app").style.display = 'block'
      const req = indexedDB.open(firebase.auth().currentUser.uid)
      req.onsuccess = function(){
        const db =req.result;
         console.log(db);
         if(Object.keys(db.objectStoreNames).length < 9){
-          resetApp(auth, 0)
+          db.close();
+          resetApp(auth, 0);
+          
         }
         else {
           requestCreator('now', {
@@ -584,6 +585,7 @@ function init(auth) {
                 from: '',
                 registerToken: native.getFCMToken()
           })
+          openListWithChecks()
         }
      } 
 }
@@ -591,19 +593,14 @@ function init(auth) {
 
 function resetApp(auth, from) {
   removeIDBInstance(auth).then(function () {
+    localStorage.setItem('today', null);
     history.pushState(null, null, null);
-    document.getElementById('growthfile').appendChild(loader('init-loader'))
-
-    setTimeout(function () {
-      snacks('Growthfile is Loading. Please Wait');
-    }, 1000)
-
+    // document.getElementById('growthfile').appendChild(loader('init-loader'))
     requestCreator('now', {
       device: native.getInfo(),
       from: from,
       registerToken: native.getFCMToken()
     });
-    listView();
   }).catch(function (error) {
     snacks(error.userMessage);
     handleError(error)

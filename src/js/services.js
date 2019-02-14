@@ -716,6 +716,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
+  'initFirstLoad':initFirstLoad,
   'update-app': updateApp,
   'revoke-session': revokeSession,
   'notification': successDialog,
@@ -727,6 +728,23 @@ var receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
+}
+
+function initFirstLoad(response){
+ 
+  if(!history.state) {
+    history.pushState(['listView'], null, null)
+    initDomLoad();
+    return;
+  }
+  if(history.state[0] !== 'listView') return;
+  if(!Array.isArray(response.msg)) return;
+  if(!response.msg.length) return;
+  
+  getRootRecord().then(function(record){
+    updateEl(response.msg,record);
+  })
+  return;
 }
 
 function updateApp(data) {
@@ -794,14 +812,13 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-  localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   androidStopRefreshing();
-
-  if (!history.state) {
-    localStorage.setItem('today', null);
-    openListWithChecks();
-    return;
-  }
+  
+  // if (!history.state) {
+  //   localStorage.setItem('today', null);
+  //   openListWithChecks();
+  //   return;
+  // }
 
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
@@ -811,9 +828,10 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
+    
     if (!data.msg.length) return;
     getRootRecord().then(function (record) {
-      updateEl(data.msg, record.location);
+      updateEl(data.msg, record);
     });
     return;
   }
