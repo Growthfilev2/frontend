@@ -484,7 +484,6 @@ function isEmployeeOnLeave() {
 
 function idbVersionLessThan3(auth) {
   return new Promise(function (resolve, reject) {
-
     const req = indexedDB.open(auth.uid, 3);
     let db;
     let reset = {
@@ -506,7 +505,6 @@ function idbVersionLessThan3(auth) {
           children.createIndex('templateStatus', ['template', 'status']);
           const map = req.transaction.objectStore('map');
           map.createIndex('byOffice', ['office', 'location']);
-
           break;
         case 3:
           value = false;
@@ -571,25 +569,25 @@ function init(auth) {
   //   redirect();
   //   return
   // }
+
   document.getElementById("main-layout-app").style.display = 'block'
-  idbVersionLessThan3(auth).then(function (reset) {
-    if (localStorage.getItem('dbexist')) {
-      from = 1;
-      if (reset.value) {
-        resetApp(auth, from);
-        return;
-      }
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: '',
-        registerToken: native.getFCMToken()
-      })
-      openListWithChecks()
-      return;
-    }
-    resetApp(auth, 0)
-  }).catch(handleError);
+     const req = indexedDB.open(firebase.auth().currentUser.uid)
+     req.onsuccess = function(){
+       const db =req.result;
+        console.log(db);
+        if(Object.keys(db.objectStoreNames).length < 9){
+          resetApp(auth, 0)
+        }
+        else {
+          requestCreator('now', {
+                device: native.getInfo(),
+                from: '',
+                registerToken: native.getFCMToken()
+          })
+        }
+     } 
 }
+
 
 function resetApp(auth, from) {
   removeIDBInstance(auth).then(function () {
@@ -599,13 +597,13 @@ function resetApp(auth, from) {
     setTimeout(function () {
       snacks('Growthfile is Loading. Please Wait');
     }, 1000)
- 
+
     requestCreator('now', {
       device: native.getInfo(),
       from: from,
       registerToken: native.getFCMToken()
     });
-
+    listView();
   }).catch(function (error) {
     snacks(error.userMessage);
     handleError(error)
