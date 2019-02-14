@@ -254,7 +254,6 @@ function createObjectStores(request, data) {
   list.createIndex('timestamp', 'timestamp');
   list.createIndex('status', 'status');
 
-
   const users = db.createObjectStore('users', {
     keyPath: 'mobile'
   })
@@ -316,7 +315,7 @@ function createObjectStores(request, data) {
     fromTime: data.fromTime,
     location: ''
   })
-
+  
 }
 
 function comment(body, auth) {

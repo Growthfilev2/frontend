@@ -41,12 +41,14 @@ let native = function () {
           id: '123',
         })
       }
-      
+
       if (this.getName() === 'Android') {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          handleError({message:`${e.message} from AndroidInterface.getDeviceId`})
+          handleError({
+            message: `${e.message} from AndroidInterface.getDeviceId`
+          })
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -106,17 +108,19 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-  if(!this.localStorage.getItem('error')) {
-    this.localStorage.setItem('error',JSON.stringify({}));
+  if (!this.localStorage.getItem('error')) {
+    this.localStorage.setItem('error', JSON.stringify({}));
   }
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
     try {
-      AndroidInterface.showDialog(title,message);
+      AndroidInterface.showDialog(title, message);
     } catch (e) {
-      handleError({message:`${e.message} from showDialog during device Incompatibility check`})
+      handleError({
+        message: `${e.message} from showDialog during device Incompatibility check`
+      })
       appDialog(message);
     }
     return
@@ -185,7 +189,7 @@ function firebaseUiConfig(value) {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        if(value) {
+        if (value) {
           document.querySelector('#updateEmailDialog').remove();
           updateEmail(authResult.user, value);
           return false;
@@ -209,7 +213,7 @@ function firebaseUiConfig(value) {
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
-        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '' ,
+        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '',
       }
     ]
 
@@ -220,10 +224,10 @@ function firebaseUiConfig(value) {
 
 function userSignedOut() {
   const login = document.createElement('div')
-    login.id = 'login-container'
-    localStorage.clear();
+  login.id = 'login-container'
+  localStorage.clear();
   document.body.appendChild(login)
-  if(!ui) {
+  if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
   }
   ui.start('#login-container', firebaseUiConfig());
@@ -384,7 +388,7 @@ function imageViewDialog() {
 }
 
 function startApp(start) {
-  
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -392,12 +396,27 @@ function startApp(start) {
       userSignedOut()
       return
     }
-    if(start) {
-     
-      init(auth)
-      return;
+    if (start) {
+      const req = indexedDB.open(firebase.auth().currentUser.uid)
+      req.onsuccess = function () {
+        const db = req.result;
+        if (Object.keys(db.objectStoreNames).length < 9) {
+          db.close();
+          resetApp(auth, 0);
+        } else {
+          idbVersionLessThan3(auth).then(function (reset) {
+            if (reset.value) {
+              resetApp(auth, 0)
+              return;
+            }
+            init()
+          }).catch(function (error) {
+            resetApp(auth, 0);
+            handleError(error)
+          })
+        }
+      }
     }
-
   })
 }
 
@@ -427,12 +446,16 @@ function getEmployeeDetails() {
       tx.oncomplete = function () {
         resolve(details);
       }
-      tx.onerror = function(){
-        reject({message:`${tx.error.message} from getEmployeeDetails`})
+      tx.onerror = function () {
+        reject({
+          message: `${tx.error.message} from getEmployeeDetails`
+        })
       }
     }
-    req.onerror = function(){
-      reject({message:`${req.error.message} from getEmployeeDetails`})
+    req.onerror = function () {
+      reject({
+        message: `${req.error.message} from getEmployeeDetails`
+      })
     }
   })
 }
@@ -469,14 +492,18 @@ function isEmployeeOnLeave() {
           resolve(empDetails)
         }
         tx.onerror = function () {
-          reject({message:`${tx.error.message} from isEmployeeOnLeave`})
+          reject({
+            message: `${tx.error.message} from isEmployeeOnLeave`
+          })
         }
       }
       req.onerror = function () {
-        reject({message:`${req.error.message} from isEmployeeOnLeave`});
+        reject({
+          message: `${req.error.message} from isEmployeeOnLeave`
+        });
       }
 
-    }).catch(function(error){
+    }).catch(function (error) {
       reject(error)
     })
   })
@@ -510,6 +537,7 @@ function idbVersionLessThan3(auth) {
           value = false;
           reset.version = 3
           break;
+
         default:
           reset.value = true;
           reset.version = ''
@@ -522,7 +550,7 @@ function idbVersionLessThan3(auth) {
     }
     req.onerror = function () {
       reject({
-        message: `${req.error.message} from idbVersionLessThan3` 
+        message: `${req.error.message} from idbVersionLessThan3`
       })
     }
   })
@@ -555,39 +583,30 @@ function removeIDBInstance(auth) {
   })
 }
 
-function redirect(){
+function redirect() {
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
     window.location = 'https://www.growthfile.com';
-   handleError({message:`${error} from redirect`})
+    handleError({
+      message: `${error} from redirect`
+    })
   });
 }
 
-function init(auth) {
+function init() {
   // if(!native.getName()) {
   //   redirect();
   //   return
   // }
+
   document.getElementById("main-layout-app").style.display = 'block'
-     const req = indexedDB.open(firebase.auth().currentUser.uid)
-     req.onsuccess = function(){
-       const db =req.result;
-        console.log(db);
-        if(Object.keys(db.objectStoreNames).length < 9){
-          db.close();
-          resetApp(auth, 0);
-          
-        }
-        else {
-          requestCreator('now', {
-                device: native.getInfo(),
-                from: '',
-                registerToken: native.getFCMToken()
-          })
-          openListWithChecks()
-        }
-     } 
+  requestCreator('now', {
+    device: native.getInfo(),
+    from: '',
+    registerToken: native.getFCMToken()
+  })
+  openListWithChecks()
 }
 
 
@@ -611,17 +630,17 @@ function resetApp(auth, from) {
 function runAppChecks() {
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
-      detectSuggestCheckinEvent(e.detail,emp);
+      detectSuggestCheckinEvent(e.detail, emp);
       return;
-    }).catch(function(error){
+    }).catch(function (error) {
       handleError(error);
       detectSuggestCheckinEvent(e.detail);
     })
   }, true);
 }
 
-function detectSuggestCheckinEvent(changed,emp){
-  
+function detectSuggestCheckinEvent(changed, emp) {
+
   var dataObject = {
     urgent: false,
     nearby: false,
@@ -690,11 +709,11 @@ function startInitializatioOfList(data) {
         nearby: data.nearby
       });
     }
-  }).catch(function(error){
+  }).catch(function (error) {
     handleError(error);
     listView({
       urgent: false,
-      nearby:false
+      nearby: false
     });
   })
 }
@@ -702,13 +721,14 @@ function startInitializatioOfList(data) {
 
 
 function openListWithChecks() {
-  listView({urgent:false,nearby:false});
+  listView({
+    urgent: false,
+    nearby: false
+  });
   runAppChecks();
-  setInterval(function(){
-      manageLocation().then(function (location) {
-        updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-      }).catch(handleError);
-    },5000);
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+    }).catch(handleError);
+  }, 5000);
 }
-
-
