@@ -36,7 +36,7 @@ let native = function () {
           baseOs: 'mac',
           deviceBrand: '',
           deviceModel: '',
-          appVersion: 6,
+          appVersion: 7,
           osVersion: '',
           id: '123',
         })
