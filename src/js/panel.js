@@ -54,6 +54,11 @@ function getListViewData(filter, size) {
 
     window.addEventListener('scroll', handleScroll, false)
 
+    if(!filter) {
+      fetchActivities(size,record.location)
+      return;
+    }
+
     notificationWorker('urgent', filter.urgent).then(function () {
       notificationWorker('nearBy', filter.nearby).then(function () {
         fetchActivities(size, record.location)
