@@ -608,14 +608,15 @@ function putAssignessInStore(assigneeArray, param) {
   const req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     const db = req.result;
-    const tx = db.transaction('users');
+    const tx = db.transaction(['users'],'readwrite');
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
         const record = event.target.result
         record.put({
           mobile: assignee,
-          displayName: ''
+          displayName: assignee.displayName,
+          photoURL:assignee.photoURL
         })
       }
     })
@@ -753,27 +754,35 @@ function updateSubscription(db, subscription, param) {
 function createListStore(activity, counter, param) {
   return new Promise(function (resolve, reject) {
 
+
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const listTx = db.transaction(['list'], 'readwrite');
-      const listStore = listTx.objectStore('list');
+      const tx = db.transaction(['list','users'], 'readwrite');
+      const listStore = tx.objectStore('list');
+      const usersStore = tx.objectStore('users')
+      usersStore.get(activity.creator).onsuccess = function(event){
+        const requiredData = {
+          'activityId': activity.activityId,
+          'secondLine': '',
+          'count': counter[activity.activityId],
+          'timestamp': activity.timestamp,
+          'creator': {
+            number: activity.creator,
+            photo: ''
+          },
+          'activityName': activity.activityName,
+          'status': activity.status
+        }
 
-      const requiredData = {
-        'activityId': activity.activityId,
-        'secondLine': '',
-        'count': counter[activity.activityId],
-        'timestamp': activity.timestamp,
-        'creator': {
-          number: activity.creator,
-          photo: ''
-        },
-        'activityName': activity.activityName,
-        'status': activity.status
+        const record = event.target.result;
+        if(record) {
+          requiredData.creator.photo = record.photoURL
+        }
+        listStore.put(requiredData);
       }
-
-      listStore.put(requiredData);
-      listTx.oncomplete = function () {
+    
+      tx.oncomplete = function () {
         resolve(true)
       }
     }
@@ -823,7 +832,7 @@ function successResponse(read, param) {
 
       updateMap(activity, param);
       updateCalendar(activity, param)
-      putAssignessInStore(activity.assignees, param)
+      putAssignessInStore(activity.assignees, param);
       putAttachment(activity, param)
 
       if (activity.hidden === 0) {
