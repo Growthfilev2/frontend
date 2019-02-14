@@ -938,25 +938,12 @@ function resetSelectedContacts() {
 
 function fillMapInSelector(db, tx, dialog, data) {
 
-  if (data.record.template === 'check-in') {
-    const searchIcon = document.getElementById('selector--search')
-    searchIcon.classList.add('hidden');
-    const ul = document.getElementById('data-list--container')
-
-    getRootRecord().then(function (record) {
-      checkMapStoreForNearByLocation(data.record.office, record.location).then(function (results) {
-        results.forEach(function (result) {
-          ul.appendChild(createVenueLi(result, false, data.record, true))
-        })
-
-        handleClickListnersForMap(db, dialog, data)
-      })
-    })
-  } else {
-    getLocationForMapSelector(tx, data).then(function () {
-      handleClickListnersForMap(db, dialog, data)
-    }).catch(console.log)
-  }
+  const searchIcon = document.getElementById('selector--search')
+  searchIcon.classList.add('hidden');
+  const ul = document.getElementById('data-list--container');
+  getLocationForMapSelector(tx, data).then(function () {
+    handleClickListnersForMap(db, dialog, data)
+  }).catch(console.log)
 }
 
 function getLocationForMapSelector(tx, data) {
@@ -1247,23 +1234,35 @@ function createTempRecord(office, template, data) {
 
       const bareBonesVenueArray = []
       if (template === 'check-in') {
-
+        const bareBonesVenue = {}
+        bareBonesVenue.venueDescriptor = selectedCombo.venue[0]
+        bareBonesVenue.location = ''
+        bareBonesVenue.address = ''
+        bareBonesVenue.geopoint = {
+          '_latitude': '',
+          '_longitude': ''
+        }
+        bareBonesRecord.venue = [bareBonesVenue];
         getRootRecord().then(function (record) {
 
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (!record.location || isLocationOld) {
             appDialog('Fetching Location Please wait', false)
             window.addEventListener('location', function _checkInLatest(e) {
-              const newLocation = e.detail
+
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], newLocation);
+              
+              updateCreateActivity(bareBonesRecord)
+              removeDialog()
+
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
           }
-          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], record.location);
+          updateCreateActivity(bareBonesRecord)
+          removeDialog()
         });
         return
       }
@@ -1287,45 +1286,6 @@ function createTempRecord(office, template, data) {
   }
 
 }
-
-
-function prefillLocationForCheckIn(bareBonesRecord, venueDesc, currentLocation) {
-
-  checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
-
-    const locations = [];
-    const bareBonesVenue = {}
-    bareBonesVenue.venueDescriptor = venueDesc
-    bareBonesVenue.location = ''
-    bareBonesVenue.address = ''
-    bareBonesVenue.geopoint = {
-      '_latitude': '',
-      '_longitude': ''
-    }
-
-    if (!results.length) {
-      bareBonesVenue.showIcon = false;
-    } else {
-      bareBonesVenue.showIcon = true;
-    }
-
-    if (results.length === 1) {
-      const singleLocation = results[0]
-      bareBonesVenue.location = singleLocation.location
-      bareBonesVenue.address = singleLocation.address
-      bareBonesVenue.geopoint = {
-        '_latitude': singleLocation.latitude,
-        '_longitude': singleLocation.longitude
-      }
-    }
-    locations.push(bareBonesVenue)
-    bareBonesRecord.venue = locations
-    updateCreateActivity(bareBonesRecord)
-    removeDialog()
-  })
-}
-
-
 
 function hasAnyValueInChildren(office, template, status) {
   const dbName = firebase.auth().currentUser.uid
@@ -1646,14 +1606,15 @@ function createCheckInVenue(venue) {
   const li = document.createElement('li')
   li.className = 'mdc-list-item'
   li.textContent = venue.location
-
+  li.style.height = '50px';
   const meta = document.createElement('span')
   meta.className = 'mdc-list-item__meta'
-  
+
   const radio = document.createElement('div')
   radio.className = 'mdc-radio checkin'
   radio.value = JSON.stringify(venue)
-  const input = document.createElement('mdc-radio__native-control')
+  const input = document.createElement('input')
+  input.className = 'mdc-radio__native-control'
   input.type = 'radio'
   id = convertKeyToId(venue.venueDescriptor)
   const background = document.createElement('div')
@@ -1667,7 +1628,7 @@ function createCheckInVenue(venue) {
   background.appendChild(inner)
   radio.appendChild(input)
   radio.appendChild(background)
- 
+
   meta.appendChild(radio);
   li.appendChild(meta)
   return li
@@ -1780,48 +1741,60 @@ function createGroupList(office, template) {
 }
 
 function createVenueSection(record) {
-
+  console.log(record);
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in') {
     const checkInDesc = document.createElement('li')
     checkInDesc.className = 'mdc-list-item'
-    checkInDesc.textContent = venue.venueDescriptor
+    checkInDesc.textContent = record.venue[0].venueDescriptor
+    checkInDesc.style.height = '50px'
     const meta = document.createElement('span')
     meta.className = 'mdc-list-item__meta'
 
-    const uncheck = document.createElement('button')
+    const uncheck = document.createElement('label')
     uncheck.id = 'uncheck-checkin'
-    uncheck.className = 'mdc-button'
+    uncheck.className = 'mdc-fab add--assignee-icon'
+    const span = document.createElement('span')
+    span.className = 'mdc-fab__icon material-icons'
+    span.textContent = 'clear';
+    uncheck.appendChild(span);
 
     meta.appendChild(uncheck)
     checkInDesc.appendChild(meta)
 
     venueSection.appendChild(checkInDesc)
-  }
-  record.venue.forEach(function (venue) {
-    if (record.template === 'check-in') {
-      venueSection.appendChild(createCheckInVenue(venue));
-    } else {
-      venueSection.appendChild(createVenueLi(venue, true, record))
+
+    getRootRecord().then(function (rootRecord) {
+      checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+        results.forEach(function (result) {
+          console.log(result);
+          venueSection.appendChild(createCheckInVenue(result));
+        })
+      })
+    })
+
+    const uncheckFab = document.getElementById('uncheck-checkin');
+    if (uncheckFab) {
+      uncheckFab.addEventListener('click', function () {
+        document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+          const radio = new mdc.radio.MDCRadio(el)
+          radio.checked = false
+        });
+      })
     }
+    return;
+  }
+
+
+  record.venue.forEach(function (venue) {
+
+    venueSection.appendChild(createVenueLi(venue, true, record))
     const mapDom = document.createElement('div');
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
     venueSection.appendChild(mapDom)
   });
 
-  
-  const uncheck = document.getElementById('uncheck-checkin');
-  if (uncheck) {
-    uncheck.addEventListener('click', function () {
-      document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-        const radio = new mdc.radio.MDCRadio(el)
-      
-          radio.checked = false
-        
-      });
 
-    })
-  }
 
   if (record.venue.length === 0) {
     document.getElementById('venue--list').style.display = 'none'
@@ -2723,25 +2696,24 @@ function insertInputsIntoActivity(record, activityStore) {
     record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
   }
 
-  if(record.template === 'check-in'){
+  if (record.template === 'check-in') {
     if (record.venue[i].hasOwnProperty('showIcon')) {
       delete record.venue[i].showIcon
     }
-    
-    document.querySelectorAll('.mdc-radio.checkin').forEach(function(el){
+
+    document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
       const radio = new mdc.radio.MDCRadio(el);
-      if(radio.checked) {
+      if (radio.checked) {
         const venueData = JSON.parse(el.value);
         record.venue[0].geopoint = {
-          latitude : venueData.geopoint['_latitude'] || '',
+          latitude: venueData.geopoint['_latitude'] || '',
           longitude: venueData.geopoint['_longitude'] || ''
         }
         record.venue[0].location = venueData.location
         record.venue[0].address = venueData.address
       }
     });
-  }
-  else {
+  } else {
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
         latitude: record.venue[i].geopoint['_latitude'] || "",
@@ -2752,7 +2724,7 @@ function insertInputsIntoActivity(record, activityStore) {
       }
     }
   }
-    
+
   const requiredObject = {
     venue: record.venue,
     schedule: record.schedule,
