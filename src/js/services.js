@@ -450,6 +450,7 @@ function updateLocationInRoot(finalLocation) {
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
+       
         if (record.location) {
           previousLocation = record.location
         };
@@ -703,6 +704,7 @@ function sendRequest(location, requestGenerator) {
 }
 
 function isLastLocationOlderThanThreshold(test, threshold) {
+ 
   var currentTime = moment(moment().valueOf());
   var lastLocationTime = test;
   var duration = moment.duration(currentTime.diff(lastLocationTime));

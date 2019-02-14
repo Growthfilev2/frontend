@@ -1249,9 +1249,9 @@ function createTempRecord(office, template, data) {
       if (template === 'check-in') {
 
         getRootRecord().then(function (record) {
-
+         
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if (isLocationOld) {
+            if(!record.location || isLocationOld) {
             appDialog('Fetching Location Please wait', false)
             window.addEventListener('location', function _checkInLatest(e) {
               const newLocation = e.detail
