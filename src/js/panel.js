@@ -41,7 +41,6 @@ function listView(filter) {
     })
     getListViewData(filter);
   })
-
 }
 
 function getListViewData(filter, size) {
@@ -157,6 +156,7 @@ function loadActivitiesFromListStore(currentLocation) {
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
       if (!ul) return
+      ul.innerHTML = '';
       ul.appendChild(fragment)
       scrollToActivity()
     }

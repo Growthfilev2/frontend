@@ -289,8 +289,8 @@ function getCellTowerInfo() {
       });
       return
     }
-
-    var apiKey ='AIzaSyCoGolm0z6XOtI_EYvDmxaRJV_uIVekL_w'
+    
+    var apiKey ='AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
