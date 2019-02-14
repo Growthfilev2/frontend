@@ -475,58 +475,54 @@ function instantUpdateDB(data, type, user) {
 
 
 function updateMap(activity, param) {
-  return new Promise(function(resolve,reject){
 
-    const req = indexedDB.open(param.user.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const mapTx = db.transaction(['map'], 'readwrite')
-      const mapObjectStore = mapTx.objectStore('map')
-      const mapActivityIdIndex = mapObjectStore.index('activityId')
-      mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (cursor) {
-          
-          let deleteRecordReq = cursor.delete()
-          cursor.continue()
-          deleteRecordReq.onerror = errorDeletingRecord
-        }
-      }
+  const req = indexedDB.open(param.user.uid);
+  req.onsuccess = function () {
+    const db = req.result;
+    const mapTx = db.transaction(['map'], 'readwrite')
+    const mapObjectStore = mapTx.objectStore('map')
+    const mapActivityIdIndex = mapObjectStore.index('activityId')
+    mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+      const cursor = event.target.result
+      if (cursor) {
 
-      
-      mapTx.oncomplete = function () {
-        const mapTxAdd = db.transaction(['map'], 'readwrite')
-        const mapObjectStore = mapTxAdd.objectStore('map')
-        if (activity.template !== 'check-in') {
-          
-          activity.venue.forEach(function (newVenue) {
-            mapObjectStore.add({
-              activityId: activity.activityId,
-              latitude: newVenue.geopoint['_latitude'],
-              longitude: newVenue.geopoint['_longitude'],
-              location: newVenue.location.toLowerCase(),
-              template: activity.template,
-              address: newVenue.address.toLowerCase(),
-              venueDescriptor: newVenue.venueDescriptor,
-              status: activity.status,
-              office: activity.office,
-              hidden: activity.hidden
-            })
-          })
-        }
-        mapTxAdd.oncomplete = function(){
-          resolve(true);
-        }
-        mapTxAdd.onerror = function(){
-          reject(mapTxAdd.error)
-        }
-      }
-      mapTx.onerror = function(){
-        reject(mapTx.error)
+        let deleteRecordReq = cursor.delete()
+        cursor.continue()
+        deleteRecordReq.onerror = errorDeletingRecord
       }
     }
-  })
+
+
+    mapTx.oncomplete = function () {
+      const mapTxAdd = db.transaction(['map'], 'readwrite')
+      const mapObjectStore = mapTxAdd.objectStore('map')
+      if (activity.template !== 'check-in') {
+
+        activity.venue.forEach(function (newVenue) {
+          mapObjectStore.add({
+            activityId: activity.activityId,
+            latitude: newVenue.geopoint['_latitude'],
+            longitude: newVenue.geopoint['_longitude'],
+            location: newVenue.location.toLowerCase(),
+            template: activity.template,
+            address: newVenue.address.toLowerCase(),
+            venueDescriptor: newVenue.venueDescriptor,
+            status: activity.status,
+            office: activity.office,
+            hidden: activity.hidden
+          })
+        })
+      }
+      mapTxAdd.onerror = function(){
+        instant(JSON.stringify({message:`${mapTxAdd.error}`}),param.user)
+      }
+    }
+    mapTx.onerror = function () {
+      instant(JSON.stringify({message:`${mapTx.error}`}),param.user)
+    }
+  }
 }
+
 
 function errorDeletingRecord(event) {
   console.log(event.target.error)
@@ -538,114 +534,93 @@ function transactionError(event) {
 
 
 function updateCalendar(activity, param) {
-  return new Promise(function(){
 
-    const req = indexedDB.open(param.user.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const calendarTx = db.transaction(['calendar'], 'readwrite')
-      const calendarObjectStore = calendarTx.objectStore('calendar')
-      const calendarActivityIndex = calendarObjectStore.index('activityId')
-      
-      calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
-        // console.log(activity.activityId)
-        const cursor = event.target.result
-        if (cursor) {
-          let recordDeleteReq = cursor.delete()
-          recordDeleteReq.onerror = errorDeletingRecord
-          cursor.continue()
-        }
-      }
-      calendarTx.oncomplete = function () {
-        const calendarTxAdd = db.transaction(['calendar'], 'readwrite')
-        const calendarObjectStore = calendarTxAdd.objectStore('calendar')
-        
-        activity.schedule.forEach(function (schedule) {
-          const startTime = moment(schedule.startTime).toDate()
-          const endTime = moment(schedule.endTime).toDate()
-          
-          calendarObjectStore.add({
-            activityId: activity.activityId,
-            scheduleName: schedule.name,
-            timestamp: activity.timestamp,
-            template: activity.template,
-            hidden: activity.hidden,
-            start: moment(startTime).format('YYYY-MM-DD'),
-            end: moment(endTime).format('YYYY-MM-DD'),
-            status: activity.status,
-            office: activity.office
-          })
-        })
-        calendarTxAdd.oncomplete = function(){
-          resolve(true)
-        }
-        calendarTxAdd.onerror = function(){
-          reject(calendarTxAdd.error);
-        }
-        calendarTx.onerror = function(){
-          reject(calendarTx.error)
-        }
+  const req = indexedDB.open(param.user.uid);
+  req.onsuccess = function () {
+    const db = req.result;
+    const calendarTx = db.transaction(['calendar'], 'readwrite')
+    const calendarObjectStore = calendarTx.objectStore('calendar')
+    const calendarActivityIndex = calendarObjectStore.index('activityId')
+
+    calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+      // console.log(activity.activityId)
+      const cursor = event.target.result
+      if (cursor) {
+        let recordDeleteReq = cursor.delete()
+        recordDeleteReq.onerror = errorDeletingRecord
+        cursor.continue()
       }
     }
-    
-  })
+    calendarTx.oncomplete = function () {
+      const calendarTxAdd = db.transaction(['calendar'], 'readwrite')
+      const calendarObjectStore = calendarTxAdd.objectStore('calendar')
+
+      activity.schedule.forEach(function (schedule) {
+        const startTime = moment(schedule.startTime).toDate()
+        const endTime = moment(schedule.endTime).toDate()
+        
+        calendarObjectStore.add({
+          activityId: activity.activityId,
+          scheduleName: schedule.name,
+          timestamp: activity.timestamp,
+          template: activity.template,
+          hidden: activity.hidden,
+          start: moment(startTime).format('YYYY-MM-DD'),
+          end: moment(endTime).format('YYYY-MM-DD'),
+          status: activity.status,
+          office: activity.office
+        })
+      })
+      calendarTx.onerror = function () {
+       console.log(calendarTx.error);
+      }
+    }
+  }
 }
-  
-  // create attachment record with status,template and office values from activity
+
+// create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment(activity,param) {
-  return new Promise(function(resolve,reject){
+function putAttachment(activity, param) {
 
-    const req = indexedDB.open(param.uid)
-    req.onsuccess = function(){
-      const db =req.result;
-      const tx = db.transaction(['children'],'readwrite')
-      const store = tx.objectStore('children')
-      const commonSet = {
-        activityId: activity.activityId,
-        status: activity.status,
-        template: activity.template,
-        office: activity.office,
-        attachment: activity.attachment,
-      }
-      store.put(commonSet)
-      tx.oncomplete = function(){
-        resolve(resolve)
-      }
-      tx.onerror = function(){
-        reject(tx.error)
-      }
+  const req = indexedDB.open(param.user.uid)
+  req.onsuccess = function () {
+    const db = req.result;
+    const tx = db.transaction(['children'], 'readwrite')
+    const store = tx.objectStore('children')
+    const commonSet = {
+      activityId: activity.activityId,
+      status: activity.status,
+      template: activity.template,
+      office: activity.office,
+      attachment: activity.attachment,
     }
-  })
+    store.put(commonSet)
+
+    tx.onerror = function () {
+      reject(tx.error)
+    }
+  }
 }
 
 // if an assignee's phone number is present inside the users object store then
 // return else  call the users api to get the profile info for the number
-function putAssignessInStore(assigneeArray) {
-  return new Promise(function(resolve,reject){
-    const req = indexedDB.open(param.user.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction('users');
-      const store = tx.objectStore('users');  
-      assigneeArray.forEach(function (assignee) {
-        store.get(assignee).onsuccess = function (event) {
-          const record = event.target.result
-          record.put({
-            mobile: assignee,
-            displayName: ''
-          })
-        }
-      })
-      tx.oncomplete = function(){
-        resolve(true)
+function putAssignessInStore(assigneeArray, param) {
+  const req = indexedDB.open(param.user.uid);
+  req.onsuccess = function () {
+    const db = req.result;
+    const tx = db.transaction('users');
+    const store = tx.objectStore('users');
+    assigneeArray.forEach(function (assignee) {
+      store.get(assignee).onsuccess = function (event) {
+        const record = event.target.result
+        record.put({
+          mobile: assignee,
+          displayName: ''
+        })
       }
-      tx.onerror = function(){
-        reject(tx.error)
-      }
-    }
-  })
+    })
+  }
 }
 
 
@@ -943,12 +918,9 @@ function successResponse(read, param) {
   request.onsuccess = function () {
     const db = request.result
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
-    const rootObjectStoreTx = db.transaction(['root'], 'readwrite')
-    const rootObjectStore = rootObjectStoreTx.objectStore('root')
-    const activitytx = db.transaction(['activity'], 'readwrite')
+    const activitytx = db.transaction(['activity', 'addendum'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
 
-    let counter = {}
 
     read.addendum.forEach(function (addendum) {
       if (addendum.unassign) {
@@ -967,9 +939,8 @@ function successResponse(read, param) {
       addendumObjectStore.add(addendum)
     })
 
-    removeActivityFromDB(db, removeActivitiesForUser, param);
+    removeActivityFromDB(db, removeActivitiesForUser, param)
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-
 
     for (let index = read.activities.length; index--;) {
       const activity = read.activities[index];
@@ -981,68 +952,65 @@ function successResponse(read, param) {
         activityObjectStore.put(activity)
       }
 
-      updateMap(activity, param).then(function(){
-        updateCalendar(activity, param).then(function(){
-          putAssignessInStore(activity.assignees,param).then(function(){
-            putAttachment(activity,param).then(function(){
-              if (activity.hidden === 0) {
-                if(read.activities.length >= 20) {
-                  if ((read.activities.length - index) <= 20) {
-                    createListStore(activity, counter, param).then(function () {
-                      requestHandlerResponse('initFirstLoad', 200, [activity]);
-                    })
-                  }
-                }
-                else {
-                  createListStore(activity, counter, param).then(function () {
-                    requestHandlerResponse('initFirstLoad', 200, [activity]);
-                  })
-                }
-              }
+      updateMap(activity, param);
+      updateCalendar(activity, param)
+      putAssignessInStore(activity.assignees, param)
+      putAttachment(activity, param)
+
+      if (activity.hidden === 0) {
+        if (read.activities.length >= 20) {
+          if ((read.activities.length - index) <= 20) {
+            createListStore(activity, counter, param).then(function () {
+              requestHandlerResponse('initFirstLoad', 200, [activity]);
             })
-          })
-        })
-      })
-    }
-
-    
-    read.templates.forEach(function (subscription) {
-      updateSubscription(db, subscription, param)
-    })
-
-    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-      getUniqueOfficeCount(param).then(function (offices) {
-        setUniqueOffice(offices, param);
-      }).catch(console.log);
-
-      const record = event.target.result
-      record.fromTime = read.upto
-      rootObjectStore.put(record);
-
-      createUsersApiUrl(db, param.user).then(function (data) {
-        if (data.url) {
-          updateUserObjectStore(data).then(function (updated) {
-            updateListStoreWithCreatorImage(param).then(function () {
-              const updatedActivities = read.activities
-              requestHandlerResponse('loadView', 200, updatedActivities);
-            })
-          }).catch(function (error) {
-
-            // requestHandlerResponse('loadView', 200, updatedActivities);
-          })
+          }
         } else {
-          updateListStoreWithCreatorImage(param).then(function () {
-            const updatedActivities = read.activities
-            // requestHandlerResponse('loadView', 200, updatedActivities);
+          createListStore(activity, counter, param).then(function () {
+            requestHandlerResponse('initFirstLoad', 200, [activity]);
           })
         }
+      }
 
-      });
     }
+
+    read.templates.forEach(function (subscription) {
+      updateSubscription(db, subscription, param).then(function () {
+        getUniqueOfficeCount(param).then(function (offices) {
+          setUniqueOffice(offices, param).then(function () {
+            updateRoot(param, read).then(function () {
+              // requestHandlerResponse('loadView', 200, updatedActivities);
+            }).catch(function (error) {
+              // requestHandlerResponse('loadView', 200, updatedActivities);
+            })
+          })
+        }).catch(console.log);
+      })
+    })
   }
 }
 
 
+function updateRoot(param, read) {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(param.user.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const rootTx = db.transaction(['root'], 'readwrite');
+      const store = rootTx.objectStore('root')
+      store.get(param.user.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        record.fromTime = read.upto
+        rootObjectStore.put(record);
+      }
+      rootTx.oncomplete = function () {
+        resolve(true)
+      }
+      rootTx.onerror = function () {
+        reject(rootTx.error);
+      }
+    }
+  })
+}
 
 
 function getUniqueOfficeCount(param) {
@@ -1072,23 +1040,29 @@ function getUniqueOfficeCount(param) {
 }
 
 function setUniqueOffice(offices, param) {
-  const dbName = param.user.uid;
-  const req = indexedDB.open(dbName)
+  return new Promise(function (resolve, reject) {
 
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['root'], 'readwrite')
-    const rootObjectStore = tx.objectStore('root');
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      const record = event.target.result
-      record.offices = offices
-      rootObjectStore.put(record)
-    };
+    const dbName = param.user.uid;
+    const req = indexedDB.open(dbName)
 
-    tx.oncomplete = function () {
-      console.log("all offices are set")
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['root'], 'readwrite')
+      const rootObjectStore = tx.objectStore('root');
+      rootObjectStore.get(dbName).onsuccess = function (event) {
+        const record = event.target.result
+        record.offices = offices
+        rootObjectStore.put(record)
+      };
+
+      tx.oncomplete = function () {
+        resolve(true)
+      }
+      tx.onerror = function () {
+        reject(tx.error)
+      }
     }
-  }
+  })
 }
 
 function updateIDB(param) {
