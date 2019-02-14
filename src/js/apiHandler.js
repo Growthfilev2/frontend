@@ -558,7 +558,7 @@ function updateCalendar(activity, param) {
       activity.schedule.forEach(function (schedule) {
         const startTime = moment(schedule.startTime).toDate()
         const endTime = moment(schedule.endTime).toDate()
-        
+
         calendarObjectStore.add({
           activityId: activity.activityId,
           scheduleName: schedule.name,
@@ -698,101 +698,6 @@ function deleteByIndex(store, activitiesToRemove) {
 }
 
 
-
-
-function createUsersApiUrl(db, user) {
-  return new Promise(function (resolve) {
-    const tx = db.transaction(['users'], 'readwrite');
-    const usersObjectStore = tx.objectStore('users');
-    // const isUpdatedIndex = usersObjectStore.index('isUpdated')
-    // const NON_UPDATED_USERS = 0
-    let assigneeString = ''
-
-    const defaultReadUserString = `${apiUrl}services/users?q=`
-    let fullReadUserString = ''
-
-    usersObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-
-      if (!cursor) return
-
-      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-      assigneeString += `${assigneeFormat.replace('+', '')}`
-      cursor.continue()
-    }
-    tx.oncomplete = function () {
-      fullReadUserString = `${defaultReadUserString}${assigneeString}`
-      if (assigneeString) {
-        resolve({
-          db: db,
-          url: fullReadUserString,
-          user: user
-        })
-      } else {
-        resolve({
-          db: db,
-          url: null,
-          user: user
-        })
-      }
-    }
-
-  })
-}
-
-// query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
-
-function updateUserObjectStore(requestPayload) {
-  return new Promise(function (resolve, reject) {
-
-    const req = {
-      method: 'GET',
-      url: requestPayload.url,
-      data: null,
-      token: requestPayload.user.token
-    }
-    http(req)
-      .then(function (userProfile) {
-        if (!Object.keys(userProfile).length) {
-          return resolve(true)
-        }
-
-        const tx = requestPayload.db.transaction(['users'], 'readwrite');
-        const usersObjectStore = tx.objectStore('users');
-        // const isUpdatedIndex = usersObjectStore.index('isUpdated')
-        // const USER_NOT_UPDATED = 0
-        // const USER_UPDATED = 1
-
-        usersObjectStore.openCursor().onsuccess = function (event) {
-          const cursor = event.target.result
-
-          if (!cursor) return;
-
-          if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
-
-          if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-            const record = cursor.value
-            record.photoURL = userProfile[cursor.primaryKey].photoURL
-            record.displayName = userProfile[cursor.primaryKey].displayName
-            // record.isUpdated = USER_UPDATED
-
-            usersObjectStore.put(record)
-          }
-          cursor.continue()
-        }
-        tx.oncomplete = function () {
-          resolve(true)
-        }
-        tx.onerror = function () {
-          reject(tx.error)
-        }
-
-      }).catch(function (error) {
-        reject(error)
-      })
-  });
-}
-
 function findSubscriptionCount(db) {
   return new Promise(function (resolve, reject) {
 
@@ -876,41 +781,6 @@ function createListStore(activity, counter, param) {
   })
 }
 
-
-function updateListStoreWithCreatorImage(param) {
-  return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(param.user.uid)
-    req.onsuccess = function () {
-      const db = req.result
-      const transaction = db.transaction(['list', 'users'], 'readwrite')
-      const listStore = transaction.objectStore('list');
-      const userStore = transaction.objectStore('users');
-
-      listStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        const creator = cursor.value.creator;
-        userStore.get(creator.number).onsuccess = function (userEvent) {
-          const record = userEvent.target.result;
-          if (record) {
-            creator.photo = record.photoURL;
-            listStore.put(cursor.value);
-          }
-        }
-
-        cursor.continue();
-      }
-
-      transaction.oncomplete = function () {
-        resolve(true);
-      }
-      transaction.onerror = function () {
-        reject(transaction.error);
-      }
-    }
-  })
-}
-
 function successResponse(read, param) {
   const request = indexedDB.open(param.user.uid)
   const removeActivitiesForUser = []
@@ -970,7 +840,6 @@ function successResponse(read, param) {
           })
         }
       }
-
     }
 
     read.templates.forEach(function (subscription) {
