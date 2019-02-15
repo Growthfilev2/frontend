@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -441,10 +441,6 @@ function errorDeletingRecord(event) {
   console.log(event.target.error)
 }
 
-function transactionError(event) {
-  console.log(event.target.error)
-}
-
 
 function updateCalendar(activity, param) {
 
@@ -485,7 +481,9 @@ function updateCalendar(activity, param) {
         })
       })
       calendarTx.onerror = function () {
-        console.log(calendarTx.error);
+        instant(JSON.stringify({
+          message: `${calendarTx.error}`
+        }), param.user)
       }
     }
   }
@@ -511,7 +509,9 @@ function putAttachment(activity, param) {
     store.put(commonSet)
 
     tx.onerror = function () {
-      reject(tx.error)
+      instant(JSON.stringify({
+        message: `${tx.error}`
+      }), param.user)
     }
   }
 }
@@ -612,21 +612,6 @@ function deleteByIndex(store, activitiesToRemove) {
 }
 
 
-function findSubscriptionCount(db) {
-  return new Promise(function (resolve, reject) {
-
-    const tx = db.transaction(['subscriptions'], 'readwrite');
-    const subscriptionObjectStore = tx.objectStore('subscriptions');
-    const request = subscriptionObjectStore.count();
-    request.onsuccess = function () {
-      resolve(request.result)
-    }
-    request.onerror = function () {
-      reject(request.error)
-    }
-  })
-}
-
 function updateSubscription(db, templates, param) {
   return new Promise(function (resolve, reject) {
     if (!templates.length) {
@@ -660,6 +645,9 @@ function updateSubscription(db, templates, param) {
 
       tx.oncomplete = function () {
         resolve(true)
+      }
+      tx.onerror = function(){
+        reject({message:`${tx.error}`});
       }
     }
   })
@@ -778,6 +766,7 @@ function successResponse(read, param) {
           template: true
         });
       }).catch(function (error) {
+        instant(JSON.stringify(error), param.user)
         requestHandlerResponse('initFirstLoad', 200, {
           template: true
         });
@@ -785,13 +774,17 @@ function successResponse(read, param) {
     })
 
     getUniqueOfficeCount(param).then(function (offices) {
-      setUniqueOffice(offices, param).then(function () {})
+      setUniqueOffice(offices, param).then(console.log).catch(function(error){
+        instant(JSON.stringify(error), param.user)
+      })
     }).catch(console.log);
 
     createUsersApiUrl(db, param.user).then(function (data) {
       if (data.url) {
         updateUserObjectStore(data)
       }
+    }).catch(function(error){
+      instant(JSON.stringify(error), param.user)
     })
   }
 }
@@ -831,7 +824,9 @@ function createUsersApiUrl(db, user) {
         })
       }
     }
-
+    tx.onerror = function(){
+      reject({message:tx.error})
+    }
   })
 }
 
@@ -885,7 +880,9 @@ function updateUserObjectStore(requestPayload) {
 
       }
       tx.onerror = function () {
-       console.log(tx.error)
+        instant(JSON.stringify({
+          message: `${tx.error}`
+        }), param.user)
       }
 
     }).catch(function (error) {

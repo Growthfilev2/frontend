@@ -228,19 +228,14 @@ function newSignIn(value, field) {
   const dialogSelector = document.querySelector('#updateEmailDialog')
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
   emailDialog.show();
-
-  try {
-    
+  try {  
     ui.start('#refresh-login', firebaseUiConfig(value));
     setTimeout(function () {
       document.querySelector('.firebaseui-id-phone-number').disabled = true;
       document.querySelector('.firebaseui-label').remove();
       document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
-
     }, 500)
-
     emailDialog.listen('MDCDialog:cancel', function () {
-
       field.value = firebase.auth().currentUser.email;
       dialogSelector.remove();
     });

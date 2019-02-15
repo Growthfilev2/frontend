@@ -232,6 +232,7 @@ function userSignedOut() {
   if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
   }
+  
   ui.start('#login-container', firebaseUiConfig());
 }
 
