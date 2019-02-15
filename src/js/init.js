@@ -404,6 +404,7 @@ function startApp(start) {
           db.close();
           resetApp(auth, 0);
         } else {
+          db.close();
           idbVersionLessThan3(auth).then(function (reset) {
             if (reset.value) {
               resetApp(auth, 0)
@@ -599,7 +600,7 @@ function init() {
   //   redirect();
   //   return
   // }
-
+  
   document.getElementById("main-layout-app").style.display = 'block'
   requestCreator('now', {
     device: native.getInfo(),
