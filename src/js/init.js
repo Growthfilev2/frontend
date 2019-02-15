@@ -397,6 +397,7 @@ function startApp(start) {
       return
     }
     if (start) {
+      localStorage.setItem('error',{});
       const req = indexedDB.open(firebase.auth().currentUser.uid)
       req.onsuccess = function () {
         const db = req.result;

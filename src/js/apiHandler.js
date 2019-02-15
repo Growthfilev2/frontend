@@ -613,7 +613,7 @@ function putAssignessInStore(assigneeArray, param) {
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
         const record = event.target.result
-        record.put({
+        store.put({
           mobile: assignee,
           displayName: assignee.displayName,
           photoURL:assignee.photoURL
@@ -714,6 +714,7 @@ function findSubscriptionCount(db) {
 }
 
 function updateSubscription(db, subscription, param) {
+return new Promise(function(resolve,reject){
 
   findSubscriptionCount(db).then(function (count) {
     const req = indexedDB.open(param.user.uid)
@@ -729,25 +730,26 @@ function updateSubscription(db, subscription, param) {
       templateIndex.openCursor(subscription.template).onsuccess = function (event) {
         const cursor = event.target.result;
         if (cursor) {
-
+          
           if (subscription.office === cursor.value.office) {
-
+            
             cursor.delete()
           }
           cursor.continue()
         }
       }
-
+      
       tx.oncomplete = function () {
         const req = indexedDB.open(param.user.uid)
         req.onsuccess = function () {
           const db = req.result;
           const store = db.transaction('subscriptions', 'readwrite').objectStore('subscriptions')
           store.put(subscription);
+          resolve(true)
         }
       }
     }
-
+  })
   }).catch(console.log)
 }
 
@@ -798,7 +800,7 @@ function successResponse(read, param) {
     const addendumObjectStore = db.transaction('addendum', 'readwrite').objectStore('addendum')
     const activitytx = db.transaction(['activity', 'addendum'], 'readwrite')
     const activityObjectStore = activitytx.objectStore('activity')
-
+    let counter = {};
 
     read.addendum.forEach(function (addendum) {
       if (addendum.unassign) {
@@ -832,7 +834,7 @@ function successResponse(read, param) {
 
       updateMap(activity, param);
       updateCalendar(activity, param)
-      putAssignessInStore(activity.assignees, param);
+      // putAssignessInStore(activity.assignees, param);
       putAttachment(activity, param)
 
       if (activity.hidden === 0) {
