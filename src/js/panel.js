@@ -165,6 +165,7 @@ function loadActivitiesFromListStore(currentLocation) {
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
       if (!ul) return
+      ul.innerHTML = ''
       ul.appendChild(fragment)
       scrollToActivity()
     }
@@ -172,7 +173,7 @@ function loadActivitiesFromListStore(currentLocation) {
 }
 
 function startCursor(currentLocation) {
-
+  console.log(currentLocation)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;

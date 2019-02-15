@@ -389,15 +389,17 @@ function startApp(start) {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
+      localStorage.setItem('today', null);
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
+
     if (!localStorage.getItem('error')) {
       localStorage.setItem('error', JSON.stringify({}));
     }
-    if (start) {
 
+    if (start) {
       createIDBStore(auth).then(function () {
         init()
       }).catch(function (error) {
@@ -516,6 +518,7 @@ function createIDBStore(auth) {
       resolve(true)
     }
     req.onerror = function () {
+      console.log(req.error);
       reject({
         message: `${req.error.message} from createIDBStore`
       })
@@ -657,22 +660,6 @@ function init() {
 }
 
 
-function resetApp(auth, from) {
-  removeIDBInstance(auth).then(function () {
-    localStorage.setItem('today', null);
-    history.pushState(null, null, null);
-    // document.getElementById('growthfile').appendChild(loader('init-loader'))
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: from,
-      registerToken: native.getFCMToken()
-    });
-  }).catch(function (error) {
-    snacks(error.userMessage);
-    handleError(error)
-  })
-}
-
 
 function runAppChecks() {
   window.addEventListener('locationChanged', function _locationChanged(e) {
@@ -773,9 +760,9 @@ function openListWithChecks() {
     nearby: false
   });
   runAppChecks();
-  // setInterval(function () {
-  //   manageLocation().then(function (location) {
-  //     updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-  //   }).catch(handleError);
-  // }, 5000);
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+    }).catch(handleError);
+  }, 5000);
 }

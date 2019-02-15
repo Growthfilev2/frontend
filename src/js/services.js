@@ -731,13 +731,19 @@ function messageReceiver(response) {
 }
 
 function initFirstLoad(response){
- 
+  console.log(response);
   if(history.state[0] !== 'listView') return;
-  if(!response.msg.length) return;
-  
-  getRootRecord().then(function(record){
-    updateEl(response.msg,record);
-  })
+  if(response.msg.hasOwnProperty('activity')) {
+    if(response.msg.activity.length){
+      getRootRecord().then(function(record){
+        updateEl(response.msg.activity,record);
+      })
+    }
+  }
+  if(response.msg.hasOwnProperty('template')){
+    createActivityIcon()
+  }
+
   return;
 }
 

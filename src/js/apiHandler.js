@@ -219,7 +219,7 @@ function putServerTime(data) {
       rootTx.oncomplete = function () {
         resolve({
           user: data.user,
-          ts:data.ts
+          ts: data.ts
         })
       }
     }
@@ -526,10 +526,10 @@ function putAssignessInStore(assigneeArray, param) {
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
-       
+
         store.put({
           mobile: assignee,
-          displayName:'',
+          displayName: '',
           photoURL: ''
         })
       }
@@ -627,44 +627,46 @@ function findSubscriptionCount(db) {
   })
 }
 
-function updateSubscription(db, subscription, param) {
+function updateSubscription(db, templates, param) {
   return new Promise(function (resolve, reject) {
+    if (!templates.length) {
+      resolve(true)
+      return
+    }
+    const req = indexedDB.open(param.user.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['subscriptions'], 'readwrite')
+      const subscriptionObjectStore = tx.objectStore('subscriptions');
+      const templateIndex = subscriptionObjectStore.index('template');
+      templates.forEach(function (subscription) {
 
-    findSubscriptionCount(db).then(function (count) {
-      const req = indexedDB.open(param.user.uid)
-      req.onsuccess = function () {
-        const db = req.result;
-        const tx = db.transaction(['subscriptions'], 'readwrite')
-        const subscriptionObjectStore = tx.objectStore('subscriptions');
-        const templateIndex = subscriptionObjectStore.index('template');
-        if (!count) {
-          subscriptionObjectStore.put(subscription)
-          return;
-        }
         templateIndex.openCursor(subscription.template).onsuccess = function (event) {
           const cursor = event.target.result;
           if (cursor) {
 
             if (subscription.office === cursor.value.office) {
-
-              cursor.delete()
+              cursor.update(subscription);
+            }
+            else {
+              cursor.update(subscription)
             }
             cursor.continue()
+          } else {
+            subscriptionObjectStore.put(subscription)
           }
         }
+      })
 
-        tx.oncomplete = function () {
-          const req = indexedDB.open(param.user.uid)
-          req.onsuccess = function () {
-            const db = req.result;
-            const store = db.transaction('subscriptions', 'readwrite').objectStore('subscriptions')
-            store.put(subscription);
-            resolve(true)
-          }
-        }
+      tx.oncomplete = function () {
+        resolve(true)
       }
-    })
-  }).catch(console.log)
+    }
+  })
+}
+
+function deleteTemplateInSubscription(subscription) {
+
 }
 
 function createListStore(activity, counter, param) {
@@ -755,38 +757,43 @@ function successResponse(read, param) {
         if (read.activities.length >= 20) {
           if ((read.activities.length - index) <= 20) {
             createListStore(activity, counter, param).then(function () {
-              requestHandlerResponse('initFirstLoad', 200, [activity]);
+              requestHandlerResponse('initFirstLoad', 200, {
+                activity: [activity]
+              });
             })
           }
         } else {
           createListStore(activity, counter, param).then(function () {
-            requestHandlerResponse('initFirstLoad', 200, [activity]);
+            requestHandlerResponse('initFirstLoad', 200, {
+              activity: [activity]
+            });
           })
         }
       }
-
     }
-    createUsersApiUrl(db,param.user).then(function(data){
-      if(data.url) {
+
+    updateSubscription(db, read.templates, param).then(function () {
+      updateRoot(param, read).then(function () {
+        requestHandlerResponse('initFirstLoad', 200, {
+          template: true
+        });
+        // requestHandlerResponse('loadView', 200, {activity:read.activities});
+      }).catch(function (error) {
+        requestHandlerResponse('initFirstLoad', 200, {
+          template: true
+        });
+        // requestHandlerResponse('loadView', 200, {activity:read.activities});
+      })
+    })
+
+    getUniqueOfficeCount(param).then(function (offices) {
+      setUniqueOffice(offices, param).then(function () {})
+    }).catch(console.log);
+
+    createUsersApiUrl(db, param.user).then(function (data) {
+      if (data.url) {
         updateUserObjectStore(data)
       }
-    })
-
-    updateRoot(param, read).then(function () {
-      // requestHandlerResponse('loadView', 200, updatedActivities);
-    }).catch(function (error) {
-      // requestHandlerResponse('loadView', 200, updatedActivities);
-    })
-  
-  
-    read.templates.forEach(function (subscription) {
-      updateSubscription(db, subscription, param).then(function () {
-        getUniqueOfficeCount(param).then(function (offices) {
-          setUniqueOffice(offices, param).then(function () {
-
-          })
-        }).catch(console.log);
-      })
     })
   }
 }
@@ -795,7 +802,7 @@ function createUsersApiUrl(db, user) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['users'], 'readwrite');
     const usersObjectStore = tx.objectStore('users');
-  
+
     let assigneeString = ''
 
     const defaultReadUserString = `${apiUrl}services/users?q=`
@@ -833,50 +840,50 @@ function createUsersApiUrl(db, user) {
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(requestPayload) {
- 
 
-    const req = {
-      method: 'GET',
-      url: requestPayload.url,
-      data: null,
-      token: requestPayload.user.token
-    }
-    http(req)
-      .then(function (userProfile) {
-        if (!Object.keys(userProfile).length) {
-          return resolve(true)
+
+  const req = {
+    method: 'GET',
+    url: requestPayload.url,
+    data: null,
+    token: requestPayload.user.token
+  }
+  http(req)
+    .then(function (userProfile) {
+      if (!Object.keys(userProfile).length) {
+        return resolve(true)
+      }
+
+      const tx = requestPayload.db.transaction(['users'], 'readwrite');
+      const usersObjectStore = tx.objectStore('users');
+
+      usersObjectStore.openCursor().onsuccess = function (event) {
+        const cursor = event.target.result
+
+        if (!cursor) return;
+
+        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
+
+        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
+          const record = cursor.value
+          record.photoURL = userProfile[cursor.primaryKey].photoURL
+          record.displayName = userProfile[cursor.primaryKey].displayName
+
+          usersObjectStore.put(record)
         }
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
 
-        const tx = requestPayload.db.transaction(['users'], 'readwrite');
-        const usersObjectStore = tx.objectStore('users');
-   
-        usersObjectStore.openCursor().onsuccess = function (event) {
-          const cursor = event.target.result
+      }
+      tx.onerror = function () {
+        reject(tx.error)
+      }
 
-          if (!cursor) return;
+    }).catch(function (error) {
+      reject(error)
+    })
 
-          if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
-
-          if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-            const record = cursor.value
-            record.photoURL = userProfile[cursor.primaryKey].photoURL
-            record.displayName = userProfile[cursor.primaryKey].displayName
-       
-            usersObjectStore.put(record)
-          }
-          cursor.continue()
-        }
-        tx.oncomplete = function () {
-            
-        }
-        tx.onerror = function () {
-          reject(tx.error)
-        }
-
-      }).catch(function (error) {
-        reject(error)
-      })
-  
 }
 
 function updateRoot(param, read) {
