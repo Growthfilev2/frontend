@@ -108,9 +108,7 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-  if (!this.localStorage.getItem('error')) {
-    this.localStorage.setItem('error', JSON.stringify({}));
-  }
+ 
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
@@ -225,7 +223,6 @@ function firebaseUiConfig(value) {
 function userSignedOut() {
   const login = document.createElement('div')
   login.id = 'login-container'
-  localStorage.clear();
   document.body.appendChild(login)
   if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
@@ -396,7 +393,11 @@ function startApp(start) {
       userSignedOut()
       return
     }
+    if (!localStorage.getItem('error')) {
+      localStorage.setItem('error', JSON.stringify({}));
+    }
     if (start) {
+
       createIDBStore(auth).then(function () {
         init()
       }).catch(function (error) {
@@ -501,11 +502,14 @@ function createIDBStore(auth) {
     const req = indexedDB.open(auth.uid, 3);
     let db;
     req.onupgradeneeded = function (evt) {
-      if(evt.oldVersion < 3) {
-        // next time when new indexed or obejctstore need to be created
-      }
-      else {
+      db = req.result;
+      switch(evt.oldVersion){
+        case 0:
         createObjectStores(db,auth.uid)
+        break;
+        default:
+        // next time when new indexed or obejctstore need to be created
+        break;
       }
     }
     req.onsuccess = function () {
@@ -519,7 +523,7 @@ function createIDBStore(auth) {
   })
 }
 
-function createObjectStores(db) {
+function createObjectStores(db,uid) {
 
   const activity = db.createObjectStore('activity', {
     keyPath: 'activityId'
@@ -643,12 +647,13 @@ function init() {
   // }
 
   document.getElementById("main-layout-app").style.display = 'block'
+  openListWithChecks()
   requestCreator('now', {
     device: native.getInfo(),
     from: '',
     registerToken: native.getFCMToken()
   })
-  openListWithChecks()
+ 
 }
 
 
@@ -768,9 +773,9 @@ function openListWithChecks() {
     nearby: false
   });
   runAppChecks();
-  setInterval(function () {
-    manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-    }).catch(handleError);
-  }, 5000);
+  // setInterval(function () {
+  //   manageLocation().then(function (location) {
+  //     updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+  //   }).catch(handleError);
+  // }, 5000);
 }

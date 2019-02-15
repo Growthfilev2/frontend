@@ -22,7 +22,6 @@ function initDomLoad() {
 }
 
 function listView(filter) {
-  debugger;
   history.pushState(['listView'], null, null)
   initDomLoad();
   getSizeOfListStore().then(function (size) {

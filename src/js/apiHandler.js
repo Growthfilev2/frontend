@@ -208,7 +208,8 @@ function putServerTime(data) {
     }
 
     request.onsuccess = function () {
-      const rootTx = request.result.transaction(['root'], 'readwrite')
+      const db = request.result
+      const rootTx = db.transaction(['root'], 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
       rootObjectStore.get(data.user.uid).onsuccess = function (event) {
         const record = event.target.result
@@ -216,7 +217,6 @@ function putServerTime(data) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
-        requestHandlerResponse('initFirstLoad', 200, 'start');
         resolve({
           user: data.user,
           ts:data.ts
@@ -771,16 +771,19 @@ function successResponse(read, param) {
         updateUserObjectStore(data)
       }
     })
-    
+
+    updateRoot(param, read).then(function () {
+      // requestHandlerResponse('loadView', 200, updatedActivities);
+    }).catch(function (error) {
+      // requestHandlerResponse('loadView', 200, updatedActivities);
+    })
+  
+  
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription, param).then(function () {
         getUniqueOfficeCount(param).then(function (offices) {
           setUniqueOffice(offices, param).then(function () {
-            updateRoot(param, read).then(function () {
-              // requestHandlerResponse('loadView', 200, updatedActivities);
-            }).catch(function (error) {
-              // requestHandlerResponse('loadView', 200, updatedActivities);
-            })
+
           })
         }).catch(console.log);
       })
@@ -886,7 +889,7 @@ function updateRoot(param, read) {
       store.get(param.user.uid).onsuccess = function (event) {
         const record = event.target.result;
         record.fromTime = read.upto
-        rootObjectStore.put(record);
+        store.put(record);
       }
       rootTx.oncomplete = function () {
         resolve(true)

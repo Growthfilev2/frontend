@@ -732,13 +732,7 @@ function messageReceiver(response) {
 
 function initFirstLoad(response){
  
-  if(!history.state) {
-    history.pushState(['listView'], null, null)
-    initDomLoad();
-    return;
-  }
   if(history.state[0] !== 'listView') return;
-  if(!Array.isArray(response.msg)) return;
   if(!response.msg.length) return;
   
   getRootRecord().then(function(record){
