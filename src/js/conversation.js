@@ -1617,42 +1617,7 @@ function createCheckInVenue(venue) {
   radio.appendChild(input)
   radio.appendChild(background)
   let showMap = false;
-  radio.onclick = function () {
-    if (!hasMapsApiLoaded()) return;
-    if (!venue.latitude) return;
-    if (!venue.longitude) return;
-    const selector =  document.getElementById('map-detail-check-in-create'+convertKeyToId(venue.venueDescriptor));
-
-    // document.getElementById('map-detail-check-in-create').innerHTML = ''
-    showMap = !showMap
-    if (!showMap) {
-     selector.style.height = '0px';
-      return;
-    }
-    selector.style.height = '200px';
-    const map = new google.maps.Map(selector, {
-      zoom: 16,
-      center: {
-        lat: venue.latitude,
-        lng: venue.longitude
-      },
-      disableDefaultUI: true
-    });
-
-    const marker = new google.maps.Marker({
-      position: {
-        lat: venue.latitude,
-        lng: venue.longitude
-      },
-      map: map
-    }); 
-
-    var customControlDiv = document.createElement('div');
-    var customControl = new MapsCustomControl(customControlDiv, map, venue.latitude, venue.longitude);
-    customControlDiv.index = 1;
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-
-  }
+ 
   return radio
   
 }
@@ -1769,7 +1734,7 @@ function createVenueSection(record) {
 
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-
+       
         const checkInDesc = document.createElement('li')
         checkInDesc.className = 'mdc-list-item label--text'
         checkInDesc.textContent = record.venue[0].venueDescriptor

@@ -289,11 +289,6 @@ function getCellTowerInfo() {
       });
       return
     }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> list-view-updation
     var apiKey ='AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
     const req = {
       method: 'POST',
