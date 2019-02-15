@@ -526,11 +526,11 @@ function putAssignessInStore(assigneeArray, param) {
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
-        const record = event.target.result
+       
         store.put({
           mobile: assignee,
-          displayName: assignee.displayName,
-          photoURL: assignee.photoURL
+          displayName:'',
+          photoURL: ''
         })
       }
     })
@@ -748,7 +748,7 @@ function successResponse(read, param) {
 
       updateMap(activity, param);
       updateCalendar(activity, param)
-      // putAssignessInStore(activity.assignees, param);
+      putAssignessInStore(activity.assignees, param);
       putAttachment(activity, param)
 
       if (activity.hidden === 0) {
@@ -764,8 +764,13 @@ function successResponse(read, param) {
           })
         }
       }
-    }
 
+    }
+    createUsersApiUrl(db,param.user).then(function(data){
+      if(data.url) {
+        updateUserObjectStore(data)
+      }
+    })
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription, param).then(function () {
         getUniqueOfficeCount(param).then(function (offices) {
@@ -786,8 +791,7 @@ function createUsersApiUrl(db, user) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['users'], 'readwrite');
     const usersObjectStore = tx.objectStore('users');
-    // const isUpdatedIndex = usersObjectStore.index('isUpdated')
-    // const NON_UPDATED_USERS = 0
+  
     let assigneeString = ''
 
     const defaultReadUserString = `${apiUrl}services/users?q=`
@@ -825,7 +829,7 @@ function createUsersApiUrl(db, user) {
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(requestPayload) {
-  return new Promise(function (resolve, reject) {
+ 
 
     const req = {
       method: 'GET',
@@ -841,10 +845,7 @@ function updateUserObjectStore(requestPayload) {
 
         const tx = requestPayload.db.transaction(['users'], 'readwrite');
         const usersObjectStore = tx.objectStore('users');
-        // const isUpdatedIndex = usersObjectStore.index('isUpdated')
-        // const USER_NOT_UPDATED = 0
-        // const USER_UPDATED = 1
-
+   
         usersObjectStore.openCursor().onsuccess = function (event) {
           const cursor = event.target.result
 
@@ -856,14 +857,13 @@ function updateUserObjectStore(requestPayload) {
             const record = cursor.value
             record.photoURL = userProfile[cursor.primaryKey].photoURL
             record.displayName = userProfile[cursor.primaryKey].displayName
-            // record.isUpdated = USER_UPDATED
-
+       
             usersObjectStore.put(record)
           }
           cursor.continue()
         }
         tx.oncomplete = function () {
-          resolve(true)
+            
         }
         tx.onerror = function () {
           reject(tx.error)
@@ -872,7 +872,7 @@ function updateUserObjectStore(requestPayload) {
       }).catch(function (error) {
         reject(error)
       })
-  });
+  
 }
 
 function updateRoot(param, read) {

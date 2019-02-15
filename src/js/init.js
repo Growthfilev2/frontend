@@ -502,6 +502,7 @@ function createIDBStore(auth) {
     let db;
     req.onupgradeneeded = function (evt) {
       if(evt.oldVersion < 3) {
+        // next time when new indexed or obejctstore need to be created
       }
       else {
         createObjectStores(db,auth.uid)
