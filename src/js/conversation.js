@@ -656,7 +656,9 @@ function initializeSelectorWithData(evt, data) {
     const db = req.result
     if (data.store === 'map') {
       const tx = db.transaction([data.store]);
-      fillMapInSelector(db, tx, dialog, data)
+      getLocationForMapSelector(tx, data).then(function () {
+        handleClickListnersForMap(db, dialog, data)
+      }).catch(console.log)
     }
     if (data.store === 'subscriptions') {
 
@@ -936,15 +938,7 @@ function resetSelectedContacts() {
   })
 }
 
-function fillMapInSelector(db, tx, dialog, data) {
 
-  const searchIcon = document.getElementById('selector--search')
-  searchIcon.classList.add('hidden');
-  const ul = document.getElementById('data-list--container');
-  getLocationForMapSelector(tx, data).then(function () {
-    handleClickListnersForMap(db, dialog, data)
-  }).catch(console.log)
-}
 
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
@@ -1548,8 +1542,8 @@ function updateCreateActivity(record) {
       showLabel: true
     }))
 
-    createVenueSection(record)
 
+    createVenueSection(record)
     createScheduleTable(record);
     createAttachmentContainer(record)
     createAssigneeList(record, true, db)
