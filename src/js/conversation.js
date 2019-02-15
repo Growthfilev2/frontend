@@ -1744,10 +1744,10 @@ function createVenueSection(record) {
 
     
     const checkInDesc = document.createElement('li')
-    checkInDesc.className = 'mdc-list-item'
+    checkInDesc.className = 'mdc-list-item label--text'
     checkInDesc.textContent = record.venue[0].venueDescriptor
     checkInDesc.style.height = '50px'
-    checkInDesc.style.paddingRight = '13px';
+    checkInDesc.style.paddingRight = '11px';
 
     const meta = document.createElement('span')
     meta.className = 'mdc-list-item__meta'
@@ -1780,8 +1780,7 @@ function createVenueSection(record) {
           form.appendChild(label);
           form.appendChild(createCheckInVenue(result,i))
           venueSection.appendChild(form);
-          const br = document.createElement('br')
-          venueSection.appendChild(br);
+       
         })
 
         const uncheckFab = document.getElementById('uncheck-checkin');
@@ -1793,7 +1792,7 @@ function createVenueSection(record) {
             });
           })
         }
-        
+
       })
     })
 

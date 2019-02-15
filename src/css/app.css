@@ -1689,9 +1689,16 @@ input[type="datetime-local"] {
     color: gray;
   }
   .mdc-form-field.check-in-form {
-    width:95%;
-    padding-left: 12px;
+    display: flex;
+    position: relative;
+    align-items: center;
+    justify-content: flex-start;
+    
+    padding: 0px 6px 0px 16px;
+    overflow: hidden;
+
   }
-  .mdc-form-field.check-in-form .mdc-radio.checkin {
-    float: right;
+ 
+  #uncheck-checkin {
+    margin-top: 0px;
   }
