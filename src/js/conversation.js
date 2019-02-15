@@ -765,7 +765,7 @@ function fillUsersInSelector(data, dialog) {
         initSearchForSelectors(db, 'users', data)
       })
 
-     
+
     }
   }
 
@@ -1249,10 +1249,8 @@ function createTempRecord(office, template, data) {
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-
               updateCreateActivity(bareBonesRecord)
               removeDialog()
-
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
@@ -1619,9 +1617,9 @@ function createCheckInVenue(venue) {
   radio.appendChild(input)
   radio.appendChild(background)
   let showMap = false;
- 
+
   return radio
-  
+
 }
 
 function createSimpleLi(key, data) {
@@ -1736,30 +1734,28 @@ function createVenueSection(record) {
 
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-       
+        if (!results.length) return;
+
         const checkInDesc = document.createElement('li')
         checkInDesc.className = 'mdc-list-item label--text'
         checkInDesc.textContent = record.venue[0].venueDescriptor
         checkInDesc.style.height = '50px'
         checkInDesc.style.paddingRight = '11px';
 
-        if (results.length) {
+        const meta = document.createElement('span')
+        meta.className = 'mdc-list-item__meta'
+        const uncheck = document.createElement('label')
+        uncheck.id = 'uncheck-checkin'
+        uncheck.className = 'mdc-fab add--assignee-icon'
+        const span = document.createElement('span')
+        span.className = 'mdc-fab__icon material-icons'
+        span.textContent = 'clear';
+        uncheck.appendChild(span);
+        meta.appendChild(uncheck)
+        checkInDesc.appendChild(meta)
 
-          const meta = document.createElement('span')
-          meta.className = 'mdc-list-item__meta'
-          const uncheck = document.createElement('label')
-          uncheck.id = 'uncheck-checkin'
-          uncheck.className = 'mdc-fab add--assignee-icon'
-          const span = document.createElement('span')
-          span.className = 'mdc-fab__icon material-icons'
-          span.textContent = 'clear';
-          uncheck.appendChild(span);
-          meta.appendChild(uncheck)
-          checkInDesc.appendChild(meta)
-        }
 
         venueSection.appendChild(checkInDesc)
-
 
         results.forEach(function (result) {
 
@@ -1772,10 +1768,10 @@ function createVenueSection(record) {
           form.appendChild(createCheckInVenue(result))
           venueSection.appendChild(form);
           const mapDom = document.createElement('div');
-          mapDom.id = 'map-detail-check-in-create'+convertKeyToId(result.venueDescriptor)
-          venueSection.appendChild(mapDom);  
+          mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
+          venueSection.appendChild(mapDom);
         })
-        
+
 
         const uncheckFab = document.getElementById('uncheck-checkin');
         if (uncheckFab) {
@@ -1800,7 +1796,11 @@ function createVenueSection(record) {
     venueSection.appendChild(mapDom)
   });
 
-
+  if (record.template === 'check-in') {
+    if (!record.venue[0].location || !record.venue[0].address) {
+      document.getElementById('venue--list').style.display = 'none'
+    }
+  }
 
   if (record.venue.length === 0) {
     document.getElementById('venue--list').style.display = 'none'

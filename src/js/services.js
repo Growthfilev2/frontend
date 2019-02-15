@@ -453,6 +453,7 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
+       
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
