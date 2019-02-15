@@ -1688,3 +1688,10 @@ input[type="datetime-local"] {
     font-size: 20px;
     color: gray;
   }
+  .mdc-form-field.check-in-form {
+    width:95%;
+    padding-left: 12px;
+  }
+  .mdc-form-field.check-in-form .mdc-radio.checkin {
+    float: right;
+  }

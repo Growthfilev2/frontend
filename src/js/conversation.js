@@ -1601,21 +1601,18 @@ function updateCreateActivity(record) {
 }
 
 
-function createCheckInVenue(venue) {
-
-  const li = document.createElement('li')
-  li.className = 'mdc-list-item'
-  li.textContent = venue.location
-  li.style.height = '50px';
-  const meta = document.createElement('span')
-  meta.className = 'mdc-list-item__meta'
+function createCheckInVenue(venue,i) {
 
   const radio = document.createElement('div')
   radio.className = 'mdc-radio checkin'
   radio.value = JSON.stringify(venue)
+  
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
   input.type = 'radio'
+  input.id = 'check-in-radio-'+i
+  input.setAttribute('name','radios')
+
   id = convertKeyToId(venue.venueDescriptor)
   const background = document.createElement('div')
   background.className = 'mdc-radio__background'
@@ -1628,10 +1625,10 @@ function createCheckInVenue(venue) {
   background.appendChild(inner)
   radio.appendChild(input)
   radio.appendChild(background)
-
-  meta.appendChild(radio);
-  li.appendChild(meta)
-  return li
+  // const label = document.createElement('label')
+  // label.textContent = venue.location
+  
+  return radio
 
 }
 
@@ -1744,10 +1741,14 @@ function createVenueSection(record) {
   console.log(record);
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in') {
+
+    
     const checkInDesc = document.createElement('li')
     checkInDesc.className = 'mdc-list-item'
     checkInDesc.textContent = record.venue[0].venueDescriptor
     checkInDesc.style.height = '50px'
+    checkInDesc.style.paddingRight = '13px';
+
     const meta = document.createElement('span')
     meta.className = 'mdc-list-item__meta'
 
@@ -1763,25 +1764,40 @@ function createVenueSection(record) {
     checkInDesc.appendChild(meta)
 
     venueSection.appendChild(checkInDesc)
+    // venueSection.appendChild(form);
+
 
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+        let i = 0
         results.forEach(function (result) {
-          console.log(result);
-          venueSection.appendChild(createCheckInVenue(result));
+          i++
+          const form = document.createElement('div');
+          form.className = 'mdc-form-field check-in-form'
+          const label = document.createElement('label')
+          label.setAttribute('for','check-in-radio-'+i);
+          label.textContent = result.location
+          form.appendChild(label);
+          form.appendChild(createCheckInVenue(result,i))
+          venueSection.appendChild(form);
+          const br = document.createElement('br')
+          venueSection.appendChild(br);
         })
+
+        const uncheckFab = document.getElementById('uncheck-checkin');
+        if (uncheckFab) {
+          uncheckFab.addEventListener('click', function () {
+            document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+              const radio = new mdc.radio.MDCRadio(el)
+              radio.checked = false
+            });
+          })
+        }
+        
       })
     })
 
-    const uncheckFab = document.getElementById('uncheck-checkin');
-    if (uncheckFab) {
-      uncheckFab.addEventListener('click', function () {
-        document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-          const radio = new mdc.radio.MDCRadio(el)
-          radio.checked = false
-        });
-      })
-    }
+  
     return;
   }
 
