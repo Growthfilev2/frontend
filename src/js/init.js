@@ -409,7 +409,7 @@ function startApp(start) {
         localStorage.setItem('dbexist',auth.uid);
         init()
       }).catch(function (error) {
-        resetApp(auth, 0);
+        snacks('Please restart the app');
         handleError(error)
       })
     }
@@ -511,16 +511,15 @@ function createIDBStore(auth) {
     let db;
     req.onupgradeneeded = function (evt) {
       db = req.result;
-      switch(evt.oldVersion){
-        case 0:
-        createObjectStores(db,auth.uid)
-        break;
-        default:
-        // next time when new indexed or obejctstore need to be created
-        break;
+      db.onerror = function(){
+        reject({message: `${db.error.message} from createIDBStore on upgradeneeded`})
+        return;
       }
+
+      createObjectStores(db,auth.uid)
     }
     req.onsuccess = function () {
+
       resolve(true)
     }
     req.onerror = function () {

@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -814,27 +814,21 @@ function urlFromBase64Image(data) {
 function loadView(data) {
   androidStopRefreshing();
   
-  // if (!history.state) {
-  //   localStorage.setItem('today', null);
-  //   openListWithChecks();
-  //   return;
-  // }
-
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
   }
 
   if (history.state[0] === 'profileView') return;
-
-  if (history.state[0] === 'listView') {
+  
+  // if (history.state[0] === 'listView') {
     
-    if (!data.msg.length) return;
-    getRootRecord().then(function (record) {
-      updateEl(data.msg, record);
-    });
-    return;
-  }
+  //   if (!data.msg.length) return;
+  //   getRootRecord().then(function (record) {
+  //     updateEl(data.msg, record);
+  //   });
+  //   return;
+  // }
 
   window[history.state[0]](history.state[1], false);
 }
@@ -869,7 +863,9 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-  requestCreator('Null', value);
+  if(localStorage.getItem('dbexist')){
+    requestCreator('Null', value);
+  }
 }
 
 function removeChildNodes(parent) {
