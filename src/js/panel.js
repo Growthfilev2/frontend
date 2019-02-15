@@ -50,9 +50,10 @@ function getListViewData(filter, size) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
+    if(size > 20) {
+      window.addEventListener('scroll', handleScroll, false)
 
-    window.addEventListener('scroll', handleScroll, false)
-
+    }
     if(!filter) {
       fetchActivities(size,record.location)
       return;
@@ -77,6 +78,7 @@ function fetchActivities(size, location) {
     loadActivitiesFromListStore(location)
     return;
   }
+
   startCursor(location);
 }
 
@@ -125,7 +127,7 @@ function updateEl(activities, rootRecord) {
           })
         }
         else {
-          getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
+          getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
             ul.insertBefore(li, ul.childNodes[0])
           })
         }

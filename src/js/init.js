@@ -403,6 +403,7 @@ function startApp(start) {
 
     if (start) {
       createIDBStore(auth).then(function () {
+        localStorage.setItem('dbexist',auth.uid);
         init()
       }).catch(function (error) {
         resetApp(auth, 0);
@@ -763,10 +764,10 @@ function openListWithChecks() {
   });
   runAppChecks();
 
-  // setInterval(function () {
-  //   manageLocation().then(function (location) {
-  //     updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-  //   }).catch(handleError);
-  // }, 5000);
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+    }).catch(handleError);
+  }, 5000);
 
 }

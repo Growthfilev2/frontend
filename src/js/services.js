@@ -868,9 +868,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-  if (localStorage.getItem('dbexist')) {
-    requestCreator('Null', value);
-  }
+  requestCreator('Null', value);
 }
 
 function removeChildNodes(parent) {
