@@ -1601,7 +1601,7 @@ function updateCreateActivity(record) {
 }
 
 
-function createCheckInVenue(venue,i) {
+function createCheckInVenue(venue) {
 
   const radio = document.createElement('div')
   radio.className = 'mdc-radio checkin'
@@ -1610,7 +1610,7 @@ function createCheckInVenue(venue,i) {
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
   input.type = 'radio'
-  input.id = 'check-in-radio-'+i
+  // input.id = 'check-in-radio-'+i
   input.setAttribute('name','radios')
 
   id = convertKeyToId(venue.venueDescriptor)
@@ -1742,7 +1742,6 @@ function createVenueSection(record) {
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in') {
 
-    
     const checkInDesc = document.createElement('li')
     checkInDesc.className = 'mdc-list-item label--text'
     checkInDesc.textContent = record.venue[0].venueDescriptor
@@ -1769,16 +1768,16 @@ function createVenueSection(record) {
 
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-        let i = 0
+        // let i = 0
         results.forEach(function (result) {
-          i++
+          // i++
           const form = document.createElement('div');
           form.className = 'mdc-form-field check-in-form'
           const label = document.createElement('label')
-          label.setAttribute('for','check-in-radio-'+i);
+          label.setAttribute('for','check-in-radio');
           label.textContent = result.location
           form.appendChild(label);
-          form.appendChild(createCheckInVenue(result,i))
+          form.appendChild(createCheckInVenue(result))
           venueSection.appendChild(form);
        
         })
@@ -1796,7 +1795,6 @@ function createVenueSection(record) {
       })
     })
 
-  
     return;
   }
 
@@ -2712,23 +2710,30 @@ function insertInputsIntoActivity(record, activityStore) {
   }
 
   if (record.template === 'check-in') {
-    if (record.venue[i].hasOwnProperty('showIcon')) {
-      delete record.venue[i].showIcon
-    }
+    // if (record.venue[i].hasOwnProperty('showIcon')) {
+    //   delete record.venue[i].showIcon
+    // }
 
     document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
       const radio = new mdc.radio.MDCRadio(el);
       if (radio.checked) {
         const venueData = JSON.parse(el.value);
         record.venue[0].geopoint = {
-          latitude: venueData.geopoint['_latitude'] || '',
-          longitude: venueData.geopoint['_longitude'] || ''
+          latitude: venueData.latitude,
+          longitude: venueData.longitude
         }
         record.venue[0].location = venueData.location
         record.venue[0].address = venueData.address
       }
     });
-  } else {
+    if(!record.venue[0].location || !record.venue[0].address || !record.venue[0].geopoint['_latitude'] || !record.venue[0].geopoint['_longitude']) {
+        record.venue[0].geopoint = {
+          latitude:'',
+          longitude:''
+        }
+    }
+  }
+   else {
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
         latitude: record.venue[i].geopoint['_latitude'] || "",
