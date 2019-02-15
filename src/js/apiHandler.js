@@ -8,7 +8,6 @@ function getTime() {
   return Date.now()
 }
 
-
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
 const requestFunctionCaller = {
@@ -17,9 +16,7 @@ const requestFunctionCaller = {
   share: share,
   update: update,
   create: create,
-
 }
-
 
 function requestHandlerResponse(type, code, message, params) {
   self.postMessage({
@@ -987,6 +984,7 @@ function updateIDB(param) {
         data: null,
         token: param.user.token
       }
+      
       http(req)
         .then(function (response) {
           if (!response) return;

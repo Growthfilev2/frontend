@@ -754,20 +754,15 @@ function startInitializatioOfList(data) {
   })
 }
 
-
-
 function openListWithChecks() {
- 
   listView({
     urgent: false,
     nearby: false
   });
   runAppChecks();
-
   setInterval(function () {
     manageLocation().then(function (location) {
       updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
     }).catch(handleError);
   }, 5000);
-
 }
