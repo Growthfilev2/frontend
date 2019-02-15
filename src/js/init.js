@@ -41,12 +41,14 @@ let native = function () {
           id: '123',
         })
       }
-      
+
       if (this.getName() === 'Android') {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          handleError({message:`${e.message} from AndroidInterface.getDeviceId`})
+          handleError({
+            message: `${e.message} from AndroidInterface.getDeviceId`
+          })
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -106,17 +108,17 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-  if(!this.localStorage.getItem('error')) {
-    this.localStorage.setItem('error',JSON.stringify({}));
-  }
+ 
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
     try {
-      AndroidInterface.showDialog(title,message);
+      AndroidInterface.showDialog(title, message);
     } catch (e) {
-      handleError({message:`${e.message} from showDialog during device Incompatibility check`})
+      handleError({
+        message: `${e.message} from showDialog during device Incompatibility check`
+      })
       appDialog(message);
     }
     return
@@ -185,7 +187,7 @@ function firebaseUiConfig(value) {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        if(value) {
+        if (value) {
           document.querySelector('#updateEmailDialog').remove();
           updateEmail(authResult.user, value);
           return false;
@@ -209,7 +211,7 @@ function firebaseUiConfig(value) {
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
-        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '' ,
+        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '',
       }
     ]
 
@@ -220,10 +222,9 @@ function firebaseUiConfig(value) {
 
 function userSignedOut() {
   const login = document.createElement('div')
-    login.id = 'login-container'
-    localStorage.clear();
+  login.id = 'login-container'
   document.body.appendChild(login)
-  if(!ui) {
+  if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
   }
   ui.start('#login-container', firebaseUiConfig());
@@ -384,20 +385,28 @@ function imageViewDialog() {
 }
 
 function startApp(start) {
-  
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
+      localStorage.setItem('today', null);
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
-    if(start) {
-     
-      init(auth)
-      return;
+
+    if (!localStorage.getItem('error')) {
+      localStorage.setItem('error', JSON.stringify({}));
     }
 
+    if (start) {
+      createIDBStore(auth).then(function () {
+        init()
+      }).catch(function (error) {
+        resetApp(auth, 0);
+        handleError(error)
+      })
+    }
   })
 }
 
@@ -427,12 +436,16 @@ function getEmployeeDetails() {
       tx.oncomplete = function () {
         resolve(details);
       }
-      tx.onerror = function(){
-        reject({message:`${tx.error.message} from getEmployeeDetails`})
+      tx.onerror = function () {
+        reject({
+          message: `${tx.error.message} from getEmployeeDetails`
+        })
       }
     }
-    req.onerror = function(){
-      reject({message:`${req.error.message} from getEmployeeDetails`})
+    req.onerror = function () {
+      reject({
+        message: `${req.error.message} from getEmployeeDetails`
+      })
     }
   })
 }
@@ -469,64 +482,126 @@ function isEmployeeOnLeave() {
           resolve(empDetails)
         }
         tx.onerror = function () {
-          reject({message:`${tx.error.message} from isEmployeeOnLeave`})
+          reject({
+            message: `${tx.error.message} from isEmployeeOnLeave`
+          })
         }
       }
       req.onerror = function () {
-        reject({message:`${req.error.message} from isEmployeeOnLeave`});
+        reject({
+          message: `${req.error.message} from isEmployeeOnLeave`
+        });
       }
 
-    }).catch(function(error){
+    }).catch(function (error) {
       reject(error)
     })
   })
 }
 
-function idbVersionLessThan3(auth) {
+function createIDBStore(auth) {
   return new Promise(function (resolve, reject) {
-
     const req = indexedDB.open(auth.uid, 3);
     let db;
-    let reset = {
-      value: false,
-      version: ''
-    };
     req.onupgradeneeded = function (evt) {
-      switch (evt.oldVersion) {
-        case 1:
-          reset.value = true;
-          reset.version = 1;
-          break;
-        case 2:
-          value = false;
-          reset.version = 2;
-          const calendar = req.transaction.objectStore('calendar');
-          calendar.createIndex('onLeave', ['template', 'status', 'office']);
-          const children = req.transaction.objectStore('children');
-          children.createIndex('templateStatus', ['template', 'status']);
-          const map = req.transaction.objectStore('map');
-          map.createIndex('byOffice', ['office', 'location']);
-
-          break;
-        case 3:
-          value = false;
-          reset.version = 3
-          break;
+      db = req.result;
+      switch(evt.oldVersion){
+        case 0:
+        createObjectStores(db,auth.uid)
+        break;
         default:
-          reset.value = true;
-          reset.version = ''
+        // next time when new indexed or obejctstore need to be created
+        break;
       }
     }
     req.onsuccess = function () {
-      db = req.result;
-      db.close();
-      resolve(reset)
+      resolve(true)
     }
     req.onerror = function () {
+      console.log(req.error);
       reject({
-        message: `${req.error.message} from idbVersionLessThan3` 
+        message: `${req.error.message} from createIDBStore`
       })
     }
+  })
+}
+
+function createObjectStores(db,uid) {
+
+  const activity = db.createObjectStore('activity', {
+    keyPath: 'activityId'
+  })
+
+  activity.createIndex('timestamp', 'timestamp')
+  activity.createIndex('office', 'office')
+  activity.createIndex('hidden', 'hidden')
+
+  const list = db.createObjectStore('list', {
+    keyPath: 'activityId'
+  })
+  list.createIndex('timestamp', 'timestamp');
+  list.createIndex('status', 'status');
+
+  const users = db.createObjectStore('users', {
+    keyPath: 'mobile'
+  })
+
+  users.createIndex('displayName', 'displayName')
+  users.createIndex('isUpdated', 'isUpdated')
+  users.createIndex('count', 'count')
+
+  const addendum = db.createObjectStore('addendum', {
+    autoIncrement: true
+  })
+
+  addendum.createIndex('activityId', 'activityId')
+
+  const subscriptions = db.createObjectStore('subscriptions', {
+    autoIncrement: true
+  })
+
+  subscriptions.createIndex('office', 'office')
+  subscriptions.createIndex('template', 'template')
+  subscriptions.createIndex('officeTemplate', ['office', 'template'])
+
+  const calendar = db.createObjectStore('calendar', {
+    autoIncrement: true
+  })
+
+  calendar.createIndex('activityId', 'activityId')
+  calendar.createIndex('timestamp', 'timestamp')
+  calendar.createIndex('start', 'start')
+  calendar.createIndex('end', 'end')
+  calendar.createIndex('urgent', ['status', 'hidden']),
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
+
+  const map = db.createObjectStore('map', {
+    autoIncrement: true
+  })
+
+  map.createIndex('activityId', 'activityId')
+  map.createIndex('location', 'location')
+  map.createIndex('latitude', 'latitude')
+  map.createIndex('longitude', 'longitude')
+  map.createIndex('nearby', ['status', 'hidden'])
+  map.createIndex('byOffice', ['office', 'location'])
+
+  const children = db.createObjectStore('children', {
+    keyPath: 'activityId'
+  })
+
+  children.createIndex('template', 'template');
+  children.createIndex('office', 'office');
+  children.createIndex('templateStatus', ['template', 'status']);
+
+  const root = db.createObjectStore('root', {
+    keyPath: 'uid'
+  });
+
+  root.put({
+    uid: uid,
+    fromTime: 0,
+    location: ''
   })
 }
 
@@ -557,76 +632,49 @@ function removeIDBInstance(auth) {
   })
 }
 
-function redirect(){
+function redirect() {
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
     window.location = 'https://www.growthfile.com';
-   handleError({message:`${error} from redirect`})
+    handleError({
+      message: `${error} from redirect`
+    })
   });
 }
 
-function init(auth) {
+function init() {
   // if(!native.getName()) {
   //   redirect();
   //   return
   // }
+
   document.getElementById("main-layout-app").style.display = 'block'
-  idbVersionLessThan3(auth).then(function (reset) {
-    if (localStorage.getItem('dbexist')) {
-      from = 1;
-      if (reset.value) {
-        resetApp(auth, from);
-        return;
-      }
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: '',
-        registerToken: native.getFCMToken()
-      })
-      openListWithChecks()
-      return;
-    }
-    resetApp(auth, 0)
-  }).catch(handleError);
-}
-
-function resetApp(auth, from) {
-  removeIDBInstance(auth).then(function () {
-    history.pushState(null, null, null);
-    document.getElementById('growthfile').appendChild(loader('init-loader'))
-
-    setTimeout(function () {
-      snacks('Growthfile is Loading. Please Wait');
-    }, 1000)
- 
-    requestCreator('now', {
-      device: native.getInfo(),
-      from: from,
-      registerToken: native.getFCMToken()
-    });
-
-  }).catch(function (error) {
-    snacks(error.userMessage);
-    handleError(error)
+  openListWithChecks()
+  requestCreator('now', {
+    device: native.getInfo(),
+    from: '',
+    registerToken: native.getFCMToken()
   })
+ 
 }
+
 
 
 function runAppChecks() {
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
-      detectSuggestCheckinEvent(e.detail,emp);
+      detectSuggestCheckinEvent(e.detail, emp);
       return;
-    }).catch(function(error){
+    }).catch(function (error) {
       handleError(error);
       detectSuggestCheckinEvent(e.detail);
     })
   }, true);
 }
 
-function detectSuggestCheckinEvent(changed,emp){
-  
+function detectSuggestCheckinEvent(changed, emp) {
+
   var dataObject = {
     urgent: false,
     nearby: false,
@@ -695,11 +743,11 @@ function startInitializatioOfList(data) {
         nearby: data.nearby
       });
     }
-  }).catch(function(error){
+  }).catch(function (error) {
     handleError(error);
     listView({
       urgent: false,
-      nearby:false
+      nearby: false
     });
   })
 }
@@ -707,14 +755,14 @@ function startInitializatioOfList(data) {
 
 
 function openListWithChecks() {
-  listView({urgent:false,nearby:false});
+  listView({
+    urgent: false,
+    nearby: false
+  });
   runAppChecks();
-  setInterval(function(){
-      manageLocation().then(function (location) {
-        updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-      }).catch(handleError);
-    },5000);
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+    }).catch(handleError);
+  }, 5000);
 }
-
-
-

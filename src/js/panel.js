@@ -101,7 +101,7 @@ function getSizeOfListStore() {
   })
 }
 
-function updateEl(activities, currentLocation) {
+function updateEl(activities, rootRecord) {
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -118,9 +118,17 @@ function updateEl(activities, currentLocation) {
           existingEl.remove();
         }
         if (!record) return;
-        getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
-          ul.insertBefore(li, ul.childNodes[0])
-        })
+        
+        if(!rootRecord.location)  {
+          getActivityDataForList(activityStore, record).then(function (li) {
+            ul.insertBefore(li, ul.childNodes[0])
+          })
+        }
+        else {
+          getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
+            ul.insertBefore(li, ul.childNodes[0])
+          })
+        }
       }
     })
   }
@@ -156,7 +164,7 @@ function loadActivitiesFromListStore(currentLocation) {
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
       if (!ul) return
-      ul.innerHTML = '';
+      ul.innerHTML = ''
       ul.appendChild(fragment)
       scrollToActivity()
     }
@@ -164,7 +172,7 @@ function loadActivitiesFromListStore(currentLocation) {
 }
 
 function startCursor(currentLocation) {
-
+  console.log(currentLocation)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -254,8 +262,9 @@ function getActivityDataForList(activity, value, currentLocation) {
           secondLine.appendChild(el);
         }
       }
-
-      secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+      if(currentLocation){
+        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+      }
       const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineCss))
     }
@@ -530,7 +539,7 @@ function appendActivityListToDom(activityDom) {
 function getRootRecord() {
   return new Promise(function (resolve, reject) {
     let record;
-    const dbName = localStorage.getItem('dbexist');
+    const dbName = firebase.auth().currentUser.uid;
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result;

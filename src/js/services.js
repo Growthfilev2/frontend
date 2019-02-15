@@ -289,7 +289,11 @@ function getCellTowerInfo() {
       });
       return
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> list-view-updation
     var apiKey ='AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
     const req = {
       method: 'POST',
@@ -716,6 +720,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
+  'initFirstLoad':initFirstLoad,
   'update-app': updateApp,
   'revoke-session': revokeSession,
   'notification': successDialog,
@@ -727,6 +732,23 @@ var receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
+}
+
+function initFirstLoad(response){
+  console.log(response);
+  if(history.state[0] !== 'listView') return;
+  if(response.msg.hasOwnProperty('activity')) {
+    if(response.msg.activity.length){
+      getRootRecord().then(function(record){
+        updateEl(response.msg.activity,record);
+      })
+    }
+  }
+  if(response.msg.hasOwnProperty('template')){
+    createActivityIcon()
+  }
+
+  return;
 }
 
 function updateApp(data) {
@@ -794,14 +816,13 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-  localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
   androidStopRefreshing();
-
-  if (!history.state) {
-    localStorage.setItem('today', null);
-    openListWithChecks();
-    return;
-  }
+  
+  // if (!history.state) {
+  //   localStorage.setItem('today', null);
+  //   openListWithChecks();
+  //   return;
+  // }
 
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
@@ -811,9 +832,10 @@ function loadView(data) {
   if (history.state[0] === 'profileView') return;
 
   if (history.state[0] === 'listView') {
+    
     if (!data.msg.length) return;
     getRootRecord().then(function (record) {
-      updateEl(data.msg, record.location);
+      updateEl(data.msg, record);
     });
     return;
   }
