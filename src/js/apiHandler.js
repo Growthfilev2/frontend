@@ -35,14 +35,9 @@ function sendApiFailToMainThread(error) {
   requestHandlerResponse('apiFail', error.code, error);
 }
 
-
-
-// when worker receives the request body from the main thread
-
-
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(initializeIDB).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.user).then(putServerTime).then(updateIDB).catch(console.log);
     return
   }
 
@@ -158,9 +153,9 @@ function fetchServerTime(body, user) {
         return
       };
 
+
       resolve({
         ts: response.timestamp,
-        fromTime: body.from,
         user: user,
       })
     }).catch(sendApiFailToMainThread)
@@ -204,18 +199,12 @@ function fetchRecord(uid, id) {
 }
 
 
-function initializeIDB(data) {
-  console.log("init db")
+function putServerTime(data) {
+
   return new Promise(function (resolve, reject) {
     const request = indexedDB.open(data.user.uid, 3);
     request.onerror = function () {
-      console.log(request.error)
       reject(request.error)
-    }
-
-    request.onupgradeneeded = function (evt) {
-      console.log(evt);
-      createObjectStores(request, data);
     }
 
     request.onsuccess = function () {
@@ -230,93 +219,14 @@ function initializeIDB(data) {
         requestHandlerResponse('initFirstLoad', 200, 'start');
         resolve({
           user: data.user,
-          fromTime: data.fromTime
+          ts:data.ts
         })
       }
     }
   })
 }
 
-function createObjectStores(request, data) {
-  const db = request.result;
 
-  const activity = db.createObjectStore('activity', {
-    keyPath: 'activityId'
-  })
-
-  activity.createIndex('timestamp', 'timestamp')
-  activity.createIndex('office', 'office')
-  activity.createIndex('hidden', 'hidden')
-
-  const list = db.createObjectStore('list', {
-    keyPath: 'activityId'
-  })
-  list.createIndex('timestamp', 'timestamp');
-  list.createIndex('status', 'status');
-
-  const users = db.createObjectStore('users', {
-    keyPath: 'mobile'
-  })
-
-  users.createIndex('displayName', 'displayName')
-  users.createIndex('isUpdated', 'isUpdated')
-  users.createIndex('count', 'count')
-
-  const addendum = db.createObjectStore('addendum', {
-    autoIncrement: true
-  })
-
-  addendum.createIndex('activityId', 'activityId')
-
-  const subscriptions = db.createObjectStore('subscriptions', {
-    autoIncrement: true
-  })
-
-  subscriptions.createIndex('office', 'office')
-  subscriptions.createIndex('template', 'template')
-  subscriptions.createIndex('officeTemplate', ['office', 'template'])
-
-  const calendar = db.createObjectStore('calendar', {
-    autoIncrement: true
-  })
-
-  calendar.createIndex('activityId', 'activityId')
-  calendar.createIndex('timestamp', 'timestamp')
-  calendar.createIndex('start', 'start')
-  calendar.createIndex('end', 'end')
-  calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
-
-  const map = db.createObjectStore('map', {
-    autoIncrement: true
-  })
-
-  map.createIndex('activityId', 'activityId')
-  map.createIndex('location', 'location')
-  map.createIndex('latitude', 'latitude')
-  map.createIndex('longitude', 'longitude')
-  map.createIndex('nearby', ['status', 'hidden'])
-  map.createIndex('byOffice', ['office', 'location'])
-
-  const children = db.createObjectStore('children', {
-    keyPath: 'activityId'
-  })
-
-  children.createIndex('template', 'template');
-  children.createIndex('office', 'office');
-  children.createIndex('templateStatus', ['template', 'status']);
-
-  const root = db.createObjectStore('root', {
-    keyPath: 'uid'
-  })
-
-  root.put({
-    uid: data.user.uid,
-    fromTime: data.fromTime,
-    location: ''
-  })
-  
-}
 
 function comment(body, auth) {
   console.log(body)
@@ -512,12 +422,16 @@ function updateMap(activity, param) {
           })
         })
       }
-      mapTxAdd.onerror = function(){
-        instant(JSON.stringify({message:`${mapTxAdd.error}`}),param.user)
+      mapTxAdd.onerror = function () {
+        instant(JSON.stringify({
+          message: `${mapTxAdd.error}`
+        }), param.user)
       }
     }
     mapTx.onerror = function () {
-      instant(JSON.stringify({message:`${mapTx.error}`}),param.user)
+      instant(JSON.stringify({
+        message: `${mapTx.error}`
+      }), param.user)
     }
   }
 }
@@ -571,7 +485,7 @@ function updateCalendar(activity, param) {
         })
       })
       calendarTx.onerror = function () {
-       console.log(calendarTx.error);
+        console.log(calendarTx.error);
       }
     }
   }
@@ -608,7 +522,7 @@ function putAssignessInStore(assigneeArray, param) {
   const req = indexedDB.open(param.user.uid);
   req.onsuccess = function () {
     const db = req.result;
-    const tx = db.transaction(['users'],'readwrite');
+    const tx = db.transaction(['users'], 'readwrite');
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
@@ -616,7 +530,7 @@ function putAssignessInStore(assigneeArray, param) {
         store.put({
           mobile: assignee,
           displayName: assignee.displayName,
-          photoURL:assignee.photoURL
+          photoURL: assignee.photoURL
         })
       }
     })
@@ -714,42 +628,42 @@ function findSubscriptionCount(db) {
 }
 
 function updateSubscription(db, subscription, param) {
-return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
 
-  findSubscriptionCount(db).then(function (count) {
-    const req = indexedDB.open(param.user.uid)
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['subscriptions'], 'readwrite')
-      const subscriptionObjectStore = tx.objectStore('subscriptions');
-      const templateIndex = subscriptionObjectStore.index('template');
-      if (!count) {
-        subscriptionObjectStore.put(subscription)
-        return;
-      }
-      templateIndex.openCursor(subscription.template).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (cursor) {
-          
-          if (subscription.office === cursor.value.office) {
-            
-            cursor.delete()
+    findSubscriptionCount(db).then(function (count) {
+      const req = indexedDB.open(param.user.uid)
+      req.onsuccess = function () {
+        const db = req.result;
+        const tx = db.transaction(['subscriptions'], 'readwrite')
+        const subscriptionObjectStore = tx.objectStore('subscriptions');
+        const templateIndex = subscriptionObjectStore.index('template');
+        if (!count) {
+          subscriptionObjectStore.put(subscription)
+          return;
+        }
+        templateIndex.openCursor(subscription.template).onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (cursor) {
+
+            if (subscription.office === cursor.value.office) {
+
+              cursor.delete()
+            }
+            cursor.continue()
           }
-          cursor.continue()
+        }
+
+        tx.oncomplete = function () {
+          const req = indexedDB.open(param.user.uid)
+          req.onsuccess = function () {
+            const db = req.result;
+            const store = db.transaction('subscriptions', 'readwrite').objectStore('subscriptions')
+            store.put(subscription);
+            resolve(true)
+          }
         }
       }
-      
-      tx.oncomplete = function () {
-        const req = indexedDB.open(param.user.uid)
-        req.onsuccess = function () {
-          const db = req.result;
-          const store = db.transaction('subscriptions', 'readwrite').objectStore('subscriptions')
-          store.put(subscription);
-          resolve(true)
-        }
-      }
-    }
-  })
+    })
   }).catch(console.log)
 }
 
@@ -760,10 +674,10 @@ function createListStore(activity, counter, param) {
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['list','users'], 'readwrite');
+      const tx = db.transaction(['list', 'users'], 'readwrite');
       const listStore = tx.objectStore('list');
       const usersStore = tx.objectStore('users')
-      usersStore.get(activity.creator).onsuccess = function(event){
+      usersStore.get(activity.creator).onsuccess = function (event) {
         const requiredData = {
           'activityId': activity.activityId,
           'secondLine': '',
@@ -778,12 +692,12 @@ function createListStore(activity, counter, param) {
         }
 
         const record = event.target.result;
-        if(record) {
+        if (record) {
           requiredData.creator.photo = record.photoURL
         }
         listStore.put(requiredData);
       }
-    
+
       tx.oncomplete = function () {
         resolve(true)
       }
@@ -883,7 +797,7 @@ function createUsersApiUrl(db, user) {
       const cursor = event.target.result
 
       if (!cursor) return
-    
+
       const assigneeFormat = `%2B${cursor.value.mobile}&q=`
       assigneeString += `${assigneeFormat.replace('+', '')}`
       cursor.continue()
@@ -896,12 +810,11 @@ function createUsersApiUrl(db, user) {
           url: fullReadUserString,
           user: user
         })
-      }
-      else {
+      } else {
         resolve({
-          db:db,
-          url:null,
-          user:user
+          db: db,
+          url: null,
+          user: user
         })
       }
     }
@@ -912,53 +825,53 @@ function createUsersApiUrl(db, user) {
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(requestPayload) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
 
-  const req = {
-    method: 'GET',
-    url: requestPayload.url,
-    data: null,
-    token: requestPayload.user.token
-  }
-  http(req)
-    .then(function (userProfile) {
-      if (!Object.keys(userProfile).length) {
-        return resolve(true)
-      }
-
-      const tx = requestPayload.db.transaction(['users'], 'readwrite');
-      const usersObjectStore = tx.objectStore('users');
-      // const isUpdatedIndex = usersObjectStore.index('isUpdated')
-      // const USER_NOT_UPDATED = 0
-      // const USER_UPDATED = 1
-
-      usersObjectStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-
-        if (!cursor) return;
-
-        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
-
-        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-          const record = cursor.value
-          record.photoURL = userProfile[cursor.primaryKey].photoURL
-          record.displayName = userProfile[cursor.primaryKey].displayName
-          // record.isUpdated = USER_UPDATED
-         
-          usersObjectStore.put(record)
+    const req = {
+      method: 'GET',
+      url: requestPayload.url,
+      data: null,
+      token: requestPayload.user.token
+    }
+    http(req)
+      .then(function (userProfile) {
+        if (!Object.keys(userProfile).length) {
+          return resolve(true)
         }
-        cursor.continue()
-      }
-      tx.oncomplete = function () {
-          resolve(true)
-      }
-      tx.onerror = function(){
-        reject(tx.error)
-      }
 
-    }).catch(function (error) {
-      reject(error)
-    })
+        const tx = requestPayload.db.transaction(['users'], 'readwrite');
+        const usersObjectStore = tx.objectStore('users');
+        // const isUpdatedIndex = usersObjectStore.index('isUpdated')
+        // const USER_NOT_UPDATED = 0
+        // const USER_UPDATED = 1
+
+        usersObjectStore.openCursor().onsuccess = function (event) {
+          const cursor = event.target.result
+
+          if (!cursor) return;
+
+          if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
+
+          if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
+            const record = cursor.value
+            record.photoURL = userProfile[cursor.primaryKey].photoURL
+            record.displayName = userProfile[cursor.primaryKey].displayName
+            // record.isUpdated = USER_UPDATED
+
+            usersObjectStore.put(record)
+          }
+          cursor.continue()
+        }
+        tx.oncomplete = function () {
+          resolve(true)
+        }
+        tx.onerror = function () {
+          reject(tx.error)
+        }
+
+      }).catch(function (error) {
+        reject(error)
+      })
   });
 }
 
@@ -1045,13 +958,10 @@ function updateIDB(param) {
     const rootObjectStore = tx.objectStore('root');
     let record;
     let time;
-    if (param.fromTime) {
-      time = param.fromTime
-    } else {
-      rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-        record = event.target.result;
-        time = record.fromTime
-      }
+
+    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+      record = event.target.result;
+      time = record.fromTime
     }
 
     tx.oncomplete = function () {

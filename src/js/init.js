@@ -397,27 +397,12 @@ function startApp(start) {
       return
     }
     if (start) {
-      localStorage.setItem('error',{});
-      const req = indexedDB.open(firebase.auth().currentUser.uid)
-      req.onsuccess = function () {
-        const db = req.result;
-        if (Object.keys(db.objectStoreNames).length < 9) {
-          db.close();
-          resetApp(auth, 0);
-        } else {
-          db.close();
-          idbVersionLessThan3(auth).then(function (reset) {
-            if (reset.value) {
-              resetApp(auth, 0)
-              return;
-            }
-            init()
-          }).catch(function (error) {
-            resetApp(auth, 0);
-            handleError(error)
-          })
-        }
-      }
+      createIDBStore(auth).then(function () {
+        init()
+      }).catch(function (error) {
+        resetApp(auth, 0);
+        handleError(error)
+      })
     }
   })
 }
@@ -511,50 +496,104 @@ function isEmployeeOnLeave() {
   })
 }
 
-function idbVersionLessThan3(auth) {
+function createIDBStore(auth) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(auth.uid, 3);
     let db;
-    let reset = {
-      value: false,
-      version: ''
-    };
     req.onupgradeneeded = function (evt) {
-      switch (evt.oldVersion) {
-        case 1:
-          reset.value = true;
-          reset.version = 1;
-          break;
-        case 2:
-          value = false;
-          reset.version = 2;
-          const calendar = req.transaction.objectStore('calendar');
-          calendar.createIndex('onLeave', ['template', 'status', 'office']);
-          const children = req.transaction.objectStore('children');
-          children.createIndex('templateStatus', ['template', 'status']);
-          const map = req.transaction.objectStore('map');
-          map.createIndex('byOffice', ['office', 'location']);
-          break;
-        case 3:
-          value = false;
-          reset.version = 3
-          break;
-
-        default:
-          reset.value = true;
-          reset.version = ''
+      if(evt.oldVersion < 3) {
+      }
+      else {
+        createObjectStores(db,auth.uid)
       }
     }
     req.onsuccess = function () {
-      db = req.result;
-      db.close();
-      resolve(reset)
+      resolve(true)
     }
     req.onerror = function () {
       reject({
-        message: `${req.error.message} from idbVersionLessThan3`
+        message: `${req.error.message} from createIDBStore`
       })
     }
+  })
+}
+
+function createObjectStores(db) {
+
+  const activity = db.createObjectStore('activity', {
+    keyPath: 'activityId'
+  })
+
+  activity.createIndex('timestamp', 'timestamp')
+  activity.createIndex('office', 'office')
+  activity.createIndex('hidden', 'hidden')
+
+  const list = db.createObjectStore('list', {
+    keyPath: 'activityId'
+  })
+  list.createIndex('timestamp', 'timestamp');
+  list.createIndex('status', 'status');
+
+  const users = db.createObjectStore('users', {
+    keyPath: 'mobile'
+  })
+
+  users.createIndex('displayName', 'displayName')
+  users.createIndex('isUpdated', 'isUpdated')
+  users.createIndex('count', 'count')
+
+  const addendum = db.createObjectStore('addendum', {
+    autoIncrement: true
+  })
+
+  addendum.createIndex('activityId', 'activityId')
+
+  const subscriptions = db.createObjectStore('subscriptions', {
+    autoIncrement: true
+  })
+
+  subscriptions.createIndex('office', 'office')
+  subscriptions.createIndex('template', 'template')
+  subscriptions.createIndex('officeTemplate', ['office', 'template'])
+
+  const calendar = db.createObjectStore('calendar', {
+    autoIncrement: true
+  })
+
+  calendar.createIndex('activityId', 'activityId')
+  calendar.createIndex('timestamp', 'timestamp')
+  calendar.createIndex('start', 'start')
+  calendar.createIndex('end', 'end')
+  calendar.createIndex('urgent', ['status', 'hidden']),
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
+
+  const map = db.createObjectStore('map', {
+    autoIncrement: true
+  })
+
+  map.createIndex('activityId', 'activityId')
+  map.createIndex('location', 'location')
+  map.createIndex('latitude', 'latitude')
+  map.createIndex('longitude', 'longitude')
+  map.createIndex('nearby', ['status', 'hidden'])
+  map.createIndex('byOffice', ['office', 'location'])
+
+  const children = db.createObjectStore('children', {
+    keyPath: 'activityId'
+  })
+
+  children.createIndex('template', 'template');
+  children.createIndex('office', 'office');
+  children.createIndex('templateStatus', ['template', 'status']);
+
+  const root = db.createObjectStore('root', {
+    keyPath: 'uid'
+  });
+
+  root.put({
+    uid: uid,
+    fromTime: 0,
+    location: ''
   })
 }
 
@@ -601,7 +640,7 @@ function init() {
   //   redirect();
   //   return
   // }
-  
+
   document.getElementById("main-layout-app").style.display = 'block'
   requestCreator('now', {
     device: native.getInfo(),
