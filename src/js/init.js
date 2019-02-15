@@ -760,9 +760,11 @@ function openListWithChecks() {
     nearby: false
   });
   runAppChecks();
-  setInterval(function () {
-    manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-    }).catch(handleError);
-  }, 5000);
+
+  // setInterval(function () {
+  //   manageLocation().then(function (location) {
+  //     updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+  //   }).catch(handleError);
+  // }, 5000);
+
 }

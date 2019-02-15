@@ -854,22 +854,32 @@ function updateUserObjectStore(requestPayload) {
         return resolve(true)
       }
 
-      const tx = requestPayload.db.transaction(['users'], 'readwrite');
+      const tx = requestPayload.db.transaction(['users','list'], 'readwrite');
       const usersObjectStore = tx.objectStore('users');
-
+      const listStore = tx.objectStore('list')
       usersObjectStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result
 
         if (!cursor) return;
-
+        console.log(cursor.primaryKey);
+        console.log(userProfile)
         if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
 
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
           const record = cursor.value
           record.photoURL = userProfile[cursor.primaryKey].photoURL
           record.displayName = userProfile[cursor.primaryKey].displayName
-
           usersObjectStore.put(record)
+          listStore.openCursor().onsuccess = function(event){
+            const listCursor = event.target.result;
+            if(listCursor){
+              if(listCursor.value.creator.number === cursor.primaryKey) {
+                listCursor.value.creator.photo = userProfile[cursor.primaryKey].photoURL
+                listCursor.update(listCursor.value)
+              }
+              listCursor.continue();
+            }
+          }
         }
         cursor.continue()
       }
@@ -877,11 +887,11 @@ function updateUserObjectStore(requestPayload) {
 
       }
       tx.onerror = function () {
-        reject(tx.error)
+       console.log(tx.error)
       }
 
     }).catch(function (error) {
-      reject(error)
+        console.log(error);
     })
 
 }

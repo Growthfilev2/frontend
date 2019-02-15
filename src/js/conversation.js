@@ -1239,22 +1239,22 @@ function createTempRecord(office, template, data) {
         bareBonesRecord.venue = [bareBonesVenue];
         getRootRecord().then(function (record) {
 
-          const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if (!record.location || isLocationOld) {
-            appDialog('Fetching Location Please wait', false)
-            window.addEventListener('location', function _checkInLatest(e) {
+          // const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
+          // if (!record.location || isLocationOld) {
+          //   appDialog('Fetching Location Please wait', false)
+          //   window.addEventListener('location', function _checkInLatest(e) {
 
-              if (document.querySelector('#enable-gps')) {
-                document.querySelector('#enable-gps').remove();
-              }
+          //     if (document.querySelector('#enable-gps')) {
+          //       document.querySelector('#enable-gps').remove();
+          //     }
 
-              updateCreateActivity(bareBonesRecord)
-              removeDialog()
+          //     updateCreateActivity(bareBonesRecord)
+          //     removeDialog()
 
-              window.removeEventListener('location', _checkInLatest, true);
-            }, true)
-            return
-          }
+          //     window.removeEventListener('location', _checkInLatest, true);
+          //   }, true)
+          //   return
+          // }
           updateCreateActivity(bareBonesRecord)
           removeDialog()
         });
