@@ -2719,7 +2719,7 @@ function insertInputsIntoActivity(record, activityStore) {
         record.venue[0].address = venueData.address
       }
     });
-    if (!record.venue[0].location || !record.venue[0].address || !record.venue[0].geopoint['_latitude'] || !record.venue[0].geopoint['_longitude']) {
+    if (!record.venue[0].location || !record.venue[0].address) {
       record.venue[0].geopoint = {
         latitude: '',
         longitude: ''

@@ -4,7 +4,7 @@ const scroll_namespace = {
   count: 0,
   size: 20,
   skip: false,
-  run:true
+ 
 }
 
 function initDomLoad() {
@@ -51,16 +51,10 @@ function getListViewData(filter, size) {
 
 
     if(size > 20) {
-      // if(!scroll_namespace.run) {
-      //   scroll_namespace
-      // }
     
       window.addEventListener('scroll', handleScroll, false)
     }
-    // else {
-    //   scroll_namespace.run = false
-    // }
-
+   
     if(!filter) {
       fetchActivities(size,record.location)
       return;
