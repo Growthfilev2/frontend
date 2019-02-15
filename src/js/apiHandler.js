@@ -777,12 +777,10 @@ function successResponse(read, param) {
         requestHandlerResponse('initFirstLoad', 200, {
           template: true
         });
-        // requestHandlerResponse('loadView', 200, {activity:read.activities});
       }).catch(function (error) {
         requestHandlerResponse('initFirstLoad', 200, {
           template: true
         });
-        // requestHandlerResponse('loadView', 200, {activity:read.activities});
       })
     })
 

@@ -3,7 +3,8 @@ const notification = new Worker('js/notification.js')
 const scroll_namespace = {
   count: 0,
   size: 20,
-  skip: false
+  skip: false,
+  run:true
 }
 
 function initDomLoad() {
@@ -24,13 +25,10 @@ function initDomLoad() {
 function listView(filter) {
   history.pushState(['listView'], null, null)
   initDomLoad();
+ 
   getSizeOfListStore().then(function (size) {
     if (!size) {
-      const p = document.createElement('p')
-      p.textContent = 'No Activities Found';
-      p.className = 'no-activity'
-      document.getElementById('activity-list-main').appendChild(p)
-      document.getElementById('activity-list-main').style.boxShadow = 'none';
+      appendTextContentInListView('No activities Found');
       return;
     }
 
@@ -50,10 +48,19 @@ function getListViewData(filter, size) {
       document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
       showSuggestCheckInDialog()
     }
-    if(size > 20) {
-      window.addEventListener('scroll', handleScroll, false)
 
+
+    if(size > 20) {
+      // if(!scroll_namespace.run) {
+      //   scroll_namespace
+      // }
+    
+      window.addEventListener('scroll', handleScroll, false)
     }
+    // else {
+    //   scroll_namespace.run = false
+    // }
+
     if(!filter) {
       fetchActivities(size,record.location)
       return;
@@ -71,6 +78,14 @@ function getListViewData(filter, size) {
       fetchActivities(size, record.location)
     })
   })
+}
+
+function appendTextContentInListView(textContent){
+  const p = document.createElement('p')
+      p.textContent = textContent;
+      p.className = 'no-activity'
+      document.getElementById('activity-list-main').appendChild(p)
+      document.getElementById('activity-list-main').style.boxShadow = 'none';
 }
 
 function fetchActivities(size, location) {
@@ -111,8 +126,12 @@ function updateEl(activities, rootRecord) {
     const tx = db.transaction(['list', 'activity'])
     const activityStore = tx.objectStore('activity')
     const listStore = tx.objectStore('list');
-    const ul = document.getElementById('activity--list')
+    const ul = document.getElementById('activity--list');
     activities.forEach(function (activity) {
+      if(document.querySelector('.no-activity')) {
+        document.querySelector('.no-activity').remove()
+      }
+      
       listStore.get(activity.activityId).onsuccess = function (event) {
         const record = event.target.result;
         const existingEl = document.querySelector(`[data-id="${activity.activityId}"]`)

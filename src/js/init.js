@@ -163,7 +163,10 @@ window.addEventListener('load', function () {
     if (!event.state) return;
     if (event.state[0] === 'listView') {
       const originalCount = scroll_namespace.count;
-      scroll_namespace.size = originalCount
+      if(originalCount){
+        scroll_namespace.size = originalCount
+      }
+     
       scroll_namespace.count = 0;
       window[event.state[0]]()
       return;
@@ -647,11 +650,7 @@ function redirect() {
 }
 
 function init() {
-  // if(!native.getName()) {
-  //   redirect();
-  //   return
-  // }
-
+  
   document.getElementById("main-layout-app").style.display = 'block'
   openListWithChecks()
   requestCreator('now', {
@@ -758,6 +757,7 @@ function startInitializatioOfList(data) {
 
 
 function openListWithChecks() {
+ 
   listView({
     urgent: false,
     nearby: false
