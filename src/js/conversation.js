@@ -1253,7 +1253,7 @@ function createTempRecord(office, template, data) {
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-              
+
               updateCreateActivity(bareBonesRecord)
               removeDialog()
 
@@ -1606,12 +1606,12 @@ function createCheckInVenue(venue) {
   const radio = document.createElement('div')
   radio.className = 'mdc-radio checkin'
   radio.value = JSON.stringify(venue)
-  
+
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
   input.type = 'radio'
   // input.id = 'check-in-radio-'+i
-  input.setAttribute('name','radios')
+  input.setAttribute('name', 'radios')
 
   id = convertKeyToId(venue.venueDescriptor)
   const background = document.createElement('div')
@@ -1627,7 +1627,7 @@ function createCheckInVenue(venue) {
   radio.appendChild(background)
   // const label = document.createElement('label')
   // label.textContent = venue.location
-  
+
   return radio
 
 }
@@ -1741,45 +1741,44 @@ function createVenueSection(record) {
   console.log(record);
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in') {
-
-    const checkInDesc = document.createElement('li')
-    checkInDesc.className = 'mdc-list-item label--text'
-    checkInDesc.textContent = record.venue[0].venueDescriptor
-    checkInDesc.style.height = '50px'
-    checkInDesc.style.paddingRight = '11px';
-
-    const meta = document.createElement('span')
-    meta.className = 'mdc-list-item__meta'
-
-    const uncheck = document.createElement('label')
-    uncheck.id = 'uncheck-checkin'
-    uncheck.className = 'mdc-fab add--assignee-icon'
-    const span = document.createElement('span')
-    span.className = 'mdc-fab__icon material-icons'
-    span.textContent = 'clear';
-    uncheck.appendChild(span);
-
-    meta.appendChild(uncheck)
-    checkInDesc.appendChild(meta)
-
-    venueSection.appendChild(checkInDesc)
-    // venueSection.appendChild(form);
-
-
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-        // let i = 0
+
+        const checkInDesc = document.createElement('li')
+        checkInDesc.className = 'mdc-list-item label--text'
+        checkInDesc.textContent = record.venue[0].venueDescriptor
+        checkInDesc.style.height = '50px'
+        checkInDesc.style.paddingRight = '11px';
+
+        if(results.length) {
+          
+          const meta = document.createElement('span')
+          meta.className = 'mdc-list-item__meta'
+          const uncheck = document.createElement('label')
+          uncheck.id = 'uncheck-checkin'
+          uncheck.className = 'mdc-fab add--assignee-icon'
+          const span = document.createElement('span')
+          span.className = 'mdc-fab__icon material-icons'
+          span.textContent = 'clear';
+          uncheck.appendChild(span); 
+          meta.appendChild(uncheck)
+          checkInDesc.appendChild(meta)
+        }
+
+        venueSection.appendChild(checkInDesc)
+
+
         results.forEach(function (result) {
-          // i++
+
           const form = document.createElement('div');
           form.className = 'mdc-form-field check-in-form'
           const label = document.createElement('label')
-          label.setAttribute('for','check-in-radio');
+          label.setAttribute('for', 'check-in-radio');
           label.textContent = result.location
           form.appendChild(label);
           form.appendChild(createCheckInVenue(result))
           venueSection.appendChild(form);
-       
+
         })
 
         const uncheckFab = document.getElementById('uncheck-checkin');
@@ -1791,7 +1790,6 @@ function createVenueSection(record) {
             });
           })
         }
-
       })
     })
 
@@ -2726,14 +2724,13 @@ function insertInputsIntoActivity(record, activityStore) {
         record.venue[0].address = venueData.address
       }
     });
-    if(!record.venue[0].location || !record.venue[0].address || !record.venue[0].geopoint['_latitude'] || !record.venue[0].geopoint['_longitude']) {
-        record.venue[0].geopoint = {
-          latitude:'',
-          longitude:''
-        }
+    if (!record.venue[0].location || !record.venue[0].address || !record.venue[0].geopoint['_latitude'] || !record.venue[0].geopoint['_longitude']) {
+      record.venue[0].geopoint = {
+        latitude: '',
+        longitude: ''
+      }
     }
-  }
-   else {
+  } else {
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
         latitude: record.venue[i].geopoint['_latitude'] || "",
