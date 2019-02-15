@@ -701,6 +701,43 @@ function fillUsersInSelector(data, dialog) {
     const store = transaction.objectStore('users')
     document.querySelector('.selector-send').classList.remove('hidden');
 
+    dialog['acceptButton_'].onclick = function () {
+
+      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+        document.getElementById('selector--search').style.display = 'none'
+        const parentNode = document.getElementById('data-list--container')
+        removeChildNodes(parentNode)
+        document.querySelector('.mdc-dialog__footer').style.display = 'none'
+        addNewNumber(data, dialog)
+        return
+      }
+
+      if (data.attachment.present) {
+        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+        updateDomFromIDB(data.record, {
+          hash: '',
+          key: data.attachment.key
+        }, {
+          primary: JSON.parse(radio.value)
+        }).then(removeDialog).catch(handleError)
+        return;
+      }
+      if (data.record.hasOwnProperty('create')) {
+        resetSelectedContacts().then(function (selectedPeople) {
+          updateDomFromIDB(data.record, {
+            hash: 'addOnlyAssignees',
+          }, {
+            primary: selectedPeople
+          }).then(removeDialog).catch(handleError)
+
+        })
+        return
+      }
+      if (isLocationStatusWorking()) {
+        shareReq(data)
+      }
+    }
+
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -728,42 +765,7 @@ function fillUsersInSelector(data, dialog) {
         initSearchForSelectors(db, 'users', data)
       })
 
-      dialog['acceptButton_'].onclick = function () {
-
-        if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
-          document.getElementById('selector--search').style.display = 'none'
-          const parentNode = document.getElementById('data-list--container')
-          removeChildNodes(parentNode)
-          document.querySelector('.mdc-dialog__footer').style.display = 'none'
-          addNewNumber(data, dialog)
-          return
-        }
-
-        if (data.attachment.present) {
-          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: JSON.parse(radio.value)
-          }).then(removeDialog).catch(handleError)
-          return;
-        }
-        if (data.record.hasOwnProperty('create')) {
-          resetSelectedContacts().then(function (selectedPeople) {
-            updateDomFromIDB(data.record, {
-              hash: 'addOnlyAssignees',
-            }, {
-              primary: selectedPeople
-            }).then(removeDialog).catch(handleError)
-
-          })
-          return
-        }
-        if (isLocationStatusWorking()) {
-          shareReq(data)
-        }
-      }
+     
     }
   }
 
