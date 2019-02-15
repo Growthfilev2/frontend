@@ -1,4 +1,4 @@
-let ui = firebaseui.auth.AuthUI.getInstance();
+let ui;
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -123,6 +123,8 @@ window.addEventListener('load', function () {
     }
     return
   }
+
+  ui = firebaseui.auth.AuthUI.getInstance();
 
   firebase.initializeApp({
     apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
