@@ -771,6 +771,7 @@ function successResponse(read, param) {
         updateUserObjectStore(data)
       }
     })
+    
     read.templates.forEach(function (subscription) {
       updateSubscription(db, subscription, param).then(function () {
         getUniqueOfficeCount(param).then(function (offices) {
