@@ -812,24 +812,13 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-  androidStopRefreshing();
   
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
   }
-
   if (history.state[0] === 'profileView') return;
   
-  // if (history.state[0] === 'listView') {
-    
-  //   if (!data.msg.length) return;
-  //   getRootRecord().then(function (record) {
-  //     updateEl(data.msg, record);
-  //   });
-  //   return;
-  // }
-
   window[history.state[0]](history.state[1], false);
 }
 
