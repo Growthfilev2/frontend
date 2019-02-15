@@ -1240,21 +1240,21 @@ function createTempRecord(office, template, data) {
         getRootRecord().then(function (record) {
 
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if (!record.location || isLocationOld) {
-            appDialog('Fetching Location Please wait', false)
-            window.addEventListener('location', function _checkInLatest(e) {
+          // if (!record.location || isLocationOld) {
+          //   appDialog('Fetching Location Please wait', false)
+          //   window.addEventListener('location', function _checkInLatest(e) {
 
-              if (document.querySelector('#enable-gps')) {
-                document.querySelector('#enable-gps').remove();
-              }
+          //     if (document.querySelector('#enable-gps')) {
+          //       document.querySelector('#enable-gps').remove();
+          //     }
 
-              updateCreateActivity(bareBonesRecord)
-              removeDialog()
+          //     updateCreateActivity(bareBonesRecord)
+          //     removeDialog()
 
-              window.removeEventListener('location', _checkInLatest, true);
-            }, true)
-            return
-          }
+          //     window.removeEventListener('location', _checkInLatest, true);
+          //   }, true)
+          //   return
+          // }
           updateCreateActivity(bareBonesRecord)
           removeDialog()
         });
@@ -1604,10 +1604,7 @@ function createCheckInVenue(venue) {
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
   input.type = 'radio'
-  // input.id = 'check-in-radio-'+i
   input.setAttribute('name', 'radios')
-
-  id = convertKeyToId(venue.venueDescriptor)
   const background = document.createElement('div')
   background.className = 'mdc-radio__background'
   const outer = document.createElement('div')
@@ -1619,11 +1616,45 @@ function createCheckInVenue(venue) {
   background.appendChild(inner)
   radio.appendChild(input)
   radio.appendChild(background)
-  // const label = document.createElement('label')
-  // label.textContent = venue.location
+  let showMap = false;
+  radio.onclick = function () {
+    if (!hasMapsApiLoaded()) return;
+    if (!venue.latitude) return;
+    if (!venue.longitude) return;
+    const selector =  document.getElementById('map-detail-check-in-create'+convertKeyToId(venue.venueDescriptor));
 
+    // document.getElementById('map-detail-check-in-create').innerHTML = ''
+    showMap = !showMap
+    if (!showMap) {
+     selector.style.height = '0px';
+      return;
+    }
+    selector.style.height = '200px';
+    const map = new google.maps.Map(selector, {
+      zoom: 16,
+      center: {
+        lat: venue.latitude,
+        lng: venue.longitude
+      },
+      disableDefaultUI: true
+    });
+
+    const marker = new google.maps.Marker({
+      position: {
+        lat: venue.latitude,
+        lng: venue.longitude
+      },
+      map: map
+    }); 
+
+    var customControlDiv = document.createElement('div');
+    var customControl = new MapsCustomControl(customControlDiv, map, venue.latitude, venue.longitude);
+    customControlDiv.index = 1;
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
+
+  }
   return radio
-
+  
 }
 
 function createSimpleLi(key, data) {
@@ -1734,7 +1765,8 @@ function createGroupList(office, template) {
 function createVenueSection(record) {
   console.log(record);
   const venueSection = document.getElementById('venue--list')
-  if (record.template === 'check-in') {
+  if (record.template === 'check-in' && record.hasOwnProperty('create')) {
+
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
 
@@ -1744,8 +1776,8 @@ function createVenueSection(record) {
         checkInDesc.style.height = '50px'
         checkInDesc.style.paddingRight = '11px';
 
-        if(results.length) {
-          
+        if (results.length) {
+
           const meta = document.createElement('span')
           meta.className = 'mdc-list-item__meta'
           const uncheck = document.createElement('label')
@@ -1754,7 +1786,7 @@ function createVenueSection(record) {
           const span = document.createElement('span')
           span.className = 'mdc-fab__icon material-icons'
           span.textContent = 'clear';
-          uncheck.appendChild(span); 
+          uncheck.appendChild(span);
           meta.appendChild(uncheck)
           checkInDesc.appendChild(meta)
         }
@@ -1772,8 +1804,11 @@ function createVenueSection(record) {
           form.appendChild(label);
           form.appendChild(createCheckInVenue(result))
           venueSection.appendChild(form);
-
+          const mapDom = document.createElement('div');
+          mapDom.id = 'map-detail-check-in-create'+convertKeyToId(result.venueDescriptor)
+          venueSection.appendChild(mapDom);  
         })
+        
 
         const uncheckFab = document.getElementById('uncheck-checkin');
         if (uncheckFab) {
@@ -1789,7 +1824,6 @@ function createVenueSection(record) {
 
     return;
   }
-
 
   record.venue.forEach(function (venue) {
 
