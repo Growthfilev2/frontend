@@ -1,5 +1,5 @@
 importScripts('external/js/moment.min.js');
-const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+const apiUrl = 'https://api2.growthfile.com/api/'
 
 let deviceInfo;
 
