@@ -590,12 +590,12 @@ function getRootRecord() {
 
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
-  // getCountOfTemplates().then(function (officeTemplateObject) {
-  //   if (Object.keys(officeTemplateObject).length) {
-  //     createActivityIconDom()
-  //     return;
-  //   }
-  // }).catch(handleError);
+  getCountOfTemplates().then(function (officeTemplateObject) {
+    if (Object.keys(officeTemplateObject).length) {
+      createActivityIconDom()
+      return;
+    }
+  }).catch(handleError);
 }
 
 

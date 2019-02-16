@@ -569,11 +569,7 @@ function createAndroidDialog(title, body) {
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
-  // if (!locationPermission.checkGps()) {
-  //   createAndroidDialog('GPS Unavailable', 'Please Turn on Gps.');
-
-  //   return;
-  // }
+  
   if (!locationPermission.checkLocationPermission()) {
     createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
     return;
