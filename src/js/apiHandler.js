@@ -629,8 +629,7 @@ function updateSubscription(db, templates, param) {
 
             if (subscription.office === cursor.value.office) {
               cursor.update(subscription);
-            }
-            else {
+            } else {
               cursor.update(subscription)
             }
             cursor.continue()
@@ -643,8 +642,10 @@ function updateSubscription(db, templates, param) {
       tx.oncomplete = function () {
         resolve(true)
       }
-      tx.onerror = function(){
-        reject({message:`${tx.error}`});
+      tx.onerror = function () {
+        reject({
+          message: `${tx.error}`
+        });
       }
     }
   })
@@ -739,51 +740,50 @@ function successResponse(read, param) {
       putAttachment(activity, param)
 
       if (activity.hidden === 0) {
-        if (read.activities.length >= 20) {
-          if ((read.activities.length - index) <= 20) {
-            createListStore(activity, counter, param).then(function () {
+        createListStore(activity, counter, param).then(function () {
+          if (read.activities.length >= 20) {
+            if ((read.activities.length - index) <= 20) {
               requestHandlerResponse('initFirstLoad', 200, {
                 activity: [activity]
               });
-            })
-          }
-        } else {
-          createListStore(activity, counter, param).then(function () {
+            }
+          } else {
             requestHandlerResponse('initFirstLoad', 200, {
               activity: [activity]
             });
-          })
-        }
+          }
+        })
       }
     }
+  }
 
-    updateSubscription(db, read.templates, param).then(function () {
-      updateRoot(param, read).then(function () {
-        requestHandlerResponse('initFirstLoad', 200, {
-          template: true
-        });
-      }).catch(function (error) {
-        instant(JSON.stringify(error), param.user)
-        requestHandlerResponse('initFirstLoad', 200, {
-          template: true
-        });
-      })
+  updateSubscription(db, read.templates, param).then(function () {
+    updateRoot(param, read).then(function () {
+      requestHandlerResponse('initFirstLoad', 200, {
+        template: true
+      });
+    }).catch(function (error) {
+      instant(JSON.stringify(error), param.user)
+      requestHandlerResponse('initFirstLoad', 200, {
+        template: true
+      });
     })
+  })
 
-    getUniqueOfficeCount(param).then(function (offices) {
-      setUniqueOffice(offices, param).then(console.log).catch(function(error){
-        instant(JSON.stringify(error), param.user)
-      })
-    }).catch(console.log);
-
-    createUsersApiUrl(db, param.user).then(function (data) {
-      if (data.url) {
-        updateUserObjectStore(data)
-      }
-    }).catch(function(error){
+  getUniqueOfficeCount(param).then(function (offices) {
+    setUniqueOffice(offices, param).then(console.log).catch(function (error) {
       instant(JSON.stringify(error), param.user)
     })
-  }
+  }).catch(console.log);
+
+  createUsersApiUrl(db, param.user).then(function (data) {
+    if (data.url) {
+      updateUserObjectStore(data)
+    }
+  }).catch(function (error) {
+    instant(JSON.stringify(error), param.user)
+  })
+}
 }
 
 function createUsersApiUrl(db, user) {
@@ -821,8 +821,10 @@ function createUsersApiUrl(db, user) {
         })
       }
     }
-    tx.onerror = function(){
-      reject({message:tx.error})
+    tx.onerror = function () {
+      reject({
+        message: tx.error
+      })
     }
   })
 }
@@ -844,7 +846,7 @@ function updateUserObjectStore(requestPayload) {
         return resolve(true)
       }
 
-      const tx = requestPayload.db.transaction(['users','list'], 'readwrite');
+      const tx = requestPayload.db.transaction(['users', 'list'], 'readwrite');
       const usersObjectStore = tx.objectStore('users');
       const listStore = tx.objectStore('list')
       usersObjectStore.openCursor().onsuccess = function (event) {
@@ -860,10 +862,10 @@ function updateUserObjectStore(requestPayload) {
           record.photoURL = userProfile[cursor.primaryKey].photoURL
           record.displayName = userProfile[cursor.primaryKey].displayName
           usersObjectStore.put(record)
-          listStore.openCursor().onsuccess = function(event){
+          listStore.openCursor().onsuccess = function (event) {
             const listCursor = event.target.result;
-            if(listCursor){
-              if(listCursor.value.creator.number === cursor.primaryKey) {
+            if (listCursor) {
+              if (listCursor.value.creator.number === cursor.primaryKey) {
                 listCursor.value.creator.photo = userProfile[cursor.primaryKey].photoURL
                 listCursor.update(listCursor.value)
               }
@@ -883,7 +885,7 @@ function updateUserObjectStore(requestPayload) {
       }
 
     }).catch(function (error) {
-        console.log(error);
+      console.log(error);
     })
 
 }
@@ -984,7 +986,7 @@ function updateIDB(param) {
         data: null,
         token: param.user.token
       }
-      
+
       http(req)
         .then(function (response) {
           if (!response) return;
