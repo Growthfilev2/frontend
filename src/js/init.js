@@ -108,7 +108,7 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
- 
+
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
@@ -163,10 +163,10 @@ window.addEventListener('load', function () {
     if (!event.state) return;
     if (event.state[0] === 'listView') {
       const originalCount = scroll_namespace.count;
-      if(originalCount){
+      if (originalCount) {
         scroll_namespace.size = originalCount
       }
-     
+
       scroll_namespace.count = 0;
       window[event.state[0]]()
       return;
@@ -232,7 +232,7 @@ function userSignedOut() {
   if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
   }
-  
+
   ui.start('#login-container', firebaseUiConfig());
 }
 
@@ -407,7 +407,7 @@ function startApp(start) {
 
     if (start) {
       createIDBStore(auth).then(function () {
-        localStorage.setItem('dbexist',auth.uid);
+        localStorage.setItem('dbexist', auth.uid);
         init()
       }).catch(function (error) {
         snacks('Please restart the app');
@@ -512,12 +512,14 @@ function createIDBStore(auth) {
     let db;
     req.onupgradeneeded = function (evt) {
       db = req.result;
-      db.onerror = function(){
-        reject({message: `${db.error.message} from createIDBStore on upgradeneeded`})
+      db.onerror = function () {
+        reject({
+          message: `${db.error.message} from createIDBStore on upgradeneeded`
+        })
         return;
       }
 
-      createObjectStores(db,auth.uid)
+      createObjectStores(db, auth.uid)
     }
     req.onsuccess = function () {
 
@@ -532,7 +534,7 @@ function createIDBStore(auth) {
   })
 }
 
-function createObjectStores(db,uid) {
+function createObjectStores(db, uid) {
 
   const activity = db.createObjectStore('activity', {
     keyPath: 'activityId'
@@ -650,7 +652,7 @@ function redirect() {
 }
 
 function init() {
-  
+
   document.getElementById("main-layout-app").style.display = 'block'
   openListWithChecks()
   requestCreator('now', {
@@ -658,12 +660,15 @@ function init() {
     from: '',
     registerToken: native.getFCMToken()
   })
- 
+
 }
 
 
 
 function runAppChecks() {
+
+
+
   window.addEventListener('locationChanged', function _locationChanged(e) {
     isEmployeeOnLeave().then(function (emp) {
       detectSuggestCheckinEvent(e.detail, emp);
@@ -740,6 +745,7 @@ function startInitializatioOfList(data) {
   suggestCheckIn(data.checkin).then(function () {
     localStorage.removeItem('clickedActivity');
     if (history.state[0] === 'listView' || !history.state) {
+      document.getElementById('activity--list').innerHTML = ''
       listView({
         urgent: data.urgent,
         nearby: data.nearby
@@ -747,10 +753,13 @@ function startInitializatioOfList(data) {
     }
   }).catch(function (error) {
     handleError(error);
-    listView({
-      urgent: false,
-      nearby: false
-    });
+    if (history.state[0] === 'listView' || !history.state) {
+      document.getElementById('activity--list').innerHTML = ''
+      listView({
+        urgent: false,
+        nearby: false
+      });
+    }
   })
 }
 

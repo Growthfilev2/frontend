@@ -622,6 +622,7 @@ function getCountOfTemplates() {
         resolve(officeByTemplate)
       }
       tx.onerror = function () {
+        console.log(tx.error  )
         reject({
           message: `${tx.error.message} from getCountOfTemplates`
         });
