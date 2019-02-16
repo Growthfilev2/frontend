@@ -523,12 +523,13 @@ function putAssignessInStore(assigneeArray, param) {
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
-
-        store.put({
-          mobile: assignee,
-          displayName: '',
-          photoURL: ''
-        })
+        if(!event.target.result) {
+          store.put({
+            mobile: assignee,
+            displayName: '',
+            photoURL: ''
+          })
+        }
       }
     })
   }
@@ -743,19 +744,14 @@ function successResponse(read, param) {
         createListStore(activity, counter, param).then(function () {
           if (read.activities.length >= 20) {
             if ((read.activities.length - index) <= 20) {
-              setTimeout(function () {
-
-                requestHandlerResponse('initFirstLoad', 200, {
-                  activity: [activity]
-                });
-              }, 1000)
-            }
-          } else {
-            setTimeout(function () {
               requestHandlerResponse('initFirstLoad', 200, {
                 activity: [activity]
               });
-            }, 1000)
+            }
+          } else {
+            requestHandlerResponse('initFirstLoad', 200, {
+              activity: [activity]
+            });
           }
         })
       }
@@ -788,202 +784,202 @@ function successResponse(read, param) {
       instant(JSON.stringify(error), param.user);
     })
   }
+}
 
 
-  function createUsersApiUrl(db, user) {
-    return new Promise(function (resolve) {
-      const tx = db.transaction(['users'], 'readwrite');
+function createUsersApiUrl(db, user) {
+  return new Promise(function (resolve) {
+    const tx = db.transaction(['users'], 'readwrite');
+    const usersObjectStore = tx.objectStore('users');
+
+    let assigneeString = ''
+
+    const defaultReadUserString = `${apiUrl}services/users?q=`
+    let fullReadUserString = ''
+
+    usersObjectStore.openCursor().onsuccess = function (event) {
+      const cursor = event.target.result
+
+      if (!cursor) return
+
+      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+      assigneeString += `${assigneeFormat.replace('+', '')}`
+      cursor.continue()
+    }
+    tx.oncomplete = function () {
+      fullReadUserString = `${defaultReadUserString}${assigneeString}`
+
+      resolve({
+        db: db,
+        url: fullReadUserString,
+        user: user
+      })
+
+    }
+    tx.onerror = function () {
+      reject({
+        message: tx.error
+      })
+    }
+  })
+}
+
+// query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
+
+function updateUserObjectStore(requestPayload) {
+  const req = {
+    method: 'GET',
+    url: requestPayload.url,
+    data: null,
+    token: requestPayload.user.token
+  }
+  http(req)
+    .then(function (userProfile) {
+      if (!Object.keys(userProfile).length) {
+        return resolve(true)
+      }
+
+      const tx = requestPayload.db.transaction(['users'], 'readwrite');
       const usersObjectStore = tx.objectStore('users');
-
-      let assigneeString = ''
-
-      const defaultReadUserString = `${apiUrl}services/users?q=`
-      let fullReadUserString = ''
-
       usersObjectStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result
+        if (!cursor) return;
+        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
 
-        if (!cursor) return
+        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
+          const record = cursor.value
+          record.photoURL = userProfile[cursor.primaryKey].photoURL
+          record.displayName = userProfile[cursor.primaryKey].displayName
+          usersObjectStore.put(record)
+        }
 
-        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-        assigneeString += `${assigneeFormat.replace('+', '')}`
         cursor.continue()
       }
       tx.oncomplete = function () {
-        fullReadUserString = `${defaultReadUserString}${assigneeString}`
-
-        resolve({
-          db: db,
-          url: fullReadUserString,
-          user: user
-        })
 
       }
       tx.onerror = function () {
+        instant(JSON.stringify({
+          message: `${tx.error}`
+        }), param.user)
+      }
+
+    }).catch(function (error) {
+      console.log(error);
+    })
+
+}
+
+function updateRoot(param, read) {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(param.user.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const rootTx = db.transaction(['root'], 'readwrite');
+      const store = rootTx.objectStore('root')
+      store.get(param.user.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        record.fromTime = read.upto
+        store.put(record);
+      }
+      rootTx.oncomplete = function () {
+        resolve(true)
+      }
+      rootTx.onerror = function () {
+        reject(rootTx.error);
+      }
+    }
+  })
+}
+
+
+function getUniqueOfficeCount(param) {
+
+  return new Promise(function (resolve, reject) {
+    const dbName = param.user.uid
+    const req = indexedDB.open(dbName)
+    let offices = []
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['activity']);
+      const activityStore = tx.objectStore('activity').index('office');
+      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return;
+        offices.push(cursor.value.office)
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        resolve(offices);
+      }
+      tx.oncomplete = function () {
         reject({
           message: tx.error
         })
       }
-    })
-  }
-
-  // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
-
-  function updateUserObjectStore(requestPayload) {
-    const req = {
-      method: 'GET',
-      url: requestPayload.url,
-      data: null,
-      token: requestPayload.user.token
+      req.onerror = function () {
+        reject({
+          message: req.error
+        })
+      }
     }
-    http(req)
-      .then(function (userProfile) {
-        if (!Object.keys(userProfile).length) {
-          return resolve(true)
-        }
+  })
+}
 
-        const tx = requestPayload.db.transaction(['users'], 'readwrite');
-        const usersObjectStore = tx.objectStore('users');
-        usersObjectStore.openCursor().onsuccess = function (event) {
-          const cursor = event.target.result
-          if (!cursor) return;
-          if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
+function setUniqueOffice(offices, param) {
+  return new Promise(function (resolve, reject) {
 
-          if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-            const record = cursor.value
-            record.photoURL = userProfile[cursor.primaryKey].photoURL
-            record.displayName = userProfile[cursor.primaryKey].displayName
-            usersObjectStore.put(record)
-          }
+    const dbName = param.user.uid;
+    const req = indexedDB.open(dbName)
 
-          cursor.continue()
-        }
-        tx.oncomplete = function () {
-
-        }
-        tx.onerror = function () {
-          instant(JSON.stringify({
-            message: `${tx.error}`
-          }), param.user)
-        }
-
-      }).catch(function (error) {
-        console.log(error);
-      })
-
-  }
-
-  function updateRoot(param, read) {
-    return new Promise(function (resolve, reject) {
-      const req = indexedDB.open(param.user.uid)
-      req.onsuccess = function () {
-        const db = req.result;
-        const rootTx = db.transaction(['root'], 'readwrite');
-        const store = rootTx.objectStore('root')
-        store.get(param.user.uid).onsuccess = function (event) {
-          const record = event.target.result;
-          record.fromTime = read.upto
-          store.put(record);
-        }
-        rootTx.oncomplete = function () {
-          resolve(true)
-        }
-        rootTx.onerror = function () {
-          reject(rootTx.error);
-        }
-      }
-    })
-  }
-
-
-  function getUniqueOfficeCount(param) {
-
-    return new Promise(function (resolve, reject) {
-      const dbName = param.user.uid
-      const req = indexedDB.open(dbName)
-      let offices = []
-      req.onsuccess = function () {
-        const db = req.result
-        const tx = db.transaction(['activity']);
-        const activityStore = tx.objectStore('activity').index('office');
-        activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
-          const cursor = event.target.result
-          if (!cursor) return;
-          offices.push(cursor.value.office)
-          cursor.continue()
-        }
-        tx.oncomplete = function () {
-          resolve(offices);
-        }
-        tx.oncomplete = function () {
-          reject({
-            message: tx.error
-          })
-        }
-        req.onerror = function () {
-          reject({
-            message: req.error
-          })
-        }
-      }
-    })
-  }
-
-  function setUniqueOffice(offices, param) {
-    return new Promise(function (resolve, reject) {
-
-      const dbName = param.user.uid;
-      const req = indexedDB.open(dbName)
-
-      req.onsuccess = function () {
-        const db = req.result
-        const tx = db.transaction(['root'], 'readwrite')
-        const rootObjectStore = tx.objectStore('root');
-        rootObjectStore.get(dbName).onsuccess = function (event) {
-          const record = event.target.result
-          record.offices = offices
-          rootObjectStore.put(record)
-        };
-
-        tx.oncomplete = function () {
-          resolve(true)
-        }
-        tx.onerror = function () {
-          reject(tx.error)
-        }
-      }
-    })
-  }
-
-  function updateIDB(param) {
-    const req = indexedDB.open(param.user.uid)
     req.onsuccess = function () {
       const db = req.result
-      const tx = db.transaction(['root']);
+      const tx = db.transaction(['root'], 'readwrite')
       const rootObjectStore = tx.objectStore('root');
-      let record;
-      let time;
-
-      rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-        record = event.target.result;
-        time = record.fromTime
-      }
+      rootObjectStore.get(dbName).onsuccess = function (event) {
+        const record = event.target.result
+        record.offices = offices
+        rootObjectStore.put(record)
+      };
 
       tx.oncomplete = function () {
-        const req = {
-          method: 'GET',
-          url: `${apiUrl}read?from=${time}`,
-          data: null,
-          token: param.user.token
-        }
-
-        http(req)
-          .then(function (response) {
-            if (!response) return;
-            requestHandlerResponse('android-stop-refreshing', 200)
-            successResponse(response, param)
-          })
-          .catch(sendApiFailToMainThread)
+        resolve(true)
+      }
+      tx.onerror = function () {
+        reject(tx.error)
       }
     }
+  })
+}
+
+function updateIDB(param) {
+  const req = indexedDB.open(param.user.uid)
+  req.onsuccess = function () {
+    const db = req.result
+    const tx = db.transaction(['root']);
+    const rootObjectStore = tx.objectStore('root');
+    let record;
+    let time;
+
+    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+      record = event.target.result;
+      time = record.fromTime
+    }
+
+    tx.oncomplete = function () {
+      const req = {
+        method: 'GET',
+        url: `${apiUrl}read?from=${time}`,
+        data: null,
+        token: param.user.token
+      }
+
+      http(req)
+        .then(function (response) {
+          if (!response) return;
+          requestHandlerResponse('android-stop-refreshing', 200)
+          successResponse(response, param)
+        }).catch(sendApiFailToMainThread)
+    }
   }
+}
