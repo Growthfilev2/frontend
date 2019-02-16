@@ -199,7 +199,7 @@ function fetchRecord(uid, id) {
 function putServerTime(data) {
 
   return new Promise(function (resolve, reject) {
-    const request = indexedDB.open(data.user.uid, 3);
+    const request = indexedDB.open(data.user.uid);
     request.onerror = function () {
       reject(request.error)
     }
@@ -523,12 +523,13 @@ function putAssignessInStore(assigneeArray, param) {
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
-
-        store.put({
-          mobile: assignee,
-          displayName: '',
-          photoURL: ''
-        })
+        if(!event.target.result) {
+          store.put({
+            mobile: assignee,
+            displayName: '',
+            photoURL: ''
+          })
+        }
       }
     })
   }
@@ -755,35 +756,35 @@ function successResponse(read, param) {
         })
       }
     }
-  
 
-  updateSubscription(db, read.templates, param).then(function () {
+
     updateRoot(param, read).then(function () {
-      requestHandlerResponse('initFirstLoad', 200, {
-        template: true
-      });
+      updateSubscription(db, read.templates, param).then(function () {
+        requestHandlerResponse('initFirstLoad', 200, {
+          template: true
+        })
+      }).catch(function (error) {
+
+        instant(JSON.stringify(error), param.user)
+        requestHandlerResponse('initFirstLoad', 200, {
+          template: true
+        });
+      })
+    })
+
+    getUniqueOfficeCount(param).then(function (offices) {
+      setUniqueOffice(offices, param).then(console.log).catch(function (error) {
+        instant(JSON.stringify(error), param.user)
+      })
     }).catch(function (error) {
       instant(JSON.stringify(error), param.user)
-      requestHandlerResponse('initFirstLoad', 200, {
-        template: true
-      });
-    })
-  })
+    });
 
-  getUniqueOfficeCount(param).then(function (offices) {
-    setUniqueOffice(offices, param).then(console.log).catch(function (error) {
-      instant(JSON.stringify(error), param.user)
+    createUsersApiUrl(db, param.user).then(updateUserObjectStore).catch(function (error) {
+      instant(JSON.stringify(error), param.user);
     })
-  }).catch(console.log);
-
-  createUsersApiUrl(db, param.user).then(function (data) {
-    if (data.url) {
-      updateUserObjectStore(data)
-    }
-  }).catch(function (error) {
-    instant(JSON.stringify(error), param.user)
-  })
-}
+    
+  }
 }
 
 
@@ -808,19 +809,13 @@ function createUsersApiUrl(db, user) {
     }
     tx.oncomplete = function () {
       fullReadUserString = `${defaultReadUserString}${assigneeString}`
-      if (assigneeString) {
-        resolve({
-          db: db,
-          url: fullReadUserString,
-          user: user
-        })
-      } else {
-        resolve({
-          db: db,
-          url: null,
-          user: user
-        })
-      }
+
+      resolve({
+        db: db,
+        url: fullReadUserString,
+        user: user
+      })
+
     }
     tx.onerror = function () {
       reject({
@@ -833,8 +828,6 @@ function createUsersApiUrl(db, user) {
 // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
 function updateUserObjectStore(requestPayload) {
-
-
   const req = {
     method: 'GET',
     url: requestPayload.url,
@@ -847,15 +840,11 @@ function updateUserObjectStore(requestPayload) {
         return resolve(true)
       }
 
-      const tx = requestPayload.db.transaction(['users', 'list'], 'readwrite');
+      const tx = requestPayload.db.transaction(['users'], 'readwrite');
       const usersObjectStore = tx.objectStore('users');
-      const listStore = tx.objectStore('list')
       usersObjectStore.openCursor().onsuccess = function (event) {
         const cursor = event.target.result
-
         if (!cursor) return;
-        console.log(cursor.primaryKey);
-        console.log(userProfile)
         if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
 
         if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
@@ -863,17 +852,8 @@ function updateUserObjectStore(requestPayload) {
           record.photoURL = userProfile[cursor.primaryKey].photoURL
           record.displayName = userProfile[cursor.primaryKey].displayName
           usersObjectStore.put(record)
-          listStore.openCursor().onsuccess = function (event) {
-            const listCursor = event.target.result;
-            if (listCursor) {
-              if (listCursor.value.creator.number === cursor.primaryKey) {
-                listCursor.value.creator.photo = userProfile[cursor.primaryKey].photoURL
-                listCursor.update(listCursor.value)
-              }
-              listCursor.continue();
-            }
-          }
         }
+
         cursor.continue()
       }
       tx.oncomplete = function () {
@@ -933,8 +913,15 @@ function getUniqueOfficeCount(param) {
       tx.oncomplete = function () {
         resolve(offices);
       }
-      req.onerror = function (event) {
-        reject(event.error)
+      tx.oncomplete = function () {
+        reject({
+          message: tx.error
+        })
+      }
+      req.onerror = function () {
+        reject({
+          message: req.error
+        })
       }
     }
   })
@@ -993,8 +980,7 @@ function updateIDB(param) {
           if (!response) return;
           requestHandlerResponse('android-stop-refreshing', 200)
           successResponse(response, param)
-        })
-        .catch(sendApiFailToMainThread)
+        }).catch(sendApiFailToMainThread)
     }
   }
 }
