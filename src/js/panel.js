@@ -3,7 +3,8 @@ const notification = new Worker('notification.js')
 const scroll_namespace = {
   count: 0,
   size: 20,
-  skip: false
+  skip: false,
+ 
 }
 
 function initDomLoad() {
@@ -24,13 +25,10 @@ function initDomLoad() {
 function listView(filter) {
   history.pushState(['listView'], null, null)
   initDomLoad();
+ 
   getSizeOfListStore().then(function (size) {
     if (!size) {
-      const p = document.createElement('p')
-      p.textContent = 'No Activities Found';
-      p.className = 'no-activity'
-      document.getElementById('activity-list-main').appendChild(p)
-      document.getElementById('activity-list-main').style.boxShadow = 'none';
+      appendTextContentInListView('No activities Found');
       return;
     }
 
@@ -41,7 +39,6 @@ function listView(filter) {
     })
     getListViewData(filter);
   })
-
 }
 
 function getListViewData(filter, size) {
@@ -52,7 +49,16 @@ function getListViewData(filter, size) {
       showSuggestCheckInDialog()
     }
 
-    window.addEventListener('scroll', handleScroll, false)
+
+    if(size > 20) {
+    
+      window.addEventListener('scroll', handleScroll, false)
+    }
+   
+    if(!filter) {
+      fetchActivities(size,record.location)
+      return;
+    }
 
 
     if(!filter) {
@@ -75,11 +81,20 @@ function getListViewData(filter, size) {
   })
 }
 
+function appendTextContentInListView(textContent){
+  const p = document.createElement('p')
+      p.textContent = textContent;
+      p.className = 'no-activity'
+      document.getElementById('activity-list-main').appendChild(p)
+      document.getElementById('activity-list-main').style.boxShadow = 'none';
+}
+
 function fetchActivities(size, location) {
   if (size && size <= 20) {
     loadActivitiesFromListStore(location)
     return;
   }
+
   startCursor(location);
 }
 
@@ -104,7 +119,7 @@ function getSizeOfListStore() {
   })
 }
 
-function updateEl(activities, currentLocation) {
+function updateEl(activities, rootRecord) {
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -112,8 +127,12 @@ function updateEl(activities, currentLocation) {
     const tx = db.transaction(['list', 'activity'])
     const activityStore = tx.objectStore('activity')
     const listStore = tx.objectStore('list');
-    const ul = document.getElementById('activity--list')
+    const ul = document.getElementById('activity--list');
     activities.forEach(function (activity) {
+      if(document.querySelector('.no-activity')) {
+        document.querySelector('.no-activity').remove()
+      }
+      
       listStore.get(activity.activityId).onsuccess = function (event) {
         const record = event.target.result;
         const existingEl = document.querySelector(`[data-id="${activity.activityId}"]`)
@@ -121,9 +140,17 @@ function updateEl(activities, currentLocation) {
           existingEl.remove();
         }
         if (!record) return;
-        getActivityDataForList(activityStore, record, currentLocation).then(function (li) {
-          ul.insertBefore(li, ul.childNodes[0])
-        })
+        
+        if(!rootRecord.location)  {
+          getActivityDataForList(activityStore, record).then(function (li) {
+            ul.insertBefore(li, ul.childNodes[0])
+          })
+        }
+        else {
+          getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
+            ul.insertBefore(li, ul.childNodes[0])
+          })
+        }
       }
     })
   }
@@ -159,6 +186,7 @@ function loadActivitiesFromListStore(currentLocation) {
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
       if (!ul) return
+      ul.innerHTML = ''
       ul.appendChild(fragment)
       scrollToActivity()
     }
@@ -166,7 +194,7 @@ function loadActivitiesFromListStore(currentLocation) {
 }
 
 function startCursor(currentLocation) {
-
+  console.log(currentLocation)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -256,8 +284,9 @@ function getActivityDataForList(activity, value, currentLocation) {
           secondLine.appendChild(el);
         }
       }
-
-      secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+      if(currentLocation){
+        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+      }
       const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineCss))
     }
@@ -532,7 +561,7 @@ function appendActivityListToDom(activityDom) {
 function getRootRecord() {
   return new Promise(function (resolve, reject) {
     let record;
-    const dbName = localStorage.getItem('dbexist');
+    const dbName = firebase.auth().currentUser.uid;
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result;
@@ -600,6 +629,7 @@ function getCountOfTemplates() {
         resolve(officeByTemplate)
       }
       tx.onerror = function () {
+        console.log(tx.error  )
         reject({
           message: `${tx.error.message} from getCountOfTemplates`
         });

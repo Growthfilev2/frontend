@@ -289,7 +289,6 @@ function getCellTowerInfo() {
       });
       return
     }
-
     var apiKey ='AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
     const req = {
       method: 'POST',
@@ -450,9 +449,11 @@ function updateLocationInRoot(finalLocation) {
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
+       
         if (record.location) {
           previousLocation = record.location
         };
+       
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -703,6 +704,7 @@ function sendRequest(location, requestGenerator) {
 }
 
 function isLastLocationOlderThanThreshold(test, threshold) {
+ 
   var currentTime = moment(moment().valueOf());
   var lastLocationTime = test;
   var duration = moment.duration(currentTime.diff(lastLocationTime));
@@ -714,6 +716,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
+  'initFirstLoad':initFirstLoad,
   'update-app': updateApp,
   'revoke-session': revokeSession,
   'notification': successDialog,
@@ -725,6 +728,23 @@ var receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
+}
+
+function initFirstLoad(response){
+  console.log(response);
+  if(history.state[0] !== 'listView') return;
+  if(response.msg.hasOwnProperty('activity')) {
+    if(response.msg.activity.length){
+      getRootRecord().then(function(record){
+        updateEl(response.msg.activity,record);
+      })
+    }
+  }
+  if(response.msg.hasOwnProperty('template')){
+    createActivityIcon()
+  }
+
+  return;
 }
 
 function updateApp(data) {
@@ -792,30 +812,13 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-  localStorage.setItem('dbexist', firebase.auth().currentUser.uid);
-  androidStopRefreshing();
-
-  if (!history.state) {
-    localStorage.setItem('today', null);
-    openListWithChecks();
-    return;
-  }
-
+  
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
   }
-
   if (history.state[0] === 'profileView') return;
-
-  if (history.state[0] === 'listView') {
-    if (!data.msg.length) return;
-    getRootRecord().then(function (record) {
-      updateEl(data.msg, record.location);
-    });
-    return;
-  }
-
+  
   window[history.state[0]](history.state[1], false);
 }
 
@@ -849,7 +852,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-  if (localStorage.getItem('dbexist')) {
+  if(localStorage.getItem('dbexist')){
     requestCreator('Null', value);
   }
 }

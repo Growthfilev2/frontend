@@ -1688,3 +1688,18 @@ input[type="datetime-local"] {
     font-size: 20px;
     color: gray;
   }
+  .mdc-form-field.check-in-form {
+    display: flex;
+    position: relative;
+    align-items: center;
+    justify-content: flex-start;
+    
+    padding: 0px 6px 0px 16px;
+    overflow: hidden;
+
+  }
+ 
+  #uncheck-checkin {
+    margin-top: 0px;
+  }
+

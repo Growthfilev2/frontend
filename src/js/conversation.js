@@ -1,5 +1,5 @@
 function conversation(id, pushState) {
-  window.removeEventListener('scroll',handleScroll,false)
+  window.removeEventListener('scroll', handleScroll, false)
   checkIfRecordExists('activity', id).then(function (id) {
     if (id) {
       if (pushState) {
@@ -29,8 +29,10 @@ function checkIfRecordExists(store, id) {
         }
       }
     }
-    req.onerror = function (){
-      reject({message:`${req.error.message} from checkIfRecordExists`});
+    req.onerror = function () {
+      reject({
+        message: `${req.error.message} from checkIfRecordExists`
+      });
     }
   })
 
@@ -136,9 +138,9 @@ function commentPanel(id) {
   }
 
   document.getElementById('send-chat--input').onclick = function () {
-    if(isLocationStatusWorking()){
+    if (isLocationStatusWorking()) {
 
-    sendComment(id)
+      sendComment(id)
     }
   }
 }
@@ -239,11 +241,10 @@ function statusChange(db, id) {
       switchControl.checked = true
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
-      if(isLocationStatusWorking()){
-      changeStatusRequest(switchControl, record)
-      }
-      else {
-        resetStatusConfirmation(switchControl,record);
+      if (isLocationStatusWorking()) {
+        changeStatusRequest(switchControl, record)
+      } else {
+        resetStatusConfirmation(switchControl, record);
       }
     }
   }
@@ -466,7 +467,7 @@ function createHeaderContent(db, id) {
       dataObject.data = uri || './img/empty-user.jpg';
       dataObject.className = 'header--icon-creator';
       dataObject.type = 'image/jpeg';
-      
+
       var creatorImg = document.createElement("img");
       creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator'
@@ -518,8 +519,7 @@ function reinitCount(db, id) {
     record.count = 0
     store.put(record)
   }
-  transaction.oncomplete = function () {
-  }
+  transaction.oncomplete = function () {}
 }
 
 function getImageFromNumber(db, number) {
@@ -656,7 +656,9 @@ function initializeSelectorWithData(evt, data) {
     const db = req.result
     if (data.store === 'map') {
       const tx = db.transaction([data.store]);
-      fillMapInSelector(db, tx, dialog, data)
+      getLocationForMapSelector(tx, data).then(function () {
+        handleClickListnersForMap(db, dialog, data)
+      }).catch(console.log)
     }
     if (data.store === 'subscriptions') {
 
@@ -699,6 +701,43 @@ function fillUsersInSelector(data, dialog) {
     const store = transaction.objectStore('users')
     document.querySelector('.selector-send').classList.remove('hidden');
 
+    dialog['acceptButton_'].onclick = function () {
+
+      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+        document.getElementById('selector--search').style.display = 'none'
+        const parentNode = document.getElementById('data-list--container')
+        removeChildNodes(parentNode)
+        document.querySelector('.mdc-dialog__footer').style.display = 'none'
+        addNewNumber(data, dialog)
+        return
+      }
+
+      if (data.attachment.present) {
+        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+        updateDomFromIDB(data.record, {
+          hash: '',
+          key: data.attachment.key
+        }, {
+          primary: JSON.parse(radio.value)
+        }).then(removeDialog).catch(handleError)
+        return;
+      }
+      if (data.record.hasOwnProperty('create')) {
+        resetSelectedContacts().then(function (selectedPeople) {
+          updateDomFromIDB(data.record, {
+            hash: 'addOnlyAssignees',
+          }, {
+            primary: selectedPeople
+          }).then(removeDialog).catch(handleError)
+
+        })
+        return
+      }
+      if (isLocationStatusWorking()) {
+        shareReq(data)
+      }
+    }
+
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -710,7 +749,7 @@ function fillUsersInSelector(data, dialog) {
       }
       cursor.continue()
     }
-    
+
     transaction.oncomplete = function () {
       const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
@@ -726,42 +765,7 @@ function fillUsersInSelector(data, dialog) {
         initSearchForSelectors(db, 'users', data)
       })
 
-      dialog['acceptButton_'].onclick = function () {
 
-        if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
-          document.getElementById('selector--search').style.display = 'none'
-          const parentNode = document.getElementById('data-list--container')
-          removeChildNodes(parentNode)
-          document.querySelector('.mdc-dialog__footer').style.display = 'none'
-          addNewNumber(data, dialog)
-          return
-        }
-
-        if (data.attachment.present) {
-          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: JSON.parse(radio.value)
-          }).then(removeDialog).catch(handleError)
-          return;
-        }
-        if (data.record.hasOwnProperty('create')) {
-          resetSelectedContacts().then(function (selectedPeople) {
-            updateDomFromIDB(data.record, {
-              hash: 'addOnlyAssignees',
-            }, {
-              primary: selectedPeople
-            }).then(removeDialog).catch(handleError)
-
-          })
-          return
-        }
-        if(isLocationStatusWorking()){
-        shareReq(data)
-        }
-      }
     }
   }
 
@@ -936,28 +940,7 @@ function resetSelectedContacts() {
   })
 }
 
-function fillMapInSelector(db, tx, dialog, data) {
 
-  if (data.record.template === 'check-in') {
-    const searchIcon = document.getElementById('selector--search')
-    searchIcon.classList.add('hidden');
-    const ul = document.getElementById('data-list--container')
-
-    getRootRecord().then(function (record) {
-      checkMapStoreForNearByLocation(data.record.office, record.location).then(function (results) {
-        results.forEach(function (result) {
-          ul.appendChild(createVenueLi(result, false, data.record, true))
-        })
-
-        handleClickListnersForMap(db, dialog, data)
-      })
-    })
-  } else {
-    getLocationForMapSelector(tx, data).then(function () {
-      handleClickListnersForMap(db, dialog, data)
-    }).catch(console.log)
-  }
-}
 
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
@@ -1138,16 +1121,16 @@ function fillSubscriptionInSelector(db, dialog, data) {
     mainUL.appendChild(grp)
 
     dialog['acceptButton_'].onclick = function () {
-      if(isLocationStatusWorking()){ 
+      if (isLocationStatusWorking()) {
 
-      if (document.querySelector('.mdc-radio.radio-selected')) {
+        if (document.querySelector('.mdc-radio.radio-selected')) {
 
-        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-        const selectedField = JSON.parse(radio.value)
-        document.getElementById('app-current-panel').dataset.view = 'create'
-        createTempRecord(selectedField.office, selectedField.template, data)
+          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+          const selectedField = JSON.parse(radio.value)
+          document.getElementById('app-current-panel').dataset.view = 'create'
+          createTempRecord(selectedField.office, selectedField.template, data)
+        }
       }
-    }
     }
   }
 
@@ -1247,23 +1230,33 @@ function createTempRecord(office, template, data) {
 
       const bareBonesVenueArray = []
       if (template === 'check-in') {
-
+        const bareBonesVenue = {}
+        bareBonesVenue.venueDescriptor = selectedCombo.venue[0]
+        bareBonesVenue.location = ''
+        bareBonesVenue.address = ''
+        bareBonesVenue.geopoint = {
+          '_latitude': '',
+          '_longitude': ''
+        }
+        bareBonesRecord.venue = [bareBonesVenue];
         getRootRecord().then(function (record) {
 
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if (isLocationOld) {
+          if (!record.location || isLocationOld) {
             appDialog('Fetching Location Please wait', false)
             window.addEventListener('location', function _checkInLatest(e) {
-              const newLocation = e.detail
+
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-              prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], newLocation);
+              updateCreateActivity(bareBonesRecord)
+              removeDialog()
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
           }
-          prefillLocationForCheckIn(bareBonesRecord, selectedCombo.venue[0], record.location);
+          updateCreateActivity(bareBonesRecord)
+          removeDialog()
         });
         return
       }
@@ -1287,45 +1280,6 @@ function createTempRecord(office, template, data) {
   }
 
 }
-
-
-function prefillLocationForCheckIn(bareBonesRecord, venueDesc, currentLocation) {
-
-  checkMapStoreForNearByLocation(bareBonesRecord.office, currentLocation).then(function (results) {
-
-    const locations = [];
-    const bareBonesVenue = {}
-    bareBonesVenue.venueDescriptor = venueDesc
-    bareBonesVenue.location = ''
-    bareBonesVenue.address = ''
-    bareBonesVenue.geopoint = {
-      '_latitude': '',
-      '_longitude': ''
-    }
-
-    if (!results.length) {
-      bareBonesVenue.showIcon = false;
-    } else {
-      bareBonesVenue.showIcon = true;
-    }
-
-    if (results.length === 1) {
-      const singleLocation = results[0]
-      bareBonesVenue.location = singleLocation.location
-      bareBonesVenue.address = singleLocation.address
-      bareBonesVenue.geopoint = {
-        '_latitude': singleLocation.latitude,
-        '_longitude': singleLocation.longitude
-      }
-    }
-    locations.push(bareBonesVenue)
-    bareBonesRecord.venue = locations
-    updateCreateActivity(bareBonesRecord)
-    removeDialog()
-  })
-}
-
-
 
 function hasAnyValueInChildren(office, template, status) {
   const dbName = firebase.auth().currentUser.uid
@@ -1395,7 +1349,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
         resolve(true);
         return
       }
-      
+
       if (attr.hash === 'weekday') return
       if (!attr.hasOwnProperty('key')) return
 
@@ -1425,7 +1379,9 @@ function updateLocalRecord(thisActivity, db) {
       resolve("activity object store updated with value")
     }
     tx.onerror = function () {
-      reject({message:`${tx.error.message} from updateLocalRecord`});
+      reject({
+        message: `${tx.error.message} from updateLocalRecord`
+      });
     }
   })
 }
@@ -1596,10 +1552,10 @@ function updateCreateActivity(record) {
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        if(isLocationStatusWorking()){
+        if (isLocationStatusWorking()) {
 
-        this.dataset.progress = true
-        sendActivity(record)
+          this.dataset.progress = true
+          sendActivity(record)
         }
       })
     }
@@ -1636,6 +1592,34 @@ function updateCreateActivity(record) {
     }
 
   }
+}
+
+
+function createCheckInVenue(venue) {
+
+  const radio = document.createElement('div')
+  radio.className = 'mdc-radio checkin'
+  radio.value = JSON.stringify(venue)
+
+  const input = document.createElement('input')
+  input.className = 'mdc-radio__native-control'
+  input.type = 'radio'
+  input.setAttribute('name', 'radios')
+  const background = document.createElement('div')
+  background.className = 'mdc-radio__background'
+  const outer = document.createElement('div')
+  outer.className = 'mdc-radio__outer-circle'
+  const inner = document.createElement('div')
+  inner.className = 'mdc-radio__inner-circle'
+
+  background.appendChild(outer)
+  background.appendChild(inner)
+  radio.appendChild(input)
+  radio.appendChild(background)
+  let showMap = false;
+
+  return radio
+
 }
 
 function createSimpleLi(key, data) {
@@ -1698,11 +1682,11 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-      if(isLocationStatusWorking()){
+      if (isLocationStatusWorking()) {
 
-      document.querySelector('.undo-deleted').style.display = 'none'
-      listItem.appendChild(loader('undo-delete-loader'));
-      reqForUndoDeleted(data.id)
+        document.querySelector('.undo-deleted').style.display = 'none'
+        listItem.appendChild(loader('undo-delete-loader'));
+        reqForUndoDeleted(data.id)
       }
     }
     listItem.appendChild(undo)
@@ -1744,14 +1728,79 @@ function createGroupList(office, template) {
 }
 
 function createVenueSection(record) {
+  console.log(record);
   const venueSection = document.getElementById('venue--list')
+  if (record.template === 'check-in' && record.hasOwnProperty('create')) {
+
+    getRootRecord().then(function (rootRecord) {
+      checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+        if (!results.length) return;
+
+        const checkInDesc = document.createElement('li')
+        checkInDesc.className = 'mdc-list-item label--text'
+        checkInDesc.textContent = record.venue[0].venueDescriptor
+        checkInDesc.style.height = '50px'
+        checkInDesc.style.paddingRight = '11px';
+
+        const meta = document.createElement('span')
+        meta.className = 'mdc-list-item__meta'
+        const uncheck = document.createElement('label')
+        uncheck.id = 'uncheck-checkin'
+        uncheck.className = 'mdc-fab add--assignee-icon'
+        const span = document.createElement('span')
+        span.className = 'mdc-fab__icon material-icons'
+        span.textContent = 'clear';
+        uncheck.appendChild(span);
+        meta.appendChild(uncheck)
+        checkInDesc.appendChild(meta)
+
+
+        venueSection.appendChild(checkInDesc)
+
+        results.forEach(function (result) {
+
+          const form = document.createElement('div');
+          form.className = 'mdc-form-field check-in-form'
+          const label = document.createElement('label')
+          label.setAttribute('for', 'check-in-radio');
+          label.textContent = result.location
+          form.appendChild(label);
+          form.appendChild(createCheckInVenue(result))
+          venueSection.appendChild(form);
+          const mapDom = document.createElement('div');
+          mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
+          venueSection.appendChild(mapDom);
+        })
+
+
+        const uncheckFab = document.getElementById('uncheck-checkin');
+        if (uncheckFab) {
+          uncheckFab.addEventListener('click', function () {
+            document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+              const radio = new mdc.radio.MDCRadio(el)
+              radio.checked = false
+            });
+          })
+        }
+      })
+    })
+
+    return;
+  }
 
   record.venue.forEach(function (venue) {
+
     venueSection.appendChild(createVenueLi(venue, true, record))
     const mapDom = document.createElement('div');
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
     venueSection.appendChild(mapDom)
-  })
+  });
+
+  if (record.template === 'check-in') {
+    if (!record.venue[0].location || !record.venue[0].address) {
+      document.getElementById('venue--list').style.display = 'none'
+    }
+  }
 
   if (record.venue.length === 0) {
     document.getElementById('venue--list').style.display = 'none'
@@ -2432,7 +2481,9 @@ function readCameraFile() {
     try {
       AndroidInterface.startCamera()
     } catch (e) {
-      handleError({message:`${e.message} from startCamera`});
+      handleError({
+        message: `${e.message} from startCamera`
+      });
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
@@ -2485,13 +2536,12 @@ function createActivityCancellation(record) {
     var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
 
     document.getElementById('delete-allow').onclick = function () {
-     if(isLocationStatusWorking()){
-       deleteActivityReq(record.activityId)
-     }
+      if (isLocationStatusWorking()) {
+        deleteActivityReq(record.activityId)
+      }
     }
 
-    dialog.listen('MDCDialog:cancel', function () {
-    })
+    dialog.listen('MDCDialog:cancel', function () {})
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
       dialog.lastFocusedTarget = evt.target;
       dialog.show();
@@ -2652,13 +2702,38 @@ function insertInputsIntoActivity(record, activityStore) {
     record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
   }
 
-  for (var i = 0; i < record.venue.length; i++) {
-    record.venue[i].geopoint = {
-      latitude: record.venue[i].geopoint['_latitude'] || "",
-      longitude: record.venue[i].geopoint['_longitude'] || ""
+  if (record.template === 'check-in') {
+    // if (record.venue[i].hasOwnProperty('showIcon')) {
+    //   delete record.venue[i].showIcon
+    // }
+
+    document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+      const radio = new mdc.radio.MDCRadio(el);
+      if (radio.checked) {
+        const venueData = JSON.parse(el.value);
+        record.venue[0].geopoint = {
+          latitude: venueData.latitude,
+          longitude: venueData.longitude
+        }
+        record.venue[0].location = venueData.location
+        record.venue[0].address = venueData.address
+      }
+    });
+    if (!record.venue[0].location || !record.venue[0].address) {
+      record.venue[0].geopoint = {
+        latitude: '',
+        longitude: ''
+      }
     }
-    if (record.venue[i].hasOwnProperty('showIcon')) {
-      delete record.venue[i].showIcon
+  } else {
+    for (var i = 0; i < record.venue.length; i++) {
+      record.venue[i].geopoint = {
+        latitude: record.venue[i].geopoint['_latitude'] || "",
+        longitude: record.venue[i].geopoint['_longitude'] || ""
+      }
+      if (record.venue[i].hasOwnProperty('showIcon')) {
+        delete record.venue[i].showIcon
+      }
     }
   }
 
@@ -2994,7 +3069,7 @@ function toggleActionables(id) {
       }
       const actions = document.querySelectorAll('.mdc-fab')
       if (!record.editable) return
-      
+
       if (document.querySelector('.loader')) {
         document.querySelector('.loader').remove()
         if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
