@@ -755,7 +755,7 @@ function successResponse(read, param) {
         })
       }
     }
-  }
+  
 
   updateSubscription(db, read.templates, param).then(function () {
     updateRoot(param, read).then(function () {
@@ -785,6 +785,7 @@ function successResponse(read, param) {
   })
 }
 }
+
 
 function createUsersApiUrl(db, user) {
   return new Promise(function (resolve) {

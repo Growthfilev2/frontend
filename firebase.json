@@ -1,35 +1,10 @@
 {
   "hosting": {
-    "headers": [ {
-      "source": "**/*.@(jpg|jpeg|gif|png)",
-      "headers": [ {
-        "key": "Cache-Control",
-        "value": "max-age=3600"
-      }]
-    },{
-      "source": "**/*.@(js)",
-      "headers": [ {
-        "key": "Access-Control-Allow-Origin",
-        "value": "*"
-      }]
-    }, {
-      "source": "**/*.@(js|html|css)",
-      "headers": [ {
-        "key": "Cache-Control",
-        "value": "max-age=3600"
-      } ]
-    }],
     "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
     ]
   }
 }
