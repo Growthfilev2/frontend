@@ -709,6 +709,7 @@ function fillUsersInSelector(data, dialog) {
         removeChildNodes(parentNode)
         document.querySelector('.mdc-dialog__footer').style.display = 'none'
         addNewNumber(data, dialog)
+        dialog['acceptButton_'].style.display = 'none';
         return
       }
 
@@ -855,7 +856,7 @@ function addNewNumber(data) {
           }).then(removeDialog).catch(handleError)
           return
         }
-        if (isLocationVerified()) {
+        if (isLocationStatusWorking()) {
 
           newNumberReq(data, formattedNumber)
         }

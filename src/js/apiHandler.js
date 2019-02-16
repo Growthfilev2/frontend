@@ -523,7 +523,7 @@ function putAssignessInStore(assigneeArray, param) {
     const store = tx.objectStore('users');
     assigneeArray.forEach(function (assignee) {
       store.get(assignee).onsuccess = function (event) {
-        if(!event.target.result) {
+        if (!event.target.result) {
           store.put({
             mobile: assignee,
             displayName: '',
@@ -837,7 +837,7 @@ function updateUserObjectStore(requestPayload) {
   http(req)
     .then(function (userProfile) {
       if (!Object.keys(userProfile).length) {
-        return resolve(true)
+        return;
       }
 
       const tx = requestPayload.db.transaction(['users'], 'readwrite');
@@ -913,7 +913,7 @@ function getUniqueOfficeCount(param) {
       tx.oncomplete = function () {
         resolve(offices);
       }
-      tx.oncomplete = function () {
+      tx.onerror = function () {
         reject({
           message: tx.error
         })
@@ -947,7 +947,9 @@ function setUniqueOffice(offices, param) {
         resolve(true)
       }
       tx.onerror = function () {
-        reject(tx.error)
+        reject({
+          message: tx.error
+        })
       }
     }
   })
