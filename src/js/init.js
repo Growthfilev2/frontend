@@ -124,7 +124,6 @@ window.addEventListener('load', function () {
     return
   }
 
-  ui = firebaseui.auth.AuthUI.getInstance();
 
   firebase.initializeApp({
     apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
@@ -134,6 +133,8 @@ window.addEventListener('load', function () {
     storageBucket: "growthfilev2-0.appspot.com",
     messagingSenderId: "1011478688238"
   })
+  
+  ui = firebaseui.auth.AuthUI.getInstance();
 
 
   moment.updateLocale('en', {
