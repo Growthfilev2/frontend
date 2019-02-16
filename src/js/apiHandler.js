@@ -199,7 +199,7 @@ function fetchRecord(uid, id) {
 function putServerTime(data) {
 
   return new Promise(function (resolve, reject) {
-    const request = indexedDB.open(data.user.uid, 3);
+    const request = indexedDB.open(data.user.uid);
     request.onerror = function () {
       reject(request.error)
     }
@@ -743,258 +743,247 @@ function successResponse(read, param) {
         createListStore(activity, counter, param).then(function () {
           if (read.activities.length >= 20) {
             if ((read.activities.length - index) <= 20) {
+              setTimeout(function () {
+
+                requestHandlerResponse('initFirstLoad', 200, {
+                  activity: [activity]
+                });
+              }, 1000)
+            }
+          } else {
+            setTimeout(function () {
               requestHandlerResponse('initFirstLoad', 200, {
                 activity: [activity]
               });
-            }
-          } else {
-            requestHandlerResponse('initFirstLoad', 200, {
-              activity: [activity]
-            });
+            }, 1000)
           }
         })
       }
     }
-  
 
-  updateSubscription(db, read.templates, param).then(function () {
+
     updateRoot(param, read).then(function () {
-      requestHandlerResponse('initFirstLoad', 200, {
-        template: true
-      });
+      updateSubscription(db, read.templates, param).then(function () {
+        requestHandlerResponse('initFirstLoad', 200, {
+          template: true
+        })
+      }).catch(function (error) {
+
+        instant(JSON.stringify(error), param.user)
+        requestHandlerResponse('initFirstLoad', 200, {
+          template: true
+        });
+      })
+    })
+
+    getUniqueOfficeCount(param).then(function (offices) {
+      setUniqueOffice(offices, param).then(console.log).catch(function (error) {
+        instant(JSON.stringify(error), param.user)
+      })
     }).catch(function (error) {
       instant(JSON.stringify(error), param.user)
-      requestHandlerResponse('initFirstLoad', 200, {
-        template: true
-      });
+    });
+
+    createUsersApiUrl(db, param.user).then(updateUserObjectStore).catch(function (error) {
+      instant(JSON.stringify(error), param.user);
     })
-  })
-
-  getUniqueOfficeCount(param).then(function (offices) {
-    setUniqueOffice(offices, param).then(console.log).catch(function (error) {
-      instant(JSON.stringify(error), param.user)
-    })
-  }).catch(console.log);
-
-  createUsersApiUrl(db, param.user).then(function (data) {
-    if (data.url) {
-      updateUserObjectStore(data)
-    }
-  }).catch(function (error) {
-    instant(JSON.stringify(error), param.user)
-  })
-}
-}
+  }
 
 
-function createUsersApiUrl(db, user) {
-  return new Promise(function (resolve) {
-    const tx = db.transaction(['users'], 'readwrite');
-    const usersObjectStore = tx.objectStore('users');
+  function createUsersApiUrl(db, user) {
+    return new Promise(function (resolve) {
+      const tx = db.transaction(['users'], 'readwrite');
+      const usersObjectStore = tx.objectStore('users');
 
-    let assigneeString = ''
+      let assigneeString = ''
 
-    const defaultReadUserString = `${apiUrl}services/users?q=`
-    let fullReadUserString = ''
+      const defaultReadUserString = `${apiUrl}services/users?q=`
+      let fullReadUserString = ''
 
-    usersObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
+      usersObjectStore.openCursor().onsuccess = function (event) {
+        const cursor = event.target.result
 
-      if (!cursor) return
+        if (!cursor) return
 
-      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-      assigneeString += `${assigneeFormat.replace('+', '')}`
-      cursor.continue()
-    }
-    tx.oncomplete = function () {
-      fullReadUserString = `${defaultReadUserString}${assigneeString}`
-      if (assigneeString) {
+        const assigneeFormat = `%2B${cursor.value.mobile}&q=`
+        assigneeString += `${assigneeFormat.replace('+', '')}`
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        fullReadUserString = `${defaultReadUserString}${assigneeString}`
+
         resolve({
           db: db,
           url: fullReadUserString,
           user: user
         })
-      } else {
-        resolve({
-          db: db,
-          url: null,
-          user: user
-        })
-      }
-    }
-    tx.onerror = function () {
-      reject({
-        message: tx.error
-      })
-    }
-  })
-}
-
-// query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
-
-function updateUserObjectStore(requestPayload) {
-
-
-  const req = {
-    method: 'GET',
-    url: requestPayload.url,
-    data: null,
-    token: requestPayload.user.token
-  }
-  http(req)
-    .then(function (userProfile) {
-      if (!Object.keys(userProfile).length) {
-        return resolve(true)
-      }
-
-      const tx = requestPayload.db.transaction(['users', 'list'], 'readwrite');
-      const usersObjectStore = tx.objectStore('users');
-      const listStore = tx.objectStore('list')
-      usersObjectStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-
-        if (!cursor) return;
-        console.log(cursor.primaryKey);
-        console.log(userProfile)
-        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
-
-        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-          const record = cursor.value
-          record.photoURL = userProfile[cursor.primaryKey].photoURL
-          record.displayName = userProfile[cursor.primaryKey].displayName
-          usersObjectStore.put(record)
-          listStore.openCursor().onsuccess = function (event) {
-            const listCursor = event.target.result;
-            if (listCursor) {
-              if (listCursor.value.creator.number === cursor.primaryKey) {
-                listCursor.value.creator.photo = userProfile[cursor.primaryKey].photoURL
-                listCursor.update(listCursor.value)
-              }
-              listCursor.continue();
-            }
-          }
-        }
-        cursor.continue()
-      }
-      tx.oncomplete = function () {
 
       }
       tx.onerror = function () {
-        instant(JSON.stringify({
-          message: `${tx.error}`
-        }), param.user)
+        reject({
+          message: tx.error
+        })
       }
-
-    }).catch(function (error) {
-      console.log(error);
     })
+  }
 
-}
+  // query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
 
-function updateRoot(param, read) {
-  return new Promise(function (resolve, reject) {
+  function updateUserObjectStore(requestPayload) {
+    const req = {
+      method: 'GET',
+      url: requestPayload.url,
+      data: null,
+      token: requestPayload.user.token
+    }
+    http(req)
+      .then(function (userProfile) {
+        if (!Object.keys(userProfile).length) {
+          return resolve(true)
+        }
+
+        const tx = requestPayload.db.transaction(['users'], 'readwrite');
+        const usersObjectStore = tx.objectStore('users');
+        usersObjectStore.openCursor().onsuccess = function (event) {
+          const cursor = event.target.result
+          if (!cursor) return;
+          if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
+
+          if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
+            const record = cursor.value
+            record.photoURL = userProfile[cursor.primaryKey].photoURL
+            record.displayName = userProfile[cursor.primaryKey].displayName
+            usersObjectStore.put(record)
+          }
+
+          cursor.continue()
+        }
+        tx.oncomplete = function () {
+
+        }
+        tx.onerror = function () {
+          instant(JSON.stringify({
+            message: `${tx.error}`
+          }), param.user)
+        }
+
+      }).catch(function (error) {
+        console.log(error);
+      })
+
+  }
+
+  function updateRoot(param, read) {
+    return new Promise(function (resolve, reject) {
+      const req = indexedDB.open(param.user.uid)
+      req.onsuccess = function () {
+        const db = req.result;
+        const rootTx = db.transaction(['root'], 'readwrite');
+        const store = rootTx.objectStore('root')
+        store.get(param.user.uid).onsuccess = function (event) {
+          const record = event.target.result;
+          record.fromTime = read.upto
+          store.put(record);
+        }
+        rootTx.oncomplete = function () {
+          resolve(true)
+        }
+        rootTx.onerror = function () {
+          reject(rootTx.error);
+        }
+      }
+    })
+  }
+
+
+  function getUniqueOfficeCount(param) {
+
+    return new Promise(function (resolve, reject) {
+      const dbName = param.user.uid
+      const req = indexedDB.open(dbName)
+      let offices = []
+      req.onsuccess = function () {
+        const db = req.result
+        const tx = db.transaction(['activity']);
+        const activityStore = tx.objectStore('activity').index('office');
+        activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+          const cursor = event.target.result
+          if (!cursor) return;
+          offices.push(cursor.value.office)
+          cursor.continue()
+        }
+        tx.oncomplete = function () {
+          resolve(offices);
+        }
+        tx.oncomplete = function () {
+          reject({
+            message: tx.error
+          })
+        }
+        req.onerror = function () {
+          reject({
+            message: req.error
+          })
+        }
+      }
+    })
+  }
+
+  function setUniqueOffice(offices, param) {
+    return new Promise(function (resolve, reject) {
+
+      const dbName = param.user.uid;
+      const req = indexedDB.open(dbName)
+
+      req.onsuccess = function () {
+        const db = req.result
+        const tx = db.transaction(['root'], 'readwrite')
+        const rootObjectStore = tx.objectStore('root');
+        rootObjectStore.get(dbName).onsuccess = function (event) {
+          const record = event.target.result
+          record.offices = offices
+          rootObjectStore.put(record)
+        };
+
+        tx.oncomplete = function () {
+          resolve(true)
+        }
+        tx.onerror = function () {
+          reject(tx.error)
+        }
+      }
+    })
+  }
+
+  function updateIDB(param) {
     const req = indexedDB.open(param.user.uid)
     req.onsuccess = function () {
-      const db = req.result;
-      const rootTx = db.transaction(['root'], 'readwrite');
-      const store = rootTx.objectStore('root')
-      store.get(param.user.uid).onsuccess = function (event) {
-        const record = event.target.result;
-        record.fromTime = read.upto
-        store.put(record);
-      }
-      rootTx.oncomplete = function () {
-        resolve(true)
-      }
-      rootTx.onerror = function () {
-        reject(rootTx.error);
-      }
-    }
-  })
-}
-
-
-function getUniqueOfficeCount(param) {
-
-  return new Promise(function (resolve, reject) {
-    const dbName = param.user.uid
-    const req = indexedDB.open(dbName)
-    let offices = []
-    req.onsuccess = function () {
       const db = req.result
-      const tx = db.transaction(['activity']);
-      const activityStore = tx.objectStore('activity').index('office');
-      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return;
-        offices.push(cursor.value.office)
-        cursor.continue()
-      }
-      tx.oncomplete = function () {
-        resolve(offices);
-      }
-      req.onerror = function (event) {
-        reject(event.error)
-      }
-    }
-  })
-}
-
-function setUniqueOffice(offices, param) {
-  return new Promise(function (resolve, reject) {
-
-    const dbName = param.user.uid;
-    const req = indexedDB.open(dbName)
-
-    req.onsuccess = function () {
-      const db = req.result
-      const tx = db.transaction(['root'], 'readwrite')
+      const tx = db.transaction(['root']);
       const rootObjectStore = tx.objectStore('root');
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        const record = event.target.result
-        record.offices = offices
-        rootObjectStore.put(record)
-      };
+      let record;
+      let time;
+
+      rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+        record = event.target.result;
+        time = record.fromTime
+      }
 
       tx.oncomplete = function () {
-        resolve(true)
+        const req = {
+          method: 'GET',
+          url: `${apiUrl}read?from=${time}`,
+          data: null,
+          token: param.user.token
+        }
+
+        http(req)
+          .then(function (response) {
+            if (!response) return;
+            requestHandlerResponse('android-stop-refreshing', 200)
+            successResponse(response, param)
+          })
+          .catch(sendApiFailToMainThread)
       }
-      tx.onerror = function () {
-        reject(tx.error)
-      }
-    }
-  })
-}
-
-function updateIDB(param) {
-  const req = indexedDB.open(param.user.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['root']);
-    const rootObjectStore = tx.objectStore('root');
-    let record;
-    let time;
-
-    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
-      record = event.target.result;
-      time = record.fromTime
-    }
-
-    tx.oncomplete = function () {
-      const req = {
-        method: 'GET',
-        url: `${apiUrl}read?from=${time}`,
-        data: null,
-        token: param.user.token
-      }
-
-      http(req)
-        .then(function (response) {
-          if (!response) return;
-          requestHandlerResponse('android-stop-refreshing', 200)
-          successResponse(response, param)
-        })
-        .catch(sendApiFailToMainThread)
     }
   }
-}

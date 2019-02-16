@@ -607,12 +607,14 @@ function getCountOfTemplates() {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
+      console.log(db)
       const tx = db.transaction(['subscriptions'], 'readonly');
+      console.log(tx)
       const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
       subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result;
-
         if (!cursor) return;
+        console.log(cursor.value)
         count++
         officeByTemplate[cursor.value.office] = count;
         cursor.continue();
@@ -622,15 +624,15 @@ function getCountOfTemplates() {
         resolve(officeByTemplate)
       }
       tx.onerror = function () {
-        console.log(tx.error  )
+        console.log(tx.error)
         reject({
-          message: `${tx.error.message} from getCountOfTemplates`
+          message: `${tx.error} from getCountOfTemplates`
         });
       }
     }
     req.onerror = function () {
       reject({
-        message: `${req.error.message} from getCountOfTemplates`
+        message: `${req.error} from getCountOfTemplates`
       });
     }
   })

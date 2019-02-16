@@ -503,6 +503,7 @@ function isEmployeeOnLeave() {
 }
 
 function createIDBStore(auth) {
+  
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(auth.uid, 3);
     let db;
@@ -650,12 +651,14 @@ function redirect() {
 function init() {
 
   document.getElementById("main-layout-app").style.display = 'block'
-  openListWithChecks()
   requestCreator('now', {
     device: native.getInfo(),
     from: '',
     registerToken: native.getFCMToken()
   })
+  
+  openListWithChecks()
+  
 
 }
 
