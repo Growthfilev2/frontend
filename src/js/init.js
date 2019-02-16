@@ -133,7 +133,7 @@ window.addEventListener('load', function () {
     storageBucket: "growthfilev2-0.appspot.com",
     messagingSenderId: "1011478688238"
   })
-  
+
   ui = firebaseui.auth.AuthUI.getInstance();
 
 
@@ -176,11 +176,6 @@ window.addEventListener('load', function () {
   }
   layoutGrid()
   startApp(true)
-})
-
-
-window.addEventListener('onMessage', function _onMessage(e) {
-  requestCreator('Null', false)
 })
 
 
