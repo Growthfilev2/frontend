@@ -679,15 +679,15 @@ function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
     isEmployeeOnLeave().then(function (empDetails) {
-      const checkin = false;
+      let show = false;
       if (!empDetails.onLeave) {
         if(e.details) {
-          checkin = true
+          show = true
         }
         else {
-          checkin = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
+          show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
         }
-        if (checkin) {
+        if (show) {
           document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
           showSuggestCheckInDialog();
         }
@@ -699,16 +699,4 @@ function runAppChecks() {
       // });
     })
   }, true);
-}
-
-
-
-function startInitializatioOfList(data) {
-  suggestCheckIn(data.checkin).then(function () {
-    localStorage.removeItem('clickedActivity');
-    if (history.state[0] === 'listView' || !history.state) {
-      document.getElementById('activity--list').innerHTML = ''
-      listView();
-    }
-  })
 }
