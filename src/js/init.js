@@ -745,28 +745,13 @@ function startInitializatioOfList(data) {
     localStorage.removeItem('clickedActivity');
     if (history.state[0] === 'listView' || !history.state) {
       document.getElementById('activity--list').innerHTML = ''
-      listView({
-        urgent: data.urgent,
-        nearby: data.nearby
-      });
-    }
-  }).catch(function (error) {
-    handleError(error);
-    if (history.state[0] === 'listView' || !history.state) {
-      document.getElementById('activity--list').innerHTML = ''
-      listView({
-        urgent: false,
-        nearby: false
-      });
+      listView();
     }
   })
 }
 
 function openListWithChecks() {
-  listView({
-    urgent: false,
-    nearby: false
-  });
+  listView();
   runAppChecks();
   setInterval(function () {
     manageLocation().then(function (location) {

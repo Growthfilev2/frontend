@@ -631,7 +631,7 @@ function updateSubscription(db, templates, param) {
             if (subscription.office === cursor.value.office) {
               cursor.update(subscription);
             } else {
-              cursor.update(subscription)
+              cursor.put(subscription)
             }
             cursor.continue()
           } else {

@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -53,10 +53,7 @@ function successDialog() {
   scroll_namespace.count = 0;
   scroll_namespace.size = 20;
   localStorage.removeItem('clickedActivity');
-  listView({
-    urgent: false,
-    nearBy: false
-  });
+  listView();
 }
 
 function appDialog(messageString, showButton) {
@@ -98,10 +95,7 @@ function appDialog(messageString, showButton) {
   var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
 
   gpsDialog.listen('MDCDialog:accept', function () {
-    listView({
-      nearby: false,
-      urgent: false
-    });
+    listView();
   });
 
   gpsDialog.show();
@@ -442,7 +436,7 @@ function updateLocationInRoot(finalLocation) {
 
 
     var dbName = firebase.auth().currentUser.uid;
-    var req = indexedDB.open(dbName, 3);
+    var req = indexedDB.open(dbName);
     req.onsuccess = function () {
       var db = req.result;
       var tx = db.transaction(['root'], 'readwrite');
