@@ -720,11 +720,10 @@ function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
 
-function handleEmailUpdation() {
-  if (firebase.auth().currentUser.emailVerified) return;
+function emailVerify() {
 
   if (firebase.auth().currentUser.email) {
-    user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
+    emailUpdateSuccess()
     return;
   }
 
@@ -734,29 +733,6 @@ function handleEmailUpdation() {
     profileView(true);
   })
   dialog.listen('MDC:cancel', function () {})
-}
-
-
-
-
-function setEmailSendInRoot(set) {
-  return new Promise(function (resolve) {
-
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['root'])
-      const store = tx.objectStore('root')
-      store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-        const record = event.target.result;
-        record.emailSend = set
-        store.put(record);
-      }
-      tx.oncomplete = function () {
-        console.log('done');
-      }
-    }
-  })
 }
 
 function showEMailUpdateDailog() {
@@ -778,7 +754,7 @@ function showEMailUpdateDailog() {
   header.appendChild(headerText)
   var section = document.createElement('section');
   section.className = 'mdc-dialog__body';
-  section.textContent = 'Check-in ?';
+  section.textContent = 'Please Set your Email-id';
 
   var footer = document.createElement('footer');
   footer.className = 'mdc-dialog__footer';
@@ -929,10 +905,14 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
+  console.log(value);
+
   if (localStorage.getItem('dbexist')) {
-    console.log(value);
-    
-    requestCreator('Null', value);
+    // if(Object.keys(value)[0] === 'verifyEmail') {
+      emailVerify();
+    //   return
+    // }
+    // requestCreator('Null', value);
   }
 }
 

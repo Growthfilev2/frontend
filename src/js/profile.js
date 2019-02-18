@@ -387,18 +387,23 @@ function emailValidation(emailField) {
 
 function updateEmail(user, email) {
   document.getElementById('growthfile').appendChild(loader('init-loader'));
-  user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError);
+  user.updateEmail(email).then(function(){
+    emailUpdateSuccess(true)
+  }).catch(authUpdatedError);
 }
 
-function emailUpdateSuccess() {
+function emailUpdateSuccess(showSuccessDialog) {
   var user = firebase.auth().currentUser;
-  user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
+  user.sendEmailVerification().then(function(){
+    emailVerificationSuccess(showSuccessDialog)
+  }).catch(emailVerificationError);
 }
 
-function emailVerificationSuccess() {
-  successDialog();
+function emailVerificationSuccess(showSuccessDialog) {
+  if(showSuccessDialog){
+    successDialog();
+  }
   snacks('Verification link has been send to your email address');
-
 }
 
 function emailVerificationError(error) {
