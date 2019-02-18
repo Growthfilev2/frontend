@@ -93,12 +93,16 @@ let app = function () {
       const startTime = emp.attachment['Daily Start Time'].value
       const format = 'hh:mm'
       const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
+      console.log(moment().isSameOrBefore(offsetStartBefore));
+      
       return moment().isSameOrBefore(offsetStartBefore)
     },
     isCurrentTimeNearEnd: function (emp) {
       const endTime = emp.attachment['Daily End Time'].value
       const format = 'hh:mm'
       const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
+      console.log(moment().isSameOrAfter(offsetEndAfter));
+      
       return moment().isSameOrAfter(offsetEndAfter)
     }
   }
@@ -574,7 +578,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('start', 'start')
   calendar.createIndex('end', 'end')
   calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
+  calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
     autoIncrement: true
@@ -689,6 +693,8 @@ function runAppChecks() {
         store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
           const record = event.target.result;
           if (e.detail) {
+            show = true
+            
           } else {
             if(!record.checkInCreated) {
               show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
@@ -696,6 +702,7 @@ function runAppChecks() {
           }
         }
         tx.oncomplete = function(){
+         
           if (show) {
             if (history.state[0] === 'listView') {
               document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML

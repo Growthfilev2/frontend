@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -722,7 +722,7 @@ function checkInCreated(){
     const req = indexedDB.open(dbName);
     req.onsuccess = function(){
       const db = req.result;
-      const tx = db.transaction(['root']);
+      const tx = db.transaction(['root'],'readwrite');
       const store = tx.objectStore('root')
       store.get(dbName).onsuccess = function(event){
         const record = event.target.result;
