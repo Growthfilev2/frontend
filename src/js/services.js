@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -370,19 +370,15 @@ function html5Geolocation() {
 }
 
 
-function locationUpdationSuccess(location) {
-  if (!location.prev.latitude) return;
-  if (!location.prev.longitude) return;
-  if (!location.new.latitude) return;
-  if (!location.new.longitude) return;
-
+function locationUpdationSuccess(location, checkIn) {
+  if(!checkIn) return;
+ 
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-
   var suggestCheckIn = new CustomEvent("suggestCheckIn", {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
   });
@@ -398,7 +394,6 @@ function showSuggestCheckInDialog() {
   dialog['root_'].classList.remove('hidden');
   dialog.show();
   dialog.listen('MDCDialog:accept', function (evt) {
-
     getRootRecord().then(function (rootRecord) {
       if (isLocationStatusWorking()) {
         if (rootRecord.offices.length === 1) {
@@ -412,7 +407,7 @@ function showSuggestCheckInDialog() {
     }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
-    checkEmailVerification()
+   
   });
 }
 
@@ -454,6 +449,7 @@ function updateLocationInRoot(finalLocation) {
 
       };
       tx.oncomplete = function () {
+  
         resolve({
           prev: previousLocation,
           new: finalLocation
@@ -714,12 +710,16 @@ var receiverCaller = {
   'loadView': loadView,
   'apiFail': apiFail,
   'backblazeRequest': urlFromBase64Image,
+  'checkInCreated':checkInCreated
 };
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
-
+function checkInCreated(){
+  locationUpdationSuccess('',false)
+  return
+}
 function emailVerify() {
 
   if (firebase.auth().currentUser.email) {
@@ -910,13 +910,12 @@ function getInputText(selector) {
 
 function runRead(value) {
   console.log(value);
-
   if (localStorage.getItem('dbexist')) {
-    // if(Object.keys(value)[0] === 'verifyEmail') {
+    if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();
-    //   return
-    // }
-    // requestCreator('Null', value);
+      return
+    }
+    requestCreator('Null', value);
   }
 }
 

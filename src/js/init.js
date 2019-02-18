@@ -262,6 +262,7 @@ function createCheckInDialog() {
   var aside = document.createElement('aside');
   aside.className = 'mdc-dialog mdc-dialog--open hidden';
   aside.id = 'suggest-checkIn-dialog';
+  aside.style.backgroundColor = 'rgba(0,0,0,0.47)';
 
   var surface = document.createElement('div');
   surface.className = 'mdc-dialog__surface';
@@ -301,9 +302,6 @@ function createCheckInDialog() {
   surface.appendChild(footer);
   aside.appendChild(surface);
 
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop);
   return aside
 
 }
@@ -513,9 +511,9 @@ function createIDBStore(auth) {
         })
         return;
       }
-    
+
       createObjectStores(db, auth.uid)
-      
+
     }
     req.onsuccess = function () {
 
@@ -660,9 +658,16 @@ function init() {
   runAppChecks();
 
   //TODO : move this in device   
+
   setInterval(function () {
     manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+      updateLocationInRoot(location).then(function (location) {
+        if (!location.prev.latitude) return;
+        if (!location.prev.longitude) return;
+        if (!location.new.latitude) return;
+        if (!location.new.longitude) return;
+        locationUpdationSuccess(location,true)
+      }).catch(handleError);
     }).catch(handleError);
   }, 5000);
 
@@ -676,15 +681,17 @@ function runAppChecks() {
     isEmployeeOnLeave().then(function (empDetails) {
       let show = false;
       if (!empDetails.onLeave) {
-        if(e.details) {
+        if (e.details) {
           show = true
-        }
-        else {
+        } else {
           show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
         }
+
         if (show) {
-          document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-          showSuggestCheckInDialog();
+          if (history.state[0] === 'listView') {
+            document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
+            showSuggestCheckInDialog();
+          }
         }
       }
     }).catch(function (error) {
