@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -370,8 +370,7 @@ function html5Geolocation() {
 }
 
 
-function locationUpdationSuccess(location, checkIn) {
-  if(!checkIn) return;
+function locationUpdationSuccess(location) {
  
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
@@ -717,7 +716,27 @@ function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
 function checkInCreated(){
-  locationUpdationSuccess('',false)
+  getEmployeeDetails().then(function(empDetails){
+
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName);
+    req.onsuccess = function(){
+      const db = req.result;
+      const tx = db.transaction(['root']);
+      const store = tx.objectStore('root')
+      store.get(dbName).onsuccess = function(event){
+        const record = event.target.result;
+        if(app.isCurrentTimeNearEnd(empDetails) || app.isCurrentTimeNearStart(empDetails)) {
+          record.checkInCreatedNearEmpTiming = true
+          store.put(record);
+        }
+        
+      }
+      tx.oncomplete = function(){
+        console.log('completed');
+      }
+    }
+  })
   return
 }
 function emailVerify() {

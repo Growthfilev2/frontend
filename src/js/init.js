@@ -666,7 +666,7 @@ function init() {
         if (!location.prev.longitude) return;
         if (!location.new.latitude) return;
         if (!location.new.longitude) return;
-        locationUpdationSuccess(location,true)
+        locationUpdationSuccess(location)
       }).catch(handleError);
     }).catch(handleError);
   }, 5000);
@@ -679,26 +679,33 @@ function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
     isEmployeeOnLeave().then(function (empDetails) {
-      let show = false;
-      if (!empDetails.onLeave) {
-        if (e.details) {
-          show = true
-        } else {
-          show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
+    
+      if (empDetails.onLeave) return
+      const req = indexedDB.open(firebase.auth().currentUser.uid)
+      req.onsuccess = function(){
+        const show = false;
+        const db = req.result;
+        const tx = db.transaction(['root'])
+        const store  = tx.objectStore('root')
+        store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+          const record = event.target.result;
+          if (e.detail) {
+            show = true
+          } else {
+            if(!record.checkInCreatedNearEmpTiming) {
+              show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
+            }
+          }
         }
-
-        if (show) {
-          if (history.state[0] === 'listView') {
-            document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-            showSuggestCheckInDialog();
+        tx.oncomplete = function(){
+          if (show) {
+            if (history.state[0] === 'listView') {
+              document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
+              showSuggestCheckInDialog();
+            }
           }
         }
       }
-    }).catch(function (error) {
-      // handleError(error);
-      // detectSuggestCheckinEvent(e.detail, {
-      //   onLeave: false
-      // });
-    })
+    }).catch(handleError)
   }, true);
 }
