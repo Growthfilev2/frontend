@@ -311,7 +311,9 @@ function create(body, user) {
     }
     http(req)
       .then(function (success) {
-        requestHandlerResponse('checkInCreated',200);
+        if(body.template === 'check-in'){
+          requestHandlerResponse('checkInCreated',200);
+        }
         resolve(true)
       })
       .catch(sendApiFailToMainThread)
