@@ -726,12 +726,17 @@ function checkInCreated(){
       const store = tx.objectStore('root')
       store.get(dbName).onsuccess = function(event){
         const record = event.target.result;
-        if(app.isCurrentTimeNearEnd(empDetails) || app.isCurrentTimeNearStart(empDetails)) {
-          record.checkInCreatedNearEmpTiming = true
-          store.put(record);
-        }
         
+        if(app.isNewDay() || app.isCurrentTimeNearEnd(empDetails) || app.isCurrentTimeNearStart(empDetails)) {
+          
+          record.checkInCreated = true
+        }
+        else {
+          record.checkInCreated = false
+        }
+        store.put(record);
       }
+      
       tx.oncomplete = function(){
         console.log('completed');
       }

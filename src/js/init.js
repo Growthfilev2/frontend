@@ -77,7 +77,7 @@ let app = function () {
     },
     isNewDay: function (auth) {
       var today = localStorage.getItem('today');
-      if (today === "null" || today == null) {
+      if (!today) {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
@@ -385,7 +385,6 @@ function startApp(start) {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      localStorage.setItem('today', null);
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
@@ -690,9 +689,8 @@ function runAppChecks() {
         store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
           const record = event.target.result;
           if (e.detail) {
-            show = true
           } else {
-            if(!record.checkInCreatedNearEmpTiming) {
+            if(!record.checkInCreated) {
               show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
             }
           }

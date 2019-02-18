@@ -783,6 +783,8 @@ function successResponse(read, param) {
       instant(JSON.stringify(error), param.user)
     });
 
+
+
     createUsersApiUrl(db, param.user).then(updateUserObjectStore).catch(function (error) {
       instant(JSON.stringify(error), param.user);
     })
@@ -956,6 +958,7 @@ function setUniqueOffice(offices, param) {
     }
   })
 }
+
 
 function updateIDB(param) {
   const req = indexedDB.open(param.user.uid)
