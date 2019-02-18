@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -311,6 +311,7 @@ function create(body, user) {
     }
     http(req)
       .then(function (success) {
+      
         resolve(true)
       })
       .catch(sendApiFailToMainThread)

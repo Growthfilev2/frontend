@@ -37,11 +37,7 @@ function listView() {
 
     getRootRecord().then(function (record) {
 
-      if (record.suggestCheckIn) {
-        document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-        showSuggestCheckInDialog()
-      }
-
+   
       if (size && size <= 20) {
         loadActivitiesFromListStore(location)
         return;

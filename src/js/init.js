@@ -93,15 +93,13 @@ let app = function () {
       const startTime = emp.attachment['Daily Start Time'].value
       const format = 'hh:mm'
       const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
-      const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
-      return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
+      return moment().isSameOrBefore(offsetStartBefore)
     },
     isCurrentTimeNearEnd: function (emp) {
       const endTime = emp.attachment['Daily End Time'].value
       const format = 'hh:mm'
-      const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
       const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-      return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
+      return moment().isSameOrAfter(offsetEndAfter)
     }
   }
 }();
@@ -133,8 +131,6 @@ window.addEventListener('load', function () {
     storageBucket: "growthfilev2-0.appspot.com",
     messagingSenderId: "1011478688238"
   })
-
-  ui = firebaseui.auth.AuthUI.getInstance();
 
 
   moment.updateLocale('en', {
@@ -459,7 +455,9 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
 
       if (!empDetails) {
-        return resolve(false)
+        return {
+          onLeave: false
+        }
       }
 
       empDetails.onLeave = false
@@ -469,7 +467,7 @@ function isEmployeeOnLeave() {
         const tx = db.transaction(['calendar']);
         const store = tx.objectStore('calendar');
         const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
-
+        let onLeave = false;
         store.index('onLeave').openCursor(range).onsuccess = function (event) {
 
           const cursor = event.target.result;
@@ -503,7 +501,7 @@ function isEmployeeOnLeave() {
 }
 
 function createIDBStore(auth) {
-  
+
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(auth.uid, 3);
     let db;
@@ -515,8 +513,13 @@ function createIDBStore(auth) {
         })
         return;
       }
+      if (evt.oldVersion == 3) {
+        let store = request.transaction.objectStore('activity')
+        store.createIndex('template', 'template');
+      } else {
 
-      createObjectStores(db, auth.uid)
+        createObjectStores(db, auth.uid)
+      }
     }
     req.onsuccess = function () {
 
@@ -540,6 +543,7 @@ function createObjectStores(db, uid) {
   activity.createIndex('timestamp', 'timestamp')
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
+  activity.createIndex('template', 'template');
 
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
@@ -656,9 +660,16 @@ function init() {
     from: '',
     registerToken: native.getFCMToken()
   })
-  
-  openListWithChecks()
-  
+
+  listView();
+  runAppChecks();
+
+  //TODO : move this in device   
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
+    }).catch(handleError);
+  }, 5000);
 
 }
 
@@ -666,79 +677,31 @@ function init() {
 
 function runAppChecks() {
 
-
-
-  window.addEventListener('locationChanged', function _locationChanged(e) {
-    isEmployeeOnLeave().then(function (emp) {
-      detectSuggestCheckinEvent(e.detail, emp);
-      return;
+  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    isEmployeeOnLeave().then(function (empDetails) {
+      const checkin = false;
+      if (!empDetails.onLeave) {
+        if(e.details) {
+          checkin = true
+        }
+        else {
+          checkin = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
+        }
+        if (checkin) {
+          document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
+          showSuggestCheckInDialog();
+        }
+      }
     }).catch(function (error) {
-      handleError(error);
-      detectSuggestCheckinEvent(e.detail);
+      // handleError(error);
+      // detectSuggestCheckinEvent(e.detail, {
+      //   onLeave: false
+      // });
     })
   }, true);
 }
 
-function detectSuggestCheckinEvent(changed, emp) {
 
-  var dataObject = {
-    urgent: false,
-    nearby: false,
-  };
-  if (emp) {
-    dataObject['checkin'] = !emp.onLeave
-  } else {
-    dataObject['checkin'] = false
-  }
-
-  var newDay = app.isNewDay();
-  if (changed && newDay) {
-    dataObject.nearby = true;
-    dataObject.urgent = true;
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (changed) {
-    dataObject.nearby = true;
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (newDay) {
-    dataObject.urgent = true;
-    localStorage.removeItem('dailyStartTimeCheckIn');
-    localStorage.removeItem('dailyEndTimeCheckIn');
-    startInitializatioOfList(dataObject);
-    return;
-  };
-
-  if (!emp) return
-
-  if (app.isCurrentTimeNearStart(emp)) {
-    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-    if (hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyStartTimeCheckIn', true);
-      if (!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      startInitializatioOfList(dataObject);
-    }
-    return;
-  }
-
-  if (app.isCurrentTimeNearEnd(emp)) {
-    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-    if (hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyEndTimeCheckIn', true);
-      if (!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      startInitializatioOfList(dataObject);
-    }
-    return;
-  }
-}
 
 function startInitializatioOfList(data) {
   suggestCheckIn(data.checkin).then(function () {
@@ -748,14 +711,4 @@ function startInitializatioOfList(data) {
       listView();
     }
   })
-}
-
-function openListWithChecks() {
-  listView();
-  runAppChecks();
-  setInterval(function () {
-    manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-    }).catch(handleError);
-  }, 5000);
 }

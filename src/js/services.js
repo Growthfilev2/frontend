@@ -283,7 +283,7 @@ function getCellTowerInfo() {
       });
       return
     }
-    var apiKey ='AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
+    var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
@@ -317,9 +317,9 @@ function manageLocation() {
       })
       return;
     }
-    html5Geolocation().then(function(location){
+    html5Geolocation().then(function (location) {
       resolve(location)
-    }).catch(function(error){
+    }).catch(function (error) {
       reject(error)
     })
   })
@@ -375,17 +375,18 @@ function locationUpdationSuccess(location) {
   if (!location.prev.longitude) return;
   if (!location.new.latitude) return;
   if (!location.new.longitude) return;
-  
+
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-  var locationChanged = new CustomEvent("locationChanged", {
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth)
+
+  var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
   });
-  window.dispatchEvent(locationChanged);
+  window.dispatchEvent(suggestCheckIn);
 }
 
 function showSuggestCheckInDialog() {
@@ -397,22 +398,21 @@ function showSuggestCheckInDialog() {
   dialog['root_'].classList.remove('hidden');
   dialog.show();
   dialog.listen('MDCDialog:accept', function (evt) {
+
     getRootRecord().then(function (rootRecord) {
-      suggestCheckIn(false).then(function () {
-        if (isLocationStatusWorking()) {
-          if (rootRecord.offices.length === 1) {
-            createTempRecord(rootRecord.offices[0], 'check-in', {
-              suggestCheckIn: true
-            });
-          } else {
-            callSubscriptionSelectorUI(evt, true);
-          }
+      if (isLocationStatusWorking()) {
+        if (rootRecord.offices.length === 1) {
+          createTempRecord(rootRecord.offices[0], 'check-in', {
+            suggestCheckIn: true
+          });
+        } else {
+          callSubscriptionSelectorUI(evt, true);
         }
-      });
+      }
     }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
-    suggestCheckIn(false).then(console.log).catch(console.log);
+    checkEmailVerification()
   });
 }
 
@@ -443,11 +443,11 @@ function updateLocationInRoot(finalLocation) {
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
-       
+
         if (record.location) {
           previousLocation = record.location
         };
-       
+
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -563,7 +563,7 @@ function createAndroidDialog(title, body) {
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
-  
+
   if (!locationPermission.checkLocationPermission()) {
     createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
     return;
@@ -694,7 +694,7 @@ function sendRequest(location, requestGenerator) {
 }
 
 function isLastLocationOlderThanThreshold(test, threshold) {
- 
+
   var currentTime = moment(moment().valueOf());
   var lastLocationTime = test;
   var duration = moment.duration(currentTime.diff(lastLocationTime));
@@ -706,31 +706,118 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
-  'initFirstLoad':initFirstLoad,
+  'initFirstLoad': initFirstLoad,
   'update-app': updateApp,
   'revoke-session': revokeSession,
   'notification': successDialog,
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'apiFail': apiFail,
-  'backblazeRequest': urlFromBase64Image
+  'backblazeRequest': urlFromBase64Image,
 };
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
 
-function initFirstLoad(response){
+function handleEmailUpdation() {
+  if (firebase.auth().currentUser.emailVerified) return;
+
+  if (firebase.auth().currentUser.email) {
+    user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
+    return;
+  }
+
+  showEMailUpdateDailog();
+  const dialog = new mdc.dialog.MDCDialog('email-update-dialog');
+  dialog.listen('MDC:accept', function () {
+    profileView(true);
+  })
+  dialog.listen('MDC:cancel', function () {})
+}
+
+
+
+
+function setEmailSendInRoot(set) {
+  return new Promise(function (resolve) {
+
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['root'])
+      const store = tx.objectStore('root')
+      store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        record.emailSend = set
+        store.put(record);
+      }
+      tx.oncomplete = function () {
+        console.log('done');
+      }
+    }
+  })
+}
+
+function showEMailUpdateDailog() {
+
+  var aside = document.createElement('aside');
+  aside.className = 'mdc-dialog mdc-dialog--open hidden';
+  aside.id = 'email-update-dialog';
+
+  var surface = document.createElement('div');
+  surface.className = 'mdc-dialog__surface';
+  surface.style.width = '90%';
+  surface.style.height = 'auto';
+
+  const header = document.createElement('header');
+  header.className = 'mdc-dialog__header'
+  const headerText = document.createElement('h2')
+  headerText.className = 'mdc-dialog__header__title'
+  headerText.textContent = 'Reminder'
+  header.appendChild(headerText)
+  var section = document.createElement('section');
+  section.className = 'mdc-dialog__body';
+  section.textContent = 'Check-in ?';
+
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
+
+  var ok = document.createElement('button');
+  ok.type = 'button';
+  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
+  ok.textContent = 'Okay';
+  ok.style.backgroundColor = '#3498db';
+
+  var canel = document.createElement('button');
+  canel.type = 'button';
+  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+  canel.textContent = 'Cancel';
+  canel.style.backgroundColor = '#3498db';
+
+  footer.appendChild(canel);
+  footer.appendChild(ok);
+
+  surface.appendChild(header)
+  surface.appendChild(section);
+  surface.appendChild(footer);
+  aside.appendChild(surface);
+
+  document.body.appendChild(aside);
+
+}
+
+function initFirstLoad(response) {
   console.log(response);
-  if(history.state[0] !== 'listView') return;
-  if(response.msg.hasOwnProperty('activity')) {
-    if(response.msg.activity.length){
-      getRootRecord().then(function(record){
-        updateEl(response.msg.activity,record);
+  if (history.state[0] !== 'listView') return;
+  if (response.msg.hasOwnProperty('activity')) {
+    if (response.msg.activity.length) {
+      getRootRecord().then(function (record) {
+        updateEl(response.msg.activity, record);
       })
     }
   }
-  if(response.msg.hasOwnProperty('template')){
+  if (response.msg.hasOwnProperty('template')) {
     createActivityIcon()
   }
 
@@ -802,13 +889,13 @@ function urlFromBase64Image(data) {
 }
 
 function loadView(data) {
-  
+
   if (history.state[0] === 'updateCreateActivity') {
     toggleActionables(history.state[1].activityId);
     return;
   }
   if (history.state[0] === 'profileView') return;
-  
+
   window[history.state[0]](history.state[1], false);
 }
 
@@ -842,7 +929,9 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-  if(localStorage.getItem('dbexist')){
+  if (localStorage.getItem('dbexist')) {
+    console.log(value);
+    
     requestCreator('Null', value);
   }
 }
