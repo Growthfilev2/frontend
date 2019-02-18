@@ -513,13 +513,9 @@ function createIDBStore(auth) {
         })
         return;
       }
-      if (evt.oldVersion == 3) {
-        let store = request.transaction.objectStore('activity')
-        store.createIndex('template', 'template');
-      } else {
-
-        createObjectStores(db, auth.uid)
-      }
+    
+      createObjectStores(db, auth.uid)
+      
     }
     req.onsuccess = function () {
 
@@ -543,7 +539,6 @@ function createObjectStores(db, uid) {
   activity.createIndex('timestamp', 'timestamp')
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
-  activity.createIndex('template', 'template');
 
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
