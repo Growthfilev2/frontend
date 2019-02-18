@@ -728,19 +728,23 @@ function emailVerify() {
   }
 
   showEMailUpdateDailog();
-  const dialog = new mdc.dialog.MDCDialog('email-update-dialog');
-  dialog.listen('MDC:accept', function () {
+  const dialog = new mdc.dialog.MDCDialog(document.getElementById('email-update-dialog'));
+  dialog.show()
+  dialog.listen('MDCDialog:accept', function () {
+    document.getElementById('email-update-dialog').remove()
     profileView(true);
   })
-  dialog.listen('MDC:cancel', function () {})
+  dialog.listen('MDCDialog:cancel', function () {
+    document.getElementById('email-update-dialog').remove()
+  })
 }
 
 function showEMailUpdateDailog() {
 
   var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open hidden';
+  aside.className = 'mdc-dialog mdc-dialog--open';
   aside.id = 'email-update-dialog';
-
+  aside.style.backgroundColor = 'rgba(0,0,0,0.47)'
   var surface = document.createElement('div');
   surface.className = 'mdc-dialog__surface';
   surface.style.width = '90%';
