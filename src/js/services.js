@@ -378,7 +378,9 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+
   var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+    
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
   });
   window.dispatchEvent(suggestCheckIn);

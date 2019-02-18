@@ -88,22 +88,18 @@ let app = function () {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'))
         return true
       }
+
     },
     isCurrentTimeNearStart: function (emp) {
-      const startTime = emp.attachment['Daily Start Time'].value
-      const format = 'hh:mm'
-      const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
-      console.log(moment().isSameOrBefore(offsetStartBefore));
-      
-      return moment().isSameOrBefore(offsetStartBefore)
+      const startTime = moment(emp.attachment['Daily Start Time'].value,'hh:mm:ss')
+      const offsetStartBefore = startTime.subtract(15, 'minutes')
+      return moment().isBetween(offsetStartBefore,startTime)
     },
+    
     isCurrentTimeNearEnd: function (emp) {
-      const endTime = emp.attachment['Daily End Time'].value
-      const format = 'hh:mm'
-      const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-      console.log(moment().isSameOrAfter(offsetEndAfter));
-      
-      return moment().isSameOrAfter(offsetEndAfter)
+      const endTime = moment(emp.attachment['Daily End Time'].value,'hh:mm:ss')
+      const offsetEndAfter = endTime.add(15, 'minutes');
+      return moment().isBetween(endTime,offsetEndAfter)
     }
   }
 }();
@@ -692,12 +688,17 @@ function runAppChecks() {
         const store  = tx.objectStore('root')
         store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
           const record = event.target.result;
+      
           if (e.detail) {
             show = true
             
           } else {
             if(!record.checkInCreated) {
+              console.log(app.isCurrentTimeNearStart(empDetails))
+              console.log(app.isCurrentTimeNearEnd(empDetails))
+
               show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
+              console.log(show)
             }
           }
         }
