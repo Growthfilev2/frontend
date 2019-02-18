@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -928,7 +928,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
-  console.log(value);
+ 
   if (localStorage.getItem('dbexist')) {
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();

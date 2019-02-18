@@ -683,7 +683,7 @@ function runAppChecks() {
       if (empDetails.onLeave) return
       const req = indexedDB.open(firebase.auth().currentUser.uid)
       req.onsuccess = function(){
-        const show = false;
+        let show = false;
         const db = req.result;
         const tx = db.transaction(['root'])
         const store  = tx.objectStore('root')
