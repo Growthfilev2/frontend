@@ -9,6 +9,7 @@ function handleError(error) {
     if (error.stack) {
       error.stack = error.stack;
     }
+
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -443,8 +444,7 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-        // finalLocation.latitude = 28.5575264
-        // finalLocation.longitude = 77.227514
+      
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -739,7 +739,6 @@ function checkInCreated(){
         }
         store.put(record);
       }
-      
       tx.oncomplete = function(){
         console.log('completed');
       }
@@ -936,7 +935,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
- 
+  
   if (localStorage.getItem('dbexist')) {
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();

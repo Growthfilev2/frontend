@@ -37,12 +37,11 @@ function listView() {
 
     getRootRecord().then(function (record) {
 
-   
       if (size && size <= 20) {
-        loadActivitiesFromListStore(location)
+        loadActivitiesFromListStore(record.location)
         return;
       }
-      startCursor(location);
+      startCursor(record.location);
     });
   })
 }
@@ -572,9 +571,7 @@ function getCountOfTemplates() {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
-      console.log(db)
       const tx = db.transaction(['subscriptions'], 'readonly');
-      console.log(tx)
       const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
       subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result;
@@ -584,12 +581,10 @@ function getCountOfTemplates() {
         officeByTemplate[cursor.value.office] = count;
         cursor.continue();
       }
-
       tx.oncomplete = function () {
         resolve(officeByTemplate)
       }
       tx.onerror = function () {
-        console.log(tx.error)
         reject({
           message: `${tx.error} from getCountOfTemplates`
         });
