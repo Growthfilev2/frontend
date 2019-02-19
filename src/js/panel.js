@@ -37,12 +37,11 @@ function listView() {
 
     getRootRecord().then(function (record) {
 
-   
       if (size && size <= 20) {
-        loadActivitiesFromListStore(location)
+        loadActivitiesFromListStore(record.location)
         return;
       }
-      startCursor(location);
+      startCursor(record.location);
     });
   })
 }
