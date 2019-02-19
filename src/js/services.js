@@ -443,7 +443,8 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-
+        // finalLocation.latitude = 28.5575264
+        // finalLocation.longitude = 77.227514
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
