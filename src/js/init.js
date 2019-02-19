@@ -91,23 +91,18 @@ let app = function () {
 
     },
     isCurrentTimeNearStart: function (emp) {
-      
-      // const startTime = moment(emp.attachment['Daily Start Time'].value,'hh:mm:ss')
-      const startTime = new Date("00:45")
-      const offsetStartBefore = new Date(startTime - (15*60000))
-      const tame = new Date().getHours()+new Date().getMinutes();
-      if(tame >= offsetStartBefore && tame <= startTime) {
-        alert("meri gali mein")
-      }
-      // console.log(offsetStartBefore.format('hh:mm'))
-      return false;
-      // return moment().isBetween(startTime,offsetStartBefore)
+      const startTime = emp.attachment['Daily Start Time'].value
+      const formatStartTime = moment(startTime,'hh:mm');
+      const offsetStartBefore = moment(formatStartTime.subtract(15,'minutes'),'hh:mm')
+      return moment().isBetween(offsetStartBefore,moment(startTime,'hh:mm'),null,'[]')
     },
 
     isCurrentTimeNearEnd: function (emp) {
-      const endTime = moment(emp.attachment['Daily End Time'].value,'hh:mm:ss')
-      const offsetEndAfter = endTime.add(15, 'minutes');
-      return moment().isBetween(endTime,offsetEndAfter)
+
+      const endTime = emp.attachment['Daily End Time'].value;
+      const formatEndTime = moment(endTime,'hh:mm');
+      const offsetEndAfter = moment(formatEndTime.add(15, 'minutes'),'hh:mm')
+      return moment().isBetween(moment(endTime,'hh:mm'),offsetEndAfter,null,'[]')
     }
   }
 }();
