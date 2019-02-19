@@ -378,17 +378,10 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-  const isNewDay = app.isNewDay();
-
-  if(isNewDay) {
-    localStorage.removeItem('dailyStartTimeCheckIn');
-    localStorage.removeItem('dailyEndTimeCheckIn');
-  }
-
+ 
   var suggestCheckIn = new CustomEvent("suggestCheckIn", { 
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || isNewDay
+    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
   });
-
   window.dispatchEvent(suggestCheckIn);
 }
 
@@ -716,13 +709,13 @@ var receiverCaller = {
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'apiFail': apiFail,
-  'backblazeRequest': urlFromBase64Image,
-  
+  'backblazeRequest': urlFromBase64Image,  
 };
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
+
 
 function emailVerify() {
 

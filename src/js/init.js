@@ -88,35 +88,6 @@ let app = function () {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'))
         return true
       }
-
-    },
-    isCurrentTimeNearStart: function (emp) {
-      const startTime = emp.attachment['Daily Start Time'].value
-      const formatStartTime = moment(startTime, 'hh:mm');
-      const offsetStartBefore = moment(formatStartTime.subtract(15, 'minutes'), 'hh:mm');
-      let value = false;
-
-      if (moment().isBetween(offsetStartBefore, moment(startTime, 'hh:mm'), null, '[]')) {
-        if (!localStorage.getItem('dailyStartTimeCheckIn')) {
-          value = true
-          localStorage.setItem('dailyStartTimeCheckIn', true)
-        }
-      }
-      return value
-    },
-
-    isCurrentTimeNearEnd: function (emp) {
-      const endTime = emp.attachment['Daily End Time'].value;
-      const formatEndTime = moment(endTime, 'hh:mm');
-      const offsetEndAfter = moment(formatEndTime.add(15, 'minutes'), 'hh:mm')
-      let value = false;
-      if (moment().isBetween(moment(endTime, 'hh:mm'), offsetEndAfter, null, '[]')) {
-        if (!localStorage.getItem('dailyEndTimeCheckIn')) {
-          value = true
-          localStorage.setItem('dailyEndTimeCheckIn', true)
-        }
-      }
-      return value
     }
   }
 }();
@@ -469,9 +440,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
 
       if (!empDetails) {
-        return {
-          onLeave: false
-        }
+        return false;
       }
 
       empDetails.onLeave = false
@@ -488,13 +457,13 @@ function isEmployeeOnLeave() {
           if (!cursor) return;
 
           if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-            empDetails.onLeave = true
+            onLeave = true
             return;
           }
           cursor.continue()
         }
         tx.oncomplete = function () {
-          resolve(empDetails)
+          resolve(onLeave)
         }
         tx.onerror = function () {
           reject({
@@ -694,23 +663,15 @@ function init() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-    isEmployeeOnLeave().then(function (empDetails) {
-      let show = false;
-      if (empDetails.onLeave) return
+    isEmployeeOnLeave().then(function (onLeave) {
 
+      if (onLeave) return
       if (e.detail) {
-        show = true
-      } else {
-        show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
-        console.log(show)
-      }
-      if (show) {
         if (history.state[0] === 'listView') {
           document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
           showSuggestCheckInDialog();
         }
       }
-
     }).catch(handleError)
   }, true);
 }
