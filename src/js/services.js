@@ -378,11 +378,17 @@ function locationUpdationSuccess(location) {
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+  const isNewDay = app.isNewDay();
 
-  var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-    
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+  if(isNewDay) {
+    localStorage.removeItem('dailyStartTimeCheckIn');
+    localStorage.removeItem('dailyEndTimeCheckIn');
+  }
+
+  var suggestCheckIn = new CustomEvent("suggestCheckIn", { 
+    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || isNewDay
   });
+
   window.dispatchEvent(suggestCheckIn);
 }
 
@@ -408,7 +414,7 @@ function showSuggestCheckInDialog() {
     }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
-   
+   app.isNewDay();
   });
 }
 
@@ -443,8 +449,7 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-        // finalLocation.latitude = 28.5575264
-        // finalLocation.longitude = 77.227514
+
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -712,41 +717,13 @@ var receiverCaller = {
   'loadView': loadView,
   'apiFail': apiFail,
   'backblazeRequest': urlFromBase64Image,
-  'checkInCreated':checkInCreated
+  
 };
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
-function checkInCreated(){
-  getEmployeeDetails().then(function(empDetails){
 
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName);
-    req.onsuccess = function(){
-      const db = req.result;
-      const tx = db.transaction(['root'],'readwrite');
-      const store = tx.objectStore('root')
-      store.get(dbName).onsuccess = function(event){
-        const record = event.target.result;
-        
-        if(app.isNewDay() || app.isCurrentTimeNearEnd(empDetails) || app.isCurrentTimeNearStart(empDetails)) {
-          
-          record.checkInCreated = true
-        }
-        else {
-          record.checkInCreated = false
-        }
-        store.put(record);
-      }
-      
-      tx.oncomplete = function(){
-        console.log('completed');
-      }
-    }
-  })
-  return
-}
 function emailVerify() {
 
   if (firebase.auth().currentUser.email) {

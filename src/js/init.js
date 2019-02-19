@@ -92,17 +92,31 @@ let app = function () {
     },
     isCurrentTimeNearStart: function (emp) {
       const startTime = emp.attachment['Daily Start Time'].value
-      const formatStartTime = moment(startTime,'hh:mm');
-      const offsetStartBefore = moment(formatStartTime.subtract(15,'minutes'),'hh:mm')
-      return moment().isBetween(offsetStartBefore,moment(startTime,'hh:mm'),null,'[]')
+      const formatStartTime = moment(startTime, 'hh:mm');
+      const offsetStartBefore = moment(formatStartTime.subtract(15, 'minutes'), 'hh:mm');
+      let value = false;
+
+      if (moment().isBetween(offsetStartBefore, moment(startTime, 'hh:mm'), null, '[]')) {
+        if (!localStorage.getItem('dailyStartTimeCheckIn')) {
+          value = true
+          localStorage.setItem('dailyStartTimeCheckIn', true)
+        }
+      }
+      return value
     },
 
     isCurrentTimeNearEnd: function (emp) {
-
       const endTime = emp.attachment['Daily End Time'].value;
-      const formatEndTime = moment(endTime,'hh:mm');
-      const offsetEndAfter = moment(formatEndTime.add(15, 'minutes'),'hh:mm')
-      return moment().isBetween(moment(endTime,'hh:mm'),offsetEndAfter,null,'[]')
+      const formatEndTime = moment(endTime, 'hh:mm');
+      const offsetEndAfter = moment(formatEndTime.add(15, 'minutes'), 'hh:mm')
+      let value = false;
+      if (moment().isBetween(moment(endTime, 'hh:mm'), offsetEndAfter, null, '[]')) {
+        if (!localStorage.getItem('dailyEndTimeCheckIn')) {
+          value = true
+          localStorage.setItem('dailyEndTimeCheckIn', true)
+        }
+      }
+      return value
     }
   }
 }();
@@ -577,7 +591,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('start', 'start')
   calendar.createIndex('end', 'end')
   calendar.createIndex('urgent', ['status', 'hidden']),
-  calendar.createIndex('onLeave', ['template', 'status', 'office']);
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
     autoIncrement: true
@@ -681,37 +695,22 @@ function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
     isEmployeeOnLeave().then(function (empDetails) {
-    
+      let show = false;
       if (empDetails.onLeave) return
-      const req = indexedDB.open(firebase.auth().currentUser.uid)
-      req.onsuccess = function(){
-        let show = false;
-        const db = req.result;
-        const tx = db.transaction(['root'])
-        const store  = tx.objectStore('root')
-        store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
-          const record = event.target.result;
-      
-          if (e.detail) {
-            show = true
-            
-          } else {
-            if(!record.checkInCreated) {
-              show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
-              console.log(show)
-            }
-          }
-        }
-        tx.oncomplete = function(){
-         
-          if (show) {
-            if (history.state[0] === 'listView') {
-              document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-              showSuggestCheckInDialog();
-            }
-          }
+
+      if (e.detail) {
+        show = true
+      } else {
+        show = app.isCurrentTimeNearStart(empDetails) || app.isCurrentTimeNearEnd(empDetails)
+        console.log(show)
+      }
+      if (show) {
+        if (history.state[0] === 'listView') {
+          document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
+          showSuggestCheckInDialog();
         }
       }
+
     }).catch(handleError)
   }, true);
 }
