@@ -631,7 +631,7 @@ function updateSubscription(db, templates, param) {
             if (subscription.office === cursor.value.office) {
               cursor.update(subscription);
             } else {
-              cursor.update(subscription)
+              cursor.put(subscription)
             }
             cursor.continue()
           } else {
@@ -779,6 +779,8 @@ function successResponse(read, param) {
     }).catch(function (error) {
       instant(JSON.stringify(error), param.user)
     });
+
+
 
     createUsersApiUrl(db, param.user).then(updateUserObjectStore).catch(function (error) {
       instant(JSON.stringify(error), param.user);
@@ -954,6 +956,7 @@ function setUniqueOffice(offices, param) {
     }
   })
 }
+
 
 function updateIDB(param) {
   const req = indexedDB.open(param.user.uid)

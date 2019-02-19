@@ -198,7 +198,7 @@ function updateEmailDialog() {
 
     var footer = document.createElement('footer');
     footer.className = 'mdc-dialog__footer';
-     
+
     var canel = document.createElement('button');
     canel.type = 'button';
     canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel update-email-cancel';
@@ -228,7 +228,10 @@ function newSignIn(value, field) {
   const dialogSelector = document.querySelector('#updateEmailDialog')
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
   emailDialog.show();
-  try {  
+  try {
+    if(!ui) {
+      ui  = new firebaseui.auth.AuthUI(firebase.auth())
+    }
     ui.start('#refresh-login', firebaseUiConfig(value));
     setTimeout(function () {
       document.querySelector('.firebaseui-id-phone-number').disabled = true;
@@ -371,7 +374,7 @@ function emailValidation(emailField) {
     snacks('Enter a valid Email Id');
     return;
   }
-  if (value === auth.email) {
+  if (value === auth.email && auth.emailVerified) {
     snacks('You have already set this as your email address');
     return;
   }
@@ -384,16 +387,22 @@ function emailValidation(emailField) {
 
 function updateEmail(user, email) {
   document.getElementById('growthfile').appendChild(loader('init-loader'));
-  user.updateEmail(email).then(emailUpdateSuccess).catch(authUpdatedError);
+  user.updateEmail(email).then(function(){
+    emailUpdateSuccess(true)
+  }).catch(authUpdatedError);
 }
 
-function emailUpdateSuccess() {
+function emailUpdateSuccess(showSuccessDialog) {
   var user = firebase.auth().currentUser;
-  user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
+  user.sendEmailVerification().then(function(){
+    emailVerificationSuccess(showSuccessDialog)
+  }).catch(emailVerificationError);
 }
 
-function emailVerificationSuccess() {
-  successDialog();
+function emailVerificationSuccess(showSuccessDialog) {
+  if(showSuccessDialog){
+    successDialog();
+  }
   snacks('Verification link has been send to your email address');
 }
 
@@ -402,8 +411,8 @@ function emailVerificationError(error) {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
+  
   handleError({
     message: `${error.message} from emailVerificationError`
   })
 }
-

@@ -1,4 +1,3 @@
-const notification = new Worker('notification.js')
 
 const scroll_namespace = {
   count: 0,
@@ -22,7 +21,7 @@ function initDomLoad() {
   createActivityIcon();
 }
 
-function listView(filter) {
+function listView() {
   history.pushState(['listView'], null, null)
   initDomLoad();
  
@@ -31,53 +30,20 @@ function listView(filter) {
       appendTextContentInListView('No activities Found');
       return;
     }
-
-    getListViewData(filter, size);
-  }).catch(function (error) {
-    handleError({
-      message: `${error} from getSizeOfListStore`
-    })
-    getListViewData(filter);
-  })
-}
-
-function getListViewData(filter, size) {
-  getRootRecord().then(function (record) {
-
-    if (record.suggestCheckIn) {
-      document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-      showSuggestCheckInDialog()
-    }
-
-
     if(size > 20) {
-    
+      
       window.addEventListener('scroll', handleScroll, false)
     }
+
+    getRootRecord().then(function (record) {
+
    
-    if(!filter) {
-      fetchActivities(size,record.location)
-      return;
-    }
-
-
-    if(!filter) {
-      fetchActivities(size,record.location)
-      return;
-    }
-
-
-    notificationWorker('urgent', filter.urgent).then(function () {
-      notificationWorker('nearBy', filter.nearby).then(function () {
-        fetchActivities(size, record.location)
-      }).catch(function (error) {
-        handleError(error);
-        fetchActivities(size, record.location)
-      })
-    }).catch(function (error) {
-      handleError(error);
-      fetchActivities(size, record.location)
-    })
+      if (size && size <= 20) {
+        loadActivitiesFromListStore(location)
+        return;
+      }
+      startCursor(location);
+    });
   })
 }
 
@@ -89,14 +55,6 @@ function appendTextContentInListView(textContent){
       document.getElementById('activity-list-main').style.boxShadow = 'none';
 }
 
-function fetchActivities(size, location) {
-  if (size && size <= 20) {
-    loadActivitiesFromListStore(location)
-    return;
-  }
-
-  startCursor(location);
-}
 
 function getSizeOfListStore() {
   return new Promise(function (resolve, reject) {

@@ -70,7 +70,7 @@ let app = function () {
     },
     isNewDay: function (auth) {
       var today = localStorage.getItem('today');
-      if (today === "null" || today == null) {
+      if (!today) {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'));
         return true;
       }
@@ -81,20 +81,6 @@ let app = function () {
         localStorage.setItem('today', moment().format('YYYY-MM-DD'))
         return true
       }
-    },
-    isCurrentTimeNearStart: function (emp) {
-      const startTime = emp.attachment['Daily Start Time'].value
-      const format = 'hh:mm'
-      const offsetStartBefore = moment(startTime, format).subtract(15, 'minutes')
-      const offsetStartAfter = moment(startTime, format).add(15, 'minutes');
-      return moment().isBetween(offsetStartBefore, offsetStartAfter, null, '[]')
-    },
-    isCurrentTimeNearEnd: function (emp) {
-      const endTime = emp.attachment['Daily End Time'].value
-      const format = 'hh:mm'
-      const offsetEndBefore = moment(endTime, format).subtract(15, 'minutes');
-      const offsetEndAfter = moment(endTime, format).add(15, 'minutes');
-      return moment().isBetween(offsetEndBefore, offsetEndAfter, null, '[]')
     }
   }
 }();
@@ -127,7 +113,6 @@ window.addEventListener('load', function () {
     messagingSenderId: '701025551237'
   })
 
-  ui = firebaseui.auth.AuthUI.getInstance();
 
   moment.updateLocale('en', {
     calendar: {
@@ -258,6 +243,7 @@ function createCheckInDialog() {
   var aside = document.createElement('aside');
   aside.className = 'mdc-dialog mdc-dialog--open hidden';
   aside.id = 'suggest-checkIn-dialog';
+  aside.style.backgroundColor = 'rgba(0,0,0,0.47)';
 
   var surface = document.createElement('div');
   surface.className = 'mdc-dialog__surface';
@@ -297,9 +283,6 @@ function createCheckInDialog() {
   surface.appendChild(footer);
   aside.appendChild(surface);
 
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop);
   return aside
 
 }
@@ -383,7 +366,6 @@ function startApp(start) {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      localStorage.setItem('today', null);
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
@@ -451,7 +433,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
 
       if (!empDetails) {
-        return resolve(false)
+        return false;
       }
 
       empDetails.onLeave = false
@@ -461,20 +443,20 @@ function isEmployeeOnLeave() {
         const tx = db.transaction(['calendar']);
         const store = tx.objectStore('calendar');
         const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
-
+        let onLeave = false;
         store.index('onLeave').openCursor(range).onsuccess = function (event) {
 
           const cursor = event.target.result;
           if (!cursor) return;
 
           if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-            empDetails.onLeave = true
+            onLeave = true
             return;
           }
           cursor.continue()
         }
         tx.oncomplete = function () {
-          resolve(empDetails)
+          resolve(onLeave)
         }
         tx.onerror = function () {
           reject({
@@ -495,7 +477,7 @@ function isEmployeeOnLeave() {
 }
 
 function createIDBStore(auth) {
-  
+
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(auth.uid, 3);
     let db;
@@ -509,6 +491,7 @@ function createIDBStore(auth) {
       }
 
       createObjectStores(db, auth.uid)
+
     }
     req.onsuccess = function () {
 
@@ -651,9 +634,23 @@ function init() {
     from: '',
     registerToken: native.getFCMToken()
   })
-  
-  openListWithChecks()
-  
+
+  listView();
+  runAppChecks();
+
+  //TODO : move this in device   
+
+  setInterval(function () {
+    manageLocation().then(function (location) {
+      updateLocationInRoot(location).then(function (location) {
+        if (!location.prev.latitude) return;
+        if (!location.prev.longitude) return;
+        if (!location.new.latitude) return;
+        if (!location.new.longitude) return;
+        locationUpdationSuccess(location)
+      }).catch(handleError);
+    }).catch(handleError);
+  }, 5000);
 
 }
 
@@ -661,111 +658,16 @@ function init() {
 
 function runAppChecks() {
 
+  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    isEmployeeOnLeave().then(function (onLeave) {
 
-
-  window.addEventListener('locationChanged', function _locationChanged(e) {
-    isEmployeeOnLeave().then(function (emp) {
-      detectSuggestCheckinEvent(e.detail, emp);
-      return;
-    }).catch(function (error) {
-      handleError(error);
-      detectSuggestCheckinEvent(e.detail);
-    })
+      if (onLeave) return
+      if (e.detail) {
+        if (history.state[0] === 'listView') {
+          document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
+          showSuggestCheckInDialog();
+        }
+      }
+    }).catch(handleError)
   }, true);
-}
-
-function detectSuggestCheckinEvent(changed, emp) {
-
-  var dataObject = {
-    urgent: false,
-    nearby: false,
-  };
-  if (emp) {
-    dataObject['checkin'] = !emp.onLeave
-  } else {
-    dataObject['checkin'] = false
-  }
-
-  var newDay = app.isNewDay();
-  if (changed && newDay) {
-    dataObject.nearby = true;
-    dataObject.urgent = true;
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (changed) {
-    dataObject.nearby = true;
-    startInitializatioOfList(dataObject);
-    return;
-  }
-
-  if (newDay) {
-    dataObject.urgent = true;
-    localStorage.removeItem('dailyStartTimeCheckIn');
-    localStorage.removeItem('dailyEndTimeCheckIn');
-    startInitializatioOfList(dataObject);
-    return;
-  };
-
-  if (!emp) return
-
-  if (app.isCurrentTimeNearStart(emp)) {
-    const hasAlreadyCheckedIn = localStorage.getItem('dailyStartTimeCheckIn');
-    if (hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyStartTimeCheckIn', true);
-      if (!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      startInitializatioOfList(dataObject);
-    }
-    return;
-  }
-
-  if (app.isCurrentTimeNearEnd(emp)) {
-    const hasAlreadyCheckedIn = localStorage.getItem('dailyEndTimeCheckIn');
-    if (hasAlreadyCheckedIn == null) {
-      localStorage.setItem('dailyEndTimeCheckIn', true);
-      if (!emp.onLeave) {
-        dataObject.checkin = true;
-      }
-      startInitializatioOfList(dataObject);
-    }
-    return;
-  }
-}
-
-function startInitializatioOfList(data) {
-  suggestCheckIn(data.checkin).then(function () {
-    localStorage.removeItem('clickedActivity');
-    if (history.state[0] === 'listView' || !history.state) {
-      document.getElementById('activity--list').innerHTML = ''
-      listView({
-        urgent: data.urgent,
-        nearby: data.nearby
-      });
-    }
-  }).catch(function (error) {
-    handleError(error);
-    if (history.state[0] === 'listView' || !history.state) {
-      document.getElementById('activity--list').innerHTML = ''
-      listView({
-        urgent: false,
-        nearby: false
-      });
-    }
-  })
-}
-
-function openListWithChecks() {
-  listView({
-    urgent: false,
-    nearby: false
-  });
-  runAppChecks();
-  setInterval(function () {
-    manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(locationUpdationSuccess).catch(handleError);
-    }).catch(handleError);
-  }, 5000);
 }
