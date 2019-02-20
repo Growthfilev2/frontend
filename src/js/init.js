@@ -386,7 +386,7 @@ function startApp(start) {
       createIDBStore(auth).then(function () {
         localStorage.setItem('dbexist', auth.uid);
         if(native.getName() === 'Ios') {
-          webkit.messageHandler.startLocationService.postMessage('start fetchin location');
+          webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
         }
         init()
       }).catch(function (error) {
@@ -654,15 +654,11 @@ function init() {
 
 function getLocation(){
   manageLocation().then(function (location) {
-    updateLocationInRoot(location).then(function (location) {
-      if (!location.prev.latitude) return;
-      if (!location.prev.longitude) return;
-      if (!location.new.latitude) return;
-      if (!location.new.longitude) return;
-      locationUpdationSuccess(location)
-    }).catch(handleError);
+    updateLocationInRoot(location);
   }).catch(handleError);
 }
+
+
 
 function runAppChecks() {
 

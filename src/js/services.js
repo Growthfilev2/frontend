@@ -370,20 +370,7 @@ function html5Geolocation() {
 }
 
 
-function locationUpdationSuccess(location) {
- 
-  var locationEvent = new CustomEvent("location", {
-    "detail": location.new
-  });
-  window.dispatchEvent(locationEvent);
 
-  var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
- 
-  var suggestCheckIn = new CustomEvent("suggestCheckIn", { 
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
-  });
-  window.dispatchEvent(suggestCheckIn);
-}
 
 function showSuggestCheckInDialog() {
   const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
@@ -407,7 +394,7 @@ function showSuggestCheckInDialog() {
     }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
-   app.isNewDay();
+    app.isNewDay();
   });
 }
 
@@ -418,8 +405,8 @@ function isDialogOpened(id) {
   return isOpen;
 }
 
+
 function updateLocationInRoot(finalLocation) {
-  return new Promise(function (resolve, reject) {
 
     var previousLocation = {
       latitude: '',
@@ -449,26 +436,38 @@ function updateLocationInRoot(finalLocation) {
 
       };
       tx.oncomplete = function () {
-  
-        resolve({
-          prev: previousLocation,
-          new: finalLocation
+
+        if (!previousLocation.latitude) return;
+        if (!previousLocation.longitude) return;
+        if (!finalLocation.latitude) return;
+        if (!finalLocation.longitude) return;
+
+        var locationEvent = new CustomEvent("location", {
+          "detail": location.new
         });
+        window.dispatchEvent(locationEvent);
+
+        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+
+        var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+          "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+        });
+        window.dispatchEvent(suggestCheckIn);
       };
       tx.onerror = function () {
-        reject({
+        handleError({
           message: `${tx.error.message} from updateLocationInRoot`,
           body: tx.error.name
         })
       }
     };
     req.onerror = function () {
-      reject({
+      handleError({
         message: `${req.error.message} from updateLocationInRoot`,
         body: req.error.name
       });
     };
-  });
+  
 }
 
 function toRad(value) {
@@ -709,7 +708,7 @@ var receiverCaller = {
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'apiFail': apiFail,
-  'backblazeRequest': urlFromBase64Image,  
+  'backblazeRequest': urlFromBase64Image,
 };
 
 function messageReceiver(response) {
@@ -906,7 +905,7 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
- 
+
   if (localStorage.getItem('dbexist')) {
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();
