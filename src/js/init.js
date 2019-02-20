@@ -385,6 +385,9 @@ function startApp(start) {
     if (start) {
       createIDBStore(auth).then(function () {
         localStorage.setItem('dbexist', auth.uid);
+        if(native.getName() === 'Ios') {
+          webkit.messageHandler.startLocationService.postMessage('start fetchin location');
+        }
         init()
       }).catch(function (error) {
         snacks('Please restart the app');
