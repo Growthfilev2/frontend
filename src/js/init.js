@@ -645,23 +645,24 @@ function init() {
   listView();
   runAppChecks();
 
-  //TODO : move this in device   
-
-  setInterval(function () {
-    manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(function (location) {
-        if (!location.prev.latitude) return;
-        if (!location.prev.longitude) return;
-        if (!location.new.latitude) return;
-        if (!location.new.longitude) return;
-        locationUpdationSuccess(location)
-      }).catch(handleError);
-    }).catch(handleError);
-  }, 5000);
-
+  if(native.getName() === 'Android') {
+    setInterval(function () {
+      getLocation()
+    }, 5000);
+  }
 }
 
-
+function getLocation(){
+  manageLocation().then(function (location) {
+    updateLocationInRoot(location).then(function (location) {
+      if (!location.prev.latitude) return;
+      if (!location.prev.longitude) return;
+      if (!location.new.latitude) return;
+      if (!location.new.longitude) return;
+      locationUpdationSuccess(location)
+    }).catch(handleError);
+  }).catch(handleError);
+}
 
 function runAppChecks() {
 
