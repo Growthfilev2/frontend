@@ -1596,16 +1596,20 @@ function updateCreateActivity(record) {
 }
 
 
-function createCheckInVenue(venue) {
+function createCheckInVenue(venue,defaultSelected) {
 
   const radio = document.createElement('div')
   radio.className = 'mdc-radio checkin'
   radio.value = JSON.stringify(venue)
-
+  
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
   input.type = 'radio'
-  input.setAttribute('name', 'radios')
+  input.setAttribute('name', 'radios');
+
+  if(defaultSelected) {
+    input.setAttribute('checked','true')
+  }
   const background = document.createElement('div')
   background.className = 'mdc-radio__background'
   const outer = document.createElement('div')
@@ -1729,14 +1733,14 @@ function createGroupList(office, template) {
 }
 
 function createVenueSection(record) {
-  console.log(record);
+  
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in' && record.hasOwnProperty('create')) {
 
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
         if (!results.length) return;
-
+        let defaultSelected = false;
         const checkInDesc = document.createElement('li')
         checkInDesc.className = 'mdc-list-item label--text'
         checkInDesc.textContent = record.venue[0].venueDescriptor
@@ -1754,10 +1758,12 @@ function createVenueSection(record) {
         uncheck.appendChild(span);
         meta.appendChild(uncheck)
         checkInDesc.appendChild(meta)
-
-
         venueSection.appendChild(checkInDesc)
-
+      
+        if(results.length == 1) {
+          defaultSelected = true
+        }
+        
         results.forEach(function (result) {
 
           const form = document.createElement('div');
@@ -1766,7 +1772,7 @@ function createVenueSection(record) {
           label.setAttribute('for', 'check-in-radio');
           label.textContent = result.location
           form.appendChild(label);
-          form.appendChild(createCheckInVenue(result))
+          form.appendChild(createCheckInVenue(result,defaultSelected))
           venueSection.appendChild(form);
           const mapDom = document.createElement('div');
           mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
