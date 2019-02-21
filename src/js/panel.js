@@ -228,8 +228,7 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (!record) return
       const schedules = record.schedule;
       const venues = record.venue;
-      const status = record.status
-
+    
       secondLine.appendChild(generateLastestSchedule(schedules, activity.createdTime));
 
       if (currentLocation) {
@@ -277,12 +276,12 @@ function generateLastestSchedule(schedules, createdTime) {
   const length = validSchedules.length;
 
   if (!length) {
-    return generateSecondLine(formatCreatedTime(createdTime))
+    return formatCreatedTime(createdTime);
   }
 
   const currentTime = Date.now();
   const ascendingOrder = sortDatesInAscendingOrderWithPivot(currentTime, validSchedules);
-  return generateSecondLine(getTimeTypeForMultipleSchedule(currentTime, ascendingOrder))
+  return getTimeTypeForMultipleSchedule(currentTime, ascendingOrder)
 }
 
 function removeEmptyObjects(schedules, prop1, prop2) {
@@ -334,13 +333,13 @@ function generateLatestVenue(venues, currentLocation) {
   const validVenues = removeEmptyObjects(venues, 'location', 'address')
   const length = validVenues.length
   if (!length) {
-    return generateSecondLine('')
+    return ''
   }
 
   if(length == 1) {
-    return generateSecondLine(validVenues[0].location);
+    return validVenues[0].location;
   }
-  
+
   const distances = []
   venues.forEach(function (venue) {
 
@@ -358,7 +357,7 @@ function generateLatestVenue(venues, currentLocation) {
   })
 
   const sortedDistance = sortNearestLocation(distances)
-  return generateSecondLine(sortedDistance[0].location)
+  return sortedDistance[0].location;
 }
 
 function sortNearestLocation(distances) {
