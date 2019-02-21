@@ -218,9 +218,13 @@ function runCursor(cursor, iterator) {
 
 function getActivityDataForList(activity, value, currentLocation) {
   return new Promise(function (resolve, reject) {
+    const secondLineParent = document.createElement('div')
 
-    const secondLine = document.createElement('span')
-    secondLine.className = 'mdc-list-item__secondary-text'
+    const secondLineVenue = document.createElement('span')
+    secondLineVenue.className = 'mdc-list-item__secondary-text venue-secondline'
+    
+    const secondLineSchedule = document.createElement('span')
+    secondLineSchedule.className = 'mdc-list-item__secondary-text'
 
     activity.get(value.activityId).onsuccess = function (event) {
 
@@ -236,17 +240,19 @@ function getActivityDataForList(activity, value, currentLocation) {
       }
 
       if(venueSpan && !dateSpan) {
-        secondLine.textContent = venueSpan;
+        secondLineVenue.textContent = venueSpan;
       }
       else if (dateSpan && !venueSpan) {
-        secondLine.textContent = dateSpan
+        secondLineSchedule.textContent = dateSpan
       }
       else if(dateSpan && venueSpan){
-        secondLine.textContent = venueSpan +' | '+ dateSpan
+        secondLineVenue.textContent = venueSpan +' | ';
+        secondLineSchedule.textContent = dateSpan;
       }
-  
+      secondLineParent.appendChild(secondLineVenue)
+      secondLineParent.appendChild(secondLineSchedule)
       // const secondLineCss = setMarginForSecondLine(secondLine)
-      resolve(activityListUI(value,secondLine))
+      resolve(activityListUI(value,secondLineParent))
     }
   })
 }
@@ -400,14 +406,13 @@ function activityListUI(data, secondLine) {
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
   activityNameText.textContent = data.activityName;
   leftTextContainer.appendChild(activityNameText);
-  leftTextContainer.appendChild(secondLine);
-  
+  leftTextContainer.appendChild(secondLine)
+
   const timeCustomText = document.createElement('div')
   timeCustomText.className = 'mdc-meta__custom-text'
   timeCustomText.style.width = '76px';
-  // timeCustomText.style.fontSize = '16px';
   if(isToday(data.timestamp)) {
-    timeCustomText.style.marginTop = '13px'
+    timeCustomText.style.marginTop = '4px'
   }
   
   timeCustomText.textContent = moment(data.timestamp).calendar()

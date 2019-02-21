@@ -238,7 +238,7 @@ body {
 .status-cancel {
   color: darkgray;
   cursor: pointer;
-  font-size: 30px;
+  font-size: 24px;
   margin-top: 10px
 
 }
@@ -247,7 +247,7 @@ body {
 .status-confirmed {
   color: darkgray;
   cursor: pointer;
-  font-size: 26px;
+  font-size: 24px;
   margin-top: 10px
 }
 
@@ -746,11 +746,13 @@ footer.mdc-dialog__footer {
 }
 
 .activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text {
-  margin-top: 9px;
+  display: inline-block;
   font-size: 20px;
 
 }
-
+.activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text.venue-secondline {
+  max-width: 70%;
+}
 .activity--list-item .mdc-list-item__meta {
 
   text-align: right;
@@ -1624,6 +1626,7 @@ input[type="datetime-local"] {
 .count-active .mdc-list-item__meta .mdc-meta__custom-text,
 .count-active .mdc-list-item__meta .mdc-list-item__secondary-text {
   float: right;
+  max-height: 24px;
 }
 
 /** count **/
