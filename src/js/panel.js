@@ -229,14 +229,14 @@ function getActivityDataForList(activity, value, currentLocation) {
       const schedules = record.schedule;
       const venues = record.venue;
     
-      secondLine.appendChild(generateLastestSchedule(schedules, activity.createdTime));
+      secondLine.textContent = generateLastestSchedule(schedules, activity.createdTime);
 
       if (currentLocation) {
-        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+        secondLine.textContent = secondLine.textContent + generateLatestVenue(venues, currentLocation);
       }
 
-      const secondLineCss = setMarginForSecondLine(secondLine)
-      resolve(activityListUI(value, secondLineCss))
+      // const secondLineCss = setMarginForSecondLine(secondLine)
+      resolve(activityListUI(value,secondLine))
     }
   })
 }
@@ -263,12 +263,6 @@ function generateTextIfActivityIsNotPending(status) {
   return textStatus[status]
 }
 
-function generateSecondLine(value) {
-  const el = document.createElement('div');
-  el.textContent = value
-
-  return el
-}
 
 
 function generateLastestSchedule(schedules, createdTime) {
@@ -393,31 +387,10 @@ function activityListUI(data, secondLine) {
   activityNameText.textContent = data.activityName;
   leftTextContainer.appendChild(activityNameText);
   leftTextContainer.appendChild(secondLine);
+
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
   metaTextContainer.appendChild(generateIconByCondition(data, li));
-
-  const metaTextActivityStatus = document.createElement('span')
-  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
-  const statusIcon = document.createElement('i')
-  statusIcon.className = 'material-icons'
-
-  const cancelIcon = document.createElement('i')
-  cancelIcon.classList.add('status-cancel', 'material-icons')
-  cancelIcon.appendChild(document.createTextNode('clear'))
-
-  const confirmedIcon = document.createElement('i')
-  confirmedIcon.classList.add('status-confirmed', 'material-icons')
-  confirmedIcon.appendChild(document.createTextNode('check'))
-
-  if (data.status === 'CONFIRMED') {
-    metaTextActivityStatus.appendChild(confirmedIcon)
-  }
-  if (data.status === 'CANCELLED') {
-    metaTextActivityStatus.appendChild(cancelIcon)
-  }
-
-  metaTextContainer.appendChild(metaTextActivityStatus)
 
   li.appendChild(dataObject);
   li.appendChild(leftTextContainer);
@@ -428,21 +401,9 @@ function activityListUI(data, secondLine) {
 
 
 function generateIconByCondition(data, li) {
-  const icon = document.createElement('i');
-  icon.className = 'material-icons notification'
-  if (data.urgent) {
-    icon.textContent = 'alarm';
-
-    return icon;
-  }
-  if (data.nearby) {
-    icon.textContent = 'location_on';
-    return icon;
-  }
+ 
   if (data.count) {
-
     const countDiv = document.createElement('div')
-
     const countSpan = document.createElement('span')
     countSpan.textContent = data.count
     countSpan.className = 'count mdc-meta__custom-text'
@@ -450,12 +411,26 @@ function generateIconByCondition(data, li) {
     li.classList.add('count-active');
     return countDiv;
   }
-  const timeCustomText = document.createElement('div')
-  timeCustomText.className = 'mdc-meta__custom-text'
-  timeCustomText.style.width = '76px';
-  timeCustomText.style.fontSize = '16px';
-  timeCustomText.textContent = moment(data.timestamp).calendar()
-  return timeCustomText;
+  
+  metaTextActivityStatus.classList.add('status-in-activity', `${data.status}`)
+  const statusIcon = document.createElement('i')
+  statusIcon.className = 'material-icons'
+
+  const cancelIcon = document.createElement('i')
+  cancelIcon.classList.add('status-cancel', 'material-icons');
+  cancelIcon.textContent = 'clear';
+
+  const confirmedIcon = document.createElement('i')
+  confirmedIcon.classList.add('status-confirmed', 'material-icons')
+  confirmedIcon.textContent = 'check';
+
+  if (data.status === 'CONFIRMED') {
+    metaTextActivityStatus.appendChild(confirmedIcon)
+  }
+  if (data.status === 'CANCELLED') {
+    metaTextActivityStatus.appendChild(cancelIcon)
+  }
+  return metaTextActivityStatus;
 }
 
 function appendActivityListToDom(activityDom) {
