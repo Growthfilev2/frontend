@@ -273,7 +273,7 @@ function generateSecondLine(value) {
 
 
 function generateLastestSchedule(schedules, createdTime) {
-  const validSchedules = removeEmptySchedules(schedules);
+  const validSchedules = removeEmptyObjects(schedules, 'startTime', 'endTime');
   const length = validSchedules.length;
 
   if (!length) {
@@ -285,9 +285,9 @@ function generateLastestSchedule(schedules, createdTime) {
   return generateSecondLine(getTimeTypeForMultipleSchedule(currentTime, ascendingOrder))
 }
 
-function removeEmptySchedules(schedules) {
+function removeEmptyObjects(schedules, prop1, prop2) {
   schedules.filter(function (value) {
-    if (value.startTime && value.endTime) {
+    if (value[prop1] && value[prop2]) {
       return value
     }
   })
@@ -306,11 +306,11 @@ function sortDatesInAscendingOrderWithPivot(pivot, dates) {
 function getTimeTypeForMultipleSchedule(pivot, dates) {
   const duplicate = dates.slice()
   const index = duplicate.indexOf(pivot);
-  
+
   if (index == dates.length - 1) {
     return moment(dates[dates.length - 2]).format('D, MMM');
   }
-  return moment(dates[index +1]).format('D, MMM');
+  return moment(dates[index + 1]).format('D, MMM');
 }
 
 
@@ -331,42 +331,34 @@ function isToday(comparisonTimestamp) {
 }
 
 function generateLatestVenue(venues, currentLocation) {
-  const length = venues.length
-
-  let text = ''
-  switch (length) {
-    case 0:
-      text = generateSecondLine();
-      break;
-    case 1:
-      text = generateSecondLine(venues[0].location)
-      break;
-    default:
-      const distances = []
-      venues.forEach(function (venue) {
-
-        const lat = venue.geopoint['_latitude']
-        const lon = venue.geopoint['_longitude']
-        if (lat && lon) {
-          const geopoint = {
-            latitude: lat,
-            longitude: lon
-          }
-          distances.push({
-            distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
-            location: venue.location
-          })
-        }
-      })
-      if (!distances.length) {
-        text = generateSecondLine()
-      } else {
-
-        const sortedDistance = sortNearestLocation(distances)
-        text = generateSecondLine(sortedDistance[0].location)
-      }
+  const validVenues = removeEmptyObjects(venues, 'location', 'address')
+  const length = validVenues.length
+  if (!length) {
+    return generateSecondLine('')
   }
-  return text;
+
+  if(length == 1) {
+    return generateSecondLine(validVenues[0].location);
+  }
+  
+  const distances = []
+  venues.forEach(function (venue) {
+
+    const lat = venue.geopoint['_latitude']
+    const lon = venue.geopoint['_longitude']
+
+    const geopoint = {
+      latitude: lat,
+      longitude: lon
+    }
+    distances.push({
+      distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
+      location: venue.location
+    })
+  })
+
+  const sortedDistance = sortNearestLocation(distances)
+  return generateSecondLine(sortedDistance[0].location)
 }
 
 function sortNearestLocation(distances) {
