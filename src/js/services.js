@@ -263,8 +263,26 @@ function geolocationApi(req) {
         });
       }
     };
-    xhr.send(req.body);
+    const verfiedBody = handleRequestBody(req.body);
+    if(verfiedBody){
+      xhr.send(req.body);
+    }
   });
+}
+
+function handleRequestBody(request){
+const body = JSON.parse(request);
+if(body.radioType === "WCDMA") {
+  if(body.wifiAccessPoints.length) {
+    delete body.cellTowers;
+    return JSON.stringify(body);
+  }
+  else {
+    return null;
+  }
+}
+
+return request
 }
 
 function getCellTowerInfo() {
