@@ -219,13 +219,14 @@ function runCursor(cursor, iterator) {
 function getActivityDataForList(activity, value, currentLocation) {
   return new Promise(function (resolve, reject) {
     const secondLineParent = document.createElement('div')
-
+    secondLineParent.style.marginTop = '10px';
+    
     const secondLineVenue = document.createElement('span')
     secondLineVenue.className = 'mdc-list-item__secondary-text venue-secondline'
     
     const secondLineSchedule = document.createElement('span')
     secondLineSchedule.className = 'mdc-list-item__secondary-text'
-
+ 
     activity.get(value.activityId).onsuccess = function (event) {
 
       const record = event.target.result;
@@ -241,13 +242,14 @@ function getActivityDataForList(activity, value, currentLocation) {
 
       if(venueSpan && !dateSpan) {
         secondLineVenue.textContent = venueSpan;
+        secondLineVenue.style.maxWidth = '70%';
       }
       else if (dateSpan && !venueSpan) {
         secondLineSchedule.textContent = dateSpan
       }
       else if(dateSpan && venueSpan){
-        secondLineVenue.textContent = venueSpan +' | ';
-        secondLineSchedule.textContent = dateSpan;
+        secondLineVenue.textContent = venueSpan;
+        secondLineSchedule.textContent = ' | ' + dateSpan;
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
