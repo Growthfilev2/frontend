@@ -512,8 +512,8 @@ function getRootRecord() {
 
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
-  getCountOfTemplates().then(function (officeTemplateObject) {
-    if (Object.keys(officeTemplateObject).length) {
+  getCountOfTemplates().then(function (count) {
+    if (count) {
       createActivityIconDom()
       return;
     }
@@ -525,7 +525,7 @@ function getCountOfTemplates() {
 
   return new Promise(function (resolve, reject) {
     let count = 0;
-    const officeByTemplate = {}
+ 
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -534,13 +534,11 @@ function getCountOfTemplates() {
       subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        console.log(cursor.value)
-        count++
-        officeByTemplate[cursor.value.office] = count;
+        count++;
         cursor.continue();
       }
       tx.oncomplete = function () {
-        resolve(officeByTemplate)
+        resolve(count)
       }
       tx.onerror = function () {
         reject({
