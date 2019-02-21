@@ -663,33 +663,48 @@ function createListStore(activity, counter, param) {
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['list', 'users'], 'readwrite');
-      const listStore = tx.objectStore('list');
-      const usersStore = tx.objectStore('users')
+      const userTx = db.transaction(['users']);
+      
+      const usersStore = userTx.objectStore('users');
+   
+      const requiredData = {
+        'activityId': activity.activityId,
+        'secondLine': '',
+        'count': counter[activity.activityId],
+        'timestamp': activity.timestamp,
+        'creator': {
+          number: activity.creator,
+          photo: ''
+        },
+        
+        'activityName': activity.activityName,
+        'status': activity.status
+      }
       usersStore.get(activity.creator).onsuccess = function (event) {
-        const requiredData = {
-          'activityId': activity.activityId,
-          'secondLine': '',
-          'count': counter[activity.activityId],
-          'timestamp': activity.timestamp,
-          'creator': {
-            number: activity.creator,
-            photo: ''
-          },
-          'activityName': activity.activityName,
-          'status': activity.status
-        }
-
+       
         const record = event.target.result;
         if (record) {
           requiredData.creator.photo = record.photoURL
         }
-        listStore.put(requiredData);
+      }
+      userTx.oncomplete = function(){
+        const listTX = db.transaction(['list'],'readwrite');
+        const listStore = listTX.objectStore('list');
+        listStore.get(activity.activityId).onsuccess = function(listEvent){
+          const record = listEvent.target.result;
+          if(!record) {
+            requiredData.createdTime = activity.timestamp;
+          }
+          else {
+            requiredData.createdTime  = record.createdTime
+          }
+          listStore.put(requiredData);
+        }
+        listTX.oncomplete = function(){
+          resolve(true)
+        }
       }
 
-      tx.oncomplete = function () {
-        resolve(true)
-      }
     }
   })
 }
