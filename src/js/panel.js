@@ -235,6 +235,7 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (currentLocation) {
         secondLine.appendChild(generateLatestVenue(venues, currentLocation));
       }
+
       const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineCss))
     }
@@ -292,40 +293,7 @@ function removeEmptySchedules(schedules) {
   })
 }
 
-function getTimeTypeForSingleSchedule(schedule, createdTime) {
-  if (!schedule.startTime || !schedule.endTime) {
-    return formatCreatedTime(createdTime);
-  }
 
-
-  const today = moment().format('DD-MM-YYYY');
-  const startTime = moment(schedule.startTime).format('DD-MM-YYYY');
-
-  let value = ''
-
-
-  if (moment(startTime).isAfter(moment(today))) {
-    value = moment(startTime).calendar();
-  } else {
-    value = moment(schedule.endTime).calendar();
-  }
-  return newScheduleText;
-}
-
-function formatDates(schedules) {
-  const formatted = []
-  schedules.forEach(function (schedule) {
-    formatted.push({
-      time: schedule.startTime,
-      name: schedule.name
-    })
-    formatted.push({
-      time: schedule.endTime,
-      name: schedule.name
-    })
-  })
-  return formatted;
-}
 
 function sortDatesInAscendingOrderWithPivot(pivot, dates) {
   const dataset = dates.slice();
@@ -345,14 +313,6 @@ function getTimeTypeForMultipleSchedule(pivot, dates) {
   return moment(dates[index +1]).format('D, MMM');
 }
 
-function positionOfPivot(dates) {
-  const index = dates.findIndex(function (obj) {
-    if (obj.pivot) {
-      return obj
-    }
-  })
-  return index;
-}
 
 function formatCreatedTime(createdTime) {
   if (!createdTime) return ''
@@ -372,6 +332,7 @@ function isToday(comparisonTimestamp) {
 
 function generateLatestVenue(venues, currentLocation) {
   const length = venues.length
+
   let text = ''
   switch (length) {
     case 0:
