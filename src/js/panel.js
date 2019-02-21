@@ -278,8 +278,11 @@ function generateLastestSchedule(schedules, createdTime) {
   return getTimeTypeForMultipleSchedule(currentTime, ascendingOrder)
 }
 
-function removeEmptyObjects(schedules, prop1, prop2) {
-  schedules.filter(function (value) {
+function removeEmptyObjects(data, prop1, prop2) {
+  if(!data.length) {
+    return data;
+  }
+  return data.filter(function (value) {
     if (value[prop1] && value[prop2]) {
       return value
     }
@@ -387,7 +390,7 @@ function activityListUI(data, secondLine) {
   activityNameText.textContent = data.activityName;
   leftTextContainer.appendChild(activityNameText);
   leftTextContainer.appendChild(secondLine);
-
+  
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
   metaTextContainer.appendChild(generateIconByCondition(data, li));
@@ -412,25 +415,22 @@ function generateIconByCondition(data, li) {
     return countDiv;
   }
   
-  metaTextActivityStatus.classList.add('status-in-activity', `${data.status}`)
-  const statusIcon = document.createElement('i')
-  statusIcon.className = 'material-icons'
 
   const cancelIcon = document.createElement('i')
-  cancelIcon.classList.add('status-cancel', 'material-icons');
+  cancelIcon.classList.add('status-cancel', 'material-icons',`${data.status}`);
   cancelIcon.textContent = 'clear';
 
   const confirmedIcon = document.createElement('i')
-  confirmedIcon.classList.add('status-confirmed', 'material-icons')
+  confirmedIcon.classList.add('status-confirmed', 'material-icons',`${data.status}`)
   confirmedIcon.textContent = 'check';
 
   if (data.status === 'CONFIRMED') {
-    metaTextActivityStatus.appendChild(confirmedIcon)
+    return confirmedIcon
   }
   if (data.status === 'CANCELLED') {
-    metaTextActivityStatus.appendChild(cancelIcon)
+   return cancelIcon
   }
-  return metaTextActivityStatus;
+  
 }
 
 function appendActivityListToDom(activityDom) {
