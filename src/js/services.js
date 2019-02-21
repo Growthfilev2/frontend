@@ -276,8 +276,10 @@ function geolocationApi(req) {
 function handleRequestBody(request) {
   const body = JSON.parse(request);
   if (body.radioType === "WCDMA") {
-    if (body.wifiAccessPoints.length) {
-      delete body.cellTowers;
+    if (body.wifiAccessPoints &&  body.wifiAccessPoints.length) {
+      if(body.cellTowers) {
+        delete body.cellTowers;
+      }
       return JSON.stringify(body);
     } else {
       return null;
@@ -286,6 +288,7 @@ function handleRequestBody(request) {
 
   return request
 }
+
 
 function getCellTowerInfo() {
   return new Promise(function (resolve, reject) {
