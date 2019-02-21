@@ -232,7 +232,7 @@ function getActivityDataForList(activity, value, currentLocation) {
       const venues = record.venue;
       const status = record.status
 
-      secondLine.appendChild(generateLastestSchedule(schedules));
+      secondLine.appendChild(generateLastestSchedule(schedules,activity.createdTime));
       
       if(currentLocation){
         secondLine.appendChild(generateLatestVenue(venues, currentLocation));
@@ -273,12 +273,12 @@ function generateSecondLine(value) {
 }
 
 
-function generateLastestSchedule(schedules) {
+function generateLastestSchedule(schedules,createdTime) {
   const length = schedules.length;
   let text;
   switch (length) {
     case 0:
-      text = generateSecondLine()
+      text = generateSecondLine(formatCreatedTime(createdTime))
       break;
     case 1:
       const timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0])
@@ -357,6 +357,22 @@ function positionOfPivot(dates) {
     }
   })
   return index;
+}
+
+function formatCreatedTime(createdTime){
+  if(!createdTime) return ''
+  if(isToday(createdTime)) {
+    return moment(createdTime).format('hh:mm')
+  }
+  return moment(createdTime).format('D, MMM');
+}
+
+function isToday(comparisonTimestamp){
+  const today = new Date();
+  if(today.setHours(0,0,0,0) == new Date(comparisonTimestamp).setHours(0,0,0,0)) {
+    return true
+  }
+  return false;
 }
 
 function generateLatestVenue(venues, currentLocation) {
