@@ -265,24 +265,23 @@ function geolocationApi(req) {
     };
     const verfiedBody = handleRequestBody(req.body);
     if(verfiedBody){
-      xhr.send(req.body);
+      xhr.send(verfiedBody);
     }
   });
 }
 
-function handleRequestBody(request){
-const body = JSON.parse(request);
-if(body.radioType === "WCDMA") {
-  if(body.wifiAccessPoints.length) {
-    delete body.cellTowers;
-    return JSON.stringify(body);
+function handleRequestBody(request) {
+  const body = JSON.parse(request);
+  if (body.radioType === "WCDMA") {
+    if (body.wifiAccessPoints.length) {
+      delete body.cellTowers;
+      return JSON.stringify(body);
+    } else {
+      return null;
+    }
   }
-  else {
-    return null;
-  }
-}
 
-return request
+  return request
 }
 
 function getCellTowerInfo() {
