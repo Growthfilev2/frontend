@@ -264,11 +264,13 @@ function geolocationApi(req) {
       }
     };
     const verfiedBody = handleRequestBody(req.body);
-    if(verfiedBody){
+    if (verfiedBody) {
       xhr.send(verfiedBody);
-    }
-    else {
-      reject({message:'WCDMA CellTower request doesnt have wifiAccessPoints',body:req.body})
+    } else {
+      reject({
+        message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
+        body: req.body
+      })
     }
   });
 }
@@ -276,8 +278,8 @@ function geolocationApi(req) {
 function handleRequestBody(request) {
   const body = JSON.parse(request);
   if (body.radioType === "WCDMA") {
-    if (body.wifiAccessPoints &&  body.wifiAccessPoints.length) {
-      if(body.cellTowers) {
+    if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
+      if (body.cellTowers) {
         delete body.cellTowers;
       }
       return JSON.stringify(body);
@@ -306,7 +308,7 @@ function getCellTowerInfo() {
       });
       return
     }
-    var apiKey ='AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
+    var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
@@ -394,15 +396,15 @@ function html5Geolocation() {
 
 
 function locationUpdationSuccess(location) {
- 
+
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
- 
-  var suggestCheckIn = new CustomEvent("suggestCheckIn", { 
+
+  var suggestCheckIn = new CustomEvent("suggestCheckIn", {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
   });
   window.dispatchEvent(suggestCheckIn);
@@ -430,7 +432,7 @@ function showSuggestCheckInDialog() {
     }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
-   app.isNewDay();
+    app.isNewDay();
   });
 }
 
@@ -465,14 +467,14 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-      
+
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
 
       };
       tx.oncomplete = function () {
-  
+
         resolve({
           prev: previousLocation,
           new: finalLocation
@@ -732,7 +734,7 @@ var receiverCaller = {
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'apiFail': apiFail,
-  'backblazeRequest': urlFromBase64Image,  
+  'backblazeRequest': urlFromBase64Image,
 };
 
 function messageReceiver(response) {
@@ -832,7 +834,7 @@ function updateApp(data) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;
       appUpdateDialog('' + message, title);
-    } 
+    }
     return;
   }
   webkit.messageHandlers.updateApp.postMessage('Update App');
@@ -928,19 +930,18 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
+
 function runRead(value) {
-  
+
   if (localStorage.getItem('dbexist')) {
-    if(!value) {
-      requestCreator('Null', value);
-      return;
-    }
-    
+
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();
       return
     }
+    requestCreator('Null', value);
   }
+
 }
 
 function removeChildNodes(parent) {
