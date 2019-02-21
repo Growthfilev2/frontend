@@ -2,7 +2,7 @@ importScripts('external/js/moment.min.js');
 const apiUrl = 'https://api2.growthfile.com/api/'
 
 let deviceInfo;
-
+let currentDevice;
 // get Device time
 function getTime() {
   return Date.now()
@@ -75,9 +75,9 @@ function http(request) {
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
 
     xhr.onreadystatechange = function () {
-      // console.log(xhr.status)
+    
       if (xhr.readyState === 4) {
-        // console.log(xhr.status)
+     
         if (!xhr.status) {
           requestHandlerResponse('android-stop-refreshing', 400)
           return;
@@ -106,7 +106,7 @@ function http(request) {
 
 function fetchServerTime(body, user) {
   currentDevice = body.device;
-  console.log(currentDevice);
+
   const parsedDeviceInfo = JSON.parse(currentDevice);
 
   return new Promise(function (resolve) {
@@ -168,6 +168,7 @@ function instant(error, user) {
     body: error,
     token: user.token
   }
+  
   http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
@@ -662,33 +663,48 @@ function createListStore(activity, counter, param) {
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['list', 'users'], 'readwrite');
-      const listStore = tx.objectStore('list');
-      const usersStore = tx.objectStore('users')
+      const userTx = db.transaction(['users']);
+      
+      const usersStore = userTx.objectStore('users');
+   
+      const requiredData = {
+        'activityId': activity.activityId,
+        'secondLine': '',
+        'count': counter[activity.activityId],
+        'timestamp': activity.timestamp,
+        'creator': {
+          number: activity.creator,
+          photo: ''
+        },
+        
+        'activityName': activity.activityName,
+        'status': activity.status
+      }
       usersStore.get(activity.creator).onsuccess = function (event) {
-        const requiredData = {
-          'activityId': activity.activityId,
-          'secondLine': '',
-          'count': counter[activity.activityId],
-          'timestamp': activity.timestamp,
-          'creator': {
-            number: activity.creator,
-            photo: ''
-          },
-          'activityName': activity.activityName,
-          'status': activity.status
-        }
-
+       
         const record = event.target.result;
         if (record) {
           requiredData.creator.photo = record.photoURL
         }
-        listStore.put(requiredData);
+      }
+      userTx.oncomplete = function(){
+        const listTX = db.transaction(['list'],'readwrite');
+        const listStore = listTX.objectStore('list');
+        listStore.get(activity.activityId).onsuccess = function(listEvent){
+          const record = listEvent.target.result;
+          if(!record) {
+            requiredData.createdTime = activity.timestamp;
+          }
+          else {
+            requiredData.createdTime  = record.createdTime
+          }
+          listStore.put(requiredData);
+        }
+        listTX.oncomplete = function(){
+          resolve(true)
+        }
       }
 
-      tx.oncomplete = function () {
-        resolve(true)
-      }
     }
   })
 }
@@ -716,8 +732,11 @@ function successResponse(read, param) {
           })
         }
       }
-      let key = addendum.activityId
-      counter[key] = (counter[key] || 0) + 1
+
+     if(addendum.isComment) {
+       let key = addendum.activityId 
+       counter[key] = (counter[key] || 0) + 1
+      }
       addendumObjectStore.add(addendum)
     })
 

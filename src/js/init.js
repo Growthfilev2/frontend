@@ -117,7 +117,7 @@ window.addEventListener('load', function () {
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
-      sameDay: 'LT',
+      sameDay: 'hh:mm',
       nextDay: '[Tomorrow at] LT',
       lastWeek: 'dddd',
       nextWeek: 'dddd [at] LT',

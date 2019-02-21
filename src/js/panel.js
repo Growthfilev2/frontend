@@ -1,9 +1,8 @@
-
 const scroll_namespace = {
   count: 0,
   size: 20,
   skip: false,
- 
+
 }
 
 function initDomLoad() {
@@ -24,14 +23,14 @@ function initDomLoad() {
 function listView() {
   history.pushState(['listView'], null, null)
   initDomLoad();
- 
+
   getSizeOfListStore().then(function (size) {
     if (!size) {
       appendTextContentInListView('No activities Found');
       return;
     }
-    if(size > 20) {
-      
+    if (size > 20) {
+
       window.addEventListener('scroll', handleScroll, false)
     }
 
@@ -46,12 +45,12 @@ function listView() {
   })
 }
 
-function appendTextContentInListView(textContent){
+function appendTextContentInListView(textContent) {
   const p = document.createElement('p')
-      p.textContent = textContent;
-      p.className = 'no-activity'
-      document.getElementById('activity-list-main').appendChild(p)
-      document.getElementById('activity-list-main').style.boxShadow = 'none';
+  p.textContent = textContent;
+  p.className = 'no-activity'
+  document.getElementById('activity-list-main').appendChild(p)
+  document.getElementById('activity-list-main').style.boxShadow = 'none';
 }
 
 
@@ -86,10 +85,10 @@ function updateEl(activities, rootRecord) {
     const listStore = tx.objectStore('list');
     const ul = document.getElementById('activity--list');
     activities.forEach(function (activity) {
-      if(document.querySelector('.no-activity')) {
+      if (document.querySelector('.no-activity')) {
         document.querySelector('.no-activity').remove()
       }
-      
+
       listStore.get(activity.activityId).onsuccess = function (event) {
         const record = event.target.result;
         const existingEl = document.querySelector(`[data-id="${activity.activityId}"]`)
@@ -97,13 +96,12 @@ function updateEl(activities, rootRecord) {
           existingEl.remove();
         }
         if (!record) return;
-        
-        if(!rootRecord.location)  {
+
+        if (!rootRecord.location) {
           getActivityDataForList(activityStore, record).then(function (li) {
             ul.insertBefore(li, ul.childNodes[0])
           })
-        }
-        else {
+        } else {
           getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
             ul.insertBefore(li, ul.childNodes[0])
           })
@@ -220,9 +218,14 @@ function runCursor(cursor, iterator) {
 
 function getActivityDataForList(activity, value, currentLocation) {
   return new Promise(function (resolve, reject) {
+    const secondLineParent = document.createElement('div')
+    secondLineParent.style.marginTop = '10px';
 
-    const secondLine = document.createElement('span')
-    secondLine.className = 'mdc-list-item__secondary-text'
+    const secondLineVenue = document.createElement('span')
+    secondLineVenue.className = 'mdc-list-item__secondary-text venue-secondline'
+
+    const secondLineSchedule = document.createElement('span')
+    secondLineSchedule.className = 'mdc-list-item__secondary-text'
 
     activity.get(value.activityId).onsuccess = function (event) {
 
@@ -230,22 +233,26 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (!record) return
       const schedules = record.schedule;
       const venues = record.venue;
-      const status = record.status
+      let venueSpan;
+      const dateSpan = generateLastestSchedule(schedules, value.createdTime);
 
-      if (status === 'PENDING') {
-        secondLine.appendChild(generateLastestSchedule(schedules));
-      } else {
-        if (schedules.length) {
-          const el = document.createElement('div')
-          el.textContent = generateTextIfActivityIsNotPending(status)
-          secondLine.appendChild(el);
-        }
+      if (currentLocation) {
+        venueSpan = generateLatestVenue(venues, currentLocation);
       }
-      if(currentLocation){
-        secondLine.appendChild(generateLatestVenue(venues, currentLocation));
+
+      if (venueSpan && !dateSpan) {
+        secondLineVenue.textContent = venueSpan;
+        secondLineVenue.style.maxWidth = '70%';
+      } else if (dateSpan && !venueSpan) {
+        secondLineSchedule.textContent = dateSpan
+      } else if (dateSpan && venueSpan) {
+        secondLineVenue.textContent = venueSpan;
+        secondLineSchedule.textContent = ' | ' + dateSpan;
       }
-      const secondLineCss = setMarginForSecondLine(secondLine)
-      resolve(activityListUI(value, secondLineCss))
+      secondLineParent.appendChild(secondLineVenue)
+      secondLineParent.appendChild(secondLineSchedule)
+      // const secondLineCss = setMarginForSecondLine(secondLine)
+      resolve(activityListUI(value, secondLineParent))
     }
   })
 }
@@ -272,142 +279,99 @@ function generateTextIfActivityIsNotPending(status) {
   return textStatus[status]
 }
 
-function generateSecondLine(name, value) {
-  const el = document.createElement('div');
-  if (name && value) {
-    el.textContent = `${name} : ${value}`
-  } else {
-    el.textContent = ''
+
+
+function generateLastestSchedule(schedules, createdTime) {
+  const validSchedules = removeEmptyObjects(schedules, 'startTime', 'endTime');
+  const length = validSchedules.length;
+
+  if (!length) {
+    return formatCreatedTime(createdTime);
   }
-  return el
+
+  const currentTime = Date.now();
+  const ascendingOrder = sortDatesInAscendingOrderWithPivot(currentTime, validSchedules);
+  return getTimeTypeForMultipleSchedule(currentTime, ascendingOrder)
 }
 
-
-function generateLastestSchedule(schedules) {
-  const length = schedules.length;
-  let text;
-  switch (length) {
-    case 0:
-      text = generateSecondLine('', '')
-      break;
-    case 1:
-      const timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0])
-      text = generateSecondLine(timeTypeSingle.name, timeTypeSingle.value)
-      break;
-    default:
-      const formattedDates = formatDates(schedules);
-      const ascendingOrder = sortDatesInAscendingOrderWithPivot({
-        time: moment().valueOf(),
-        pivot: true
-      }, formattedDates);
-      const timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
-      text = generateSecondLine(timeTypeMultiple.name, timeTypeMultiple.time);
-      break;
+function removeEmptyObjects(data, prop1, prop2) {
+  if (!data.length) {
+    return data;
   }
-  return text
-}
-
-function getTimeTypeForSingleSchedule(schedule) {
-  const today = moment().format('DD-MM-YYYY');
-  const startTime = moment(schedule.startTime).format('DD-MM-YYYY');
-  let newScheduleText = {
-    name: schedule.name,
-    value: ''
-  }
-  if (!startTime) return newScheduleText
-  if (!schedule.endTime) return newScheduleText
-
-  if (moment(startTime).isAfter(moment(today))) {
-    newScheduleText.value = moment(startTime).calendar();
-  } else {
-    newScheduleText.value = moment(schedule.endTime).calendar();
-  }
-  return newScheduleText;
-
-}
-
-function formatDates(schedules) {
-  const formatted = []
-  schedules.forEach(function (schedule) {
-    formatted.push({
-      time: schedule.startTime,
-      name: schedule.name
-    })
-    formatted.push({
-      time: schedule.endTime,
-      name: schedule.name
-    })
+  return data.filter(function (value) {
+    if (value[prop1] && value[prop2]) {
+      return value
+    }
   })
-  return formatted;
 }
+
+
 
 function sortDatesInAscendingOrderWithPivot(pivot, dates) {
   const dataset = dates.slice();
   dataset.push(pivot);
   return dataset.sort(function (a, b) {
-    return a.time - b.time;
+    return a - b;
   })
 }
 
-function getTimeTypeForMultipleSchedule(dates) {
+function getTimeTypeForMultipleSchedule(pivot, dates) {
   const duplicate = dates.slice()
-  const pivotIndex = positionOfPivot(duplicate);
-  if (pivotIndex === dates.length - 1) {
-    duplicate[pivotIndex - 1].time = moment(duplicate[pivotIndex - 1].time).calendar();
-    return duplicate[pivotIndex - 1]
+  const index = duplicate.indexOf(pivot);
+
+  if (index == dates.length - 1) {
+    return moment(dates[dates.length - 2]).format('D, MMM').replace(',', '')
   }
-  duplicate[pivotIndex + 1].time = moment(duplicate[pivotIndex + 1].time).calendar();
-  return duplicate[pivotIndex + 1]
+  return moment(dates[index + 1]).format('D, MMM').replace(',', '')
 }
 
-function positionOfPivot(dates) {
-  const index = dates.findIndex(function (obj) {
-    if (obj.pivot) {
-      return obj
-    }
-  })
-  return index;
+
+function formatCreatedTime(createdTime) {
+  if (!createdTime) return ''
+  if (isToday(createdTime)) {
+    return moment(createdTime).format('hh:mm')
+  }
+
+  return moment(createdTime).format('D, MMM').replace(',', '')
+}
+
+function isToday(comparisonTimestamp) {
+  const today = new Date();
+  if (today.setHours(0, 0, 0, 0) == new Date(comparisonTimestamp).setHours(0, 0, 0, 0)) {
+    return true
+  }
+  return false;
 }
 
 function generateLatestVenue(venues, currentLocation) {
-  const length = venues.length
-  let text = ''
-  switch (length) {
-    case 0:
-      text = generateSecondLine('', '');
-      break;
-    case 1:
-      text = generateSecondLine(venues[0].venueDescriptor, venues[0].location)
-      break;
-    default:
-
-
-      const distances = []
-      venues.forEach(function (venue) {
-
-        const lat = venue.geopoint['_latitude']
-        const lon = venue.geopoint['_longitude']
-        if (lat && lon) {
-          const geopoint = {
-            latitude: lat,
-            longitude: lon
-          }
-          distances.push({
-            distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
-            desc: venue.venueDescriptor,
-            location: venue.location
-          })
-        }
-      })
-      if (!distances.length) {
-        text = generateSecondLine('', '')
-      } else {
-
-        const sortedDistance = sortNearestLocation(distances)
-        text = generateSecondLine(sortedDistance[0].desc, sortedDistance[0].location)
-      }
+  const validVenues = removeEmptyObjects(venues, 'location', 'address')
+  const length = validVenues.length
+  if (!length) {
+    return ''
   }
-  return text;
+
+  if (length == 1) {
+    return validVenues[0].location;
+  }
+
+  const distances = []
+  venues.forEach(function (venue) {
+
+    const lat = venue.geopoint['_latitude']
+    const lon = venue.geopoint['_longitude']
+
+    const geopoint = {
+      latitude: lat,
+      longitude: lon
+    }
+    distances.push({
+      distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
+      location: venue.location
+    })
+  })
+
+  const sortedDistance = sortNearestLocation(distances)
+  return sortedDistance[0].location;
 }
 
 function sortNearestLocation(distances) {
@@ -442,32 +406,21 @@ function activityListUI(data, secondLine) {
   activityNameText.className = 'mdc-list-item__primary-text bigBlackBold'
   activityNameText.textContent = data.activityName;
   leftTextContainer.appendChild(activityNameText);
-  leftTextContainer.appendChild(secondLine);
+  leftTextContainer.appendChild(secondLine)
+
+  const timeCustomText = document.createElement('div')
+  timeCustomText.className = 'mdc-meta__custom-text'
+  timeCustomText.style.width = '76px';
+  if (isToday(data.timestamp)) {
+    timeCustomText.style.marginTop = '4px'
+  }
+
+  timeCustomText.textContent = moment(data.timestamp).calendar()
+
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
+  metaTextContainer.appendChild(timeCustomText);
   metaTextContainer.appendChild(generateIconByCondition(data, li));
-
-  const metaTextActivityStatus = document.createElement('span')
-  metaTextActivityStatus.classList.add('mdc-list-item__secondary-text', 'status-in-activity', `${data.status}`)
-  const statusIcon = document.createElement('i')
-  statusIcon.className = 'material-icons'
-
-  const cancelIcon = document.createElement('i')
-  cancelIcon.classList.add('status-cancel', 'material-icons')
-  cancelIcon.appendChild(document.createTextNode('clear'))
-
-  const confirmedIcon = document.createElement('i')
-  confirmedIcon.classList.add('status-confirmed', 'material-icons')
-  confirmedIcon.appendChild(document.createTextNode('check'))
-
-  if (data.status === 'CONFIRMED') {
-    metaTextActivityStatus.appendChild(confirmedIcon)
-  }
-  if (data.status === 'CANCELLED') {
-    metaTextActivityStatus.appendChild(cancelIcon)
-  }
-
-  metaTextContainer.appendChild(metaTextActivityStatus)
 
   li.appendChild(dataObject);
   li.appendChild(leftTextContainer);
@@ -478,34 +431,37 @@ function activityListUI(data, secondLine) {
 
 
 function generateIconByCondition(data, li) {
-  const icon = document.createElement('i');
-  icon.className = 'material-icons notification'
-  if (data.urgent) {
-    icon.textContent = 'alarm';
 
-    return icon;
-  }
-  if (data.nearby) {
-    icon.textContent = 'location_on';
-    return icon;
-  }
   if (data.count) {
-
-    const countDiv = document.createElement('div')
 
     const countSpan = document.createElement('span')
     countSpan.textContent = data.count
     countSpan.className = 'count mdc-meta__custom-text'
-    countDiv.appendChild(countSpan)
+
     li.classList.add('count-active');
-    return countDiv;
+    return countSpan;
   }
-  const timeCustomText = document.createElement('div')
-  timeCustomText.className = 'mdc-meta__custom-text'
-  timeCustomText.style.width = '76px';
-  timeCustomText.style.fontSize = '16px';
-  timeCustomText.textContent = moment(data.timestamp).calendar()
-  return timeCustomText;
+
+
+  const cancelIcon = document.createElement('i')
+  cancelIcon.classList.add('status-cancel', 'material-icons', `${data.status}`);
+  cancelIcon.textContent = 'clear';
+
+  const confirmedIcon = document.createElement('i')
+  confirmedIcon.classList.add('status-confirmed', 'material-icons', `${data.status}`)
+  confirmedIcon.textContent = 'check';
+
+  const pendingIcon = document.createElement('i')
+  pendingIcon.classList.add('status-pending', 'material-icons', `${data.status}`)
+  pendingIcon.textContent = '';
+
+  if (data.status === 'CONFIRMED') {
+    return confirmedIcon
+  }
+  if (data.status === 'CANCELLED') {
+    return cancelIcon
+  }
+  return pendingIcon
 }
 
 function appendActivityListToDom(activityDom) {
@@ -554,8 +510,8 @@ function getRootRecord() {
 
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
-  getCountOfTemplates().then(function (officeTemplateObject) {
-    if (Object.keys(officeTemplateObject).length) {
+  getCountOfTemplates().then(function (count) {
+    if (count) {
       createActivityIconDom()
       return;
     }
@@ -567,28 +523,21 @@ function getCountOfTemplates() {
 
   return new Promise(function (resolve, reject) {
     let count = 0;
-    const officeByTemplate = {}
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
-      console.log(db)
       const tx = db.transaction(['subscriptions'], 'readonly');
-      console.log(tx)
       const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
       subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        console.log(cursor.value)
-        count++
-        officeByTemplate[cursor.value.office] = count;
+        count++;
         cursor.continue();
       }
-
       tx.oncomplete = function () {
-        resolve(officeByTemplate)
+        resolve(count)
       }
       tx.onerror = function () {
-        console.log(tx.error)
         reject({
           message: `${tx.error} from getCountOfTemplates`
         });
@@ -604,10 +553,7 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom() {
-
-
   const parent = document.getElementById('create-activity--parent')
-
   const fab = document.createElement('button')
   fab.className = 'mdc-fab create-activity'
   fab.id = 'create-activity'

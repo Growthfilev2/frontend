@@ -9,6 +9,7 @@ function handleError(error) {
     if (error.stack) {
       error.stack = error.stack;
     }
+
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -262,9 +263,32 @@ function geolocationApi(req) {
         });
       }
     };
-    xhr.send(req.body);
+    const verfiedBody = handleRequestBody(req.body);
+    if(verfiedBody){
+      xhr.send(verfiedBody);
+    }
+    else {
+      reject({message:'WCDMA CellTower request doesnt have wifiAccessPoints',body:req.body})
+    }
   });
 }
+
+function handleRequestBody(request) {
+  const body = JSON.parse(request);
+  if (body.radioType === "WCDMA") {
+    if (body.wifiAccessPoints &&  body.wifiAccessPoints.length) {
+      if(body.cellTowers) {
+        delete body.cellTowers;
+      }
+      return JSON.stringify(body);
+    } else {
+      return null;
+    }
+  }
+
+  return request
+}
+
 
 function getCellTowerInfo() {
   return new Promise(function (resolve, reject) {
@@ -442,7 +466,7 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-
+      
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -906,13 +930,17 @@ function getInputText(selector) {
 }
 
 function runRead(value) {
- 
+  
   if (localStorage.getItem('dbexist')) {
+    if(!value) {
+      requestCreator('Null', value);
+      return;
+    }
+    
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();
       return
     }
-    requestCreator('Null', value);
   }
 }
 
