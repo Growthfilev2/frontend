@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -168,7 +168,7 @@ function instant(error, user) {
     body: error,
     token: user.token
   }
-  console.log(error)
+  
   http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
