@@ -2,7 +2,7 @@ importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
-
+let currentDevice;
 // get Device time
 function getTime() {
   return Date.now()
@@ -75,9 +75,9 @@ function http(request) {
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
 
     xhr.onreadystatechange = function () {
-      // console.log(xhr.status)
+    
       if (xhr.readyState === 4) {
-        // console.log(xhr.status)
+     
         if (!xhr.status) {
           requestHandlerResponse('android-stop-refreshing', 400)
           return;
@@ -106,7 +106,7 @@ function http(request) {
 
 function fetchServerTime(body, user) {
   currentDevice = body.device;
-  console.log(currentDevice);
+
   const parsedDeviceInfo = JSON.parse(currentDevice);
 
   return new Promise(function (resolve) {

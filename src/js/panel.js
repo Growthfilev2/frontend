@@ -220,13 +220,13 @@ function getActivityDataForList(activity, value, currentLocation) {
   return new Promise(function (resolve, reject) {
     const secondLineParent = document.createElement('div')
     secondLineParent.style.marginTop = '10px';
-    
+
     const secondLineVenue = document.createElement('span')
     secondLineVenue.className = 'mdc-list-item__secondary-text venue-secondline'
-    
+
     const secondLineSchedule = document.createElement('span')
     secondLineSchedule.className = 'mdc-list-item__secondary-text'
- 
+
     activity.get(value.activityId).onsuccess = function (event) {
 
       const record = event.target.result;
@@ -240,21 +240,19 @@ function getActivityDataForList(activity, value, currentLocation) {
         venueSpan = generateLatestVenue(venues, currentLocation);
       }
 
-      if(venueSpan && !dateSpan) {
+      if (venueSpan && !dateSpan) {
         secondLineVenue.textContent = venueSpan;
         secondLineVenue.style.maxWidth = '70%';
-      }
-      else if (dateSpan && !venueSpan) {
+      } else if (dateSpan && !venueSpan) {
         secondLineSchedule.textContent = dateSpan
-      }
-      else if(dateSpan && venueSpan){
+      } else if (dateSpan && venueSpan) {
         secondLineVenue.textContent = venueSpan;
         secondLineSchedule.textContent = ' | ' + dateSpan;
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
       // const secondLineCss = setMarginForSecondLine(secondLine)
-      resolve(activityListUI(value,secondLineParent))
+      resolve(activityListUI(value, secondLineParent))
     }
   })
 }
@@ -297,7 +295,7 @@ function generateLastestSchedule(schedules, createdTime) {
 }
 
 function removeEmptyObjects(data, prop1, prop2) {
-  if(!data.length) {
+  if (!data.length) {
     return data;
   }
   return data.filter(function (value) {
@@ -322,9 +320,9 @@ function getTimeTypeForMultipleSchedule(pivot, dates) {
   const index = duplicate.indexOf(pivot);
 
   if (index == dates.length - 1) {
-    return moment(dates[dates.length - 2]).format('D, MMM').replace(',','')
+    return moment(dates[dates.length - 2]).format('D, MMM').replace(',', '')
   }
-  return moment(dates[index + 1]).format('D, MMM').replace(',','')
+  return moment(dates[index + 1]).format('D, MMM').replace(',', '')
 }
 
 
@@ -333,8 +331,8 @@ function formatCreatedTime(createdTime) {
   if (isToday(createdTime)) {
     return moment(createdTime).format('hh:mm')
   }
-  
-  return moment(createdTime).format('D, MMM').replace(',','')
+
+  return moment(createdTime).format('D, MMM').replace(',', '')
 }
 
 function isToday(comparisonTimestamp) {
@@ -352,7 +350,7 @@ function generateLatestVenue(venues, currentLocation) {
     return ''
   }
 
-  if(length == 1) {
+  if (length == 1) {
     return validVenues[0].location;
   }
 
@@ -413,10 +411,10 @@ function activityListUI(data, secondLine) {
   const timeCustomText = document.createElement('div')
   timeCustomText.className = 'mdc-meta__custom-text'
   timeCustomText.style.width = '76px';
-  if(isToday(data.timestamp)) {
+  if (isToday(data.timestamp)) {
     timeCustomText.style.marginTop = '4px'
   }
-  
+
   timeCustomText.textContent = moment(data.timestamp).calendar()
 
   const metaTextContainer = document.createElement('span')
@@ -433,35 +431,35 @@ function activityListUI(data, secondLine) {
 
 
 function generateIconByCondition(data, li) {
- 
+
   if (data.count) {
-  
+
     const countSpan = document.createElement('span')
     countSpan.textContent = data.count
     countSpan.className = 'count mdc-meta__custom-text'
-    
+
     li.classList.add('count-active');
     return countSpan;
   }
-  
+
 
   const cancelIcon = document.createElement('i')
-  cancelIcon.classList.add('status-cancel', 'material-icons',`${data.status}`);
+  cancelIcon.classList.add('status-cancel', 'material-icons', `${data.status}`);
   cancelIcon.textContent = 'clear';
 
   const confirmedIcon = document.createElement('i')
-  confirmedIcon.classList.add('status-confirmed', 'material-icons',`${data.status}`)
+  confirmedIcon.classList.add('status-confirmed', 'material-icons', `${data.status}`)
   confirmedIcon.textContent = 'check';
 
   const pendingIcon = document.createElement('i')
-  pendingIcon.classList.add('status-pending', 'material-icons',`${data.status}`)
+  pendingIcon.classList.add('status-pending', 'material-icons', `${data.status}`)
   pendingIcon.textContent = '';
-  
+
   if (data.status === 'CONFIRMED') {
     return confirmedIcon
   }
   if (data.status === 'CANCELLED') {
-   return cancelIcon
+    return cancelIcon
   }
   return pendingIcon
 }
@@ -525,7 +523,6 @@ function getCountOfTemplates() {
 
   return new Promise(function (resolve, reject) {
     let count = 0;
- 
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -556,10 +553,7 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom() {
-
-
   const parent = document.getElementById('create-activity--parent')
-
   const fab = document.createElement('button')
   fab.className = 'mdc-fab create-activity'
   fab.id = 'create-activity'
