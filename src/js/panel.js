@@ -314,9 +314,9 @@ function getTimeTypeForMultipleSchedule(pivot, dates) {
   const index = duplicate.indexOf(pivot);
 
   if (index == dates.length - 1) {
-    return moment(dates[dates.length - 2]).format('D, MMM');
+    return moment(dates[dates.length - 2]).format('D, MMM').replace(',','')
   }
-  return moment(dates[index + 1]).format('D, MMM');
+  return moment(dates[index + 1]).format('D, MMM').replace(',','')
 }
 
 
@@ -325,7 +325,8 @@ function formatCreatedTime(createdTime) {
   if (isToday(createdTime)) {
     return moment(createdTime).format('hh:mm')
   }
-  return moment(createdTime).format('D, MMM');
+  
+  return moment(createdTime).format('D, MMM').replace(',','')
 }
 
 function isToday(comparisonTimestamp) {
@@ -445,13 +446,17 @@ function generateIconByCondition(data, li) {
   confirmedIcon.classList.add('status-confirmed', 'material-icons',`${data.status}`)
   confirmedIcon.textContent = 'check';
 
+  const pendingIcon = document.createElement('i')
+  pendingIcon.classList.add('status-pending', 'material-icons',`${data.status}`)
+  pendingIcon.textContent = '';
+  
   if (data.status === 'CONFIRMED') {
     return confirmedIcon
   }
   if (data.status === 'CANCELLED') {
    return cancelIcon
   }
-  
+  return pendingIcon
 }
 
 function appendActivityListToDom(activityDom) {
