@@ -668,7 +668,8 @@ function createListStore(activity, counter, param) {
       const db = req.result;
       const tx = db.transaction(['list', 'users'], 'readwrite');
       const listStore = tx.objectStore('list');
-      const usersStore = tx.objectStore('users')
+      const usersStore = tx.objectStore('users');
+      
       usersStore.get(activity.creator).onsuccess = function (event) {
         const requiredData = {
           'activityId': activity.activityId,
@@ -679,6 +680,7 @@ function createListStore(activity, counter, param) {
             number: activity.creator,
             photo: ''
           },
+          
           'activityName': activity.activityName,
           'status': activity.status
         }
@@ -687,9 +689,15 @@ function createListStore(activity, counter, param) {
         if (record) {
           requiredData.creator.photo = record.photoURL
         }
-        listStore.put(requiredData);
+        listStore.get(activity.activityId).onsuccess = function(listEvent){
+          const record = listEvent.target.result;
+          if(!record) {
+            requiredData.createdTime = activity.timestamp;
+            listStore.put(requiredData);
+          }
+        }
       }
-
+      
       tx.oncomplete = function () {
         resolve(true)
       }
