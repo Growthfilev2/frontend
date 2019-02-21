@@ -232,15 +232,8 @@ function getActivityDataForList(activity, value, currentLocation) {
       const venues = record.venue;
       const status = record.status
 
-      if (status === 'PENDING') {
-        secondLine.appendChild(generateLastestSchedule(schedules));
-      } else {
-        if (schedules.length) {
-          const el = document.createElement('div')
-          el.textContent = generateTextIfActivityIsNotPending(status)
-          secondLine.appendChild(el);
-        }
-      }
+      secondLine.appendChild(generateLastestSchedule(schedules));
+      
       if(currentLocation){
         secondLine.appendChild(generateLatestVenue(venues, currentLocation));
       }
@@ -272,13 +265,10 @@ function generateTextIfActivityIsNotPending(status) {
   return textStatus[status]
 }
 
-function generateSecondLine(name, value) {
+function generateSecondLine(value) {
   const el = document.createElement('div');
-  if (name && value) {
-    el.textContent = `${name} : ${value}`
-  } else {
-    el.textContent = ''
-  }
+  el.textContent = value
+  
   return el
 }
 
@@ -288,11 +278,11 @@ function generateLastestSchedule(schedules) {
   let text;
   switch (length) {
     case 0:
-      text = generateSecondLine('', '')
+      text = generateSecondLine()
       break;
     case 1:
       const timeTypeSingle = getTimeTypeForSingleSchedule(schedules[0])
-      text = generateSecondLine(timeTypeSingle.name, timeTypeSingle.value)
+      text = generateSecondLine(timeTypeSingle.value)
       break;
     default:
       const formattedDates = formatDates(schedules);
@@ -301,7 +291,7 @@ function generateLastestSchedule(schedules) {
         pivot: true
       }, formattedDates);
       const timeTypeMultiple = getTimeTypeForMultipleSchedule(ascendingOrder);
-      text = generateSecondLine(timeTypeMultiple.name, timeTypeMultiple.time);
+      text = generateSecondLine(timeTypeMultiple.time);
       break;
   }
   return text
@@ -374,14 +364,12 @@ function generateLatestVenue(venues, currentLocation) {
   let text = ''
   switch (length) {
     case 0:
-      text = generateSecondLine('', '');
+      text = generateSecondLine();
       break;
     case 1:
-      text = generateSecondLine(venues[0].venueDescriptor, venues[0].location)
+      text = generateSecondLine(venues[0].location)
       break;
     default:
-
-
       const distances = []
       venues.forEach(function (venue) {
 
@@ -394,17 +382,16 @@ function generateLatestVenue(venues, currentLocation) {
           }
           distances.push({
             distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
-            desc: venue.venueDescriptor,
             location: venue.location
           })
         }
       })
       if (!distances.length) {
-        text = generateSecondLine('', '')
+        text = generateSecondLine()
       } else {
 
         const sortedDistance = sortNearestLocation(distances)
-        text = generateSecondLine(sortedDistance[0].desc, sortedDistance[0].location)
+        text = generateSecondLine(sortedDistance[0].location)
       }
   }
   return text;
