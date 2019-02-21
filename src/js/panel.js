@@ -228,12 +228,13 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (!record) return
       const schedules = record.schedule;
       const venues = record.venue;
-    
-      secondLine.textContent = generateLastestSchedule(schedules, activity.createdTime);
 
       if (currentLocation) {
-        secondLine.textContent = secondLine.textContent + generateLatestVenue(venues, currentLocation);
+        secondLine.textContent = generateLatestVenue(venues, currentLocation);
       }
+
+      secondLine.textContent = secondLine.textContent +' | '+generateLastestSchedule(schedules, value.createdTime);
+
 
       // const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value,secondLine))
@@ -391,8 +392,19 @@ function activityListUI(data, secondLine) {
   leftTextContainer.appendChild(activityNameText);
   leftTextContainer.appendChild(secondLine);
   
+  const timeCustomText = document.createElement('div')
+  timeCustomText.className = 'mdc-meta__custom-text'
+  timeCustomText.style.width = '76px';
+  // timeCustomText.style.fontSize = '16px';
+  if(isToday(data.timestamp)) {
+    timeCustomText.style.marginTop = '13px'
+  }
+  
+  timeCustomText.textContent = moment(data.timestamp).calendar()
+
   const metaTextContainer = document.createElement('span')
   metaTextContainer.classList.add('mdc-list-item__meta');
+  metaTextContainer.appendChild(timeCustomText);
   metaTextContainer.appendChild(generateIconByCondition(data, li));
 
   li.appendChild(dataObject);
@@ -406,13 +418,13 @@ function activityListUI(data, secondLine) {
 function generateIconByCondition(data, li) {
  
   if (data.count) {
-    const countDiv = document.createElement('div')
+  
     const countSpan = document.createElement('span')
     countSpan.textContent = data.count
     countSpan.className = 'count mdc-meta__custom-text'
-    countDiv.appendChild(countSpan)
+    
     li.classList.add('count-active');
-    return countDiv;
+    return countSpan;
   }
   
 

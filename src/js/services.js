@@ -937,11 +937,15 @@ function getInputText(selector) {
 function runRead(value) {
   
   if (localStorage.getItem('dbexist')) {
+    if(!value) {
+      requestCreator('Null', value);
+      return;
+    }
+    
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();
       return
     }
-    requestCreator('Null', value);
   }
 }
 
