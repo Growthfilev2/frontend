@@ -228,14 +228,23 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (!record) return
       const schedules = record.schedule;
       const venues = record.venue;
+      let venueSpan;
+      const dateSpan = generateLastestSchedule(schedules, value.createdTime);
 
       if (currentLocation) {
-        secondLine.textContent = generateLatestVenue(venues, currentLocation);
+        venueSpan = generateLatestVenue(venues, currentLocation);
       }
 
-      secondLine.textContent = secondLine.textContent +' | '+generateLastestSchedule(schedules, value.createdTime);
-
-
+      if(venueSpan && !dateSpan) {
+        secondLine.textContent = venueSpan;
+      }
+      else if (dateSpan && !venueSpan) {
+        secondLine.textContent = dateSpan
+      }
+      else if(dateSpan && venueSpan){
+        secondLine.textContent = venueSpan +' | '+ dateSpan
+      }
+  
       // const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value,secondLine))
     }
