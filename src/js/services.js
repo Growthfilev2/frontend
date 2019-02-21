@@ -267,6 +267,9 @@ function geolocationApi(req) {
     if(verfiedBody){
       xhr.send(verfiedBody);
     }
+    else {
+      reject({message:'WCDMA CellTower request doesnt have wifiAccessPoints',body:req.body})
+    }
   });
 }
 
@@ -301,7 +304,7 @@ function getCellTowerInfo() {
       });
       return
     }
-    var key = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
+    var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
