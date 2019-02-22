@@ -252,15 +252,20 @@ function geolocationApi(req) {
             body: req.body
           })
         }
+        if(response.accuracy <= 350) {
 
-        resolve({
-          'latitude': response.location.lat,
-          'longitude': response.location.lng,
-          'accuracy': response.accuracy,
-          'provider': {
-            'cellular': JSON.parse(req.body)
-          },
-        });
+          resolve({
+            'latitude': response.location.lat,
+            'longitude': response.location.lng,
+            'accuracy': response.accuracy,
+            'provider': {
+              'cellular': JSON.parse(req.body)
+            },
+          });
+        }
+        else {
+          resolve({latitude:'',longitude:''})
+        }
       }
     };
     const verfiedBody = handleRequestBody(req.body);
@@ -359,7 +364,6 @@ function html5Geolocation() {
 
     let interval = setInterval(function () {
       navigator.geolocation.getCurrentPosition(function (position) {
-
         stabalzied.push({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
@@ -367,7 +371,7 @@ function html5Geolocation() {
         if (stabalzied.length > 1) {
           i++
           if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            if (position.coords.accuracy < 350) {
+            if (position.coords.accuracy <= 350) {
               stabalizedCount++
               if (stabalizedCount == 3) {
                 clearInterval(interval)
@@ -389,7 +393,7 @@ function html5Geolocation() {
           message: `${error.message} from html5Geolocation`
         });
       }, {
-        enableHighAccuracy:true,
+        enableHighAccuracy: true,
         timeout: 5000,
         maximumAge: 0
       })
@@ -400,17 +404,19 @@ function html5Geolocation() {
 
 function locationUpdationSuccess(location) {
 
-  var locationEvent = new CustomEvent("location", {
-    "detail": location.new
-  });
-  window.dispatchEvent(locationEvent);
+    var locationEvent = new CustomEvent("location", {
+      "detail": location.new
+    });
+    window.dispatchEvent(locationEvent);
 
-  var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+    var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
 
-  var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-    "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
-  });
-  window.dispatchEvent(suggestCheckIn);
+    var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+      "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+    });
+    window.dispatchEvent(suggestCheckIn);
+
+  
 }
 
 function showSuggestCheckInDialog() {
@@ -937,12 +943,12 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
 
-  if(native.getName() !== 'Android') {
+  if (native.getName() !== 'Android') {
     requestCreator('Null', value);
     return;
   }
 
-  if(!value) {
+  if (!value) {
     requestCreator('Null', value);
     return;
   }
