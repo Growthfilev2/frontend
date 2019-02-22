@@ -539,13 +539,13 @@ function getCountOfTemplates() {
       }
       tx.onerror = function () {
         reject({
-          message: `${tx.error} from getCountOfTemplates`
+          message: `${tx.error.message} from getCountOfTemplates`
         });
       }
     }
     req.onerror = function () {
       reject({
-        message: `${req.error} from getCountOfTemplates`
+        message: `${req.error.message} from getCountOfTemplates`
       });
     }
   })
