@@ -930,18 +930,23 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
-
 function runRead(value) {
+  if (!localStorage.getItem('dbexist')) return
 
-  if (localStorage.getItem('dbexist')) {
-
-    if (Object.keys(value)[0] === 'verifyEmail') {
-      emailVerify();
-      return
-    }
+  if(native.getName() !== 'Android') {
     requestCreator('Null', value);
+    return;
   }
 
+  if(!value) {
+    requestCreator('Null', value);
+    return;
+  }
+  if (Object.keys(value)[0] === 'verifyEmail') {
+    emailVerify();
+    return
+  }
+  requestCreator('Null', value);
 }
 
 function removeChildNodes(parent) {
