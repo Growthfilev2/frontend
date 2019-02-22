@@ -357,14 +357,14 @@ function html5Geolocation() {
     let i = 0;
     let stabalizedCount = 0;
 
-    let interval = setInterval(function(){
+    let interval = setInterval(function () {
       navigator.geolocation.getCurrentPosition(function (position) {
 
         stabalzied.push({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         })
-        if(stabalzied.length > 1){
+        if (stabalzied.length > 1) {
           i++
           if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
             if (position.coords.accuracy < 350) {
@@ -380,7 +380,7 @@ function html5Geolocation() {
                 })
               }
             }
-          } 
+          }
         }
       }, function (error) {
         clearInterval(interval)
@@ -392,8 +392,8 @@ function html5Geolocation() {
         timeout: 1000,
         maximumAge: 0
       })
-  },500);
-})
+    }, 500);
+  })
 }
 
 
@@ -936,17 +936,18 @@ function getInputText(selector) {
 function runRead(value) {
 
   if (!localStorage.getItem('dbexist')) return
-
-  if (native.getName() === 'Android') {
-
-    if (Object.keys(value)[0] === 'verifyEmail') {
-      emailVerify();
-      return
-    }
+  
+  if(native.getName() !== 'Android') {
+    requestCreator('Null', value);
+  }
+  if(!value) {
     requestCreator('Null', value);
     return;
   }
-  requestCreator('Null', value);
+  if (Object.keys(value)[0] === 'verifyEmail') {
+    emailVerify();
+    return
+  }
 }
 
 function removeChildNodes(parent) {
