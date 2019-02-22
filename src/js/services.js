@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -264,11 +264,13 @@ function geolocationApi(req) {
       }
     };
     const verfiedBody = handleRequestBody(req.body);
-    if(verfiedBody){
+    if (verfiedBody) {
       xhr.send(verfiedBody);
-    }
-    else {
-      reject({message:'WCDMA CellTower request doesnt have wifiAccessPoints',body:req.body})
+    } else {
+      reject({
+        message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
+        body: req.body
+      })
     }
   });
 }
@@ -276,8 +278,8 @@ function geolocationApi(req) {
 function handleRequestBody(request) {
   const body = JSON.parse(request);
   if (body.radioType === "WCDMA") {
-    if (body.wifiAccessPoints &&  body.wifiAccessPoints.length) {
-      if(body.cellTowers) {
+    if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
+      if (body.cellTowers) {
         delete body.cellTowers;
       }
       return JSON.stringify(body);
@@ -352,58 +354,59 @@ function manageLocation() {
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
     var stabalzied = [];
-    var totalcount = 0;
-    var count = 0;
+    let i = 0;
+    let stabalizedCount = 0;
 
-    var myInterval = setInterval(function () {
+    let interval = setInterval(function(){
       navigator.geolocation.getCurrentPosition(function (position) {
-        ++totalcount;
-        if (totalcount !== 1) {
-          stabalzied.push({
-            'latitude': position.coords.latitude,
-            'longitude': position.coords.longitude,
-            'accuracy': position.coords.accuracy,
-            'provider': 'HTML5'
-          });
 
-          if (stabalzied[0].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[0].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            ++count;
-            if (count == 3) {
-              clearInterval(myInterval);
-              myInterval = null;
-              return resolve(stabalzied[0]);
+        stabalzied.push({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        })
+        if(stabalzied.length > 1){
+          i++
+          if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
+            if (position.coords.accuracy < 350) {
+              stabalizedCount++
+              if (stabalizedCount == 3) {
+                clearInterval(interval)
+                interval = null;
+                return resolve({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  provider: 'HMTL5'
+                })
+              }
             }
-          }
-          if (totalcount >= 5) {
-            clearInterval(myInterval);
-            myInterval = null;
-            var bestInNavigator = sortedByAccuracy(stabalzied);
-            return resolve(bestInNavigator);
-          }
+          } 
         }
       }, function (error) {
-        clearInterval(myInterval);
-        myInterval = null;
+        clearInterval(interval)
+        interval = null;
         reject({
           message: `${error.message} from html5Geolocation`
         });
-      });
-    }, 500);
-  });
-
+      }, {
+        timeout: 1000,
+        maximumAge: 0
+      })
+  },500);
+})
 }
 
 
 function locationUpdationSuccess(location) {
- 
+
   var locationEvent = new CustomEvent("location", {
     "detail": location.new
   });
   window.dispatchEvent(locationEvent);
 
   var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
- 
-  var suggestCheckIn = new CustomEvent("suggestCheckIn", { 
+
+  var suggestCheckIn = new CustomEvent("suggestCheckIn", {
     "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
   });
   window.dispatchEvent(suggestCheckIn);
@@ -431,7 +434,7 @@ function showSuggestCheckInDialog() {
     }).catch(console.log);
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
-   app.isNewDay();
+    app.isNewDay();
   });
 }
 
@@ -466,14 +469,14 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-      
+
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
 
       };
       tx.oncomplete = function () {
-  
+
         resolve({
           prev: previousLocation,
           new: finalLocation
@@ -733,7 +736,7 @@ var receiverCaller = {
   'android-stop-refreshing': androidStopRefreshing,
   'loadView': loadView,
   'apiFail': apiFail,
-  'backblazeRequest': urlFromBase64Image,  
+  'backblazeRequest': urlFromBase64Image,
 };
 
 function messageReceiver(response) {
@@ -929,19 +932,21 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
+
 function runRead(value) {
-  
-  if (localStorage.getItem('dbexist')) {
-    if(!value) {
-      requestCreator('Null', value);
-      return;
-    }
-    
+
+  if (!localStorage.getItem('dbexist')) return
+
+  if (native.getName() === 'Android') {
+
     if (Object.keys(value)[0] === 'verifyEmail') {
       emailVerify();
       return
     }
+    requestCreator('Null', value);
+    return;
   }
+  requestCreator('Null', value);
 }
 
 function removeChildNodes(parent) {
