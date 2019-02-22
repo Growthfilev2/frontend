@@ -934,12 +934,13 @@ function getInputText(selector) {
 
 
 function runRead(value) {
-
   if (!localStorage.getItem('dbexist')) return
-  
+
   if(native.getName() !== 'Android') {
     requestCreator('Null', value);
+    return;
   }
+
   if(!value) {
     requestCreator('Null', value);
     return;
@@ -948,6 +949,7 @@ function runRead(value) {
     emailVerify();
     return
   }
+  requestCreator('Null', value);
 }
 
 function removeChildNodes(parent) {
