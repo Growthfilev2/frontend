@@ -459,7 +459,7 @@ function updateLocationInRoot(finalLocation) {
         if (record.location) {
           previousLocation = record.location
         };
-        
+
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
@@ -472,11 +472,11 @@ function updateLocationInRoot(finalLocation) {
         if (!finalLocation.longitude) return;
 
         var locationEvent = new CustomEvent("location", {
-          "detail": location.new
+          "detail": finalLocation
         });
         window.dispatchEvent(locationEvent);
 
-        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
 
         var suggestCheckIn = new CustomEvent("suggestCheckIn", {
           "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
@@ -937,6 +937,7 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
   
+
   if(value){
     const key = Object.keys(value)[0]
     switch(key) {
