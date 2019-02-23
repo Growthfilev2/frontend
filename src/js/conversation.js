@@ -1246,7 +1246,6 @@ function createTempRecord(office, template, data) {
           if (!record.location || isLocationOld) {
             appDialog('Fetching Location Please wait', false)
             window.addEventListener('location', function _checkInLatest(e) {
-
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
