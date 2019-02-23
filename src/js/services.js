@@ -356,6 +356,11 @@ function manageLocation() {
   })
 }
 
+function iosLocationError(error){
+  handleError({message:error});
+  initLocation()
+}
+
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
     var stabalzied = [];
@@ -393,31 +398,13 @@ function html5Geolocation() {
           message: `${error.message} from html5Geolocation`
         });
       }, {
-        enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 8000,
         maximumAge: 0
       })
     }, 500);
   })
 }
 
-
-function locationUpdationSuccess(location) {
-
-    var locationEvent = new CustomEvent("location", {
-      "detail": location.new
-    });
-    window.dispatchEvent(locationEvent);
-
-    var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
-
-    var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-      "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
-    });
-    window.dispatchEvent(suggestCheckIn);
-
-  
-}
 
 function showSuggestCheckInDialog() {
   const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
@@ -452,9 +439,8 @@ function isDialogOpened(id) {
   return isOpen;
 }
 
-function updateLocationInRoot(finalLocation) {
-  return new Promise(function (resolve, reject) {
 
+function updateLocationInRoot(finalLocation) {
     var previousLocation = {
       latitude: '',
       longitude: '',
@@ -462,8 +448,6 @@ function updateLocationInRoot(finalLocation) {
       provider: '',
       lastLocationTime: ''
     };
-
-
     var dbName = firebase.auth().currentUser.uid;
     var req = indexedDB.open(dbName);
     req.onsuccess = function () {
@@ -472,37 +456,47 @@ function updateLocationInRoot(finalLocation) {
       var rootStore = tx.objectStore('root');
       rootStore.get(dbName).onsuccess = function (event) {
         var record = event.target.result;
-
         if (record.location) {
           previousLocation = record.location
         };
-
+        
         record.location = finalLocation;
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
-
       };
       tx.oncomplete = function () {
 
-        resolve({
-          prev: previousLocation,
-          new: finalLocation
+        if (!previousLocation.latitude) return;
+        if (!previousLocation.longitude) return;
+        if (!finalLocation.latitude) return;
+        if (!finalLocation.longitude) return;
+
+        var locationEvent = new CustomEvent("location", {
+          "detail": location.new
         });
+        window.dispatchEvent(locationEvent);
+
+        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(location.prev, location.new);
+
+        var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+          "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+        });
+        window.dispatchEvent(suggestCheckIn);
       };
       tx.onerror = function () {
-        reject({
+        handleError({
           message: `${tx.error.message} from updateLocationInRoot`,
           body: tx.error.name
         })
       }
     };
     req.onerror = function () {
-      reject({
+      handleError({
         message: `${req.error.message} from updateLocationInRoot`,
         body: req.error.name
       });
     };
-  });
+  
 }
 
 function toRad(value) {
@@ -942,20 +936,24 @@ function getInputText(selector) {
 
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
-
-  if (native.getName() !== 'Android') {
-    requestCreator('Null', value);
+  
+  if(value){
+    const key = Object.keys(value)[0]
+    switch(key) {
+      case 'verifyEmail':
+      emailVerify();
+      break;
+      case 'removedFromOffice':
+      break;
+      case 'read':
+      requestCreator('Null', value);
+      break;
+      default:
+      requestCreator('Null', value);
+    }
     return;
   }
 
-  if (!value) {
-    requestCreator('Null', value);
-    return;
-  }
-  if (Object.keys(value)[0] === 'verifyEmail') {
-    emailVerify();
-    return
-  }
   requestCreator('Null', value);
 }
 
