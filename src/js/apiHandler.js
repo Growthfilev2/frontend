@@ -1,5 +1,6 @@
-importScripts('../external/js/moment.min.js');
+importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+
 
 let deviceInfo;
 let currentDevice;
@@ -201,7 +202,7 @@ function putServerTime(data) {
   return new Promise(function (resolve, reject) {
     const request = indexedDB.open(data.user.uid);
     request.onerror = function () {
-      reject(request.error)
+      reject(request.error.message)
     }
 
     request.onsuccess = function () {
@@ -394,7 +395,9 @@ function updateMap(activity, param) {
 
         let deleteRecordReq = cursor.delete()
         cursor.continue()
-        deleteRecordReq.onerror = errorDeletingRecord
+        deleteRecordReq.onerror = function(){
+          instant({message:deleteRecordReq.error.message})
+        }
       }
     }
 
@@ -421,23 +424,17 @@ function updateMap(activity, param) {
       }
       mapTxAdd.onerror = function () {
         instant(JSON.stringify({
-          message: `${mapTxAdd.error}`
+          message: `${mapTxAdd.error.message}`
         }), param.user)
       }
     }
     mapTx.onerror = function () {
       instant(JSON.stringify({
-        message: `${mapTx.error}`
+        message: `${mapTx.error.message}`
       }), param.user)
     }
   }
 }
-
-
-function errorDeletingRecord(event) {
-  console.log(event.target.error)
-}
-
 
 function updateCalendar(activity, param) {
 
@@ -453,7 +450,9 @@ function updateCalendar(activity, param) {
       const cursor = event.target.result
       if (cursor) {
         let recordDeleteReq = cursor.delete()
-        recordDeleteReq.onerror = errorDeletingRecord
+        recordDeleteReq.onerror = function(){
+          instant({message:recordDeleteReq.error.message})
+        }
         cursor.continue()
       }
     }
@@ -479,7 +478,7 @@ function updateCalendar(activity, param) {
       })
       calendarTx.onerror = function () {
         instant(JSON.stringify({
-          message: `${calendarTx.error}`
+          message: `${calendarTx.error.message}`
         }), param.user)
       }
     }
@@ -507,7 +506,7 @@ function putAttachment(activity, param) {
 
     tx.onerror = function () {
       instant(JSON.stringify({
-        message: `${tx.error}`
+        message: `${tx.error.message}`
       }), param.user)
     }
   }
@@ -589,7 +588,8 @@ function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
       console.log("activity is removed from all stores")
     }
     tx.onerror = function () {
-      console.log(transaction.error)
+
+      instant({message:transaction.error.message})
     }
 
   }
@@ -645,7 +645,7 @@ function updateSubscription(db, templates, param) {
       }
       tx.onerror = function () {
         reject({
-          message: `${tx.error}`
+          message: `${tx.error.message}`
         });
       }
     }
@@ -838,7 +838,7 @@ function createUsersApiUrl(db, user) {
     }
     tx.onerror = function () {
       reject({
-        message: tx.error
+        message: tx.error.message
       })
     }
   })
@@ -880,7 +880,7 @@ function updateUserObjectStore(requestPayload) {
       }
       tx.onerror = function () {
         instant(JSON.stringify({
-          message: `${tx.error}`
+          message: `${tx.error.message}`
         }), param.user)
       }
 
@@ -906,7 +906,7 @@ function updateRoot(param, read) {
         resolve(true)
       }
       rootTx.onerror = function () {
-        reject(rootTx.error);
+        reject(rootTx.error.message);
       }
     }
   })
@@ -934,12 +934,12 @@ function getUniqueOfficeCount(param) {
       }
       tx.onerror = function () {
         reject({
-          message: tx.error
+          message: tx.error.message
         })
       }
       req.onerror = function () {
         reject({
-          message: req.error
+          message: req.error.message
         })
       }
     }
@@ -967,7 +967,7 @@ function setUniqueOffice(offices, param) {
       }
       tx.onerror = function () {
         reject({
-          message: tx.error
+          message: tx.error.message
         })
       }
     }
