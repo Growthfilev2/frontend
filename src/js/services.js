@@ -15,6 +15,7 @@ function handleError(error) {
   }
 }
 
+
 function loader(nameClass) {
   var div = document.createElement('div');
   div.className = 'loader ' + nameClass;
@@ -936,7 +937,6 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
   
-
   if(value){
     const key = Object.keys(value)[0]
     switch(key) {
