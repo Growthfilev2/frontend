@@ -443,7 +443,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
 
       if (!empDetails) {
-        return false;
+        return resolve(false);
       }
 
       empDetails.onLeave = false

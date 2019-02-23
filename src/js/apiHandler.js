@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -659,7 +659,6 @@ function deleteTemplateInSubscription(subscription) {
 function createListStore(activity, counter, param) {
   return new Promise(function (resolve, reject) {
 
-
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -676,12 +675,10 @@ function createListStore(activity, counter, param) {
           number: activity.creator,
           photo: ''
         },
-        
         'activityName': activity.activityName,
         'status': activity.status
       }
       usersStore.get(activity.creator).onsuccess = function (event) {
-       
         const record = event.target.result;
         if (record) {
           requiredData.creator.photo = record.photoURL
