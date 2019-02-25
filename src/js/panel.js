@@ -164,7 +164,7 @@ function startCursor(currentLocation) {
 
       const cursor = event.target.result;
       if (!cursor) return;
-
+      
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true

@@ -378,10 +378,9 @@ function startApp(start) {
     if (start) {
       createIDBStore(auth).then(function () {
         localStorage.setItem('dbexist', auth.uid);
-        // if(native.getName() === 'Ios') {
-           
-        //   webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-        // }
+        if(native.getName() !== 'Android') {
+          webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+        }
         init()
       }).catch(function (error) {
         snacks('Please restart the app');
@@ -642,11 +641,11 @@ function init() {
   listView();
   runAppChecks();
   
-  // if(native.getName() === 'Android') {
+  if(native.getName() === 'Android') {
   setInterval(function () {
      initLocation()
     }, 5000);
-  // }
+  }
 }
 
 function initLocation (){
