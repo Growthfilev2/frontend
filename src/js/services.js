@@ -373,7 +373,6 @@ function html5Geolocation() {
         if (stabalzied.length > 1) {
           i++
           if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-
             stabalizedCount++
             if (stabalizedCount == 3) {
               clearInterval(interval)
