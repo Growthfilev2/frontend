@@ -264,15 +264,15 @@ function geolocationApi(req) {
         });
       }
     };
-    // const verfiedBody = handleRequestBody(req.body);
-    // if (verfiedBody) {
-      xhr.send(req.body);
-    // } else {
-    //   reject({
-    //     message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
-    //     body: req.body
-    //   })
-    // }
+    const verfiedBody = handleRequestBody(req.body);
+    if (verfiedBody) {
+      xhr.send(verfiedBody);
+    } else {
+      reject({
+        message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
+        body: req.body
+      })
+    }
   });
 }
 
