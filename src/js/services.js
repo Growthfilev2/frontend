@@ -217,7 +217,7 @@ function geolocationApi(req) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           const errorMessage = JSON.parse(xhr.response).error.errors[0].reason
-          if (errorMessage === 'Backend Error') {
+          if (errorMessage === 'backendError') {
             if (req.retry === 1) {
               return reject({
                 message: errorMessage,
