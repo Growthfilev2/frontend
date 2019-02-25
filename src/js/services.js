@@ -253,7 +253,7 @@ function geolocationApi(req) {
             body: req.body
           })
         }
-        if(response.accuracy <= 350) {
+        // if(response.accuracy <= 350) {
 
           resolve({
             'latitude': response.location.lat,
@@ -263,21 +263,21 @@ function geolocationApi(req) {
               'cellular': JSON.parse(req.body)
             },
           });
-        }
-        else {
-          resolve({latitude:'',longitude:''})
-        }
+        // }
+        // else {
+        //   resolve({latitude:'',longitude:''})
+        // }
       }
     };
-    const verfiedBody = handleRequestBody(req.body);
-    if (verfiedBody) {
-      xhr.send(verfiedBody);
-    } else {
-      reject({
-        message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
-        body: req.body
-      })
-    }
+    // const verfiedBody = handleRequestBody(req.body);
+    // if (verfiedBody) {
+      xhr.send(req.body);
+    // } else {
+    //   reject({
+    //     message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
+    //     body: req.body
+    //   })
+    // }
   });
 }
 
@@ -376,7 +376,7 @@ function html5Geolocation() {
         if (stabalzied.length > 1) {
           i++
           if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            if (position.coords.accuracy <= 350) {
+            // if (position.coords.accuracy <= 350) {
               stabalizedCount++
               if (stabalizedCount == 3) {
                 clearInterval(interval)
@@ -385,10 +385,10 @@ function html5Geolocation() {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
                   accuracy: position.coords.accuracy,
-                  provider: 'HMTL5'
+                  provider: 'HTML5'
                 })
               }
-            }
+            // }
           }
         }
       }, function (error) {
