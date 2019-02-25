@@ -385,7 +385,7 @@ function html5Geolocation() {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
                   accuracy: position.coords.accuracy,
-                  provider: 'HMTL5'
+                  provider: 'HTML5'
                 })
               }
             }
