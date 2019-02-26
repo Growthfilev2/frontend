@@ -500,9 +500,7 @@ function createIDBStore(auth) {
         })
         return;
       }
-
-      createObjectStores(db, auth.uid)
-
+      createObjectStores(db, auth.uid); 
     }
     req.onsuccess = function () {
 

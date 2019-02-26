@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -17,6 +17,7 @@ const requestFunctionCaller = {
   share: share,
   update: update,
   create: create,
+  removeFromOffice:removeFromOffice
 }
 
 function requestHandlerResponse(type, code, message, params) {
@@ -317,6 +318,132 @@ function create(body, user) {
       .catch(sendApiFailToMainThread)
   })
 }
+
+function removeFromOffice(param){
+  removeActivity(param).then(function(response){
+    return removeFromListAndChildren(response)
+  }).then(function(response){
+    return removeFromMapAndCalendar(response);
+  }).then(function(response) {
+    return removeFromSubscriptions(response)
+  }).catch(function(error){
+    throw new Error(error);
+  }).catch(function(error){
+    console.log(error);
+    instant(JSON.stringify({message:Error}))
+  })
+}
+
+
+
+
+function removeActivity(param){
+  return new Promise (function(resolve,reject){
+
+    const req = indexedDB.open(param.user.uid);
+    req.onsuccess = function(){
+      const db =req.result;
+      const tx =db.transaction(['activity'],'readwrite')
+      const store = tx.objectStore('activity');
+      const index = store.index('office');
+      const ids  = [];
+
+      index.openCursor(param.body.office).onsuccess = function(event){
+        const cursor = event.target.result;
+        if(!cursor) return;
+        ids.push(cursor.value.activityId);
+        const deleteReq = cursor.delete();
+
+        deleteReq.onsuccess = function(){
+
+          cursor.continue();
+        }
+      }
+      tx.oncomplete = function(){
+        resolve({param:param,ids:ids})
+      }
+      tx.onerror = function(){
+        reject({message:tx.error.message})
+      }
+    }
+    req.onerror = function(){
+      reject({message:req.error.message})
+    }
+  })
+}
+
+function removeFromListAndChildren(response){
+  return new Promise(function(resolve,reject){
+
+    const req = indexedDB.open(response.param.user.uid);
+    req.onsuccess = function(){
+      const db = req.result;
+      const tx = db.transaction(['list','children'],'readwrite');
+      const listStore = tx.objectStore('list');
+      const childrenStore  = tx.objectStore('children');
+      response.ids.forEach(function(id){
+          const deleteReqList = listStore.delete(id);
+          const deleteReqChildren = childrenStore.delete(id);
+      })
+      tx.oncomplete = function(){
+        resolve(response)
+      }
+      tx.onerror = function(){
+        reject({message:tx.error.message})
+      }
+    }
+    req.onerror = function(){
+      reject({message:req.error.message})
+    }
+  })
+}
+
+function removeFromMapAndCalendar(response){
+  return new Promise(function(resolve,reject){
+
+    const req = indexedDB.open(Response.param.user.uid);
+    req.onsuccess = function(){
+      const db = req.result;
+      const tx = db.transaction(['map','calendar'],'readwrite');
+      const map = tx.objectStore('map');
+      const calendar = tx.objectStore('calendar');
+      
+      deleteByIndex(map,response.ids);
+      deleteByIndex(calendar,response.ids);
+      tx.oncomplete = function(){
+        resolve(response)    
+      }
+      tx.onerror = function(){
+        reject({message:tx.error.message})
+      }
+    }
+    req.onerror = function(){
+      reject({message:req.error.message})
+    }
+  })
+}
+
+function removeFromSubscriptions(response) {
+  return new Promise(function(resolve,reject){
+
+    const req = indexedDB.open(response.param.user.uid)
+    req.onsuccess = function(){
+      const db = req.result;
+      const tx = db.transaction(['subscriptions'],'readwrite');
+      const store = tx.objectStore('subscriptions');
+      const index = store.index('office')
+      index.openCursor(response.body.office).onsuccess = function(event){
+        const cursor = event.target.result;
+        if(!cursor) return;
+        const deleteReq = cursor.delete();
+        cursor.continue()
+      }
+      tx.oncomplete = function(){
+        
+      }
+    }
+  })
+  }
 
 function getUrlFromPhoto(body, user) {
 

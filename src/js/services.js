@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -220,7 +220,7 @@ function geolocationApi(req) {
           if (errorMessage === 'backendError') {
             if (req.retry === 1) {
               return reject({
-                message: errorMessage,
+                message: errorMessage,  
                 body: {
                   cellular: req.body,
                   tries: 'Retried 3 times'
@@ -333,22 +333,22 @@ function getCellTowerInfo() {
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
-    if (native.getName() === 'Android') {
-      getCellTowerInfo().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        handleError(error);
-        return html5Geolocation();
-      }).then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject({
-          error: error,
-          meta: 'Both geolocation and html5 failed to get location'
-        });
-      })
-      return;
-    }
+    // if (native.getName() === 'Android') {
+    //   getCellTowerInfo().then(function (location) {
+    //     resolve(location)
+    //   }).catch(function (error) {
+    //     handleError(error);
+    //     return html5Geolocation();
+    //   }).then(function (location) {
+    //     resolve(location)
+    //   }).catch(function (error) {
+    //     reject({
+    //       error: error,
+    //       meta: 'Both geolocation and html5 failed to get location'
+    //     });
+    //   })
+    //   return;
+    // }
     html5Geolocation().then(function (location) {
       resolve(location)
     }).catch(function (error) {
@@ -949,6 +949,8 @@ function runRead(value) {
       case 'read':
       requestCreator('Null', value);
       break;
+      case 'removeFromOffice':
+      requestCreator('removeFromOffice')
       default:
       requestCreator('Null', value);
     }
