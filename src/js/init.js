@@ -399,19 +399,29 @@ function startApp(start) {
       req.onsuccess = function () {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        let iosLocationManagerFail = false;
+        let useJSTimer = false;
         
-        if (native.getName() === 'Ios') {
+        if(native.getName() === 'Android') {
           try {
-            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-          } catch (e) {
-            iosLocationManagerFail = true;
+            AndroidInterface.startLocationService();
+          }catch(e){
+            useJSTimer = true;
             handleError({
               message: e.message
             })
           }
         }
-
+        else {
+          try {
+            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+          } catch (e) {
+            useJSTimer = true;
+            handleError({
+              message: e.message
+            })
+          }
+        }
+      
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -421,7 +431,7 @@ function startApp(start) {
         listView();
         runAppChecks();
 
-        if (native.getName() === 'Android' || useiOSLocationManager) {
+        if (useJSTimer) {
           setInterval(function () {
             initLocation()
           }, 5000);
