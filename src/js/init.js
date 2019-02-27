@@ -400,7 +400,6 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         let useJSTimer = false;
-        
         if(native.getName() === 'Android') {
           try {
             AndroidInterface.startLocationService(true);
