@@ -217,6 +217,7 @@ function geolocationApi(req) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           const errorMessage = JSON.parse(xhr.response).error.errors[0].reason
+          
           if (errorMessage === 'Backend Error') {
             if (req.retry === 1) {
               return reject({
@@ -253,8 +254,11 @@ function geolocationApi(req) {
             body: req.body
           })
         }
-        if(response.accuracy <= 350) {
+        
+        if(response.accuracy > 350) {
 
+        }
+        else {
           resolve({
             'latitude': response.location.lat,
             'longitude': response.location.lng,
@@ -263,9 +267,6 @@ function geolocationApi(req) {
               'cellular': JSON.parse(req.body)
             },
           });
-        }
-        else {
-          resolve({latitude:'',longitude:''})
         }
       }
     };
@@ -298,27 +299,33 @@ function handleRequestBody(request) {
 }
 
 
-function getCellTowerInfo() {
+function getCellTowerInfo(cellBody) {
   return new Promise(function (resolve, reject) {
-    let coarseData = "";
-    try {
-      coarseData = AndroidInterface.getCellularData();
-    } catch (e) {
-      reject({
-        message: `${e.message} from getCellularData`
-      });
-    }
 
-    if (!coarseData) {
-      reject({
-        message: 'empty cell tower from android.'
-      });
-      return
-    }
-    var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
-    const req = {
-      method: 'POST',
-      url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
+      let coarseData = "";
+      try {
+        if(cellBody) {
+          coarseData = cellBody
+        }
+        else {
+          coarseData = AndroidInterface.getCellularData();
+        }
+      } catch (e) {
+        reject({
+          message: `${e.message} from getCellularData`
+        });
+      }
+      
+      if (!coarseData) {
+        reject({
+          message: 'empty cell tower from android.'
+        });
+        return
+      }
+      var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
+      const req = {
+        method: 'POST',
+        url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
       body: coarseData,
       retry: 3
     }
@@ -331,24 +338,35 @@ function getCellTowerInfo() {
   })
 }
 
-function manageLocation() {
+function manageLocation(cellBody) {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
-      getCellTowerInfo().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        handleError(error);
-        return html5Geolocation();
-      }).then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject({
-          error: error,
-          meta: 'Both geolocation and html5 failed to get location'
-        });
+      
+    getCellTowerInfo(cellBody).then(function(cellLocation){
+      if(cellLocation.accuracy <= 350) {
+        // use this
+        resolve(cellLocation)
+      }
+      else {
+        html5Geolocation().then(function(htmlLocation){
+          if(cellLocation.accuracy < html5Geolocation.accuracy) {
+            resolve(cellLocation)
+          }
+          else {
+            resolve(html5Geolocation);
+          }
+        })
+      }
+    }).catch(function(cellError){
+      html5Geolocation().then(function(htmlLocation){
+        resolve(html5Geolocation);
+      }).catch(function(htmlError){
+        reject({message:'ka',body:{html:htmlError,cellError:cellError}})
       })
-      return;
-    }
+    })
+    return;
+  }
+
     html5Geolocation().then(function (location) {
       resolve(location)
     }).catch(function (error) {

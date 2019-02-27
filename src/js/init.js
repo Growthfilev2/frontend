@@ -403,7 +403,7 @@ function startApp(start) {
         
         if(native.getName() === 'Android') {
           try {
-            AndroidInterface.startLocationService();
+            AndroidInterface.startLocationService(true);
           }catch(e){
             useJSTimer = true;
             handleError({
