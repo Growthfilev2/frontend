@@ -217,24 +217,6 @@ function geolocationApi(req) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           const errorMessage = JSON.parse(xhr.response).error.errors[0].reason
-          
-          if (errorMessage === 'Backend Error') {
-            if (req.retry === 1) {
-              return reject({
-                message: errorMessage,
-                body: {
-                  cellular: req.body,
-                  tries: 'Retried 3 times'
-                }
-              });
-            }
-            req.retry--
-            geolocationApi(req).then().catch(function (error) {
-              reject(error)
-            })
-            return;
-          }
-
           return reject({
             message: errorMessage,
             body: req.body
@@ -256,7 +238,34 @@ function geolocationApi(req) {
         }
         
         if(response.accuracy > 350) {
-
+          if (req.retry === 1) {
+            return resolve({
+              'latitude': response.location.lat,
+              'longitude': response.location.lng,
+              'accuracy': response.accuracy,
+              'provider': {
+                'cellular': JSON.parse(req.body)
+              },
+            });
+          }
+          req.retry--
+          const wifiBased = handleRequestBody(req.body);
+          if(wifiBased) {
+            req.body = wifiBased
+            geolocationApi(req).then().catch(function (error) {
+              reject(error)
+            })
+          }
+          else {
+            resolve({
+              'latitude': response.location.lat,
+              'longitude': response.location.lng,
+              'accuracy': response.accuracy,
+              'provider': {
+                'cellular': JSON.parse(req.body)
+              },
+            })
+          }
         }
         else {
           resolve({
@@ -270,21 +279,15 @@ function geolocationApi(req) {
         }
       }
     };
-    const verfiedBody = handleRequestBody(req.body);
-    if (verfiedBody) {
-      xhr.send(verfiedBody);
-    } else {
-      reject({
-        message: 'WCDMA CellTower request doesnt have wifiAccessPoints',
-        body: req.body
-      })
-    }
+   
+    xhr.send(req.body);
+    
   });
 }
 
 function handleRequestBody(request) {
   const body = JSON.parse(request);
-  if (body.radioType === "WCDMA") {
+  
     if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
       if (body.cellTowers) {
         delete body.cellTowers;
@@ -293,9 +296,7 @@ function handleRequestBody(request) {
     } else {
       return null;
     }
-  }
-
-  return request
+ 
 }
 
 
@@ -327,7 +328,7 @@ function getCellTowerInfo(cellBody) {
         method: 'POST',
         url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
       body: coarseData,
-      retry: 3
+      retry: 2
     }
 
     geolocationApi(req).then(function (location) {
