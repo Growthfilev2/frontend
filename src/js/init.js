@@ -402,7 +402,7 @@ function startApp(start) {
         let useJSTimer = false;
         if(native.getName() === 'Android') {
           try {
-            AndroidInterface.startLocationService(true);
+            AndroidInterface.startLocationService("true");
           }catch(e){
             useJSTimer = true;
             handleError({
@@ -627,12 +627,15 @@ function redirect() {
 }
 
 
-function initLocation() {
-  manageLocation().then(function (location) {
+function initLocation(cellBody) {
+  manageLocation(cellBody).then(function (location) {
     if (location.latitude && location.longitude) {
+      console.log("c"+location)
       updateLocationInRoot(location)
     }
-  }).catch(handleError);
+  }).catch(function(error){
+    console.log("c"+error)
+  });
 }
 
 function runAppChecks() {

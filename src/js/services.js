@@ -10,6 +10,7 @@ function handleError(error) {
       error.stack = error.stack;
     }
 
+
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -214,6 +215,7 @@ function geolocationApi(req) {
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
+      
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           const errorMessage = JSON.parse(xhr.response).error.errors[0].reason
@@ -329,6 +331,7 @@ function getCellTowerInfo(cellBody) {
     }
 
     geolocationApi(req).then(function (location) {
+      console.log("b"+location)
       resolve(location)
     }).catch(function (error) {
       reject(error)
@@ -342,6 +345,7 @@ function manageLocation(cellBody) {
 
       getCellTowerInfo(cellBody).then(function (cellLocation) {
         if (cellLocation.accuracy <= 350) {
+          console.log("f"+cellLocation)
           resolve(cellLocation)
         } else {
           html5Geolocation().then(function (htmlLocation) {
