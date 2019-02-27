@@ -215,7 +215,7 @@ function geolocationApi(req) {
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
-      
+
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           const errorMessage = JSON.parse(xhr.response).error.errors[0].reason
@@ -331,7 +331,7 @@ function getCellTowerInfo(cellBody) {
     }
 
     geolocationApi(req).then(function (location) {
-      console.log("b"+location)
+      console.log("b" + location)
       resolve(location)
     }).catch(function (error) {
       reject(error)
@@ -344,18 +344,22 @@ function manageLocation(cellBody) {
     if (native.getName() === 'Android') {
 
       getCellTowerInfo(cellBody).then(function (cellLocation) {
-        if (cellLocation.accuracy <= 350) {
-          console.log("f"+cellLocation)
-          resolve(cellLocation)
-        } else {
-          html5Geolocation().then(function (htmlLocation) {
-            if (cellLocation.accuracy < htmlLocation.accuracy) {
-              resolve(cellLocation)
-            } else {
-              resolve(htmlLocation);
-            }
-          })
-        }
+        // if (cellLocation.accuracy <= 350) {
+        //   console.log("f"+cellLocation)
+        //   resolve(cellLocation)
+        // } else {
+        html5Geolocation().then(function (htmlLocation) {
+          console.log("u" + htmlLocation)
+          
+          if (cellLocation.accuracy < htmlLocation.accuracy) {
+            resolve(cellLocation)
+          } else {
+            resolve(htmlLocation);
+          }
+        }).catch(function(htmlError){
+            resolve(cellLocation);
+        })
+        // }
       }).catch(function (cellError) {
         html5Geolocation().then(function (htmlLocation) {
           resolve(htmlLocation);
@@ -389,38 +393,52 @@ function iosLocationError(error) {
 
 function html5Geolocation() {
 
-  
+
   return new Promise(function (resolve, reject) {
     var stabalzied = [];
     let i = 0;
     let stabalizedCount = 0;
-   let Timer =  setTimeout(function(){
+    let Timer = setTimeout(function () {
       clearTimeout(Timer)
       Timer = null;
-      resolve(stabalzied[stabalzied.length -1]);
+      
+      const lastLocation = stabalzied[stabalzied.length - 1]
+      console.log("unstable")
+      if(!lastLocation) {
+        reject({message:'navigator.getCurrentLocation failed to fetch location'})
+      }
+      else {
+        resolve(lastLocation);
+      }
       return;
-    },5000)
+    }, 5000)
 
     let interval = setInterval(function () {
+
       navigator.geolocation.getCurrentPosition(function (position) {
         stabalzied.push({
           latitude: position.coords.latitude,
-          longitude: position.coords.longitude
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          provider: 'HTML5'
         })
         if (stabalzied.length > 1) {
           i++
-          if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)  && position.coords.accuracy <= 350) {
-              stabalizedCount++
-              if (stabalizedCount == 3) {
-                clearInterval(interval)
-                interval = null;
-                return resolve({
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                  accuracy: position.coords.accuracy,
-                  provider: 'HMTL5'
-                })
-              }
+          if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3) && position.coords.accuracy <= 350) {
+            stabalizedCount++
+            if (stabalizedCount == 3) {
+              console.log("stabalized")
+              clearInterval(interval)
+              clearTimeout(Timer)
+              Timer = null;
+              interval = null;
+              return resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                provider: 'HMTL5'
+              })
+            }
           }
         }
       }, function (error) {
