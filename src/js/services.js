@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -213,7 +213,7 @@ function geolocationApi(req) {
     var xhr = new XMLHttpRequest();
     xhr.open(req.method, req.url, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-
+    let originalResponse;
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
@@ -224,7 +224,6 @@ function geolocationApi(req) {
             body: req.body
           });
         }
-
         if (!xhr.responseText) {
           return reject({
             message: 'No response text from google',
@@ -238,7 +237,7 @@ function geolocationApi(req) {
             body: req.body
           })
         }
-
+        originalResponse = response;
         if (response.accuracy > 350) {
           if (req.retry === 1) {
             return resolve({
@@ -254,7 +253,14 @@ function geolocationApi(req) {
           const wifiBased = handleRequestBody(req.body);
           if (wifiBased) {
             req.body = wifiBased
-            geolocationApi(req).then().catch(function (error) {
+            geolocationApi(req).then(function(retryRes){
+              if(retryRes.accuracy < 350) {
+                resolve(retryRes)
+              }
+              else {
+                resolve(originalResponse)
+              }
+            }).catch(function (error) {
               reject(error)
             })
           } else {
@@ -268,7 +274,7 @@ function geolocationApi(req) {
             })
           }
         } else {
-          resolve({
+         resolve({
             'latitude': response.location.lat,
             'longitude': response.location.lng,
             'accuracy': response.accuracy,
@@ -279,7 +285,9 @@ function geolocationApi(req) {
         }
       }
     };
-
+    xhr.onerror = function(){
+      reject({message:xhr})
+    }
     xhr.send(req.body);
 
   });
@@ -331,7 +339,6 @@ function getCellTowerInfo(cellBody) {
     }
 
     geolocationApi(req).then(function (location) {
-      console.log("b" + location)
       resolve(location)
     }).catch(function (error) {
       reject(error)
@@ -341,16 +348,14 @@ function getCellTowerInfo(cellBody) {
 
 function manageLocation(cellBody) {
   return new Promise(function (resolve, reject) {
-    if (native.getName() === 'Android') {
+    // if (native.getName() === 'Android') {
 
       getCellTowerInfo(cellBody).then(function (cellLocation) {
         // if (cellLocation.accuracy <= 350) {
-        //   console.log("f"+cellLocation)
         //   resolve(cellLocation)
         // } else {
         html5Geolocation().then(function (htmlLocation) {
-          console.log("u" + htmlLocation)
-          
+        
           if (cellLocation.accuracy < htmlLocation.accuracy) {
             resolve(cellLocation)
           } else {
@@ -374,13 +379,13 @@ function manageLocation(cellBody) {
         })
       })
       return;
-    }
+    // }
 
-    html5Geolocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
+    // html5Geolocation().then(function (location) {
+    //   resolve(location)
+    // }).catch(function (error) {
+    //   reject(error)
+    // })
   })
 }
 
@@ -403,7 +408,6 @@ function html5Geolocation() {
       Timer = null;
       
       const lastLocation = stabalzied[stabalzied.length - 1]
-      console.log("unstable")
       if(!lastLocation) {
         reject({message:'navigator.getCurrentLocation failed to fetch location'})
       }
@@ -427,7 +431,6 @@ function html5Geolocation() {
           if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3) && position.coords.accuracy <= 350) {
             stabalizedCount++
             if (stabalizedCount == 3) {
-              console.log("stabalized")
               clearInterval(interval)
               clearTimeout(Timer)
               Timer = null;
@@ -442,7 +445,6 @@ function html5Geolocation() {
           }
         }
       }, function (error) {
-        console.log(error)
         clearInterval(interval)
         interval = null;
         reject({
@@ -861,7 +863,6 @@ function showEMailUpdateDailog() {
 }
 
 function initFirstLoad(response) {
-  console.log(response);
   if (history.state[0] !== 'listView') return;
   if (response.msg.hasOwnProperty('activity')) {
     if (response.msg.activity.length) {

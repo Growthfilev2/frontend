@@ -400,7 +400,7 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         let useJSTimer = false;
-        if(native.getName() === 'Android') {
+        // if(native.getName() === 'Android') {
           try {
             AndroidInterface.startLocationService("true");
           }catch(e){
@@ -409,17 +409,17 @@ function startApp(start) {
               message: e.message
             })
           }
-        }
-        else {
-          try {
-            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-          } catch (e) {
-            useJSTimer = true;
-            handleError({
-              message: e.message
-            })
-          }
-        }
+        // }
+        // else {
+        //   try {
+        //     webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+        //   } catch (e) {
+        //     useJSTimer = true;
+        //     handleError({
+        //       message: e.message
+        //     })
+        //   }
+        // }
       
         requestCreator('now', {
           device: native.getInfo(),
@@ -431,9 +431,70 @@ function startApp(start) {
         runAppChecks();
 
         if (useJSTimer) {
-          setInterval(function () {
-            initLocation()
-          }, 5000);
+          setTimeout(function () {
+            const body =JSON.stringify({
+              "homeMobileCountryCode": 404,
+              "radioType": "LTE",
+              "cellTowers": [
+                  {
+                      "signalStrength": -105,
+                      "locationAreaCode": 4342,
+                      "mobileCountryCode": 404,
+                      "cellId": 62820128,
+                      "mobileNetworkCode": 22
+                  },
+                  {
+                      "signalStrength": -113,
+                      "locationAreaCode": 2147483647,
+                      "mobileCountryCode": 2147483647,
+                      "cellId": 2147483647,
+                      "mobileNetworkCode": 2147483647
+                  }
+              ],
+              "wifiAccessPoints": [
+                  {
+                      "macAddress": "92:cd:b6:33:b0:d7",
+                      "signalStrength": -66
+                  },
+                  {
+                      "signalStrength": -68,
+                      "macAddress": "c0:25:e9:a9:02:d6"
+                  },
+                  {
+                      "macAddress": "18:a6:f7:2a:a9:a8",
+                      "signalStrength": -74
+                  },
+                  {
+                      "macAddress": "00:0d:67:3d:40:b9",
+                      "signalStrength": -83
+                  },
+                  {
+                      "macAddress": "00:0d:67:3d:40:c0",
+                      "signalStrength": -83
+                  },
+                  {
+                      "macAddress": "00:17:7c:91:f3:8c",
+                      "signalStrength": -89
+                  },
+                  {
+                      "signalStrength": -89,
+                      "macAddress": "10:30:47:4a:08:7f"
+                  },
+                  {
+                      "signalStrength": -79,
+                      "macAddress": "00:0d:67:3d:40:ba"
+                  },
+                  {
+                      "macAddress": "e8:91:20:05:cd:5b",
+                      "signalStrength": -90
+                  }
+              ],
+              "considerIp": "true",
+              "carrier": "IDEA | Vodafone IN",
+              "homeMobileNetworkCode": 22
+          })
+            initLocation(body)
+          }, 500);
         }
       }
       req.onerror = function () {
