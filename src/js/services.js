@@ -348,12 +348,12 @@ function getCellTowerInfo(cellBody) {
 
 function manageLocation(cellBody) {
   return new Promise(function (resolve, reject) {
-    // if (native.getName() === 'Android') {
+    if (native.getName() === 'Android') {
 
       getCellTowerInfo(cellBody).then(function (cellLocation) {
-        // if (cellLocation.accuracy <= 350) {
-        //   resolve(cellLocation)
-        // } else {
+        if (cellLocation.accuracy <= 350) {
+          resolve(cellLocation)
+        } else {
         html5Geolocation().then(function (htmlLocation) {
         
           if (cellLocation.accuracy < htmlLocation.accuracy) {
@@ -364,7 +364,7 @@ function manageLocation(cellBody) {
         }).catch(function(htmlError){
             resolve(cellLocation);
         })
-        // }
+        }
       }).catch(function (cellError) {
         html5Geolocation().then(function (htmlLocation) {
           resolve(htmlLocation);
@@ -379,13 +379,13 @@ function manageLocation(cellBody) {
         })
       })
       return;
-    // }
+    }
 
-    // html5Geolocation().then(function (location) {
-    //   resolve(location)
-    // }).catch(function (error) {
-    //   reject(error)
-    // })
+    html5Geolocation().then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    })
   })
 }
 
