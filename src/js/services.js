@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -439,7 +439,7 @@ function html5Geolocation() {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
                 accuracy: position.coords.accuracy,
-                provider: 'HMTL5'
+                provider: 'HTML5'
               })
             }
           }
@@ -454,7 +454,6 @@ function html5Geolocation() {
     }, 500);
   })
 }
-
 
 function showSuggestCheckInDialog() {
   const checkInDialog = document.querySelector('#suggest-checkIn-dialog');

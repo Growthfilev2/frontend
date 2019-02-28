@@ -400,7 +400,7 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         let useJSTimer = false;
-        // if(native.getName() === 'Android') {
+        if(native.getName() === 'Android') {
           try {
             AndroidInterface.startLocationService("true");
           }catch(e){
@@ -409,17 +409,17 @@ function startApp(start) {
               message: e.message
             })
           }
-        // }
-        // else {
-        //   try {
-        //     webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-        //   } catch (e) {
-        //     useJSTimer = true;
-        //     handleError({
-        //       message: e.message
-        //     })
-        //   }
-        // }
+        }
+        else {
+          try {
+            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+          } catch (e) {
+            useJSTimer = true;
+            handleError({
+              message: e.message
+            })
+          }
+        }
       
         requestCreator('now', {
           device: native.getInfo(),
