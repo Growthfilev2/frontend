@@ -1199,9 +1199,6 @@ input[type="datetime-local"] {
   font-size: 20px;
 }
 
-.pac-container {
-  margin-left: -21px
-}
 
 #search--bar--selector {
   padding-top: 0px;
@@ -1875,11 +1872,7 @@ input[type="datetime-local"] {
   background-color: #80808017;
   color: black;
 }
-.search-field label {
-  margin-bottom: 10px;
-  font-size: 20px;
-}
-.search-field .mdc-text-field__input {
-  padding-left: inherit;
-  padding-right: inherit;
+
+.search-field .mdc-text-field__icon {
+  bottom: 10px;
 }

@@ -532,146 +532,8 @@ function getImageFromNumber(db, number) {
   })
 }
 
-// function selectorUI(evt, data) {
-  
-//   const aside = document.createElement('aside')
 
-//   aside.id = 'dialog--component'
-//   aside.className = 'mdc-dialog'
-//   aside.role = 'alertdialog'
 
-//   const dialogSurface = document.createElement('div')
-//   dialogSurface.className = 'mdc-dialog__surface'
-//   dialogSurface.appendChild(createHeader('dialog--surface-header'))
-
-//   const searchIcon = document.createElement('span')
-//   searchIcon.className = 'material-icons'
-//   searchIcon.textContent = 'search'
-//   searchIcon.id = 'selector--search'
-
-//   const backSpan = document.createElement('span')
-//   backSpan.className = 'material-icons dialog--header-back selector--type-' + data.store
-//   backSpan.textContent = 'arrow_back'
-
-//   const section = document.createElement('section')
-//   section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
-
-//   const ul = document.createElement('ul')
-//   ul.id = 'data-list--container'
-//   ul.className = 'mdc-list '
-
-//   section.appendChild(ul)
-//   const footer = document.createElement('footer')
-//   footer.className = 'mdc-dialog__footer'
-
-//   const accept = document.createElement('button');
-//   accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
-//   accept.type = 'button'
-
-//   const acceptIcon = document.createElement('span')
-//   acceptIcon.className = 'mdc-fab__icon material-icons'
-//   if (data.store === 'users') {
-//     acceptIcon.textContent = 'add'
-//     accept.dataset.clicktype = 'numpad'
-//   } else {
-//     acceptIcon.textContent = 'send'
-//   }
-//   accept.appendChild(acceptIcon)
-
-//   footer.appendChild(accept);
-
-//   dialogSurface.appendChild(section)
-//   dialogSurface.appendChild(footer)
-
-//   aside.appendChild(dialogSurface)
-//   const backdrop = document.createElement('div')
-//   backdrop.className = 'mdc-dialog__backdrop'
-//   aside.appendChild(backdrop)
-//   document.body.appendChild(aside)
-
-//   if (data.store === 'subscriptions' || data.store === 'children') {
-//     modifyHeader({
-//       id: 'dialog--surface-header',
-//       left: backSpan.outerHTML
-//     })
-//   } else {
-//     modifyHeader({
-//       id: 'dialog--surface-header',
-//       left: backSpan.outerHTML,
-//       right: searchIcon.outerHTML
-//     });
-//   }
-
-//   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
-//     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
-//       resetSelectedContacts().then(function (people) {
-//         handleRemoveDialogEvt(e, data)
-//       });
-//       return
-//     }
-//     removeDialog();
-//   })
-//   initializeSelectorWithData(evt, data)
-// }
-
-function removeDialog() {
-  const dialog = document.getElementById('dialog--component');
-  if (!dialog) return;
-  document.getElementById('dialog--component').remove();
-  document.getElementById('growthfile').classList.remove('mdc-dialog-scroll-lock')
-}
-
-function handleRemoveDialogEvt(evt, data) {
-
-  if (!evt) {
-    return
-  }
-  if (evt.target.dataset.type !== 'back-list') {
-    return;
-  }
-  resetSelectorUI(data);
-  removeDialog();
-}
-
-function initializeSelectorWithData(evt, data) {
-  //init dialog
-  const dialog = new mdc.dialog.MDCDialog(document.querySelector('#dialog--component'))
-  let activityRecord = data.record
-  let selectorStore;
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    if (data.store === 'map') {
-      const tx = db.transaction([data.store]);
-      getLocationForMapSelector(tx, data).then(function () {
-        handleClickListnersForMap(db, dialog, data)
-      }).catch(console.log)
-    }
-    if (data.store === 'subscriptions') {
-
-      fillSubscriptionInSelector(db, data)
-    }
-    if (data.store === 'users') {
-      selectorStore = db.transaction(data.store).objectStore(data.store)
-      resetSelectedContacts().then(function () {
-
-        fillUsersInSelector(data, dialog)
-
-      })
-
-    }
-
-    if (data.store === 'children') {
-      selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillChildrenInSelector(selectorStore, activityRecord,data)
-    }
-  }
-  // show dialog
-  dialog.lastFocusedTarget = evt.target;
-  dialog.show();
-
-}
 
 function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
@@ -707,22 +569,22 @@ function fillUsersInSelector(data) {
           key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
-        }).then(function(activity){
+        }).then(function (activity) {
 
-          updateCreateActivity(activity,true)
+          updateCreateActivity(activity, true)
         }).catch(handleError)
         return;
       }
-      
+
       if (data.record.hasOwnProperty('create')) {
         resetSelectedContacts().then(function (selectedPeople) {
           updateDomFromIDB(data.record, {
             hash: 'addOnlyAssignees',
           }, {
             primary: selectedPeople
-          }).then(function(activity){
+          }).then(function (activity) {
 
-            updateCreateActivity(activity,true)
+            updateCreateActivity(activity, true)
           }).catch(handleError)
         })
         return
@@ -756,7 +618,7 @@ function fillUsersInSelector(data) {
       })
 
       document.getElementById('selector--search').addEventListener('click', function () {
-        initSearchForSelectors(data,'users')
+        initUserSelectorSearch(data)
       })
 
 
@@ -774,7 +636,6 @@ function shareReq(data) {
       'share': people
     }
     requestCreator('share', reqBody)
-    removeDialog()
   })
 }
 
@@ -837,9 +698,9 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
-          }).then(function(activity){
+          }).then(function (activity) {
 
-              updateCreateActivity(activity,true)
+            updateCreateActivity(activity, true)
           }).catch(handleError)
           return
         }
@@ -849,9 +710,9 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees',
           }, {
             primary: [formattedNumber]
-          }).then(function(activity){
+          }).then(function (activity) {
 
-            updateCreateActivity(activity,true)
+            updateCreateActivity(activity, true)
           }).catch(handleError)
           return
         }
@@ -888,7 +749,6 @@ function newNumberReq(data, formattedNumber) {
     activityId: data.record.activityId,
     'share': [formattedNumber]
   })
-  removeDialog()
 }
 
 function numberNotExist(number) {
@@ -1007,7 +867,8 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
     }
   })
 }
-function createSeachInput(id){
+
+function createSeachInput(id) {
   const search = document.createElement('div')
   search.id = id
   search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
@@ -1027,15 +888,9 @@ function createSeachInput(id){
   search.appendChild(label)
   return search
 }
+
 function handleClickListnersForMap(data) {
 
- 
-  const searchIcon = document.getElementById('selector--search')
-  if (searchIcon) {
-    document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(data,'map')
-    })
-  }
 
   document.querySelector('#selector-submit-send').onclick = function () {
     const selected = document.querySelector('.mdc-radio.radio-selected');
@@ -1052,10 +907,10 @@ function handleClickListnersForMap(data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-    }).then(function(activity){
+    }).then(function (activity) {
 
-      updateCreateActivity(activity,true)
-    }).catch(function(error){
+      updateCreateActivity(activity, true)
+    }).catch(function (error) {
       console.log(error);
     })
   }
@@ -1087,9 +942,9 @@ function fillChildrenInSelector(selectorStore, activityRecord, data) {
       key: data.attachment.key
     }, {
       primary: selectedField.name
-    }).then(function(activity){
-      updateCreateActivity(activity,true)
-    }).catch(function(error){
+    }).then(function (activity) {
+      updateCreateActivity(activity, true)
+    }).catch(function (error) {
       console.log(error)
     })
   }
@@ -1156,8 +1011,7 @@ function fillSubscriptionInSelector(db, data) {
           const selectedField = JSON.parse(radio.value);
           document.getElementById('app-current-panel').dataset.view = 'create';
           createTempRecord(selectedField.office, selectedField.template, data);
-        }
-        else {
+        } else {
           document.getElementById('selector-warning').textContent = 'Please Select a Template';
         }
       }
@@ -1175,7 +1029,7 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
     const db = req.result
     const tx = db.transaction(['subscriptions'], 'readonly');
     const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
-    
+
     subscriptionObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
@@ -1279,13 +1133,13 @@ function createTempRecord(office, template, data) {
                 document.querySelector('#enable-gps').remove();
               }
               updateCreateActivity(bareBonesRecord)
-              
+
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
           }
           updateCreateActivity(bareBonesRecord)
-         
+
         });
         return
       }
@@ -1304,7 +1158,6 @@ function createTempRecord(office, template, data) {
       });
       bareBonesRecord.venue = bareBonesVenueArray
       updateCreateActivity(bareBonesRecord)
-      removeDialog()
     }
   }
 
@@ -1366,7 +1219,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
         data.primary.forEach(function (number) {
           if (thisActivity.assignees.indexOf(number) > -1) return
           thisActivity.assignees.push(number)
-          })
+        })
         resolve(thisActivity);
         return
       }
@@ -1376,7 +1229,7 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       thisActivity.attachment[attr.key].value = data.primary;
 
-      updateLocalRecord(thisActivity, db).then(function (message) {    
+      updateLocalRecord(thisActivity, db).then(function (message) {
         resolve(thisActivity);
       }).catch(function (error) {
         reject(error)
@@ -1454,7 +1307,7 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy, db,showSendButton) {
+function updateCreateContainer(recordCopy, db, showSendButton) {
   const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
 
@@ -1475,11 +1328,11 @@ function updateCreateContainer(recordCopy, db,showSendButton) {
   leftHeaderContent.appendChild(backSpan);
   leftHeaderContent.appendChild(activityName);
   const righHeaderContent = document.createElement('div');
-  
+
   modifyHeader({
     id: 'app-main-header',
     left: leftHeaderContent.outerHTML,
-    right:righHeaderContent.outerHTML
+    right: righHeaderContent.outerHTML
   })
 
 
@@ -1530,22 +1383,21 @@ function updateCreateContainer(recordCopy, db,showSendButton) {
 
     const updateBtn = document.createElement('button')
     updateBtn.setAttribute('aria-label', 'Send')
-    if(!showSendButton) {
+    if (!showSendButton) {
       updateBtn.className = 'hidden';
     }
     updateBtn.id = 'send-activity'
     updateBtn.textContent = 'SUBMIT'
-   
+
     container.appendChild(updateBtn)
   }
   return container
 }
 
-function updateCreateActivity(record,showSendButton) {
-  if(history.state[0] === 'updateCreateActivity') {
+function updateCreateActivity(record, showSendButton) {
+  if (history.state[0] === 'updateCreateActivity') {
     history.replaceState(['updateCreateActivity', record], null, null)
-  }
-  else {
+  } else {
     history.pushState(['updateCreateActivity', record], null, null)
   }
   //open indexedDB
@@ -1557,7 +1409,7 @@ function updateCreateActivity(record,showSendButton) {
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord, db,showSendButton).outerHTML
+    appView.innerHTML = updateCreateContainer(oldRecord, db, showSendButton).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
@@ -1572,7 +1424,7 @@ function updateCreateActivity(record,showSendButton) {
     createAttachmentContainer(record)
     createAssigneeList(record, true, db)
     createActivityCancellation(record);
-    window.scrollTo(0,0)
+    window.scrollTo(0, 0)
 
 
     if (document.getElementById('send-activity')) {
@@ -1620,19 +1472,19 @@ function updateCreateActivity(record,showSendButton) {
 }
 
 
-function createCheckInVenue(venue,defaultSelected) {
+function createCheckInVenue(venue, defaultSelected) {
 
   const radio = document.createElement('div')
   radio.className = 'mdc-radio checkin'
   radio.value = JSON.stringify(venue)
-  
+
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
   input.type = 'radio'
   input.setAttribute('name', 'radios');
 
-  if(defaultSelected) {
-    input.setAttribute('checked','true')
+  if (defaultSelected) {
+    input.setAttribute('checked', 'true')
   }
   const background = document.createElement('div')
   background.className = 'mdc-radio__background'
@@ -1757,7 +1609,7 @@ function createGroupList(office, template) {
 }
 
 function createVenueSection(record) {
-  
+
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in' && record.hasOwnProperty('create')) {
 
@@ -1783,11 +1635,11 @@ function createVenueSection(record) {
         meta.appendChild(uncheck)
         checkInDesc.appendChild(meta)
         venueSection.appendChild(checkInDesc)
-      
-        if(results.length == 1) {
+
+        if (results.length == 1) {
           defaultSelected = true
         }
-        
+
         results.forEach(function (result) {
 
           const form = document.createElement('div');
@@ -1796,7 +1648,7 @@ function createVenueSection(record) {
           label.setAttribute('for', 'check-in-radio');
           label.textContent = result.location
           form.appendChild(label);
-          form.appendChild(createCheckInVenue(result,defaultSelected))
+          form.appendChild(createCheckInVenue(result, defaultSelected))
           venueSection.appendChild(form);
           const mapDom = document.createElement('div');
           mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
@@ -1892,7 +1744,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.appendChild(addLocation)
       addLocation.onclick = function (evt) {
         insertInputsIntoActivity(record)
-        history.replaceState(['updateCreateActivity',record],null,null)
+        history.replaceState(['updateCreateActivity', record], null, null)
 
         selectorUI({
           record: record,
@@ -1932,11 +1784,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const secondaryText = document.createElement('span')
   secondaryText.className = 'mdc-list-item__secondary-text'
-  // if (!record.hasOwnProperty('create')) {
-  //   secondaryText.textContent = venue.address
-  // } else if (record.template === 'check-in' && !showMetaInput) {
-    secondaryText.textContent = venue.address
-  // }
+  secondaryText.textContent = venue.address
 
   secondaryText.dataset.secondary = ''
   textSpan.appendChild(secondaryText)
@@ -1944,9 +1792,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   if (showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
-    
+
     listItem.appendChild(selectorIcon)
-    
+
   }
   return listItem
 
@@ -2125,7 +1973,7 @@ function createAttachmentContainer(data) {
         div.appendChild(addButton)
         addButton.onclick = function (evt) {
           insertInputsIntoActivity(data)
-          history.replaceState(['updateCreateActivity',data],null,null)
+          history.replaceState(['updateCreateActivity', data], null, null)
           selectorUI({
             record: data,
             store: 'users',
@@ -2199,7 +2047,6 @@ function createAttachmentContainer(data) {
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
-      // div.appendChild(createInput(key, data.attachment[key].type, 'attachment', true))
       if (data.canEdit) {
         hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
           if (hasValue) {
@@ -2208,7 +2055,7 @@ function createAttachmentContainer(data) {
             addButtonName.onclick = function (evt) {
               valueField.dataset.primary = ''
               insertInputsIntoActivity(data)
-              history.replaceState(['updateCreateActivity',data],null,null)
+              history.replaceState(['updateCreateActivity', data], null, null)
 
               selectorUI({
                 record: data,
@@ -2264,7 +2111,7 @@ function createAssigneeList(record, showLabel, db) {
 
     addButton.onclick = function (evt) {
       insertInputsIntoActivity(record)
-      history.replaceState(['updateCreateActivity',record],null,null)
+      history.replaceState(['updateCreateActivity', record], null, null)
       selectorUI({
         record: record,
         store: 'users',
@@ -2637,7 +2484,7 @@ function cancelAlertDialog() {
 function sendActivity(record) {
 
   if (record.hasOwnProperty('create')) {
-    insertInputsIntoActivity(record,true)
+    insertInputsIntoActivity(record, true)
     return
   }
 
@@ -2649,7 +2496,7 @@ function sendActivity(record) {
 
     activityStore.get(record.activityId).onsuccess = function (event) {
       const record = event.target.result
-      insertInputsIntoActivity(record,true)
+      insertInputsIntoActivity(record, true)
     }
   }
 }
@@ -2659,13 +2506,13 @@ function concatDateWithTime(date, time) {
   return moment(dateConcat).valueOf()
 }
 
-function insertInputsIntoActivity(record,send) {
+function insertInputsIntoActivity(record, send) {
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
     let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
 
     if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
-      if(send) {
+      if (send) {
         snacks('Please provide an input for the field “Name” ')
       }
       return;
@@ -2735,7 +2582,7 @@ function insertInputsIntoActivity(record,send) {
   }
 
   if (record.template === 'check-in') {
- 
+
     document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
       const radio = new mdc.radio.MDCRadio(el);
       if (radio.checked) {
@@ -2772,10 +2619,10 @@ function insertInputsIntoActivity(record,send) {
     attachment: record.attachment
   }
 
-  if(send){
+  if (send) {
     sendUpdateReq(requiredObject, record)
   }
-  
+
 }
 
 function sendUpdateReq(requiredObject, record) {
@@ -2802,84 +2649,8 @@ function checkSpacesInString(input) {
   return false
 }
 
-function initSearchForSelectors(attr, type) {
-  searchBarUI(type)
-  if (type === 'map') {
-    let input = document.getElementById('search--bar-selector')
-    const options = {
-      componentRestrictions: {
-        country: "in"
-      }
-    }
 
-    autocomplete = new google.maps.places.Autocomplete(input, options);
-    initializeAutocompleteGoogle(autocomplete, attr.record, attr)
-    return
-  }
-
-    initUserSelectorSearch(attr)
-  
-
-}
-
-function searchBarUI(type) {
-
-  const dialogEl = document.getElementById('app-main-header')
-  const actionCont = dialogEl.querySelector("#app-main-headeraction-data")
-  actionCont.className = 'search--cont'
-
-  dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.add('search-field-transform')
-  dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#0399f4'
-  if (!document.getElementById('search--bar--field')) {
-
-    actionCont.appendChild(createSimpleInput('', true, true))
-
-  } else {
-    document.getElementById('search--bar--field').style.display = 'block'
-  }
-  document.getElementById('selector--search').style.display = 'none'
-  document.querySelector('.selector-send').dataset.clicktype = ''
-  // dialogEl.querySelector('#app-main-headerview-type span').dataset.type = 'back-list'
-  // if (type === 'users') {
-  //   dialogEl.querySelector('#app-main-headerview-type span').dataset.state = 'user-list-back'
-  // }
-  // dialogEl.querySelector('#app-main-headerview-type span').style.color = '#0399f4'
-}
-
-function resetSelectorUI(data) {
-
-  const dialogEl = document.getElementById('app-main-header')
-  const actionCont = dialogEl.querySelector("#app-main-headeraction-data")
-
-  dialogEl.querySelector('#app-main-headerview-type span').dataset.type = ''
-
-  dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
-  actionCont.querySelector('#search--bar--field').classList.remove('field-input')
-  actionCont.classList.remove('search--cont')
-  document.getElementById('selector--search').style.display = 'block'
-  document.querySelector('.selector-send').style.display = 'block'
-  document.querySelector('#search--bar--field').style.display = 'none'
-  dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#eeeeee'
-  document.getElementById('data-list--container').style.display = 'block'
-
-  const selectorDialog = new mdc.dialog.MDCDialog(dialogEl)
-
-  if (data.store === 'users') {
-    document.getElementById('data-list--container').innerHTML = ''
-    fillUsersInSelector(data, selectorDialog)
-  }
-
-  if (data.store === 'subscriptions') {
-    document.getElementById('data-list--container').querySelectorAll('li').forEach(function (li) {
-      li.style.display = 'flex'
-    })
-  }
-
-}
-
-function initializeAutocompleteGoogle(autocomplete, record, attr) {
-  // document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '100vw'
-  // document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '100vh'
+function initializeAutocompleteGoogle(autocomplete, attr) {
 
   autocomplete.addListener('place_changed', function () {
     let place = autocomplete.getPlace();
@@ -2909,12 +2680,12 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
         }
       }
     }
-    updateDomFromIDB(record, {
+    updateDomFromIDB(attr.record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes).then(function(activity){
+    }, selectedAreaAttributes).then(function (activity) {
 
-      updateCreateActivity(activity,true);
+      updateCreateActivity(activity, true);
     }).catch(handleError)
   })
 }
