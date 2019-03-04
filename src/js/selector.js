@@ -5,6 +5,10 @@ function selectorUI(data) {
     createSelectorHeader(data);
     const container = document.createElement('div')
     container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
+    
+    if(data.store === 'map' || data.store === 'users') {
+        container.appendChild(createSeachInput('map-selector-search'));
+    }
 
     const ul = document.createElement('ul')
     ul.id = 'data-list--container'
@@ -21,7 +25,7 @@ function selectorUI(data) {
     submitButton.className = 'mdc-button selector-submit--button selector-send'
     container.appendChild(submitButton)
     parent.innerHTML = container.outerHTML;
-
+    window.scrollTo(0,0);
     let activityRecord = data.record
     let selectorStore;
 
@@ -31,8 +35,10 @@ function selectorUI(data) {
       const db = req.result;
       if (data.store === 'map') {
         const tx = db.transaction([data.store]);
+        const mapSeachInit = new mdc.textField.MDCTextField.attachTo(document.querySelector('#map-selector-search'));
+        console.log(mapSeachInit)
         getLocationForMapSelector(tx, data).then(function () {
-          handleClickListnersForMap(db, data)
+          handleClickListnersForMap(data)
         }).catch(console.log)
       }
       if (data.store === 'subscriptions') {

@@ -1007,16 +1007,35 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
     }
   })
 }
-
+function createSeachInput(id){
+  const search = document.createElement('div')
+  search.id = id
+  search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
+  const icon = document.createElement('i')
+  icon.className = 'material-icons mdc-text-field__icon'
+  icon.textContent = 'search'
+  const input = document.createElement("input")
+  input.className = 'mdc-text-field__input'
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+  const label = document.createElement('label')
+  label.className = 'mdc-floating-label'
+  label.textContent = 'Seach For Location'
+  search.appendChild(icon)
+  search.appendChild(input)
+  search.appendChild(ripple)
+  search.appendChild(label)
+  return search
+}
 function handleClickListnersForMap(data) {
 
+ 
   const searchIcon = document.getElementById('selector--search')
   if (searchIcon) {
     document.getElementById('selector--search').addEventListener('click', function () {
       initSearchForSelectors(data,'map')
     })
   }
-
 
   document.querySelector('#selector-submit-send').onclick = function () {
     const selected = document.querySelector('.mdc-radio.radio-selected');
@@ -1036,7 +1055,9 @@ function handleClickListnersForMap(data) {
     }).then(function(activity){
 
       updateCreateActivity(activity,true)
-    }).catch(handleError)
+    }).catch(function(error){
+      console.log(error);
+    })
   }
 }
 
@@ -1339,7 +1360,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
         })
         return
       }
-
       //for create
       if (attr.hash === 'addOnlyAssignees') {
         if (!data.primary.length) return
@@ -1528,7 +1548,6 @@ function updateCreateActivity(record,showSendButton) {
   else {
     history.pushState(['updateCreateActivity', record], null, null)
   }
-
   //open indexedDB
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
@@ -1553,6 +1572,7 @@ function updateCreateActivity(record,showSendButton) {
     createAttachmentContainer(record)
     createAssigneeList(record, true, db)
     createActivityCancellation(record);
+    window.scrollTo(0,0)
 
 
     if (document.getElementById('send-activity')) {
@@ -2858,8 +2878,8 @@ function resetSelectorUI(data) {
 }
 
 function initializeAutocompleteGoogle(autocomplete, record, attr) {
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '100vw'
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '100vh'
+  // document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '100vw'
+  // document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '100vh'
 
   autocomplete.addListener('place_changed', function () {
     let place = autocomplete.getPlace();
@@ -2892,9 +2912,9 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes).then(function(activty){
+    }, selectedAreaAttributes).then(function(activity){
 
-      updateCreateActivity(activty,true);
+      updateCreateActivity(activity,true);
     }).catch(handleError)
   })
 }
@@ -2917,7 +2937,6 @@ function createSimpleInput(value, canEdit, withIcon, key, required) {
   }
 
   const input = document.createElement('input')
-  input.setAttribute('autofocus','true')
   input.className = 'mdc-text-field__input input--value--update'
   input.style.paddingTop = '0px'
   input.value = value
