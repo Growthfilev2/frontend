@@ -457,13 +457,28 @@ body {
   padding: 10px 0px 10px 0px;
 }
 
-.create-activity,
-.selector-send {
+.create-activity {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
 }
-
+.selector-send {
+  background-color: #0399f4 !important;
+  color: white !important;
+  width: 100%;
+  position: fixed;
+  bottom: 0rem;
+  height: 50px;
+  font-size: 20px;
+}
+.selector-warning-text {
+  color: red;
+  position: fixed;
+  bottom: 4rem;
+ 
+  text-align: center;
+  width: 100%;
+}
 .create-activity .mdc-fab_icon {
   font-size: 53px;
 }

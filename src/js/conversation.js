@@ -532,99 +532,87 @@ function getImageFromNumber(db, number) {
   })
 }
 
-function selectorUI(evt, data) {
+// function selectorUI(evt, data) {
+  
+//   const aside = document.createElement('aside')
 
-  sendCurrentViewNameToAndroid('selector')
+//   aside.id = 'dialog--component'
+//   aside.className = 'mdc-dialog'
+//   aside.role = 'alertdialog'
 
-  const aside = document.createElement('aside')
+//   const dialogSurface = document.createElement('div')
+//   dialogSurface.className = 'mdc-dialog__surface'
+//   dialogSurface.appendChild(createHeader('dialog--surface-header'))
 
-  aside.id = 'dialog--component'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
+//   const searchIcon = document.createElement('span')
+//   searchIcon.className = 'material-icons'
+//   searchIcon.textContent = 'search'
+//   searchIcon.id = 'selector--search'
 
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-  dialogSurface.appendChild(createHeader('dialog--surface-header'))
+//   const backSpan = document.createElement('span')
+//   backSpan.className = 'material-icons dialog--header-back selector--type-' + data.store
+//   backSpan.textContent = 'arrow_back'
 
-  const searchIcon = document.createElement('span')
-  searchIcon.className = 'material-icons'
-  searchIcon.textContent = 'search'
-  searchIcon.id = 'selector--search'
+//   const section = document.createElement('section')
+//   section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
 
+//   const ul = document.createElement('ul')
+//   ul.id = 'data-list--container'
+//   ul.className = 'mdc-list '
 
+//   section.appendChild(ul)
+//   const footer = document.createElement('footer')
+//   footer.className = 'mdc-dialog__footer'
 
-  const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons dialog--header-back selector--type-' + data.store
-  backSpan.textContent = 'arrow_back'
+//   const accept = document.createElement('button');
+//   accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
+//   accept.type = 'button'
 
+//   const acceptIcon = document.createElement('span')
+//   acceptIcon.className = 'mdc-fab__icon material-icons'
+//   if (data.store === 'users') {
+//     acceptIcon.textContent = 'add'
+//     accept.dataset.clicktype = 'numpad'
+//   } else {
+//     acceptIcon.textContent = 'send'
+//   }
+//   accept.appendChild(acceptIcon)
 
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
+//   footer.appendChild(accept);
 
-  const ul = document.createElement('ul')
-  ul.id = 'data-list--container'
-  ul.className = 'mdc-list '
+//   dialogSurface.appendChild(section)
+//   dialogSurface.appendChild(footer)
 
-  section.appendChild(ul)
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
+//   aside.appendChild(dialogSurface)
+//   const backdrop = document.createElement('div')
+//   backdrop.className = 'mdc-dialog__backdrop'
+//   aside.appendChild(backdrop)
+//   document.body.appendChild(aside)
 
+//   if (data.store === 'subscriptions' || data.store === 'children') {
+//     modifyHeader({
+//       id: 'dialog--surface-header',
+//       left: backSpan.outerHTML
+//     })
+//   } else {
+//     modifyHeader({
+//       id: 'dialog--surface-header',
+//       left: backSpan.outerHTML,
+//       right: searchIcon.outerHTML
+//     });
+//   }
 
-
-
-  const accept = document.createElement('button');
-  accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
-  accept.type = 'button'
-
-  const acceptIcon = document.createElement('span')
-  acceptIcon.className = 'mdc-fab__icon material-icons'
-  if (data.store === 'users') {
-    acceptIcon.textContent = 'add'
-    accept.dataset.clicktype = 'numpad'
-  } else {
-    acceptIcon.textContent = 'send'
-
-  }
-  accept.appendChild(acceptIcon)
-
-  footer.appendChild(accept);
-
-
-
-  dialogSurface.appendChild(section)
-  dialogSurface.appendChild(footer)
-
-  aside.appendChild(dialogSurface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
-
-  if (data.store === 'subscriptions' || data.store === 'children') {
-    modifyHeader({
-      id: 'dialog--surface-header',
-      left: backSpan.outerHTML
-    })
-  } else {
-    modifyHeader({
-      id: 'dialog--surface-header',
-      left: backSpan.outerHTML,
-      right: searchIcon.outerHTML
-    })
-  }
-
-  document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
-    if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
-      resetSelectedContacts().then(function (people) {
-        handleRemoveDialogEvt(e, data)
-      })
-      return
-    }
-    removeDialog()
-  })
-
-  initializeSelectorWithData(evt, data)
-}
+//   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
+//     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
+//       resetSelectedContacts().then(function (people) {
+//         handleRemoveDialogEvt(e, data)
+//       });
+//       return
+//     }
+//     removeDialog();
+//   })
+//   initializeSelectorWithData(evt, data)
+// }
 
 function removeDialog() {
   const dialog = document.getElementById('dialog--component');
@@ -1071,7 +1059,7 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
 
 
 
-function fillSubscriptionInSelector(db, dialog, data) {
+function fillSubscriptionInSelector(db, data) {
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
@@ -1121,15 +1109,18 @@ function fillSubscriptionInSelector(db, dialog, data) {
 
     mainUL.appendChild(grp)
 
-    dialog['acceptButton_'].onclick = function () {
+    document.getElementById('selector-submit-send').onclick = function () {
       if (isLocationStatusWorking()) {
 
         if (document.querySelector('.mdc-radio.radio-selected')) {
-
+          document.getElementById('selector-warning').textContent = ''
           const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          const selectedField = JSON.parse(radio.value)
-          document.getElementById('app-current-panel').dataset.view = 'create'
-          createTempRecord(selectedField.office, selectedField.template, data)
+          const selectedField = JSON.parse(radio.value);
+          document.getElementById('app-current-panel').dataset.view = 'create';
+          createTempRecord(selectedField.office, selectedField.template, data);
+        }
+        else {
+          document.getElementById('selector-warning').textContent = 'Please Select a Template';
         }
       }
     }
@@ -2417,7 +2408,6 @@ function checkRadioInput(inherit, value) {
     const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
     radio['root_'].classList.add('radio-selected')
 
-    document.querySelector('.selector-send span').textContent = 'send'
     document.querySelector('.selector-send').dataset.clicktype = ''
     radio.value = JSON.stringify(value)
   }
