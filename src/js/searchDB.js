@@ -6,7 +6,6 @@ function initUserSelectorSearch(data,userSearchField) {
         searchField.value = ''
         let objectStore = ''
         let frag = document.createDocumentFragment()
-        const alreadyPresntAssigness = {};
         searchField.addEventListener('input', function (e) {
             let searchString = e.target.value
             

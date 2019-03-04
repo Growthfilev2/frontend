@@ -537,13 +537,9 @@ function getImageFromNumber(db, number) {
 
 function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
-  const alreadyPresntAssigness = {}
   const usersInRecord = data.record.assignees
 
-  usersInRecord.forEach(function (user) {
-    alreadyPresntAssigness[user] = ''
-  })
-
+  
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -551,62 +547,78 @@ function fillUsersInSelector(data) {
     const store = transaction.objectStore('users')
     document.querySelector('.selector-send').classList.remove('hidden');
     const btn = document.getElementById('selector-submit-send')
-    btn.onclick = function () {
-      if (btn.dataset.clicktype === 'numpad') {
-        document.getElementById('selector--search').style.display = 'none'
-        const parentNode = document.getElementById('data-list--container')
-        removeChildNodes(parentNode)
-        document.querySelector('.mdc-dialog__footer').style.display = 'none'
-        addNewNumber(data, dialog)
-        btn.style.display = 'none';
-        return
-      }
-
-      if (data.attachment.present) {
-        const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-        updateDomFromIDB(data.record, {
-          hash: '',
-          key: data.attachment.key
-        }, {
-          primary: JSON.parse(radio.value)
-        }).then(function (activity) {
-
-          updateCreateActivity(activity, true)
-        }).catch(handleError)
-        return;
-      }
-
-      if (data.record.hasOwnProperty('create')) {
-        resetSelectedContacts().then(function (selectedPeople) {
-          updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees',
-          }, {
-            primary: selectedPeople
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-        })
-        return
-      }
-      if (isLocationStatusWorking()) {
-        shareReq(data)
-      }
-    }
-
+    
+    let count =0;
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
       const userRecord = cursor.value
       if (data.attachment.present) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
-      } else if (!alreadyPresntAssigness.hasOwnProperty(cursor.value.mobile)) {
+        count++
+      }
+      else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+        count++
       }
       cursor.continue()
     }
 
     transaction.oncomplete = function () {
+      if(!count) {
+        ul.appendChild(noSelectorResult('No Contact Found'));
+        document.getElementById('users-selector-search').style.display = 'none';
+        document.getElementById('selector-submit-send').textContent = 'CANCEL'
+        btn.onclick = function(){
+          updateCreateActivity(data.record,true)
+        }
+        return;
+      }
+      btn.onclick = function () {
+        
+        if (btn.dataset.clicktype === 'numpad') {
+          document.getElementById('selector--search').style.display = 'none'
+          const parentNode = document.getElementById('data-list--container')
+          removeChildNodes(parentNode)
+          document.querySelector('.mdc-dialog__footer').style.display = 'none'
+          addNewNumber(data, dialog)
+          btn.style.display = 'none';
+          return
+        }
+  
+        if (data.attachment.present) {
+          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+          updateDomFromIDB(data.record, {
+            hash: '',
+            key: data.attachment.key
+          }, {
+            primary: JSON.parse(radio.value)
+          }).then(function (activity) {
+  
+            updateCreateActivity(activity, true)
+          }).catch(handleError)
+          return;
+        }
+  
+        if (data.record.hasOwnProperty('create')) {
+          resetSelectedContacts().then(function (selectedPeople) {
+            updateDomFromIDB(data.record, {
+              hash: 'addOnlyAssignees',
+            }, {
+              primary: selectedPeople
+            }).then(function (activity) {
+  
+              updateCreateActivity(activity, true)
+            }).catch(handleError)
+          })
+          return
+        }
+        if (isLocationStatusWorking()) {
+          shareReq(data)
+        }
+      }
+    
+    
       const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
         if (box) {
@@ -621,6 +633,16 @@ function fillUsersInSelector(data) {
 
 }
 
+
+function noSelectorResult (text){
+  const noResult = document.createElement('div')
+  noResult.className  ='data-not-found'
+  const p = document.createElement('p')
+  p.className = 'mdc-typography--headline5'
+  p.textContent = text
+  noResult.appendChild(p)
+  return noResult
+}
 function shareReq(data) {
   document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
   document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
