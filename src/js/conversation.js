@@ -2106,7 +2106,7 @@ function createAttachmentContainer(data) {
         div.appendChild(addButton)
         addButton.onclick = function (evt) {
           insertInputsIntoActivity(data)
-
+          history.replaceState(['updateCreateActivity',data],null,null)
           selectorUI({
             record: data,
             store: 'users',
@@ -2243,7 +2243,7 @@ function createAssigneeList(record, showLabel, db) {
 
     addButton.onclick = function (evt) {
       insertInputsIntoActivity(record)
-
+      history.replaceState(['updateCreateActivity',record],null,null)
       selectorUI({
         record: record,
         store: 'users',
