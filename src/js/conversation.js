@@ -616,12 +616,6 @@ function fillUsersInSelector(data) {
           box.children[1].children[0].children[0].style.animation = 'none'
         }
       })
-
-      document.getElementById('selector--search').addEventListener('click', function () {
-        initUserSelectorSearch(data)
-      })
-
-
     }
   }
 
@@ -868,7 +862,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function createSeachInput(id) {
+function createSeachInput(id,labelText) {
   const search = document.createElement('div')
   search.id = id
   search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
@@ -881,7 +875,8 @@ function createSeachInput(id) {
   ripple.className = 'mdc-line-ripple'
   const label = document.createElement('label')
   label.className = 'mdc-floating-label'
-  label.textContent = 'Seach For Location'
+
+  label.textContent = labelText
   search.appendChild(icon)
   search.appendChild(input)
   search.appendChild(ripple)

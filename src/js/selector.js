@@ -6,8 +6,11 @@ function selectorUI(data) {
   const container = document.createElement('div')
   container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
 
-  if (data.store === 'map' || data.store === 'users') {
-    container.appendChild(createSeachInput('map-selector-search'));
+  if (data.store === 'map') {
+    container.appendChild(createSeachInput('map-selector-search','Search For Location'));
+  }
+  if(data.store === 'users'){
+    container.appendChild(createSeachInput('users-selector-search','Search Users'));
   }
 
   const ul = document.createElement('ul')
@@ -56,10 +59,10 @@ function selectorUI(data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
+      const userSearchInit = new mdc.textField.MDCTextField.attachTo(document.getElementById('users-selector-search'));
+      initUserSelectorSearch(data,userSearchInit);
       resetSelectedContacts().then(function () {
-
         fillUsersInSelector(data)
-
       })
     }
 
