@@ -472,6 +472,10 @@ body {
   font-size: 20px;
   z-index: 999;
 }
+#selector--search {
+  float: right;
+  color: white;
+}
 .selector-warning-text {
   color: red;
   position: fixed;

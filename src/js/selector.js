@@ -41,11 +41,11 @@ function selectorUI(data) {
       }
       if (data.store === 'users') {
         selectorStore = db.transaction(data.store).objectStore(data.store)
-        // resetSelectedContacts().then(function () {
+        resetSelectedContacts().then(function () {
   
           fillUsersInSelector(data)
   
-        // })
+        })
       }
   
       if (data.store === 'children') {
@@ -75,22 +75,24 @@ function createSelectorHeader(data){
             left: backDiv.outerHTML
         })
     } else {
-
         const searchIcon = document.createElement('span')
         searchIcon.className = 'material-icons'
         searchIcon.textContent = 'search'
         searchIcon.id = 'selector--search'
+        
         modifyHeader({
             id: 'app-main-header',
             left: backDiv.outerHTML,
             right: searchIcon.outerHTML
         });
+
     }
     document.querySelector('#back-selector').addEventListener('click', function (e) {
         if(data.store === 'subscriptions') {
             backNav()
         }
         else {
+            document.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
             updateCreateActivity(history.state[1],true);        
         }
     })

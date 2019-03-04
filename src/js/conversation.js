@@ -756,7 +756,7 @@ function fillUsersInSelector(data) {
       })
 
       document.getElementById('selector--search').addEventListener('click', function () {
-        initSearchForSelectors(db, 'users', data)
+        initSearchForSelectors(data,'users')
       })
 
 
@@ -1008,12 +1008,12 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function handleClickListnersForMap(db, data) {
+function handleClickListnersForMap(data) {
 
   const searchIcon = document.getElementById('selector--search')
   if (searchIcon) {
     document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(db, 'map', data)
+      initSearchForSelectors(data,'map')
     })
   }
 
@@ -1452,11 +1452,14 @@ function updateCreateContainer(recordCopy, db,showSendButton) {
   activityName.style.paddingLeft = '10px'
   activityName.style.marginTop = '6px'
 
-  leftHeaderContent.appendChild(backSpan)
-  leftHeaderContent.appendChild(activityName)
+  leftHeaderContent.appendChild(backSpan);
+  leftHeaderContent.appendChild(activityName);
+  const righHeaderContent = document.createElement('div');
+  
   modifyHeader({
     id: 'app-main-header',
-    left: leftHeaderContent.outerHTML
+    left: leftHeaderContent.outerHTML,
+    right:righHeaderContent.outerHTML
   })
 
 
@@ -1507,17 +1510,12 @@ function updateCreateContainer(recordCopy, db,showSendButton) {
 
     const updateBtn = document.createElement('button')
     updateBtn.setAttribute('aria-label', 'Send')
-
     if(!showSendButton) {
       updateBtn.className = 'hidden';
     }
-    
     updateBtn.id = 'send-activity'
     updateBtn.textContent = 'SUBMIT'
-    if (!record.hasOwnProperty('create')) {
-      updateBtn.classList.add('hidden')
-    }
- 
+   
     container.appendChild(updateBtn)
   }
   return container
@@ -1874,6 +1872,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.appendChild(addLocation)
       addLocation.onclick = function (evt) {
         insertInputsIntoActivity(record)
+        history.replaceState(['updateCreateActivity',record],null,null)
 
         selectorUI({
           record: record,
@@ -2189,6 +2188,8 @@ function createAttachmentContainer(data) {
             addButtonName.onclick = function (evt) {
               valueField.dataset.primary = ''
               insertInputsIntoActivity(data)
+              history.replaceState(['updateCreateActivity',data],null,null)
+
               selectorUI({
                 record: data,
                 store: 'children',
@@ -2781,7 +2782,7 @@ function checkSpacesInString(input) {
   return false
 }
 
-function initSearchForSelectors(db, type, attr) {
+function initSearchForSelectors(attr, type) {
   searchBarUI(type)
   if (type === 'map') {
     let input = document.getElementById('search--bar-selector')
@@ -2796,21 +2797,19 @@ function initSearchForSelectors(db, type, attr) {
     return
   }
 
-  if (type === 'users') {
-
-    initUserSelectorSearch(db, attr)
-  }
+    initUserSelectorSearch(attr)
+  
 
 }
 
 function searchBarUI(type) {
 
-  const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
+  const dialogEl = document.getElementById('app-main-header')
+  const actionCont = dialogEl.querySelector("#app-main-headeraction-data")
   actionCont.className = 'search--cont'
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.add('search-field-transform')
-  dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = 'white'
+  dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#0399f4'
   if (!document.getElementById('search--bar--field')) {
 
     actionCont.appendChild(createSimpleInput('', true, true))
@@ -2820,20 +2819,19 @@ function searchBarUI(type) {
   }
   document.getElementById('selector--search').style.display = 'none'
   document.querySelector('.selector-send').dataset.clicktype = ''
-  document.querySelector('.selector-send span').textContent = 'send'
-  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = 'back-list'
-  if (type === 'users') {
-    dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back'
-  }
-  dialogEl.querySelector('#dialog--surface-headerview-type span').style.color = '#0399f4'
+  // dialogEl.querySelector('#app-main-headerview-type span').dataset.type = 'back-list'
+  // if (type === 'users') {
+  //   dialogEl.querySelector('#app-main-headerview-type span').dataset.state = 'user-list-back'
+  // }
+  // dialogEl.querySelector('#app-main-headerview-type span').style.color = '#0399f4'
 }
 
 function resetSelectorUI(data) {
 
-  const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
+  const dialogEl = document.getElementById('app-main-header')
+  const actionCont = dialogEl.querySelector("#app-main-headeraction-data")
 
-  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = ''
+  dialogEl.querySelector('#app-main-headerview-type span').dataset.type = ''
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
   actionCont.querySelector('#search--bar--field').classList.remove('field-input')
@@ -2919,6 +2917,7 @@ function createSimpleInput(value, canEdit, withIcon, key, required) {
   }
 
   const input = document.createElement('input')
+  input.setAttribute('autofocus','true')
   input.className = 'mdc-text-field__input input--value--update'
   input.style.paddingTop = '0px'
   input.value = value
