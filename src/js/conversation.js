@@ -708,7 +708,7 @@ function fillUsersInSelector(data) {
         }, {
           primary: JSON.parse(radio.value)
         }).then(function(activity){
-         
+
           updateCreateActivity(activity,true)
         }).catch(handleError)
         return;
@@ -721,6 +721,7 @@ function fillUsersInSelector(data) {
           }, {
             primary: selectedPeople
           }).then(function(activity){
+
             updateCreateActivity(activity,true)
           }).catch(handleError)
         })
@@ -837,6 +838,7 @@ function addNewNumber(data) {
           }, {
             primary: [formattedNumber]
           }).then(function(activity){
+
               updateCreateActivity(activity,true)
           }).catch(handleError)
           return
@@ -848,6 +850,7 @@ function addNewNumber(data) {
           }, {
             primary: [formattedNumber]
           }).then(function(activity){
+
             updateCreateActivity(activity,true)
           }).catch(handleError)
           return
@@ -1031,6 +1034,7 @@ function handleClickListnersForMap(db, data) {
         geopoint: selectedField.geopoint
       },
     }).then(function(activity){
+
       updateCreateActivity(activity,true)
     }).catch(handleError)
   }
@@ -1064,7 +1068,9 @@ function fillChildrenInSelector(selectorStore, activityRecord, data) {
       primary: selectedField.name
     }).then(function(activity){
       updateCreateActivity(activity,true)
-    }).catch(handleError)
+    }).catch(function(error){
+      console.log(error)
+    })
   }
 }
 
@@ -1867,6 +1873,8 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.setAttribute('aria-hidden', 'true')
       selectorIcon.appendChild(addLocation)
       addLocation.onclick = function (evt) {
+        insertInputsIntoActivity(record)
+
         selectorUI({
           record: record,
           store: 'map',
@@ -2097,6 +2105,8 @@ function createAttachmentContainer(data) {
       if (data.canEdit) {
         div.appendChild(addButton)
         addButton.onclick = function (evt) {
+          insertInputsIntoActivity(data)
+
           selectorUI({
             record: data,
             store: 'users',
@@ -2178,6 +2188,7 @@ function createAttachmentContainer(data) {
             div.classList.add('selector--margin')
             addButtonName.onclick = function (evt) {
               valueField.dataset.primary = ''
+              insertInputsIntoActivity(data)
               selectorUI({
                 record: data,
                 store: 'children',
@@ -2231,6 +2242,8 @@ function createAssigneeList(record, showLabel, db) {
     addButton.className = 'mdc-fab add--assignee-icon'
 
     addButton.onclick = function (evt) {
+      insertInputsIntoActivity(record)
+
       selectorUI({
         record: record,
         store: 'users',
@@ -2603,7 +2616,7 @@ function cancelAlertDialog() {
 function sendActivity(record) {
 
   if (record.hasOwnProperty('create')) {
-    insertInputsIntoActivity(record)
+    insertInputsIntoActivity(record,true)
     return
   }
 
@@ -2615,7 +2628,7 @@ function sendActivity(record) {
 
     activityStore.get(record.activityId).onsuccess = function (event) {
       const record = event.target.result
-      insertInputsIntoActivity(record, activityStore)
+      insertInputsIntoActivity(record,true)
     }
   }
 }
@@ -2625,13 +2638,15 @@ function concatDateWithTime(date, time) {
   return moment(dateConcat).valueOf()
 }
 
-function insertInputsIntoActivity(record, activityStore) {
+function insertInputsIntoActivity(record,send) {
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
     let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
 
     if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
-      snacks('Please provide an input for the field “Name” ')
+      if(send) {
+        snacks('Please provide an input for the field “Name” ')
+      }
       return;
     }
 
@@ -2699,10 +2714,7 @@ function insertInputsIntoActivity(record, activityStore) {
   }
 
   if (record.template === 'check-in') {
-    // if (record.venue[i].hasOwnProperty('showIcon')) {
-    //   delete record.venue[i].showIcon
-    // }
-
+ 
     document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
       const radio = new mdc.radio.MDCRadio(el);
       if (radio.checked) {
@@ -2739,8 +2751,10 @@ function insertInputsIntoActivity(record, activityStore) {
     attachment: record.attachment
   }
 
-
-  sendUpdateReq(requiredObject, record)
+  if(send){
+    sendUpdateReq(requiredObject, record)
+  }
+  
 }
 
 function sendUpdateReq(requiredObject, record) {
@@ -2881,6 +2895,7 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
       hash: 'venue',
       key: attr.key
     }, selectedAreaAttributes).then(function(activty){
+
       updateCreateActivity(activty,true);
     }).catch(handleError)
   })

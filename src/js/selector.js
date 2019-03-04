@@ -1,10 +1,5 @@
 function selectorUI(data) {
-    // if(history.state[0] === 'selectorUI') {
-    //     history.replaceState(['selectorUI',data],null,null);
-    // }
-    // else {
-    //     history.pushState(['selectorUI',data],null,null);
-    // }
+   
     const parent = document.getElementById('app-current-panel');
     
     createSelectorHeader(data);
@@ -34,7 +29,6 @@ function selectorUI(data) {
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result;
-    
       if (data.store === 'map') {
         const tx = db.transaction([data.store]);
         getLocationForMapSelector(tx, data).then(function () {
