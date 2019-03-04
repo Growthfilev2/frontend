@@ -240,7 +240,6 @@ body {
   cursor: pointer;
   font-size: 24px;
   margin-top: 10px
-
 }
 
 .CONFIRMED,
@@ -457,11 +456,41 @@ body {
   padding: 10px 0px 10px 0px;
 }
 
-.create-activity,
-.selector-send {
+.create-activity {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
+}
+
+.selector-send,
+#send-activity {
+  background-color: #0399f4 !important;
+  color: white !important;
+  width: 100%;
+  position: fixed;
+  bottom: 0rem;
+  height: 50px;
+  font-size: 20px;
+  z-index: 999;
+}
+
+#selector--search {
+  float: right;
+  color: white;
+}
+
+.selector-warning-text {
+  color: red;
+  position: fixed;
+  bottom: 4rem;
+
+  text-align: center;
+  width: 100%;
+}
+
+.selector-container {
+  height: 100vh;
+  background: white;
 }
 
 .create-activity .mdc-fab_icon {
@@ -750,9 +779,11 @@ footer.mdc-dialog__footer {
   font-size: 20px;
 
 }
+
 .activity--list-item .mdc-list-item__text .mdc-list-item__secondary-text.venue-secondline {
   max-width: 60%;
 }
+
 .activity--list-item .mdc-list-item__meta {
 
   text-align: right;
@@ -1835,4 +1866,20 @@ input[type="datetime-local"] {
 
 #uncheck-checkin {
   margin-top: 0px;
+}
+
+.search-field {
+  margin-left: 20px;
+  width: 89%;
+  margin-top: 10px;
+  background-color: #80808017;
+  color: black;
+}
+.search-field label {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+.search-field .mdc-text-field__input {
+  padding-left: inherit;
+  padding-right: inherit;
 }

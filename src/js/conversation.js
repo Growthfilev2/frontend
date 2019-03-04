@@ -532,99 +532,87 @@ function getImageFromNumber(db, number) {
   })
 }
 
-function selectorUI(evt, data) {
+// function selectorUI(evt, data) {
+  
+//   const aside = document.createElement('aside')
 
-  sendCurrentViewNameToAndroid('selector')
+//   aside.id = 'dialog--component'
+//   aside.className = 'mdc-dialog'
+//   aside.role = 'alertdialog'
 
-  const aside = document.createElement('aside')
+//   const dialogSurface = document.createElement('div')
+//   dialogSurface.className = 'mdc-dialog__surface'
+//   dialogSurface.appendChild(createHeader('dialog--surface-header'))
 
-  aside.id = 'dialog--component'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
+//   const searchIcon = document.createElement('span')
+//   searchIcon.className = 'material-icons'
+//   searchIcon.textContent = 'search'
+//   searchIcon.id = 'selector--search'
 
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-  dialogSurface.appendChild(createHeader('dialog--surface-header'))
+//   const backSpan = document.createElement('span')
+//   backSpan.className = 'material-icons dialog--header-back selector--type-' + data.store
+//   backSpan.textContent = 'arrow_back'
 
-  const searchIcon = document.createElement('span')
-  searchIcon.className = 'material-icons'
-  searchIcon.textContent = 'search'
-  searchIcon.id = 'selector--search'
+//   const section = document.createElement('section')
+//   section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
 
+//   const ul = document.createElement('ul')
+//   ul.id = 'data-list--container'
+//   ul.className = 'mdc-list '
 
+//   section.appendChild(ul)
+//   const footer = document.createElement('footer')
+//   footer.className = 'mdc-dialog__footer'
 
-  const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons dialog--header-back selector--type-' + data.store
-  backSpan.textContent = 'arrow_back'
+//   const accept = document.createElement('button');
+//   accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
+//   accept.type = 'button'
 
+//   const acceptIcon = document.createElement('span')
+//   acceptIcon.className = 'mdc-fab__icon material-icons'
+//   if (data.store === 'users') {
+//     acceptIcon.textContent = 'add'
+//     accept.dataset.clicktype = 'numpad'
+//   } else {
+//     acceptIcon.textContent = 'send'
+//   }
+//   accept.appendChild(acceptIcon)
 
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__body--scrollable mdc-top-app-bar--fixed-adjust'
+//   footer.appendChild(accept);
 
-  const ul = document.createElement('ul')
-  ul.id = 'data-list--container'
-  ul.className = 'mdc-list '
+//   dialogSurface.appendChild(section)
+//   dialogSurface.appendChild(footer)
 
-  section.appendChild(ul)
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
+//   aside.appendChild(dialogSurface)
+//   const backdrop = document.createElement('div')
+//   backdrop.className = 'mdc-dialog__backdrop'
+//   aside.appendChild(backdrop)
+//   document.body.appendChild(aside)
 
+//   if (data.store === 'subscriptions' || data.store === 'children') {
+//     modifyHeader({
+//       id: 'dialog--surface-header',
+//       left: backSpan.outerHTML
+//     })
+//   } else {
+//     modifyHeader({
+//       id: 'dialog--surface-header',
+//       left: backSpan.outerHTML,
+//       right: searchIcon.outerHTML
+//     });
+//   }
 
-
-
-  const accept = document.createElement('button');
-  accept.className = 'mdc-fab mdc-dialog__footer__button mdc-dialog__footer__button--accept selector-send hidden'
-  accept.type = 'button'
-
-  const acceptIcon = document.createElement('span')
-  acceptIcon.className = 'mdc-fab__icon material-icons'
-  if (data.store === 'users') {
-    acceptIcon.textContent = 'add'
-    accept.dataset.clicktype = 'numpad'
-  } else {
-    acceptIcon.textContent = 'send'
-
-  }
-  accept.appendChild(acceptIcon)
-
-  footer.appendChild(accept);
-
-
-
-  dialogSurface.appendChild(section)
-  dialogSurface.appendChild(footer)
-
-  aside.appendChild(dialogSurface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
-
-  if (data.store === 'subscriptions' || data.store === 'children') {
-    modifyHeader({
-      id: 'dialog--surface-header',
-      left: backSpan.outerHTML
-    })
-  } else {
-    modifyHeader({
-      id: 'dialog--surface-header',
-      left: backSpan.outerHTML,
-      right: searchIcon.outerHTML
-    })
-  }
-
-  document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
-    if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
-      resetSelectedContacts().then(function (people) {
-        handleRemoveDialogEvt(e, data)
-      })
-      return
-    }
-    removeDialog()
-  })
-
-  initializeSelectorWithData(evt, data)
-}
+//   document.querySelector('.dialog--header-back').addEventListener('click', function (e) {
+//     if (e.target.classList.contains('selector--type-users') && e.target.dataset.state === 'users-list-back') {
+//       resetSelectedContacts().then(function (people) {
+//         handleRemoveDialogEvt(e, data)
+//       });
+//       return
+//     }
+//     removeDialog();
+//   })
+//   initializeSelectorWithData(evt, data)
+// }
 
 function removeDialog() {
   const dialog = document.getElementById('dialog--component');
@@ -662,7 +650,7 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'subscriptions') {
 
-      fillSubscriptionInSelector(db, dialog, data)
+      fillSubscriptionInSelector(db, data)
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
@@ -676,7 +664,7 @@ function initializeSelectorWithData(evt, data) {
 
     if (data.store === 'children') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillChildrenInSelector(selectorStore, activityRecord, dialog, data)
+      fillChildrenInSelector(selectorStore, activityRecord,data)
     }
   }
   // show dialog
@@ -685,7 +673,7 @@ function initializeSelectorWithData(evt, data) {
 
 }
 
-function fillUsersInSelector(data, dialog) {
+function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
   const alreadyPresntAssigness = {}
   const usersInRecord = data.record.assignees
@@ -700,16 +688,15 @@ function fillUsersInSelector(data, dialog) {
     const transaction = db.transaction(['users']);
     const store = transaction.objectStore('users')
     document.querySelector('.selector-send').classList.remove('hidden');
-
-    dialog['acceptButton_'].onclick = function () {
-
-      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+    const btn = document.getElementById('selector-submit-send')
+    btn.onclick = function () {
+      if (btn.dataset.clicktype === 'numpad') {
         document.getElementById('selector--search').style.display = 'none'
         const parentNode = document.getElementById('data-list--container')
         removeChildNodes(parentNode)
         document.querySelector('.mdc-dialog__footer').style.display = 'none'
         addNewNumber(data, dialog)
-        dialog['acceptButton_'].style.display = 'none';
+        btn.style.display = 'none';
         return
       }
 
@@ -720,17 +707,23 @@ function fillUsersInSelector(data, dialog) {
           key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
-        }).then(removeDialog).catch(handleError)
+        }).then(function(activity){
+
+          updateCreateActivity(activity,true)
+        }).catch(handleError)
         return;
       }
+      
       if (data.record.hasOwnProperty('create')) {
         resetSelectedContacts().then(function (selectedPeople) {
           updateDomFromIDB(data.record, {
             hash: 'addOnlyAssignees',
           }, {
             primary: selectedPeople
-          }).then(removeDialog).catch(handleError)
+          }).then(function(activity){
 
+            updateCreateActivity(activity,true)
+          }).catch(handleError)
         })
         return
       }
@@ -763,7 +756,7 @@ function fillUsersInSelector(data, dialog) {
       })
 
       document.getElementById('selector--search').addEventListener('click', function () {
-        initSearchForSelectors(db, 'users', data)
+        initSearchForSelectors(data,'users')
       })
 
 
@@ -844,7 +837,10 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(handleError)
+          }).then(function(activity){
+
+              updateCreateActivity(activity,true)
+          }).catch(handleError)
           return
         }
 
@@ -853,7 +849,10 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees',
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(handleError)
+          }).then(function(activity){
+
+            updateCreateActivity(activity,true)
+          }).catch(handleError)
           return
         }
         if (isLocationStatusWorking()) {
@@ -1008,19 +1007,37 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
     }
   })
 }
+function createSeachInput(id){
+  const search = document.createElement('div')
+  search.id = id
+  search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
+  const icon = document.createElement('i')
+  icon.className = 'material-icons mdc-text-field__icon'
+  icon.textContent = 'search'
+  const input = document.createElement("input")
+  input.className = 'mdc-text-field__input'
+  const ripple = document.createElement('div')
+  ripple.className = 'mdc-line-ripple'
+  const label = document.createElement('label')
+  label.className = 'mdc-floating-label'
+  label.textContent = 'Seach For Location'
+  search.appendChild(icon)
+  search.appendChild(input)
+  search.appendChild(ripple)
+  search.appendChild(label)
+  return search
+}
+function handleClickListnersForMap(data) {
 
-function handleClickListnersForMap(db, dialog, data) {
-
+ 
   const searchIcon = document.getElementById('selector--search')
   if (searchIcon) {
     document.getElementById('selector--search').addEventListener('click', function () {
-      initSearchForSelectors(db, 'map', data)
+      initSearchForSelectors(data,'map')
     })
   }
 
-  document.querySelector('.selector-send').classList.remove('hidden');
-
-  dialog['acceptButton_'].onclick = function () {
+  document.querySelector('#selector-submit-send').onclick = function () {
     const selected = document.querySelector('.mdc-radio.radio-selected');
     if (!selected) return;
     const radio = new mdc.radio.MDCRadio(selected);
@@ -1035,11 +1052,16 @@ function handleClickListnersForMap(db, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-    }).then(removeDialog).catch(handleError)
+    }).then(function(activity){
+
+      updateCreateActivity(activity,true)
+    }).catch(function(error){
+      console.log(error);
+    })
   }
 }
 
-function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
+function fillChildrenInSelector(selectorStore, activityRecord, data) {
   const ul = document.getElementById('data-list--container')
   selectorStore.openCursor().onsuccess = function (event) {
     const cursor = event.target.result
@@ -1056,8 +1078,8 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     cursor.continue()
   }
 
-  document.querySelector('.selector-send').classList.remove('hidden')
-  dialog['acceptButton_'].onclick = function () {
+  // document.querySelector('.selector-send').classList.remove('hidden')
+  document.getElementById('selector-submit-send').onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
     updateDomFromIDB(activityRecord, {
@@ -1065,13 +1087,17 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
       key: data.attachment.key
     }, {
       primary: selectedField.name
-    }).then(removeDialog).catch(handleError)
+    }).then(function(activity){
+      updateCreateActivity(activity,true)
+    }).catch(function(error){
+      console.log(error)
+    })
   }
 }
 
 
 
-function fillSubscriptionInSelector(db, dialog, data) {
+function fillSubscriptionInSelector(db, data) {
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
@@ -1121,20 +1147,22 @@ function fillSubscriptionInSelector(db, dialog, data) {
 
     mainUL.appendChild(grp)
 
-    dialog['acceptButton_'].onclick = function () {
+    document.getElementById('selector-submit-send').onclick = function () {
       if (isLocationStatusWorking()) {
 
         if (document.querySelector('.mdc-radio.radio-selected')) {
-
+          document.getElementById('selector-warning').textContent = ''
           const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          const selectedField = JSON.parse(radio.value)
-          document.getElementById('app-current-panel').dataset.view = 'create'
-          createTempRecord(selectedField.office, selectedField.template, data)
+          const selectedField = JSON.parse(radio.value);
+          document.getElementById('app-current-panel').dataset.view = 'create';
+          createTempRecord(selectedField.office, selectedField.template, data);
+        }
+        else {
+          document.getElementById('selector-warning').textContent = 'Please Select a Template';
         }
       }
     }
   }
-
 }
 
 
@@ -1146,7 +1174,8 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction(['subscriptions'], 'readonly');
-    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
+    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+    
     subscriptionObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
@@ -1246,18 +1275,17 @@ function createTempRecord(office, template, data) {
           if (!record.location || isLocationOld) {
             appDialog('Fetching Location Please wait', false)
             window.addEventListener('location', function _checkInLatest(e) {
-
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
               updateCreateActivity(bareBonesRecord)
-              removeDialog()
+              
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
           }
           updateCreateActivity(bareBonesRecord)
-          removeDialog()
+         
         });
         return
       }
@@ -1324,30 +1352,22 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       if (attr.hash === 'venue') {
         thisActivity = updateVenue(thisActivity, attr, data);
-        changeTextContentForNewSelectedVenue(attr, data)
         updateLocalRecord(thisActivity, db).then(function (message) {
-          resolve(message)
+          resolve(thisActivity)
         }).catch(function (error) {
+          console.log(error)
           reject(error)
         })
         return
       }
-
       //for create
       if (attr.hash === 'addOnlyAssignees') {
         if (!data.primary.length) return
-        const assigneeList = document.getElementById('assignees--list')
-
         data.primary.forEach(function (number) {
           if (thisActivity.assignees.indexOf(number) > -1) return
           thisActivity.assignees.push(number)
-          getUserRecord(db, number).then(function (record) {
-            if (assigneeList) {
-              assigneeList.appendChild(createSimpleAssigneeLi(record))
-            }
           })
-        })
-        resolve(true);
+        resolve(thisActivity);
         return
       }
 
@@ -1356,9 +1376,8 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       thisActivity.attachment[attr.key].value = data.primary;
 
-      updateLocalRecord(thisActivity, db).then(function (message) {
-        changeTextContentForNewSelectedVenue(attr, data);
-        resolve(message);
+      updateLocalRecord(thisActivity, db).then(function (message) {    
+        resolve(thisActivity);
       }).catch(function (error) {
         reject(error)
       })
@@ -1435,7 +1454,7 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy, db) {
+function updateCreateContainer(recordCopy, db,showSendButton) {
   const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
 
@@ -1453,11 +1472,14 @@ function updateCreateContainer(recordCopy, db) {
   activityName.style.paddingLeft = '10px'
   activityName.style.marginTop = '6px'
 
-  leftHeaderContent.appendChild(backSpan)
-  leftHeaderContent.appendChild(activityName)
+  leftHeaderContent.appendChild(backSpan);
+  leftHeaderContent.appendChild(activityName);
+  const righHeaderContent = document.createElement('div');
+  
   modifyHeader({
     id: 'app-main-header',
-    left: leftHeaderContent.outerHTML
+    left: leftHeaderContent.outerHTML,
+    right:righHeaderContent.outerHTML
   })
 
 
@@ -1507,24 +1529,25 @@ function updateCreateContainer(recordCopy, db) {
   if (record.canEdit) {
 
     const updateBtn = document.createElement('button')
-    updateBtn.className = 'mdc-fab send--activity-fab'
     updateBtn.setAttribute('aria-label', 'Send')
-    updateBtn.id = 'send-activity'
-    if (!record.hasOwnProperty('create')) {
-      updateBtn.classList.add('hidden')
+    if(!showSendButton) {
+      updateBtn.className = 'hidden';
     }
-    const sendIcon = document.createElement('span')
-    sendIcon.className = 'mdc-fab__icon material-icons'
-    sendIcon.textContent = 'send'
-    updateBtn.appendChild(sendIcon)
+    updateBtn.id = 'send-activity'
+    updateBtn.textContent = 'SUBMIT'
+   
     container.appendChild(updateBtn)
   }
   return container
 }
 
-function updateCreateActivity(record) {
-
-  history.pushState(['updateCreateActivity', record], null, null)
+function updateCreateActivity(record,showSendButton) {
+  if(history.state[0] === 'updateCreateActivity') {
+    history.replaceState(['updateCreateActivity', record], null, null)
+  }
+  else {
+    history.pushState(['updateCreateActivity', record], null, null)
+  }
   //open indexedDB
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
@@ -1534,7 +1557,7 @@ function updateCreateActivity(record) {
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord, db).outerHTML
+    appView.innerHTML = updateCreateContainer(oldRecord, db,showSendButton).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
@@ -1549,6 +1572,7 @@ function updateCreateActivity(record) {
     createAttachmentContainer(record)
     createAssigneeList(record, true, db)
     createActivityCancellation(record);
+    window.scrollTo(0,0)
 
 
     if (document.getElementById('send-activity')) {
@@ -1867,7 +1891,10 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.setAttribute('aria-hidden', 'true')
       selectorIcon.appendChild(addLocation)
       addLocation.onclick = function (evt) {
-        selectorUI(evt, {
+        insertInputsIntoActivity(record)
+        history.replaceState(['updateCreateActivity',record],null,null)
+
+        selectorUI({
           record: record,
           store: 'map',
           attachment: {
@@ -1905,16 +1932,11 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const secondaryText = document.createElement('span')
   secondaryText.className = 'mdc-list-item__secondary-text'
-  if (!record.hasOwnProperty('create')) {
+  // if (!record.hasOwnProperty('create')) {
+  //   secondaryText.textContent = venue.address
+  // } else if (record.template === 'check-in' && !showMetaInput) {
     secondaryText.textContent = venue.address
-  } else if (record.template === 'check-in' && !showMetaInput) {
-    if (!venue.showIcon) {
-      secondaryText.style.paddingTop = '3px';
-      secondaryText.textContent = 'Not A Known Location'
-    } else {
-      secondaryText.textContent = venue.address
-    }
-  }
+  // }
 
   secondaryText.dataset.secondary = ''
   textSpan.appendChild(secondaryText)
@@ -1922,13 +1944,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   if (showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
-    if (record.template === 'check-in') {
-      if (venue.showIcon) {
-        listItem.appendChild(selectorIcon)
-      }
-    } else {
-      listItem.appendChild(selectorIcon)
-    }
+    
+    listItem.appendChild(selectorIcon)
+    
   }
   return listItem
 
@@ -2106,7 +2124,9 @@ function createAttachmentContainer(data) {
       if (data.canEdit) {
         div.appendChild(addButton)
         addButton.onclick = function (evt) {
-          selectorUI(evt, {
+          insertInputsIntoActivity(data)
+          history.replaceState(['updateCreateActivity',data],null,null)
+          selectorUI({
             record: data,
             store: 'users',
             attachment: {
@@ -2187,7 +2207,10 @@ function createAttachmentContainer(data) {
             div.classList.add('selector--margin')
             addButtonName.onclick = function (evt) {
               valueField.dataset.primary = ''
-              selectorUI(evt, {
+              insertInputsIntoActivity(data)
+              history.replaceState(['updateCreateActivity',data],null,null)
+
+              selectorUI({
                 record: data,
                 store: 'children',
                 attachment: {
@@ -2240,7 +2263,9 @@ function createAssigneeList(record, showLabel, db) {
     addButton.className = 'mdc-fab add--assignee-icon'
 
     addButton.onclick = function (evt) {
-      selectorUI(evt, {
+      insertInputsIntoActivity(record)
+      history.replaceState(['updateCreateActivity',record],null,null)
+      selectorUI({
         record: record,
         store: 'users',
         attachment: {
@@ -2393,12 +2418,11 @@ function checkCheckboxInput(evt, record) {
     } else {
       evt.target.parentNode.dataset.selected = true
       record.isSelected = true
-      document.querySelector('.selector-send span').textContent = 'send'
 
     }
     objectStore.put(record)
     if (document.querySelectorAll('[data-selected="true"]').length == 0) {
-      document.querySelector('.selector-send span').textContent = 'add'
+      document.querySelector('.selector-send').textContent = 'add'
       document.querySelector('.selector-send').dataset.clicktype = 'numpad'
     } else {
       document.querySelector('.selector-send').dataset.clicktype = ''
@@ -2418,7 +2442,6 @@ function checkRadioInput(inherit, value) {
     const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
     radio['root_'].classList.add('radio-selected')
 
-    document.querySelector('.selector-send span').textContent = 'send'
     document.querySelector('.selector-send').dataset.clicktype = ''
     radio.value = JSON.stringify(value)
   }
@@ -2614,7 +2637,7 @@ function cancelAlertDialog() {
 function sendActivity(record) {
 
   if (record.hasOwnProperty('create')) {
-    insertInputsIntoActivity(record)
+    insertInputsIntoActivity(record,true)
     return
   }
 
@@ -2626,7 +2649,7 @@ function sendActivity(record) {
 
     activityStore.get(record.activityId).onsuccess = function (event) {
       const record = event.target.result
-      insertInputsIntoActivity(record, activityStore)
+      insertInputsIntoActivity(record,true)
     }
   }
 }
@@ -2636,13 +2659,15 @@ function concatDateWithTime(date, time) {
   return moment(dateConcat).valueOf()
 }
 
-function insertInputsIntoActivity(record, activityStore) {
+function insertInputsIntoActivity(record,send) {
   const allStringTypes = document.querySelectorAll('.string')
   for (var i = 0; i < allStringTypes.length; i++) {
     let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
 
     if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
-      snacks('Please provide an input for the field “Name” ')
+      if(send) {
+        snacks('Please provide an input for the field “Name” ')
+      }
       return;
     }
 
@@ -2710,10 +2735,7 @@ function insertInputsIntoActivity(record, activityStore) {
   }
 
   if (record.template === 'check-in') {
-    // if (record.venue[i].hasOwnProperty('showIcon')) {
-    //   delete record.venue[i].showIcon
-    // }
-
+ 
     document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
       const radio = new mdc.radio.MDCRadio(el);
       if (radio.checked) {
@@ -2750,8 +2772,10 @@ function insertInputsIntoActivity(record, activityStore) {
     attachment: record.attachment
   }
 
-
-  sendUpdateReq(requiredObject, record)
+  if(send){
+    sendUpdateReq(requiredObject, record)
+  }
+  
 }
 
 function sendUpdateReq(requiredObject, record) {
@@ -2778,7 +2802,7 @@ function checkSpacesInString(input) {
   return false
 }
 
-function initSearchForSelectors(db, type, attr) {
+function initSearchForSelectors(attr, type) {
   searchBarUI(type)
   if (type === 'map') {
     let input = document.getElementById('search--bar-selector')
@@ -2793,21 +2817,19 @@ function initSearchForSelectors(db, type, attr) {
     return
   }
 
-  if (type === 'users') {
-
-    initUserSelectorSearch(db, attr)
-  }
+    initUserSelectorSearch(attr)
+  
 
 }
 
 function searchBarUI(type) {
 
-  const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
+  const dialogEl = document.getElementById('app-main-header')
+  const actionCont = dialogEl.querySelector("#app-main-headeraction-data")
   actionCont.className = 'search--cont'
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.add('search-field-transform')
-  dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = 'white'
+  dialogEl.querySelector('.mdc-top-app-bar__section--align-start').style.backgroundColor = '#0399f4'
   if (!document.getElementById('search--bar--field')) {
 
     actionCont.appendChild(createSimpleInput('', true, true))
@@ -2817,20 +2839,19 @@ function searchBarUI(type) {
   }
   document.getElementById('selector--search').style.display = 'none'
   document.querySelector('.selector-send').dataset.clicktype = ''
-  document.querySelector('.selector-send span').textContent = 'send'
-  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = 'back-list'
-  if (type === 'users') {
-    dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.state = 'user-list-back'
-  }
-  dialogEl.querySelector('#dialog--surface-headerview-type span').style.color = '#0399f4'
+  // dialogEl.querySelector('#app-main-headerview-type span').dataset.type = 'back-list'
+  // if (type === 'users') {
+  //   dialogEl.querySelector('#app-main-headerview-type span').dataset.state = 'user-list-back'
+  // }
+  // dialogEl.querySelector('#app-main-headerview-type span').style.color = '#0399f4'
 }
 
 function resetSelectorUI(data) {
 
-  const dialogEl = document.getElementById('dialog--component')
-  const actionCont = dialogEl.querySelector("#dialog--surface-headeraction-data")
+  const dialogEl = document.getElementById('app-main-header')
+  const actionCont = dialogEl.querySelector("#app-main-headeraction-data")
 
-  dialogEl.querySelector('#dialog--surface-headerview-type span').dataset.type = ''
+  dialogEl.querySelector('#app-main-headerview-type span').dataset.type = ''
 
   dialogEl.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
   actionCont.querySelector('#search--bar--field').classList.remove('field-input')
@@ -2857,8 +2878,8 @@ function resetSelectorUI(data) {
 }
 
 function initializeAutocompleteGoogle(autocomplete, record, attr) {
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '100vw'
-  document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '100vh'
+  // document.querySelector('#dialog--component .mdc-dialog__surface').style.width = '100vw'
+  // document.querySelector('#dialog--component .mdc-dialog__surface').style.height = '100vh'
 
   autocomplete.addListener('place_changed', function () {
     let place = autocomplete.getPlace();
@@ -2891,7 +2912,10 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes).then(removeDialog).catch(handleError)
+    }, selectedAreaAttributes).then(function(activity){
+
+      updateCreateActivity(activity,true);
+    }).catch(handleError)
   })
 }
 

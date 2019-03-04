@@ -1,28 +1,30 @@
-function initUserSelectorSearch(db, data) {
-    const searchField = document.getElementById('search--bar-selector');
-    searchField.value = ''
-    let objectStore = ''
-    let frag = document.createDocumentFragment()
-    const alreadyPresntAssigness = {}
-    const usersInRecord = data.record.assignees
-
-    usersInRecord.forEach(function (user) {
-        alreadyPresntAssigness[user] = ''
-    })
-
-    searchField.addEventListener('input', function (e) {
-        let searchString = e.target.value
-
-        if (isNumber(searchString)) {
-            objectStore = db.transaction('users').objectStore('users')
-            searchUsersDB(formatNumber(searchString), objectStore, frag, alreadyPresntAssigness, data)
-            return
-        }
-
-        frag = document.createDocumentFragment()
-        objectStore = db.transaction('users').objectStore('users').index('displayName')
-        searchUsersDB(formatName(searchString), objectStore, frag, alreadyPresntAssigness, data)
-    })
+function initUserSelectorSearch(data) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function(){
+        const db = req.result;
+        const searchField = document.getElementById('search--bar-selector');
+        searchField.value = ''
+        let objectStore = ''
+        let frag = document.createDocumentFragment()
+        const alreadyPresntAssigness = {};
+        const usersInRecord = data.record.assignees;
+        usersInRecord.forEach(function (user) {
+            alreadyPresntAssigness[user] = ''
+        })
+        
+        searchField.addEventListener('input', function (e) {
+            let searchString = e.target.value
+            
+            if (isNumber(searchString)) {
+                objectStore = db.transaction('users').objectStore('users')
+                searchUsersDB(formatNumber(searchString), objectStore, frag, alreadyPresntAssigness, data)
+                return
+            }
+            frag = document.createDocumentFragment()
+            objectStore = db.transaction('users').objectStore('users').index('displayName')
+            searchUsersDB(formatName(searchString), objectStore, frag, alreadyPresntAssigness, data)
+        })
+    }
 }
 
 
@@ -51,7 +53,6 @@ function formatName(name) {
         const element = nameArr[index];
         if (element.charAt(0).toUpperCase() === name.charAt(0).toUpperCase) return name
         result.push(element.charAt(0).toUpperCase() + element.slice(1))
-
     }
     return result.join(' ')
 }

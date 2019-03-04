@@ -1,6 +1,7 @@
 importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
+
 let deviceInfo;
 let currentDevice;
 // get Device time
@@ -75,9 +76,9 @@ function http(request) {
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
 
     xhr.onreadystatechange = function () {
-    
+
       if (xhr.readyState === 4) {
-     
+
         if (!xhr.status) {
           requestHandlerResponse('android-stop-refreshing', 400)
           return;
@@ -168,7 +169,7 @@ function instant(error, user) {
     body: error,
     token: user.token
   }
-  console.log(error)
+
   http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
@@ -201,7 +202,7 @@ function putServerTime(data) {
   return new Promise(function (resolve, reject) {
     const request = indexedDB.open(data.user.uid);
     request.onerror = function () {
-      reject(request.error)
+      reject(request.error.message)
     }
 
     request.onsuccess = function () {
@@ -394,7 +395,11 @@ function updateMap(activity, param) {
 
         let deleteRecordReq = cursor.delete()
         cursor.continue()
-        deleteRecordReq.onerror = errorDeletingRecord
+        deleteRecordReq.onerror = function () {
+          instant({
+            message: deleteRecordReq.error.message
+          })
+        }
       }
     }
 
@@ -421,23 +426,17 @@ function updateMap(activity, param) {
       }
       mapTxAdd.onerror = function () {
         instant(JSON.stringify({
-          message: `${mapTxAdd.error}`
+          message: `${mapTxAdd.error.message}`
         }), param.user)
       }
     }
     mapTx.onerror = function () {
       instant(JSON.stringify({
-        message: `${mapTx.error}`
+        message: `${mapTx.error.message}`
       }), param.user)
     }
   }
 }
-
-
-function errorDeletingRecord(event) {
-  console.log(event.target.error)
-}
-
 
 function updateCalendar(activity, param) {
 
@@ -453,7 +452,11 @@ function updateCalendar(activity, param) {
       const cursor = event.target.result
       if (cursor) {
         let recordDeleteReq = cursor.delete()
-        recordDeleteReq.onerror = errorDeletingRecord
+        recordDeleteReq.onerror = function () {
+          instant({
+            message: recordDeleteReq.error.message
+          })
+        }
         cursor.continue()
       }
     }
@@ -479,7 +482,7 @@ function updateCalendar(activity, param) {
       })
       calendarTx.onerror = function () {
         instant(JSON.stringify({
-          message: `${calendarTx.error}`
+          message: `${calendarTx.error.message}`
         }), param.user)
       }
     }
@@ -507,7 +510,7 @@ function putAttachment(activity, param) {
 
     tx.onerror = function () {
       instant(JSON.stringify({
-        message: `${tx.error}`
+        message: `${tx.error.message}`
       }), param.user)
     }
   }
@@ -589,7 +592,10 @@ function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
       console.log("activity is removed from all stores")
     }
     tx.onerror = function () {
-      console.log(transaction.error)
+
+      instant({
+        message: transaction.error.message
+      })
     }
 
   }
@@ -610,63 +616,50 @@ function deleteByIndex(store, activitiesToRemove) {
 }
 
 
-function updateSubscription(db, templates, param) {
-  return new Promise(function (resolve, reject) {
-    if (!templates.length) {
-      resolve(true)
-      return
-    }
-    const req = indexedDB.open(param.user.uid)
+function updateSubscription(templates, param) {
+  return new Promise(function(resolve,reject){
+
+    const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['subscriptions'], 'readwrite')
       const subscriptionObjectStore = tx.objectStore('subscriptions');
-      const templateIndex = subscriptionObjectStore.index('template');
+      const templateIndex = subscriptionObjectStore.index('officeTemplate');
       templates.forEach(function (subscription) {
-
-        templateIndex.openCursor(subscription.template).onsuccess = function (event) {
+        templateIndex.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
           const cursor = event.target.result;
           if (cursor) {
-
-            if (subscription.office === cursor.value.office) {
-              cursor.update(subscription);
-            } else {
-              cursor.put(subscription)
+            const deleteReq = cursor.delete();
+            deleteReq.onsuccess = function () {
+              subscriptionObjectStore.put(subscription);
             }
             cursor.continue()
           } else {
-            subscriptionObjectStore.put(subscription)
+            subscriptionObjectStore.put(subscription);
           }
         }
       })
-
       tx.oncomplete = function () {
-        resolve(true)
+          resolve(true)
       }
-      tx.onerror = function () {
-        reject({
-          message: `${tx.error}`
-        });
+      tx.onerror = function(){
+        reject({message:tx.error.message})
       }
     }
   })
 }
-
-function deleteTemplateInSubscription(subscription) {
-
-}
+  
 
 function createListStore(activity, counter, param) {
   return new Promise(function (resolve, reject) {
-
 
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
       const userTx = db.transaction(['users']);
-      
+
       const usersStore = userTx.objectStore('users');
-   
+
       const requiredData = {
         'activityId': activity.activityId,
         'secondLine': '',
@@ -676,31 +669,28 @@ function createListStore(activity, counter, param) {
           number: activity.creator,
           photo: ''
         },
-        
         'activityName': activity.activityName,
         'status': activity.status
       }
       usersStore.get(activity.creator).onsuccess = function (event) {
-       
         const record = event.target.result;
         if (record) {
           requiredData.creator.photo = record.photoURL
         }
       }
-      userTx.oncomplete = function(){
-        const listTX = db.transaction(['list'],'readwrite');
+      userTx.oncomplete = function () {
+        const listTX = db.transaction(['list'], 'readwrite');
         const listStore = listTX.objectStore('list');
-        listStore.get(activity.activityId).onsuccess = function(listEvent){
+        listStore.get(activity.activityId).onsuccess = function (listEvent) {
           const record = listEvent.target.result;
-          if(!record) {
+          if (!record) {
             requiredData.createdTime = activity.timestamp;
-          }
-          else {
-            requiredData.createdTime  = record.createdTime
+          } else {
+            requiredData.createdTime = record.createdTime
           }
           listStore.put(requiredData);
         }
-        listTX.oncomplete = function(){
+        listTX.oncomplete = function () {
           resolve(true)
         }
       }
@@ -733,9 +723,9 @@ function successResponse(read, param) {
         }
       }
 
-     if(addendum.isComment) {
-       let key = addendum.activityId 
-       counter[key] = (counter[key] || 0) + 1
+      if (addendum.isComment) {
+        let key = addendum.activityId
+        counter[key] = (counter[key] || 0) + 1
       }
       addendumObjectStore.add(addendum)
     })
@@ -756,7 +746,7 @@ function successResponse(read, param) {
       updateMap(activity, param);
       updateCalendar(activity, param)
       putAssignessInStore(activity.assignees, param);
-      putAttachment(activity, param)
+      putAttachment(activity, param);
 
       if (activity.hidden === 0) {
         createListStore(activity, counter, param).then(function () {
@@ -777,7 +767,7 @@ function successResponse(read, param) {
 
 
     updateRoot(param, read).then(function () {
-      updateSubscription(db, read.templates, param).then(function () {
+      updateSubscription(read.templates, param).then(function () {
         requestHandlerResponse('initFirstLoad', 200, {
           template: true
         })
@@ -838,7 +828,7 @@ function createUsersApiUrl(db, user) {
     }
     tx.onerror = function () {
       reject({
-        message: tx.error
+        message: tx.error.message
       })
     }
   })
@@ -880,7 +870,7 @@ function updateUserObjectStore(requestPayload) {
       }
       tx.onerror = function () {
         instant(JSON.stringify({
-          message: `${tx.error}`
+          message: `${tx.error.message}`
         }), param.user)
       }
 
@@ -906,7 +896,7 @@ function updateRoot(param, read) {
         resolve(true)
       }
       rootTx.onerror = function () {
-        reject(rootTx.error);
+        reject(rootTx.error.message);
       }
     }
   })
@@ -934,12 +924,12 @@ function getUniqueOfficeCount(param) {
       }
       tx.onerror = function () {
         reject({
-          message: tx.error
+          message: tx.error.message
         })
       }
       req.onerror = function () {
         reject({
-          message: req.error
+          message: req.error.message
         })
       }
     }
@@ -967,7 +957,7 @@ function setUniqueOffice(offices, param) {
       }
       tx.onerror = function () {
         reject({
-          message: tx.error
+          message: tx.error.message
         })
       }
     }
