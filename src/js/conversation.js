@@ -1134,7 +1134,6 @@ function fillSubscriptionInSelector(db, dialog, data) {
       }
     }
   }
-
 }
 
 
@@ -1146,7 +1145,8 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction(['subscriptions'], 'readonly');
-    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
+    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+    
     subscriptionObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
