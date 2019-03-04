@@ -462,7 +462,7 @@ body {
   bottom: 1rem;
   right: 1rem;
 }
-.selector-send {
+.selector-send , #send-activity{
   background-color: #0399f4 !important;
   color: white !important;
   width: 100%;
@@ -470,6 +470,7 @@ body {
   bottom: 0rem;
   height: 50px;
   font-size: 20px;
+  z-index: 999;
 }
 .selector-warning-text {
   color: red;
@@ -478,6 +479,10 @@ body {
  
   text-align: center;
   width: 100%;
+}
+.selector-container {
+  height: 100vh;
+  background: white;
 }
 .create-activity .mdc-fab_icon {
   font-size: 53px;

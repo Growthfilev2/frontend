@@ -1,14 +1,19 @@
 function selectorUI(data) {
+    // if(history.state[0] === 'selectorUI') {
+    //     history.replaceState(['selectorUI',data],null,null);
+    // }
+    // else {
+    //     history.pushState(['selectorUI',data],null,null);
+    // }
     const parent = document.getElementById('app-current-panel');
-    parent.style.backgroundColor = 'white'
-    parent.style.height = '100vh';
+    
     createSelectorHeader(data);
     const container = document.createElement('div')
     container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
 
     const ul = document.createElement('ul')
     ul.id = 'data-list--container'
-    ul.className = 'mdc-list '
+    ul.className = 'mdc-list'
     container.appendChild(ul)
     const warning = document.createElement('span')
     warning.className = 'selector-warning-text'
@@ -28,11 +33,12 @@ function selectorUI(data) {
     const dbName = firebase.auth().currentUser.uid
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
-      const db = req.result
+      const db = req.result;
+    
       if (data.store === 'map') {
         const tx = db.transaction([data.store]);
         getLocationForMapSelector(tx, data).then(function () {
-          handleClickListnersForMap(db, dialog, data)
+          handleClickListnersForMap(db, data)
         }).catch(console.log)
       }
       if (data.store === 'subscriptions') {
@@ -41,17 +47,16 @@ function selectorUI(data) {
       }
       if (data.store === 'users') {
         selectorStore = db.transaction(data.store).objectStore(data.store)
-        resetSelectedContacts().then(function () {
+        // resetSelectedContacts().then(function () {
   
-          fillUsersInSelector(data, dialog)
+          fillUsersInSelector(data)
   
-        })
-  
+        // })
       }
   
       if (data.store === 'children') {
         selectorStore = db.transaction(data.store).objectStore(data.store)
-        fillChildrenInSelector(selectorStore, activityRecord, dialog, data)
+        fillChildrenInSelector(selectorStore, activityRecord, data)
       }
     }
 }
@@ -88,8 +93,11 @@ function createSelectorHeader(data){
         });
     }
     document.querySelector('#back-selector').addEventListener('click', function (e) {
-        backNav()
+        if(data.store === 'subscriptions') {
+            backNav()
+        }
+        else {
+            updateCreateActivity(history.state[1],true);        
+        }
     })
-
-    
 }

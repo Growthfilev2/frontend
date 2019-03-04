@@ -650,7 +650,7 @@ function initializeSelectorWithData(evt, data) {
     }
     if (data.store === 'subscriptions') {
 
-      fillSubscriptionInSelector(db, dialog, data)
+      fillSubscriptionInSelector(db, data)
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
@@ -664,7 +664,7 @@ function initializeSelectorWithData(evt, data) {
 
     if (data.store === 'children') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillChildrenInSelector(selectorStore, activityRecord, dialog, data)
+      fillChildrenInSelector(selectorStore, activityRecord,data)
     }
   }
   // show dialog
@@ -673,7 +673,7 @@ function initializeSelectorWithData(evt, data) {
 
 }
 
-function fillUsersInSelector(data, dialog) {
+function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
   const alreadyPresntAssigness = {}
   const usersInRecord = data.record.assignees
@@ -688,16 +688,15 @@ function fillUsersInSelector(data, dialog) {
     const transaction = db.transaction(['users']);
     const store = transaction.objectStore('users')
     document.querySelector('.selector-send').classList.remove('hidden');
-
-    dialog['acceptButton_'].onclick = function () {
-
-      if (dialog['acceptButton_'].dataset.clicktype === 'numpad') {
+    const btn = document.getElementById('selector-submit-send')
+    btn.onclick = function () {
+      if (btn.dataset.clicktype === 'numpad') {
         document.getElementById('selector--search').style.display = 'none'
         const parentNode = document.getElementById('data-list--container')
         removeChildNodes(parentNode)
         document.querySelector('.mdc-dialog__footer').style.display = 'none'
         addNewNumber(data, dialog)
-        dialog['acceptButton_'].style.display = 'none';
+        btn.style.display = 'none';
         return
       }
 
@@ -708,17 +707,22 @@ function fillUsersInSelector(data, dialog) {
           key: data.attachment.key
         }, {
           primary: JSON.parse(radio.value)
-        }).then(removeDialog).catch(handleError)
+        }).then(function(activity){
+         
+          updateCreateActivity(activity,true)
+        }).catch(handleError)
         return;
       }
+      
       if (data.record.hasOwnProperty('create')) {
         resetSelectedContacts().then(function (selectedPeople) {
           updateDomFromIDB(data.record, {
             hash: 'addOnlyAssignees',
           }, {
             primary: selectedPeople
-          }).then(removeDialog).catch(handleError)
-
+          }).then(function(activity){
+            updateCreateActivity(activity,true)
+          }).catch(handleError)
         })
         return
       }
@@ -832,7 +836,9 @@ function addNewNumber(data) {
             key: data.attachment.key
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(handleError)
+          }).then(function(activity){
+              updateCreateActivity(activity,true)
+          }).catch(handleError)
           return
         }
 
@@ -841,7 +847,9 @@ function addNewNumber(data) {
             hash: 'addOnlyAssignees',
           }, {
             primary: [formattedNumber]
-          }).then(removeDialog).catch(handleError)
+          }).then(function(activity){
+            updateCreateActivity(activity,true)
+          }).catch(handleError)
           return
         }
         if (isLocationStatusWorking()) {
@@ -997,7 +1005,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function handleClickListnersForMap(db, dialog, data) {
+function handleClickListnersForMap(db, data) {
 
   const searchIcon = document.getElementById('selector--search')
   if (searchIcon) {
@@ -1006,9 +1014,8 @@ function handleClickListnersForMap(db, dialog, data) {
     })
   }
 
-  document.querySelector('.selector-send').classList.remove('hidden');
 
-  dialog['acceptButton_'].onclick = function () {
+  document.querySelector('#selector-submit-send').onclick = function () {
     const selected = document.querySelector('.mdc-radio.radio-selected');
     if (!selected) return;
     const radio = new mdc.radio.MDCRadio(selected);
@@ -1023,11 +1030,13 @@ function handleClickListnersForMap(db, dialog, data) {
         address: selectedField.address,
         geopoint: selectedField.geopoint
       },
-    }).then(removeDialog).catch(handleError)
+    }).then(function(activity){
+      updateCreateActivity(activity,true)
+    }).catch(handleError)
   }
 }
 
-function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
+function fillChildrenInSelector(selectorStore, activityRecord, data) {
   const ul = document.getElementById('data-list--container')
   selectorStore.openCursor().onsuccess = function (event) {
     const cursor = event.target.result
@@ -1044,8 +1053,8 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
     cursor.continue()
   }
 
-  document.querySelector('.selector-send').classList.remove('hidden')
-  dialog['acceptButton_'].onclick = function () {
+  // document.querySelector('.selector-send').classList.remove('hidden')
+  document.getElementById('selector-submit-send').onclick = function () {
     const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
     const selectedField = JSON.parse(radio.value)
     updateDomFromIDB(activityRecord, {
@@ -1053,7 +1062,9 @@ function fillChildrenInSelector(selectorStore, activityRecord, dialog, data) {
       key: data.attachment.key
     }, {
       primary: selectedField.name
-    }).then(removeDialog).catch(handleError)
+    }).then(function(activity){
+      updateCreateActivity(activity,true)
+    }).catch(handleError)
   }
 }
 
@@ -1241,13 +1252,13 @@ function createTempRecord(office, template, data) {
                 document.querySelector('#enable-gps').remove();
               }
               updateCreateActivity(bareBonesRecord)
-              removeDialog()
+              
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
           }
           updateCreateActivity(bareBonesRecord)
-          removeDialog()
+         
         });
         return
       }
@@ -1314,10 +1325,10 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       if (attr.hash === 'venue') {
         thisActivity = updateVenue(thisActivity, attr, data);
-        changeTextContentForNewSelectedVenue(attr, data)
         updateLocalRecord(thisActivity, db).then(function (message) {
-          resolve(message)
+          resolve(thisActivity)
         }).catch(function (error) {
+          console.log(error)
           reject(error)
         })
         return
@@ -1326,18 +1337,11 @@ function updateDomFromIDB(activityRecord, attr, data) {
       //for create
       if (attr.hash === 'addOnlyAssignees') {
         if (!data.primary.length) return
-        const assigneeList = document.getElementById('assignees--list')
-
         data.primary.forEach(function (number) {
           if (thisActivity.assignees.indexOf(number) > -1) return
           thisActivity.assignees.push(number)
-          getUserRecord(db, number).then(function (record) {
-            if (assigneeList) {
-              assigneeList.appendChild(createSimpleAssigneeLi(record))
-            }
           })
-        })
-        resolve(true);
+        resolve(thisActivity);
         return
       }
 
@@ -1346,9 +1350,8 @@ function updateDomFromIDB(activityRecord, attr, data) {
 
       thisActivity.attachment[attr.key].value = data.primary;
 
-      updateLocalRecord(thisActivity, db).then(function (message) {
-        changeTextContentForNewSelectedVenue(attr, data);
-        resolve(message);
+      updateLocalRecord(thisActivity, db).then(function (message) {    
+        resolve(thisActivity);
       }).catch(function (error) {
         reject(error)
       })
@@ -1425,7 +1428,7 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy, db) {
+function updateCreateContainer(recordCopy, db,showSendButton) {
   const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
 
@@ -1497,24 +1500,31 @@ function updateCreateContainer(recordCopy, db) {
   if (record.canEdit) {
 
     const updateBtn = document.createElement('button')
-    updateBtn.className = 'mdc-fab send--activity-fab'
     updateBtn.setAttribute('aria-label', 'Send')
+
+    if(!showSendButton) {
+      updateBtn.className = 'hidden';
+    }
+    
     updateBtn.id = 'send-activity'
+    updateBtn.textContent = 'SUBMIT'
     if (!record.hasOwnProperty('create')) {
       updateBtn.classList.add('hidden')
     }
-    const sendIcon = document.createElement('span')
-    sendIcon.className = 'mdc-fab__icon material-icons'
-    sendIcon.textContent = 'send'
-    updateBtn.appendChild(sendIcon)
+ 
     container.appendChild(updateBtn)
   }
   return container
 }
 
-function updateCreateActivity(record) {
+function updateCreateActivity(record,showSendButton) {
+  if(history.state[0] === 'updateCreateActivity') {
+    history.replaceState(['updateCreateActivity', record], null, null)
+  }
+  else {
+    history.pushState(['updateCreateActivity', record], null, null)
+  }
 
-  history.pushState(['updateCreateActivity', record], null, null)
   //open indexedDB
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
@@ -1524,7 +1534,7 @@ function updateCreateActivity(record) {
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord, db).outerHTML
+    appView.innerHTML = updateCreateContainer(oldRecord, db,showSendButton).outerHTML
 
 
     const officeSection = document.getElementById('office--list')
@@ -1857,7 +1867,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.setAttribute('aria-hidden', 'true')
       selectorIcon.appendChild(addLocation)
       addLocation.onclick = function (evt) {
-        selectorUI(evt, {
+        selectorUI({
           record: record,
           store: 'map',
           attachment: {
@@ -1895,16 +1905,11 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const secondaryText = document.createElement('span')
   secondaryText.className = 'mdc-list-item__secondary-text'
-  if (!record.hasOwnProperty('create')) {
+  // if (!record.hasOwnProperty('create')) {
+  //   secondaryText.textContent = venue.address
+  // } else if (record.template === 'check-in' && !showMetaInput) {
     secondaryText.textContent = venue.address
-  } else if (record.template === 'check-in' && !showMetaInput) {
-    if (!venue.showIcon) {
-      secondaryText.style.paddingTop = '3px';
-      secondaryText.textContent = 'Not A Known Location'
-    } else {
-      secondaryText.textContent = venue.address
-    }
-  }
+  // }
 
   secondaryText.dataset.secondary = ''
   textSpan.appendChild(secondaryText)
@@ -1912,13 +1917,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   if (showMetaInput) {
     listItem.appendChild(metaInput)
   } else {
-    if (record.template === 'check-in') {
-      if (venue.showIcon) {
-        listItem.appendChild(selectorIcon)
-      }
-    } else {
-      listItem.appendChild(selectorIcon)
-    }
+    
+    listItem.appendChild(selectorIcon)
+    
   }
   return listItem
 
@@ -2096,7 +2097,7 @@ function createAttachmentContainer(data) {
       if (data.canEdit) {
         div.appendChild(addButton)
         addButton.onclick = function (evt) {
-          selectorUI(evt, {
+          selectorUI({
             record: data,
             store: 'users',
             attachment: {
@@ -2177,7 +2178,7 @@ function createAttachmentContainer(data) {
             div.classList.add('selector--margin')
             addButtonName.onclick = function (evt) {
               valueField.dataset.primary = ''
-              selectorUI(evt, {
+              selectorUI({
                 record: data,
                 store: 'children',
                 attachment: {
@@ -2230,7 +2231,7 @@ function createAssigneeList(record, showLabel, db) {
     addButton.className = 'mdc-fab add--assignee-icon'
 
     addButton.onclick = function (evt) {
-      selectorUI(evt, {
+      selectorUI({
         record: record,
         store: 'users',
         attachment: {
@@ -2383,12 +2384,11 @@ function checkCheckboxInput(evt, record) {
     } else {
       evt.target.parentNode.dataset.selected = true
       record.isSelected = true
-      document.querySelector('.selector-send span').textContent = 'send'
 
     }
     objectStore.put(record)
     if (document.querySelectorAll('[data-selected="true"]').length == 0) {
-      document.querySelector('.selector-send span').textContent = 'add'
+      document.querySelector('.selector-send').textContent = 'add'
       document.querySelector('.selector-send').dataset.clicktype = 'numpad'
     } else {
       document.querySelector('.selector-send').dataset.clicktype = ''
@@ -2880,7 +2880,9 @@ function initializeAutocompleteGoogle(autocomplete, record, attr) {
     updateDomFromIDB(record, {
       hash: 'venue',
       key: attr.key
-    }, selectedAreaAttributes).then(removeDialog).catch(handleError)
+    }, selectedAreaAttributes).then(function(activty){
+      updateCreateActivity(activty,true);
+    }).catch(handleError)
   })
 }
 
