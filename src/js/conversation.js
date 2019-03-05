@@ -587,7 +587,12 @@ function fillUsersInSelector(data) {
         }
   
         if (data.attachment.present) {
-          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
+          const selector = document.querySelector('.mdc-radio.radio-selected');
+          if(!selector) {
+            document.getElementById('selector-warning').textContent = '* Please Select A Contact'
+            return
+          }
+          const radio = new mdc.radio.MDCRadio(selector)
           updateDomFromIDB(data.record, {
             hash: '',
             key: data.attachment.key
@@ -602,6 +607,11 @@ function fillUsersInSelector(data) {
   
         if (data.record.hasOwnProperty('create')) {
           resetSelectedContacts().then(function (selectedPeople) {
+            if(!selectedPeople.length) {
+              document.getElementById('selector-warning').textContent = '* Please Select A Contact'
+              return
+            }
+
             updateDomFromIDB(data.record, {
               hash: 'addOnlyAssignees',
             }, {
@@ -644,8 +654,7 @@ function noSelectorResult (text){
   return noResult
 }
 function shareReq(data) {
-  document.querySelector('.add--assignee-loader').appendChild(loader('user-loader'));
-  document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'none'
+  
   resetSelectedContacts().then(function (people) {
     const reqBody = {
       'activityId': data.record.activityId,
@@ -805,6 +814,7 @@ function resetSelectedContacts() {
           return
         }
         if (cursor.value.isSelected) {
+
           selectedUsers.push(cursor.value.mobile)
           cursor.value.isSelected = false
           objectStore.put(cursor.value)
@@ -820,10 +830,10 @@ function resetSelectedContacts() {
 
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
-
+    let count =0;
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
-    const office = data.record.office
+    const office = data.record.office;
     const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
     store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
       const cursor = event.target.result
@@ -832,14 +842,15 @@ function getLocationForMapSelector(tx, data) {
         cursor.continue();
         return;
       }
-      if (cursor.value.location) {
-        ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-      }
+      // if (cursor.value.location) {
+      //   count++
+      //   ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+      // }
       cursor.continue()
     }
     tx.oncomplete = function () {
-
-      resolve(true)
+      
+      resolve(count)
     }
     tx.onerror = function () {
       reject(tx.error)
@@ -906,12 +917,19 @@ function createSeachInput(id,labelText) {
   return search
 }
 
-function handleClickListnersForMap(data) {
+function handleClickListnersForMap(data,count) {
 
 
   document.querySelector('#selector-submit-send').onclick = function () {
+    if(!count) {
+      updateCreateActivity(data.record,true)
+      return
+    }
     const selected = document.querySelector('.mdc-radio.radio-selected');
-    if (!selected) return;
+    if (!selected) {
+      document.getElementById('selector-warning').textContent = '* Please Choose A Location'
+      return;
+    };
     const radio = new mdc.radio.MDCRadio(selected);
     const selectedField = JSON.parse(radio.value)
 
@@ -933,38 +951,58 @@ function handleClickListnersForMap(data) {
   }
 }
 
-function fillChildrenInSelector(selectorStore, activityRecord, data) {
+function fillChildrenInSelector(selectorStore, data, tx) {
   const ul = document.getElementById('data-list--container')
-  selectorStore.openCursor().onsuccess = function (event) {
+  const bound = IDBKeyRange.bound([data.attachment.template,'CONFIRMED'],[data.attachment.template,'PENDING'])
+  let count = 0;
+  selectorStore.openCursor(bound).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
-
-    if (cursor.value.template === data.attachment.template && cursor.value.office === data.attachment.office && cursor.value.status != 'CANCELLED') {
-      if (cursor.value.attachment.Name) {
-        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
-      }
-      if (cursor.value.attachment.Number) {
-        ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
-      }
+    if(data.attachment.office !== cursor.value.office) {
+      cursor.continue();
+      return;
+    }
+    if (cursor.value.attachment.Name) {
+     count++
+      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
+    }
+    if (cursor.value.attachment.Number) {
+      count++
+      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
     }
     cursor.continue()
   }
-
-  // document.querySelector('.selector-send').classList.remove('hidden')
-  document.getElementById('selector-submit-send').onclick = function () {
-    const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-    const selectedField = JSON.parse(radio.value)
-    updateDomFromIDB(activityRecord, {
-      hash: 'children',
-      key: data.attachment.key
-    }, {
-      primary: selectedField.name
-    }).then(function (activity) {
-      updateCreateActivity(activity, true)
+  tx.oncomplete = function(){
+    const btn = document.getElementById('selector-submit-send')
+    if(!count) {
+      ul.appendChild(noSelectorResult('No Values Found'))
+      btn.textContent = 'CANCEL'
+      btn.onclick = function () {
+        updateCreateActivity(data.record,true);
+      }
+      return;
+    }
+    // document.querySelector('.selector-send').classList.remove('hidden')
+    document.getElementById('selector-submit-send').onclick = function () {
+      const selector = document.querySelector('.mdc-radio.radio-selected');
+      if(!selector){
+        document.getElementById('selector-warning').textContent = '* Please Select a Value'
+        return;
+      }
+      const radio = new mdc.radio.MDCRadio(selector)
+      const selectedField = JSON.parse(radio.value)
+      updateDomFromIDB(activityRecord, {
+        hash: 'children',
+        key: data.attachment.key
+      }, {
+        primary: selectedField.name
+      }).then(function (activity) {
+        updateCreateActivity(activity, true)
     }).catch(function (error) {
       console.log(error)
     })
   }
+}
 }
 
 
@@ -1400,9 +1438,13 @@ function updateCreateContainer(recordCopy, db, showSendButton) {
 
     const updateBtn = document.createElement('button')
     updateBtn.setAttribute('aria-label', 'Send')
-    if (!showSendButton) {
+    if(record.template === 'check-in') {
+      updateBtn.className = ''
+    }
+    else if (!showSendButton) {
       updateBtn.className = 'hidden';
     }
+    
     updateBtn.id = 'send-activity'
     updateBtn.textContent = 'SUBMIT'
 

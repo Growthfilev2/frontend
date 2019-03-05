@@ -646,11 +646,11 @@ function init() {
   listView();
   runAppChecks();
   
-  if(native.getName() === 'Android') {
+  // if(native.getName() === 'Android') {
   setInterval(function () {
      initLocation()
     }, 5000);
-  }
+  // }
 }
 
 function initLocation (){

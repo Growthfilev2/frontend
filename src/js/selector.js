@@ -49,7 +49,13 @@ function selectorUI(data) {
       autocomplete = new google.maps.places.Autocomplete(input, options);
       input.placeholder = ''
       initializeAutocompleteGoogle(autocomplete, data)
-      getLocationForMapSelector(tx, data).then(function () {
+      getLocationForMapSelector(tx, data).then(function (count) {
+        if(!count) {
+          document.getElementById('map-selector-search').style.display = 'none'
+          document.getElementById('selector-submit-send').textContent = 'CANCEL'
+          document.getElementById('data-list--container').appendChild(noSelectorResult('No Location Found'))
+ 
+        }
         handleClickListnersForMap(data)
       }).catch(console.log)
     }
@@ -67,8 +73,9 @@ function selectorUI(data) {
     }
 
     if (data.store === 'children') {
-      selectorStore = db.transaction(data.store).objectStore(data.store)
-      fillChildrenInSelector(selectorStore, activityRecord, data)
+      const tx = db.transaction([data.store])
+      const store = tx.objectStore(data.store).index('templateStatus')
+      fillChildrenInSelector(store, data, tx)
     }
   }
 }
