@@ -547,45 +547,39 @@ function fillUsersInSelector(data) {
     const store = transaction.objectStore('users')
     document.querySelector('.selector-send').classList.remove('hidden');
     const btn = document.getElementById('selector-submit-send')
-    
-    let count =0;
+    btn.textContent = 'Add New Number';
+    btn.dataset.type = 'add-number'
+
+    let count = 0;
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
       const userRecord = cursor.value
       if (data.attachment.present) {
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
         count++
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
       }
       else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
         count++
+        ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
       }
       cursor.continue()
     }
 
     transaction.oncomplete = function () {
-      if(!count) {
+      if(!count){
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
-        document.getElementById('selector-submit-send').textContent = 'CANCEL'
-        btn.onclick = function(){
-          updateCreateActivity(data.record,true)
-        }
-        return;
       }
       btn.onclick = function () {
-        
-        if (btn.dataset.clicktype === 'numpad') {
-          document.getElementById('selector--search').style.display = 'none'
-          const parentNode = document.getElementById('data-list--container')
-          removeChildNodes(parentNode)
-          document.querySelector('.mdc-dialog__footer').style.display = 'none'
-          addNewNumber(data, dialog)
-          btn.style.display = 'none';
+        if (btn.dataset.type === 'add-number') {
+          document.getElementById('users-selector-search').style.display = 'none';
+          removeChildNodes(ul)
+          btn.remove();
+          addNewNumber(data)
           return
         }
-  
+        
         if (data.attachment.present) {
           const selector = document.querySelector('.mdc-radio.radio-selected');
           if(!selector) {
@@ -660,6 +654,8 @@ function shareReq(data) {
       'activityId': data.record.activityId,
       'share': people
     }
+    document.querySelector('header').appendChild(progressBar())
+
     requestCreator('share', reqBody)
   })
 }
@@ -698,6 +694,7 @@ function addNewNumber(data) {
 
   }
 
+    
   const createButton = document.createElement('button')
   createButton.className = 'mdc-button'
   createButton.textContent = 'Add Contact'
@@ -764,12 +761,14 @@ function addNewNumber(data) {
   container.appendChild(input)
   container.appendChild(message)
   container.appendChild(createButton)
-  document.querySelector('#dialog--component section.mdc-dialog__body--scrollable').appendChild(container)
+  document.querySelector('#data-list--container').appendChild(container)
   const getNumber = new mdc.ripple.MDCRipple.attachTo(document.getElementById('new-contact'))
 
 }
 
 function newNumberReq(data, formattedNumber) {
+  document.querySelector('header').appendChild(progressBar())
+
   requestCreator('share', {
     activityId: data.record.activityId,
     'share': [formattedNumber]
@@ -1469,7 +1468,6 @@ function updateCreateActivity(record, showSendButton) {
     const appView = document.getElementById('app-current-panel')
     const oldRecord = JSON.stringify(record);
     appView.innerHTML = updateCreateContainer(oldRecord, db, showSendButton).outerHTML
-
 
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {
@@ -2327,14 +2325,10 @@ function checkCheckboxInput(evt, record) {
 
     }
     objectStore.put(record)
-    if (document.querySelectorAll('[data-selected="true"]').length == 0) {
-      document.querySelector('.selector-send').textContent = 'add'
-      document.querySelector('.selector-send').dataset.clicktype = 'numpad'
-    } else {
-      document.querySelector('.selector-send').dataset.clicktype = ''
-
+    if (document.querySelectorAll('[data-selected="true"]').length) {
+      document.querySelector('.selector-send').dataset.type = ''
+      document.querySelector('.selector-send').textContent = 'SUBMIT'
     }
-
   }
 }
 

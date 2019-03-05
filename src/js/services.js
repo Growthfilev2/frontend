@@ -877,7 +877,7 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-
+  
   snacks(data.msg.message);
 }
 

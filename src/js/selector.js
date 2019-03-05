@@ -22,6 +22,7 @@ function selectorUI(data) {
   warning.id = 'selector-warning'
   container.appendChild(warning);
 
+  
   const submitButton = document.createElement('button')
   submitButton.textContent = 'Submit'
   submitButton.id = 'selector-submit-send'
