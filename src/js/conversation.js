@@ -719,9 +719,9 @@ function addNewNumber(data) {
             hash: '',
             key: data.attachment.key
           }, {
-            primary: [formattedNumber]
+            primary: formattedNumber
           }).then(function (activity) {
-
+           console.log(activity);
             updateCreateActivity(activity, true)
           }).catch(handleError)
           return
@@ -990,7 +990,7 @@ function fillChildrenInSelector(selectorStore, data, tx) {
       }
       const radio = new mdc.radio.MDCRadio(selector)
       const selectedField = JSON.parse(radio.value)
-      updateDomFromIDB(activityRecord, {
+      updateDomFromIDB(data.record, {
         hash: 'children',
         key: data.attachment.key
       }, {
@@ -1437,16 +1437,14 @@ function updateCreateContainer(recordCopy, db, showSendButton) {
 
     const updateBtn = document.createElement('button')
     updateBtn.setAttribute('aria-label', 'Send')
-    if(record.template === 'check-in') {
+    if(record.create) {
       updateBtn.className = ''
     }
     else if (!showSendButton) {
       updateBtn.className = 'hidden';
     }
-    
     updateBtn.id = 'send-activity'
     updateBtn.textContent = 'SUBMIT'
-
     container.appendChild(updateBtn)
   }
   return container
@@ -2327,12 +2325,14 @@ function checkCheckboxInput(evt, record) {
     objectStore.put(record)
     if (document.querySelectorAll('[data-selected="true"]').length) {
       document.querySelector('.selector-send').dataset.type = ''
-      document.querySelector('.selector-send').textContent = 'SUBMIT'
+      document.querySelector('.selector-send').textContent = 'SELECT'
     }
   }
 }
 
 function checkRadioInput(inherit, value) {
+  document.getElementById('selector-submit-send').textContent = 'SELECT';
+
   [...document.querySelectorAll('.radio-selected')].forEach(function (input) {
     input.classList.remove('radio-selected');
   });
@@ -2342,7 +2342,7 @@ function checkRadioInput(inherit, value) {
     const radio = new mdc.radio.MDCRadio(parent.querySelector('.radio-control-selector'))
     radio['root_'].classList.add('radio-selected')
 
-    document.querySelector('.selector-send').dataset.clicktype = ''
+    document.getElementById('selector-submit-send').dataset.type = ''
     radio.value = JSON.stringify(value)
   }
 }

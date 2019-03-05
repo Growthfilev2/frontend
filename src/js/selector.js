@@ -24,7 +24,7 @@ function selectorUI(data) {
 
   
   const submitButton = document.createElement('button')
-  submitButton.textContent = 'Submit'
+  submitButton.textContent = 'SELECT'
   submitButton.id = 'selector-submit-send'
   submitButton.className = 'mdc-button selector-submit--button selector-send'
   container.appendChild(submitButton)
@@ -57,7 +57,7 @@ function selectorUI(data) {
           document.getElementById('data-list--container').appendChild(noSelectorResult('No Location Found'))
  
         }
-        handleClickListnersForMap(data)
+        handleClickListnersForMap(data,count)
       }).catch(console.log)
     }
     if (data.store === 'subscriptions') {

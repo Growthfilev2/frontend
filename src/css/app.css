@@ -472,6 +472,7 @@ body {
   height: 50px;
   font-size: 20px;
   z-index: 999;
+  font-weight: 600;
 }
 
 #selector--search {
