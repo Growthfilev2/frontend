@@ -173,7 +173,7 @@ function snacks(message, type) {
   snack.setAttribute('aria-live', 'assertive');
   snack.setAttribute('aria-atomic', 'true');
   snack.setAttribute('aria-hidden', 'true');
-
+  snack.style.zIndex = 99999
   var snackbarText = document.createElement('div');
   snackbarText.className = 'mdc-snackbar__text mdc-typography--subtitle2';
 
@@ -192,9 +192,11 @@ function snacks(message, type) {
   var data = {
 
     message: message,
-    actionText: type ? type.btn : 'OK',
-    timeout: 10000,
-    actionHandler: function actionHandler() {}
+    actionText: 'OK',
+    timeout: 5000,
+    actionHandler: function actionHandler() {
+
+    }
   };
 
   var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));

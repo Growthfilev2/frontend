@@ -842,10 +842,10 @@ function getLocationForMapSelector(tx, data) {
         cursor.continue();
         return;
       }
-      // if (cursor.value.location) {
-      //   count++
-      //   ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-      // }
+      if (cursor.value.location) {
+        count++
+        ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
+      }
       cursor.continue()
     }
     tx.oncomplete = function () {
