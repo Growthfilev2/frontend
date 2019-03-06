@@ -353,8 +353,10 @@ function manageLocation() {
   })
 }
 
-function iosLocationError(error){
-  handleError({message:error});
+function iosLocationError(error) {
+  handleError({
+    message: error
+  });
   initLocation()
 }
 
@@ -381,10 +383,11 @@ function html5Geolocation() {
                   latitude: position.coords.latitude,
                   longitude: position.coords.longitude,
                   accuracy: position.coords.accuracy,
-                  provider: 'HMTL5'
+                  provider: ' HTML5'
                 })
               }
           }
+
         }
       }, function (error) {
         clearInterval(interval)
@@ -459,39 +462,40 @@ function updateLocationInRoot(finalLocation) {
         record.location.lastLocationTime = Date.now();
         rootStore.put(record);
       };
-      tx.oncomplete = function () {
 
-        if (!previousLocation.latitude) return;
-        if (!previousLocation.longitude) return;
-        if (!finalLocation.latitude) return;
-        if (!finalLocation.longitude) return;
+    tx.oncomplete = function () {
 
-        var locationEvent = new CustomEvent("location", {
-          "detail": finalLocation
-        });
-        window.dispatchEvent(locationEvent);
+      if (!previousLocation.latitude) return;
+      if (!previousLocation.longitude) return;
+      if (!finalLocation.latitude) return;
+      if (!finalLocation.longitude) return;
 
-        var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
-
-        var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-          "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
-        });
-        window.dispatchEvent(suggestCheckIn);
-      };
-      tx.onerror = function () {
-        handleError({
-          message: `${tx.error.message} from updateLocationInRoot`,
-          body: tx.error.name
-        })
-      }
-    };
-    req.onerror = function () {
-      handleError({
-        message: `${req.error.message} from updateLocationInRoot`,
-        body: req.error.name
+      var locationEvent = new CustomEvent("location", {
+        "detail": finalLocation
       });
+      window.dispatchEvent(locationEvent);
+
+      var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
+
+      var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+        "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+      });
+      window.dispatchEvent(suggestCheckIn);
     };
-  
+    tx.onerror = function () {
+      handleError({
+        message: `${tx.error.message} from updateLocationInRoot`,
+        body: tx.error.name
+      })
+    }
+  };
+  req.onerror = function () {
+    handleError({
+      message: `${req.error.message} from updateLocationInRoot`,
+      body: req.error.name
+    });
+  };
+
 }
 
 function toRad(value) {
@@ -931,21 +935,20 @@ function getInputText(selector) {
 
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
-  
-  if(value){
+
+  if (value) {
     const key = Object.keys(value)[0]
-    switch(key) {
+    switch (key) {
       case 'verifyEmail':
-      emailVerify();
-      break;
+        emailVerify();
+        break;
       case 'removedFromOffice':
-    
       break;
       case 'read':
-      requestCreator('Null', value);
-      break;
+        requestCreator('Null', value);
+        break;
       default:
-      requestCreator('Null', value);
+        requestCreator('Null', value);
     }
     return;
   }
