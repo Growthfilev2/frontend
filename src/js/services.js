@@ -9,7 +9,7 @@ function handleError(error) {
     if (error.stack) {
       error.stack = error.stack;
     }
-
+    
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -173,7 +173,7 @@ function snacks(message, type) {
   snack.setAttribute('aria-live', 'assertive');
   snack.setAttribute('aria-atomic', 'true');
   snack.setAttribute('aria-hidden', 'true');
-
+  snack.style.zIndex = 99999
   var snackbarText = document.createElement('div');
   snackbarText.className = 'mdc-snackbar__text mdc-typography--subtitle2';
 
@@ -192,9 +192,11 @@ function snacks(message, type) {
   var data = {
 
     message: message,
-    actionText: type ? type.btn : 'OK',
-    timeout: 10000,
-    actionHandler: function actionHandler() {}
+    actionText: 'OK',
+    timeout: 5000,
+    actionHandler: function actionHandler() {
+
+    }
   };
 
   var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));
@@ -373,17 +375,17 @@ function html5Geolocation() {
         if (stabalzied.length > 1) {
           i++
           if (stabalzied[i].latitude.toFixed(3) === position.coords.latitude.toFixed(3) && stabalzied[i].longitude.toFixed(3) === position.coords.longitude.toFixed(3)) {
-            stabalizedCount++
-            if (stabalizedCount == 3) {
-              clearInterval(interval)
-              interval = null;
-              return resolve({
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-                provider: 'HTML5'
-              })
-            }
+              stabalizedCount++
+              if (stabalizedCount == 3) {
+                clearInterval(interval)
+                interval = null;
+                return resolve({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  provider: ' HTML5'
+                })
+              }
           }
 
         }
@@ -437,29 +439,30 @@ function isDialogOpened(id) {
 
 
 function updateLocationInRoot(finalLocation) {
-  var previousLocation = {
-    latitude: '',
-    longitude: '',
-    accuracy: '',
-    provider: '',
-    lastLocationTime: ''
-  };
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var tx = db.transaction(['root'], 'readwrite');
-    var rootStore = tx.objectStore('root');
-    rootStore.get(dbName).onsuccess = function (event) {
-      var record = event.target.result;
-      if (record.location) {
-        previousLocation = record.location
+    var previousLocation = {
+      latitude: '',
+      longitude: '',
+      accuracy: '',
+      provider: '',
+      lastLocationTime: ''
+    };
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var rootStore = tx.objectStore('root');
+      rootStore.get(dbName).onsuccess = function (event) {
+        var record = event.target.result;
+        if (record.location) {
+          previousLocation = record.location
+        };
+        
+        record.location = finalLocation;
+        record.location.lastLocationTime = Date.now();
+        rootStore.put(record);
       };
 
-      record.location = finalLocation;
-      record.location.lastLocationTime = Date.now();
-      rootStore.put(record);
-    };
     tx.oncomplete = function () {
 
       if (!previousLocation.latitude) return;
@@ -940,7 +943,7 @@ function runRead(value) {
         emailVerify();
         break;
       case 'removedFromOffice':
-        break;
+      break;
       case 'read':
         requestCreator('Null', value);
         break;

@@ -379,6 +379,7 @@ function startApp(start) {
       createIDBStore(auth).then(function () {
         localStorage.setItem('dbexist', auth.uid);
         if(native.getName() !== 'Android') {
+           
           webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
         }
         init()
