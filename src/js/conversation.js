@@ -868,7 +868,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       const store = tx.objectStore('map')
       const index = store.index('byOffice')
       const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
-      index.openCursor(range, 'nextunique').onsuccess = function (event) {
+      index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
 
@@ -876,16 +876,29 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
           cursor.continue();
           return;
         }
-
+        if(!cursor.value.latitude || !cursor.value.longitude) {
+          cursor.continue();
+          return;
+        }
+        
         const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
 
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+          
           results.push(cursor.value);
         }
         cursor.continue();
       }
       tx.oncomplete = function () {
-        resolve(results)
+        const filter = {};
+        results.forEach(function(value){
+          filter[value.location] = value;
+        })
+        const array = [];
+        Object.keys(filter).forEach(function(locationName){
+          array.push(filter[locationName])
+        })
+        resolve(array)
       }
       tx.onerror = function () {
         reject(tx.error)
