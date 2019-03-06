@@ -255,20 +255,15 @@ function geolocationApi(req) {
             body: req.body
           })
         }
-        if(response.accuracy <= 350) {
 
-          resolve({
-            'latitude': response.location.lat,
-            'longitude': response.location.lng,
-            'accuracy': response.accuracy,
-            'provider': {
-              'cellular': JSON.parse(req.body)
-            },
-          });
-        }
-        else {
-          resolve({latitude:'',longitude:''})
-        }
+        resolve({
+          'latitude': response.location.lat,
+          'longitude': response.location.lng,
+          'accuracy': response.accuracy,
+          'provider': {
+            'cellular': JSON.parse(req.body)
+          },
+        });
       }
     };
     const verfiedBody = handleRequestBody(req.body);
