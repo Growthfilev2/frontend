@@ -569,12 +569,12 @@ function createActivityIconDom() {
   parent.innerHTML = fab.outerHTML;
 
   document.querySelector('.create-activity').addEventListener('click', function (evt) {
-    callSubscriptionSelectorUI(evt)
+    callSubscriptionSelectorUI()
   })
 }
 
-function callSubscriptionSelectorUI(evt, checkIn) {
-  selectorUI(evt, {
+function callSubscriptionSelectorUI(checkIn) {
+  selectorUI({
     record: '',
     store: 'subscriptions',
     suggestCheckIn: checkIn

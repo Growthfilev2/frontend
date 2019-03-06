@@ -378,6 +378,10 @@ function startApp(start) {
     if (start) {
       createIDBStore(auth).then(function () {
         localStorage.setItem('dbexist', auth.uid);
+        if(native.getName() !== 'Android') {
+           
+          webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+        }
         init()
       }).catch(function (error) {
         snacks('Please restart the app');
@@ -433,7 +437,7 @@ function isEmployeeOnLeave() {
     getEmployeeDetails().then(function (empDetails) {
 
       if (!empDetails) {
-        return false;
+        return resolve(false);
       }
 
       empDetails.onLeave = false
@@ -637,24 +641,21 @@ function init() {
 
   listView();
   runAppChecks();
-
-  //TODO : move this in device   
-
+  
+  if(native.getName() === 'Android') {
   setInterval(function () {
-    manageLocation().then(function (location) {
-      updateLocationInRoot(location).then(function (location) {
-        if (!location.prev.latitude) return;
-        if (!location.prev.longitude) return;
-        if (!location.new.latitude) return;
-        if (!location.new.longitude) return;
-        locationUpdationSuccess(location)
-      }).catch(handleError);
-    }).catch(handleError);
-  }, 5000);
-
+     initLocation()
+    }, 5000);
+  }
 }
 
-
+function initLocation (){
+  manageLocation().then(function (location) {
+    if(location.latitude && location.longitude) {
+      updateLocationInRoot(location)
+    }
+  }).catch(handleError);
+}
 
 function runAppChecks() {
 
