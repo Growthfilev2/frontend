@@ -429,10 +429,9 @@ function startApp(start) {
 
         listView();
         runAppChecks();
-
+        useJSTimer = true;
         if (useJSTimer) {
-          debugger;
-          setTimeout(function () {
+          setInterval(function () {
             initLocation()
           }, 5000);
         }
