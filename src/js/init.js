@@ -432,9 +432,8 @@ function startApp(start) {
 
         if (useJSTimer) {
           setTimeout(function () {
-          
             initLocation()
-          }, 500);
+          }, 5000);
         }
       }
       req.onerror = function () {
@@ -631,19 +630,16 @@ function redirect() {
 function initLocation() {
   manageLocation().then(function (location) {
     if (location.latitude && location.longitude) {
-   
       updateLocationInRoot(location)
     }
   }).catch(function(error){
-    
+    handleError(error)
   });
 }
 
 function runAppChecks() {
-
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
     isEmployeeOnLeave().then(function (onLeave) {
-
       if (onLeave) return
       if (e.detail) {
         if (history.state[0] === 'listView') {

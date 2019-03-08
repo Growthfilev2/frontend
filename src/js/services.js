@@ -254,14 +254,15 @@ function geolocationApi(req) {
           if (wifiBased) {
             req.body = wifiBased
             geolocationApi(req).then(function(retryRes){
-              if(retryRes.accuracy < 350) {
+              if(retryRes.accuracy <= 350) {
                 resolve(retryRes)
               }
               else {
                 resolve(originalResponse)
               }
             }).catch(function (error) {
-              reject(error)
+              //TODO test error reject on retry of geolocation api
+              reject(error);
             })
           } else {
             resolve({
@@ -361,13 +362,16 @@ function manageLocation(cellBody) {
             resolve(htmlLocation);
           }
         }).catch(function(htmlError){
+          //TODO: Test cell location going in catch block
             resolve(cellLocation);
         })
         }
       }).catch(function (cellError) {
+         //TODO: Test html location going in catch block
         html5Geolocation().then(function (htmlLocation) {
           resolve(htmlLocation);
         }).catch(function (htmlError) {
+          //TODO:test reject in catch block;
           reject({
             message: 'Both GeolocationApi and HTML5 location failed',
             body: {
@@ -396,8 +400,7 @@ function iosLocationError(error) {
 }
 
 function html5Geolocation() {
-
-
+  //TODO: test html5 geolocation
   return new Promise(function (resolve, reject) {
     var stabalzied = [];
     let i = 0;
@@ -446,6 +449,8 @@ function html5Geolocation() {
       }, function (error) {
         clearInterval(interval)
         interval = null;
+        clearTimeout(Timer)
+        Timer = null;  
         reject({
           message: `${error.message} from html5Geolocation`
         });
