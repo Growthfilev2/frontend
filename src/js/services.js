@@ -332,9 +332,6 @@ function getCellTowerInfo(cellBody) {
       return
     }
 
-    const testJson = JSON.parse(coarseData);
-    testJson.cellTowers[0].cellId = -1;
-
     var apiKey = 'AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ'
     const req = {
       method: 'POST',
