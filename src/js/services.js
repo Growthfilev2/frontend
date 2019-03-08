@@ -324,6 +324,7 @@ function getCellTowerInfo(cellBody) {
         message: `${e.message} from getCellularData`
       });
     }
+    
 
     if (!coarseData) {
       reject({
@@ -336,10 +337,9 @@ function getCellTowerInfo(cellBody) {
     const req = {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
-      body: testJson,
+      body: coarseData,
       retry: 2
     }
-
     geolocationApi(req).then(function (location) {
       resolve(location)
     }).catch(function (error) {
