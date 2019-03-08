@@ -9,8 +9,6 @@ function handleError(error) {
     if (error.stack) {
       error.stack = error.stack;
     }
-
-
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -174,7 +172,7 @@ function snacks(message, type) {
   snack.setAttribute('aria-live', 'assertive');
   snack.setAttribute('aria-atomic', 'true');
   snack.setAttribute('aria-hidden', 'true');
-
+  snack.style.zIndex = 99999
   var snackbarText = document.createElement('div');
   snackbarText.className = 'mdc-snackbar__text mdc-typography--subtitle2';
 
@@ -193,9 +191,11 @@ function snacks(message, type) {
   var data = {
 
     message: message,
-    actionText: type ? type.btn : 'OK',
-    timeout: 10000,
-    actionHandler: function actionHandler() {}
+    actionText: 'OK',
+    timeout: 5000,
+    actionHandler: function actionHandler() {
+
+    }
   };
 
   var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));
@@ -304,7 +304,6 @@ function handleRequestBody(request) {
   } else {
     return null;
   }
-
 }
 
 
@@ -490,28 +489,29 @@ function isDialogOpened(id) {
 
 
 function updateLocationInRoot(finalLocation) {
-  var previousLocation = {
-    latitude: '',
-    longitude: '',
-    accuracy: '',
-    provider: '',
-    lastLocationTime: ''
-  };
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var tx = db.transaction(['root'], 'readwrite');
-    var rootStore = tx.objectStore('root');
-    rootStore.get(dbName).onsuccess = function (event) {
-      var record = event.target.result;
-      if (record.location) {
-        previousLocation = record.location
+    var previousLocation = {
+      latitude: '',
+      longitude: '',
+      accuracy: '',
+      provider: '',
+      lastLocationTime: ''
+    };
+    var dbName = firebase.auth().currentUser.uid;
+    var req = indexedDB.open(dbName);
+    req.onsuccess = function () {
+      var db = req.result;
+      var tx = db.transaction(['root'], 'readwrite');
+      var rootStore = tx.objectStore('root');
+      rootStore.get(dbName).onsuccess = function (event) {
+        var record = event.target.result;
+        if (record.location) {
+          previousLocation = record.location
+        };
+        
+        record.location = finalLocation;
+        record.location.lastLocationTime = Date.now();
+        rootStore.put(record);
       };
-
-      record.location = finalLocation;
-      record.location.lastLocationTime = Date.now();
-      rootStore.put(record);
     };
     tx.oncomplete = function () {
 
@@ -538,14 +538,13 @@ function updateLocationInRoot(finalLocation) {
         body: tx.error.name
       })
     }
-  };
+  
   req.onerror = function () {
     handleError({
       message: `${req.error.message} from updateLocationInRoot`,
       body: req.error.name
     });
   };
-
 }
 
 function toRad(value) {
@@ -992,7 +991,8 @@ function runRead(value) {
         emailVerify();
         break;
       case 'removedFromOffice':
-        break;
+    
+      break;
       case 'read':
         requestCreator('Null', value);
         break;
