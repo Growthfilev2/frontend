@@ -431,6 +431,7 @@ function startApp(start) {
         runAppChecks();
 
         if (useJSTimer) {
+          debugger;
           setTimeout(function () {
             initLocation()
           }, 5000);
@@ -627,8 +628,8 @@ function redirect() {
 }
 
 
-function initLocation() {
-  manageLocation().then(function (location) {
+function initLocation(cellBody) {
+  manageLocation(cellBody).then(function (location) {
     if (location.latitude && location.longitude) {
       updateLocationInRoot(location)
     }
