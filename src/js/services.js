@@ -324,8 +324,7 @@ function getCellTowerInfo(cellBody) {
         message: `${e.message} from getCellularData`
       });
     }
-    
-
+  
     if (!coarseData) {
       reject({
         message: 'empty cell tower from android.'
@@ -350,7 +349,7 @@ function getCellTowerInfo(cellBody) {
 
 function manageLocation(cellBody) {
   return new Promise(function (resolve, reject) {
-    if (native.getName() === 'Android') {
+    // if (native.getName() === 'Android') {
 
       getCellTowerInfo(cellBody).then(function (cellLocation) {
         if (cellLocation.accuracy <= 350) {
@@ -364,17 +363,17 @@ function manageLocation(cellBody) {
               resolve(htmlLocation);
             }
           }).catch(function (htmlError) {
-            //TODO: Test cell location going in catch block
+          
             resolve(cellLocation);
           })
         }
       }).catch(function (cellError) {
-        //TODO: Test html location going in catch block
+
         html5Geolocation().then(function (htmlLocation) {
           resolve(htmlLocation);
         }).catch(function (htmlError) {
-          //TODO:test reject in catch block;
-        
+      
+  
           reject({
             message: 'Both GeolocationApi and HTML5 location failed',
             body: {
@@ -384,16 +383,16 @@ function manageLocation(cellBody) {
           })
         })
       })
-      return;
-    }
+    //   return;
+    // }
 
-    html5Geolocation().then(function (location) {
-      console.log(location)
-      resolve(location)
-    }).catch(function (error) {
-      console.log(error)
-      reject(error)
-    })
+    // html5Geolocation().then(function (location) {
+    //   console.log(location)
+    //   resolve(location)
+    // }).catch(function (error) {
+    //   console.log(error)
+    //   reject(error)
+    // })
   })
 }
 

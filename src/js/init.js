@@ -432,7 +432,76 @@ function startApp(start) {
         useJSTimer = true;
         if (useJSTimer) {
           setInterval(function () {
-            initLocation()
+            let body = JSON.stringify({"radioType": "GSM",
+            "cellTowers": [
+                {
+                    "cellId": 5829,
+                    "mobileNetworkCode": 27,
+                    "signalStrength": -51,
+                    "locationAreaCode": 434,
+                    "mobileCountryCode": 404
+                },
+                {
+                    "signalStrength": -51,
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0,
+                    "cellId": 28358,
+                    "mobileNetworkCode": 0
+                },
+                {
+                    "signalStrength": -51,
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0,
+                    "cellId": 5827,
+                    "mobileNetworkCode": 0
+                },
+                {
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0,
+                    "cellId": 48133,
+                    "mobileNetworkCode": 0,
+                    "signalStrength": -51
+                },
+                {
+                    "cellId": 65535,
+                    "mobileNetworkCode": 0,
+                    "signalStrength": -51,
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0
+                },
+                {
+                    "cellId": 48221,
+                    "mobileNetworkCode": 0,
+                    "signalStrength": -51,
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0
+                },
+                {
+                    "cellId": 65535,
+                    "mobileNetworkCode": 0,
+                    "signalStrength": -51,
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0
+                },
+                {
+                    "locationAreaCode": 0,
+                    "mobileCountryCode": 0,
+                    "cellId": 49892,
+                    "mobileNetworkCode": 0,
+                    "signalStrength": -51
+                }
+            ],
+            "wifiAccessPoints": [
+                {
+                    "macAddress": "00:1e:a6:ed:21:c8",
+                    "signalStrength": -43
+                }
+            ],
+            "considerIp": "true",
+            "carrier": "Vodafone IN",
+            "homeMobileNetworkCode": 27,
+            "homeMobileCountryCode": 404})
+            initLocation(body)
           }, 5000);
         }
       }
