@@ -907,13 +907,13 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function createSeachInput(id, labelText, iconName) {
+function createSeachInput(id, labelText) {
   const search = document.createElement('div')
   search.id = id
   search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
   const icon = document.createElement('i')
   icon.className = 'material-icons mdc-text-field__icon'
-  icon.textContent = iconName
+  icon.textContent = 'search'
   const input = document.createElement("input")
   input.className = 'mdc-text-field__input'
   const ripple = document.createElement('div')
@@ -1794,7 +1794,6 @@ function createVenueSection(record) {
 
   if (record.template === 'customer') {
 
-    record.canEdit = false;
     if (record.canEdit) {
       
       const checkInDesc = document.createElement('li')

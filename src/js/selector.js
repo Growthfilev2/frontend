@@ -7,7 +7,7 @@ function selectorUI(data) {
   container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
   
   if(data.store === 'map') {
-    createSeachInput('map-selector-search','Search For Location','search')
+    container.appendChild(createSeachInput('map-selector-search','Search For Location'));
   }
 
   if(data.store === 'users'){
