@@ -263,7 +263,7 @@ function geolocationApi(req) {
                 }
               }
             }).catch(function (error) {
-            
+
               reject(error);
             })
           } else {
@@ -316,9 +316,9 @@ function getCellTowerInfo() {
   return new Promise(function (resolve, reject) {
 
     let coarseData = "";
-    try { 
+    try {
       coarseData = AndroidInterface.getCellularData();
-     
+
     } catch (e) {
       reject({
         message: `${e.message} from getCellularData`
@@ -369,6 +369,7 @@ function manageLocation() {
           })
         }
       }).catch(function (htmlError) {
+        console.log(htmlError)
         handleError(htmlError)
         getCellTowerInfo().then(function (cellLocation) {
 
@@ -398,8 +399,8 @@ function iosLocationError(error) {
   handleError({
     message: error
   });
-  manageLocation().then(function(location){
-    if(location.latitude && location.longitude) {
+  manageLocation().then(function (location) {
+    if (location.latitude && location.longitude) {
       updateLocationInRoot(location)
     }
   })
@@ -407,12 +408,12 @@ function iosLocationError(error) {
 
 
 function html5Geolocation() {
-
+  let locationFound = false;
   return new Promise(function (resolve, reject) {
-    // const prom = [];
-    // for (let i = 0; i < 3; i++) {
+    const prom = [];
+    for (let i = 0; i < 3; i++) {
 
-      // let navProm = new Promise(function (resolve, reject) {
+      let navProm = new Promise(function (resolve, reject) {
         navigator.geolocation.getCurrentPosition(function (position) {
           return resolve({
             latitude: position.coords.latitude,
@@ -426,21 +427,34 @@ function html5Geolocation() {
             message: error
           })
         })
-      // })
-      // prom.push(navProm)
-    // }
-    // Promise.all(prom).then(function (results) {
-    //   let bestAccuracy = results.sort(function (a, b) {
-    //     return a.accuracy - b.accuracy
-    //   })
-    //   resolve(bestAccuracy[0]);
-    //   return;
-    // }).catch(function (error) {
-    //   reject({
-    //     message: error.message.message
-    //   })
-    //   return;
-    // })
+      })
+      prom.push(navProm)
+    }
+
+    let timer = setTimeout(function () {
+      clearTimeout(timer)
+      timer = null
+      return reject({message:'No location from HTML5 for more than 5 seconds'})
+    }, 6000)
+
+    Promise.all(prom).then(function (results) {
+
+      clearTimeout(timer)
+      timer = null
+      let bestAccuracy = results.sort(function (a, b) {
+        return a.accuracy - b.accuracy
+      })
+      resolve(bestAccuracy[0]);
+      return;
+    }).catch(function (error) {
+
+      clearTimeout(timer)
+      timer = null
+      reject({
+        message: error.message.message
+      })
+      return;
+    })
   })
 }
 
@@ -453,15 +467,15 @@ function showSuggestCheckInDialog(offices) {
   dialog['root_'].classList.remove('hidden');
   dialog.show();
   dialog.listen('MDCDialog:accept', function (evt) {
-      if (isLocationStatusWorking()) {
-        if (offices.length === 1) {
-          createTempRecord(offices[0], 'check-in', {
-            suggestCheckIn: true
-          });
-        } else {
-          callSubscriptionSelectorUI(true);
-        }
+    if (isLocationStatusWorking()) {
+      if (offices.length === 1) {
+        createTempRecord(offices[0], 'check-in', {
+          suggestCheckIn: true
+        });
+      } else {
+        callSubscriptionSelectorUI(true);
       }
+    }
   });
   dialog.listen('MDCDialog:cancel', function (evt) {
     app.isNewDay();
@@ -655,19 +669,20 @@ function requestCreator(requestType, requestBody) {
       })
     });
   } else {
-    
+
     getRootRecord().then(function (rootRecord) {
-    
+
       let location = rootRecord.location;
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
-      if(isLocationOld){
+      if (isLocationOld) {
         promises.push(manageLocation())
       }
-      Promise.all(promises).then(function(result){
+      Promise.all(promises).then(function (result) {
         const token = result[0];
-        if(result.length ==2) {
+        if (result.length == 2) {
           location = result[1];
+          updateLocationInRoot(location);
         }
         var geopoints = {
           'latitude': location.latitude,
@@ -680,7 +695,7 @@ function requestCreator(requestType, requestBody) {
         requestGenerator.body = requestBody;
         requestGenerator.user.token = token;
         sendRequest(location, requestGenerator);
-      }).catch(function(error){
+      }).catch(function (error) {
         handleError(error);
       })
     });
