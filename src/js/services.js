@@ -409,9 +409,10 @@ function iosLocationError(error) {
 function html5Geolocation() {
 
   return new Promise(function (resolve, reject) {
-    const prom = [];
-    for (let i = 0; i < 3; i++) {
-      let navProm = new Promise(function (resolve, reject) {
+    // const prom = [];
+    // for (let i = 0; i < 3; i++) {
+
+      // let navProm = new Promise(function (resolve, reject) {
         navigator.geolocation.getCurrentPosition(function (position) {
           return resolve({
             latitude: position.coords.latitude,
@@ -425,21 +426,21 @@ function html5Geolocation() {
             message: error
           })
         })
-      })
-      prom.push(navProm)
-    }
-    Promise.all(prom).then(function (results) {
-      let bestAccuracy = results.sort(function (a, b) {
-        return a.accuracy - b.accuracy
-      })
-      resolve(bestAccuracy[0]);
-      return;
-    }).catch(function (error) {
-      reject({
-        message: error.message.message
-      })
-      return;
-    })
+      // })
+      // prom.push(navProm)
+    // }
+    // Promise.all(prom).then(function (results) {
+    //   let bestAccuracy = results.sort(function (a, b) {
+    //     return a.accuracy - b.accuracy
+    //   })
+    //   resolve(bestAccuracy[0]);
+    //   return;
+    // }).catch(function (error) {
+    //   reject({
+    //     message: error.message.message
+    //   })
+    //   return;
+    // })
   })
 }
 
