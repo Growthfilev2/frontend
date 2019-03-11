@@ -104,7 +104,7 @@ function createSelectorHeader(data) {
 
   document.querySelector('#back-selector').addEventListener('click', function (e) {
     if (data.store === 'subscriptions') {
-      backNav()
+      listView();
     } else {
       document.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
       updateCreateActivity(history.state[1], true);
