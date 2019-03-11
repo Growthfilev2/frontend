@@ -17,7 +17,6 @@ const requestFunctionCaller = {
   share: share,
   update: update,
   create: create,
-  removeFromOffice:removeFromOffice
 }
 
 function requestHandlerResponse(type, code, message, params) {
@@ -77,9 +76,9 @@ function http(request) {
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
 
     xhr.onreadystatechange = function () {
-    
+
       if (xhr.readyState === 4) {
-     
+
         if (!xhr.status) {
           requestHandlerResponse('android-stop-refreshing', 400)
           return;
@@ -151,8 +150,10 @@ function fetchServerTime(body, user) {
         requestHandlerResponse('revoke-session', 200);
         return
       };
-
-
+      console.log(response)
+      if (response.removeFromOffice) {
+        removeFromOffice(response.removeFromOffice, user)
+      }
       resolve({
         ts: response.timestamp,
         user: user,
@@ -170,7 +171,7 @@ function instant(error, user) {
     body: error,
     token: user.token
   }
-  
+
   http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
@@ -319,131 +320,174 @@ function create(body, user) {
   })
 }
 
-function removeFromOffice(param){
-  removeActivity(param).then(function(response){
+function removeFromOffice(offices, user) {
+  removeActivity(offices, user).then(function (response) {
     return removeFromListAndChildren(response)
-  }).then(function(response){
+  }).then(function (response) {
     return removeFromMapAndCalendar(response);
-  }).then(function(response) {
-    return removeFromSubscriptions(response)
-  }).catch(function(error){
+  }).then(function (response) {
+    return removeFromSubscriptions(response);
+
+  }).catch(function (error) {
+    console.log(error)
     throw new Error(error);
-  }).catch(function(error){
+  }).catch(function (error) {
     console.log(error);
-    instant(JSON.stringify({message:Error}))
+    instant(JSON.stringify({
+      message: Error
+    }))
   })
 }
 
 
 
 
-function removeActivity(param){
-  return new Promise (function(resolve,reject){
+function removeActivity(offices, user) {
+  return new Promise(function (resolve, reject) {
 
     const req = indexedDB.open(param.user.uid);
-    req.onsuccess = function(){
-      const db =req.result;
-      const tx =db.transaction(['activity'],'readwrite')
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['activity'], 'readwrite')
       const store = tx.objectStore('activity');
       const index = store.index('office');
-      const ids  = [];
-
-      index.openCursor(param.body.office).onsuccess = function(event){
-        const cursor = event.target.result;
-        if(!cursor) return;
-        ids.push(cursor.value.activityId);
-        const deleteReq = cursor.delete();
-
-        deleteReq.onsuccess = function(){
-
-          cursor.continue();
+      const ids = [];
+      offices.forEach(function (office) {
+        index.openCursor(office).onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (!cursor) return;
+          ids.push(cursor.value.activityId);
+          const deleteReq = cursor.delete();
+          deleteReq.onsuccess = function () {
+            cursor.continue();
+          }
         }
+      })
+      tx.oncomplete = function () {
+        resolve({
+          offices: offices,
+          ids: ids,
+          user:user
+        })
       }
-      tx.oncomplete = function(){
-        resolve({param:param,ids:ids})
-      }
-      tx.onerror = function(){
-        reject({message:tx.error.message})
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
       }
     }
-    req.onerror = function(){
-      reject({message:req.error.message})
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
     }
   })
 }
 
-function removeFromListAndChildren(response){
-  return new Promise(function(resolve,reject){
+function removeFromListAndChildren(response) {
+  return new Promise(function (resolve, reject) {
 
-    const req = indexedDB.open(response.param.user.uid);
-    req.onsuccess = function(){
+    const req = indexedDB.open(response.user.uid);
+    req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['list','children'],'readwrite');
+      const tx = db.transaction(['list', 'children'], 'readwrite');
       const listStore = tx.objectStore('list');
-      const childrenStore  = tx.objectStore('children');
-      response.ids.forEach(function(id){
-          const deleteReqList = listStore.delete(id);
-          const deleteReqChildren = childrenStore.delete(id);
+      const childrenStore = tx.objectStore('children');
+      response.ids.forEach(function (id) {
+        const deleteReqList = listStore.delete(id);
+        const deleteReqChildren = childrenStore.delete(id);
       })
-      tx.oncomplete = function(){
+      tx.oncomplete = function () {
         resolve(response)
       }
-      tx.onerror = function(){
-        reject({message:tx.error.message})
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
       }
     }
-    req.onerror = function(){
-      reject({message:req.error.message})
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
     }
   })
 }
 
-function removeFromMapAndCalendar(response){
-  return new Promise(function(resolve,reject){
+function removeFromMapAndCalendar(response) {
+  return new Promise(function (resolve, reject) {
 
-    const req = indexedDB.open(Response.param.user.uid);
-    req.onsuccess = function(){
+    const req = indexedDB.open(response.user.uid);
+    req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['map','calendar'],'readwrite');
+      const tx = db.transaction(['map', 'calendar'], 'readwrite');
       const map = tx.objectStore('map');
       const calendar = tx.objectStore('calendar');
-      
-      deleteByIndex(map,response.ids);
-      deleteByIndex(calendar,response.ids);
-      tx.oncomplete = function(){
-        resolve(response)    
+
+      deleteByIndex(map, response.ids);
+      deleteByIndex(calendar, response.ids);
+      tx.oncomplete = function () {
+        resolve(response)
       }
-      tx.onerror = function(){
-        reject({message:tx.error.message})
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
       }
     }
-    req.onerror = function(){
-      reject({message:req.error.message})
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
     }
   })
 }
 
 function removeFromSubscriptions(response) {
-  return new Promise(function(resolve,reject){
 
-    const req = indexedDB.open(response.param.user.uid)
-    req.onsuccess = function(){
-      const db = req.result;
-      const tx = db.transaction(['subscriptions'],'readwrite');
-      const store = tx.objectStore('subscriptions');
-      const index = store.index('office')
-      index.openCursor(response.body.office).onsuccess = function(event){
+  const req = indexedDB.open(response.user.uid)
+  req.onsuccess = function () {
+    const db = req.result;
+    const tx = db.transaction(['subscriptions'], 'readwrite');
+    const store = tx.objectStore('subscriptions');
+    const index = store.index('office');
+    response.offices.forEach(function(office){
+      index.openCursor(office).onsuccess = function (event) {
         const cursor = event.target.result;
-        if(!cursor) return;
+        if (!cursor) return;
         const deleteReq = cursor.delete();
-        cursor.continue()
+        deleteReq.onsuccess = function () {
+          cursor.continue()
+        }
+  
       }
-      tx.oncomplete = function(){
-        
+    })
+    
+    tx.oncomplete = function () {
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(response.param.user.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return;
+        record.officesRemoved = true
+        rootStore.put(record)
+      }
+      rootTx.oncomplete = function () {
+
+      }
+      rootTx.onerror = function () {
+        instant({
+          message: rootTx.error.message
+        })
       }
     }
-  })
+    tx.onerror = function () {
+      instant({
+        message: tx.error.message
+      })
+    }
   }
+}
 
 function getUrlFromPhoto(body, user) {
 
@@ -522,8 +566,10 @@ function updateMap(activity, param) {
 
         let deleteRecordReq = cursor.delete()
         cursor.continue()
-        deleteRecordReq.onerror = function(){
-          instant({message:deleteRecordReq.error.message})
+        deleteRecordReq.onerror = function () {
+          instant({
+            message: deleteRecordReq.error.message
+          })
         }
       }
     }
@@ -577,8 +623,10 @@ function updateCalendar(activity, param) {
       const cursor = event.target.result
       if (cursor) {
         let recordDeleteReq = cursor.delete()
-        recordDeleteReq.onerror = function(){
-          instant({message:recordDeleteReq.error.message})
+        recordDeleteReq.onerror = function () {
+          instant({
+            message: recordDeleteReq.error.message
+          })
         }
         cursor.continue()
       }
@@ -716,7 +764,9 @@ function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
     }
     tx.onerror = function () {
 
-      instant({message:transaction.error.message})
+      instant({
+        message: transaction.error.message
+      })
     }
 
   }
@@ -790,9 +840,9 @@ function createListStore(activity, counter, param) {
     req.onsuccess = function () {
       const db = req.result;
       const userTx = db.transaction(['users']);
-      
+
       const usersStore = userTx.objectStore('users');
-   
+
       const requiredData = {
         'activityId': activity.activityId,
         'secondLine': '',
@@ -811,20 +861,19 @@ function createListStore(activity, counter, param) {
           requiredData.creator.photo = record.photoURL
         }
       }
-      userTx.oncomplete = function(){
-        const listTX = db.transaction(['list'],'readwrite');
+      userTx.oncomplete = function () {
+        const listTX = db.transaction(['list'], 'readwrite');
         const listStore = listTX.objectStore('list');
-        listStore.get(activity.activityId).onsuccess = function(listEvent){
+        listStore.get(activity.activityId).onsuccess = function (listEvent) {
           const record = listEvent.target.result;
-          if(!record) {
+          if (!record) {
             requiredData.createdTime = activity.timestamp;
-          }
-          else {
-            requiredData.createdTime  = record.createdTime
+          } else {
+            requiredData.createdTime = record.createdTime
           }
           listStore.put(requiredData);
         }
-        listTX.oncomplete = function(){
+        listTX.oncomplete = function () {
           resolve(true)
         }
       }
@@ -857,9 +906,9 @@ function successResponse(read, param) {
         }
       }
 
-     if(addendum.isComment) {
-       let key = addendum.activityId 
-       counter[key] = (counter[key] || 0) + 1
+      if (addendum.isComment) {
+        let key = addendum.activityId
+        counter[key] = (counter[key] || 0) + 1
       }
       addendumObjectStore.add(addendum)
     })
