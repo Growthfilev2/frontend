@@ -151,9 +151,11 @@ function fetchServerTime(body, user) {
         return
       };
       console.log(response)
-      if (response.removeFromOffice) {
-        removeFromOffice(response.removeFromOffice, user)
-      }
+      // // if (response.hasOwnProperty('removeFromOffice')) {
+      //   if(Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
+          removeFromOffice(response.removeFromOffice, user)
+      //   }
+      // }
       resolve({
         ts: response.timestamp,
         user: user,
@@ -345,7 +347,7 @@ function removeFromOffice(offices, user) {
 function removeActivity(offices, user) {
   return new Promise(function (resolve, reject) {
 
-    const req = indexedDB.open(param.user.uid);
+    const req = indexedDB.open(user.uid);
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['activity'], 'readwrite')

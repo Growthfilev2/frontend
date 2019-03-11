@@ -944,13 +944,9 @@ function runRead(value) {
       case 'verifyEmail':
       emailVerify();
       break;
-      case 'removedFromOffice':
-      break;
       case 'read':
       requestCreator('Null', value);
       break;
-      case 'removeFromOffice':
-      requestCreator('removeFromOffice')
       default:
       requestCreator('Null', value);
     }
