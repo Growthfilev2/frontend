@@ -1194,19 +1194,27 @@ function createTempRecord(office, template, data) {
 
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (!record.location || isLocationOld) {
+
             appDialog('Fetching Location Please wait', false)
-            window.addEventListener('location', function _checkInLatest(e) {
+            manageLocation().then(function(location){
+              if(location.latitude && location.longitude){
+                updateLocationInRoot(location)
+                if (document.querySelector('#enable-gps')) {
+                  document.querySelector('#enable-gps').remove();
+                }
+                updateCreateActivity(bareBonesRecord)
+              }
+            }).catch(function(error){
+              snacks('There was a problem in detecting your location')
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-              updateCreateActivity(bareBonesRecord)
-
-              window.removeEventListener('location', _checkInLatest, true);
-            }, true)
+              listView();
+              handleError(error)
+            })
             return
           }
           updateCreateActivity(bareBonesRecord)
-
         });
         return
       }
@@ -1680,7 +1688,7 @@ function createVenueSection(record) {
 
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in' && record.hasOwnProperty('create')) {
-
+    
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
         if (!results.length) return;

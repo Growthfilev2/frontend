@@ -399,26 +399,20 @@ function startApp(start) {
       req.onsuccess = function () {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        let useJSTimer = false;
-        if(native.getName() === 'Android') {
+        let getInstantLocation = false;
+        if (native.getName() !== 'Android') {
           try {
-            AndroidInterface.startLocationService("true");
-          }catch(e){
-            useJSTimer = true;
+            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+           
+          } catch (e) {
+            getInstantLocation = true
             handleError({
               message: e.message
             })
           }
         }
         else {
-          try {
-            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-          } catch (e) {
-            useJSTimer = true;
-            handleError({
-              message: e.message
-            })
-          }
+          getInstantLocation = true
         }
       
         requestCreator('now', {
@@ -428,82 +422,17 @@ function startApp(start) {
         })
 
         listView();
-        runAppChecks();
-        useJSTimer = true;
-        if (useJSTimer) {
-          setInterval(function () {
-            let body = JSON.stringify({"radioType": "GSM",
-            "cellTowers": [
-                {
-                    "cellId": 5829,
-                    "mobileNetworkCode": 27,
-                    "signalStrength": -51,
-                    "locationAreaCode": 434,
-                    "mobileCountryCode": 404
-                },
-                {
-                    "signalStrength": -51,
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0,
-                    "cellId": 28358,
-                    "mobileNetworkCode": 0
-                },
-                {
-                    "signalStrength": -51,
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0,
-                    "cellId": 5827,
-                    "mobileNetworkCode": 0
-                },
-                {
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0,
-                    "cellId": 48133,
-                    "mobileNetworkCode": 0,
-                    "signalStrength": -51
-                },
-                {
-                    "cellId": 65535,
-                    "mobileNetworkCode": 0,
-                    "signalStrength": -51,
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0
-                },
-                {
-                    "cellId": 48221,
-                    "mobileNetworkCode": 0,
-                    "signalStrength": -51,
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0
-                },
-                {
-                    "cellId": 65535,
-                    "mobileNetworkCode": 0,
-                    "signalStrength": -51,
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0
-                },
-                {
-                    "locationAreaCode": 0,
-                    "mobileCountryCode": 0,
-                    "cellId": 49892,
-                    "mobileNetworkCode": 0,
-                    "signalStrength": -51
-                }
-            ],
-            "wifiAccessPoints": [
-                {
-                    "macAddress": "00:1e:a6:ed:21:c8",
-                    "signalStrength": -43
-                }
-            ],
-            "considerIp": "true",
-            "carrier": "Vodafone IN",
-            "homeMobileNetworkCode": 27,
-            "homeMobileCountryCode": 404})
-            initLocation(body)
-          }, 5000);
-        }
+        runAppChecks()
+
+        if(!getInstantLocation) return;
+        manageLocation().then(function(location){
+          if(location.latitude && location.longitude) {
+            updateLocationInRoot(location);
+          }
+        }).catch(function(error){
+          handleError(error)
+        })
+
       }
       req.onerror = function () {
         console.log(req.error);
@@ -696,26 +625,38 @@ function redirect() {
 }
 
 
-function initLocation(cellBody) {
-  manageLocation(cellBody).then(function (location) {
+function initLocation() {
+  manageLocation().then(function (location) {
     if (location.latitude && location.longitude) {
       updateLocationInRoot(location)
     }
-  }).catch(function(error){
+  }).catch(function (error) {
     handleError(error)
   });
 }
 
 function runAppChecks() {
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+
     isEmployeeOnLeave().then(function (onLeave) {
       if (onLeave) return
       if (e.detail) {
-        if (history.state[0] === 'listView') {
+      if (history.state[0] === 'listView') {
+        try {
           document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-          showSuggestCheckInDialog();
+          getRootRecord().then(function(record){
+            if(record) {
+              if(record.offices) {
+                showSuggestCheckInDialog(record.offices);
+                listView();
+              }
+            }
+          })
+        }catch(e){
+          console.log(e)
         }
       }
+    }
     }).catch(handleError)
   }, true);
 }
