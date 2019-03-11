@@ -5,10 +5,11 @@ function selectorUI(data) {
   createSelectorHeader(data);
   const container = document.createElement('div')
   container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
-
-  if (data.store === 'map') {
-    container.appendChild(createSeachInput('map-selector-search','Search For Location'));
+  
+  if(data.store === 'map') {
+    createSeachInput('map-selector-search','Search For Location','search')
   }
+
   if(data.store === 'users'){
     container.appendChild(createSeachInput('users-selector-search','Search Users'));
   }
@@ -38,8 +39,10 @@ function selectorUI(data) {
   req.onsuccess = function () {
     const db = req.result;
     if (data.store === 'map') {
-      const tx = db.transaction([data.store]);
+    
       const mapSeachInit = new mdc.textField.MDCTextField.attachTo(document.querySelector('#map-selector-search'));
+
+      const tx = db.transaction([data.store]);
       let input = mapSeachInit['input_'];
       const options = {
         componentRestrictions: {

@@ -1877,3 +1877,13 @@ input[type="datetime-local"] {
 .search-field .mdc-text-field__icon {
   bottom: 10px;
 }
+
+
+.address-text-area {
+  width: 90%;
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #0399f4;
+  font-size: 20px;
+  border-radius: 10px;
+}

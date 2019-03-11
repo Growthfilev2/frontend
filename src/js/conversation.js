@@ -539,7 +539,7 @@ function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
   const usersInRecord = data.record.assignees
 
-  
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -558,8 +558,7 @@ function fillUsersInSelector(data) {
       if (data.attachment.present) {
         count++
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
-      }
-      else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
+      } else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
         count++
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
       }
@@ -567,7 +566,7 @@ function fillUsersInSelector(data) {
     }
 
     transaction.oncomplete = function () {
-      if(!count){
+      if (!count) {
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
       }
@@ -579,10 +578,10 @@ function fillUsersInSelector(data) {
           addNewNumber(data)
           return
         }
-        
+
         if (data.attachment.present) {
           const selector = document.querySelector('.mdc-radio.radio-selected');
-          if(!selector) {
+          if (!selector) {
             document.getElementById('selector-warning').textContent = '* Please Select A Contact'
             return
           }
@@ -593,15 +592,15 @@ function fillUsersInSelector(data) {
           }, {
             primary: JSON.parse(radio.value)
           }).then(function (activity) {
-  
+
             updateCreateActivity(activity, true)
           }).catch(handleError)
           return;
         }
-  
+
         if (data.record.hasOwnProperty('create')) {
           resetSelectedContacts().then(function (selectedPeople) {
-            if(!selectedPeople.length) {
+            if (!selectedPeople.length) {
               document.getElementById('selector-warning').textContent = '* Please Select A Contact'
               return
             }
@@ -611,7 +610,7 @@ function fillUsersInSelector(data) {
             }, {
               primary: selectedPeople
             }).then(function (activity) {
-  
+
               updateCreateActivity(activity, true)
             }).catch(handleError)
           })
@@ -621,8 +620,8 @@ function fillUsersInSelector(data) {
           shareReq(data)
         }
       }
-    
-    
+
+
       const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
         if (box) {
@@ -638,17 +637,18 @@ function fillUsersInSelector(data) {
 }
 
 
-function noSelectorResult (text){
+function noSelectorResult(text) {
   const noResult = document.createElement('div')
-  noResult.className  ='data-not-found'
+  noResult.className = 'data-not-found'
   const p = document.createElement('p')
   p.className = 'mdc-typography--headline5'
   p.textContent = text
   noResult.appendChild(p)
   return noResult
 }
+
 function shareReq(data) {
-  
+
   resetSelectedContacts().then(function (people) {
     const reqBody = {
       'activityId': data.record.activityId,
@@ -694,7 +694,7 @@ function addNewNumber(data) {
 
   }
 
-    
+
   const createButton = document.createElement('button')
   createButton.className = 'mdc-button'
   createButton.textContent = 'Add Contact'
@@ -721,7 +721,7 @@ function addNewNumber(data) {
           }, {
             primary: formattedNumber
           }).then(function (activity) {
-           console.log(activity);
+            console.log(activity);
             updateCreateActivity(activity, true)
           }).catch(handleError)
           return
@@ -829,7 +829,7 @@ function resetSelectedContacts() {
 
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
-    let count =0;
+    let count = 0;
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
     const office = data.record.office;
@@ -848,7 +848,7 @@ function getLocationForMapSelector(tx, data) {
       cursor.continue()
     }
     tx.oncomplete = function () {
-      
+
       resolve(count)
     }
     tx.onerror = function () {
@@ -876,26 +876,26 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
           cursor.continue();
           return;
         }
-        if(!cursor.value.latitude || !cursor.value.longitude) {
+        if (!cursor.value.latitude || !cursor.value.longitude) {
           cursor.continue();
           return;
         }
-        
+
         const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
 
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-          
+
           results.push(cursor.value);
         }
         cursor.continue();
       }
       tx.oncomplete = function () {
         const filter = {};
-        results.forEach(function(value){
+        results.forEach(function (value) {
           filter[value.location] = value;
         })
         const array = [];
-        Object.keys(filter).forEach(function(locationName){
+        Object.keys(filter).forEach(function (locationName) {
           array.push(filter[locationName])
         })
         resolve(array)
@@ -907,13 +907,13 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function createSeachInput(id,labelText) {
+function createSeachInput(id, labelText, iconName) {
   const search = document.createElement('div')
   search.id = id
   search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
   const icon = document.createElement('i')
   icon.className = 'material-icons mdc-text-field__icon'
-  icon.textContent = 'search'
+  icon.textContent = iconName
   const input = document.createElement("input")
   input.className = 'mdc-text-field__input'
   const ripple = document.createElement('div')
@@ -929,12 +929,56 @@ function createSeachInput(id,labelText) {
   return search
 }
 
-function handleClickListnersForMap(data,count) {
+function createTextArea(textAreaId, record) {
+  const container = document.createElement('div')
+  container.className = 'mdc-text-field mdc-text-field--textarea'
+  // container.id = parentId
+  const textarea = document.createElement('textarea');
+  // textarea.className = 'mdc-text-field__input'
+  textarea.className = 'address-text-area'
+  textarea.placeholder = 'Enter Address'
+  if(record.create) {
+    textarea.setAttribute('rows', '3')
+  }
+  else {
+    textarea.setAttribute('rows', '2')
+    textarea.style.marginTop = '-10px';
+  }
+
+  textarea.setAttribute('cols', '40');
+  textarea.id = textAreaId
+
+  const notchedOutline = document.createElement('div')
+  notchedOutline.className = 'mdc-notched-outline'
+
+  const leading = document.createElement('div')
+  leading.className = 'mdc-notched-outline__leading'
+
+  const notch = document.createElement('div')
+  notch.className = 'mdc-notched-outline__notch';
+  const label = document.createElement('label')
+  label.setAttribute('for', 'textarea')
+  label.className = 'mdc-floating-label'
+  // label.textContent = labelText
+
+  notch.appendChild(label);
+
+  const trailing = document.createElement('div')
+  trailing.className = 'mdc-notched-outline__trailing'
+  notchedOutline.appendChild(leading)
+  notchedOutline.appendChild(notch);
+  notchedOutline.appendChild(trailing)
+  container.appendChild(textarea)
+  container.appendChild(notchedOutline);
+  return textarea;
+}
+
+function handleClickListnersForMap(data, count) {
 
 
   document.querySelector('#selector-submit-send').onclick = function () {
-    if(!count) {
-      updateCreateActivity(data.record,true)
+    if (!count) {
+      updateCreateActivity(data.record, true)
       return
     }
     const selected = document.querySelector('.mdc-radio.radio-selected');
@@ -965,17 +1009,17 @@ function handleClickListnersForMap(data,count) {
 
 function fillChildrenInSelector(selectorStore, data, tx) {
   const ul = document.getElementById('data-list--container')
-  const bound = IDBKeyRange.bound([data.attachment.template,'CONFIRMED'],[data.attachment.template,'PENDING'])
+  const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
   let count = 0;
   selectorStore.openCursor(bound).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
-    if(data.attachment.office !== cursor.value.office) {
+    if (data.attachment.office !== cursor.value.office) {
       cursor.continue();
       return;
     }
     if (cursor.value.attachment.Name) {
-     count++
+      count++
       ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
     }
     if (cursor.value.attachment.Number) {
@@ -984,20 +1028,20 @@ function fillChildrenInSelector(selectorStore, data, tx) {
     }
     cursor.continue()
   }
-  tx.oncomplete = function(){
+  tx.oncomplete = function () {
     const btn = document.getElementById('selector-submit-send')
-    if(!count) {
+    if (!count) {
       ul.appendChild(noSelectorResult('No Values Found'))
       btn.textContent = 'CANCEL'
       btn.onclick = function () {
-        updateCreateActivity(data.record,true);
+        updateCreateActivity(data.record, true);
       }
       return;
     }
     // document.querySelector('.selector-send').classList.remove('hidden')
     document.getElementById('selector-submit-send').onclick = function () {
       const selector = document.querySelector('.mdc-radio.radio-selected');
-      if(!selector){
+      if (!selector) {
         document.getElementById('selector-warning').textContent = '* Please Select a Value'
         return;
       }
@@ -1010,11 +1054,11 @@ function fillChildrenInSelector(selectorStore, data, tx) {
         primary: selectedField.name
       }).then(function (activity) {
         updateCreateActivity(activity, true)
-    }).catch(function (error) {
-      console.log(error)
-    })
+      }).catch(function (error) {
+        console.log(error)
+      })
+    }
   }
-}
 }
 
 
@@ -1180,18 +1224,18 @@ function createTempRecord(office, template, data) {
       }
 
       const bareBonesVenueArray = []
-      if (template === 'check-in') {
-        const bareBonesVenue = {}
-        bareBonesVenue.venueDescriptor = selectedCombo.venue[0]
-        bareBonesVenue.location = ''
-        bareBonesVenue.address = ''
-        bareBonesVenue.geopoint = {
-          '_latitude': '',
-          '_longitude': ''
-        }
-        bareBonesRecord.venue = [bareBonesVenue];
+      if (template === 'check-in' || template === 'customer') {
+        
         getRootRecord().then(function (record) {
-
+          const bareBonesVenue = {}
+          bareBonesVenue.venueDescriptor = selectedCombo.venue[0]
+          bareBonesVenue.location = ''
+          bareBonesVenue.address = ''
+          bareBonesVenue.geopoint = {
+            '_latitude': '',
+            '_longitude': ''
+          }
+         
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (!record.location || isLocationOld) {
             appDialog('Fetching Location Please wait', false)
@@ -1199,12 +1243,21 @@ function createTempRecord(office, template, data) {
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
+              if(template === 'customer') {
+                bareBonesVenue.geopoint['_latitude'] = e.detail.latitude
+                bareBonesVenue.geopoint['_longitude'] = e.detail.longitude
+              }
+              bareBonesRecord.venue = [bareBonesVenue];
               updateCreateActivity(bareBonesRecord)
-
               window.removeEventListener('location', _checkInLatest, true);
             }, true)
             return
           }
+          if(template === 'customer') {
+            bareBonesVenue.geopoint['_latitude'] = record.location.latitude
+            bareBonesVenue.geopoint['_longitude'] = record.location.longitude
+          }
+          bareBonesRecord.venue = [bareBonesVenue];
           updateCreateActivity(bareBonesRecord)
 
         });
@@ -1450,10 +1503,9 @@ function updateCreateContainer(recordCopy, db, showSendButton) {
 
     const updateBtn = document.createElement('button')
     updateBtn.setAttribute('aria-label', 'Send')
-    if(record.create) {
+    if (record.create) {
       updateBtn.className = ''
-    }
-    else if (!showSendButton) {
+    } else if (!showSendButton) {
       updateBtn.className = 'hidden';
     }
     updateBtn.id = 'send-activity'
@@ -1678,7 +1730,8 @@ function createGroupList(office, template) {
 
 function createVenueSection(record) {
 
-  const venueSection = document.getElementById('venue--list')
+  const venueSection = document.getElementById('venue--list');
+
   if (record.template === 'check-in' && record.hasOwnProperty('create')) {
 
     getRootRecord().then(function (rootRecord) {
@@ -1736,6 +1789,100 @@ function createVenueSection(record) {
       })
     })
 
+    return;
+  }
+
+  if (record.template === 'customer') {
+
+    record.canEdit = false;
+    if (record.canEdit) {
+      
+      const checkInDesc = document.createElement('li')
+      checkInDesc.className = 'mdc-list-item'
+      const span = document.createElement('span')
+      span.className = 'label--text'
+      span.textContent = record.venue[0].venueDescriptor
+      checkInDesc.appendChild(span)
+      const locationName = document.createElement('span')
+      locationName.textContent = record.venue[0].location
+      locationName.style.paddingLeft = '10px';
+
+      checkInDesc.appendChild(locationName);
+
+      checkInDesc.style.height = '50px'
+      checkInDesc.style.paddingRight = '11px';
+      venueSection.appendChild(checkInDesc)
+      venueSection.style.paddingBottom = '20px';
+      venueSection.appendChild(createTextArea('customer-address', record))
+      document.getElementById('customer-address').value = record.venue[0].address
+      document.getElementById('customer-address').addEventListener('input',function(e){
+        document.getElementById('send-activity').classList.remove('hidden');
+      })
+      const mapDom = document.createElement('div');
+      venueSection.appendChild(mapDom);
+      mapDom.id = 'customer-address-map'
+      if (record.venue[0].geopoint['_latitude'] && record.venue[0].geopoint['_longitude']) {
+        if(!record.hasOwnProperty('create') && !record.venue[0].address) return;
+        const location = {
+          lat: record.venue[0].geopoint['_latitude'],
+          lng: record.venue[0].geopoint['_longitude']
+        }
+        mapDom.style.height = '200px'
+        mapDom.style.marginTop = '10px';
+
+        const map = new google.maps.Map(document.getElementById('customer-address-map'), {
+          zoom: 16,
+          center: location,
+          disableDefaultUI: true
+        });
+
+
+        var customControlDiv = document.createElement('div');
+        var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
+        customControlDiv.index = 1;
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
+
+        const marker = new google.maps.Marker({
+          position: location,
+          map: map
+        });
+
+      }
+    } else {
+      venueSection.appendChild(createVenueLi(record.venue[0], true, record))
+      const mapDom = document.createElement('div');
+      mapDom.className = 'map-detail ' + convertKeyToId(record.venue[0].venueDescriptor)
+      venueSection.appendChild(mapDom)
+      mapDom.id = 'customer-address-map'
+      if (record.venue[0].geopoint['_latitude'] && record.venue[0].geopoint['_longitude']) {
+        if(!record.hasOwnProperty('create') && !record.venue[0].address) return;
+        const location = {
+          lat: record.venue[0].geopoint['_latitude'],
+          lng: record.venue[0].geopoint['_longitude']
+        }
+        mapDom.style.height = '200px'
+        mapDom.style.marginTop = '10px';
+
+        const map = new google.maps.Map(document.getElementById('customer-address-map'), {
+          zoom: 16,
+          center: location,
+          disableDefaultUI: true
+        });
+
+
+        var customControlDiv = document.createElement('div');
+        var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
+        customControlDiv.index = 1;
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
+
+        const marker = new google.maps.Marker({
+          position: location,
+          map: map
+        });
+
+      }
+    }
+    
     return;
   }
 
@@ -2573,7 +2720,8 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, send) {
-  const allStringTypes = document.querySelectorAll('.string')
+  const allStringTypes = document.querySelectorAll('.string');
+
   for (var i = 0; i < allStringTypes.length; i++) {
     let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
 
@@ -2583,6 +2731,9 @@ function insertInputsIntoActivity(record, send) {
       }
       return;
     }
+    if (record.template === 'customer' && convertIdToKey(allStringTypes[i].id) === 'Name') {
+      record.venue[0].location = inputValue;
+    };
 
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   }
@@ -2610,6 +2761,7 @@ function insertInputsIntoActivity(record, send) {
 
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
+
 
   let sd;
   let st;
@@ -2667,7 +2819,11 @@ function insertInputsIntoActivity(record, send) {
         longitude: ''
       }
     }
-  } else {
+  }
+   else {
+    if (record.template === 'customer') {
+      record.venue[0].address = document.getElementById('customer-address').value
+    }
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
         latitude: record.venue[i].geopoint['_latitude'] || "",

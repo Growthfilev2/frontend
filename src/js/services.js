@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -640,6 +640,7 @@ function requestCreator(requestType, requestBody) {
           };
 
           requestBody['geopoint'] = geopoints;
+
           requestGenerator.body = requestBody;
           requestGenerator.user.token = token;
           sendRequest(location, requestGenerator);
@@ -670,6 +671,7 @@ function handleWaitForLocation(requestBody, requestGenerator) {
         'provider': data.provider
       };
       requestBody['geopoint'] = geopoints;
+    
       requestGenerator.body = requestBody;
       requestGenerator.user.token = token;
       sendRequest(geopoints, requestGenerator);
