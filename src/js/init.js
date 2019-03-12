@@ -425,15 +425,15 @@ function startApp(start) {
         runAppChecks()
 
         if(!getInstantLocation) return;
-        // manageLocation().then(function(location){
-        //   if(location.latitude && location.longitude) {
-        //     console.log(location)
-        //     updateLocationInRoot(location);
+        manageLocation().then(function(location){
+          if(location.latitude && location.longitude) {
+            console.log(location)
+            updateLocationInRoot(location);
             
-        //   }
-        // }).catch(function(error){
-        //   handleError(error)
-        // })
+          }
+        }).catch(function(error){
+          handleError(error)
+        })
 
       }
       req.onerror = function () {

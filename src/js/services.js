@@ -264,27 +264,6 @@ function handleRequestBody(request) {
   }
 }
 
-
-function getCellTowerInfo() {
-
-  let coarseData = "";
-  try {
-    coarseData = AndroidInterface.getCellTowerInfo();
-  } catch (e) {
-    return ({
-      message: `${e.message} from getCellularData`
-    });
-  }
-
-  if (!coarseData) {
-    return ({
-      message: 'empty cell tower from android.'
-    });
-    return
-  }
-  return coarseData;
-}
-
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     const holder = {}
@@ -321,7 +300,6 @@ function manageLocation() {
     })
   })
 }
-
 
 function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
@@ -426,7 +404,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
   })
 }
 
-
 function iosLocationError(error) {
   handleError({
     message: error
@@ -437,7 +414,6 @@ function iosLocationError(error) {
     }
   })
 }
-
 
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
