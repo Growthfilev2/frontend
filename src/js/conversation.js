@@ -1198,6 +1198,7 @@ function createTempRecord(office, template, data) {
             appDialog('Fetching Location Please wait', false)
             manageLocation().then(function(location){
               if(location.latitude && location.longitude){
+                console.log(location)
                 updateLocationInRoot(location)
                 if (document.querySelector('#enable-gps')) {
                   document.querySelector('#enable-gps').remove();

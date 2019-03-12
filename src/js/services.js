@@ -209,6 +209,7 @@ function fetchCurrentTime(serverTime) {
 
 
 function geolocationApi(req) {
+
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
     xhr.open(req.method, req.url, true);
@@ -224,9 +225,20 @@ function geolocationApi(req) {
           });
         }
         if (!xhr.responseText) {
-          return reject({
-            message: 'No response text from google',
-            body: req.body
+          if(retryNoResponse == 1) {
+            reject({
+              message:'No Response Text from google',
+              body:req.body
+            })
+            return;
+          }
+          retryNoResponse--
+          geolocationApi(req.body).then(function(location){
+            debugger
+            resolve(location)
+          }).catch(function(error){
+            debugger
+            reject(error)
           })
         };
         const response = JSON.parse(xhr.responseText);
@@ -317,8 +329,8 @@ function getCellTowerInfo() {
 
     let coarseData = "";
     try {
-      coarseData = AndroidInterface.getCellularData();
-
+      // coarseData = AndroidInterface.getCellularData();
+      coarseData = JSON.stringify({"homeMobileCountryCode": 404,"homeMobileNetworkCode": 66,"radioType": "LTE","carrier": "BSNL Mobile","considerIp": "true"})
     } catch (e) {
       reject({
         message: `${e.message} from getCellularData`
@@ -337,8 +349,13 @@ function getCellTowerInfo() {
       method: 'POST',
       url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
       body: coarseData,
-      retry: 2
+      retry: 2,
+      retryNoResponse:2
     }
+
+  
+
+
     geolocationApi(req).then(function (location) {
       resolve(location)
     }).catch(function (error) {
@@ -408,10 +425,9 @@ function iosLocationError(error) {
 
 
 function html5Geolocation() {
-  let locationFound = false;
   return new Promise(function (resolve, reject) {
     const prom = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
 
       let navProm = new Promise(function (resolve, reject) {
         navigator.geolocation.getCurrentPosition(function (position) {
@@ -426,21 +442,14 @@ function html5Geolocation() {
           reject({
             message: error
           })
-        })
+        },{timeout:5000,maximumAge:0})
       })
       prom.push(navProm)
     }
 
-    let timer = setTimeout(function () {
-      clearTimeout(timer)
-      timer = null
-      return reject({message:'No location from HTML5 for more than 5 seconds'})
-    }, 6000)
-
+  
     Promise.all(prom).then(function (results) {
 
-      clearTimeout(timer)
-      timer = null
       let bestAccuracy = results.sort(function (a, b) {
         return a.accuracy - b.accuracy
       })
@@ -448,8 +457,6 @@ function html5Geolocation() {
       return;
     }).catch(function (error) {
 
-      clearTimeout(timer)
-      timer = null
       reject({
         message: error.message.message
       })
@@ -682,6 +689,7 @@ function requestCreator(requestType, requestBody) {
         const token = result[0];
         if (result.length == 2) {
           location = result[1];
+          console.log(location)
           updateLocationInRoot(location);
         }
         var geopoints = {
