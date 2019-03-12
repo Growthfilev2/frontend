@@ -299,12 +299,11 @@ function manageLocation() {
           resolve(location)
         })
       }).catch(function (htmlError) {
-
         handleGeoLocationApi(holder).then(function (location) {
           resolve(location)
         }).catch(function (error) {
           reject({
-            message: 'Both HTML and geolocation failed, Error:'+error,
+            message: 'Both HTML and geolocation failed, Error:' + error,
             body: {
               html5: htmlError,
               geolocation: error
