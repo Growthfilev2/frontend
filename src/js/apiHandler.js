@@ -151,11 +151,11 @@ function fetchServerTime(body, user) {
         return
       };
       console.log(response)
-      // // if (response.hasOwnProperty('removeFromOffice')) {
-      //   if(Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
+      if (response.hasOwnProperty('removeFromOffice')) {
+        if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
           removeFromOffice(response.removeFromOffice, user)
-      //   }
-      // }
+        }
+      }
       resolve({
         ts: response.timestamp,
         user: user,
@@ -329,7 +329,6 @@ function removeFromOffice(offices, user) {
     return removeFromMapAndCalendar(response);
   }).then(function (response) {
     return removeFromSubscriptions(response);
-
   }).catch(function (error) {
     console.log(error)
     throw new Error(error);
@@ -369,7 +368,7 @@ function removeActivity(offices, user) {
         resolve({
           offices: offices,
           ids: ids,
-          user:user
+          user: user
         })
       }
       tx.onerror = function () {
@@ -423,8 +422,8 @@ function removeFromMapAndCalendar(response) {
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['map', 'calendar'], 'readwrite');
-      const map = tx.objectStore('map');
-      const calendar = tx.objectStore('calendar');
+      const map = tx.objectStore('map').index('activityId')
+      const calendar = tx.objectStore('calendar').index('activityId')
 
       deleteByIndex(map, response.ids);
       deleteByIndex(calendar, response.ids);
@@ -453,7 +452,7 @@ function removeFromSubscriptions(response) {
     const tx = db.transaction(['subscriptions'], 'readwrite');
     const store = tx.objectStore('subscriptions');
     const index = store.index('office');
-    response.offices.forEach(function(office){
+    response.offices.forEach(function (office) {
       index.openCursor(office).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -461,14 +460,14 @@ function removeFromSubscriptions(response) {
         deleteReq.onsuccess = function () {
           cursor.continue()
         }
-  
+
       }
     })
-    
+
     tx.oncomplete = function () {
       const rootTx = db.transaction(['root'], 'readwrite')
       const rootStore = rootTx.objectStore('root')
-      rootStore.get(response.param.user.uid).onsuccess = function (event) {
+      rootStore.get(response.user.uid).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
         record.officesRemoved = true
@@ -776,16 +775,16 @@ function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
 
 
 function deleteByIndex(store, activitiesToRemove) {
-  store.openCursor().onsuccess = function (event) {
-    const cursor = event.target.result;
-    if (!cursor) return;
-
-    if (activitiesToRemove.indexOf(cursor.key) > -1) {
-      cursor.delete()
+  activitiesToRemove.forEach(function (id) {
+    store.openCursor(id).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      const deleteReq = cursor.delete();
+      deleteReq.onsuccess = function () {
+        cursor.continue()
+      }
     }
-    cursor.continue()
-  }
-
+  })
 }
 
 
