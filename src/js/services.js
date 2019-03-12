@@ -289,37 +289,37 @@ function manageLocation() {
   return new Promise(function (resolve, reject) {
     const holder = {}
     if (native.getName() === 'Android') {
-    html5Geolocation().then(function (htmlLocation) {
-      if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
-      holder['html5'] = {
-        body: '',
-        result: htmlLocation
-      }
-      handleGeoLocationApi(holder, htmlLocation).then(function (location) {
-        resolve(location)
-      })
-    }).catch(function (htmlError) {
+      html5Geolocation().then(function (htmlLocation) {
+        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        holder['html5'] = {
+          body: '',
+          result: htmlLocation
+        }
+        handleGeoLocationApi(holder, htmlLocation).then(function (location) {
+          resolve(location)
+        })
+      }).catch(function (htmlError) {
 
-      handleGeoLocationApi(holder).then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject({
-          message: 'Both HTML and geolocation failed',
-          body: {
-            html5: htmlError,
-            geolocation: error
-          }
+        handleGeoLocationApi(holder).then(function (location) {
+          resolve(location)
+        }).catch(function (error) {
+          reject({
+            message: 'Both HTML and geolocation failed, Error:'+error,
+            body: {
+              html5: htmlError,
+              geolocation: error
+            }
+          })
         })
       })
-    })
-        return;
-      }
+      return;
+    }
 
-      html5Geolocation().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
-      })
+    html5Geolocation().then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    })
   })
 }
 
@@ -378,7 +378,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       }
 
       geolocationApi(withoutCellTower).then(function (withoutCellTowerLocation) {
-        if (withoutCellTowerLocation.accuracy <= 350) resolve(withoutCellTowerLocation);
+        if (withoutCellTowerLocation.accuracy <= 350) return resolve(withoutCellTowerLocation);
         if (withoutCellTowerLocation.accuracy >= 1200) {
           holder['withoutCellTower'] = {
             body: withoutCellTower,
@@ -394,7 +394,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
           allLocations.push(holder[key].result)
         })
         return resolve(sortedByAccuracy(allLocations))
-
       }).catch(function (error) {
         if (cellLocation.accuracy >= 1200) {
           holder['withoutCellTower'] = {
@@ -410,14 +409,12 @@ function handleGeoLocationApi(holder, htmlLocation) {
           resolve(cellLocation);
           return;
         }
-
         if (cellLocation.accuracy < htmlLocation.accuracy) {
           resolve(cellLocation);
           return
         }
         return resolve(htmlLocation);
-      })
-
+      });
     }).catch(function (error) {
       handleError(error)
       if (htmlLocation) {
