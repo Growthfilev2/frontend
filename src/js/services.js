@@ -208,84 +208,37 @@ function fetchCurrentTime(serverTime) {
 }
 
 
-function geolocationApi(req) {
+function geolocationApi(body) {
+
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open(req.method, req.url, true);
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    let originalResponse;
+
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           return reject({
             message: xhr.response,
-            body: req.body,
+            body: body,
           });
         }
-        if (!xhr.responseText) {
-          return reject({
-            message: 'No response text from google',
-            body: req.body
-          })
-        };
-        const response = JSON.parse(xhr.responseText);
+        const response = JSON.parse(xhr.response);
         if (!response) {
           return reject({
-            message: 'Response text is not parseable',
-            body: req.body
+            message: 'Response From geolocation Api ' + response,
+            body: body
           })
         }
-        originalResponse = response;
-        if (response.accuracy > 350) {
-          if (req.retry === 1) {
-            return resolve({
-              'latitude': response.location.lat,
-              'longitude': response.location.lng,
-              'accuracy': response.accuracy,
-              'provider': {
-                'cellular': JSON.parse(req.body)
-              },
-            });
+        resolve({
+          latitude: response.location.lat,
+          longitude: response.location.lng,
+          accuracy: response.accuracy,
+          provider: {
+            body: body
           }
-          req.retry--
-          const wifiBased = handleRequestBody(req.body);
-          if (wifiBased) {
-            req.body = wifiBased
-            geolocationApi(req).then(function (retryRes) {
-              if (retryRes.accuracy <= 350) {
-                resolve(retryRes)
-              } else {
-                if (retryRes.accuracy < originalResponse.accuracy) {
-                  resolve(retryRes)
-                } else {
-                  resolve(originalResponse)
-                }
-              }
-            }).catch(function (error) {
-
-              reject(error);
-            })
-          } else {
-            resolve({
-              'latitude': response.location.lat,
-              'longitude': response.location.lng,
-              'accuracy': response.accuracy,
-              'provider': {
-                'cellular': JSON.parse(req.body)
-              },
-            })
-          }
-        } else {
-          resolve({
-            'latitude': response.location.lat,
-            'longitude': response.location.lng,
-            'accuracy': response.accuracy,
-            'provider': {
-              'cellular': JSON.parse(req.body)
-            },
-          });
-        }
+        });
       }
     };
     xhr.onerror = function () {
@@ -293,7 +246,7 @@ function geolocationApi(req) {
         message: xhr
       })
     }
-    xhr.send(req.body);
+    xhr.send(body);
 
   });
 }
@@ -310,74 +263,28 @@ function handleRequestBody(request) {
   }
 }
 
-
-function getCellTowerInfo() {
-  return new Promise(function (resolve, reject) {
-
-    let coarseData = "";
-    try {
-      coarseData = AndroidInterface.getCellularData();
-
-    } catch (e) {
-      reject({
-        message: `${e.message} from getCellularData`
-      });
-    }
-
-    if (!coarseData) {
-      reject({
-        message: 'empty cell tower from android.'
-      });
-      return
-    }
-    var apiKey = 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo'
-    const req = {
-      method: 'POST',
-      url: 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + apiKey,
-      body: coarseData,
-      retry: 2
-    }
-    geolocationApi(req).then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    });
-  })
-}
-
 function manageLocation() {
   return new Promise(function (resolve, reject) {
+    const holder = {}
     if (native.getName() === 'Android') {
-
       html5Geolocation().then(function (htmlLocation) {
-
-        if (htmlLocation.accuracy <= 350) {
-          resolve(htmlLocation)
-        } else {
-          getCellTowerInfo().then(function (cellLocation) {
-
-            if (cellLocation.accuracy < htmlLocation.accuracy) {
-              resolve(cellLocation)
-            } else {
-              resolve(htmlLocation);
-            }
-          }).catch(function (cellError) {
-            handleError(cellError)
-            resolve(htmlLocation);
-          })
+        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        holder['html5'] = {
+          body: '',
+          result: htmlLocation
         }
+        handleGeoLocationApi(holder, htmlLocation).then(function (location) {
+          resolve(location)
+        })
       }).catch(function (htmlError) {
-        console.log(htmlError)
-        handleError(htmlError)
-        getCellTowerInfo().then(function (cellLocation) {
-
-          resolve(cellLocation);
-        }).catch(function (cellError) {
+        handleGeoLocationApi(holder).then(function (location) {
+          resolve(location)
+        }).catch(function (error) {
           reject({
-            message: 'Both GeolocationApi and HTML5 location failed',
+            message: 'Both HTML and geolocation failed, Error:' + error,
             body: {
-              html: htmlError,
-              cellError: cellError
+              html5: htmlError,
+              geolocation: error
             }
           })
         })
@@ -388,6 +295,110 @@ function manageLocation() {
     html5Geolocation().then(function (location) {
       resolve(location)
     }).catch(function (error) {
+      reject(error)
+    })
+  })
+}
+
+function handleGeoLocationApi(holder, htmlLocation) {
+  return new Promise(function (resolve, reject) {
+    let body;
+    const allLocations = [];
+    try {
+      body = AndroidInterface.getCellularData()
+    } catch (e) {
+      if (htmlLocation) {
+        handleError({
+          message: 'Using HTML location beacuse Java exception was raised when getting cell tower information ',
+          body: e.message
+        })
+        resolve(htmlLocation)
+        return;
+      }
+      reject(e.message)
+      return;
+    }
+
+    if (!Object.keys(JSON.parse(body)).length) {
+      if (htmlLocation) {
+        return resolve(htmlLocation);
+      }
+      return reject('Empty Object returned from getCellularData method')
+    }
+
+    geolocationApi(body).then(function (cellLocation) {
+      if (cellLocation.accuracy <= 350) return resolve(cellLocation);
+
+      holder['orignialGeolocationResponse'] = {
+        body: body,
+        result: cellLocation
+      }
+
+      const withoutCellTower = handleRequestBody(body);
+      if (!withoutCellTower) {
+        if (cellLocation.accuracy >= 1200) {
+          handleError({
+            message: 'Oringinal CellTower has accuracy more than 1200 and WAP doesnt exist',
+            body: JSON.stringify(holder)
+          })
+        }
+        if (!htmlLocation) {
+          resolve(cellLocation)
+          return
+        }
+        if (cellLocation.accuracy < htmlLocation.accuracy) {
+          resolve(cellLocation);
+          return
+        }
+        return resolve(htmlLocation);
+      }
+
+      geolocationApi(withoutCellTower).then(function (withoutCellTowerLocation) {
+        if (withoutCellTowerLocation.accuracy <= 350) return resolve(withoutCellTowerLocation);
+        holder['withoutCellTower'] = {
+          body: withoutCellTower,
+          result: withoutCellTowerLocation
+        };
+        if (withoutCellTowerLocation.accuracy >= 1200) {
+         
+          handleError({
+            message: 'html5,originalCellTower,WithoutCellTower',
+            body: JSON.stringify(holder)
+          })
+        }
+
+
+        Object.keys(holder).forEach(function (key) {
+          allLocations.push(holder[key].result)
+        })
+        return resolve(sortedByAccuracy(allLocations))
+      }).catch(function (error) {
+        if (cellLocation.accuracy >= 1200) {
+          holder['withoutCellTower'] = {
+            body: withoutCellTower
+          }
+          handleError({
+            message: 'Orinigal CellTower has accuracy more than 1200 and api failure when sending cellTowerObject without cellularTowers',
+            body: JSON.stringify(holder)
+          })
+        }
+
+        if (!htmlLocation) {
+          resolve(cellLocation);
+          return;
+        }
+        if (cellLocation.accuracy < htmlLocation.accuracy) {
+          resolve(cellLocation);
+          return
+        }
+        return resolve(htmlLocation);
+      });
+    }).catch(function (error) {
+      handleError(error)
+      if (htmlLocation) {
+        resolve(htmlLocation)
+        return;
+      }
       reject(error)
     })
   })
@@ -404,12 +415,10 @@ function iosLocationError(error) {
   })
 }
 
-
 function html5Geolocation() {
-  let locationFound = false;
   return new Promise(function (resolve, reject) {
     const prom = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
 
       let navProm = new Promise(function (resolve, reject) {
         navigator.geolocation.getCurrentPosition(function (position) {
@@ -424,21 +433,17 @@ function html5Geolocation() {
           reject({
             message: error
           })
+        }, {
+          timeout: 5000,
+          maximumAge: 0
         })
       })
       prom.push(navProm)
     }
 
-    let timer = setTimeout(function () {
-      clearTimeout(timer)
-      timer = null
-      return reject({message:'No location from HTML5 for more than 5 seconds'})
-    }, 6000)
 
     Promise.all(prom).then(function (results) {
 
-      clearTimeout(timer)
-      timer = null
       let bestAccuracy = results.sort(function (a, b) {
         return a.accuracy - b.accuracy
       })
@@ -446,8 +451,6 @@ function html5Geolocation() {
       return;
     }).catch(function (error) {
 
-      clearTimeout(timer)
-      timer = null
       reject({
         message: error.message.message
       })
@@ -681,6 +684,7 @@ function requestCreator(requestType, requestBody) {
         const token = result[0];
         if (result.length == 2) {
           location = result[1];
+          console.log(location)
           updateLocationInRoot(location);
         }
         var geopoints = {

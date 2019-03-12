@@ -423,7 +423,7 @@ function startApp(start) {
         if(!getInstantLocation) return;
         manageLocation().then(function(location){
           if(location.latitude && location.longitude) {
-            updateLocationInRoot(location);
+            updateLocationInRoot(location);            
           }
         }).catch(function(error){
           handleError(error)

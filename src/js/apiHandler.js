@@ -11,6 +11,7 @@ function getTime() {
 
 // dictionary object with key as the worker's onmessage event data and value as
 // function name
+
 const requestFunctionCaller = {
   comment: comment,
   statusChange: statusChange,

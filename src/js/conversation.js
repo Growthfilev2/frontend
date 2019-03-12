@@ -539,7 +539,7 @@ function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
   const usersInRecord = data.record.assignees
 
-  
+
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -558,8 +558,7 @@ function fillUsersInSelector(data) {
       if (data.attachment.present) {
         count++
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
-      }
-      else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
+      } else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
         count++
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
       }
@@ -567,7 +566,7 @@ function fillUsersInSelector(data) {
     }
 
     transaction.oncomplete = function () {
-      if(!count){
+      if (!count) {
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
       }
@@ -579,10 +578,10 @@ function fillUsersInSelector(data) {
           addNewNumber(data)
           return
         }
-        
+
         if (data.attachment.present) {
           const selector = document.querySelector('.mdc-radio.radio-selected');
-          if(!selector) {
+          if (!selector) {
             document.getElementById('selector-warning').textContent = '* Please Select A Contact'
             return
           }
@@ -593,15 +592,15 @@ function fillUsersInSelector(data) {
           }, {
             primary: JSON.parse(radio.value)
           }).then(function (activity) {
-  
+
             updateCreateActivity(activity, true)
           }).catch(handleError)
           return;
         }
-  
+
         if (data.record.hasOwnProperty('create')) {
           resetSelectedContacts().then(function (selectedPeople) {
-            if(!selectedPeople.length) {
+            if (!selectedPeople.length) {
               document.getElementById('selector-warning').textContent = '* Please Select A Contact'
               return
             }
@@ -611,7 +610,7 @@ function fillUsersInSelector(data) {
             }, {
               primary: selectedPeople
             }).then(function (activity) {
-  
+
               updateCreateActivity(activity, true)
             }).catch(handleError)
           })
@@ -621,8 +620,8 @@ function fillUsersInSelector(data) {
           shareReq(data)
         }
       }
-    
-    
+
+
       const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
       selectedBoxes.forEach(function (box) {
         if (box) {
@@ -638,17 +637,18 @@ function fillUsersInSelector(data) {
 }
 
 
-function noSelectorResult (text){
+function noSelectorResult(text) {
   const noResult = document.createElement('div')
-  noResult.className  ='data-not-found'
+  noResult.className = 'data-not-found'
   const p = document.createElement('p')
   p.className = 'mdc-typography--headline5'
   p.textContent = text
   noResult.appendChild(p)
   return noResult
 }
+
 function shareReq(data) {
-  
+
   resetSelectedContacts().then(function (people) {
     const reqBody = {
       'activityId': data.record.activityId,
@@ -694,7 +694,7 @@ function addNewNumber(data) {
 
   }
 
-    
+
   const createButton = document.createElement('button')
   createButton.className = 'mdc-button'
   createButton.textContent = 'Add Contact'
@@ -721,7 +721,7 @@ function addNewNumber(data) {
           }, {
             primary: formattedNumber
           }).then(function (activity) {
-           console.log(activity);
+            console.log(activity);
             updateCreateActivity(activity, true)
           }).catch(handleError)
           return
@@ -829,7 +829,7 @@ function resetSelectedContacts() {
 
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
-    let count =0;
+    let count = 0;
     const ul = document.getElementById('data-list--container')
     const store = tx.objectStore('map');
     const office = data.record.office;
@@ -848,7 +848,7 @@ function getLocationForMapSelector(tx, data) {
       cursor.continue()
     }
     tx.oncomplete = function () {
-      
+
       resolve(count)
     }
     tx.onerror = function () {
@@ -876,26 +876,26 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
           cursor.continue();
           return;
         }
-        if(!cursor.value.latitude || !cursor.value.longitude) {
+        if (!cursor.value.latitude || !cursor.value.longitude) {
           cursor.continue();
           return;
         }
-        
+
         const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
 
         if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-          
+
           results.push(cursor.value);
         }
         cursor.continue();
       }
       tx.oncomplete = function () {
         const filter = {};
-        results.forEach(function(value){
+        results.forEach(function (value) {
           filter[value.location] = value;
         })
         const array = [];
-        Object.keys(filter).forEach(function(locationName){
+        Object.keys(filter).forEach(function (locationName) {
           array.push(filter[locationName])
         })
         resolve(array)
@@ -907,7 +907,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function createSeachInput(id,labelText) {
+function createSeachInput(id, labelText) {
   const search = document.createElement('div')
   search.id = id
   search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
@@ -929,12 +929,12 @@ function createSeachInput(id,labelText) {
   return search
 }
 
-function handleClickListnersForMap(data,count) {
+function handleClickListnersForMap(data, count) {
 
 
   document.querySelector('#selector-submit-send').onclick = function () {
-    if(!count) {
-      updateCreateActivity(data.record,true)
+    if (!count) {
+      updateCreateActivity(data.record, true)
       return
     }
     const selected = document.querySelector('.mdc-radio.radio-selected');
@@ -965,17 +965,17 @@ function handleClickListnersForMap(data,count) {
 
 function fillChildrenInSelector(selectorStore, data, tx) {
   const ul = document.getElementById('data-list--container')
-  const bound = IDBKeyRange.bound([data.attachment.template,'CONFIRMED'],[data.attachment.template,'PENDING'])
+  const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
   let count = 0;
   selectorStore.openCursor(bound).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
-    if(data.attachment.office !== cursor.value.office) {
+    if (data.attachment.office !== cursor.value.office) {
       cursor.continue();
       return;
     }
     if (cursor.value.attachment.Name) {
-     count++
+      count++
       ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
     }
     if (cursor.value.attachment.Number) {
@@ -984,20 +984,20 @@ function fillChildrenInSelector(selectorStore, data, tx) {
     }
     cursor.continue()
   }
-  tx.oncomplete = function(){
+  tx.oncomplete = function () {
     const btn = document.getElementById('selector-submit-send')
-    if(!count) {
+    if (!count) {
       ul.appendChild(noSelectorResult('No Values Found'))
       btn.textContent = 'CANCEL'
       btn.onclick = function () {
-        updateCreateActivity(data.record,true);
+        updateCreateActivity(data.record, true);
       }
       return;
     }
     // document.querySelector('.selector-send').classList.remove('hidden')
     document.getElementById('selector-submit-send').onclick = function () {
       const selector = document.querySelector('.mdc-radio.radio-selected');
-      if(!selector){
+      if (!selector) {
         document.getElementById('selector-warning').textContent = '* Please Select a Value'
         return;
       }
@@ -1010,11 +1010,11 @@ function fillChildrenInSelector(selectorStore, data, tx) {
         primary: selectedField.name
       }).then(function (activity) {
         updateCreateActivity(activity, true)
-    }).catch(function (error) {
-      console.log(error)
-    })
+      }).catch(function (error) {
+        console.log(error)
+      })
+    }
   }
-}
 }
 
 
@@ -1194,21 +1194,36 @@ function createTempRecord(office, template, data) {
 
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (!record.location || isLocationOld) {
+            let message = 'Fetching Location Please wait. '
+            if (native.getName() === 'Android') {
+              message = message + ' Make Sure you have set Location Mode to High Accuracy'
+            }
+            appDialog(message, false)
 
-            appDialog('Fetching Location Please wait', false)
-            manageLocation().then(function(location){
-              if(location.latitude && location.longitude){
+            manageLocation().then(function (location) {
+              if (location.latitude && location.longitude) {
                 updateLocationInRoot(location)
                 if (document.querySelector('#enable-gps')) {
                   document.querySelector('#enable-gps').remove();
                 }
                 updateCreateActivity(bareBonesRecord)
               }
-            }).catch(function(error){
-              snacks('There was a problem in detecting your location')
+            }).catch(function (error) {
+
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
+
+              let errorMessage = 'There was a problem in detecting your location'
+              if (native.getName() === 'Android') {
+                errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
+              }
+              appDialog(errorMessage, false)
+              setTimeout(function () {
+                if (document.querySelector('#enable-gps')) {
+                  document.querySelector('#enable-gps').remove();
+                }
+              }, 5000)
               listView();
               handleError(error)
             })
@@ -1458,10 +1473,9 @@ function updateCreateContainer(recordCopy, db, showSendButton) {
 
     const updateBtn = document.createElement('button')
     updateBtn.setAttribute('aria-label', 'Send')
-    if(record.create) {
+    if (record.create) {
       updateBtn.className = ''
-    }
-    else if (!showSendButton) {
+    } else if (!showSendButton) {
       updateBtn.className = 'hidden';
     }
     updateBtn.id = 'send-activity'
@@ -1688,7 +1702,7 @@ function createVenueSection(record) {
 
   const venueSection = document.getElementById('venue--list')
   if (record.template === 'check-in' && record.hasOwnProperty('create')) {
-    
+
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
         if (!results.length) return;
