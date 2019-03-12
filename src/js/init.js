@@ -111,9 +111,9 @@ window.addEventListener('load', function () {
     projectId: 'growthfile-207204',
     storageBucket: 'growthfile-207204.appspot.com',
     messagingSenderId: '701025551237'
-  })
+  });
 
-
+  
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',

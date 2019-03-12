@@ -300,7 +300,6 @@ function geolocationApi(req) {
 
 function handleRequestBody(request) {
   const body = JSON.parse(request);
-
   if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
     if (body.cellTowers) {
       delete body.cellTowers;
@@ -963,7 +962,6 @@ function runRead(value) {
         emailVerify();
         break;
       case 'removedFromOffice':
-
         break;
       case 'read':
         requestCreator('Null', value);
