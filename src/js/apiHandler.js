@@ -107,61 +107,85 @@ function http(request) {
 
 function fetchServerTime(body, user) {
   currentDevice = body.device;
-
   const parsedDeviceInfo = JSON.parse(currentDevice);
-
-  return new Promise(function (resolve) {
-    const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
-    const httpReq = {
-      method: 'GET',
-      url: url,
-      body: null,
-      token: user.token
+  let url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
+  const req = indexedDB.open(user.uid);
+ 
+  req.onsuccess = function(){
+    const db = req.result;
+    const tx = db.transaction(['root'],'readwrite');
+    const rootStore = tx.objectStore('root')
+    rootStore.get(user.uid).onsuccess = function(event){
+      const record = event.target.result;
+      if(!record) return;
+      if(!record.hasOwnProperty('removeFromOffice')) return;
+      if(record.removeFromOffice) {
+          removeFromOffice.forEach(function(office){
+            url = url + `&removeFromOffice=${office}`
+          })
+          record.removeFromOffice = false;
+          rootStore.put(record)
+      }
     }
+    tx.oncomplete = function(){ 
 
-    http(httpReq).then(function (response) {
-      console.log(response)
-      if (response.updateClient) {
-        const title = 'Message';
-        const message = 'There is a New version of your app available';
-
-        const button = {
-          text: 'Update',
-          show: true,
-          clickAction: {
-            redirection: {
-              text: 'com.growthfile.growthfileNew',
-              value: true
+      return new Promise(function (resolve) {
+        const httpReq = {
+          method: 'GET',
+          url: url,
+          body: null,
+          token: user.token
+        }
+    
+        http(httpReq).then(function (response) {
+          console.log(response)
+          if (response.updateClient) {
+            const title = 'Message';
+            const message = 'There is a New version of your app available';
+    
+            const button = {
+              text: 'Update',
+              show: true,
+              clickAction: {
+                redirection: {
+                  text: 'com.growthfile.growthfileNew',
+                  value: true
+                }
+              }
             }
+    
+            const alertData = JSON.stringify({
+              title: title,
+              message: message,
+              cancelable: false,
+              button: button
+            })
+            requestHandlerResponse('update-app', 200, alertData, '')
+            return
           }
-        }
-
-        const alertData = JSON.stringify({
-          title: title,
-          message: message,
-          cancelable: false,
-          button: button
-        })
-        requestHandlerResponse('update-app', 200, alertData, '')
-        return
-      }
-
-      if (response.revokeSession) {
-        requestHandlerResponse('revoke-session', 200);
-        return
-      };
-      console.log(response)
-      if (response.hasOwnProperty('removeFromOffice')) {
-        if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
-          removeFromOffice(response.removeFromOffice, user)
-        }
-      }
-      resolve({
-        ts: response.timestamp,
-        user: user,
+    
+          if (response.revokeSession) {
+            requestHandlerResponse('revoke-session', 200);
+            return
+          };
+          console.log(response)
+          // if (response.hasOwnProperty('removeFromOffice')) {
+          //   if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
+              removeFromOffice(['Puja Capital'], user)
+          //   }
+          // }
+          resolve({
+            ts: response.timestamp,
+            user: user,
+          })
+        }).catch(sendApiFailToMainThread)
       })
-    }).catch(sendApiFailToMainThread)
-  })
+    }
+    tx.onerror = function(){
+
+    }
+  }
+
 }
 
 function instant(error, user) {
@@ -329,6 +353,7 @@ function removeFromOffice(offices, user) {
     return removeFromMapAndCalendar(response);
   }).then(function (response) {
     return removeFromSubscriptions(response);
+
   }).catch(function (error) {
     console.log(error)
     throw new Error(error);
@@ -470,12 +495,13 @@ function removeFromSubscriptions(response) {
       rootStore.get(response.user.uid).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
-        record.officesRemoved = true
+        record.officesRemoved = response.offices
         rootStore.put(record)
       }
       rootTx.oncomplete = function () {
 
       }
+
       rootTx.onerror = function () {
         instant({
           message: rootTx.error.message
