@@ -125,7 +125,7 @@ function fetchServerTime(body, user) {
             
             url = url + `&removeFromOffice=${office.replace(' ','%20')}`
           })
-          record.removeFromOffice = false;
+          record.officesRemoved = false;
           rootStore.put(record)
       }
     }
