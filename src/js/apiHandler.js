@@ -106,6 +106,7 @@ function http(request) {
 }
 
 function fetchServerTime(body, user) {
+  return new Promise(function (resolve) {
   currentDevice = body.device;
   const parsedDeviceInfo = JSON.parse(currentDevice);
   let url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
@@ -118,10 +119,11 @@ function fetchServerTime(body, user) {
     rootStore.get(user.uid).onsuccess = function(event){
       const record = event.target.result;
       if(!record) return;
-      if(!record.hasOwnProperty('removeFromOffice')) return;
-      if(record.removeFromOffice) {
-          removeFromOffice.forEach(function(office){
-            url = url + `&removeFromOffice=${office}`
+      if(!record.hasOwnProperty('officesRemoved')) return;
+      if(record.officesRemoved) {
+          record.officesRemoved.forEach(function(office){
+            
+            url = url + `&removeFromOffice=${office.replace(' ','%20')}`
           })
           record.removeFromOffice = false;
           rootStore.put(record)
@@ -129,7 +131,6 @@ function fetchServerTime(body, user) {
     }
     tx.oncomplete = function(){ 
 
-      return new Promise(function (resolve) {
         const httpReq = {
           method: 'GET',
           url: url,
@@ -179,13 +180,12 @@ function fetchServerTime(body, user) {
             user: user,
           })
         }).catch(sendApiFailToMainThread)
-      })
+      }
+      tx.onerror = function(){
+        
+      }
     }
-    tx.onerror = function(){
-
-    }
-  }
-
+  })
 }
 
 function instant(error, user) {
