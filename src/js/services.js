@@ -281,7 +281,7 @@ function manageLocation() {
           resolve(location)
         }).catch(function (error) {
           reject({
-            message: 'Both HTML and geolocation failed, Error:' + error,
+            message: 'Both HTML and Geolocation failed to fetch location.',
             body: JSON.stringify({
               html5: htmlError,
               geolocation: JSON.stringify(error)
@@ -393,7 +393,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
         return resolve(htmlLocation);
       });
     }).catch(function (error) {
-      handleError(error)
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
