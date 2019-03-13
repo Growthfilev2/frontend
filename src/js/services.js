@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -284,7 +284,7 @@ function manageLocation() {
             message: 'Both HTML and geolocation failed, Error:' + error,
             body: JSON.stringify({
               html5: htmlError,
-              geolocation: error
+              geolocation: JSON.stringify(error)
             })
           })
         })
@@ -332,7 +332,8 @@ function handleGeoLocationApi(holder, htmlLocation) {
       holder['orignialGeolocationResponse'] = {
         body: body,
         result: cellLocation
-      }
+      };
+
 
       const withoutCellTower = handleRequestBody(body);
       if (!withoutCellTower) {

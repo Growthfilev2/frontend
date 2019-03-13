@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -352,6 +352,7 @@ function removeFromOffice(offices, user) {
     return removeFromListAndChildren(response)
   }).then(function (response) {
     return removeFromMapAndCalendar(response);
+    asd;
   }).then(function (response) {
     return removeFromSubscriptions(response);
 
