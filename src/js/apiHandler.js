@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -47,7 +47,8 @@ self.onmessage = function (event) {
 
   if (event.data.type === 'Null') {
     updateIDB({
-      user: event.data.user
+      user: event.data.user,
+      response:''
     });
     return;
   }
@@ -125,9 +126,9 @@ function fetchServerTime(body, user) {
           record.officesRemoved.forEach(function(office){
             
             url = url + `&removeFromOffice=${office.replace(' ','%20')}`
-          })
-          record.officesRemoved = false;
-          rootStore.put(record)
+          });
+          delete record.officesRemoved;
+          rootStore.put(record);
       }
     }
     tx.oncomplete = function(){ 
@@ -140,7 +141,8 @@ function fetchServerTime(body, user) {
         }
     
         http(httpReq).then(function (response) {
-          console.log(response)
+          console.log(response);
+
           if (response.updateClient) {
             const title = 'Message';
             const message = 'There is a New version of your app available';
@@ -170,15 +172,16 @@ function fetchServerTime(body, user) {
             requestHandlerResponse('revoke-session', 200);
             return
           };
-          console.log(response)
-          // if (response.hasOwnProperty('removeFromOffice')) {
-          //   if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
-              removeFromOffice(['Puja Capital'], user)
-          //   }
-          // }
+          if(response.hasOwnProperty('removeFromOffice')){
+            if(Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+              removeFromOffice(response.removeFromOffice,user)
+            }
+          }
+
           resolve({
             ts: response.timestamp,
             user: user,
+
           })
         }).catch(sendApiFailToMainThread)
       }
@@ -246,7 +249,7 @@ function putServerTime(data) {
       rootTx.oncomplete = function () {
         resolve({
           user: data.user,
-          ts: data.ts
+         
         })
       }
     }
@@ -348,21 +351,16 @@ function create(body, user) {
 }
 
 function removeFromOffice(offices, user) {
+  console.log(offices)
   removeActivity(offices, user).then(function (response) {
     return removeFromListAndChildren(response)
   }).then(function (response) {
     return removeFromMapAndCalendar(response);
-    asd;
   }).then(function (response) {
     return removeFromSubscriptions(response);
-
   }).catch(function (error) {
-    console.log(error)
-    throw new Error(error);
-  }).catch(function (error) {
-    console.log(error);
     instant(JSON.stringify({
-      message: Error
+      message: error
     }))
   })
 }
@@ -424,6 +422,7 @@ function removeFromListAndChildren(response) {
       response.ids.forEach(function (id) {
         const deleteReqList = listStore.delete(id);
         const deleteReqChildren = childrenStore.delete(id);
+        
       })
       tx.oncomplete = function () {
         resolve(response)
@@ -501,7 +500,7 @@ function removeFromSubscriptions(response) {
         rootStore.put(record)
       }
       rootTx.oncomplete = function () {
-
+        requestHandlerResponse('removed-from-office',200,response.offices);
       }
 
       rootTx.onerror = function () {
@@ -592,7 +591,6 @@ function updateMap(activity, param) {
     mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
       const cursor = event.target.result
       if (cursor) {
-
         let deleteRecordReq = cursor.delete()
         cursor.continue()
         deleteRecordReq.onerror = function () {
@@ -934,22 +932,18 @@ function successResponse(read, param) {
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
 
     for (let index = read.activities.length; index--;) {
-      const activity = read.activities[index];
-      if (activity.canEdit) {
-        activity.editable = 1
-        activityObjectStore.put(activity)
-      } else {
-        activity.editable = 0
-        activityObjectStore.put(activity)
-      }
-
+      let activity = read.activities[index];
+    
+      activity.canEdit ? activity.editable ==1 : activity.editable == 0;
+      activityObjectStore.put(activity)
       updateMap(activity, param);
-      updateCalendar(activity, param)
+      updateCalendar(activity, param);
       putAssignessInStore(activity.assignees, param);
       putAttachment(activity, param);
 
       if (activity.hidden === 0) {
         createListStore(activity, counter, param).then(function () {
+
           if (read.activities.length >= 20) {
             if ((read.activities.length - index) <= 20) {
               requestHandlerResponse('initFirstLoad', 200, {
@@ -1186,10 +1180,10 @@ function updateIDB(param) {
         data: null,
         token: param.user.token
       }
-
+      
       http(req)
         .then(function (response) {
-          if (!response) return;
+          if (!response) return;       
           requestHandlerResponse('android-stop-refreshing', 200)
           successResponse(response, param)
         }).catch(sendApiFailToMainThread)

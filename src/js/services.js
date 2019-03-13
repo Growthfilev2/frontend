@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -100,7 +100,39 @@ function appDialog(messageString, showButton) {
 
   gpsDialog.show();
 }
+function officeRemovalDialog(text){
+  if (!document.getElementById('office-removal-dialog')) {
+    var aside = document.createElement('aside');
+    aside.className = 'mdc-dialog mdc-dialog--open';
+    aside.id = 'office-removal-dialog';
+    aside.style.backgroundColor = 'rgba(0,0,0,0.47)'
+    var surface = document.createElement('div');
+    surface.className = 'mdc-dialog__surface';
+    surface.style.width = '90%';
+    surface.style.height = 'auto';
 
+    var section = document.createElement('section');
+    section.className = 'mdc-dialog__body mock-main-body';
+    section.textContent = text;
+
+    var footer = document.createElement('footer');
+    footer.className = 'mdc-dialog__footer mock-footer';
+
+    var ok = document.createElement('button');
+    ok.type = 'button';
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
+    ok.textContent = 'Ok';
+    ok.style.width = '100%';
+    ok.style.backgroundColor = '#3498db';
+
+    footer.appendChild(ok);
+
+    surface.appendChild(section);
+    surface.appendChild(footer);
+    aside.appendChild(surface);
+    document.body.appendChild(aside);
+  }
+}
 function appUpdateDialog(messageString, title) {
   if (!document.getElementById('app-update-dialog')) {
     var aside = document.createElement('aside');
@@ -753,10 +785,10 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 var receiverCaller = {
   'initFirstLoad': initFirstLoad,
   'update-app': updateApp,
+  'removed-from-office':officeRemovalSuccess,
   'revoke-session': revokeSession,
   'notification': successDialog,
   'android-stop-refreshing': androidStopRefreshing,
-  'loadView': loadView,
   'apiFail': apiFail,
   'backblazeRequest': urlFromBase64Image,
 };
@@ -912,19 +944,17 @@ function urlFromBase64Image(data) {
     }
   }
 }
-
-function loadView(data) {
-
-  if (history.state[0] === 'updateCreateActivity') {
-    toggleActionables(history.state[1].activityId);
-    return;
-  }
-  if (history.state[0] === 'profileView') return;
-
-  window[history.state[0]](history.state[1], false);
+function officeRemovalSuccess(data){
+  officeRemovalDialog('You have been removed from ' + data.msg.join(' & '));
+  const dialog = new mdc.dialog.MDCDialog(document.getElementById('office-removal-dialog'));
+  dialog.show()
+  dialog.listen('MDCDialog:accept', function () { 
+  document.getElementById('office-removal-dialog').remove();
+  document.getElementById('app-current-panel').innerHTML = '';
+   listView();
+  })
+  return
 }
-
-
 
 function androidStopRefreshing() {
   if (native.getName() === 'Android') {
