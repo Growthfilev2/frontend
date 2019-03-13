@@ -1,5 +1,5 @@
 importScripts('external/js/moment.min.js');
-const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
+const apiUrl = 'https://api2.growthfile.com/api/'
 
 
 let deviceInfo;
@@ -201,7 +201,6 @@ function instant(error, user) {
     body: error,
     token: user.token
   }
-
   http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
@@ -987,6 +986,7 @@ function successResponse(read, param) {
     createUsersApiUrl(db, param.user).then(updateUserObjectStore).catch(function (error) {
       instant(JSON.stringify(error), param.user);
     })
+    
   }
 }
 

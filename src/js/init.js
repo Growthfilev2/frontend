@@ -32,14 +32,7 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return JSON.stringify({
-          baseOs: 'mac',
-          deviceBrand: '',
-          deviceModel: '',
-          appVersion: 7,
-          osVersion: '',
-          id: '123',
-        })
+        return false;
       }
 
       if (this.getName() === 'Android') {
@@ -53,7 +46,7 @@ let native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 6,
+            appVersion: 7,
             osVersion: '',
             id: '',
           })
@@ -121,6 +114,7 @@ window.addEventListener('load', function () {
   })
 
 
+  
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -371,7 +365,7 @@ function imageViewDialog() {
 function startApp(start) {
 
   firebase.auth().onAuthStateChanged(function (auth) {
-
+   
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
@@ -432,8 +426,7 @@ function startApp(start) {
         if(!getInstantLocation) return;
         manageLocation().then(function(location){
           if(location.latitude && location.longitude) {
-            console.log(location)
-            updateLocationInRoot(location);
+            updateLocationInRoot(location);            
           }
         }).catch(function(error){
           handleError(error)

@@ -284,7 +284,6 @@ function geolocationApi(body) {
 
 function handleRequestBody(request) {
   const body = JSON.parse(request);
-
   if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
     if (body.cellTowers) {
       delete body.cellTowers;
@@ -388,16 +387,18 @@ function handleGeoLocationApi(holder, htmlLocation) {
 
       geolocationApi(withoutCellTower).then(function (withoutCellTowerLocation) {
         if (withoutCellTowerLocation.accuracy <= 350) return resolve(withoutCellTowerLocation);
+        holder['withoutCellTower'] = {
+          body: withoutCellTower,
+          result: withoutCellTowerLocation
+        };
         if (withoutCellTowerLocation.accuracy >= 1200) {
-          holder['withoutCellTower'] = {
-            body: withoutCellTower,
-            result: withoutCellTowerLocation
-          };
+         
           handleError({
             message: 'html5,originalCellTower,WithoutCellTower',
             body: JSON.stringify(holder)
           })
         }
+
 
         Object.keys(holder).forEach(function (key) {
           allLocations.push(holder[key].result)
@@ -431,7 +432,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
       }
       reject(error)
     })
-
   })
 }
 
@@ -572,6 +572,7 @@ function updateLocationInRoot(finalLocation) {
         message: `${req.error.message} from updateLocationInRoot`,
         body: req.error.name
       });
+      window.dispatchEvent(suggestCheckIn);
     };
   }
 }

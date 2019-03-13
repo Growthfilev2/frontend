@@ -163,7 +163,7 @@ function startCursor(currentLocation) {
 
       const cursor = event.target.result;
       if (!cursor) return;
-
+      
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true
@@ -538,13 +538,13 @@ function getCountOfTemplates() {
       }
       tx.onerror = function () {
         reject({
-          message: `${tx.error} from getCountOfTemplates`
+          message: `${tx.error.message} from getCountOfTemplates`
         });
       }
     }
     req.onerror = function () {
       reject({
-        message: `${req.error} from getCountOfTemplates`
+        message: `${req.error.message} from getCountOfTemplates`
       });
     }
   })
