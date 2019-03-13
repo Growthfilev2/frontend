@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -962,9 +962,6 @@ function runRead(value) {
     switch (key) {
       case 'verifyEmail':
         emailVerify();
-        break;
-      case 'removedFromOffice':
-
         break;
       case 'read':
         requestCreator('Null', value);

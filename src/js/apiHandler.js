@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -107,57 +107,85 @@ function http(request) {
 }
 
 function fetchServerTime(body, user) {
-  currentDevice = body.device;
-
-  const parsedDeviceInfo = JSON.parse(currentDevice);
-
   return new Promise(function (resolve) {
-    const url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
-    const httpReq = {
-      method: 'GET',
-      url: url,
-      body: null,
-      token: user.token
-    }
-
-    http(httpReq).then(function (response) {
-      console.log(response)
-      if (response.updateClient) {
-        const title = 'Message';
-        const message = 'There is a New version of your app available';
-
-        const button = {
-          text: 'Update',
-          show: true,
-          clickAction: {
-            redirection: {
-              text: 'com.growthfile.growthfileNew',
-              value: true
-            }
-          }
-        }
-
-        const alertData = JSON.stringify({
-          title: title,
-          message: message,
-          cancelable: false,
-          button: button
-        })
-        requestHandlerResponse('update-app', 200, alertData, '')
-        return
+  currentDevice = body.device;
+  const parsedDeviceInfo = JSON.parse(currentDevice);
+  let url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
+  const req = indexedDB.open(user.uid);
+ 
+  req.onsuccess = function(){
+    const db = req.result;
+    const tx = db.transaction(['root'],'readwrite');
+    const rootStore = tx.objectStore('root')
+    rootStore.get(user.uid).onsuccess = function(event){
+      const record = event.target.result;
+      if(!record) return;
+      if(!record.hasOwnProperty('officesRemoved')) return;
+      if(record.officesRemoved) {
+          record.officesRemoved.forEach(function(office){
+            
+            url = url + `&removeFromOffice=${office.replace(' ','%20')}`
+          })
+          record.officesRemoved = false;
+          rootStore.put(record)
       }
+    }
+    tx.oncomplete = function(){ 
 
-      if (response.revokeSession) {
-        requestHandlerResponse('revoke-session', 200);
-        return
-      };
-
-
-      resolve({
-        ts: response.timestamp,
-        user: user,
-      })
-    }).catch(sendApiFailToMainThread)
+        const httpReq = {
+          method: 'GET',
+          url: url,
+          body: null,
+          token: user.token
+        }
+    
+        http(httpReq).then(function (response) {
+          console.log(response)
+          if (response.updateClient) {
+            const title = 'Message';
+            const message = 'There is a New version of your app available';
+    
+            const button = {
+              text: 'Update',
+              show: true,
+              clickAction: {
+                redirection: {
+                  text: 'com.growthfile.growthfileNew',
+                  value: true
+                }
+              }
+            }
+    
+            const alertData = JSON.stringify({
+              title: title,
+              message: message,
+              cancelable: false,
+              button: button
+            })
+            requestHandlerResponse('update-app', 200, alertData, '')
+            return
+          }
+    
+          if (response.revokeSession) {
+            requestHandlerResponse('revoke-session', 200);
+            return
+          };
+          console.log(response)
+          // if (response.hasOwnProperty('removeFromOffice')) {
+          //   if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length > 0) {
+              removeFromOffice(['Puja Capital'], user)
+          //   }
+          // }
+          resolve({
+            ts: response.timestamp,
+            user: user,
+          })
+        }).catch(sendApiFailToMainThread)
+      }
+      tx.onerror = function(){
+        
+      }
+    }
   })
 }
 
@@ -317,6 +345,176 @@ function create(body, user) {
       })
       .catch(sendApiFailToMainThread)
   })
+}
+
+function removeFromOffice(offices, user) {
+  removeActivity(offices, user).then(function (response) {
+    return removeFromListAndChildren(response)
+  }).then(function (response) {
+    return removeFromMapAndCalendar(response);
+  }).then(function (response) {
+    return removeFromSubscriptions(response);
+
+  }).catch(function (error) {
+    console.log(error)
+    throw new Error(error);
+  }).catch(function (error) {
+    console.log(error);
+    instant(JSON.stringify({
+      message: Error
+    }))
+  })
+}
+
+
+
+
+function removeActivity(offices, user) {
+  return new Promise(function (resolve, reject) {
+
+    const req = indexedDB.open(user.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['activity'], 'readwrite')
+      const store = tx.objectStore('activity');
+      const index = store.index('office');
+      const ids = [];
+      offices.forEach(function (office) {
+        index.openCursor(office).onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (!cursor) return;
+          ids.push(cursor.value.activityId);
+          const deleteReq = cursor.delete();
+          deleteReq.onsuccess = function () {
+            cursor.continue();
+          }
+        }
+      })
+      tx.oncomplete = function () {
+        resolve({
+          offices: offices,
+          ids: ids,
+          user: user
+        })
+      }
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
+      }
+    }
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
+    }
+  })
+}
+
+function removeFromListAndChildren(response) {
+  return new Promise(function (resolve, reject) {
+
+    const req = indexedDB.open(response.user.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['list', 'children'], 'readwrite');
+      const listStore = tx.objectStore('list');
+      const childrenStore = tx.objectStore('children');
+      response.ids.forEach(function (id) {
+        const deleteReqList = listStore.delete(id);
+        const deleteReqChildren = childrenStore.delete(id);
+      })
+      tx.oncomplete = function () {
+        resolve(response)
+      }
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
+      }
+    }
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
+    }
+  })
+}
+
+function removeFromMapAndCalendar(response) {
+  return new Promise(function (resolve, reject) {
+
+    const req = indexedDB.open(response.user.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['map', 'calendar'], 'readwrite');
+      const map = tx.objectStore('map').index('activityId')
+      const calendar = tx.objectStore('calendar').index('activityId')
+
+      deleteByIndex(map, response.ids);
+      deleteByIndex(calendar, response.ids);
+      tx.oncomplete = function () {
+        resolve(response)
+      }
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
+      }
+    }
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
+    }
+  })
+}
+
+function removeFromSubscriptions(response) {
+
+  const req = indexedDB.open(response.user.uid)
+  req.onsuccess = function () {
+    const db = req.result;
+    const tx = db.transaction(['subscriptions'], 'readwrite');
+    const store = tx.objectStore('subscriptions');
+    const index = store.index('office');
+    response.offices.forEach(function (office) {
+      index.openCursor(office).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        const deleteReq = cursor.delete();
+        deleteReq.onsuccess = function () {
+          cursor.continue()
+        }
+
+      }
+    })
+
+    tx.oncomplete = function () {
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(response.user.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return;
+        record.officesRemoved = response.offices
+        rootStore.put(record)
+      }
+      rootTx.oncomplete = function () {
+
+      }
+
+      rootTx.onerror = function () {
+        instant({
+          message: rootTx.error.message
+        })
+      }
+    }
+    tx.onerror = function () {
+      instant({
+        message: tx.error.message
+      })
+    }
+  }
 }
 
 function getUrlFromPhoto(body, user) {
@@ -604,16 +802,16 @@ function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
 
 
 function deleteByIndex(store, activitiesToRemove) {
-  store.openCursor().onsuccess = function (event) {
-    const cursor = event.target.result;
-    if (!cursor) return;
-
-    if (activitiesToRemove.indexOf(cursor.key) > -1) {
-      cursor.delete()
+  activitiesToRemove.forEach(function (id) {
+    store.openCursor(id).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      const deleteReq = cursor.delete();
+      deleteReq.onsuccess = function () {
+        cursor.continue()
+      }
     }
-    cursor.continue()
-  }
-
+  })
 }
 
 
