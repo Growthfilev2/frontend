@@ -383,17 +383,65 @@ function startApp(start) {
     }
 
     if (start) {
-      createIDBStore(auth).then(function () {
-        localStorage.setItem('dbexist', auth.uid);
-        if(native.getName() !== 'Android') {
-           
-          webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+      const req = indexedDB.open(auth.uid, 3);
+      let db;
+      req.onupgradeneeded = function (evt) {
+        db = req.result;
+        db.onerror = function () {
+          handleError({
+            message: `${db.error.message} from createIDBStore on upgradeneeded`
+          })
+          return;
         }
-        init()
-      }).catch(function (error) {
-        snacks('Please restart the app');
-        handleError(error)
-      })
+        createObjectStores(db, auth.uid)
+      }
+
+      req.onsuccess = function () {
+        document.getElementById("main-layout-app").style.display = 'block'
+        localStorage.setItem('dbexist', auth.uid);
+        let getInstantLocation = false;
+        if (native.getName() !== 'Android') {
+          try {
+            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+           
+          } catch (e) {
+            getInstantLocation = true
+            handleError({
+              message: e.message
+            })
+          }
+        }
+        else {
+          getInstantLocation = true
+        }
+      
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: '',
+          registerToken: native.getFCMToken()
+        })
+
+        listView();
+        runAppChecks()
+
+        if(!getInstantLocation) return;
+        manageLocation().then(function(location){
+          if(location.latitude && location.longitude) {
+            console.log(location)
+            updateLocationInRoot(location);
+            
+          }
+        }).catch(function(error){
+          handleError(error)
+        })
+
+      }
+      req.onerror = function () {
+        console.log(req.error);
+        handleError({
+          message: `${req.error.message} from createIDBStore`
+        })
+      }
     }
   })
 }
@@ -487,35 +535,6 @@ function isEmployeeOnLeave() {
   })
 }
 
-function createIDBStore(auth) {
-
-  return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(auth.uid, 3);
-    let db;
-    req.onupgradeneeded = function (evt) {
-      db = req.result;
-      db.onerror = function () {
-        reject({
-          message: `${db.error.message} from createIDBStore on upgradeneeded`
-        })
-        return;
-      }
-
-      createObjectStores(db, auth.uid)
-
-    }
-    req.onsuccess = function () {
-
-      resolve(true)
-    }
-    req.onerror = function () {
-      console.log(req.error);
-      reject({
-        message: `${req.error.message} from createIDBStore`
-      })
-    }
-  })
-}
 
 function createObjectStores(db, uid) {
 
@@ -596,33 +615,6 @@ function createObjectStores(db, uid) {
   })
 }
 
-function createNewIndex() {
-
-}
-
-function removeIDBInstance(auth) {
-
-  return new Promise(function (resolve, reject) {
-    const failure = {
-      userMessage: 'Please Restart The App',
-      message: '',
-    };
-
-    const req = indexedDB.deleteDatabase(auth.uid)
-    req.onsuccess = function () {
-      resolve(true)
-    }
-    req.onblocked = function () {
-      failure.message = 'Couldnt delete DB because it is busy.App was openend when new code transition took place';
-      reject(failure)
-    }
-    req.onerror = function () {
-      failure.message = `${req.error.message} from removeIDBInstance`
-      reject(failure)
-    }
-  })
-}
-
 function redirect() {
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
@@ -634,45 +626,39 @@ function redirect() {
   });
 }
 
-function init() {
 
-  document.getElementById("main-layout-app").style.display = 'block'
-  requestCreator('now', {
-    device: native.getInfo(),
-    from: '',
-    registerToken: native.getFCMToken()
-  })
-
-  listView();
-  runAppChecks();
-  
-  if(native.getName() === 'Android') {
-  setInterval(function () {
-     initLocation()
-    }, 5000);
-  }
-}
-
-function initLocation (){
+function initLocation() {
   manageLocation().then(function (location) {
-    if(location.latitude && location.longitude) {
+    if (location.latitude && location.longitude) {
       updateLocationInRoot(location)
     }
-  }).catch(handleError);
+  }).catch(function (error) {
+    handleError(error)
+  });
 }
 
 function runAppChecks() {
-
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-    isEmployeeOnLeave().then(function (onLeave) {
 
+    isEmployeeOnLeave().then(function (onLeave) {
       if (onLeave) return
       if (e.detail) {
-        if (history.state[0] === 'listView') {
+      if (history.state[0] === 'listView') {
+        try {
           document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-          showSuggestCheckInDialog();
+          getRootRecord().then(function(record){
+            if(record) {
+              if(record.offices) {
+                showSuggestCheckInDialog(record.offices);
+                listView();
+              }
+            }
+          })
+        }catch(e){
+          console.log(e)
         }
       }
+    }
     }).catch(handleError)
   }, true);
 }

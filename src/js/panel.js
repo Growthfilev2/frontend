@@ -690,38 +690,3 @@ function modifyHeader(attr) {
   }
 
 }
-
-function suggestCheckIn(value) {
-  return new Promise(function (resolve, reject) {
-    getRootRecord().then(function (record) {
-
-      var req = indexedDB.open(firebase.auth().currentUser.uid);
-      req.onsuccess = function () {
-        var db = req.result;
-        var tx = db.transaction(['root'], 'readwrite');
-        var store = tx.objectStore('root');
-        if (record.suggestCheckIn !== value) {
-
-          record.suggestCheckIn = value;
-          store.put(record);
-
-        }
-        tx.oncomplete = function () {
-          resolve(true);
-        };
-        tx.onerror = function () {
-          reject({
-            message: `${tx.error.message} from suggestCheckIn`
-          });
-        };
-      };
-      req.onerror = function () {
-        reject({
-          message: `${req.error} from suggestCheckIn`
-        });
-      };
-    }).catch(function (error) {
-      reject(error);
-    });
-  });
-}

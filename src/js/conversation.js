@@ -929,50 +929,6 @@ function createSeachInput(id, labelText) {
   return search
 }
 
-function createTextArea(textAreaId, record) {
-  const container = document.createElement('div')
-  container.className = 'mdc-text-field mdc-text-field--textarea'
-  // container.id = parentId
-  const textarea = document.createElement('textarea');
-  // textarea.className = 'mdc-text-field__input'
-  textarea.className = 'address-text-area'
-  textarea.placeholder = 'Enter Address'
-  if(record.create) {
-    textarea.setAttribute('rows', '3')
-  }
-  else {
-    textarea.setAttribute('rows', '2')
-    textarea.style.marginTop = '-10px';
-  }
-
-  textarea.setAttribute('cols', '40');
-  textarea.id = textAreaId
-
-  const notchedOutline = document.createElement('div')
-  notchedOutline.className = 'mdc-notched-outline'
-
-  const leading = document.createElement('div')
-  leading.className = 'mdc-notched-outline__leading'
-
-  const notch = document.createElement('div')
-  notch.className = 'mdc-notched-outline__notch';
-  const label = document.createElement('label')
-  label.setAttribute('for', 'textarea')
-  label.className = 'mdc-floating-label'
-  // label.textContent = labelText
-
-  notch.appendChild(label);
-
-  const trailing = document.createElement('div')
-  trailing.className = 'mdc-notched-outline__trailing'
-  notchedOutline.appendChild(leading)
-  notchedOutline.appendChild(notch);
-  notchedOutline.appendChild(trailing)
-  container.appendChild(textarea)
-  container.appendChild(notchedOutline);
-  return textarea;
-}
-
 function handleClickListnersForMap(data, count) {
 
 
@@ -1238,19 +1194,39 @@ function createTempRecord(office, template, data) {
          
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (!record.location || isLocationOld) {
-            appDialog('Fetching Location Please wait', false)
-            window.addEventListener('location', function _checkInLatest(e) {
+            let message = 'Fetching Location Please wait. '
+            if (native.getName() === 'Android') {
+              message = message + ' Make Sure you have set Location Mode to High Accuracy'
+            }
+            appDialog(message, false)
+
+            manageLocation().then(function (location) {
+              if (location.latitude && location.longitude) {
+                updateLocationInRoot(location)
+                if (document.querySelector('#enable-gps')) {
+                  document.querySelector('#enable-gps').remove();
+                }
+                updateCreateActivity(bareBonesRecord)
+              }
+            }).catch(function (error) {
+
               if (document.querySelector('#enable-gps')) {
                 document.querySelector('#enable-gps').remove();
               }
-              if(template === 'customer') {
-                bareBonesVenue.geopoint['_latitude'] = e.detail.latitude
-                bareBonesVenue.geopoint['_longitude'] = e.detail.longitude
+
+              let errorMessage = 'There was a problem in detecting your location'
+              if (native.getName() === 'Android') {
+                errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
               }
-              bareBonesRecord.venue = [bareBonesVenue];
-              updateCreateActivity(bareBonesRecord)
-              window.removeEventListener('location', _checkInLatest, true);
-            }, true)
+              appDialog(errorMessage, false)
+              setTimeout(function () {
+                if (document.querySelector('#enable-gps')) {
+                  document.querySelector('#enable-gps').remove();
+                }
+              }, 5000)
+              listView();
+              handleError(error)
+            })
             return
           }
           if(template === 'customer') {
@@ -1259,7 +1235,6 @@ function createTempRecord(office, template, data) {
           }
           bareBonesRecord.venue = [bareBonesVenue];
           updateCreateActivity(bareBonesRecord)
-
         });
         return
       }
