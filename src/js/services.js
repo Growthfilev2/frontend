@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -628,13 +628,10 @@ function sendCurrentViewNameToAndroid(viewName) {
 
 var locationPermission = function () {
   return {
-    checkGps: function checkGps() {
+    checkNetworkProvider: function checkNetworkProvider() {
       try {
-        return AndroidInterface.isGpsEnabled();
+        return AndroidInterface.isNetworkProivderAvailable();
       } catch (e) {
-        handleError({
-          message: `${e.message} from isGpsEnabled`
-        })
         return true;
       }
     },
@@ -669,6 +666,15 @@ function isLocationStatusWorking() {
     createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
     return;
   }
+  // if(!locationPermission.checkNetworkProvider()) {
+  //   try {
+  //     AndroidInterface.showLocationModeDialog();
+  //   }
+  //   catch(e){
+  //     createAndroidDialog('Location Mode', 'Growthfile Requires High Accuracy Location Mode to Work.')
+  //   }
+  //   return;
+  // }
   if (!AndroidInterface.isConnectionActive()) {
     createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
     return;

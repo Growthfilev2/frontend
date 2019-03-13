@@ -1188,7 +1188,7 @@ function createTempRecord(office, template, data) {
             '_latitude': '',
             '_longitude': ''
           }
-         
+          bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (!record.location || isLocationOld) {
             let message = 'Fetching Location Please wait. '
@@ -1203,7 +1203,7 @@ function createTempRecord(office, template, data) {
                 if (document.querySelector('#enable-gps')) {
                   document.querySelector('#enable-gps').remove();
                 }
-                bareBonesRecord.venue = [bareBonesVenue];
+               
                 updateCreateActivity(bareBonesRecord)
               }
             }).catch(function (error) {
@@ -1227,8 +1227,6 @@ function createTempRecord(office, template, data) {
             })
             return
           }
-          
-          bareBonesRecord.venue = [bareBonesVenue];
           updateCreateActivity(bareBonesRecord)
         });
         return
@@ -2607,9 +2605,6 @@ function insertInputsIntoActivity(record, send) {
       }
       return;
     }
-    if (record.template === 'customer' && convertIdToKey(allStringTypes[i].id) === 'Name') {
-      record.venue[0].location = inputValue;
-    };
 
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   }
@@ -2697,9 +2692,7 @@ function insertInputsIntoActivity(record, send) {
     }
   }
    else {
-    if (record.template === 'customer') {
-      record.venue[0].address = document.getElementById('customer-address').value
-    }
+  
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
         latitude: record.venue[i].geopoint['_latitude'] || "",
