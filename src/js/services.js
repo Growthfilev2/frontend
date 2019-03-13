@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -13,7 +13,6 @@ function handleError(error) {
     return
   }
 }
-
 
 function loader(nameClass) {
   var div = document.createElement('div');
@@ -283,10 +282,10 @@ function manageLocation() {
         }).catch(function (error) {
           reject({
             message: 'Both HTML and geolocation failed, Error:' + error,
-            body: {
+            body: JSON.stringify({
               html5: htmlError,
               geolocation: error
-            }
+            })
           })
         })
       })
