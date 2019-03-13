@@ -1139,9 +1139,6 @@ function insertTemplateByOffice(offices, showCheckInFirst) {
 }
 
 function createTempRecord(office, template, data) {
-
-
-
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1180,7 +1177,7 @@ function createTempRecord(office, template, data) {
       }
 
       const bareBonesVenueArray = []
-      if (template === 'check-in' || template === 'customer') {
+      if (template === 'check-in') {
         
         getRootRecord().then(function (record) {
           const bareBonesVenue = {}
@@ -1206,6 +1203,7 @@ function createTempRecord(office, template, data) {
                 if (document.querySelector('#enable-gps')) {
                   document.querySelector('#enable-gps').remove();
                 }
+                bareBonesRecord.venue = [bareBonesVenue];
                 updateCreateActivity(bareBonesRecord)
               }
             }).catch(function (error) {
@@ -1229,10 +1227,7 @@ function createTempRecord(office, template, data) {
             })
             return
           }
-          if(template === 'customer') {
-            bareBonesVenue.geopoint['_latitude'] = record.location.latitude
-            bareBonesVenue.geopoint['_longitude'] = record.location.longitude
-          }
+          
           bareBonesRecord.venue = [bareBonesVenue];
           updateCreateActivity(bareBonesRecord)
         });
@@ -1764,99 +1759,6 @@ function createVenueSection(record) {
       })
     })
 
-    return;
-  }
-
-  if (record.template === 'customer') {
-
-    if (record.canEdit) {
-      
-      const checkInDesc = document.createElement('li')
-      checkInDesc.className = 'mdc-list-item'
-      const span = document.createElement('span')
-      span.className = 'label--text'
-      span.textContent = record.venue[0].venueDescriptor
-      checkInDesc.appendChild(span)
-      const locationName = document.createElement('span')
-      locationName.textContent = record.venue[0].location
-      locationName.style.paddingLeft = '10px';
-
-      checkInDesc.appendChild(locationName);
-
-      checkInDesc.style.height = '50px'
-      checkInDesc.style.paddingRight = '11px';
-      venueSection.appendChild(checkInDesc)
-      venueSection.style.paddingBottom = '20px';
-      venueSection.appendChild(createTextArea('customer-address', record))
-      document.getElementById('customer-address').value = record.venue[0].address
-      document.getElementById('customer-address').addEventListener('input',function(e){
-        document.getElementById('send-activity').classList.remove('hidden');
-      })
-      const mapDom = document.createElement('div');
-      venueSection.appendChild(mapDom);
-      mapDom.id = 'customer-address-map'
-      if (record.venue[0].geopoint['_latitude'] && record.venue[0].geopoint['_longitude']) {
-        if(!record.hasOwnProperty('create') && !record.venue[0].address) return;
-        const location = {
-          lat: record.venue[0].geopoint['_latitude'],
-          lng: record.venue[0].geopoint['_longitude']
-        }
-        mapDom.style.height = '200px'
-        mapDom.style.marginTop = '10px';
-
-        const map = new google.maps.Map(document.getElementById('customer-address-map'), {
-          zoom: 16,
-          center: location,
-          disableDefaultUI: true
-        });
-
-
-        var customControlDiv = document.createElement('div');
-        var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-        customControlDiv.index = 1;
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-
-        const marker = new google.maps.Marker({
-          position: location,
-          map: map
-        });
-
-      }
-    } else {
-      venueSection.appendChild(createVenueLi(record.venue[0], true, record))
-      const mapDom = document.createElement('div');
-      mapDom.className = 'map-detail ' + convertKeyToId(record.venue[0].venueDescriptor)
-      venueSection.appendChild(mapDom)
-      mapDom.id = 'customer-address-map'
-      if (record.venue[0].geopoint['_latitude'] && record.venue[0].geopoint['_longitude']) {
-        if(!record.hasOwnProperty('create') && !record.venue[0].address) return;
-        const location = {
-          lat: record.venue[0].geopoint['_latitude'],
-          lng: record.venue[0].geopoint['_longitude']
-        }
-        mapDom.style.height = '200px'
-        mapDom.style.marginTop = '10px';
-
-        const map = new google.maps.Map(document.getElementById('customer-address-map'), {
-          zoom: 16,
-          center: location,
-          disableDefaultUI: true
-        });
-
-
-        var customControlDiv = document.createElement('div');
-        var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-        customControlDiv.index = 1;
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-
-        const marker = new google.maps.Marker({
-          position: location,
-          map: map
-        });
-
-      }
-    }
-    
     return;
   }
 

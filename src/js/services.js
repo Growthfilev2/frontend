@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -466,7 +466,8 @@ function html5Geolocation() {
           })
         }, {
           timeout: 5000,
-          maximumAge: 0
+          maximumAge: 0,
+          enableHighAccuracy:true
         })
       })
       prom.push(navProm)

@@ -429,12 +429,10 @@ function startApp(start) {
           if(location.latitude && location.longitude) {
             console.log(location)
             updateLocationInRoot(location);
-            
           }
         }).catch(function(error){
           handleError(error)
         })
-
       }
       req.onerror = function () {
         console.log(req.error);
