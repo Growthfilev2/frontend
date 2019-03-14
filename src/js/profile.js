@@ -30,7 +30,11 @@ function profileView(pushState) {
 
           if (native.getName() === 'Android') {
             document.getElementById('uploadProfileImage').addEventListener('click', function () {
-              AndroidInterface.openImagePicker();
+              try {
+                AndroidInterface.openImagePicker();
+              }catch(e){
+                sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
+              }
             })
           } else {
             inputFile('uploadProfileImage').addEventListener('change', function () {
