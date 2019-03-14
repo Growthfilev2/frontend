@@ -406,7 +406,7 @@ function emailUpdateSuccess(showSuccessDialog) {
 function emailVerificationSuccess(showSuccessDialog) {
   if(showSuccessDialog){
     successDialog();
-  }
+  };
   snacks('Verification link has been send to your email address');
 }
 
@@ -414,7 +414,7 @@ function emailVerificationError(error) {
   snacks(error.message);
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
-  }
+  };
   
   handleError({
     message: `${error.message} from emailVerificationError`

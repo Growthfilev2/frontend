@@ -340,8 +340,8 @@ function handleGeoLocationApi(holder, htmlLocation) {
         resolve(htmlLocation)
         return;
       }
-      sendExceptionObject(e,'CATCH 4 : AndroidInterface.getCellularData at handleGeolocationApi',[]);
-      reject('CATCH 4 : AndroidInterface.getCellularData at handleGeolocationApi')
+      sendExceptionObject(e,'CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi',[]);
+      reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
       return;
     }
 
@@ -617,7 +617,7 @@ function sendCurrentViewNameToAndroid(viewName) {
     try {
       AndroidInterface.startConversation(viewName);
     } catch (e) {
-      sendExceptionObject(e,'CATCH 5: AndroidInterface.startConversation at sendCurrentViewNameToAndroid',[viewName]);
+      sendExceptionObject(e,'CATCH Type 5: AndroidInterface.startConversation at sendCurrentViewNameToAndroid',[viewName]);
     }
   }
 }
