@@ -296,7 +296,7 @@ function manageLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
+        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
         holder['html5'] = {
           body: '',
           result: htmlLocation
