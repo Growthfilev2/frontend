@@ -1,4 +1,4 @@
-var apiHandler = new Worker('js/apiHandler.js');
+var apiHandler = new Worker('apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -6,9 +6,6 @@ function handleError(error) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
     error.device = native.getInfo();
-    if (error.stack) {
-      error.stack = error.stack;
-    }
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -284,7 +281,6 @@ function geolocationApi(body) {
 
 function handleRequestBody(request) {
   const body = JSON.parse(request);
-
   if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
     if (body.cellTowers) {
       delete body.cellTowers;
@@ -300,7 +296,7 @@ function manageLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
         holder['html5'] = {
           body: '',
           result: htmlLocation
@@ -439,9 +435,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
 }
 
 function iosLocationError(error) {
-  handleError({
-    message: error
-  });
   manageLocation().then(function (location) {
     if (location.latitude && location.longitude) {
       updateLocationInRoot(location)

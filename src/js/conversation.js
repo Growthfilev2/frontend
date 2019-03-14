@@ -1202,7 +1202,6 @@ function createTempRecord(office, template, data) {
                 if (document.querySelector('#enable-gps')) {
                   document.querySelector('#enable-gps').remove();
                 }
-               
                 updateCreateActivity(bareBonesRecord)
               }
             }).catch(function (error) {
@@ -1954,7 +1953,7 @@ function createScheduleTable(data) {
     edDiv.className = 'mdc-text-field end--date' + count
 
     const endDateInput = document.createElement('input')
-    endDateInput.value = moment(schedule.endTime || new Date()).format('YYYY-MM-DD')
+    endDateInput.value = moment(schedule.endTime || moment().add(1, 'days')).format('YYYY-MM-DD')
     endDateInput.type = 'date'
     endDateInput.disabled = !data.canEdit
     endDateInput.className = 'mdc-text-field__input'
@@ -2903,7 +2902,6 @@ function createTimeInput(value, canEdit, attr) {
         simeplText.textContent = ''
       }
     }
-
     return simeplText
   }
 
@@ -2919,7 +2917,7 @@ function createTimeInput(value, canEdit, attr) {
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'
-    input.value = value || moment("24", "HH:mm").format('HH:mm  ') 
+    input.value = value || moment("24", "HH:mm").format('HH:mm')
   };
 
   const ripple = document.createElement('div')
