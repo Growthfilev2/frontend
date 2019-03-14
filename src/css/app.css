@@ -1410,7 +1410,6 @@ input[type="datetime-local"] {
 
 #schedule--group .mdc-list input {
   border: none;
-  padding-top: 10px;
 
 }
 
@@ -1571,6 +1570,7 @@ input[type="datetime-local"] {
 .schedule-start-li,
 .schedule-end-li {
   padding-right: 0px;
+  height: 50px;
 }
 
 #attachment--list {
@@ -1886,4 +1886,14 @@ input[type="datetime-local"] {
   border: 2px solid #0399f4;
   font-size: 20px;
   border-radius: 10px;
+}
+
+
+.schedule-start-dates {
+  margin-left: 4px;
+}
+
+.schedule-start-times , .schedule-end-times{
+  margin-left: 29%;
+  margin-right: 0;
 }

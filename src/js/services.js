@@ -6,9 +6,6 @@ function handleError(error) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
     error.device = native.getInfo();
-    if (error.stack) {
-      error.stack = error.stack;
-    }
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -299,7 +296,7 @@ function manageLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
         holder['html5'] = {
           body: '',
           result: htmlLocation
@@ -315,8 +312,9 @@ function manageLocation() {
             message: 'Both HTML and Geolocation failed to fetch location.',
             body: JSON.stringify({
               html5: htmlError,
-              geolocation: JSON.stringify(error)
-            })
+              geolocation: JSON.stringify(error),
+            }),
+            'locationError':true
           })
         })
       })
@@ -339,14 +337,11 @@ function handleGeoLocationApi(holder, htmlLocation) {
       body = AndroidInterface.getCellularData()
     } catch (e) {
       if (htmlLocation) {
-        handleError({
-          message: 'Using HTML location beacuse Java exception was raised when getting cell tower information ',
-          body: e.message
-        })
         resolve(htmlLocation)
         return;
       }
-      reject(e.message)
+      sendExceptionObject(e,'CATCH 4 : AndroidInterface.getCellularData at handleGeolocationApi',[]);
+      reject('CATCH 4 : AndroidInterface.getCellularData at handleGeolocationApi')
       return;
     }
 
@@ -371,7 +366,8 @@ function handleGeoLocationApi(holder, htmlLocation) {
         if (cellLocation.accuracy >= 1200) {
           handleError({
             message: 'Oringinal CellTower has accuracy more than 1200 and WAP doesnt exist',
-            body: JSON.stringify(holder)
+            body: JSON.stringify(holder),
+            locationError:true
           })
         }
         if (!htmlLocation) {
@@ -395,7 +391,9 @@ function handleGeoLocationApi(holder, htmlLocation) {
          
           handleError({
             message: 'html5,originalCellTower,WithoutCellTower',
-            body: JSON.stringify(holder)
+            body: JSON.stringify(holder),
+            locationError:true
+
           })
         }
 
@@ -411,7 +409,9 @@ function handleGeoLocationApi(holder, htmlLocation) {
           }
           handleError({
             message: 'Orinigal CellTower has accuracy more than 1200 and api failure when sending cellTowerObject without cellularTowers',
-            body: JSON.stringify(holder)
+            body: JSON.stringify(holder),
+            locationError:true
+
           })
         }
 
@@ -436,9 +436,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
 }
 
 function iosLocationError(error) {
-  handleError({
-    message: error
-  });
   manageLocation().then(function (location) {
     if (location.latitude && location.longitude) {
       updateLocationInRoot(location)
@@ -620,29 +617,18 @@ function sendCurrentViewNameToAndroid(viewName) {
     try {
       AndroidInterface.startConversation(viewName);
     } catch (e) {
-      handleError({
-        message: `${e.message} from startConversation`
-      });
+      sendExceptionObject(e,'CATCH 5: AndroidInterface.startConversation at sendCurrentViewNameToAndroid',[viewName]);
     }
   }
 }
 
 var locationPermission = function () {
   return {
-    checkNetworkProvider: function checkNetworkProvider() {
-      try {
-        return AndroidInterface.isNetworkProivderAvailable();
-      } catch (e) {
-        return true;
-      }
-    },
     checkLocationPermission: function checkLocationPermission() {
       try {
         return AndroidInterface.isLocationPermissionGranted();
       } catch (e) {
-        handleError({
-          message: `${e.message} from isLocationPermissionGranted`
-        });
+        sendExceptionObject(e,'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission',[]);
         return true;
       }
     }
@@ -653,9 +639,7 @@ function createAndroidDialog(title, body) {
   try {
     AndroidInterface.showDialog(title, body);
   } catch (e) {
-    handleError({
-      message: `${e.message} from showDialog`
-    });
+    sendExceptionObject(e,'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ',[title,body])
     appDialog(body, true);
   }
 }
@@ -667,18 +651,14 @@ function isLocationStatusWorking() {
     createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
     return;
   }
-  // if(!locationPermission.checkNetworkProvider()) {
-  //   try {
-  //     AndroidInterface.showLocationModeDialog();
-  //   }
-  //   catch(e){
-  //     createAndroidDialog('Location Mode', 'Growthfile Requires High Accuracy Location Mode to Work.')
-  //   }
-  //   return;
-  // }
-  if (!AndroidInterface.isConnectionActive()) {
-    createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
-    return;
+  try {
+    if (!AndroidInterface.isConnectionActive()) {
+      createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
+      return;
+    }
+  }catch(e){
+    sendExceptionObject(e,'CATCH Type 7: AndroidInterface.isConnectionActive  at isLocationStatusWorking',[])
+    return true;
   }
   return true
 }
@@ -761,19 +741,15 @@ function sendRequest(location, requestGenerator) {
         cellTowerInfo = AndroidInterface.getCellularData();
       } catch (e) {
         cellTowerInfo = e.message;
+        sendExceptionObject(e,'CATCH Type 4: AndroidInterface.getCullarData at sendRequest',[])
       }
 
       var body = {
-
         deviceInfo: native.getInfo(),
         storedLocation: record.location,
         cellTower: cellTowerInfo
-
       };
-      handleError({
-        message: 'No location found in indexedDB',
-        body: body
-      })
+      handleError({message:'No Locations Found in indexedDB',body:JSON.stringify(body)})
     });
   }
 }
@@ -897,6 +873,7 @@ function updateApp(data) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;
       appUpdateDialog('' + message, title);
+      sendExceptionObject(e,'CATCH Type 8: AndroidInterface.updateApp at updateApp',[JSON.stringify(data.msg)])
     }
     return;
   }
@@ -969,9 +946,7 @@ function androidStopRefreshing() {
     try {
       AndroidInterface.stopRefreshing(true);
     } catch (e) {
-      handleError({
-        message: `${e.message} from androidStopRefreshing`
-      })
+      sendExceptionObject(e,'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing',[true])
     }
   }
 }
@@ -1009,7 +984,6 @@ function runRead(value) {
     }
     return;
   }
-
   requestCreator('Null', value);
 }
 
@@ -1017,4 +991,16 @@ function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
+}
+
+function sendExceptionObject(exception,message,param){
+  handleError({
+    message:`${message}`,
+    body : JSON.stringify({
+      message:exception.message,
+      name:exception.name,
+      stack:JSON.stringify(exception.stack),
+      paramSent:param
+    })
+  })
 }

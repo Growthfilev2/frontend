@@ -1,7 +1,6 @@
 importScripts('external/js/moment.min.js');
 const apiUrl = 'https://api2.growthfile.com/api/'
 
-
 let deviceInfo;
 let currentDevice;
 // get Device time
@@ -350,7 +349,7 @@ function create(body, user) {
 }
 
 function removeFromOffice(offices, user) {
-  console.log(offices)
+
   removeActivity(offices, user).then(function (response) {
     return removeFromListAndChildren(response)
   }).then(function (response) {

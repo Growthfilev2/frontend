@@ -477,7 +477,6 @@ function createHeaderContent(db, id) {
       var primarySpan = document.createElement('div');
       primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
       primarySpan.textContent = record.activityName;
-
       var secondarySpan = document.createElement('span');
       secondarySpan.className = 'mdc-list-item__secondary-text';
       secondarySpan.textContent = 'Click here to see details';
@@ -1203,7 +1202,6 @@ function createTempRecord(office, template, data) {
                 if (document.querySelector('#enable-gps')) {
                   document.querySelector('#enable-gps').remove();
                 }
-               
                 updateCreateActivity(bareBonesRecord)
               }
             }).catch(function (error) {
@@ -1408,10 +1406,11 @@ function updateCreateContainer(recordCopy, db, showSendButton) {
 
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
-
   activityName.style.fontSize = '18px'
   activityName.style.paddingLeft = '10px'
   activityName.style.marginTop = '6px'
+  activityName.className = 'mdc-list-item__text'
+  activityName.style.width = `${document.documentElement.clientWidth -100}px`
 
   leftHeaderContent.appendChild(backSpan);
   leftHeaderContent.appendChild(activityName);
@@ -1489,7 +1488,7 @@ function updateCreateActivity(record, showSendButton) {
   } else {
     history.pushState(['updateCreateActivity', record], null, null)
   }
-  //open indexedDB
+
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1895,9 +1894,7 @@ function createScheduleTable(data) {
     document.getElementById('schedule--group').style.display = 'none'
     // return document.createElement('span')
   }
-
-
-
+  
   let count = 0;
   data.schedule.forEach(function (schedule) {
     count++
@@ -1933,7 +1930,13 @@ function createScheduleTable(data) {
     stDiv.className = 'mdc-text-field start--time' + count
 
     const startTimeInput = document.createElement('input')
-    startTimeInput.value = moment(schedule.startTime || new Date()).format('HH:mm')
+    if(schedule.startTime) {
+      startTimeInput.value = moment(schedule.startTime).format('HH:mm')
+    }
+    else {
+      startTimeInput.value = moment("24", "HH:mm").format('HH:mm') 
+    }
+    
     startTimeInput.type = 'time'
     startTimeInput.className = 'time--input'
     startTimeInput.disabled = !data.canEdit
@@ -1950,7 +1953,7 @@ function createScheduleTable(data) {
     edDiv.className = 'mdc-text-field end--date' + count
 
     const endDateInput = document.createElement('input')
-    endDateInput.value = moment(schedule.endTime || new Date()).format('YYYY-MM-DD')
+    endDateInput.value = moment(schedule.endTime || moment().add(1, 'days')).format('YYYY-MM-DD')
     endDateInput.type = 'date'
     endDateInput.disabled = !data.canEdit
     endDateInput.className = 'mdc-text-field__input'
@@ -1964,7 +1967,13 @@ function createScheduleTable(data) {
 
 
     const endTimeInput = document.createElement('input')
-    endTimeInput.value = moment(schedule.endTime || new Date()).format('HH:mm')
+    if(schedule.endTime){
+      endTimeInput.value = moment(schedule.endTime || new Date()).format('HH:mm')
+    }
+    else {
+      endTimeInput.value = moment("24", "HH:mm").format('HH:mm')
+
+    }
     endTimeInput.type = 'time'
     endTimeInput.disabled = !data.canEdit
     endTimeInput.className = 'mdc-text-field__input'
@@ -1988,6 +1997,7 @@ function createScheduleTable(data) {
     document.getElementById('schedule--group').appendChild(ul)
   })
 }
+
 
 function createAttachmentContainer(data) {
 
@@ -2445,9 +2455,7 @@ function readCameraFile() {
     try {
       AndroidInterface.startCamera()
     } catch (e) {
-      handleError({
-        message: `${e.message} from startCamera`
-      });
+     sendExceptionObject(e,'CATCH Type 11: AndroidInterface.startCamera at readCameraFile',[]);
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
@@ -2645,29 +2653,40 @@ function insertInputsIntoActivity(record, send) {
     st = getInputText('.start--time' + i).value
     ed = getInputText('.end--date' + i).value
     et = getInputText('.end--time' + i).value
+    if(!concatDateWithTime(sd,st) && !concatDateWithTime(ed,et)) {
+      record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
+      record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
+    
+    }
+    else {
 
-
-    if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
-      snacks('Please Select A Start Date and End Date')
+    
+    if(sd && !st) {
+      snacks('Please Select a Start Time')
+      return;
+    }
+    if(st && !sd) {
+      snacks('Please Select a Start Date')
       return
     }
-
-    if (sd === "") {
-      snacks('Please Select a Start Date')
+    if(concatDateWithTime(sd,st) && !ed) {
+      snacks('Please Select a End Date')
       return;
     }
-    if (ed === "") {
-      snacks('Please Select an End Date')
+    if(concatDateWithTime(sd,st) && !et) {
+      snacks('Please Select a End Time')
       return;
     }
 
-
+   
     if (concatDateWithTime(ed, et) < concatDateWithTime(sd, st)) {
       snacks('The End Date and Time should be greater or equal to the start time')
       return;
     }
     record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
     record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
+  }
+    
   }
 
   if (record.template === 'check-in') {
@@ -2875,8 +2894,14 @@ function createTimeInput(value, canEdit, attr) {
   if (!canEdit) {
     const simeplText = document.createElement('span')
     simeplText.className = 'data--value-list'
-    attr.type === 'date' ? simeplText.textContent = moment(value).calendar() : simeplText.textContent = value
-
+    if(attr.type === 'date') {
+      if(value) {
+        simeplText.textContent = moment(value).calendar()
+      }
+      else {
+        simeplText.textContent = ''
+      }
+    }
     return simeplText
   }
 
@@ -2887,12 +2912,14 @@ function createTimeInput(value, canEdit, attr) {
   input.type = attr.type
   input.style.borderBottom = 'none'
 
-  attr.type === 'date' ? input.value = moment(value).format('YYYY-MM-DD') : input.value = value
+  attr.type === 'date' ? input.value = moment(value).format('DD-MM-YYYY') : input.value = value
+  
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'
-    input.value = value || moment(new Date()).format('HH:mm')
-  }
+    input.value = value || moment("24", "HH:mm").format('HH:mm')
+  };
+
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'
 
@@ -2962,7 +2989,6 @@ function toggleActionables(id) {
       }
       const actions = document.querySelectorAll('.mdc-fab')
       if (!record.editable) return
-
       if (document.querySelector('.loader')) {
         document.querySelector('.loader').remove()
         if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
@@ -2972,7 +2998,6 @@ function toggleActionables(id) {
       if (document.querySelector('.progress--update')) {
         document.querySelector('.progress--update').remove()
       }
-
     }
   }
 }

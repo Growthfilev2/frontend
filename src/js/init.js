@@ -39,9 +39,8 @@ let native = function () {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          handleError({
-            message: `${e.message} from AndroidInterface.getDeviceId`
-          })
+          sendExceptionObject(e,`Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`,[]);
+         
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -87,22 +86,17 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-
-
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
     try {
       AndroidInterface.showDialog(title, message);
     } catch (e) {
-      handleError({
-        message: `${e.message} from showDialog during device Incompatibility check`
-      })
+      sendExceptionObject(e,'Catch Type 1: AndroidInterface.showDialog at window.onload',[title,message])
       appDialog(message);
     }
     return
   }
-
 
   firebase.initializeApp({
     apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
@@ -371,7 +365,7 @@ function startApp(start) {
       userSignedOut()
       return
     }
-
+    
     if(!native.getInfo()) {
       redirect()
       return;
@@ -404,6 +398,7 @@ function startApp(start) {
             webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
            
           } catch (e) {
+            sendExceptionObject(e,'Catch Type 2: webkit.messageHandlers.startLocationService',['start fetchin location'])
             getInstantLocation = true
             handleError({
               message: e.message
