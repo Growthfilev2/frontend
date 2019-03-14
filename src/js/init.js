@@ -382,7 +382,7 @@ function startApp(start) {
         db = req.result;
         db.onerror = function () {
           handleError({
-            message: `${db.error.message} from createIDBStore on upgradeneeded`
+            message: `${db.error.message} from startApp on upgradeneeded`
           })
           return;
         }
@@ -400,9 +400,7 @@ function startApp(start) {
           } catch (e) {
             sendExceptionObject(e,'Catch Type 2: webkit.messageHandlers.startLocationService',['start fetchin location'])
             getInstantLocation = true
-            handleError({
-              message: e.message
-            })
+            
           }
         }
         else {
@@ -428,9 +426,9 @@ function startApp(start) {
         })
       }
       req.onerror = function () {
-        console.log(req.error);
+       
         handleError({
-          message: `${req.error.message} from createIDBStore`
+          message: `${req.error.message} from startApp`
         })
       }
     }

@@ -60,9 +60,7 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm, searchTerm + '\uffff')
     const ul = document.getElementById('data-list--container')
-
-
-
+    
     objectStore.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {

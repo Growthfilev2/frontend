@@ -180,8 +180,8 @@ function fetchServerTime(body, user) {
           resolve({
             ts: response.timestamp,
             user: user,
-
           })
+          
         }).catch(sendApiFailToMainThread)
       }
       tx.onerror = function(){
