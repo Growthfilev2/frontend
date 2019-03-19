@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -938,7 +938,7 @@ function successResponse(read, param) {
       activityObjectStore.put(activity)
       updateMap(activity, param);
       updateCalendar(activity, param);
-      putAssignessInStore(activity.assignees, param);
+      // putAssignessInStore(activity.assignees, param);
       putAttachment(activity, param);
 
       if (activity.hidden === 0) {
