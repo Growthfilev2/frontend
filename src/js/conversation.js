@@ -530,8 +530,7 @@ function reinitCount(db, id) {
 
 function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
-  const usersInRecord = data.record.assignees
-
+  const assignees = data.record.assignees
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -556,10 +555,23 @@ function fillUsersInSelector(data) {
       if (data.attachment.present) {
         count++
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
-      } else if (usersInRecord.indexOf(cursor.value.mobile) == -1) {
-        count++
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+      } else{
+        assignees.forEach(function(assignee){
+          if(typeof assignee === 'string') {
+            if(assignee !== cursor.value.mobile) {
+              count++
+               ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+            }
+          }
+          else {
+            if(assignee.mobile !== cursor.value.mobile) {
+              count++
+              ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+            }
+          }
+        })
       }
+     
       cursor.continue()
     }
 
