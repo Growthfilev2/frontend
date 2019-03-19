@@ -72,8 +72,9 @@ function createProfileHeader() {
 
 function createProfilePanel(db) {
   return new Promise(function (resolve) {
-    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
-
+    
+  
+  getUserRecord(db,firebase.auth().currentUser.phoneNumber).then(function(userRecord){
       var profileView = document.createElement('div');
       profileView.id = 'profile-view--container';
       profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
@@ -107,7 +108,7 @@ function createProfilePanel(db) {
 
       const dataObject = document.createElement('object');
       dataObject.type = 'image/jpeg';
-      dataObject.data = uri || './img/empty-user-big.jpg';
+      dataObject.data = userRecord.photoURL || './img/empty-user-big.jpg';
       dataObject.id = 'user-profile--image';
 
       var profileImg = document.createElement('img');
