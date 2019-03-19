@@ -350,12 +350,11 @@ function getUserRecord(db, data) {
   return new Promise(function (resolve, reject) {
     const usersObjectStore = db.transaction('users').objectStore('users');
     let number;
-      if(typeof data === 'string'){
-        number = data
-      }
-      else {
-        number = data.phoneNumber;
-      }
+    if (typeof data === 'string') {
+      number = data
+    } else {
+      number = data.phoneNumber;
+    }
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       if (!record) return resolve({
@@ -530,7 +529,7 @@ function reinitCount(db, id) {
 
 function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
-  const assignees = data.record.assignees
+  const recordAssignees = data.record.assignees
 
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -541,37 +540,38 @@ function fillUsersInSelector(data) {
     const btn = document.getElementById('selector-submit-send')
     btn.textContent = 'Add New Number';
     btn.dataset.type = 'add-number'
-
     let count = 0;
+    let alreadyPresent = {}
+
+    recordAssignees.forEach(function(assignee){
+      if(typeof assignee === 'string') {
+        alreadyPresent[assignee] = true;
+      }
+      else {
+        alreadyPresent[assignee.phoneNumber] = true
+      }
+    })
+
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      if(cursor.value.mobile === firebase.auth().currentUser.phoneNumber) {
+      if (cursor.value.mobile === firebase.auth().currentUser.phoneNumber) {
         cursor.continue();
         return;
       }
-      
+
+     
       const userRecord = cursor.value
-      if (data.attachment.present) {
+      if(data.attachment.present) {
         count++
         ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
-      } else{
-        assignees.forEach(function(assignee){
-          if(typeof assignee === 'string') {
-            if(assignee !== cursor.value.mobile) {
-              count++
-               ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
-            }
-          }
-          else {
-            if(assignee.mobile !== cursor.value.mobile) {
-              count++
-              ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
-            }
-          }
-        })
       }
-     
+      else {
+        if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
+          count++
+          ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+        }
+      }
       cursor.continue()
     }
 
@@ -1188,7 +1188,7 @@ function createTempRecord(office, template, data) {
 
       const bareBonesVenueArray = []
       if (template === 'check-in') {
-        
+
         getRootRecord().then(function (record) {
           const bareBonesVenue = {}
           bareBonesVenue.venueDescriptor = selectedCombo.venue[0]
@@ -1905,7 +1905,7 @@ function createScheduleTable(data) {
     document.getElementById('schedule--group').style.display = 'none'
     // return document.createElement('span')
   }
-  
+
   let count = 0;
   data.schedule.forEach(function (schedule) {
     count++
@@ -1941,13 +1941,12 @@ function createScheduleTable(data) {
     stDiv.className = 'mdc-text-field start--time' + count
 
     const startTimeInput = document.createElement('input')
-    if(schedule.startTime) {
+    if (schedule.startTime) {
       startTimeInput.value = moment(schedule.startTime).format('HH:mm')
+    } else {
+      startTimeInput.value = moment("24", "HH:mm").format('HH:mm')
     }
-    else {
-      startTimeInput.value = moment("24", "HH:mm").format('HH:mm') 
-    }
-    
+
     startTimeInput.type = 'time'
     startTimeInput.className = 'time--input'
     startTimeInput.disabled = !data.canEdit
@@ -1978,10 +1977,9 @@ function createScheduleTable(data) {
 
 
     const endTimeInput = document.createElement('input')
-    if(schedule.endTime){
+    if (schedule.endTime) {
       endTimeInput.value = moment(schedule.endTime || new Date()).format('HH:mm')
-    }
-    else {
+    } else {
       endTimeInput.value = moment("24", "HH:mm").format('HH:mm')
 
     }
@@ -2466,7 +2464,7 @@ function readCameraFile() {
     try {
       AndroidInterface.startCamera()
     } catch (e) {
-     sendExceptionObject(e,'CATCH Type 11: AndroidInterface.startCamera at readCameraFile',[]);
+      sendExceptionObject(e, 'CATCH Type 11: AndroidInterface.startCamera at readCameraFile', []);
     }
   } else {
     webkit.messageHandlers.takeImageForAttachment.postMessage("convert image to base 64")
@@ -2664,40 +2662,39 @@ function insertInputsIntoActivity(record, send) {
     st = getInputText('.start--time' + i).value
     ed = getInputText('.end--date' + i).value
     et = getInputText('.end--time' + i).value
-    if(!concatDateWithTime(sd,st) && !concatDateWithTime(ed,et)) {
+    if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
       record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
       record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
-    
-    }
-    else {
 
-    
-    if(sd && !st) {
-      snacks('Please Select a Start Time')
-      return;
-    }
-    if(st && !sd) {
-      snacks('Please Select a Start Date')
-      return
-    }
-    if(concatDateWithTime(sd,st) && !ed) {
-      snacks('Please Select a End Date')
-      return;
-    }
-    if(concatDateWithTime(sd,st) && !et) {
-      snacks('Please Select a End Time')
-      return;
+    } else {
+
+
+      if (sd && !st) {
+        snacks('Please Select a Start Time')
+        return;
+      }
+      if (st && !sd) {
+        snacks('Please Select a Start Date')
+        return
+      }
+      if (concatDateWithTime(sd, st) && !ed) {
+        snacks('Please Select a End Date')
+        return;
+      }
+      if (concatDateWithTime(sd, st) && !et) {
+        snacks('Please Select a End Time')
+        return;
+      }
+
+
+      if (concatDateWithTime(ed, et) < concatDateWithTime(sd, st)) {
+        snacks('The End Date and Time should be greater or equal to the start time')
+        return;
+      }
+      record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
+      record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
     }
 
-   
-    if (concatDateWithTime(ed, et) < concatDateWithTime(sd, st)) {
-      snacks('The End Date and Time should be greater or equal to the start time')
-      return;
-    }
-    record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
-    record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
-  }
-    
   }
 
   if (record.template === 'check-in') {
@@ -2720,9 +2717,8 @@ function insertInputsIntoActivity(record, send) {
         longitude: ''
       }
     }
-  }
-   else {
-  
+  } else {
+
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
         latitude: record.venue[i].geopoint['_latitude'] || "",
@@ -2905,11 +2901,10 @@ function createTimeInput(value, canEdit, attr) {
   if (!canEdit) {
     const simeplText = document.createElement('span')
     simeplText.className = 'data--value-list'
-    if(attr.type === 'date') {
-      if(value) {
+    if (attr.type === 'date') {
+      if (value) {
         simeplText.textContent = moment(value).calendar()
-      }
-      else {
+      } else {
         simeplText.textContent = ''
       }
     }
@@ -2924,7 +2919,7 @@ function createTimeInput(value, canEdit, attr) {
   input.style.borderBottom = 'none'
 
   attr.type === 'date' ? input.value = moment(value).format('DD-MM-YYYY') : input.value = value
-  
+
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
     input.style.width = '100%'

@@ -60,8 +60,16 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm, searchTerm + '\uffff')
     const ul = document.getElementById('data-list--container')
-
-
+    const assignees = data.record.assignees
+    const alreadyPresent = {}
+    assignees.forEach(function(assignee){
+        if(typeof assignee === 'string'){
+            alreadyPresent[assignee] = true
+        }
+        else {
+            alreadyPresent[assignee.phoneNumber] = true
+        }
+    })
 
     objectStore.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
@@ -92,15 +100,16 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
             })
             return
         }
-
-
-        
-        if (data.attachment.present) {
-            frag.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
-        } else if (data.record.assignees.indexOf(cursor.value.mobile) == -1) {
-            frag.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
+       
+        if(data.attachment.present) {
+            frag.appendChild(createSimpleAssigneeLi(userRecord, true, false))
         }
-
+        else {
+            if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
+                frag.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+            }
+        }
+       
         cursor.continue()
 
     }
