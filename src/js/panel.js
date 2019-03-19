@@ -392,6 +392,7 @@ function activityListUI(data, secondLine) {
   }
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
   const dataObject = document.createElement('object');
+  
   dataObject.data = data.creator.photo || './img/empty-user.jpg';
   dataObject.type = 'image/jpeg';
   dataObject.className = 'mdc-list-item__graphic material-icons'
@@ -608,8 +609,8 @@ function creatListHeader(headerName) {
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
-    getImageFromNumber(db, firebase.auth().currentUser.phoneNumber).then(function (uri) {
-
+    
+    getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
       const parentIconDiv = document.createElement('div')
       parentIconDiv.className = 'profile--icon-header'
 
@@ -619,7 +620,7 @@ function creatListHeader(headerName) {
       const object = document.createElement('object');
       object.className = 'list-photo-header';
       object.type = 'image/jpeg';
-      object.data = uri || './img/empty-user.jpg';
+      object.data = userRecord.photoURL || './img/empty-user.jpg';
 
       const icon = document.createElement('img');
       icon.src = './img/empty-user.jpg';

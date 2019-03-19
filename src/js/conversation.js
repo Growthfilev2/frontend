@@ -467,10 +467,11 @@ function createHeaderContent(db, id) {
 
   activityObjectStore.get(id).onsuccess = function (event) {
 
-    const record = event.target.result
-    getImageFromNumber(db, record.creator).then(function (uri) {
+    const record = event.target.result;
+
+    getUserRecord(db, record.creator).then(function (userRecord) {
       const dataObject = document.createElement('object');
-      dataObject.data = uri || './img/empty-user.jpg';
+      dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
       dataObject.className = 'header--icon-creator';
       dataObject.type = 'image/jpeg';
 
@@ -526,27 +527,6 @@ function reinitCount(db, id) {
   }
   transaction.oncomplete = function () {}
 }
-
-function getImageFromNumber(db, data) {
-  return new Promise(function (resolve) {
-    const userObjStore = db.transaction('users').objectStore('users')
-    let number;
-    if(typeof data === 'string') {
-      number = data
-    }
-    else {
-      number = data.phoneNumber
-    }
-    
-    userObjStore.get(number).onsuccess = function (event) {
-      const record = event.target.result
-      resolve(record ? record.photoURL : './img/empty-user.jpg')
-    }
-  })
-}
-
-
-
 
 function fillUsersInSelector(data) {
   const ul = document.getElementById('data-list--container')
