@@ -551,25 +551,20 @@ function fillUsersInSelector(data) {
         alreadyPresent[assignee.phoneNumber] = true
       }
     })
+    alreadyPresent[firebase.auth().currentUser.phoneNumber] = true
 
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      if (cursor.value.mobile === firebase.auth().currentUser.phoneNumber) {
-        cursor.continue();
-        return;
-      }
-
-     
-      const userRecord = cursor.value
+      
       if(data.attachment.present) {
         count++
-        ul.appendChild(createSimpleAssigneeLi(userRecord, true, false))
+        ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
       }
       else {
         if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
           count++
-          ul.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+          ul.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
         }
       }
       cursor.continue()
@@ -620,7 +615,7 @@ function fillUsersInSelector(data) {
             }, {
               primary: selectedPeople
             }).then(function (activity) {
-
+              document.body.classList.remove('mdc-dialog-scroll-lock');
               updateCreateActivity(activity, true)
             }).catch(handleError)
           })

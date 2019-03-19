@@ -70,7 +70,7 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
             alreadyPresent[assignee.phoneNumber] = true
         }
     })
-
+    alreadyPresent[firebase.auth().currentUser.phoneNumber] = true
     objectStore.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) {
@@ -102,11 +102,11 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
         }
        
         if(data.attachment.present) {
-            frag.appendChild(createSimpleAssigneeLi(userRecord, true, false))
+            frag.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
         }
         else {
             if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-                frag.appendChild(createSimpleAssigneeLi(userRecord, true, true))
+                frag.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
             }
         }
        
