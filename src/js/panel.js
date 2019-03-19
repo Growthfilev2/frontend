@@ -98,10 +98,12 @@ function updateEl(activities, rootRecord) {
 
         if (!rootRecord.location) {
           getActivityDataForList(activityStore, record).then(function (li) {
+            if(!ul) return
             ul.insertBefore(li, ul.childNodes[0])
           })
         } else {
           getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
+            if(!ul) return
             ul.insertBefore(li, ul.childNodes[0])
           })
         }

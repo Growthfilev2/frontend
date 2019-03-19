@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 
@@ -714,29 +714,6 @@ function putAttachment(activity, param) {
   }
 }
 
-// if an assignee's phone number is present inside the users object store then
-// return else  call the users api to get the profile info for the number
-function putAssignessInStore(assigneeArray, param) {
-  const req = indexedDB.open(param.user.uid);
-  req.onsuccess = function () {
-    const db = req.result;
-    const tx = db.transaction(['users'], 'readwrite');
-    const store = tx.objectStore('users');
-    assigneeArray.forEach(function (assignee) {
-      store.get(assignee).onsuccess = function (event) {
-        if (!event.target.result) {
-          store.put({
-            mobile: assignee,
-            displayName: '',
-            photoURL: ''
-          })
-        }
-      }
-    })
-  }
-}
-
-
 function removeUserFromAssigneeInActivity(db, userActivityId) {
   if (!userActivityId.length) return;
   const activityTx = db.transaction(['activity'], 'readwrite')
@@ -814,33 +791,49 @@ function deleteByIndex(store, activitiesToRemove) {
 }
 
 
+
 function updateSubscription(templates, param) {
   return new Promise(function(resolve,reject){
 
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['subscriptions'], 'readwrite')
-      const subscriptionObjectStore = tx.objectStore('subscriptions');
-      const templateIndex = subscriptionObjectStore.index('officeTemplate');
+      const deletTx = db.transaction(['subscriptions'], 'readwrite')
+      const deleteSubStore = deletTx.objectStore('subscriptions');
+      const deletIndex = deleteSubStore.index('officeTemplate');
       templates.forEach(function (subscription) {
-        templateIndex.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
+        deletIndex.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
           const cursor = event.target.result;
           if (cursor) {
             const deleteReq = cursor.delete();
             deleteReq.onsuccess = function () {
-              subscriptionObjectStore.put(subscription);
+             console.log('deleted')
             }
-            cursor.continue()
-          } else {
-            subscriptionObjectStore.put(subscription);
-          }
+          } 
         }
       })
-      tx.oncomplete = function () {
-          resolve(true)
+
+      deletTx.oncomplete = function () {
+         const addReq = indexedDB.open(param.user.uid)
+         addReq.onsuccess = function(){
+           const addDb = addReq.result;
+           const addTx = addDb.transaction(['subscriptions'],'readwrite');
+           const addStore = addTx.objectStore('subscriptions')
+         
+           templates.forEach(function(subscription){
+
+             addStore.put(subscription)
+             console.log('added')
+           })
+           addTx.oncomplete = function(){
+             resolve(true)
+           }
+           addTx.onerror = function(){
+             reject(addTx.error.message)
+           }
+         }
       }
-      tx.onerror = function(){
+      deletTx.onerror = function(){
         reject({message:tx.error.message})
       }
     }
@@ -854,28 +847,43 @@ function createListStore(activity, counter, param) {
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const userTx = db.transaction(['users']);
+
+      const userTx = db.transaction(['users'],'readwrite');
 
       const usersStore = userTx.objectStore('users');
+      console.log(activity)
 
-      const requiredData = {
+      let requiredData = {
         'activityId': activity.activityId,
         'secondLine': '',
         'count': counter[activity.activityId],
         'timestamp': activity.timestamp,
-        'creator': {
-          number: activity.creator,
-          photo: ''
-        },
         'activityName': activity.activityName,
         'status': activity.status
       }
-      usersStore.get(activity.creator).onsuccess = function (event) {
-        const record = event.target.result;
-        if (record) {
-          requiredData.creator.photo = record.photoURL
+
+      if(typeof activity.creator === "string") {
+        requiredData.creator = {
+          number:activity.creator,
+          photo:''
         }
       }
+      if(typeof activity.creator === 'object'){
+        requiredData.creator = {
+          number: activity.creator.phoneNumber,
+          photo: activity.creator.photoURL,
+        }
+      }
+
+      activity.assignees.forEach(function(assigneeData){
+        const record = {
+          mobile:assigneeData.phoneNumber,
+          displayName:assigneeData.displayName,
+          photoURL:assigneeData.photoURL
+        }
+        usersStore.put(record)
+      })
+
       userTx.oncomplete = function () {
         const listTX = db.transaction(['list'], 'readwrite');
         const listStore = listTX.objectStore('list');
@@ -983,95 +991,7 @@ function successResponse(read, param) {
     });
 
 
-
-    createUsersApiUrl(db, param.user).then(updateUserObjectStore).catch(function (error) {
-      instant(JSON.stringify(error), param.user);
-    })
   }
-}
-
-
-function createUsersApiUrl(db, user) {
-  return new Promise(function (resolve) {
-    const tx = db.transaction(['users'], 'readwrite');
-    const usersObjectStore = tx.objectStore('users');
-
-    let assigneeString = ''
-
-    const defaultReadUserString = `${apiUrl}services/users?q=`
-    let fullReadUserString = ''
-
-    usersObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-
-      if (!cursor) return
-
-      const assigneeFormat = `%2B${cursor.value.mobile}&q=`
-      assigneeString += `${assigneeFormat.replace('+', '')}`
-      cursor.continue()
-    }
-    tx.oncomplete = function () {
-      fullReadUserString = `${defaultReadUserString}${assigneeString}`
-
-      resolve({
-        db: db,
-        url: fullReadUserString,
-        user: user
-      })
-
-    }
-    tx.onerror = function () {
-      reject({
-        message: tx.error.message
-      })
-    }
-  })
-}
-
-// query users object store to get all non updated users and call users-api to fetch their details and update the corresponding record
-
-function updateUserObjectStore(requestPayload) {
-  const req = {
-    method: 'GET',
-    url: requestPayload.url,
-    data: null,
-    token: requestPayload.user.token
-  }
-  http(req)
-    .then(function (userProfile) {
-      if (!Object.keys(userProfile).length) {
-        return;
-      }
-
-      const tx = requestPayload.db.transaction(['users'], 'readwrite');
-      const usersObjectStore = tx.objectStore('users');
-      usersObjectStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return;
-        if (!userProfile.hasOwnProperty(cursor.primaryKey)) return
-
-        if (userProfile[cursor.primaryKey].displayName && userProfile[cursor.primaryKey].photoURL) {
-          const record = cursor.value
-          record.photoURL = userProfile[cursor.primaryKey].photoURL
-          record.displayName = userProfile[cursor.primaryKey].displayName
-          usersObjectStore.put(record)
-        }
-
-        cursor.continue()
-      }
-      tx.oncomplete = function () {
-
-      }
-      tx.onerror = function () {
-        instant(JSON.stringify({
-          message: `${tx.error.message}`
-        }), param.user)
-      }
-
-    }).catch(function (error) {
-      console.log(error);
-    })
-
 }
 
 function updateRoot(param, read) {

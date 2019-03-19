@@ -346,10 +346,16 @@ function createComment(db, addendum, currentUser) {
   })
 }
 
-function getUserRecord(db, number) {
+function getUserRecord(db, data) {
   return new Promise(function (resolve, reject) {
     const usersObjectStore = db.transaction('users').objectStore('users');
-
+    let number;
+      if(typeof data === 'string'){
+        number = data
+      }
+      else {
+        number = data.phoneNumber;
+      }
     usersObjectStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       if (!record) return resolve({
@@ -521,9 +527,17 @@ function reinitCount(db, id) {
   transaction.oncomplete = function () {}
 }
 
-function getImageFromNumber(db, number) {
+function getImageFromNumber(db, data) {
   return new Promise(function (resolve) {
     const userObjStore = db.transaction('users').objectStore('users')
+    let number;
+    if(typeof data === 'string') {
+      number = data
+    }
+    else {
+      number = data.phoneNumber
+    }
+    
     userObjStore.get(number).onsuccess = function (event) {
       const record = event.target.result
       resolve(record ? record.photoURL : './img/empty-user.jpg')
@@ -553,6 +567,11 @@ function fillUsersInSelector(data) {
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
+      if(cursor.value.mobile === firebase.auth().currentUser.phoneNumber) {
+        cursor.continue();
+        return;
+      }
+      
       const userRecord = cursor.value
       if (data.attachment.present) {
         count++
