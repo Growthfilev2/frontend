@@ -954,10 +954,11 @@ function androidStopRefreshing() {
 function onErrorMessage(error) {
   const body = {
     'line-number': error.lineno,
-    'file': error.filename
+    'file': error.filename,
+    'column-number':error.colno
   }
   handleError({
-    message: `${error.message} from apiHandler.js at ${error.lineno}`,
+    message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
     body: body
   });
 }
