@@ -75,6 +75,7 @@ function createProfilePanel(db) {
     
   
   getUserRecord(db,firebase.auth().currentUser.phoneNumber).then(function(userRecord){
+    
       var profileView = document.createElement('div');
       profileView.id = 'profile-view--container';
       profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';

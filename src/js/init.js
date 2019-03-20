@@ -409,13 +409,13 @@ function startApp(start) {
         else {
           getInstantLocation = true
         }
-      
+        
+        listView();
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
         })
-        listView();
         runAppChecks()
 
         if(!getInstantLocation) return;

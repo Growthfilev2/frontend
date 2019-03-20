@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
@@ -116,7 +116,8 @@ function fetchServerTime(body, user) {
   req.onsuccess = function(){
     const db = req.result;
     const tx = db.transaction(['root'],'readwrite');
-    const rootStore = tx.objectStore('root')
+    const rootStore = tx.objectStore('root');
+    
     rootStore.get(user.uid).onsuccess = function(event){
       const record = event.target.result;
       if(!record) return;
@@ -130,6 +131,7 @@ function fetchServerTime(body, user) {
           rootStore.put(record);
       }
     }
+    
     tx.oncomplete = function(){ 
 
         const httpReq = {
@@ -185,7 +187,7 @@ function fetchServerTime(body, user) {
         }).catch(sendApiFailToMainThread)
       }
       tx.onerror = function(){
-        
+        console.log(tx.error)
       }
     }
   })
