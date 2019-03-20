@@ -955,7 +955,7 @@ function onErrorMessage(error) {
   const body = {
     'line-number': error.lineno,
     'file': error.filename,
-    'column-number':error.colno
+    'col-number':error.colno
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
