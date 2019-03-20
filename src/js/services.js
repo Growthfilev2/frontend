@@ -687,9 +687,8 @@ function requestCreator(requestType, requestBody) {
       })
     });
   } else {
-
+    
     getRootRecord().then(function (rootRecord) {
-
       let location = rootRecord.location;
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
@@ -950,12 +949,14 @@ function androidStopRefreshing() {
 }
 
 function onErrorMessage(error) {
+  
   const body = {
     'line-number': error.lineno,
-    'file': error.filename
+    'file': error.filename,
+    'col-number':error.colno
   }
   handleError({
-    message: `${error.message} from apiHandler.js at ${error.lineno}`,
+    message: `${error.message} from apiHandler.js at ${error.lineno} and ${error.colno}`,
     body: body
   });
 }

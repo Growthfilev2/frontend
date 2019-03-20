@@ -112,7 +112,7 @@ function fetchServerTime(body, user) {
   const parsedDeviceInfo = JSON.parse(currentDevice);
   let url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
   const req = indexedDB.open(user.uid);
- 
+    
   req.onsuccess = function(){
     const db = req.result;
     const tx = db.transaction(['root'],'readwrite');
@@ -229,7 +229,7 @@ function fetchRecord(uid, id) {
 
 
 function putServerTime(data) {
-
+  console.log(data)
   return new Promise(function (resolve, reject) {
     const request = indexedDB.open(data.user.uid);
     request.onerror = function () {
@@ -248,7 +248,6 @@ function putServerTime(data) {
       rootTx.oncomplete = function () {
         resolve({
           user: data.user,
-         
         })
       }
     }
@@ -945,7 +944,7 @@ function successResponse(read, param) {
       activityObjectStore.put(activity)
       updateMap(activity, param);
       updateCalendar(activity, param);
-      // putAssignessInStore(activity.assignees, param);
+    
       putAttachment(activity, param);
 
       if (activity.hidden === 0) {
@@ -1079,6 +1078,7 @@ function setUniqueOffice(offices, param) {
 
 
 function updateIDB(param) {
+  
   const req = indexedDB.open(param.user.uid)
   req.onsuccess = function () {
     const db = req.result
