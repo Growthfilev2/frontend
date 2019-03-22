@@ -581,7 +581,7 @@ function runAppChecks() {
                 selectorUI({
                   record: '',
                   store: 'subscriptions',
-                  suggestCheckIn: checkIn
+                  suggestCheckIn: true
                 })
               });
               initCheckInDialog.listen('MDCDialog:cancel',function(){

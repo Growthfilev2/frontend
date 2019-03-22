@@ -58,7 +58,7 @@ function dialog(attr){
   if(attr.showAccept) {
     var accept = document.createElement('button');
     accept.type = 'button';
-    accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
     accept.textContent = 'Okay';
     accept.style.backgroundColor = '#3498db';
     footer.appendChild(accept)
@@ -91,53 +91,9 @@ function successDialog() {
   scroll_namespace.size = 20;
   localStorage.removeItem('clickedActivity');
   listView();
-
 }
 
-function appDialog(messageString, showButton) {
-  if (!document.getElementById('enable-gps')) {
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
-    aside.id = 'enable-gps';
 
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
-
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body mock-main-body';
-    section.textContent = messageString;
-
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer mock-footer';
-
-    var ok = document.createElement('button');
-    ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    ok.textContent = 'Ok';
-    if (!showButton) {
-      ok.classList.add('hidden');
-    }
-
-    ok.style.backgroundColor = '#3498db';
-
-    footer.appendChild(ok);
-
-    surface.appendChild(section);
-    surface.appendChild(footer);
-    aside.appendChild(surface);
-    document.body.appendChild(aside);
-  }
-
-  var gpsDialog = new mdc.dialog.MDCDialog(document.querySelector('#enable-gps'));
-
-  gpsDialog.listen('MDCDialog:accept', function () {
-    listView();
-  });
-
-  gpsDialog.show();
-}
 function appUpdateDialog(messageString, title) {
   if (!document.getElementById('app-update-dialog')) {
     var aside = document.createElement('aside');
@@ -640,35 +596,42 @@ function sendCurrentViewNameToAndroid(viewName) {
   }
 }
 
-var locationPermission = function () {
-  return {
-    checkLocationPermission: function checkLocationPermission() {
-      try {
-        return AndroidInterface.isLocationPermissionGranted();
-      } catch (e) {
-        sendExceptionObject(e,'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission',[]);
-        return true;
-      }
-    }
-  };
-}();
+
+
 
 function createAndroidDialog(title, body) {
   try {
     AndroidInterface.showDialog(title, body);
   } catch (e) {
     sendExceptionObject(e,'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ',[title,body])
-    appDialog(body, true);
+    const span = document.createElement('span')
+    span.className = 'mdc-typography--headline6'
+    span.textContent = body;
+    document.getElementById('dialog-container').innerHTML = dialog({id:'alert-dialog',showCancel:false,showAccept:true,content:span,headerText:title}).outerHTML
+    const dialogEl = document.querySelector('#alert-dialog');
+    var appDialog = new mdc.dialog.MDCDialog(dialogEl);
+
+    appDialog.listen('MDCDialog:accept', function () {
+      dialogEl.remove();
+      listView();
+    });
+    appDialog.show();
   }
 }
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
-
-  if (!locationPermission.checkLocationPermission()) {
-    createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
-    return;
+  
+  try {
+    if(!AndroidInterface.isLocationPermissionGranted()) {
+      createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
+      return;
+    }
+  } catch (e) {
+    sendExceptionObject(e,'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission',[]);
+    return true;
   }
+
   try {
     if (!AndroidInterface.isConnectionActive()) {
       createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
