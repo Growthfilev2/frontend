@@ -302,9 +302,7 @@ function share(body, user) {
     }
     http(req)
       .then(function (success) {
-        instantUpdateDB(body, 'share', user).then(function () {
           resolve(true)
-        })
       })
       .catch(sendApiFailToMainThread)
   })
