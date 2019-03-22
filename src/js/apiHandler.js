@@ -1041,11 +1041,11 @@ function getUniqueOfficeCount(param) {
           message: tx.error.message
         })
       }
-      req.onerror = function () {
-        reject({
-          message: req.error.message
-        })
-      }
+    }
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
     }
   })
 }
