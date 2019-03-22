@@ -32,7 +32,14 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return false;
+        return JSON.stringify({
+          baseOs: this.getName(),
+          deviceBrand: '',
+          deviceModel: '',
+          appVersion: 7,
+          osVersion: '',
+          id: '',
+        })
       }
 
       if (this.getName() === 'Android') {
@@ -230,7 +237,7 @@ function layoutGrid() {
   layout.appendChild(layoutInner)
   layout.appendChild(dialogContainer)
   document.body.innerHTML = layout.outerHTML
-  imageViewDialog();
+ 
 
 }
 
@@ -269,46 +276,7 @@ function createHeader(id) {
 }
 
 
-function imageViewDialog() {
 
-  const aside = document.createElement('aside')
-
-  aside.id = 'viewImage--dialog-component'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
-
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__content'
-
-  const image = document.createElement("img")
-  image.src = ''
-  image.style.width = '100%'
-  section.appendChild(image)
-
-  dialogSurface.appendChild(section)
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-
-  var cancel = document.createElement('button');
-  cancel.type = 'button';
-  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-  cancel.textContent = 'cancel';
-  cancel.style.backgroundColor = '#3498db';
-
-  footer.appendChild(cancel)
-  dialogSurface.appendChild(footer)
-  aside.appendChild(dialogSurface)
-
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-
-  document.body.appendChild(aside)
-}
 
 function startApp(start) {
 
@@ -588,11 +556,12 @@ function runAppChecks() {
               if (!record.offices) return;
               if (!record.offices.length) return;
               const offices = record.offices
-              const message = document.createElement('span')
-              message.textContent = 'Check-in ?'
+              const message = document.createElement('h1')
+              message.className = 'mdc-typography--headline6 mt-10'
+              message.textContent = 'Do you want to create a Check-In ?'
               document.getElementById('dialog-container').innerHTML = dialog({
                 id: 'suggest-checkIn-dialog',
-                headerText: 'Reminder',
+                headerText: 'Check-In Reminder',
                 content: message,
                 showCancel: true,
                 showAccept: true
@@ -600,7 +569,7 @@ function runAppChecks() {
               const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
               var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
               initCheckInDialog.show();
-              dialog.listen('MDCDialog:accept', function (evt) {
+              initCheckInDialog.listen('MDCDialog:accept', function (evt) {
                 if (!isLocationStatusWorking()) return;
 
                 if (offices.length === 1) {
@@ -615,7 +584,7 @@ function runAppChecks() {
                   suggestCheckIn: checkIn
                 })
               });
-              dialog.listen('MDCDialog:cancel',function(){
+              initCheckInDialog.listen('MDCDialog:cancel',function(){
                 checkInDialog.remove();
               })
               listView();

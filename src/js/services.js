@@ -26,13 +26,14 @@ function dialog(attr){
   
   const dialogSurface = document.createElement('div')
   dialogSurface.className = 'mdc-dialog__surface'
-  if(attr.header) {
+  if(attr.headerText) {
     const header = document.createElement('header');
     header.className = 'mdc-dialog__header'
     const headerText = document.createElement('h2')
     headerText.className = 'mdc-dialog__header__title'
     headerText.textContent = attr.headerText
     header.appendChild(headerText)
+    dialogSurface.appendChild(header);
   }
 
   const section = document.createElement('section')
