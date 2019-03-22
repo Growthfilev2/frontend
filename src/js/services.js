@@ -1,3 +1,9 @@
+//TODO : App Dialog 
+//TODO : Email dialog
+//TODO: app update dialog
+//TODO : office removel dialog
+
+
 var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
@@ -486,12 +492,6 @@ function html5Geolocation() {
   })
 }
 
-function isDialogOpened(id) {
-  var currentDialog = document.querySelector(id);
-  if (!currentDialog) return false;
-  var isOpen = currentDialog.classList.contains('mdc-dialog--open');
-  return isOpen;
-}
 
 
 function updateLocationInRoot(finalLocation) {
@@ -714,7 +714,7 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    appDialog('Fetching Location Please wait.', true);
+    // appDialog('Fetching Location Please wait.', true);
     getRootRecord().then(function (record) {
       var cellTowerInfo = void 0;
       try {
@@ -852,7 +852,13 @@ function updateApp(data) {
     } catch (e) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;
-      appUpdateDialog('' + message, title);
+      const span = document.createElement('span')
+      span.className = 'mdc-typography--headline6'
+      span.textContent = message
+      document.getElementById('dialog-container').innerHTML = dialog({id:'app-update-dialog',showCancel:false,showAccept:false,headerText:title,content:span}).outerHTML
+      const dialogEl = document.getElementById('app-update-dialog')
+      const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
+      updateDialog.show()
       sendExceptionObject(e,'CATCH Type 8: AndroidInterface.updateApp at updateApp',[JSON.stringify(data.msg)])
     }
     return;
