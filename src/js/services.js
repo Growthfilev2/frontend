@@ -1,5 +1,4 @@
-//TODO : App Dialog 
-//TODO : Email dialog
+
 //TODO : office removel dialog
 
 
@@ -98,41 +97,6 @@ function successDialog() {
   listView();
 }
 
-
-function appUpdateDialog(messageString, title) {
-  if (!document.getElementById('app-update-dialog')) {
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
-    aside.id = 'app-update-dialog';
-
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
-
-    var header = document.createElement('header');
-    header.className = 'mdc-dialog__header';
-    var headerText = document.createElement('h2');
-    headerText.className = 'mdc-dialog__header__title';
-    headerText.textContent = title;
-    header.appendChild(headerText);
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body';
-    section.textContent = messageString;
-
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer';
-
-    surface.appendChild(header);
-    surface.appendChild(section);
-    surface.appendChild(footer);
-    aside.appendChild(surface);
-    document.body.appendChild(aside);
-  }
-
-  var appUpdate = new mdc.dialog.MDCDialog(document.querySelector('#app-update-dialog'));
-  appUpdate.show();
-}
 
 function officeRemovalDialog(text){
   if (!document.getElementById('office-removal-dialog')) {
