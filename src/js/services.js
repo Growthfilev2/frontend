@@ -83,14 +83,14 @@ function successDialog() {
   var successDialog = new mdc.dialog.MDCDialog(dialogEl);
   successDialog.show();
  
-  // setTimeout(function () {
-  //   dialogEl.remove();
-  //   document.body.classList.remove('mdc-dialog-scroll-lock');
-  // }, 1000);
-  // scroll_namespace.count = 0;
-  // scroll_namespace.size = 20;
-  // localStorage.removeItem('clickedActivity');
-  // listView();
+  setTimeout(function () {
+    dialogEl.remove();
+    document.body.classList.remove('mdc-dialog-scroll-lock');
+  }, 1000);
+  scroll_namespace.count = 0;
+  scroll_namespace.size = 20;
+  localStorage.removeItem('clickedActivity');
+  listView();
 
 }
 
