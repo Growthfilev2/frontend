@@ -413,7 +413,6 @@ function startApp(start) {
           from: '',
           registerToken: native.getFCMToken()
         })
-
         runAppChecks()
 
         if(!getInstantLocation) return;

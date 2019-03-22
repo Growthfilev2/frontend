@@ -689,9 +689,8 @@ function requestCreator(requestType, requestBody) {
       })
     });
   } else {
-
+    
     getRootRecord().then(function (rootRecord) {
-
       let location = rootRecord.location;
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
@@ -952,6 +951,7 @@ function androidStopRefreshing() {
 }
 
 function onErrorMessage(error) {
+ 
   const body = {
     'line-number': error.lineno,
     'file': error.filename,

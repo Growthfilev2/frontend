@@ -112,11 +112,12 @@ function fetchServerTime(body, user) {
   const parsedDeviceInfo = JSON.parse(currentDevice);
   let url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
   const req = indexedDB.open(user.uid);
- 
+    
   req.onsuccess = function(){
     const db = req.result;
     const tx = db.transaction(['root'],'readwrite');
-    const rootStore = tx.objectStore('root')
+    const rootStore = tx.objectStore('root');
+    
     rootStore.get(user.uid).onsuccess = function(event){
       const record = event.target.result;
       if(!record) return;
@@ -130,6 +131,7 @@ function fetchServerTime(body, user) {
           rootStore.put(record);
       }
     }
+    
     tx.oncomplete = function(){ 
 
         const httpReq = {
@@ -185,7 +187,7 @@ function fetchServerTime(body, user) {
         }).catch(sendApiFailToMainThread)
       }
       tx.onerror = function(){
-        
+        console.log(tx.error)
       }
     }
   })
@@ -227,7 +229,7 @@ function fetchRecord(uid, id) {
 
 
 function putServerTime(data) {
-
+  console.log(data)
   return new Promise(function (resolve, reject) {
     const request = indexedDB.open(data.user.uid);
     request.onerror = function () {
@@ -246,7 +248,6 @@ function putServerTime(data) {
       rootTx.oncomplete = function () {
         resolve({
           user: data.user,
-         
         })
       }
     }
@@ -942,7 +943,7 @@ function successResponse(read, param) {
       activityObjectStore.put(activity)
       updateMap(activity, param);
       updateCalendar(activity, param);
-      // putAssignessInStore(activity.assignees, param);
+    
       putAttachment(activity, param);
 
       if (activity.hidden === 0) {
@@ -1037,11 +1038,11 @@ function getUniqueOfficeCount(param) {
           message: tx.error.message
         })
       }
-      req.onerror = function () {
-        reject({
-          message: req.error.message
-        })
-      }
+    }
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
     }
   })
 }
@@ -1076,6 +1077,7 @@ function setUniqueOffice(offices, param) {
 
 
 function updateIDB(param) {
+  
   const req = indexedDB.open(param.user.uid)
   req.onsuccess = function () {
     const db = req.result
