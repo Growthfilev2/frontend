@@ -98,40 +98,6 @@ function successDialog() {
 }
 
 
-function officeRemovalDialog(text){
-  if (!document.getElementById('office-removal-dialog')) {
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
-    aside.id = 'office-removal-dialog';
-    aside.style.backgroundColor = 'rgba(0,0,0,0.47)'
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
-
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body mock-main-body';
-    section.textContent = text;
-
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer mock-footer';
-
-    var ok = document.createElement('button');
-    ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    ok.textContent = 'Ok';
-    ok.style.width = '100%';
-    ok.style.backgroundColor = '#3498db';
-
-    footer.appendChild(ok);
-
-    surface.appendChild(section);
-    surface.appendChild(footer);
-    aside.appendChild(surface);
-    document.body.appendChild(aside);
-  }
-}
-
 function progressBar() {
   var div = document.createElement('div');
   div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update';
@@ -833,14 +799,18 @@ function urlFromBase64Image(data) {
   }
 }
 function officeRemovalSuccess(data){
-  officeRemovalDialog('You have been removed from ' + data.msg.join(' & '));
-  const dialog = new mdc.dialog.MDCDialog(document.getElementById('office-removal-dialog'));
-  dialog.show()
-  dialog.listen('MDCDialog:accept', function () { 
-  document.getElementById('office-removal-dialog').remove();
-  document.getElementById('app-current-panel').innerHTML = '';
-   listView();
+  const span = document.createElement('span')
+  span.className = 'mdc-typography--headline6'
+  span.textContent = 'You have been removed from ' + data.msg.join(' & ');
+  document.getElementById('dialog-container').innerHTML = dialog({id:'office-removal-dialog',showAccept:true,showCancel:false,headerText:'Reminder',content:span}).outerHTML
+  const dialogEl = document.getElementById('office-removal-dialog')
+  const officeRemovedDialog = new mdc.dialog.MDCDialog(dialogEl);
+  officeRemovedDialog.listen('MDCDialog:accept', function () { 
+    dialogEl.remove();
+    document.getElementById('app-current-panel').innerHTML = '';
+    listView();
   })
+  officeRemovedDialog.show()
   return
 }
 
