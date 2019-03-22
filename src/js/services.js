@@ -1,6 +1,5 @@
 //TODO : App Dialog 
 //TODO : Email dialog
-//TODO: app update dialog
 //TODO : office removel dialog
 
 
@@ -764,69 +763,23 @@ function messageReceiver(response) {
 
 function emailVerify() {
 
-  if (firebase.auth().currentUser.email) {
-    emailUpdateSuccess()
-    return;
-  }
+  if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
-  showEMailUpdateDailog();
-  const dialog = new mdc.dialog.MDCDialog(document.getElementById('email-update-dialog'));
-  dialog.show()
-  dialog.listen('MDCDialog:accept', function () {
-    document.getElementById('email-update-dialog').remove()
+  const span = document.createElement('h1')
+  span.className = 'mdc-typography--headline6'
+  span.textContent = 'Please Set your Email-id'
+
+  document.getElementById('dialog-container').innerHTML = dialog({id:'email-update-dialog',showCancel:true,showAccept:true,headerText:'Reminder',content:span}).outerHTML
+  const dialogEl = document.getElementById('email-update-dialog')
+  const emailDialog = new mdc.dialog.MDCDialog(dialogEl);
+  emailDialog.listen('MDCDialog:accept', function () {
+    dialogEl.remove()
     profileView(true);
   })
-  dialog.listen('MDCDialog:cancel', function () {
-    document.getElementById('email-update-dialog').remove()
+  emailDialog.listen('MDCDialog:cancel', function () {
+    dialogEl.remove()
   })
-}
-
-function showEMailUpdateDailog() {
-
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open';
-  aside.id = 'email-update-dialog';
-  aside.style.backgroundColor = 'rgba(0,0,0,0.47)'
-  var surface = document.createElement('div');
-  surface.className = 'mdc-dialog__surface';
-  surface.style.width = '90%';
-  surface.style.height = 'auto';
-
-  const header = document.createElement('header');
-  header.className = 'mdc-dialog__header'
-  const headerText = document.createElement('h2')
-  headerText.className = 'mdc-dialog__header__title'
-  headerText.textContent = 'Reminder'
-  header.appendChild(headerText)
-  var section = document.createElement('section');
-  section.className = 'mdc-dialog__body';
-  section.textContent = 'Please Set your Email-id';
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-
-  var ok = document.createElement('button');
-  ok.type = 'button';
-  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-  ok.textContent = 'Okay';
-  ok.style.backgroundColor = '#3498db';
-
-  var canel = document.createElement('button');
-  canel.type = 'button';
-  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-  canel.textContent = 'Cancel';
-  canel.style.backgroundColor = '#3498db';
-
-  footer.appendChild(canel);
-  footer.appendChild(ok);
-
-  surface.appendChild(header)
-  surface.appendChild(section);
-  surface.appendChild(footer);
-  aside.appendChild(surface);
-
-  document.body.appendChild(aside);
-
+  emailDialog.show()
 }
 
 function initFirstLoad(response) {
