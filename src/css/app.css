@@ -1897,3 +1897,7 @@ input[type="datetime-local"] {
   margin-left: 29%;
   margin-right: 0;
 }
+
+.dialog-custom-backdrop {
+ background-color:  rgba(0,0,0,0.47)
+}

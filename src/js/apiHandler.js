@@ -1,4 +1,4 @@
-importScripts('external/js/moment.min.js');
+importScripts('../external/js/moment.min.js');
 const apiUrl = 'https://api2.growthfile.com/api/'
 
 let deviceInfo;

@@ -571,17 +571,14 @@ function createActivityIconDom() {
   parent.innerHTML = fab.outerHTML;
 
   document.querySelector('.create-activity').addEventListener('click', function (evt) {
-    callSubscriptionSelectorUI()
+    selectorUI({
+      record: '',
+      store: 'subscriptions',
+      suggestCheckIn: false
+    })
   })
 }
 
-function callSubscriptionSelectorUI(checkIn) {
-  selectorUI({
-    record: '',
-    store: 'subscriptions',
-    suggestCheckIn: checkIn
-  })
-}
 
 function listPanel() {
   if (document.getElementById('activity-list-main')) return

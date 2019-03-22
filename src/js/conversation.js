@@ -2469,9 +2469,18 @@ function readCameraFile() {
 function openImage(imageSrc) {
 
   if (!imageSrc) return;
-
-  document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
-  const imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));
+  const largeImage = document.createElement('img')
+  largeImage.src = imageSrc;
+  largeImage.style.width ='100%';
+  document.getElementById('dialog-container').innerHTML = dialog({id:'viewImage--dialog-component',headerText:'',content:largeImage,showCancel:true,showAccept:true}).outerHTML
+  const dialogEl = document.querySelector('#viewImage--dialog-component')
+  const imageDialog = new mdc.dialog.MDCDialog.attachTo(dialogEl);
+  imageDialog.listen('MDCDialog:accept',function(evt){
+    dialogEl.remove()
+  })
+  imageDialog.listen('MDCDialog:cancel',function(evt){
+    dialogEl.remove()
+  })
   imageDialog.show()
 }
 

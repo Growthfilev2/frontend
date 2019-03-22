@@ -39,8 +39,8 @@ let native = function () {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          sendExceptionObject(e,`Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`,[]);
-         
+          sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
+
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -92,7 +92,7 @@ window.addEventListener('load', function () {
     try {
       AndroidInterface.showDialog(title, message);
     } catch (e) {
-      sendExceptionObject(e,'Catch Type 1: AndroidInterface.showDialog at window.onload',[title,message])
+      sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
       appDialog(message);
     }
     return
@@ -108,7 +108,7 @@ window.addEventListener('load', function () {
   })
 
 
-  
+
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -220,67 +220,21 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-  const alertDom = document.createElement('div')
-  alertDom.id = 'alert--box'
+  const dialogContainer = document.createElement('div')
+  dialogContainer.id = 'dialog-container'
   headerDiv.appendChild(createHeader('app-main-header'))
+
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
-  layout.appendChild(alertDom)
+  layout.appendChild(dialogContainer)
   document.body.innerHTML = layout.outerHTML
   imageViewDialog();
 
 }
 
-function createCheckInDialog() {
 
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open hidden';
-  aside.id = 'suggest-checkIn-dialog';
-  aside.style.backgroundColor = 'rgba(0,0,0,0.47)';
-
-  var surface = document.createElement('div');
-  surface.className = 'mdc-dialog__surface';
-  surface.style.width = '90%';
-  surface.style.height = 'auto';
-
-  const header = document.createElement('header');
-  header.className = 'mdc-dialog__header'
-  const headerText = document.createElement('h2')
-  headerText.className = 'mdc-dialog__header__title'
-  headerText.textContent = 'Reminder'
-  header.appendChild(headerText)
-  var section = document.createElement('section');
-  section.className = 'mdc-dialog__body';
-  section.textContent = 'Check-in ?';
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-
-  var ok = document.createElement('button');
-  ok.type = 'button';
-  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-  ok.textContent = 'Okay';
-  ok.style.backgroundColor = '#3498db';
-
-  var canel = document.createElement('button');
-  canel.type = 'button';
-  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-  canel.textContent = 'Cancel';
-  canel.style.backgroundColor = '#3498db';
-
-  footer.appendChild(canel);
-  footer.appendChild(ok);
-
-  surface.appendChild(header)
-  surface.appendChild(section);
-  surface.appendChild(footer);
-  aside.appendChild(surface);
-
-  return aside
-
-}
 
 function createHeader(id) {
 
@@ -359,14 +313,14 @@ function imageViewDialog() {
 function startApp(start) {
 
   firebase.auth().onAuthStateChanged(function (auth) {
-   
+
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
-    
-    if(!native.getInfo()) {
+
+    if (!native.getInfo()) {
       redirect()
       return;
     }
@@ -396,17 +350,16 @@ function startApp(start) {
         if (native.getName() !== 'Android') {
           try {
             webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-           
+
           } catch (e) {
-            sendExceptionObject(e,'Catch Type 2: webkit.messageHandlers.startLocationService',['start fetchin location'])
+            sendExceptionObject(e, 'Catch Type 2: webkit.messageHandlers.startLocationService', ['start fetchin location'])
             getInstantLocation = true
-            
+
           }
-        }
-        else {
+        } else {
           getInstantLocation = true
         }
-      
+
         listView();
         requestCreator('now', {
           device: native.getInfo(),
@@ -415,17 +368,17 @@ function startApp(start) {
         })
         runAppChecks()
 
-        if(!getInstantLocation) return;
-        manageLocation().then(function(location){
-          if(location.latitude && location.longitude) {
-            updateLocationInRoot(location);            
+        if (!getInstantLocation) return;
+        manageLocation().then(function (location) {
+          if (location.latitude && location.longitude) {
+            updateLocationInRoot(location);
           }
-        }).catch(function(error){
+        }).catch(function (error) {
           handleError(error)
         })
       }
       req.onerror = function () {
-       
+
         handleError({
           message: `${req.error.message} from startApp`
         })
@@ -631,22 +584,50 @@ function runAppChecks() {
     isEmployeeOnLeave().then(function (onLeave) {
       if (onLeave) return
       if (e.detail) {
-      if (history.state[0] === 'listView') {
-        try {
-          document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-          getRootRecord().then(function(record){
-            if(record) {
-              if(record.offices) {
-                showSuggestCheckInDialog(record.offices);
-                listView();
-              }
-            }
-          })
-        }catch(e){
-          console.log(e)
+        if (history.state[0] === 'listView') {
+          try {
+            getRootRecord().then(function (record) {
+              if (!record) return;
+              if (!record.offices) return;
+              if (!record.offices.length) return;
+              const offices = record.offices
+              const message = document.createElement('span')
+              message.textContent = 'Check-in ?'
+              document.getElementById('dialog-container').innerHTML = dialog({
+                id: 'suggest-checkIn-dialog',
+                headerText: 'Reminder',
+                content: message,
+                showCancel: true,
+                showAccept: true
+              }).outerHTML
+              const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
+              var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
+              initCheckInDialog.show();
+              dialog.listen('MDCDialog:accept', function (evt) {
+                if (!isLocationStatusWorking()) return;
+
+                if (offices.length === 1) {
+                  createTempRecord(offices[0], 'check-in', {
+                    suggestCheckIn: true
+                  });
+                  return;
+                }
+                selectorUI({
+                  record: '',
+                  store: 'subscriptions',
+                  suggestCheckIn: checkIn
+                })
+              });
+              dialog.listen('MDCDialog:cancel',function(){
+                checkInDialog.remove();
+              })
+              listView();
+            })
+          } catch (e) {
+            console.log(e)
+          }
         }
       }
-    }
     }).catch(handleError)
   }, true);
 }

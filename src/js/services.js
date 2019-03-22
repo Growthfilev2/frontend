@@ -1,4 +1,4 @@
-var apiHandler = new Worker('apiHandler.js');
+var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -15,6 +15,56 @@ function loader(nameClass) {
   var div = document.createElement('div');
   div.className = 'loader ' + nameClass;
   return div;
+}
+
+function dialog(attr){
+  const aside = document.createElement('aside')
+
+  aside.id = attr.id
+  aside.className = 'mdc-dialog dialog-custom-backdrop'
+  aside.role = 'alertdialog'
+  
+  const dialogSurface = document.createElement('div')
+  dialogSurface.className = 'mdc-dialog__surface'
+  if(attr.header) {
+    const header = document.createElement('header');
+    header.className = 'mdc-dialog__header'
+    const headerText = document.createElement('h2')
+    headerText.className = 'mdc-dialog__header__title'
+    headerText.textContent = attr.headerText
+    header.appendChild(headerText)
+  }
+
+  const section = document.createElement('section')
+  section.className = 'mdc-dialog__content'
+
+  section.appendChild(attr.content)
+  dialogSurface.appendChild(section)
+
+
+  var footer = document.createElement('footer');
+  footer.className = 'mdc-dialog__footer';
+  if(attr.showCancel) {
+
+    var cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    cancel.textContent = 'cancel';
+    cancel.style.backgroundColor = '#3498db';
+    footer.appendChild(cancel)
+  }
+  if(attr.showAccept) {
+    var accept = document.createElement('button');
+    accept.type = 'button';
+    accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
+    accept.textContent = 'Okay';
+    accept.style.backgroundColor = '#3498db';
+    footer.appendChild(accept)
+  }
+
+  dialogSurface.appendChild(footer)
+  aside.appendChild(dialogSurface)
+  return aside;
 }
 
 function successDialog() {
@@ -97,39 +147,6 @@ function appDialog(messageString, showButton) {
 
   gpsDialog.show();
 }
-function officeRemovalDialog(text){
-  if (!document.getElementById('office-removal-dialog')) {
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
-    aside.id = 'office-removal-dialog';
-    aside.style.backgroundColor = 'rgba(0,0,0,0.47)'
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
-
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body mock-main-body';
-    section.textContent = text;
-
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer mock-footer';
-
-    var ok = document.createElement('button');
-    ok.type = 'button';
-    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    ok.textContent = 'Ok';
-    ok.style.width = '100%';
-    ok.style.backgroundColor = '#3498db';
-
-    footer.appendChild(ok);
-
-    surface.appendChild(section);
-    surface.appendChild(footer);
-    aside.appendChild(surface);
-    document.body.appendChild(aside);
-  }
-}
 function appUpdateDialog(messageString, title) {
   if (!document.getElementById('app-update-dialog')) {
     var aside = document.createElement('aside');
@@ -163,6 +180,40 @@ function appUpdateDialog(messageString, title) {
 
   var appUpdate = new mdc.dialog.MDCDialog(document.querySelector('#app-update-dialog'));
   appUpdate.show();
+}
+
+function officeRemovalDialog(text){
+  if (!document.getElementById('office-removal-dialog')) {
+    var aside = document.createElement('aside');
+    aside.className = 'mdc-dialog mdc-dialog--open';
+    aside.id = 'office-removal-dialog';
+    aside.style.backgroundColor = 'rgba(0,0,0,0.47)'
+    var surface = document.createElement('div');
+    surface.className = 'mdc-dialog__surface';
+    surface.style.width = '90%';
+    surface.style.height = 'auto';
+
+    var section = document.createElement('section');
+    section.className = 'mdc-dialog__body mock-main-body';
+    section.textContent = text;
+
+    var footer = document.createElement('footer');
+    footer.className = 'mdc-dialog__footer mock-footer';
+
+    var ok = document.createElement('button');
+    ok.type = 'button';
+    ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
+    ok.textContent = 'Ok';
+    ok.style.width = '100%';
+    ok.style.backgroundColor = '#3498db';
+
+    footer.appendChild(ok);
+
+    surface.appendChild(section);
+    surface.appendChild(footer);
+    aside.appendChild(surface);
+    document.body.appendChild(aside);
+  }
 }
 
 function progressBar() {
@@ -486,30 +537,6 @@ function html5Geolocation() {
       return;
     })
   })
-}
-
-function showSuggestCheckInDialog(offices) {
-  const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
-  if (!checkInDialog) return;
-  var dialog = new mdc.dialog.MDCDialog(checkInDialog);
-  if (!dialog) return;
-  if (document.getElementById('dialog--component')) return;
-  dialog['root_'].classList.remove('hidden');
-  dialog.show();
-  dialog.listen('MDCDialog:accept', function (evt) {
-    if (isLocationStatusWorking()) {
-      if (offices.length === 1) {
-        createTempRecord(offices[0], 'check-in', {
-          suggestCheckIn: true
-        });
-      } else {
-        callSubscriptionSelectorUI(true);
-      }
-    }
-  });
-  dialog.listen('MDCDialog:cancel', function (evt) {
-    app.isNewDay();
-  });
 }
 
 function isDialogOpened(id) {
