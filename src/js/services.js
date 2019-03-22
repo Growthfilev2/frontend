@@ -38,8 +38,9 @@ function dialog(attr){
 
   const section = document.createElement('section')
   section.className = 'mdc-dialog__content'
-
-  section.appendChild(attr.content)
+  if(attr.content) {
+    section.appendChild(attr.content)
+  }
   dialogSurface.appendChild(section)
 
 
@@ -69,39 +70,28 @@ function dialog(attr){
 }
 
 function successDialog() {
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open success--dialog';
-  aside.id = 'success--dialog';
-
-  var surface = document.createElement('div');
-  surface.className = 'mdc-dialog__surface round--surface';
-
-  var section = document.createElement('section');
-  section.className = 'mdc-dialog__body';
-
-  var div = document.createElement('div');
-  div.className = 'success--container';
+  
+  var content = document.createElement('div');
+  content.className = 'success--container';
 
   var icon = document.createElement('div');
   icon.className = 'success--check';
 
-  div.appendChild(icon);
-  section.appendChild(div);
-  surface.appendChild(section);
-  aside.appendChild(surface);
-  document.body.appendChild(aside);
-
-  var successDialog = new mdc.dialog.MDCDialog(document.querySelector('#success--dialog'));
+  content.appendChild(icon);
+  document.getElementById('dialog-container').innerHTML  = dialog({id:'success-dialog',headerText:'',showCancel:false,showAccept:false,content:content}).outerHTML
+  const dialogEl = document.querySelector('#success-dialog')
+  var successDialog = new mdc.dialog.MDCDialog(dialogEl);
   successDialog.show();
+ 
+  // setTimeout(function () {
+  //   dialogEl.remove();
+  //   document.body.classList.remove('mdc-dialog-scroll-lock');
+  // }, 1000);
+  // scroll_namespace.count = 0;
+  // scroll_namespace.size = 20;
+  // localStorage.removeItem('clickedActivity');
+  // listView();
 
-  setTimeout(function () {
-    document.getElementById('success--dialog').remove();
-    document.body.classList.remove('mdc-dialog-scroll-lock');
-  }, 1200);
-  scroll_namespace.count = 0;
-  scroll_namespace.size = 20;
-  localStorage.removeItem('clickedActivity');
-  listView();
 }
 
 function appDialog(messageString, showButton) {

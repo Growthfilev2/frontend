@@ -1246,8 +1246,7 @@ input[type="datetime-local"] {
   font-size: 30px;
 }
 
-
-.round--surface {
+#success--dialog .round--surface  {
   border-radius: 50%;
   width: 300px;
   height: 300px;
@@ -1258,7 +1257,7 @@ input[type="datetime-local"] {
   /* transition: 1s ease; */
 }
 
-.success--container {
+ .success--container {
   position: absolute;
   top: 25%;
   left: 27%;
