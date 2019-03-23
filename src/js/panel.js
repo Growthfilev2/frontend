@@ -252,25 +252,11 @@ function getActivityDataForList(activity, value, currentLocation) {
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
-      // const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineParent))
     }
   })
 }
 
-function setMarginForSecondLine(secondLine) {
-  const nodes = secondLine.childNodes
-  if (nodes.length > 1) {
-    if (nodes[0].innerHTML && nodes[1].innerHTML) {
-      secondLine.style.marginTop = '-42px'
-      return secondLine;
-    }
-    secondLine.style.marginTop = '-35px'
-    return secondLine
-  }
-  secondLine.style.marginTop = '-35px'
-  return secondLine
-}
 
 function generateTextIfActivityIsNotPending(status) {
   const textStatus = {
