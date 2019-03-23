@@ -226,7 +226,17 @@ function handleRequestBody(request) {
   }
 }
 
-function manageLocation() {
+function manageLocation(){
+ return new Promise(function(resolve,reject){
+   getLocation().then(function(location){
+    updateLocationInRoot(location)
+    resolve(location)
+  }).catch(function(error){
+    reject(error)
+  })
+ })
+}
+function getLocation() {
   return new Promise(function (resolve, reject) {
     const holder = {}
     if (native.getName() === 'Android') {
@@ -371,11 +381,8 @@ function handleGeoLocationApi(holder, htmlLocation) {
 }
 
 function iosLocationError(error) {
-  manageLocation().then(function (location) {
-    if (location.latitude && location.longitude) {
-      updateLocationInRoot(location)
-    }
-  })
+  manageLocation().then(console.log).catch(console.log);
+  handleError(error)
 }
 
 function html5Geolocation() {
@@ -620,7 +627,7 @@ function requestCreator(requestType, requestBody) {
         if (result.length == 2) {
           location = result[1];
           console.log(location)
-          updateLocationInRoot(location);
+
         }
         var geopoints = {
           'latitude': location.latitude,

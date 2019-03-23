@@ -176,7 +176,9 @@ function firebaseUiConfig(value) {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         if (value) {
-          document.querySelector('#updateEmailDialog').remove();
+          if(document.querySelector('#updateEmailDialog')) {
+            document.querySelector('#updateEmailDialog').remove();
+          }
           updateEmail(authResult.user, value);
           return false;
         }
@@ -342,11 +344,7 @@ function startApp(start) {
         runAppChecks()
 
         if (!getInstantLocation) return;
-        manageLocation().then(function (location) {
-          if (location.latitude && location.longitude) {
-            updateLocationInRoot(location);
-          }
-        }).catch(function (error) {
+        manageLocation().then(console.log).catch(function (error) {
           handleError(error)
         })
       }
@@ -542,11 +540,7 @@ function redirect() {
 
 
 function initLocation() {
-  manageLocation().then(function (location) {
-    if (location.latitude && location.longitude) {
-      updateLocationInRoot(location)
-    }
-  }).catch(function (error) {
+  manageLocation().then(console.log).catch(function (error) {
     handleError(error)
   });
 }

@@ -543,11 +543,10 @@ function fillUsersInSelector(data) {
     let count = 0;
     let alreadyPresent = {}
 
-    recordAssignees.forEach(function(assignee){
-      if(typeof assignee === 'string') {
+    recordAssignees.forEach(function (assignee) {
+      if (typeof assignee === 'string') {
         alreadyPresent[assignee] = true;
-      }
-      else {
+      } else {
         alreadyPresent[assignee.phoneNumber] = true
       }
     })
@@ -556,13 +555,12 @@ function fillUsersInSelector(data) {
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      
-      if(data.attachment.present) {
+
+      if (data.attachment.present) {
         count++
         ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
-      }
-      else {
-        if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
+      } else {
+        if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
           count++
           ul.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
         }
@@ -1195,41 +1193,43 @@ function createTempRecord(office, template, data) {
           }
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if (!record.location || isLocationOld) {
-            let message = 'Fetching Location Please wait. '
-            if (native.getName() === 'Android') {
-              message = message + ' Make Sure you have set Location Mode to High Accuracy'
-            }
-            const span = document.createElement('span')
-            span.className = 'mdc-typography--headline6'
-            span.textContent = message
-            document.getElementById('dialog-container').innerHTML  = dialog({id:'location-fetch-dialog',content:span}).outerHTML
-            const dialogEl = document.getElementById('location-fetch-dialog')
-            const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
-            fetchingLocationDialog.show();
+          if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
 
-            manageLocation().then(function (location) {
-              if (location.latitude && location.longitude) {
-                updateLocationInRoot(location)
-                dialogEl.remove();
-                updateCreateActivity(bareBonesRecord)
-              }
-            }).catch(function (error) {
-
-              let errorMessage = 'There was a problem in detecting your location'
-              if (native.getName() === 'Android') {
-                errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
-              }
-              dialogEl.querySelector('section span').textContent = errorMessage;
-           
-              setTimeout(function () {
-               dialogEl.remove();
-              }, 5000)
-              listView();
-              handleError(error)
-            })
-            return
+          let message = 'Fetching Location Please wait. '
+          if (native.getName() === 'Android') {
+            message = message + ' Make Sure you have set Location Mode to High Accuracy'
           }
+          const span = document.createElement('span')
+          span.className = 'mdc-typography--headline6'
+          span.textContent = message
+          document.getElementById('dialog-container').innerHTML = dialog({
+            id: 'location-fetch-dialog',
+            content: span
+          }).outerHTML
+          const dialogEl = document.getElementById('location-fetch-dialog')
+          const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
+          fetchingLocationDialog.show();
+
+          manageLocation().then(function (location) {
+
+            dialogEl.remove();
+            updateCreateActivity(bareBonesRecord)
+
+          }).catch(function (error) {
+
+            let errorMessage = 'There was a problem in detecting your location'
+            if (native.getName() === 'Android') {
+              errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
+            }
+            dialogEl.querySelector('section span').textContent = errorMessage;
+
+            setTimeout(function () {
+              dialogEl.remove();
+            }, 5000)
+            listView();
+            handleError(error)
+          })
+
           updateCreateActivity(bareBonesRecord)
         });
         return
@@ -1897,7 +1897,7 @@ function createScheduleTable(data) {
 
   if (!data.schedule.length) {
     document.getElementById('schedule--group').style.display = 'none'
-    // return document.createElement('span')
+
   }
 
   let count = 0;
@@ -2470,15 +2470,21 @@ function openImage(imageSrc) {
   if (!imageSrc) return;
   const largeImage = document.createElement('img')
   largeImage.src = imageSrc;
-  largeImage.style.width ='100%';
+  largeImage.style.width = '100%';
 
-  document.getElementById('dialog-container').innerHTML = dialog({id:'viewImage--dialog-component',headerText:'Photo',content:largeImage,showCancel:true,showAccept:true}).outerHTML
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'viewImage--dialog-component',
+    headerText: 'Photo',
+    content: largeImage,
+    showCancel: true,
+    showAccept: true
+  }).outerHTML
   const dialogEl = document.querySelector('#viewImage--dialog-component')
   const imageDialog = new mdc.dialog.MDCDialog.attachTo(dialogEl);
-  imageDialog.listen('MDCDialog:accept',function(evt){
+  imageDialog.listen('MDCDialog:accept', function (evt) {
     dialogEl.remove()
   })
-  imageDialog.listen('MDCDialog:cancel',function(evt){
+  imageDialog.listen('MDCDialog:cancel', function (evt) {
     dialogEl.remove()
   })
   imageDialog.show()
@@ -2513,22 +2519,28 @@ function createActivityCancellation(record) {
     }))
     document.querySelector('.update-create--activity').appendChild(StautsCont);
     if (!record.canEdit) return;
-  
+
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
       const span = document.createElement('span')
       span.className = 'mdc-typography--headline6'
       span.textContent = 'Are you sure you want to delete this activity ? '
-      document.getElementById('dialog-container').innerHTML = dialog({id:'cancel-alert',headerText:`${record.activityName} will be deleted`,showCancel:true,showAccept:true,content:span}).outerHTML
+      document.getElementById('dialog-container').innerHTML = dialog({
+        id: 'cancel-alert',
+        headerText: `${record.activityName} will be deleted`,
+        showCancel: true,
+        showAccept: true,
+        content: span
+      }).outerHTML
       const dialogEl = document.querySelector('#cancel-alert')
       var cancelDialog = new mdc.dialog.MDCDialog(dialogEl);
-      
+
       cancelDialog.lastFocusedTarget = evt.target;
       cancelDialog.show();
       cancelDialog.listen('MDCDialog:cancel', function () {
         dialogEl.remove()
       })
-      cancelDialog.listen('MDCDialog:accept',function(){
-        if(!isLocationStatusWorking()) return;
+      cancelDialog.listen('MDCDialog:accept', function () {
+        if (!isLocationStatusWorking()) return;
         document.querySelector('.delete-activity').style.display = 'none';
         document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
         requestCreator('statusChange', {
