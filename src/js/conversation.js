@@ -1195,16 +1195,19 @@ function createTempRecord(office, template, data) {
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
 
-          let message = 'Fetching Location Please wait. '
+          let message;
           if (native.getName() === 'Android') {
-            message = message + ' Make Sure you have set Location Mode to High Accuracy'
+            message = 'Make Sure you have set Location Mode to High Accuracy'
+          } else {
+            message = 'Please wait.'
           }
           const span = document.createElement('span')
           span.className = 'mdc-typography--body1'
           span.textContent = message
           document.getElementById('dialog-container').innerHTML = dialog({
             id: 'location-fetch-dialog',
-            content: span
+            content: span,
+            headerText: 'Fetching Location'
           }).outerHTML
           const dialogEl = document.getElementById('location-fetch-dialog')
           const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
@@ -1221,16 +1224,14 @@ function createTempRecord(office, template, data) {
             if (native.getName() === 'Android') {
               errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
             }
+            dialogEl.querySelector('.mdc-dialog__header__title').textContent = 'Failed To Get Current Location';
             dialogEl.querySelector('section span').textContent = errorMessage;
-
             setTimeout(function () {
               dialogEl.remove();
-            }, 5000)
+            }, 3000)
             listView();
             handleError(error)
           })
-
-          updateCreateActivity(bareBonesRecord)
         });
         return
       }
