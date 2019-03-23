@@ -258,16 +258,6 @@ function getActivityDataForList(activity, value, currentLocation) {
 }
 
 
-function generateTextIfActivityIsNotPending(status) {
-  const textStatus = {
-    'CONFIRMED': 'Done',
-    'CANCELLED': 'Cancelled'
-  }
-  return textStatus[status]
-}
-
-
-
 function generateLastestSchedule(schedules, createdTime) {
   const validSchedules = removeEmptyObjects(schedules, 'startTime', 'endTime');
   const length = validSchedules.length;
