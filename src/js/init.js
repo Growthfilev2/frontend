@@ -93,18 +93,8 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
-  const title = 'Device Incompatibility'
-  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-  if (!window.Worker && !window.indexedDB) {
-    try {
-      AndroidInterface.showDialog(title, message);
-    } catch (e) {
-      sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
-      appDialog(message);
-    }
-    return
-  }
-
+  layoutGrid()
+  
   firebase.initializeApp({
     apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
     authDomain: "growthfilev2-0.firebaseapp.com",
@@ -115,6 +105,24 @@ window.addEventListener('load', function () {
   })
 
 
+
+  const title = 'Device Incompatibility'
+  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
+  if (!window.Worker && !window.indexedDB) {
+    try {
+      AndroidInterface.showDialog(title, message);
+    } catch (e) {
+      const span = document.createElement('span')
+      span.textContent = message;
+      span.className = 'mdc-typography--headline6'
+
+      sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
+      document.getElementById('dialog-container').innerHTML = dialog({id:'device-incompatibility-dialog',headerText:title,content:span}).outerHTML
+      const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
+      incompatibilityDialog.show()
+    }
+    return
+  }
 
   moment.updateLocale('en', {
     calendar: {
@@ -153,7 +161,7 @@ window.addEventListener('load', function () {
     }
     window[event.state[0]](event.state[1], false)
   }
-  layoutGrid()
+  
   startApp(true)
 })
 

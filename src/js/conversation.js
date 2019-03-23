@@ -1200,31 +1200,30 @@ function createTempRecord(office, template, data) {
             if (native.getName() === 'Android') {
               message = message + ' Make Sure you have set Location Mode to High Accuracy'
             }
-            appDialog(message, false)
+            const span = document.createElement('span')
+            span.className = 'mdc-typography--headline6'
+            span.textContent = message
+            document.getElementById('dialog-container').innerHTML  = dialog({id:'location-fetch-dialog',content:span}).outerHTML
+            const dialogEl = document.getElementById('location-fetch-dialog')
+            const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
+            fetchingLocationDialog.show();
 
             manageLocation().then(function (location) {
               if (location.latitude && location.longitude) {
                 updateLocationInRoot(location)
-                if (document.querySelector('#enable-gps')) {
-                  document.querySelector('#enable-gps').remove();
-                }
+                dialogEl.remove();
                 updateCreateActivity(bareBonesRecord)
               }
             }).catch(function (error) {
-
-              if (document.querySelector('#enable-gps')) {
-                document.querySelector('#enable-gps').remove();
-              }
 
               let errorMessage = 'There was a problem in detecting your location'
               if (native.getName() === 'Android') {
                 errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
               }
-              appDialog(errorMessage, false)
+              dialogEl.querySelector('section span').textContent = errorMessage;
+           
               setTimeout(function () {
-                if (document.querySelector('#enable-gps')) {
-                  document.querySelector('#enable-gps').remove();
-                }
+               dialogEl.remove();
               }, 5000)
               listView();
               handleError(error)
