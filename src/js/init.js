@@ -94,7 +94,7 @@ let app = function () {
 
 window.addEventListener('load', function () {
   layoutGrid()
-  
+
   firebase.initializeApp({
     apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
     authDomain: "growthfilev2-0.firebaseapp.com",
@@ -103,8 +103,6 @@ window.addEventListener('load', function () {
     storageBucket: "growthfilev2-0.appspot.com",
     messagingSenderId: "1011478688238"
   })
-
-
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
@@ -117,7 +115,11 @@ window.addEventListener('load', function () {
       span.className = 'mdc-typography--headline6'
 
       sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
-      document.getElementById('dialog-container').innerHTML = dialog({id:'device-incompatibility-dialog',headerText:title,content:span}).outerHTML
+      document.getElementById('dialog-container').innerHTML = dialog({
+        id: 'device-incompatibility-dialog',
+        headerText: title,
+        content: span
+      }).outerHTML
       const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
       incompatibilityDialog.show()
     }
@@ -149,19 +151,16 @@ window.addEventListener('load', function () {
   window.onpopstate = function (event) {
 
     if (!event.state) return;
-    if (event.state[0] === 'listView') {
-      const originalCount = scroll_namespace.count;
-      if (originalCount) {
-        scroll_namespace.size = originalCount
-      }
-
-      scroll_namespace.count = 0;
-      window[event.state[0]]()
-      return;
+    if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
+    const originalCount = scroll_namespace.count;
+    if (originalCount) {
+      scroll_namespace.size = originalCount
     }
-    window[event.state[0]](event.state[1], false)
+
+    scroll_namespace.count = 0;
+    window[event.state[0]]()
   }
-  
+
   startApp(true)
 })
 
@@ -176,7 +175,7 @@ function firebaseUiConfig(value) {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         if (value) {
-          if(document.querySelector('#updateEmailDialog')) {
+          if (document.querySelector('#updateEmailDialog')) {
             document.querySelector('#updateEmailDialog').remove();
           }
           updateEmail(authResult.user, value);
@@ -247,7 +246,7 @@ function layoutGrid() {
   layout.appendChild(layoutInner)
   layout.appendChild(dialogContainer)
   document.body.innerHTML = layout.outerHTML
- 
+
 
 }
 
@@ -298,7 +297,7 @@ function startApp(start) {
       return
     }
 
-    
+
 
     if (!localStorage.getItem('error')) {
       localStorage.setItem('error', JSON.stringify({}));
@@ -586,7 +585,7 @@ function runAppChecks() {
                   suggestCheckIn: true
                 })
               });
-              initCheckInDialog.listen('MDCDialog:cancel',function(){
+              initCheckInDialog.listen('MDCDialog:cancel', function () {
                 checkInDialog.remove();
               })
               listView();
