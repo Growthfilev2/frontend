@@ -523,7 +523,7 @@ function getUrlFromPhoto(body, user) {
   }
 
   http(req).then(function (url) {
-    requestHandlerResponse('backblazeRequest', 200);
+    requestHandlerResponse('notification', 200);
   }).catch(sendApiFailToMainThread)
 }
 

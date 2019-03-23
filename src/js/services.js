@@ -226,16 +226,17 @@ function handleRequestBody(request) {
   }
 }
 
-function manageLocation(){
- return new Promise(function(resolve,reject){
-   getLocation().then(function(location){
-    updateLocationInRoot(location)
-    resolve(location)
-  }).catch(function(error){
-    reject(error)
+function manageLocation() {
+  return new Promise(function (resolve, reject) {
+    getLocation().then(function (location) {
+      updateLocationInRoot(location)
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    })
   })
- })
 }
+
 function getLocation() {
   return new Promise(function (resolve, reject) {
     const holder = {}
@@ -658,7 +659,7 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    
+
     const span = document.createElement('span')
     span.className = 'mdc-typography--headline6'
     span.textContent = 'There was a Problem in detecting your location. Please Try again later'
@@ -670,7 +671,7 @@ function sendRequest(location, requestGenerator) {
     const dialogEl = document.getElementById('location-fetch-dialog')
     const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
     fetchingLocationDialog.show();
-    
+
     getRootRecord().then(function (record) {
       var cellTowerInfo = void 0;
       try {
@@ -689,10 +690,10 @@ function sendRequest(location, requestGenerator) {
         message: 'No Locations Found in indexedDB',
         body: JSON.stringify(body)
       })
-      setTimeout(function(){
+      setTimeout(function () {
         dialogEl.remove();
         listView();
-      },5000)
+      }, 5000)
     });
   }
 }
@@ -717,7 +718,6 @@ var receiverCaller = {
   'notification': successDialog,
   'android-stop-refreshing': androidStopRefreshing,
   'apiFail': apiFail,
-  'backblazeRequest': urlFromBase64Image,
 };
 
 function messageReceiver(response) {
@@ -831,20 +831,6 @@ function apiFail(data) {
   snacks(data.msg.message);
 }
 
-function urlFromBase64Image(data) {
-
-  if (data.code === 200) {
-    if (history.state[0] === 'profileView') {
-      var selector = document.querySelector('#profile--image-container .profile--loader ');
-      if (selector) {
-        selector.remove();
-      }
-      document.getElementById('user-profile--image').src = firebase.auth().currentUser.photoURL;
-      return;
-    }
-  }
-}
-
 function officeRemovalSuccess(data) {
   const span = document.createElement('span')
   span.className = 'mdc-typography--headline6'
@@ -897,22 +883,20 @@ function getInputText(selector) {
 
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
+  if (!value) returnrequestCreator('Null', value);
 
-  if (value) {
-    const key = Object.keys(value)[0]
-    switch (key) {
-      case 'verifyEmail':
-        emailVerify();
-        break;
-      case 'read':
-        requestCreator('Null', value);
-        break;
-      default:
-        requestCreator('Null', value);
-    }
-    return;
+  const key = Object.keys(value)[0]
+  switch (key) {
+    case 'verifyEmail':
+      emailVerify();
+      break;
+    case 'read':
+      requestCreator('Null', value);
+      break;
+    default:
+      requestCreator('Null', value);
   }
-  requestCreator('Null', value);
+
 }
 
 function removeChildNodes(parent) {
