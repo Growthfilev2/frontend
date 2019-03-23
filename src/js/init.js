@@ -112,7 +112,7 @@ window.addEventListener('load', function () {
     } catch (e) {
       const span = document.createElement('span')
       span.textContent = message;
-      span.className = 'mdc-typography--headline6'
+      span.className = 'mdc-typography--body1'
 
       sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
       document.getElementById('dialog-container').innerHTML = dialog({
@@ -558,7 +558,7 @@ function runAppChecks() {
               if (!record.offices.length) return;
               const offices = record.offices
               const message = document.createElement('h1')
-              message.className = 'mdc-typography--headline6 mt-10'
+              message.className = 'mdc-typography--body1 mt-10'
               message.textContent = 'Do you want to create a Check-In ?'
               document.getElementById('dialog-container').innerHTML = dialog({
                 id: 'suggest-checkIn-dialog',

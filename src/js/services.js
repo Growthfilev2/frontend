@@ -544,7 +544,7 @@ function createAndroidDialog(title, body) {
   } catch (e) {
     sendExceptionObject(e, 'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ', [title, body])
     const span = document.createElement('span')
-    span.className = 'mdc-typography--headline6'
+    span.className = 'mdc-typography--body1'
     span.textContent = body;
     document.getElementById('dialog-container').innerHTML = dialog({
       id: 'alert-dialog',
@@ -661,7 +661,7 @@ function sendRequest(location, requestGenerator) {
   } else {
 
     const span = document.createElement('span')
-    span.className = 'mdc-typography--headline6'
+    span.className = 'mdc-typography--body1'
     span.textContent = 'There was a Problem in detecting your location. Please Try again later'
 
     document.getElementById('dialog-container').innerHTML = dialog({
@@ -730,7 +730,7 @@ function emailVerify() {
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
-  span.className = 'mdc-typography--headline6'
+  span.className = 'mdc-typography--body1'
   span.textContent = 'Please Set your Email-id'
 
   document.getElementById('dialog-container').innerHTML = dialog({
@@ -776,7 +776,7 @@ function updateApp(data) {
       var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
       var title = JSON.parse(data.msg).message;
       const span = document.createElement('span')
-      span.className = 'mdc-typography--headline6'
+      span.className = 'mdc-typography--body1'
       span.textContent = message
       document.getElementById('dialog-container').innerHTML = dialog({
         id: 'app-update-dialog',
@@ -833,7 +833,7 @@ function apiFail(data) {
 
 function officeRemovalSuccess(data) {
   const span = document.createElement('span')
-  span.className = 'mdc-typography--headline6'
+  span.className = 'mdc-typography--body1'
   span.textContent = 'You have been removed from ' + data.msg.join(' & ');
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'office-removal-dialog',

@@ -1200,7 +1200,7 @@ function createTempRecord(office, template, data) {
             message = message + ' Make Sure you have set Location Mode to High Accuracy'
           }
           const span = document.createElement('span')
-          span.className = 'mdc-typography--headline6'
+          span.className = 'mdc-typography--body1'
           span.textContent = message
           document.getElementById('dialog-container').innerHTML = dialog({
             id: 'location-fetch-dialog',
@@ -2522,7 +2522,7 @@ function createActivityCancellation(record) {
 
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
       const span = document.createElement('span')
-      span.className = 'mdc-typography--headline6'
+      span.className = 'mdc-typography--body1'
       span.textContent = 'Are you sure you want to delete this activity ? '
       document.getElementById('dialog-container').innerHTML = dialog({
         id: 'cancel-alert',
