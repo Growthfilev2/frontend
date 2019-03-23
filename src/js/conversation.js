@@ -131,45 +131,45 @@ function commentPanel(id) {
 
   document.querySelector('.comment-field').oninput = function (evt) {
     if (!evt.target.value || !evt.target.value.replace(/\s/g, '').length) {
-      hideSendCommentButton()
+      toggleCommentButton(false)
     } else {
-      showSendCommentButton()
+      toggleCommentButton(true)
     }
   }
 
   document.getElementById('send-chat--input').onclick = function () {
-    if (isLocationStatusWorking()) {
-
-      sendComment(id)
+    if(!isLocationStatusWorking()) return;
+    let comment = document.querySelector('.comment-field').value;
+    const reqBody = {
+      'activityId': id,
+      'comment': comment
     }
-  }
-}
-
-function sendComment(id) {
-  let comment = document.querySelector('.comment-field').value;
-  const reqBody = {
-    'activityId': id,
-    'comment': comment
-  }
 
   requestCreator('comment', reqBody)
 
   document.querySelector('.comment-field').value = ''
-  hideSendCommentButton()
+  toggleCommentButton(false)
+  }
 }
 
-function hideSendCommentButton() {
-  document.getElementById('send-chat--input').classList.add('hidden')
-  document.getElementById('write--comment').style.width = '100%'
-  document.getElementById('write--comment').style.transition = '0.3s ease'
-  document.querySelector('.status--change-cont').style.transition = '0.3s ease'
-  document.querySelector('.status--change-cont').style.opacity = '1'
-}
 
-function showSendCommentButton() {
-  document.getElementById('send-chat--input').classList.remove('hidden')
-  document.getElementById('write--comment').style.width = '80%'
-  document.querySelector('.status--change-cont').style.opacity = '0';
+function toggleCommentButton(show) {
+  const input = document.getElementById('send-chat--input');
+  const writeComment = document.getElementById('write--comment');
+  const statusCont = document.querySelector('.status--change-cont');
+ 
+  if (show) {
+    input.classList.remove('hidden')
+    writeComment.style.width = '80%'
+    statusCont.style.opacity = '0';
+  } else {
+    input.classList.add('hidden');
+    writeComment.style.width = '100%';
+    writeComment.style.transition = '0.3s ease'
+    statusCont.style.transition = '0.3s ease'
+    statusCont.style.opacity = '1'
+  }
+
 }
 
 function statusChange(db, id) {

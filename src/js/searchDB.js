@@ -109,7 +109,6 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
                 frag.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
             }
         }
-       
         cursor.continue()
 
     }
