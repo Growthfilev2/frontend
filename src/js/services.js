@@ -175,7 +175,7 @@ function geolocationApi(body) {
 
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo', true);
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {

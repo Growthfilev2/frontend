@@ -212,20 +212,6 @@ function instant(error, user) {
  */
 
 
-function fetchRecord(uid, id) {
-  return new Promise(function (resolve) {
-
-    const req = indexedDB.open(uid)
-    req.onsuccess = function (event) {
-      const db = req.result
-      const objStore = db.transaction('activity').objectStore('activity')
-      objStore.get(id).onsuccess = function (event) {
-
-        resolve(event.target.result)
-      }
-    }
-  })
-}
 
 
 function putServerTime(data) {
@@ -273,9 +259,8 @@ function comment(body, auth) {
 }
 
 function statusChange(body, user) {
-
+  console.log(body)
   return new Promise(function (resolve, reject) {
-    fetchRecord(user.uid, body.activityId).then(function (originalRecord) {
       const req = {
         method: 'PATCH',
         url: `${apiUrl}activities/change-status`,
@@ -287,7 +272,6 @@ function statusChange(body, user) {
           resolve(true)
         }).catch(console.log)
       }).catch(sendApiFailToMainThread)
-    })
   })
 }
 

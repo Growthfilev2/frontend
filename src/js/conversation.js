@@ -1295,7 +1295,7 @@ function createCheckInVenue(venue, defaultSelected) {
 }
 
 function createSimpleLi(key, data) {
-
+  
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
 
@@ -1355,11 +1355,11 @@ function createSimpleLi(key, data) {
     undo.textContent = 'Undo'
     undo.onclick = function () {
       if (isLocationStatusWorking()) {
-
+      
         document.querySelector('.undo-deleted').style.display = 'none'
         listItem.appendChild(loader('undo-delete-loader'));
         requestCreator('statusChange', {
-          activityId: id,
+          activityId: data.id,
           status: 'PENDING'
         })
        
