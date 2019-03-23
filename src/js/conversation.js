@@ -138,17 +138,17 @@ function commentPanel(id) {
   }
 
   document.getElementById('send-chat--input').onclick = function () {
-    if(!isLocationStatusWorking()) return;
+    if (!isLocationStatusWorking()) return;
     let comment = document.querySelector('.comment-field').value;
     const reqBody = {
       'activityId': id,
       'comment': comment
     }
 
-  requestCreator('comment', reqBody)
+    requestCreator('comment', reqBody)
 
-  document.querySelector('.comment-field').value = ''
-  toggleCommentButton(false)
+    document.querySelector('.comment-field').value = ''
+    toggleCommentButton(false)
   }
 }
 
@@ -157,7 +157,7 @@ function toggleCommentButton(show) {
   const input = document.getElementById('send-chat--input');
   const writeComment = document.getElementById('write--comment');
   const statusCont = document.querySelector('.status--change-cont');
- 
+
   if (show) {
     input.classList.remove('hidden')
     writeComment.style.width = '80%'
@@ -315,15 +315,6 @@ function createComment(db, addendum, currentUser) {
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
 
-      link.onclick = function (evt) {
-        if (!hasMapsApiLoaded()) return
-        showMap = !showMap;
-        const loc = {
-          lat: addendum.location['_latitude'],
-          lng: addendum.location['_longitude']
-        }
-        maps(evt, showMap, addendum.addendumId, loc)
-      }
 
       mapIcon.dataset.latitude = addendum.location['_latitude']
       mapIcon.dataset.longitude = addendum.location['_longitude']
@@ -333,12 +324,28 @@ function createComment(db, addendum, currentUser) {
       mapDom.className = 'map-convo'
 
 
+      link.onclick = function (evt) {
+        if (!hasMapsApiLoaded()) return
+        showMap = !showMap;
+        const loc = {
+          lat: addendum.location['_latitude'],
+          lng: addendum.location['_longitude']
+        }
+
+        appendMap(loc, mapDom);
+        if (showMap) {
+          mapDom.style.height = '200px'
+          mapIcon.textContent = 'arrow_drop_down'
+        } else {
+          mapDom.style.height = '0px'
+          mapIcon.textContent = 'location_on'
+        }
+      }
       commentInfo.appendChild(datespan)
       commentInfo.appendChild(link)
       textContainer.appendChild(user)
       textContainer.appendChild(comment)
       textContainer.appendChild(commentInfo)
-
       commentBox.appendChild(textContainer)
       commentBox.appendChild(mapDom);
       resolve(commentBox)
@@ -374,46 +381,24 @@ function hasMapsApiLoaded() {
   return false
 }
 
-function maps(evt, show, id, location) {
-  let selector = ''
-  evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector(`.map-detail.${id}`)
 
-  if (!show) {
-    selector.style.height = '0px'
-    evt ? evt.target.textContent = 'location_on' : ''
-    return
-  }
+function appendMap(location, el) {
 
-  if (selector.children.length !== 0) {
-    selector.style.height = '200px'
-    evt ? evt.target.textContent = 'arrow_drop_down' : ''
-    return;
-  }
-
-  evt ? evt.target.textContent = 'arrow_drop_down' : ''
-
-  selector.style.height = '200px'
-
-  const map = new google.maps.Map(selector, {
+  const map = new google.maps.Map(el, {
     zoom: 16,
     center: location,
     disableDefaultUI: true
   });
 
-
-  if (!evt) {
-    var customControlDiv = document.createElement('div');
-    var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-    customControlDiv.index = 1;
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-  }
+  var customControlDiv = document.createElement('div');
+  var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
+  customControlDiv.index = 1;
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
 
   const marker = new google.maps.Marker({
     position: location,
     map: map
   });
-
-
 }
 
 function MapsCustomControl(customControlDiv, map, lat, lng) {
@@ -1830,7 +1815,13 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       }
-      maps('', showMap, convertKeyToId(venue.venueDescriptor), loc)
+      const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`)
+      appendMap(loc, mapParent)
+      if (showMap) {
+        mapParent.style.height = '200px';
+      } else {
+        mapParent.style.height = '0px';
+      }
     }
 
     if (record.canEdit) {
