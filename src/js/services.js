@@ -883,7 +883,7 @@ function getInputText(selector) {
 
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
-  if (!value) returnrequestCreator('Null', value);
+  if (!value) return requestCreator('Null', value);
 
   const key = Object.keys(value)[0]
   switch (key) {
