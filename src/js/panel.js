@@ -484,17 +484,11 @@ function getRootRecord() {
       const rootStore = rootTx.objectStore('root')
       rootStore.get(dbName).onsuccess = function (event) {
         const data = event.target.result;
-        data ? record = data : record = null;
+        record = data;
       }
 
       rootTx.oncomplete = function () {
-        if (record) {
-          resolve(record)
-        } else {
-          reject({
-            message: 'No root record found from getRootRecord'
-          });
-        }
+        resolve(record)
       }
       rootTx.onerror = function () {
         reject({
@@ -513,10 +507,8 @@ function getRootRecord() {
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (count) {
-    if (count) {
-      createActivityIconDom()
-      return;
-    }
+    if(!count) return;
+    createActivityIconDom()
   }).catch(handleError);
 }
 
