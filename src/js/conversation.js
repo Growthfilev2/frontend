@@ -2514,81 +2514,33 @@ function createActivityCancellation(record) {
     }))
     document.querySelector('.update-create--activity').appendChild(StautsCont);
     if (!record.canEdit) return;
-    if (!document.getElementById('cancel-alert')) {
-      cancelAlertDialog()
-    }
-
-
-    var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
-
-    document.getElementById('delete-allow').onclick = function () {
-      if (isLocationStatusWorking()) {
-        deleteActivityReq(record.activityId)
-      }
-    }
-
-    dialog.listen('MDCDialog:cancel', function () {})
+  
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
-      dialog.lastFocusedTarget = evt.target;
-      dialog.show();
+      const span = document.createElement('span')
+      span.className = 'mdc-typography--headline6'
+      span.textContent = 'Are you sure you want to delete this activity ? '
+      document.getElementById('dialog-container').innerHTML = dialog({id:'cancel-alert',headerText:`${record.activityName} will be deleted`,showCancel:true,showAccept:true,content:span}).outerHTML
+      const dialogEl = document.querySelector('#cancel-alert')
+      var cancelDialog = new mdc.dialog.MDCDialog(dialogEl);
+      
+      cancelDialog.lastFocusedTarget = evt.target;
+      cancelDialog.show();
+      cancelDialog.listen('MDCDialog:cancel', function () {
+        dialogEl.remove()
+      })
+      cancelDialog.listen('MDCDialog:accept',function(){
+        if(!isLocationStatusWorking()) return;
+        document.querySelector('.delete-activity').style.display = 'none';
+        document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CANCELLED',
+        })
+        dialogEl.remove()
+      })
     })
-
-
   }
-
 }
-
-function deleteActivityReq(id) {
-  document.querySelector('.delete-activity').style.display = 'none';
-  document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
-
-  requestCreator('statusChange', {
-    activityId: id,
-    status: 'CANCELLED',
-  })
-}
-
-function cancelAlertDialog() {
-  const aside = document.createElement('aside')
-  aside.className = 'mdc-dialog'
-  aside.id = 'cancel-alert'
-
-  const surface = document.createElement('div')
-  surface.className = 'mdc-dialog__surface'
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__body'
-
-  section.textContent = 'Are you sure you want to delete this activity ? '
-
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
-
-  const accept = document.createElement('button')
-  accept.type = 'button'
-  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept delete-btn'
-  accept.textContent = 'Delete'
-  accept.id = 'delete-allow'
-
-  const cancel = document.createElement('button')
-  cancel.type = 'button'
-  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel cancel-delete-btn'
-  cancel.textContent = 'Cancel'
-
-  footer.appendChild(cancel)
-  footer.appendChild(accept)
-  surface.appendChild(section)
-  surface.appendChild(footer)
-  aside.appendChild(surface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
-
-
-}
-
-
 
 function sendActivity(record) {
 

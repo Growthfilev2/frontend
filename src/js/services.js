@@ -1,5 +1,5 @@
 
-//TODO : office removel dialog
+
 
 
 var apiHandler = new Worker('js/apiHandler.js');

@@ -188,38 +188,6 @@ function createProfilePanel(db) {
   })
 }
 
-function updateEmailDialog() {
-
-  if (!document.getElementById('updateEmailDialog')) {
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
-    aside.id = 'updateEmailDialog';
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body';
-    section.id = 'refresh-login'
-
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer';
-
-    var canel = document.createElement('button');
-    canel.type = 'button';
-    canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel update-email-cancel';
-    canel.textContent = 'Cancel';
-    canel.style.backgroundColor = '#3498db';
-
-    footer.appendChild(canel);
-
-    surface.appendChild(section);
-    surface.appendChild(footer)
-    aside.appendChild(surface);
-    document.body.appendChild(aside);
-
-  }
-}
 
 
 function timeDiff(lastSignInTime) {
@@ -230,9 +198,14 @@ function timeDiff(lastSignInTime) {
 }
 
 function newSignIn(value, field) {
-  updateEmailDialog()
+  
+  document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
   const dialogSelector = document.querySelector('#updateEmailDialog')
+  dialogSelector.querySelector('section').id = 'refresh-login'
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
+  emailDialog.listen('MDCDialog:cancel',function(evt){
+    dialogSelector.remove();
+  })
   emailDialog.show();
   try {
     if(!ui) {
