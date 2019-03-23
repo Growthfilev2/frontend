@@ -165,7 +165,7 @@ function startCursor(currentLocation) {
 
       const cursor = event.target.result;
       if (!cursor) return;
-
+      
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true
@@ -252,34 +252,10 @@ function getActivityDataForList(activity, value, currentLocation) {
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
-      // const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineParent))
     }
   })
 }
-
-function setMarginForSecondLine(secondLine) {
-  const nodes = secondLine.childNodes
-  if (nodes.length > 1) {
-    if (nodes[0].innerHTML && nodes[1].innerHTML) {
-      secondLine.style.marginTop = '-42px'
-      return secondLine;
-    }
-    secondLine.style.marginTop = '-35px'
-    return secondLine
-  }
-  secondLine.style.marginTop = '-35px'
-  return secondLine
-}
-
-function generateTextIfActivityIsNotPending(status) {
-  const textStatus = {
-    'CONFIRMED': 'Done',
-    'CANCELLED': 'Cancelled'
-  }
-  return textStatus[status]
-}
-
 
 
 function generateLastestSchedule(schedules, createdTime) {
@@ -484,17 +460,11 @@ function getRootRecord() {
       const rootStore = rootTx.objectStore('root')
       rootStore.get(dbName).onsuccess = function (event) {
         const data = event.target.result;
-        data ? record = data : record = null;
+        record = data;
       }
 
       rootTx.oncomplete = function () {
-        if (record) {
-          resolve(record)
-        } else {
-          reject({
-            message: 'No root record found from getRootRecord'
-          });
-        }
+        resolve(record)
       }
       rootTx.onerror = function () {
         reject({
@@ -513,10 +483,8 @@ function getRootRecord() {
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (count) {
-    if (count) {
-      createActivityIconDom()
-      return;
-    }
+    if(!count) return;
+    createActivityIconDom()
   }).catch(handleError);
 }
 
@@ -541,13 +509,13 @@ function getCountOfTemplates() {
       }
       tx.onerror = function () {
         reject({
-          message: `${tx.error} from getCountOfTemplates`
+          message: `${tx.error.message} from getCountOfTemplates`
         });
       }
     }
     req.onerror = function () {
       reject({
-        message: `${req.error} from getCountOfTemplates`
+        message: `${req.error.message} from getCountOfTemplates`
       });
     }
   })
@@ -571,17 +539,14 @@ function createActivityIconDom() {
   parent.innerHTML = fab.outerHTML;
 
   document.querySelector('.create-activity').addEventListener('click', function (evt) {
-    callSubscriptionSelectorUI()
+    selectorUI({
+      record: '',
+      store: 'subscriptions',
+      suggestCheckIn: false
+    })
   })
 }
 
-function callSubscriptionSelectorUI(checkIn) {
-  selectorUI({
-    record: '',
-    store: 'subscriptions',
-    suggestCheckIn: checkIn
-  })
-}
 
 function listPanel() {
   if (document.getElementById('activity-list-main')) return
@@ -659,24 +624,7 @@ function scrollToActivity() {
   }
 }
 
-function notificationWorker(type, updateTimestamp) {
-  return new Promise(function (resolve, reject) {
-    notification.postMessage({
-      dbName: firebase.auth().currentUser.uid,
-      type: type,
-      updateTimestamp: updateTimestamp
-    })
-    notification.onmessage = function (message) {
-      resolve(message.data);
-    }
 
-    notification.onerror = function (error) {
-      reject({
-        message: `${error.message} from notificationWorker at ${error.lineno}`
-      })
-    }
-  })
-}
 
 function modifyHeader(attr) {
 

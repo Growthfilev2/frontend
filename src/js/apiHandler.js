@@ -182,8 +182,8 @@ function fetchServerTime(body, user) {
           resolve({
             ts: response.timestamp,
             user: user,
-
           })
+          
         }).catch(sendApiFailToMainThread)
       }
       tx.onerror = function(){
@@ -194,15 +194,13 @@ function fetchServerTime(body, user) {
 }
 
 function instant(error, user) {
-
-
+  
   const req = {
     method: 'POST',
     url: `${apiUrl}services/logs`,
     body: error,
     token: user.token
   }
-
   http(req).then(function (response) {
     console.log(response)
   }).catch(console.log)
@@ -304,9 +302,7 @@ function share(body, user) {
     }
     http(req)
       .then(function (success) {
-        instantUpdateDB(body, 'share', user).then(function () {
           resolve(true)
-        })
       })
       .catch(sendApiFailToMainThread)
   })
@@ -351,7 +347,7 @@ function create(body, user) {
 }
 
 function removeFromOffice(offices, user) {
-  console.log(offices)
+
   removeActivity(offices, user).then(function (response) {
     return removeFromListAndChildren(response)
   }).then(function (response) {
@@ -527,7 +523,7 @@ function getUrlFromPhoto(body, user) {
   }
 
   http(req).then(function (url) {
-    requestHandlerResponse('backblazeRequest', 200);
+    requestHandlerResponse('notification', 200);
   }).catch(sendApiFailToMainThread)
 }
 
@@ -851,7 +847,6 @@ function createListStore(activity, counter, param) {
       const userTx = db.transaction(['users'],'readwrite');
 
       const usersStore = userTx.objectStore('users');
-      console.log(activity)
 
       let requiredData = {
         'activityId': activity.activityId,
