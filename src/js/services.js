@@ -1,7 +1,3 @@
-
-
-
-
 var apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
@@ -21,16 +17,16 @@ function loader(nameClass) {
   return div;
 }
 
-function dialog(attr){
+function dialog(attr) {
   const aside = document.createElement('aside')
 
   aside.id = attr.id
   aside.className = 'mdc-dialog dialog-custom-backdrop'
   aside.role = 'alertdialog'
-  
+
   const dialogSurface = document.createElement('div')
   dialogSurface.className = 'mdc-dialog__surface'
-  if(attr.headerText) {
+  if (attr.headerText) {
     const header = document.createElement('header');
     header.className = 'mdc-dialog__header'
     const headerText = document.createElement('h2')
@@ -42,7 +38,7 @@ function dialog(attr){
 
   const section = document.createElement('section')
   section.className = 'mdc-dialog__content'
-  if(attr.content) {
+  if (attr.content) {
     section.appendChild(attr.content)
   }
   dialogSurface.appendChild(section)
@@ -50,7 +46,7 @@ function dialog(attr){
 
   var footer = document.createElement('footer');
   footer.className = 'mdc-dialog__footer';
-  if(attr.showCancel) {
+  if (attr.showCancel) {
 
     var cancel = document.createElement('button');
     cancel.type = 'button';
@@ -59,7 +55,7 @@ function dialog(attr){
     cancel.style.backgroundColor = '#3498db';
     footer.appendChild(cancel)
   }
-  if(attr.showAccept) {
+  if (attr.showAccept) {
     var accept = document.createElement('button');
     accept.type = 'button';
     accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
@@ -74,7 +70,7 @@ function dialog(attr){
 }
 
 function successDialog() {
-  
+
   var content = document.createElement('div');
   content.className = 'success--container';
 
@@ -82,11 +78,17 @@ function successDialog() {
   icon.className = 'success--check';
 
   content.appendChild(icon);
-  document.getElementById('dialog-container').innerHTML  = dialog({id:'success-dialog',headerText:'',showCancel:false,showAccept:false,content:content}).outerHTML
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'success-dialog',
+    headerText: '',
+    showCancel: false,
+    showAccept: false,
+    content: content
+  }).outerHTML
   const dialogEl = document.querySelector('#success-dialog')
   var successDialog = new mdc.dialog.MDCDialog(dialogEl);
   successDialog.show();
- 
+
   setTimeout(function () {
     dialogEl.remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
@@ -247,7 +249,7 @@ function manageLocation() {
               html5: htmlError,
               geolocation: JSON.stringify(error),
             }),
-            'locationError':true
+            'locationError': true
           })
         })
       })
@@ -273,7 +275,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
         resolve(htmlLocation)
         return;
       }
-      sendExceptionObject(e,'CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi',[]);
+      sendExceptionObject(e, 'CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi', []);
       reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
       return;
     }
@@ -300,7 +302,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
           handleError({
             message: 'Oringinal CellTower has accuracy more than 1200 and WAP doesnt exist',
             body: JSON.stringify(holder),
-            locationError:true
+            locationError: true
           })
         }
         if (!htmlLocation) {
@@ -321,11 +323,11 @@ function handleGeoLocationApi(holder, htmlLocation) {
           result: withoutCellTowerLocation
         };
         if (withoutCellTowerLocation.accuracy >= 1200) {
-         
+
           handleError({
             message: 'html5,originalCellTower,WithoutCellTower',
             body: JSON.stringify(holder),
-            locationError:true
+            locationError: true
 
           })
         }
@@ -343,7 +345,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
           handleError({
             message: 'Orinigal CellTower has accuracy more than 1200 and api failure when sending cellTowerObject without cellularTowers',
             body: JSON.stringify(holder),
-            locationError:true
+            locationError: true
 
           })
         }
@@ -397,7 +399,7 @@ function html5Geolocation() {
         }, {
           timeout: 5000,
           maximumAge: 0,
-          enableHighAccuracy:true
+          enableHighAccuracy: true
         })
       })
       prom.push(navProm)
@@ -520,7 +522,7 @@ function sendCurrentViewNameToAndroid(viewName) {
     try {
       AndroidInterface.startConversation(viewName);
     } catch (e) {
-      sendExceptionObject(e,'CATCH Type 5: AndroidInterface.startConversation at sendCurrentViewNameToAndroid',[viewName]);
+      sendExceptionObject(e, 'CATCH Type 5: AndroidInterface.startConversation at sendCurrentViewNameToAndroid', [viewName]);
     }
   }
 }
@@ -532,11 +534,17 @@ function createAndroidDialog(title, body) {
   try {
     AndroidInterface.showDialog(title, body);
   } catch (e) {
-    sendExceptionObject(e,'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ',[title,body])
+    sendExceptionObject(e, 'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ', [title, body])
     const span = document.createElement('span')
     span.className = 'mdc-typography--headline6'
     span.textContent = body;
-    document.getElementById('dialog-container').innerHTML = dialog({id:'alert-dialog',showCancel:false,showAccept:true,content:span,headerText:title}).outerHTML
+    document.getElementById('dialog-container').innerHTML = dialog({
+      id: 'alert-dialog',
+      showCancel: false,
+      showAccept: true,
+      content: span,
+      headerText: title
+    }).outerHTML
     const dialogEl = document.querySelector('#alert-dialog');
     var appDialog = new mdc.dialog.MDCDialog(dialogEl);
 
@@ -550,14 +558,14 @@ function createAndroidDialog(title, body) {
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
-  
+
   try {
-    if(!AndroidInterface.isLocationPermissionGranted()) {
+    if (!AndroidInterface.isLocationPermissionGranted()) {
       createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
       return;
     }
   } catch (e) {
-    sendExceptionObject(e,'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission',[]);
+    sendExceptionObject(e, 'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission', []);
     return true;
   }
 
@@ -566,8 +574,8 @@ function isLocationStatusWorking() {
       createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
       return;
     }
-  }catch(e){
-    sendExceptionObject(e,'CATCH Type 7: AndroidInterface.isConnectionActive  at isLocationStatusWorking',[])
+  } catch (e) {
+    sendExceptionObject(e, 'CATCH Type 7: AndroidInterface.isConnectionActive  at isLocationStatusWorking', [])
     return true;
   }
   return true
@@ -599,7 +607,7 @@ function requestCreator(requestType, requestBody) {
       })
     });
   } else {
-    
+
     getRootRecord().then(function (rootRecord) {
       let location = rootRecord.location;
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
@@ -643,14 +651,26 @@ function sendRequest(location, requestGenerator) {
 
     apiHandler.postMessage(requestGenerator);
   } else {
-    // appDialog('Fetching Location Please wait.', true);
+    
+    const span = document.createElement('span')
+    span.className = 'mdc-typography--headline6'
+    span.textContent = 'There was a Problem in detecting your location. Please Try again later'
+
+    document.getElementById('dialog-container').innerHTML = dialog({
+      id: 'location-fetch-dialog',
+      content: span
+    }).outerHTML
+    const dialogEl = document.getElementById('location-fetch-dialog')
+    const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
+    fetchingLocationDialog.show();
+    
     getRootRecord().then(function (record) {
       var cellTowerInfo = void 0;
       try {
         cellTowerInfo = AndroidInterface.getCellularData();
       } catch (e) {
         cellTowerInfo = e.message;
-        sendExceptionObject(e,'CATCH Type 4: AndroidInterface.getCullarData at sendRequest',[])
+        sendExceptionObject(e, 'CATCH Type 4: AndroidInterface.getCullarData at sendRequest', [])
       }
 
       var body = {
@@ -658,7 +678,14 @@ function sendRequest(location, requestGenerator) {
         storedLocation: record.location,
         cellTower: cellTowerInfo
       };
-      handleError({message:'No Locations Found in indexedDB',body:JSON.stringify(body)})
+      handleError({
+        message: 'No Locations Found in indexedDB',
+        body: JSON.stringify(body)
+      })
+      setTimeout(function(){
+        dialogEl.remove();
+        listView();
+      },5000)
     });
   }
 }
@@ -678,7 +705,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 var receiverCaller = {
   'initFirstLoad': initFirstLoad,
   'update-app': updateApp,
-  'removed-from-office':officeRemovalSuccess,
+  'removed-from-office': officeRemovalSuccess,
   'revoke-session': revokeSession,
   'notification': successDialog,
   'android-stop-refreshing': androidStopRefreshing,
@@ -699,7 +726,13 @@ function emailVerify() {
   span.className = 'mdc-typography--headline6'
   span.textContent = 'Please Set your Email-id'
 
-  document.getElementById('dialog-container').innerHTML = dialog({id:'email-update-dialog',showCancel:true,showAccept:true,headerText:'Reminder',content:span}).outerHTML
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'email-update-dialog',
+    showCancel: true,
+    showAccept: true,
+    headerText: 'Reminder',
+    content: span
+  }).outerHTML
   const dialogEl = document.getElementById('email-update-dialog')
   const emailDialog = new mdc.dialog.MDCDialog(dialogEl);
   emailDialog.listen('MDCDialog:accept', function () {
@@ -738,11 +771,17 @@ function updateApp(data) {
       const span = document.createElement('span')
       span.className = 'mdc-typography--headline6'
       span.textContent = message
-      document.getElementById('dialog-container').innerHTML = dialog({id:'app-update-dialog',showCancel:false,showAccept:false,headerText:title,content:span}).outerHTML
+      document.getElementById('dialog-container').innerHTML = dialog({
+        id: 'app-update-dialog',
+        showCancel: false,
+        showAccept: false,
+        headerText: title,
+        content: span
+      }).outerHTML
       const dialogEl = document.getElementById('app-update-dialog')
       const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
       updateDialog.show()
-      sendExceptionObject(e,'CATCH Type 8: AndroidInterface.updateApp at updateApp',[JSON.stringify(data.msg)])
+      sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
     }
     return;
   }
@@ -798,14 +837,21 @@ function urlFromBase64Image(data) {
     }
   }
 }
-function officeRemovalSuccess(data){
+
+function officeRemovalSuccess(data) {
   const span = document.createElement('span')
   span.className = 'mdc-typography--headline6'
   span.textContent = 'You have been removed from ' + data.msg.join(' & ');
-  document.getElementById('dialog-container').innerHTML = dialog({id:'office-removal-dialog',showAccept:true,showCancel:false,headerText:'Reminder',content:span}).outerHTML
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'office-removal-dialog',
+    showAccept: true,
+    showCancel: false,
+    headerText: 'Reminder',
+    content: span
+  }).outerHTML
   const dialogEl = document.getElementById('office-removal-dialog')
   const officeRemovedDialog = new mdc.dialog.MDCDialog(dialogEl);
-  officeRemovedDialog.listen('MDCDialog:accept', function () { 
+  officeRemovedDialog.listen('MDCDialog:accept', function () {
     dialogEl.remove();
     document.getElementById('app-current-panel').innerHTML = '';
     listView();
@@ -819,17 +865,17 @@ function androidStopRefreshing() {
     try {
       AndroidInterface.stopRefreshing(true);
     } catch (e) {
-      sendExceptionObject(e,'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing',[true])
+      sendExceptionObject(e, 'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing', [true])
     }
   }
 }
 
 function onErrorMessage(error) {
- 
+
   const body = {
     'line-number': error.lineno,
     'file': error.filename,
-    'col-number':error.colno
+    'col-number': error.colno
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
@@ -868,14 +914,14 @@ function removeChildNodes(parent) {
   }
 }
 
-function sendExceptionObject(exception,message,param){
+function sendExceptionObject(exception, message, param) {
   handleError({
-    message:`${message}`,
-    body : JSON.stringify({
-      message:exception.message,
-      name:exception.name,
-      stack:JSON.stringify(exception.stack),
-      paramSent:param
+    message: `${message}`,
+    body: JSON.stringify({
+      message: exception.message,
+      name: exception.name,
+      stack: JSON.stringify(exception.stack),
+      paramSent: param
     })
   })
 }
