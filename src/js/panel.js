@@ -656,24 +656,7 @@ function scrollToActivity() {
   }
 }
 
-function notificationWorker(type, updateTimestamp) {
-  return new Promise(function (resolve, reject) {
-    notification.postMessage({
-      dbName: firebase.auth().currentUser.uid,
-      type: type,
-      updateTimestamp: updateTimestamp
-    })
-    notification.onmessage = function (message) {
-      resolve(message.data);
-    }
 
-    notification.onerror = function (error) {
-      reject({
-        message: `${error.message} from notificationWorker at ${error.lineno}`
-      })
-    }
-  })
-}
 
 function modifyHeader(attr) {
 
