@@ -37,7 +37,7 @@ function profileView(pushState) {
               }
             })
           } else {
-            inputFile('uploadProfileImage').addEventListener('change', function () {
+            document.getElementById('uploadProfileImage').addEventListener('change', function () {
               readUploadedFile()
             });
           }
@@ -51,9 +51,7 @@ function profileView(pushState) {
   };
 }
 
-function inputFile(selector) {
-  return document.getElementById(selector);
-}
+
 
 function createProfileHeader() {
 
@@ -237,7 +235,7 @@ function readUploadedFile(image) {
     return;
   }
 
-  var file = inputFile('uploadProfileImage').files[0];
+  var file = document.getElementById('uploadProfileImage').files[0];
   var reader = new FileReader();
 
   reader.addEventListener("load", function () {
