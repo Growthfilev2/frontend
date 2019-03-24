@@ -1,5 +1,4 @@
 importScripts('../external/js/moment.min.js');
-const apiUrl = 'https://us-central1-growthfilev2-0.cloudfunctions.net/api/'
 
 let deviceInfo;
 let currentDevice;
@@ -34,30 +33,28 @@ function sendApiFailToMainThread(error) {
 }
 
 self.onmessage = function (event) {
+  console.log(event)
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.user).then(putServerTime).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(console.log);
     return
   }
 
   if (event.data.type === 'instant') {
-    instant(event.data.body, event.data.user)
+    instant(event.data.body, event.data.meta)
     return
   }
 
   if (event.data.type === 'Null') {
-    updateIDB({
-      user: event.data.user,
-      response:''
-    });
+    updateIDB(meta);
     return;
   }
 
   if (event.data.type === 'backblaze') {
-    getUrlFromPhoto(event.data.body, event.data.user)
+    getUrlFromPhoto(event.data.body, event.data.meta)
     return;
   }
 
-  requestFunctionCaller[event.data.type](event.data.body, event.data.user).then(function (backToList) {
+  requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (backToList) {
     if (backToList) {
       requestHandlerResponse('notification', 200, 'status changed successfully');
     }
@@ -106,19 +103,20 @@ function http(request) {
   })
 }
 
-function fetchServerTime(body, user) {
+function fetchServerTime(body, meta) {
+  console.log(body)
   return new Promise(function (resolve) {
   currentDevice = body.device;
   const parsedDeviceInfo = JSON.parse(currentDevice);
-  let url = `${apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
-  const req = indexedDB.open(user.uid);
+  let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
+  const req = indexedDB.open(meta.user.uid);
     
   req.onsuccess = function(){
     const db = req.result;
     const tx = db.transaction(['root'],'readwrite');
     const rootStore = tx.objectStore('root');
     
-    rootStore.get(user.uid).onsuccess = function(event){
+    rootStore.get(meta.user.uid).onsuccess = function(event){
       const record = event.target.result;
       if(!record) return;
       if(!record.hasOwnProperty('officesRemoved')) return;
@@ -138,7 +136,7 @@ function fetchServerTime(body, user) {
           method: 'GET',
           url: url,
           body: null,
-          token: user.token
+          token: meta.user.token
         }
     
         http(httpReq).then(function (response) {
@@ -181,7 +179,7 @@ function fetchServerTime(body, user) {
 
           resolve({
             ts: response.timestamp,
-            user: user,
+            meta: meta,
           })
           
         }).catch(sendApiFailToMainThread)
@@ -193,13 +191,13 @@ function fetchServerTime(body, user) {
   })
 }
 
-function instant(error, user) {
+function instant(error, meta) {
   
   const req = {
     method: 'POST',
-    url: `${apiUrl}services/logs`,
+    url: `${meta.apiUrl}services/logs`,
     body: error,
-    token: user.token
+    token: meta.user.token
   }
   http(req).then(function (response) {
     console.log(response)
@@ -217,7 +215,7 @@ function instant(error, user) {
 function putServerTime(data) {
   console.log(data)
   return new Promise(function (resolve, reject) {
-    const request = indexedDB.open(data.user.uid);
+    const request = indexedDB.open(data.meta.user.uid);
     request.onerror = function () {
       reject(request.error.message)
     }
@@ -226,15 +224,13 @@ function putServerTime(data) {
       const db = request.result
       const rootTx = db.transaction(['root'], 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
-      rootObjectStore.get(data.user.uid).onsuccess = function (event) {
+      rootObjectStore.get(data.meta.user.uid).onsuccess = function (event) {
         const record = event.target.result
         record.serverTime = data.ts - Date.now()
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
-        resolve({
-          user: data.user,
-        })
+        resolve(data.meta)
       }
     }
   })
@@ -242,14 +238,14 @@ function putServerTime(data) {
 
 
 
-function comment(body, auth) {
+function comment(body, meta) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     const req = {
       method: 'POST',
-      url: `${apiUrl}activities/comment`,
+      url: `${meta.apiUrl}activities/comment`,
       body: JSON.stringify(body),
-      token: auth.token
+      token: meta.user.token
     }
     http(req).then(function () {
 
@@ -258,17 +254,17 @@ function comment(body, auth) {
   })
 }
 
-function statusChange(body, user) {
-  console.log(body)
+function statusChange(body, meta) {
+  
   return new Promise(function (resolve, reject) {
       const req = {
         method: 'PATCH',
-        url: `${apiUrl}activities/change-status`,
+        url: `${meta.apiUrl}activities/change-status`,
         body: JSON.stringify(body),
-        token: user.token
+        token: meta.user.token
       }
       http(req).then(function (success) {
-        instantUpdateDB(body, 'status', user).then(function () {
+        instantUpdateDB(body, 'status', meta.user).then(function () {
           resolve(true)
         }).catch(console.log)
       }).catch(sendApiFailToMainThread)
@@ -276,13 +272,13 @@ function statusChange(body, user) {
 }
 
 
-function share(body, user) {
+function share(body, meta) {
   return new Promise(function (resolve, reject) {
     const req = {
       method: 'PATCH',
-      url: `${apiUrl}activities/share`,
+      url: `${meta.apiUrl}activities/share`,
       body: JSON.stringify(body),
-      token: user.token
+      token: meta.user.token
     }
     http(req)
       .then(function (success) {
@@ -295,17 +291,17 @@ function share(body, user) {
 
 
 
-function update(body, user) {
+function update(body, meta) {
   return new Promise(function (resolve, reject) {
     const req = {
       method: 'PATCH',
-      url: `${apiUrl}activities/update`,
+      url: `${meta.apiUrl}activities/update`,
       body: JSON.stringify(body),
-      token: user.token
+      token: meta.user.token
     }
     http(req)
       .then(function (success) {
-        instantUpdateDB(body, 'update', user).then(function () {
+        instantUpdateDB(body, 'update', meta.user).then(function () {
           resolve(true)
         })
       })
@@ -313,14 +309,14 @@ function update(body, user) {
   })
 }
 
-function create(body, user) {
+function create(body, meta) {
   console.log(body)
   return new Promise(function (resolve, reject) {
     const req = {
       method: 'POST',
-      url: `${apiUrl}activities/create`,
+      url: `${meta.apiUrl}activities/create`,
       body: JSON.stringify(body),
-      token: user.token
+      token: meta.user.token
     }
     http(req)
       .then(function (success) {
@@ -497,13 +493,13 @@ function removeFromSubscriptions(response) {
   }
 }
 
-function getUrlFromPhoto(body, user) {
+function getUrlFromPhoto(body, meta) {
 
   const req = {
     method: 'POST',
-    url: `${apiUrl}services/images`,
+    url: `${meta.apiUrl}services/images`,
     body: JSON.stringify(body),
-    token: user.token
+    token: meta.user.token
   }
 
   http(req).then(function (url) {
@@ -1058,9 +1054,9 @@ function setUniqueOffice(offices, param) {
 }
 
 
-function updateIDB(param) {
+function updateIDB(meta) {
   
-  const req = indexedDB.open(param.user.uid)
+  const req = indexedDB.open(meta.user.uid)
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction(['root']);
@@ -1068,7 +1064,7 @@ function updateIDB(param) {
     let record;
     let time;
 
-    rootObjectStore.get(param.user.uid).onsuccess = function (event) {
+    rootObjectStore.get(meta.user.uid).onsuccess = function (event) {
       record = event.target.result;
       time = record.fromTime
     }
@@ -1076,16 +1072,16 @@ function updateIDB(param) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${apiUrl}read?from=${time}`,
+        url: `${meta.apiUrl}read?from=${time}`,
         data: null,
-        token: param.user.token
+        token: meta.user.token
       }
       
       http(req)
         .then(function (response) {
           if (!response) return;       
           requestHandlerResponse('android-stop-refreshing', 200)
-          successResponse(response, param)
+          successResponse(response,meta)
         }).catch(sendApiFailToMainThread)
     }
   }

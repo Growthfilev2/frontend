@@ -1,3 +1,4 @@
+const appKey = new AppKeys();
 let ui;
 let native = function () {
   return {
@@ -93,16 +94,12 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
+  
   layoutGrid()
+ 
 
-  firebase.initializeApp({
-    apiKey: "AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ",
-    authDomain: "growthfilev2-0.firebaseapp.com",
-    databaseURL: "https://growthfilev2-0.firebaseio.com",
-    projectId: "growthfilev2-0",
-    storageBucket: "growthfilev2-0.appspot.com",
-    messagingSenderId: "1011478688238"
-  })
+  
+  firebase.initializeApp(appKey.getKeys())
 
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'

@@ -1,4 +1,5 @@
-var apiHandler = new Worker('js/apiHandler.js');
+let apiHandler;
+appKey.getMode() === 'production' ? apiHandler = new Worker('apiHandler.js') : apiHandler  = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
@@ -175,7 +176,7 @@ function geolocationApi(body) {
 
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ', true);
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+appKey.getMapKey(), true);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
@@ -595,19 +596,23 @@ function requestCreator(requestType, requestBody) {
   var requestGenerator = {
     type: requestType,
     body: '',
-    user: {
-      token: '',
-      uid: auth.uid,
-      displayName: auth.displayName,
-      photoURL: auth.photoURL,
-      phoneNumber: auth.phoneNumber
+    meta: {
+      user: {
+        token: '',
+        uid: auth.uid,
+        displayName: auth.displayName,
+        photoURL: auth.photoURL,
+        phoneNumber: auth.phoneNumber,
+      },
+      apiUrl:appKey.getBaseUrl()
     }
   };
 
   if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
     auth.getIdToken(false).then(function (token) {
       requestGenerator.body = requestBody;
-      requestGenerator.user.token = token;
+      requestGenerator.meta.user.token = token;
+      
       apiHandler.postMessage(requestGenerator);
     }).catch(function (error) {
       handleError({
@@ -639,7 +644,9 @@ function requestCreator(requestType, requestBody) {
         requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
         requestBody['geopoint'] = geopoints;
         requestGenerator.body = requestBody;
-        requestGenerator.user.token = token;
+        
+        requestGenerator.meta.user.token = token;
+       
         sendRequest(location, requestGenerator);
       }).catch(function (error) {
         handleError(error);

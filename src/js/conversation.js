@@ -1355,7 +1355,7 @@ function createSimpleLi(key, data) {
     undo.textContent = 'Undo'
     undo.onclick = function () {
       if (isLocationStatusWorking()) {
-      
+      debugger
         document.querySelector('.undo-deleted').style.display = 'none'
         listItem.appendChild(loader('undo-delete-loader'));
         requestCreator('statusChange', {
