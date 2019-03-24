@@ -1,5 +1,4 @@
-let apiHandler;
-appKey.getMode() === 'production' ? apiHandler = new Worker('apiHandler.js') : apiHandler  = new Worker('js/apiHandler.js');
+let apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
