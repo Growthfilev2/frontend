@@ -1085,13 +1085,13 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy, showSendButton) {
+function updateCreateContainer(record, showSendButton) {
 
-  const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
+  document.body.classList.remove('mdc-dialog-scroll-lock')
 
   const activityName = document.createElement('span')
-  activityName.textContent = 'asdsa dasdasd jiasjd iasdni nioasndio nsna dnasoi d'
+  activityName.textContent = record.activityName
   activityName.className = 'mdc-top-app-bar__title'
   let backIcon = headerBackIcon();
  
@@ -1165,8 +1165,8 @@ function updateCreateActivity(record, showSendButton) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-    const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord, showSendButton).outerHTML
+  
+    appView.innerHTML = updateCreateContainer(record, showSendButton).outerHTML
 
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {

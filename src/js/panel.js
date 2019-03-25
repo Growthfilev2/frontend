@@ -631,12 +631,13 @@ function modifyHeader(attr) {
 
 }
 
-function headerBackIcon(){  
+function headerBackIcon(store){  
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
   backIcon.textContent = 'arrow_back'
   backIcon.onclick = function(){
-    backNav();
+    if(!store) return backNav();
+    store === 'subscriptions' ?  listView() :updateCreateActivity(history.state[1], true);
   }
   return backIcon;
 }

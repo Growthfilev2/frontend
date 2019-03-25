@@ -2,7 +2,9 @@ function selectorUI(data) {
 
   const parent = document.getElementById('app-current-panel');
 
-  createSelectorHeader(data);
+  const sectionStart = document.getElementById('section-start');
+  sectionStart.innerHTML = ''
+  sectionStart.appendChild(headerBackIcon(data.store))
   const container = document.createElement('div')
   container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
   
@@ -84,30 +86,6 @@ function selectorUI(data) {
   }
 }
 
-function createSelectorHeader(data) {
-  if(document.getElementById('back-selector')) return;
-  const backDiv = document.createElement('div')
-  backDiv.className = 'back-icon'
-  backDiv.id = 'back-selector'
-  backDiv.onclick = function(){
-    if (data.store === 'subscriptions') {
-      listView();
-    } else {
-      document.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
-      updateCreateActivity(history.state[1], true);
-    }
-  }
-  backDiv.style.float = 'left'
-  const backIcon = document.createElement('i')
-  backIcon.style.marginRight = '5px'
-  backIcon.className = 'material-icons back-icon--large'
-  backIcon.textContent = 'arrow_back'
-
-  backDiv.appendChild(backIcon)
-  document.getElementById('section-start').appendChild(backDiv)
- 
-  
-}
 
 
 function getLocationForMapSelector(tx, data) {
