@@ -469,12 +469,14 @@ function updateLocationInRoot(finalLocation) {
         "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
       });
       window.dispatchEvent(suggestCheckIn);
+
       if(native.getName() === 'Ios') {
-        var iosLocation = new CustomEvent('ios-location',{
+        var iosLocation = new CustomEvent('iosLocation',{
           "detail":finalLocation
-        })
-        window.dispatchEvent('iosLocation')
+        });
+        window.dispatchEvent(iosLocation)
       }
+      
     };
     tx.onerror = function () {
       handleError({
