@@ -571,37 +571,31 @@ function listPanel() {
 
 
 function creatListHeader(headerName) {
-  if(document.getElementById('profile-icon-list')) return
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
-    
+    const sectionStart = document.getElementById('section-start');
+   sectionStart.innerHTML =''
     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
-      const parentIconDiv = document.createElement('div')
-      parentIconDiv.className = 'profile--icon-header'
-      parentIconDiv.id = 'profile-icon-list'
-      const menuIcon = document.createElement('div')
-      menuIcon.id = 'menu--panel'
 
       const object = document.createElement('object');
       object.className = 'list-photo-header';
       object.type = 'image/jpeg';
       object.data = userRecord.photoURL || './img/empty-user.jpg';
-
+      object.onclick = function(){
+        profileView(true)
+      }
       const icon = document.createElement('img');
       icon.src = './img/empty-user.jpg';
       icon.className = 'list-photo-header'
       object.appendChild(icon);
-      icon.onclick = function(){
-        profileView(true)
-      }
-      menuIcon.appendChild(object)
-
-      const headerText = document.createElement('p');
+    
+      const headerText = document.createElement('span');
       headerText.textContent = headerName;
-      menuIcon.appendChild(headerText)
-      parentIconDiv.appendChild(menuIcon)
-      document.getElementById('section-start').appendChild(parentIconDiv);
+      headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
+      
+      sectionStart.appendChild(object)
+      sectionStart.appendChild(headerText);
 
     })
   }
@@ -637,16 +631,12 @@ function modifyHeader(attr) {
 
 }
 
-function headerBackIcon(){
-  if(document.getElementById('back-icon')) return;
-  const leftHeaderContent = document.createElement('div')  
-  leftHeaderContent.id = 'back-icon'
-  const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons'
-  backSpan.textContent = 'arrow_back'
-  backSpan.onclick = function(){
+function headerBackIcon(){  
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
+  backIcon.textContent = 'arrow_back'
+  backIcon.onclick = function(){
     backNav();
   }
-  leftHeaderContent.appendChild(backSpan)
-  return leftHeaderContent;
+  return backIcon;
 }

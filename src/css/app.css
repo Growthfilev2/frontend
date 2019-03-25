@@ -1,6 +1,9 @@
 body {
   margin: 0;
 }
+.mdc-top-app-bar__section--align-start {
+  padding-left: 10px;
+}
 .mt-10 {
   margin-top: 10px;
 }
@@ -694,10 +697,6 @@ body {
 }
 
 
-.profile-container--main-small {
-  width: 40px;
-  height: 40px;
-}
 
 #refresh-login {
   width: 85vw !important;
@@ -1053,11 +1052,10 @@ input[type="datetime-local"] {
   width: 100%;
 }
 
-.header--icon-creator {
+.header--icon-creator , .empty-user-assignee, .profile-container--main-small {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  margin-top: 3px;
 }
 
 .back-icon--large {
@@ -1704,8 +1702,8 @@ input[type="datetime-local"] {
 
 .list-photo-header {
   border-radius: 50%;
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
@@ -1741,11 +1739,7 @@ input[type="datetime-local"] {
   height: 55px;
 }
 
-.empty-user-assignee {
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-}
+
 
 #updateEmailDialog {
   background: rgba(0, 0, 0, 0.47);

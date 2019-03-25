@@ -432,11 +432,12 @@ function MapsCustomControl(customControlDiv, map, lat, lng) {
 }
 
 function createHeaderContent(db, id) {
-
+  const sectionStart= document.getElementById('section-start');
+  sectionStart.innerHTML = ''
   if(document.getElementById('chat-back')) return;
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   let leftDiv = headerBackIcon()
-
+  
   activityObjectStore.get(id).onsuccess = function (event) {
 
     const record = event.target.result;
@@ -451,11 +452,12 @@ function createHeaderContent(db, id) {
       creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator'
       dataObject.appendChild(creatorImg);
-      backDiv.appendChild(dataObject);
-
+     
       var primarySpan = document.createElement('div');
-      primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
-      primarySpan.textContent = record.activityName;
+      primarySpan.className = 'mdc-top-app-bar__title mdc-typography--subtitle2';
+      const name = document.createElement('span')
+      name.textContent = record.activityName;
+      name.className = ''
       primarySpan.onclick = function(){
         checkIfRecordExists('activity', record.activityId).then(function (id) {
           if (id) {
@@ -465,13 +467,16 @@ function createHeaderContent(db, id) {
           }
         }).catch(handleError);
       }
-      var secondarySpan = document.createElement('span');
-      secondarySpan.className = 'mdc-list-item__secondary-text';
-      secondarySpan.textContent = 'Click here to see details';
-
-      primarySpan.appendChild(secondarySpan); 
-      leftDiv.appendChild(primarySpan);
-      document.getElementById('section-start').appendChild(leftDiv);
+      var info = document.createElement('span');
+      // secondarySpan.className = 'mdc-list-item__secondary-text';
+      info.textContent = 'Click here to see details';
+      
+      sectionStart.appendChild(leftDiv);
+      sectionStart.appendChild(dataObject);
+      primarySpan.appendChild(name);
+      primarySpan.appendChild(document.createElement('br'))
+      primarySpan.appendChild(info) 
+      sectionStart.appendChild(primarySpan)
     
     });
   }
@@ -1086,15 +1091,14 @@ function updateCreateContainer(recordCopy, showSendButton) {
   document.body.style.backgroundColor = '#eeeeee'
 
   const activityName = document.createElement('span')
-  activityName.textContent = record.activityName
-  activityName.style.fontSize = '18px'
-  activityName.style.paddingLeft = '10px'
-  activityName.style.marginTop = '6px'
-  activityName.className = 'mdc-list-item__text'
-  activityName.style.width = `${document.documentElement.clientWidth -100}px`
+  activityName.textContent = 'asdsa dasdasd jiasjd iasdni nioasndio nsna dnasoi d'
+  activityName.className = 'mdc-top-app-bar__title'
   let backIcon = headerBackIcon();
-  backIcon.appendChild(activityName)
-  document.getElementById('section-start').appendChild(backIcon);
+ 
+  const sectionStart = document.getElementById('section-start')
+  sectionStart.innerHTML = ''
+  sectionStart.appendChild(backIcon);
+  sectionStart.appendChild(activityName)
   
   const container = document.createElement('div')
   container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'

@@ -7,7 +7,9 @@ function profileView(pushState) {
   }
 
   document.body.style.backgroundColor = '#eeeeee';
-  document.getElementById('section-start').appendChild(headerBackIcon())
+  const sectionStart = document.getElementById('section-start');
+  sectionStart.innerHTML = ''
+  sectionStart.appendChild(headerBackIcon())
 
   var user = firebase.auth().currentUser;
   var dbName = user.uid;

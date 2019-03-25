@@ -234,12 +234,12 @@ function layoutGrid() {
   const dialogContainer = document.createElement('div')
   dialogContainer.id = 'dialog-container'
 
-  layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
   layout.appendChild(dialogContainer)
   document.getElementById('growthfile').innerHTML = layout.outerHTML
+  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 }
 
 function startApp(start) {
