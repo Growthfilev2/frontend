@@ -903,7 +903,7 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-
+         
           let message;
           if (native.getName() === 'Android') {
             message = 'Make Sure you have set Location Mode to High Accuracy'
@@ -921,12 +921,17 @@ function createTempRecord(office, template, prefill) {
           const dialogEl = document.getElementById('location-fetch-dialog')
           const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
           fetchingLocationDialog.show();
-
+          if(native.getName() === 'Ios') {
+            window.addEventListener('iosLocation',function _iosLocation(e){
+              dialogEl.remove();
+              updateCreateActivity(bareBonesRecord)
+              window.removeEventListener('iosLocation',_iosLocation,true);
+            },true)
+            return;
+          }
           manageLocation().then(function (location) {
-
             dialogEl.remove();
             updateCreateActivity(bareBonesRecord)
-
           }).catch(function (error) {
 
             let errorMessage = 'There was a problem in detecting your location'

@@ -469,6 +469,12 @@ function updateLocationInRoot(finalLocation) {
         "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
       });
       window.dispatchEvent(suggestCheckIn);
+      if(native.getName() === 'Ios') {
+        var iosLocation = new CustomEvent('ios-location',{
+          "detail":finalLocation
+        })
+        window.dispatchEvent('iosLocation')
+      }
     };
     tx.onerror = function () {
       handleError({
@@ -625,15 +631,24 @@ function requestCreator(requestType, requestBody) {
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
       if (isLocationOld) {
-        promises.push(manageLocation())
+        if(native.getName() === 'Android') {
+          promises.push(manageLocation())
+        }
+        else {
+          window.addEventListener('iosLocation', function _iosLocation(e) {
+            promises.push(e.detail)
+            window.removeEventListener('iosLocation',_iosLocation,true)
+          },true)
+        }
       }
+      
       Promise.all(promises).then(function (result) {
         const token = result[0];
         if (result.length == 2) {
           location = result[1];
           console.log(location)
-
         }
+
         var geopoints = {
           'latitude': location.latitude,
           'longitude': location.longitude,
