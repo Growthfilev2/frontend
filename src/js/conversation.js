@@ -433,21 +433,9 @@ function MapsCustomControl(customControlDiv, map, lat, lng) {
 
 function createHeaderContent(db, id) {
 
-
+  if(document.getElementById('chat-back')) return;
   const activityObjectStore = db.transaction('activity').objectStore('activity')
-  const leftDiv = document.createElement('div')
-
-  const backDiv = document.createElement('div')
-  backDiv.className = 'back-icon'
-  backDiv.id = 'back-conv'
-  backDiv.style.float = 'left'
-  const backIcon = document.createElement('i')
-  backIcon.style.marginRight = '5px'
-  backIcon.className = 'material-icons back-icon--large'
-  backIcon.textContent = 'arrow_back'
-
-  backDiv.appendChild(backIcon)
-
+  let leftDiv = headerBackIcon()
 
   activityObjectStore.get(id).onsuccess = function (event) {
 
@@ -468,33 +456,23 @@ function createHeaderContent(db, id) {
       var primarySpan = document.createElement('div');
       primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
       primarySpan.textContent = record.activityName;
-      var secondarySpan = document.createElement('span');
-      secondarySpan.className = 'mdc-list-item__secondary-text';
-      secondarySpan.textContent = 'Click here to see details';
-
-      primarySpan.appendChild(secondarySpan);
-
-      leftDiv.appendChild(backDiv);
-      leftDiv.appendChild(primarySpan);
-      modifyHeader({
-        id: 'app-main-header',
-        left: leftDiv.outerHTML
-      });
-
-      document.getElementById('back-conv').addEventListener('click', function () {
-        backNav();
-      });
-
-      document.querySelector('.comment-header-primary').addEventListener('click', function () {
+      primarySpan.onclick = function(){
         checkIfRecordExists('activity', record.activityId).then(function (id) {
-
           if (id) {
             updateCreateActivity(record);
           } else {
             listView();
           }
         }).catch(handleError);
-      });
+      }
+      var secondarySpan = document.createElement('span');
+      secondarySpan.className = 'mdc-list-item__secondary-text';
+      secondarySpan.textContent = 'Click here to see details';
+
+      primarySpan.appendChild(secondarySpan); 
+      leftDiv.appendChild(primarySpan);
+      document.getElementById('section-start').appendChild(leftDiv);
+    
     });
   }
 }
@@ -863,7 +841,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function createTempRecord(office, template, data) {
+function createTempRecord(office, template, prefill) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -877,17 +855,22 @@ function createTempRecord(office, template, data) {
       if (!selectedCombo) {
         return;
       }
-
-      const bareBonesScheduleArray = []
-      selectedCombo.schedule.forEach(function (schedule) {
-        const bareBonesSchedule = {}
-        bareBonesSchedule.name = schedule
-        bareBonesSchedule.startTime = ''
-        bareBonesSchedule.endTime = ''
-        bareBonesScheduleArray.push(bareBonesSchedule)
-      })
-
-
+     
+      let bareBonesScheduleArray;
+      if(prefill.schedule) {
+        bareBonesScheduleArray = prefill.schedule
+      }
+      else {
+        bareBonesScheduleArray = []
+        selectedCombo.schedule.forEach(function (schedule) {
+          const bareBonesSchedule = {}
+          bareBonesSchedule.name = schedule
+          bareBonesSchedule.startTime = ''
+          bareBonesSchedule.endTime = ''
+          bareBonesScheduleArray.push(bareBonesSchedule)
+        })
+      }
+      
       const bareBonesRecord = {
         office: selectedCombo.office,
         template: selectedCombo.template,
@@ -1097,16 +1080,10 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy, db, showSendButton) {
+function updateCreateContainer(recordCopy, showSendButton) {
+
   const record = JSON.parse(recordCopy);
   document.body.style.backgroundColor = '#eeeeee'
-
-  const leftHeaderContent = document.createElement('div')
-  leftHeaderContent.style.display = 'inline-flex'
-  const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons'
-  backSpan.textContent = 'arrow_back'
-  backSpan.id = 'backToConv'
 
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
@@ -1115,26 +1092,10 @@ function updateCreateContainer(recordCopy, db, showSendButton) {
   activityName.style.marginTop = '6px'
   activityName.className = 'mdc-list-item__text'
   activityName.style.width = `${document.documentElement.clientWidth -100}px`
-
-  leftHeaderContent.appendChild(backSpan);
-  leftHeaderContent.appendChild(activityName);
-  const righHeaderContent = document.createElement('div');
-
-  modifyHeader({
-    id: 'app-main-header',
-    left: leftHeaderContent.outerHTML,
-    right: righHeaderContent.outerHTML
-  })
-
-
-  document.getElementById('backToConv').addEventListener('click', function () {
-    updateLocalRecord(record, db).then(function () {
-      backNav()
-    }).catch(handleError)
-  })
-
-
-
+  let backIcon = headerBackIcon();
+  backIcon.appendChild(activityName)
+  document.getElementById('section-start').appendChild(backIcon);
+  
   const container = document.createElement('div')
   container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'
 
@@ -1201,7 +1162,7 @@ function updateCreateActivity(record, showSendButton) {
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
     const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord, db, showSendButton).outerHTML
+    appView.innerHTML = updateCreateContainer(oldRecord, showSendButton).outerHTML
 
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {

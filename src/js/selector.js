@@ -85,10 +85,18 @@ function selectorUI(data) {
 }
 
 function createSelectorHeader(data) {
-
+  if(document.getElementById('back-selector')) return;
   const backDiv = document.createElement('div')
   backDiv.className = 'back-icon'
   backDiv.id = 'back-selector'
+  backDiv.onclick = function(){
+    if (data.store === 'subscriptions') {
+      listView();
+    } else {
+      document.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
+      updateCreateActivity(history.state[1], true);
+    }
+  }
   backDiv.style.float = 'left'
   const backIcon = document.createElement('i')
   backIcon.style.marginRight = '5px'
@@ -96,20 +104,9 @@ function createSelectorHeader(data) {
   backIcon.textContent = 'arrow_back'
 
   backDiv.appendChild(backIcon)
-
-  modifyHeader({
-    id: 'app-main-header',
-    left: backDiv.outerHTML
-  })
-
-  document.querySelector('#back-selector').addEventListener('click', function (e) {
-    if (data.store === 'subscriptions') {
-      listView();
-    } else {
-      document.querySelector('.mdc-top-app-bar__section--align-end').classList.remove('search-field-transform')
-      updateCreateActivity(history.state[1], true);
-    }
-  })
+  document.getElementById('section-start').appendChild(backDiv)
+ 
+  
 }
 
 

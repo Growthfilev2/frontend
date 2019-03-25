@@ -7,6 +7,8 @@ function profileView(pushState) {
   }
 
   document.body.style.backgroundColor = '#eeeeee';
+  document.getElementById('section-start').appendChild(headerBackIcon())
+
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
   var req = indexedDB.open(dbName);
@@ -18,15 +20,13 @@ function profileView(pushState) {
       var record = event.target.result;
       rootObjectStore.put(record);
       rootTx.oncomplete = function () {
-        createProfileHeader();
+
         createProfilePanel(db).then(function (view) {
 
           if (!document.getElementById('app-current-panel')) return;
 
           document.getElementById('app-current-panel').innerHTML = view.outerHTML;
-          document.getElementById('close-profile--panel').addEventListener('click', function () {
-            backNav();
-          });
+        
 
           if (native.getName() === 'Android') {
             document.getElementById('uploadProfileImage').addEventListener('click', function () {
@@ -45,28 +45,12 @@ function profileView(pushState) {
           changeDisplayName(user);
           changeEmailAddress(user);
         })
-
       };
     };
   };
 }
 
 
-
-function createProfileHeader() {
-
-  var backSpan = document.createElement('span');
-  backSpan.id = 'close-profile--panel';
-  var backIcon = document.createElement('i');
-  backIcon.className = 'material-icons';
-
-  backIcon.textContent = 'arrow_back';
-  backSpan.appendChild(backIcon);
-  modifyHeader({
-    id: 'app-main-header',
-    left: backSpan.outerHTML
-  });
-}
 
 function createProfilePanel(db) {
   return new Promise(function (resolve) {

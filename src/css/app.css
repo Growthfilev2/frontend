@@ -1555,7 +1555,9 @@ input[type="datetime-local"] {
   --mdc-theme-on-primary: white !important;
   --mdc-theme-on-secondary: #ffffff !important;
 }
-
+.mdc-list-item--selected {
+  color: #0399f4 !important;
+}
 
 .mdc-line-ripple {
   background-color: #44a3eb !important;

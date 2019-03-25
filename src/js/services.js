@@ -758,6 +758,100 @@ function emailVerify() {
   emailDialog.show()
 }
 
+function radioList(attr){
+  const li  = document.createElement('li')
+  li.className = 'mdc-list-item mdc-ripple-surface--secondary'
+  li.setAttribute('role','radio')
+ 
+  // li.setAttribute('aria-checked',"true")
+  // li.setAttribute('tabindex',"0")
+  const span = document.createElement('span')
+  span.className = 'mdc-list-item__graphic'
+  const radio = document.createElement('div')
+  radio.className = 'mdc-radio'
+  const input = document.createElement('input')
+  input.className = 'mdc-radio__native-control'
+  input.setAttribute('type','radio')
+  input.setAttribute('id',attr.id)
+  input.setAttribute('name','list-radio-item-group')
+  input.setAttribute('value',attr.value)
+
+  if(attr.selected) {
+    li.setAttribute('aria-checked',"true")
+    li.classList.add('mdc-list-item--selected');
+    input.setAttribute('checked',"true")
+  }
+  else {
+    li.setAttribute('aria-checked',"false")
+  }
+  const background = document.createElement('div')
+  background.className = 'mdc-radio__background'
+  const outer = document.createElement('div')
+  outer.className = 'mdc-radio__outer-circle'
+  const inner = document.createElement('div')
+  inner.className = 'mdc-radio__inner-circle'
+  background.appendChild(outer)
+  background.appendChild(inner);
+  radio.appendChild(input)
+  radio.appendChild(background)
+  span.appendChild(radio)
+  const label = document.createElement('label')
+  label.textContent = attr.labelText
+  label.style.padding = '8px 0px 8px 0px'
+  label.style.width=  '-webkit-fill-available'
+  label.className = 'mdc-list-item__text'
+  label.setAttribute('for',attr.id)
+  li.appendChild(span)
+  li.appendChild(label)
+
+  return li
+}
+
+function createBlankPayrollDialog(notificationData){
+  
+const ul = document.createElement('ul')
+ul.className = 'mdc-list'
+ul.id = 'payroll-notification-list'
+ul.setAttribute('role','radiogroup');
+
+notificationData.forEach(function(data){
+  let selected = false
+  if(data.template === 'leave') {
+      selected  = true
+  }
+  ul.appendChild(radioList({labelText:data.template,id:convertKeyToId(data.template),value:data.template,selected:selected}))
+  
+})
+
+document.getElementById('dialog-container').innerHTML = dialog({id:'blank-payroll-dialog',showAccept:true,showCancel:true,headerText:'Payroll Alert',content:ul}).outerHTML
+const dialogEl = document.getElementById('blank-payroll-dialog');
+const payrollDialog  = new mdc.dialog.MDCDialog(dialogEl);
+const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
+radioListInit.singleSelection = true
+
+payrollDialog.listen('MDCDialog:accept',function(evt){
+  const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function(el) {
+    return new mdc.radio.MDCRadio(el);
+  });
+  leaveRadio.forEach(function(el){
+    if(el.checked) {
+      notificationData.forEach(function(data){
+        if(data.template === el.value){
+          createTempRecord('Puja Capital',el.value,{schedule:data.schedule});
+          return;
+        }
+      })
+      return;
+    }
+  })
+  dialogEl.remove();
+})
+payrollDialog.listen('MDCDialog:cancel',function(evt){
+  dialogEl.remove()
+})
+payrollDialog.show()
+}
+
 function initFirstLoad(response) {
   if (history.state[0] !== 'listView') return;
   if (response.msg.hasOwnProperty('activity')) {
@@ -888,21 +982,26 @@ function getInputText(selector) {
 
 
 function runRead(value) {
+  console.log(value)
   if (!localStorage.getItem('dbexist')) return
+
   if (!value) return requestCreator('Null', value);
 
-  const key = Object.keys(value)[0]
-  switch (key) {
-    case 'verifyEmail':
-      emailVerify();
-      break;
-    case 'read':
+  const keys = Object.keys(value);
+  keys.forEach(function(key){
+    if(key === 'verifyEmail') {
+      emailVerify()
+      return;
+    }  
+    if(key === 'read') {
       requestCreator('Null', value);
-      break;
-    default:
-      requestCreator('Null', value);
-  }
-
+      return;
+    }
+    if(key === 'payroll') {
+      createBlankPayrollDialog(JSON.parse(value[key]))
+      return;
+    }
+  })
 }
 
 function removeChildNodes(parent) {

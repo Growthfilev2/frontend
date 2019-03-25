@@ -224,8 +224,6 @@ function layoutGrid() {
   const layoutInner = document.createElement('div')
   layoutInner.className = 'mdc-layout-grid__inner cell-space'
 
-  const headerDiv = document.createElement('div')
-  headerDiv.id = 'header'
   const currentPanel = document.createElement('div')
   currentPanel.id = 'app-current-panel'
   currentPanel.className = 'mdc-layout-grid__cell--span-12'
@@ -235,54 +233,14 @@ function layoutGrid() {
 
   const dialogContainer = document.createElement('div')
   dialogContainer.id = 'dialog-container'
-  headerDiv.appendChild(createHeader('app-main-header'))
 
   layoutInner.appendChild(headerDiv)
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
   layout.appendChild(dialogContainer)
-  document.body.innerHTML = layout.outerHTML
-
-
+  document.getElementById('growthfile').innerHTML = layout.outerHTML
 }
-
-
-
-function createHeader(id) {
-
-  const header = document.createElement('header')
-  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
-  header.id = id
-
-  const row = document.createElement('div')
-  row.className = 'mdc-top-app-bar__row'
-
-  const sectionStart = document.createElement('section')
-  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
-
-  const leftUI = document.createElement('div')
-  leftUI.id = id + 'view-type'
-  leftUI.className = 'view-type'
-  sectionStart.appendChild(leftUI)
-
-  const sectionEnd = document.createElement('div')
-  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
-
-  const rightUI = document.createElement('div')
-  rightUI.id = id + 'action-data'
-
-  rightUI.className = 'action-data'
-
-  sectionEnd.appendChild(rightUI)
-  row.appendChild(sectionStart)
-  row.appendChild(sectionEnd)
-  header.appendChild(row)
-  return header
-}
-
-
-
 
 function startApp(start) {
 

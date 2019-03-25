@@ -571,6 +571,7 @@ function listPanel() {
 
 
 function creatListHeader(headerName) {
+  if(document.getElementById('profile-icon-list')) return
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
@@ -578,7 +579,7 @@ function creatListHeader(headerName) {
     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
       const parentIconDiv = document.createElement('div')
       parentIconDiv.className = 'profile--icon-header'
-
+      parentIconDiv.id = 'profile-icon-list'
       const menuIcon = document.createElement('div')
       menuIcon.id = 'menu--panel'
 
@@ -591,22 +592,17 @@ function creatListHeader(headerName) {
       icon.src = './img/empty-user.jpg';
       icon.className = 'list-photo-header'
       object.appendChild(icon);
-
+      icon.onclick = function(){
+        profileView(true)
+      }
       menuIcon.appendChild(object)
 
       const headerText = document.createElement('p');
       headerText.textContent = headerName;
       menuIcon.appendChild(headerText)
       parentIconDiv.appendChild(menuIcon)
-      modifyHeader({
-        id: 'app-main-header',
-        left: parentIconDiv.outerHTML,
-        right: ''
-      });
+      document.getElementById('section-start').appendChild(parentIconDiv);
 
-      document.querySelector('.list-photo-header').addEventListener('click', function () {
-        profileView(true)
-      })
     })
   }
 }
@@ -639,4 +635,18 @@ function modifyHeader(attr) {
     right.innerHTML = attr.right
   }
 
+}
+
+function headerBackIcon(){
+  if(document.getElementById('back-icon')) return;
+  const leftHeaderContent = document.createElement('div')  
+  leftHeaderContent.id = 'back-icon'
+  const backSpan = document.createElement('span')
+  backSpan.className = 'material-icons'
+  backSpan.textContent = 'arrow_back'
+  backSpan.onclick = function(){
+    backNav();
+  }
+  leftHeaderContent.appendChild(backSpan)
+  return leftHeaderContent;
 }
