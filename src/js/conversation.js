@@ -916,7 +916,7 @@ function createTempRecord(office, template, data) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-
+          
           let message;
           if (native.getName() === 'Android') {
             message = 'Make Sure you have set Location Mode to High Accuracy'
