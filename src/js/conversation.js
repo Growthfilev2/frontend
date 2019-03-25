@@ -434,7 +434,6 @@ function MapsCustomControl(customControlDiv, map, lat, lng) {
 function createHeaderContent(db, id) {
   const sectionStart= document.getElementById('section-start');
   sectionStart.innerHTML = ''
-  if(document.getElementById('chat-back')) return;
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   let leftDiv = headerBackIcon()
   

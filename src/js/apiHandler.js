@@ -45,7 +45,7 @@ self.onmessage = function (event) {
   }
 
   if (event.data.type === 'Null') {
-    updateIDB(meta);
+    updateIDB(event.data.meta);
     return;
   }
 
