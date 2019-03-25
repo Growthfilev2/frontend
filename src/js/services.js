@@ -633,6 +633,7 @@ function requestCreator(requestType, requestBody) {
         else {
           window.addEventListener('iosLocation', function _iosLocation(e) {
             promises.push(e.detail)
+            window.removeEventListener('iosLocation',_iosLocation,true)
           },true)
         }
       }
