@@ -873,7 +873,11 @@ function createTempRecord(office, template, prefill) {
           bareBonesScheduleArray.push(bareBonesSchedule)
         })
       }
-      
+      if(prefill.attachment) {
+       Object.keys(prefill.attachment).forEach(function(key){
+         selectedCombo.attachment[key] = prefill.attachment[key]
+       })
+      }
       const bareBonesRecord = {
         office: selectedCombo.office,
         template: selectedCombo.template,
@@ -2093,10 +2097,9 @@ function setFilePath(str, key, show) {
   textCont.appendChild(span)
   li.appendChild(textCont)
   if (show) return li
-
-
-
 }
+
+
 
 function readCameraFile() {
   if (native.getName() === 'Android') {

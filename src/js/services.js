@@ -290,7 +290,13 @@ function handleGeoLocationApi(holder, htmlLocation) {
       reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
       return;
     }
-
+    if(body === "") {
+      if (htmlLocation) {
+        resolve(htmlLocation)
+        return;
+      }
+      reject("empty string from AndroidInterface.getCellularData");
+    }
     if (!Object.keys(JSON.parse(body)).length) {
       if (htmlLocation) {
         return resolve(htmlLocation);
@@ -854,7 +860,8 @@ function createBlankPayrollDialog(notificationData) {
         notificationData.forEach(function (data) {
           if (data.template === el.value) {
             createTempRecord('Puja Capital', el.value, {
-              schedule: data.schedule
+              schedule: data.schedule,
+              attachment:data.attachment
             });
             return;
           }
@@ -1033,6 +1040,9 @@ function removeChildNodes(parent) {
   }
 }
 
+function jniException (message,stack){
+  handleError({message:message,body:stack,androidException:true})
+}
 function sendExceptionObject(exception, message, param) {
   handleError({
     message: `${message}`,
