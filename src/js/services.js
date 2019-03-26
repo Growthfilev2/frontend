@@ -1012,11 +1012,8 @@ function getInputText(selector) {
 
 
 function runRead(value) {
-  console.log(value)
   if (!localStorage.getItem('dbexist')) return
-
   if (!value) return requestCreator('Null', value);
-
   const keys = Object.keys(value);
   keys.forEach(function (key) {
     if (key === 'verifyEmail') {

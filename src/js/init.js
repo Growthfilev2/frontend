@@ -251,7 +251,7 @@ function startApp(start) {
       return
     }
 
-    if(appKey.getMode() === 'production') {
+    if(!appKey.getInfo()) {
       redirect();
       return;
     }
