@@ -533,16 +533,6 @@ function sortedByAccuracy(geoData) {
   return result[0];
 }
 
-function sendCurrentViewNameToAndroid(viewName) {
-  if (native.getName() === 'Android') {
-    try {
-      AndroidInterface.startConversation(viewName);
-    } catch (e) {
-      sendExceptionObject(e, 'CATCH Type 5: AndroidInterface.startConversation at sendCurrentViewNameToAndroid', [viewName]);
-    }
-  }
-}
-
 
 
 
@@ -987,7 +977,7 @@ function androidStopRefreshing() {
   if (native.getName() !== 'Android') return;
   const appInfo = JSON.parse(native.getInfo())
   console.log(appInfo);
-  if (appInfo.appVersion <= 7) return;
+  if (appInfo.appVersion >= 8) return;
   try {
     AndroidInterface.stopRefreshing(true);
   } catch (e) {
