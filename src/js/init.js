@@ -251,9 +251,11 @@ function startApp(start) {
       return
     }
 
-    if(!appKey.getInfo()) {
-      redirect();
-      return;
+    if(appKey.getMode()==='production') {
+      if(!appKey.getInfo()) {
+        redirect();
+        return;
+      }
     }
 
     if (!localStorage.getItem('error')) {
