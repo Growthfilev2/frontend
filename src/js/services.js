@@ -175,7 +175,7 @@ function geolocationApi(body) {
 
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key='+appKey.getMapKey(), true);
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + appKey.getMapKey(), true);
     xhr.setRequestHeader('Content-Type', 'application/json');
 
     xhr.onreadystatechange = function () {
@@ -470,13 +470,13 @@ function updateLocationInRoot(finalLocation) {
       });
       window.dispatchEvent(suggestCheckIn);
 
-      if(native.getName() === 'Ios') {
-        var iosLocation = new CustomEvent('iosLocation',{
-          "detail":finalLocation
+      if (native.getName() === 'Ios') {
+        var iosLocation = new CustomEvent('iosLocation', {
+          "detail": finalLocation
         });
         window.dispatchEvent(iosLocation)
       }
-      
+
     };
     tx.onerror = function () {
       handleError({
@@ -599,8 +599,8 @@ function isLocationStatusWorking() {
 
 function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;
-  if(!auth) return;
-   var requestGenerator = {
+  if (!auth) return;
+  var requestGenerator = {
     type: requestType,
     body: '',
     meta: {
@@ -611,7 +611,7 @@ function requestCreator(requestType, requestBody) {
         photoURL: auth.photoURL,
         phoneNumber: auth.phoneNumber,
       },
-      apiUrl:appKey.getBaseUrl()
+      apiUrl: appKey.getBaseUrl()
     }
   };
 
@@ -619,7 +619,7 @@ function requestCreator(requestType, requestBody) {
     auth.getIdToken(false).then(function (token) {
       requestGenerator.body = requestBody;
       requestGenerator.meta.user.token = token;
-      
+
       apiHandler.postMessage(requestGenerator);
     }).catch(function (error) {
       handleError({
@@ -633,17 +633,16 @@ function requestCreator(requestType, requestBody) {
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
       if (isLocationOld) {
-        if(native.getName() === 'Android') {
+        if (native.getName() === 'Android') {
           promises.push(manageLocation())
-        }
-        else {
+        } else {
           window.addEventListener('iosLocation', function _iosLocation(e) {
             promises.push(e.detail)
-            window.removeEventListener('iosLocation',_iosLocation,true)
-          },true)
+            window.removeEventListener('iosLocation', _iosLocation, true)
+          }, true)
         }
       }
-      
+
       Promise.all(promises).then(function (result) {
         const token = result[0];
         if (result.length == 2) {
@@ -660,9 +659,9 @@ function requestCreator(requestType, requestBody) {
         requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
         requestBody['geopoint'] = geopoints;
         requestGenerator.body = requestBody;
-        
+
         requestGenerator.meta.user.token = token;
-       
+
         sendRequest(location, requestGenerator);
       }).catch(function (error) {
         handleError(error);
@@ -775,11 +774,11 @@ function emailVerify() {
   emailDialog.show()
 }
 
-function radioList(attr){
-  const li  = document.createElement('li')
+function radioList(attr) {
+  const li = document.createElement('li')
   li.className = 'mdc-list-item mdc-ripple-surface--secondary'
-  li.setAttribute('role','radio')
- 
+  li.setAttribute('role', 'radio')
+
   // li.setAttribute('aria-checked',"true")
   // li.setAttribute('tabindex',"0")
   const span = document.createElement('span')
@@ -788,18 +787,17 @@ function radioList(attr){
   radio.className = 'mdc-radio'
   const input = document.createElement('input')
   input.className = 'mdc-radio__native-control'
-  input.setAttribute('type','radio')
-  input.setAttribute('id',attr.id)
-  input.setAttribute('name','list-radio-item-group')
-  input.setAttribute('value',attr.value)
+  input.setAttribute('type', 'radio')
+  input.setAttribute('id', attr.id)
+  input.setAttribute('name', 'list-radio-item-group')
+  input.setAttribute('value', attr.value)
 
-  if(attr.selected) {
-    li.setAttribute('aria-checked',"true")
+  if (attr.selected) {
+    li.setAttribute('aria-checked', "true")
     li.classList.add('mdc-list-item--selected');
-    input.setAttribute('checked',"true")
-  }
-  else {
-    li.setAttribute('aria-checked',"false")
+    input.setAttribute('checked', "true")
+  } else {
+    li.setAttribute('aria-checked', "false")
   }
   const background = document.createElement('div')
   background.className = 'mdc-radio__background'
@@ -815,58 +813,71 @@ function radioList(attr){
   const label = document.createElement('label')
   label.textContent = attr.labelText
   label.style.padding = '8px 0px 8px 0px'
-  label.style.width=  '-webkit-fill-available'
+  label.style.width = '-webkit-fill-available'
   label.className = 'mdc-list-item__text'
-  label.setAttribute('for',attr.id)
+  label.setAttribute('for', attr.id)
   li.appendChild(span)
   li.appendChild(label)
 
   return li
 }
 
-function createBlankPayrollDialog(notificationData){
-  
-const ul = document.createElement('ul')
-ul.className = 'mdc-list'
-ul.id = 'payroll-notification-list'
-ul.setAttribute('role','radiogroup');
+function createBlankPayrollDialog(notificationData) {
 
-notificationData.forEach(function(data){
-  let selected = false
-  if(data.template === 'leave') {
-      selected  = true
-  }
-  ul.appendChild(radioList({labelText:data.template,id:convertKeyToId(data.template),value:data.template,selected:selected}))
-  
-})
+  const ul = document.createElement('ul')
+  ul.className = 'mdc-list'
+  ul.id = 'payroll-notification-list'
+  ul.setAttribute('role', 'radiogroup');
 
-document.getElementById('dialog-container').innerHTML = dialog({id:'blank-payroll-dialog',showAccept:true,showCancel:true,headerText:'Payroll Alert',content:ul}).outerHTML
-const dialogEl = document.getElementById('blank-payroll-dialog');
-const payrollDialog  = new mdc.dialog.MDCDialog(dialogEl);
-const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
-radioListInit.singleSelection = true
-
-payrollDialog.listen('MDCDialog:accept',function(evt){
-  const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function(el) {
-    return new mdc.radio.MDCRadio(el);
-  });
-  leaveRadio.forEach(function(el){
-    if(el.checked) {
-      notificationData.forEach(function(data){
-        if(data.template === el.value){
-          createTempRecord('Puja Capital',el.value,{schedule:data.schedule});
-          return;
-        }
-      })
-      return;
+  notificationData.forEach(function (data) {
+    let selected = false
+    if (data.template === 'leave') {
+      selected = true
     }
+    ul.appendChild(radioList({
+      labelText: data.template,
+      id: convertKeyToId(data.template),
+      value: data.template,
+      selected: selected
+    }))
+
   })
-  dialogEl.remove();
-})
-payrollDialog.listen('MDCDialog:cancel',function(evt){
-  dialogEl.remove()
-})
-payrollDialog.show()
+
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'blank-payroll-dialog',
+    showAccept: true,
+    showCancel: true,
+    headerText: 'Payroll Alert',
+    content: ul
+  }).outerHTML
+  const dialogEl = document.getElementById('blank-payroll-dialog');
+  const payrollDialog = new mdc.dialog.MDCDialog(dialogEl);
+  const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
+  radioListInit.singleSelection = true
+
+  payrollDialog.listen('MDCDialog:accept', function (evt) {
+    const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
+      return new mdc.radio.MDCRadio(el);
+    });
+    leaveRadio.forEach(function (el) {
+      if (el.checked) {
+        notificationData.forEach(function (data) {
+          if (data.template === el.value) {
+            createTempRecord('Puja Capital', el.value, {
+              schedule: data.schedule
+            });
+            return;
+          }
+        })
+        return;
+      }
+    })
+    dialogEl.remove();
+  })
+  payrollDialog.listen('MDCDialog:cancel', function (evt) {
+    dialogEl.remove()
+  })
+  payrollDialog.show()
 
 }
 
@@ -972,13 +983,17 @@ function officeRemovalSuccess(data) {
 }
 
 function androidStopRefreshing() {
-  if (native.getName() === 'Android') {
-    try {
-      AndroidInterface.stopRefreshing(true);
-    } catch (e) {
-      sendExceptionObject(e, 'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing', [true])
-    }
+
+  if (native.getName() !== 'Android') return;
+  const appInfo = JSON.parse(native.getInfo())
+  console.log(appInfo);
+  if (appInfo.appVersion <= 7) return;
+  try {
+    AndroidInterface.stopRefreshing(true);
+  } catch (e) {
+    sendExceptionObject(e, 'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing', [true])
   }
+
 }
 
 function onErrorMessage(error) {
@@ -1006,16 +1021,16 @@ function runRead(value) {
   if (!value) return requestCreator('Null', value);
 
   const keys = Object.keys(value);
-  keys.forEach(function(key){
-    if(key === 'verifyEmail') {
+  keys.forEach(function (key) {
+    if (key === 'verifyEmail') {
       emailVerify()
       return;
-    }  
-    if(key === 'read') {
+    }
+    if (key === 'read') {
       requestCreator('Null', value);
       return;
     }
-    if(key === 'payroll') {
+    if (key === 'payroll') {
       createBlankPayrollDialog(JSON.parse(value[key]))
       return;
     }

@@ -50,7 +50,6 @@ function fetchAddendumForComment(id) {
     createHeaderContent(db, id)
     commentPanel(id)
     statusChange(db, id);
-    sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
