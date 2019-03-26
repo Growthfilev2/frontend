@@ -599,8 +599,8 @@ function isLocationStatusWorking() {
 
 function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;
-
-  var requestGenerator = {
+  if(!auth) return;
+   var requestGenerator = {
     type: requestType,
     body: '',
     meta: {
@@ -867,6 +867,7 @@ payrollDialog.listen('MDCDialog:cancel',function(evt){
   dialogEl.remove()
 })
 payrollDialog.show()
+
 }
 
 function initFirstLoad(response) {
