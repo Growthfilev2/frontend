@@ -33,14 +33,7 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return JSON.stringify({
-          baseOs: this.getName(),
-          deviceBrand: '',
-          deviceModel: '',
-          appVersion: 7,
-          osVersion: '',
-          id: '',
-        })
+        return false
       }
 
       if (this.getName() === 'Android') {
@@ -251,7 +244,7 @@ function startApp(start) {
       return
     }
 
-    if(appKey.getMode() === 'production') {
+    if(!native.getInfo()) {
       redirect();
       return;
     }
