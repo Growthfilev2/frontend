@@ -859,7 +859,7 @@ function createBlankPayrollDialog(notificationData) {
       if (el.checked) {
         notificationData.forEach(function (data) {
           if (data.template === el.value) {
-            createTempRecord('Puja Capital', el.value, {
+            createTempRecord(data.office, el.value, {
               schedule: data.schedule,
               attachment:data.attachment
             });
