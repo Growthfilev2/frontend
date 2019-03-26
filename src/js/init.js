@@ -98,7 +98,6 @@ window.addEventListener('load', function () {
   layoutGrid()
  
 
-  
   firebase.initializeApp(appKey.getKeys())
 
   const title = 'Device Incompatibility'
@@ -252,7 +251,10 @@ function startApp(start) {
       return
     }
 
-
+    if(appKey.getMode() === 'production') {
+      redirect();
+      return;
+    }
 
     if (!localStorage.getItem('error')) {
       localStorage.setItem('error', JSON.stringify({}));
