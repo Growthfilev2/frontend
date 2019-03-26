@@ -14,7 +14,7 @@ AppKeys.prototype.getKeys = function(){
     if(this.mode === 'production') {
         return {
             apiKey: this.getMapKey(),
-            authDomain: "growthfile-adminpanel.firebaseapp.com",
+            authDomain: "",
             projectId: "growthfile-207204",
             messagingSenderId: "701025551237"
         }
