@@ -50,7 +50,6 @@ function fetchAddendumForComment(id) {
     createHeaderContent(db, id)
     commentPanel(id)
     statusChange(db, id);
-    sendCurrentViewNameToAndroid('conversation')
     reinitCount(db, id)
 
     addendumIndex.openCursor(id).onsuccess = function (event) {
@@ -131,45 +130,45 @@ function commentPanel(id) {
 
   document.querySelector('.comment-field').oninput = function (evt) {
     if (!evt.target.value || !evt.target.value.replace(/\s/g, '').length) {
-      hideSendCommentButton()
+      toggleCommentButton(false)
     } else {
-      showSendCommentButton()
+      toggleCommentButton(true)
     }
   }
 
   document.getElementById('send-chat--input').onclick = function () {
-    if (isLocationStatusWorking()) {
-
-      sendComment(id)
+    if (!isLocationStatusWorking()) return;
+    let comment = document.querySelector('.comment-field').value;
+    const reqBody = {
+      'activityId': id,
+      'comment': comment
     }
+
+    requestCreator('comment', reqBody)
+
+    document.querySelector('.comment-field').value = ''
+    toggleCommentButton(false)
   }
 }
 
-function sendComment(id) {
-  let comment = document.querySelector('.comment-field').value;
-  const reqBody = {
-    'activityId': id,
-    'comment': comment
+
+function toggleCommentButton(show) {
+  const input = document.getElementById('send-chat--input');
+  const writeComment = document.getElementById('write--comment');
+  const statusCont = document.querySelector('.status--change-cont');
+
+  if (show) {
+    input.classList.remove('hidden')
+    writeComment.style.width = '80%'
+    statusCont.style.opacity = '0';
+  } else {
+    input.classList.add('hidden');
+    writeComment.style.width = '100%';
+    writeComment.style.transition = '0.3s ease'
+    statusCont.style.transition = '0.3s ease'
+    statusCont.style.opacity = '1'
   }
 
-  requestCreator('comment', reqBody)
-
-  document.querySelector('.comment-field').value = ''
-  hideSendCommentButton()
-}
-
-function hideSendCommentButton() {
-  document.getElementById('send-chat--input').classList.add('hidden')
-  document.getElementById('write--comment').style.width = '100%'
-  document.getElementById('write--comment').style.transition = '0.3s ease'
-  document.querySelector('.status--change-cont').style.transition = '0.3s ease'
-  document.querySelector('.status--change-cont').style.opacity = '1'
-}
-
-function showSendCommentButton() {
-  document.getElementById('send-chat--input').classList.remove('hidden')
-  document.getElementById('write--comment').style.width = '80%'
-  document.querySelector('.status--change-cont').style.opacity = '0';
 }
 
 function statusChange(db, id) {
@@ -315,15 +314,6 @@ function createComment(db, addendum, currentUser) {
       mapIcon.classList.add('user-map--span', 'material-icons')
       mapIcon.appendChild(document.createTextNode('location_on'))
 
-      link.onclick = function (evt) {
-        if (!hasMapsApiLoaded()) return
-        showMap = !showMap;
-        const loc = {
-          lat: addendum.location['_latitude'],
-          lng: addendum.location['_longitude']
-        }
-        maps(evt, showMap, addendum.addendumId, loc)
-      }
 
       mapIcon.dataset.latitude = addendum.location['_latitude']
       mapIcon.dataset.longitude = addendum.location['_longitude']
@@ -333,12 +323,28 @@ function createComment(db, addendum, currentUser) {
       mapDom.className = 'map-convo'
 
 
+      link.onclick = function (evt) {
+        if (!hasMapsApiLoaded()) return
+        showMap = !showMap;
+        const loc = {
+          lat: addendum.location['_latitude'],
+          lng: addendum.location['_longitude']
+        }
+
+        appendMap(loc, mapDom);
+        if (showMap) {
+          mapDom.style.height = '200px'
+          mapIcon.textContent = 'arrow_drop_down'
+        } else {
+          mapDom.style.height = '0px'
+          mapIcon.textContent = 'location_on'
+        }
+      }
       commentInfo.appendChild(datespan)
       commentInfo.appendChild(link)
       textContainer.appendChild(user)
       textContainer.appendChild(comment)
       textContainer.appendChild(commentInfo)
-
       commentBox.appendChild(textContainer)
       commentBox.appendChild(mapDom);
       resolve(commentBox)
@@ -374,46 +380,24 @@ function hasMapsApiLoaded() {
   return false
 }
 
-function maps(evt, show, id, location) {
-  let selector = ''
-  evt ? selector = document.getElementById(id).querySelector('.map-convo') : selector = document.querySelector(`.map-detail.${id}`)
 
-  if (!show) {
-    selector.style.height = '0px'
-    evt ? evt.target.textContent = 'location_on' : ''
-    return
-  }
+function appendMap(location, el) {
 
-  if (selector.children.length !== 0) {
-    selector.style.height = '200px'
-    evt ? evt.target.textContent = 'arrow_drop_down' : ''
-    return;
-  }
-
-  evt ? evt.target.textContent = 'arrow_drop_down' : ''
-
-  selector.style.height = '200px'
-
-  const map = new google.maps.Map(selector, {
+  const map = new google.maps.Map(el, {
     zoom: 16,
     center: location,
     disableDefaultUI: true
   });
 
-
-  if (!evt) {
-    var customControlDiv = document.createElement('div');
-    var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-    customControlDiv.index = 1;
-    map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-  }
+  var customControlDiv = document.createElement('div');
+  var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
+  customControlDiv.index = 1;
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
 
   const marker = new google.maps.Marker({
     position: location,
     map: map
   });
-
-
 }
 
 function MapsCustomControl(customControlDiv, map, lat, lng) {
@@ -447,23 +431,11 @@ function MapsCustomControl(customControlDiv, map, lat, lng) {
 }
 
 function createHeaderContent(db, id) {
-
-
+  const sectionStart= document.getElementById('section-start');
+  sectionStart.innerHTML = ''
   const activityObjectStore = db.transaction('activity').objectStore('activity')
-  const leftDiv = document.createElement('div')
-
-  const backDiv = document.createElement('div')
-  backDiv.className = 'back-icon'
-  backDiv.id = 'back-conv'
-  backDiv.style.float = 'left'
-  const backIcon = document.createElement('i')
-  backIcon.style.marginRight = '5px'
-  backIcon.className = 'material-icons back-icon--large'
-  backIcon.textContent = 'arrow_back'
-
-  backDiv.appendChild(backIcon)
-
-
+  let leftDiv = headerBackIcon()
+  
   activityObjectStore.get(id).onsuccess = function (event) {
 
     const record = event.target.result;
@@ -478,38 +450,32 @@ function createHeaderContent(db, id) {
       creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator'
       dataObject.appendChild(creatorImg);
-      backDiv.appendChild(dataObject);
-
+     
       var primarySpan = document.createElement('div');
-      primarySpan.className = 'mdc-list-item__text comment-header-primary mdc-typography--subtitle2';
-      primarySpan.textContent = record.activityName;
-      var secondarySpan = document.createElement('span');
-      secondarySpan.className = 'mdc-list-item__secondary-text';
-      secondarySpan.textContent = 'Click here to see details';
-
-      primarySpan.appendChild(secondarySpan);
-
-      leftDiv.appendChild(backDiv);
-      leftDiv.appendChild(primarySpan);
-      modifyHeader({
-        id: 'app-main-header',
-        left: leftDiv.outerHTML
-      });
-
-      document.getElementById('back-conv').addEventListener('click', function () {
-        backNav();
-      });
-
-      document.querySelector('.comment-header-primary').addEventListener('click', function () {
+      primarySpan.className = 'mdc-top-app-bar__title mdc-typography--subtitle2';
+      const name = document.createElement('span')
+      name.textContent = record.activityName;
+      name.className = ''
+      primarySpan.onclick = function(){
         checkIfRecordExists('activity', record.activityId).then(function (id) {
-
           if (id) {
             updateCreateActivity(record);
           } else {
             listView();
           }
         }).catch(handleError);
-      });
+      }
+      var info = document.createElement('span');
+      // secondarySpan.className = 'mdc-list-item__secondary-text';
+      info.textContent = 'Click here to see details';
+      
+      sectionStart.appendChild(leftDiv);
+      sectionStart.appendChild(dataObject);
+      primarySpan.appendChild(name);
+      primarySpan.appendChild(document.createElement('br'))
+      primarySpan.appendChild(info) 
+      sectionStart.appendChild(primarySpan)
+    
     });
   }
 }
@@ -543,11 +509,10 @@ function fillUsersInSelector(data) {
     let count = 0;
     let alreadyPresent = {}
 
-    recordAssignees.forEach(function(assignee){
-      if(typeof assignee === 'string') {
+    recordAssignees.forEach(function (assignee) {
+      if (typeof assignee === 'string') {
         alreadyPresent[assignee] = true;
-      }
-      else {
+      } else {
         alreadyPresent[assignee.phoneNumber] = true
       }
     })
@@ -556,13 +521,12 @@ function fillUsersInSelector(data) {
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-      
-      if(data.attachment.present) {
+
+      if (data.attachment.present) {
         count++
         ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
-      }
-      else {
-        if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
+      } else {
+        if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
           count++
           ul.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
         }
@@ -831,38 +795,6 @@ function resetSelectedContacts() {
 }
 
 
-
-function getLocationForMapSelector(tx, data) {
-  return new Promise(function (resolve, reject) {
-    let count = 0;
-    const ul = document.getElementById('data-list--container')
-    const store = tx.objectStore('map');
-    const office = data.record.office;
-    const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
-    store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
-      if (cursor.value.office !== data.record.office) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.location) {
-        count++
-        ul.appendChild(createVenueLi(cursor.value, false, data.record, true));
-      }
-      cursor.continue()
-    }
-    tx.oncomplete = function () {
-
-      resolve(count)
-    }
-    tx.onerror = function () {
-      reject(tx.error)
-    }
-  })
-}
-
-
 function checkMapStoreForNearByLocation(office, currentLocation) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -912,238 +844,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function createSeachInput(id, labelText) {
-  const search = document.createElement('div')
-  search.id = id
-  search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
-  const icon = document.createElement('i')
-  icon.className = 'material-icons mdc-text-field__icon'
-  icon.textContent = 'search'
-  const input = document.createElement("input")
-  input.className = 'mdc-text-field__input'
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
-
-  label.textContent = labelText
-  search.appendChild(icon)
-  search.appendChild(input)
-  search.appendChild(ripple)
-  search.appendChild(label)
-  return search
-}
-
-function handleClickListnersForMap(data, count) {
-
-
-  document.querySelector('#selector-submit-send').onclick = function () {
-    if (!count) {
-      updateCreateActivity(data.record, true)
-      return
-    }
-    const selected = document.querySelector('.mdc-radio.radio-selected');
-    if (!selected) {
-      document.getElementById('selector-warning').textContent = '* Please Choose A Location'
-      return;
-    };
-    const radio = new mdc.radio.MDCRadio(selected);
-    const selectedField = JSON.parse(radio.value)
-
-    updateDomFromIDB(data.record, {
-      hash: 'venue',
-      key: data.key
-    }, {
-      primary: selectedField.location,
-      secondary: {
-        address: selectedField.address,
-        geopoint: selectedField.geopoint
-      },
-    }).then(function (activity) {
-
-      updateCreateActivity(activity, true)
-    }).catch(function (error) {
-      console.log(error);
-    })
-  }
-}
-
-function fillChildrenInSelector(selectorStore, data, tx) {
-  const ul = document.getElementById('data-list--container')
-  const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
-  let count = 0;
-  selectorStore.openCursor(bound).onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) return;
-    if (data.attachment.office !== cursor.value.office) {
-      cursor.continue();
-      return;
-    }
-    if (cursor.value.attachment.Name) {
-      count++
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
-    }
-    if (cursor.value.attachment.Number) {
-      count++
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
-    }
-    cursor.continue()
-  }
-  tx.oncomplete = function () {
-    const btn = document.getElementById('selector-submit-send')
-    if (!count) {
-      ul.appendChild(noSelectorResult('No Values Found'))
-      btn.textContent = 'CANCEL'
-      btn.onclick = function () {
-        updateCreateActivity(data.record, true);
-      }
-      return;
-    }
-    // document.querySelector('.selector-send').classList.remove('hidden')
-    document.getElementById('selector-submit-send').onclick = function () {
-      const selector = document.querySelector('.mdc-radio.radio-selected');
-      if (!selector) {
-        document.getElementById('selector-warning').textContent = '* Please Select a Value'
-        return;
-      }
-      const radio = new mdc.radio.MDCRadio(selector)
-      const selectedField = JSON.parse(radio.value)
-      updateDomFromIDB(data.record, {
-        hash: 'children',
-        key: data.attachment.key
-      }, {
-        primary: selectedField.name
-      }).then(function (activity) {
-        updateCreateActivity(activity, true)
-      }).catch(function (error) {
-        console.log(error)
-      })
-    }
-  }
-}
-
-
-
-function fillSubscriptionInSelector(db, data) {
-  const mainUL = document.getElementById('data-list--container')
-  const grp = document.createElement('div')
-  grp.className = 'mdc-list-group'
-  const offices = []
-  const tx = db.transaction(['subscriptions'])
-  const store = tx.objectStore('subscriptions');
-  const officeIndex = store.index('office')
-  officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
-    const cursor = event.target.result
-
-    if (!cursor) return;
-
-    const headline3 = document.createElement('h3')
-    headline3.className = 'mdc-list-group__subheader subheader--group-small'
-    headline3.textContent = cursor.value.office
-    headline3.dataset.groupOffice = cursor.value.office
-    const ul = document.createElement('ul')
-    ul.className = 'mdc-list'
-    ul.dataset.selection = cursor.value.office
-    ul.setAttribute('aria-orientation', 'vertical')
-
-    offices.push(cursor.value.office)
-
-    grp.appendChild(headline3)
-    grp.appendChild(ul)
-    cursor.continue();
-  }
-
-  tx.oncomplete = function () {
-    if (data.suggestCheckIn) {
-      const parent = document.getElementById('data-list--container')
-      const suggestion = document.createElement('div')
-      suggestion.className = 'suggest-checkin--view'
-      const icon = document.createElement('span')
-      icon.className = 'material-icons suggestion-icon'
-      icon.textContent = 'add_alert'
-      suggestion.appendChild(icon)
-
-      const text = document.createElement('span')
-      text.textContent = 'Check-In ?'
-      text.className = 'suggest-checkin--text'
-      suggestion.appendChild(icon)
-      suggestion.appendChild(text)
-      parent.insertBefore(suggestion, parent.childNodes[0]);
-    }
-    insertTemplateByOffice(offices, data.suggestCheckIn);
-
-    mainUL.appendChild(grp)
-
-    document.getElementById('selector-submit-send').onclick = function () {
-      if (isLocationStatusWorking()) {
-
-        if (document.querySelector('.mdc-radio.radio-selected')) {
-          document.getElementById('selector-warning').textContent = ''
-          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          const selectedField = JSON.parse(radio.value);
-          document.getElementById('app-current-panel').dataset.view = 'create';
-          createTempRecord(selectedField.office, selectedField.template, data);
-        } else {
-          document.getElementById('selector-warning').textContent = 'Please Select a Template';
-        }
-      }
-    }
-  }
-}
-
-
-function insertTemplateByOffice(offices, showCheckInFirst) {
-
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  const frag = document.createDocumentFragment()
-  const checkInTemplate = []
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['subscriptions'], 'readonly');
-    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
-
-    subscriptionObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) {
-        return
-      }
-
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue()
-        return
-      }
-
-      if (document.querySelector(`[data-selection="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)) {
-        cursor.continue()
-        return
-      }
-      if (showCheckInFirst && cursor.value.template === 'check-in') {
-        checkInTemplate.push({
-          [cursor.value.office]: createGroupList(cursor.value.office, cursor.value.template)
-        })
-        cursor.continue();
-        return;
-      }
-      document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
-
-      cursor.continue()
-    }
-    tx.oncomplete = function () {
-
-      checkInTemplate.forEach(function (li) {
-        const keys = Object.keys(li);
-        keys.forEach(function (key) {
-          const el = document.querySelector(`[data-selection="${key}"]`);
-          el.insertBefore(li[key], el.childNodes[0])
-        })
-      });
-      document.querySelector('.selector-send').classList.remove('hidden');
-
-    }
-  }
-}
-
-function createTempRecord(office, template, data) {
+function createTempRecord(office, template, prefill) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1157,17 +858,26 @@ function createTempRecord(office, template, data) {
       if (!selectedCombo) {
         return;
       }
-
-      const bareBonesScheduleArray = []
-      selectedCombo.schedule.forEach(function (schedule) {
-        const bareBonesSchedule = {}
-        bareBonesSchedule.name = schedule
-        bareBonesSchedule.startTime = ''
-        bareBonesSchedule.endTime = ''
-        bareBonesScheduleArray.push(bareBonesSchedule)
-      })
-
-
+     
+      let bareBonesScheduleArray;
+      if(prefill.schedule) {
+        bareBonesScheduleArray = prefill.schedule
+      }
+      else {
+        bareBonesScheduleArray = []
+        selectedCombo.schedule.forEach(function (schedule) {
+          const bareBonesSchedule = {}
+          bareBonesSchedule.name = schedule
+          bareBonesSchedule.startTime = ''
+          bareBonesSchedule.endTime = ''
+          bareBonesScheduleArray.push(bareBonesSchedule)
+        })
+      }
+      if(prefill.attachment) {
+       Object.keys(prefill.attachment).forEach(function(key){
+         selectedCombo.attachment[key] = prefill.attachment[key]
+       })
+      }
       const bareBonesRecord = {
         office: selectedCombo.office,
         template: selectedCombo.template,
@@ -1195,43 +905,50 @@ function createTempRecord(office, template, data) {
           }
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
-          if (!record.location || isLocationOld) {
-            let message = 'Fetching Location Please wait. '
-            if (native.getName() === 'Android') {
-              message = message + ' Make Sure you have set Location Mode to High Accuracy'
-            }
-            appDialog(message, false)
-
-            manageLocation().then(function (location) {
-              if (location.latitude && location.longitude) {
-                updateLocationInRoot(location)
-                if (document.querySelector('#enable-gps')) {
-                  document.querySelector('#enable-gps').remove();
-                }
-                updateCreateActivity(bareBonesRecord)
-              }
-            }).catch(function (error) {
-
-              if (document.querySelector('#enable-gps')) {
-                document.querySelector('#enable-gps').remove();
-              }
-
-              let errorMessage = 'There was a problem in detecting your location'
-              if (native.getName() === 'Android') {
-                errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
-              }
-              appDialog(errorMessage, false)
-              setTimeout(function () {
-                if (document.querySelector('#enable-gps')) {
-                  document.querySelector('#enable-gps').remove();
-                }
-              }, 5000)
-              listView();
-              handleError(error)
-            })
-            return
+          if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
+         
+          let message;
+          if (native.getName() === 'Android') {
+            message = 'Make Sure you have set Location Mode to High Accuracy'
+          } else {
+            message = 'Please wait.'
           }
-          updateCreateActivity(bareBonesRecord)
+          const span = document.createElement('span')
+          span.className = 'mdc-typography--body1'
+          span.textContent = message
+          document.getElementById('dialog-container').innerHTML = dialog({
+            id: 'location-fetch-dialog',
+            content: span,
+            headerText: 'Fetching Location'
+          }).outerHTML
+          const dialogEl = document.getElementById('location-fetch-dialog')
+          const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
+          fetchingLocationDialog.show();
+          if(native.getName() === 'Ios') {
+            window.addEventListener('iosLocation',function _iosLocation(e){
+              dialogEl.remove();
+              updateCreateActivity(bareBonesRecord)
+              window.removeEventListener('iosLocation',_iosLocation,true);
+            },true)
+            return;
+          }
+          manageLocation().then(function (location) {
+            dialogEl.remove();
+            updateCreateActivity(bareBonesRecord)
+          }).catch(function (error) {
+
+            let errorMessage = 'There was a problem in detecting your location'
+            if (native.getName() === 'Android') {
+              errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
+            }
+            dialogEl.querySelector('.mdc-dialog__header__title').textContent = 'Failed To Get Current Location';
+            dialogEl.querySelector('section span').textContent = errorMessage;
+            setTimeout(function () {
+              dialogEl.remove();
+            }, 3000)
+            listView();
+            handleError(error)
+          })
         });
         return
       }
@@ -1351,30 +1068,6 @@ function updateLocalRecord(thisActivity, db) {
   })
 }
 
-function changeTextContentForNewSelectedVenue(attr, data) {
-  const el = document.getElementById(convertKeyToId(attr.key))
-  if (!el) return;
-  const primaryText = el.querySelector(`[data-primary]`)
-  const secondaryText = el.querySelector(`[data-secondary]`);
-  const sendActivity = document.getElementById('send-activity');
-
-  if (data.primary) {
-    if (primaryText) {
-      primaryText.textContent = data.primary
-    }
-  }
-  if (data.hasOwnProperty('secondary')) {
-    if (secondaryText) {
-      secondaryText.textContent = data.secondary.address
-    }
-  }
-  if (sendActivity) {
-    if (!sendActivity.dataset.progress) {
-      sendActivity.classList.remove('hidden')
-    }
-  }
-}
-
 function updateVenue(updatedActivity, attr, data) {
 
   updatedActivity.venue.forEach(function (field) {
@@ -1399,44 +1092,21 @@ function convertIdToKey(id) {
   return str.replace('  ', '-')
 }
 
-function updateCreateContainer(recordCopy, db, showSendButton) {
-  const record = JSON.parse(recordCopy);
-  document.body.style.backgroundColor = '#eeeeee'
+function updateCreateContainer(record, showSendButton) {
 
-  const leftHeaderContent = document.createElement('div')
-  leftHeaderContent.style.display = 'inline-flex'
-  const backSpan = document.createElement('span')
-  backSpan.className = 'material-icons'
-  backSpan.textContent = 'arrow_back'
-  backSpan.id = 'backToConv'
+  document.body.style.backgroundColor = '#eeeeee'
+  document.body.classList.remove('mdc-dialog-scroll-lock')
 
   const activityName = document.createElement('span')
   activityName.textContent = record.activityName
-  activityName.style.fontSize = '18px'
-  activityName.style.paddingLeft = '10px'
-  activityName.style.marginTop = '6px'
-  activityName.className = 'mdc-list-item__text'
-  activityName.style.width = `${document.documentElement.clientWidth -100}px`
-
-  leftHeaderContent.appendChild(backSpan);
-  leftHeaderContent.appendChild(activityName);
-  const righHeaderContent = document.createElement('div');
-
-  modifyHeader({
-    id: 'app-main-header',
-    left: leftHeaderContent.outerHTML,
-    right: righHeaderContent.outerHTML
-  })
-
-
-  document.getElementById('backToConv').addEventListener('click', function () {
-    updateLocalRecord(record, db).then(function () {
-      backNav()
-    }).catch(handleError)
-  })
-
-
-
+  activityName.className = 'mdc-top-app-bar__title'
+  let backIcon = headerBackIcon();
+ 
+  const sectionStart = document.getElementById('section-start')
+  sectionStart.innerHTML = ''
+  sectionStart.appendChild(backIcon);
+  sectionStart.appendChild(activityName)
+  
   const container = document.createElement('div')
   container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'
 
@@ -1502,8 +1172,8 @@ function updateCreateActivity(record, showSendButton) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-    const oldRecord = JSON.stringify(record);
-    appView.innerHTML = updateCreateContainer(oldRecord, db, showSendButton).outerHTML
+  
+    appView.innerHTML = updateCreateContainer(record, showSendButton).outerHTML
 
     const officeSection = document.getElementById('office--list')
     officeSection.appendChild(createSimpleLi('Office', {
@@ -1597,7 +1267,7 @@ function createCheckInVenue(venue, defaultSelected) {
 }
 
 function createSimpleLi(key, data) {
-
+  
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
 
@@ -1657,48 +1327,20 @@ function createSimpleLi(key, data) {
     undo.textContent = 'Undo'
     undo.onclick = function () {
       if (isLocationStatusWorking()) {
-
+      debugger
         document.querySelector('.undo-deleted').style.display = 'none'
         listItem.appendChild(loader('undo-delete-loader'));
-        reqForUndoDeleted(data.id)
+        requestCreator('statusChange', {
+          activityId: data.id,
+          status: 'PENDING'
+        })
+       
       }
     }
     listItem.appendChild(undo)
   }
 
   return listItem
-}
-
-function reqForUndoDeleted(id) {
-
-
-  requestCreator('statusChange', {
-    activityId: id,
-    status: 'PENDING'
-  })
-}
-
-function createGroupList(office, template) {
-
-  const li = document.createElement('li')
-  li.className = 'mdc-list-item transition-ease'
-  li.dataset.template = template
-  const span = document.createElement('span')
-  span.className = 'mdc-list-item__text'
-  span.textContent = template.toUpperCase()
-
-  const metaInput = document.createElement('span')
-  metaInput.className = 'mdc-list-item__meta'
-  metaInput.appendChild(createRadioInput())
-  li.onclick = function () {
-    checkRadioInput(this, {
-      office: office,
-      template: template
-    })
-  }
-  li.appendChild(span)
-  li.appendChild(metaInput)
-  return li
 }
 
 function createVenueSection(record) {
@@ -1830,7 +1472,13 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       }
-      maps('', showMap, convertKeyToId(venue.venueDescriptor), loc)
+      const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`)
+      appendMap(loc, mapParent)
+      if (showMap) {
+        mapParent.style.height = '200px';
+      } else {
+        mapParent.style.height = '0px';
+      }
     }
 
     if (record.canEdit) {
@@ -1898,7 +1546,7 @@ function createScheduleTable(data) {
 
   if (!data.schedule.length) {
     document.getElementById('schedule--group').style.display = 'none'
-    // return document.createElement('span')
+
   }
 
   let count = 0;
@@ -2449,10 +2097,9 @@ function setFilePath(str, key, show) {
   textCont.appendChild(span)
   li.appendChild(textCont)
   if (show) return li
-
-
-
 }
+
+
 
 function readCameraFile() {
   if (native.getName() === 'Android') {
@@ -2469,9 +2116,25 @@ function readCameraFile() {
 function openImage(imageSrc) {
 
   if (!imageSrc) return;
+  const largeImage = document.createElement('img')
+  largeImage.src = imageSrc;
+  largeImage.style.width = '100%';
 
-  document.getElementById('viewImage--dialog-component').querySelector("img").src = imageSrc;
-  const imageDialog = new mdc.dialog.MDCDialog.attachTo(document.querySelector('#viewImage--dialog-component'));
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'viewImage--dialog-component',
+    headerText: 'Photo',
+    content: largeImage,
+    showCancel: true,
+    showAccept: true
+  }).outerHTML
+  const dialogEl = document.querySelector('#viewImage--dialog-component')
+  const imageDialog = new mdc.dialog.MDCDialog.attachTo(dialogEl);
+  imageDialog.listen('MDCDialog:accept', function (evt) {
+    dialogEl.remove()
+  })
+  imageDialog.listen('MDCDialog:cancel', function (evt) {
+    dialogEl.remove()
+  })
   imageDialog.show()
 }
 
@@ -2504,81 +2167,39 @@ function createActivityCancellation(record) {
     }))
     document.querySelector('.update-create--activity').appendChild(StautsCont);
     if (!record.canEdit) return;
-    if (!document.getElementById('cancel-alert')) {
-      cancelAlertDialog()
-    }
 
-
-    var dialog = new mdc.dialog.MDCDialog(document.querySelector('#cancel-alert'));
-
-    document.getElementById('delete-allow').onclick = function () {
-      if (isLocationStatusWorking()) {
-        deleteActivityReq(record.activityId)
-      }
-    }
-
-    dialog.listen('MDCDialog:cancel', function () {})
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
-      dialog.lastFocusedTarget = evt.target;
-      dialog.show();
+      const span = document.createElement('span')
+      span.className = 'mdc-typography--body1'
+      span.textContent = 'Are you sure you want to delete this activity ? '
+      document.getElementById('dialog-container').innerHTML = dialog({
+        id: 'cancel-alert',
+        headerText: `${record.activityName} will be deleted`,
+        showCancel: true,
+        showAccept: true,
+        content: span
+      }).outerHTML
+      const dialogEl = document.querySelector('#cancel-alert')
+      var cancelDialog = new mdc.dialog.MDCDialog(dialogEl);
+
+      cancelDialog.lastFocusedTarget = evt.target;
+      cancelDialog.show();
+      cancelDialog.listen('MDCDialog:cancel', function () {
+        dialogEl.remove()
+      })
+      cancelDialog.listen('MDCDialog:accept', function () {
+        if (!isLocationStatusWorking()) return;
+        document.querySelector('.delete-activity').style.display = 'none';
+        document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
+        requestCreator('statusChange', {
+          activityId: record.activityId,
+          status: 'CANCELLED',
+        })
+        dialogEl.remove()
+      })
     })
-
-
   }
-
 }
-
-function deleteActivityReq(id) {
-  document.querySelector('.delete-activity').style.display = 'none';
-  document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
-
-  requestCreator('statusChange', {
-    activityId: id,
-    status: 'CANCELLED',
-  })
-}
-
-function cancelAlertDialog() {
-  const aside = document.createElement('aside')
-  aside.className = 'mdc-dialog'
-  aside.id = 'cancel-alert'
-
-  const surface = document.createElement('div')
-  surface.className = 'mdc-dialog__surface'
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__body'
-
-  section.textContent = 'Are you sure you want to delete this activity ? '
-
-  const footer = document.createElement('footer')
-  footer.className = 'mdc-dialog__footer'
-
-  const accept = document.createElement('button')
-  accept.type = 'button'
-  accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept delete-btn'
-  accept.textContent = 'Delete'
-  accept.id = 'delete-allow'
-
-  const cancel = document.createElement('button')
-  cancel.type = 'button'
-  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel cancel-delete-btn'
-  cancel.textContent = 'Cancel'
-
-  footer.appendChild(cancel)
-  footer.appendChild(accept)
-  surface.appendChild(section)
-  surface.appendChild(footer)
-  aside.appendChild(surface)
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-  document.body.appendChild(aside)
-
-
-}
-
-
 
 function sendActivity(record) {
 
@@ -2972,33 +2593,4 @@ function createSelectMenu(key, value, canEdit) {
   div.appendChild(select)
   div.appendChild(ripple)
   return div
-}
-
-
-function toggleActionables(id) {
-  if (!id) return;
-  if (document.getElementById('app-current-panel').dataset.view === 'create') return
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const activityStore = db.transaction('activity').objectStore('activity')
-    activityStore.get(id).onsuccess = function (event) {
-      const record = event.target.result
-      if (!record) {
-        listView()
-        return
-      }
-      const actions = document.querySelectorAll('.mdc-fab')
-      if (!record.editable) return
-      if (document.querySelector('.loader')) {
-        document.querySelector('.loader').remove()
-        if (document.querySelector('.add--assignee-loader .add--assignee-icon')) {
-          document.querySelector('.add--assignee-loader .add--assignee-icon').style.display = 'block'
-        }
-      }
-      if (document.querySelector('.progress--update')) {
-        document.querySelector('.progress--update').remove()
-      }
-    }
-  }
 }

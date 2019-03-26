@@ -1,3 +1,4 @@
+const appKey = new AppKeys();
 let ui;
 let native = function () {
   return {
@@ -32,15 +33,22 @@ let native = function () {
     },
     getInfo: function () {
       if (!this.getName()) {
-        return false;
+        return JSON.stringify({
+          baseOs: this.getName(),
+          deviceBrand: '',
+          deviceModel: '',
+          appVersion: 7,
+          osVersion: '',
+          id: '',
+        })
       }
 
       if (this.getName() === 'Android') {
         try {
           return AndroidInterface.getDeviceId();
         } catch (e) {
-          sendExceptionObject(e,`Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`,[]);
-         
+          sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
+
           return JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
@@ -86,29 +94,34 @@ let app = function () {
 
 
 window.addEventListener('load', function () {
+  
+  layoutGrid()
+ 
+
+  firebase.initializeApp(appKey.getKeys())
+
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
     try {
       AndroidInterface.showDialog(title, message);
     } catch (e) {
-      sendExceptionObject(e,'Catch Type 1: AndroidInterface.showDialog at window.onload',[title,message])
-      appDialog(message);
+      const span = document.createElement('span')
+      span.textContent = message;
+      span.className = 'mdc-typography--body1'
+
+      sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
+      document.getElementById('dialog-container').innerHTML = dialog({
+        id: 'device-incompatibility-dialog',
+        headerText: title,
+        content: span
+      }).outerHTML
+      const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
+      incompatibilityDialog.show()
     }
     return
   }
 
-  firebase.initializeApp({
-    apiKey: 'AIzaSyA4s7gp7SFid_by1vLVZDmcKbkEcsStBAo',
-    authDomain: 'growthfile-207204.firebaseapp.com',
-    databaseURL: 'https://growthfile-207204.firebaseio.com',
-    projectId: 'growthfile-207204',
-    storageBucket: 'growthfile-207204.appspot.com',
-    messagingSenderId: '701025551237'
-  })
-
-
-  
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -134,19 +147,16 @@ window.addEventListener('load', function () {
   window.onpopstate = function (event) {
 
     if (!event.state) return;
-    if (event.state[0] === 'listView') {
-      const originalCount = scroll_namespace.count;
-      if (originalCount) {
-        scroll_namespace.size = originalCount
-      }
-
-      scroll_namespace.count = 0;
-      window[event.state[0]]()
-      return;
+    if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
+    const originalCount = scroll_namespace.count;
+    if (originalCount) {
+      scroll_namespace.size = originalCount
     }
-    window[event.state[0]](event.state[1], false)
+
+    scroll_namespace.count = 0;
+    window[event.state[0]]()
   }
-  layoutGrid()
+
   startApp(true)
 })
 
@@ -161,7 +171,9 @@ function firebaseUiConfig(value) {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         if (value) {
-          document.querySelector('#updateEmailDialog').remove();
+          if (document.querySelector('#updateEmailDialog')) {
+            document.querySelector('#updateEmailDialog').remove();
+          }
           updateEmail(authResult.user, value);
           return false;
         }
@@ -211,8 +223,6 @@ function layoutGrid() {
   const layoutInner = document.createElement('div')
   layoutInner.className = 'mdc-layout-grid__inner cell-space'
 
-  const headerDiv = document.createElement('div')
-  headerDiv.id = 'header'
   const currentPanel = document.createElement('div')
   currentPanel.id = 'app-current-panel'
   currentPanel.className = 'mdc-layout-grid__cell--span-12'
@@ -220,154 +230,29 @@ function layoutGrid() {
   const snackbar = document.createElement('div')
   snackbar.id = 'snackbar-container'
 
-  const alertDom = document.createElement('div')
-  alertDom.id = 'alert--box'
-  headerDiv.appendChild(createHeader('app-main-header'))
-  layoutInner.appendChild(headerDiv)
+  const dialogContainer = document.createElement('div')
+  dialogContainer.id = 'dialog-container'
+
   layoutInner.appendChild(currentPanel)
   layoutInner.appendChild(snackbar)
   layout.appendChild(layoutInner)
-  layout.appendChild(alertDom)
-  document.body.innerHTML = layout.outerHTML
-  imageViewDialog();
-
-}
-
-function createCheckInDialog() {
-
-  var aside = document.createElement('aside');
-  aside.className = 'mdc-dialog mdc-dialog--open hidden';
-  aside.id = 'suggest-checkIn-dialog';
-  aside.style.backgroundColor = 'rgba(0,0,0,0.47)';
-
-  var surface = document.createElement('div');
-  surface.className = 'mdc-dialog__surface';
-  surface.style.width = '90%';
-  surface.style.height = 'auto';
-
-  const header = document.createElement('header');
-  header.className = 'mdc-dialog__header'
-  const headerText = document.createElement('h2')
-  headerText.className = 'mdc-dialog__header__title'
-  headerText.textContent = 'Reminder'
-  header.appendChild(headerText)
-  var section = document.createElement('section');
-  section.className = 'mdc-dialog__body';
-  section.textContent = 'Check-in ?';
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-
-  var ok = document.createElement('button');
-  ok.type = 'button';
-  ok.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-  ok.textContent = 'Okay';
-  ok.style.backgroundColor = '#3498db';
-
-  var canel = document.createElement('button');
-  canel.type = 'button';
-  canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-  canel.textContent = 'Cancel';
-  canel.style.backgroundColor = '#3498db';
-
-  footer.appendChild(canel);
-  footer.appendChild(ok);
-
-  surface.appendChild(header)
-  surface.appendChild(section);
-  surface.appendChild(footer);
-  aside.appendChild(surface);
-
-  return aside
-
-}
-
-function createHeader(id) {
-
-  const header = document.createElement('header')
-  header.className = 'mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'
-  header.id = id
-
-  const row = document.createElement('div')
-  row.className = 'mdc-top-app-bar__row'
-
-  const sectionStart = document.createElement('section')
-  sectionStart.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
-
-  const leftUI = document.createElement('div')
-  leftUI.id = id + 'view-type'
-  leftUI.className = 'view-type'
-  sectionStart.appendChild(leftUI)
-
-  const sectionEnd = document.createElement('div')
-  sectionEnd.className = 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
-
-  const rightUI = document.createElement('div')
-  rightUI.id = id + 'action-data'
-
-  rightUI.className = 'action-data'
-
-  sectionEnd.appendChild(rightUI)
-  row.appendChild(sectionStart)
-  row.appendChild(sectionEnd)
-  header.appendChild(row)
-  return header
-}
-
-
-function imageViewDialog() {
-
-  const aside = document.createElement('aside')
-
-  aside.id = 'viewImage--dialog-component'
-  aside.className = 'mdc-dialog'
-  aside.role = 'alertdialog'
-
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__content'
-
-  const image = document.createElement("img")
-  image.src = ''
-  image.style.width = '100%'
-  section.appendChild(image)
-
-  dialogSurface.appendChild(section)
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-
-  var cancel = document.createElement('button');
-  cancel.type = 'button';
-  cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-  cancel.textContent = 'cancel';
-  cancel.style.backgroundColor = '#3498db';
-
-  footer.appendChild(cancel)
-  dialogSurface.appendChild(footer)
-  aside.appendChild(dialogSurface)
-
-  const backdrop = document.createElement('div')
-  backdrop.className = 'mdc-dialog__backdrop'
-  aside.appendChild(backdrop)
-
-  document.body.appendChild(aside)
+  layout.appendChild(dialogContainer)
+  document.getElementById('growthfile').innerHTML = layout.outerHTML
+  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 }
 
 function startApp(start) {
 
   firebase.auth().onAuthStateChanged(function (auth) {
-   
+
     if (!auth) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
-    
-    if(!native.getInfo()) {
-      redirect()
+
+    if(appKey.getMode() === 'production') {
+      redirect();
       return;
     }
 
@@ -396,17 +281,16 @@ function startApp(start) {
         if (native.getName() !== 'Android') {
           try {
             webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-           
+
           } catch (e) {
-            sendExceptionObject(e,'Catch Type 2: webkit.messageHandlers.startLocationService',['start fetchin location'])
+            sendExceptionObject(e, 'Catch Type 2: webkit.messageHandlers.startLocationService', ['start fetchin location'])
             getInstantLocation = true
-            
+
           }
-        }
-        else {
+        } else {
           getInstantLocation = true
         }
-      
+
         listView();
         requestCreator('now', {
           device: native.getInfo(),
@@ -415,17 +299,12 @@ function startApp(start) {
         })
         runAppChecks()
 
-        if(!getInstantLocation) return;
-        manageLocation().then(function(location){
-          if(location.latitude && location.longitude) {
-            updateLocationInRoot(location);            
-          }
-        }).catch(function(error){
+        if (!getInstantLocation) return;
+        manageLocation().then(console.log).catch(function (error) {
           handleError(error)
         })
       }
       req.onerror = function () {
-       
         handleError({
           message: `${req.error.message} from startApp`
         })
@@ -616,11 +495,7 @@ function redirect() {
 
 
 function initLocation() {
-  manageLocation().then(function (location) {
-    if (location.latitude && location.longitude) {
-      updateLocationInRoot(location)
-    }
-  }).catch(function (error) {
+  manageLocation().then(console.log).catch(function (error) {
     handleError(error)
   });
 }
@@ -631,22 +506,50 @@ function runAppChecks() {
     isEmployeeOnLeave().then(function (onLeave) {
       if (onLeave) return
       if (e.detail) {
-      if (history.state[0] === 'listView') {
-        try {
-          document.getElementById('alert--box').innerHTML = createCheckInDialog().outerHTML
-          getRootRecord().then(function(record){
-            if(record) {
-              if(record.offices) {
-                showSuggestCheckInDialog(record.offices);
-                listView();
-              }
-            }
-          })
-        }catch(e){
-          console.log(e)
+        if (history.state[0] === 'listView') {
+          try {
+            getRootRecord().then(function (record) {
+           
+              if (!record.offices) return;
+              const offices = record.offices
+              const message = document.createElement('h1')
+              message.className = 'mdc-typography--body1 mt-10'
+              message.textContent = 'Do you want to create a Check-In ?'
+              document.getElementById('dialog-container').innerHTML = dialog({
+                id: 'suggest-checkIn-dialog',
+                headerText: 'Check-In Reminder',
+                content: message,
+                showCancel: true,
+                showAccept: true
+              }).outerHTML
+              const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
+              var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
+              initCheckInDialog.show();
+              initCheckInDialog.listen('MDCDialog:accept', function (evt) {
+                if (!isLocationStatusWorking()) return;
+
+                if (offices.length === 1) {
+                  createTempRecord(offices[0], 'check-in', {
+                    suggestCheckIn: true
+                  });
+                  return;
+                }
+                selectorUI({
+                  record: '',
+                  store: 'subscriptions',
+                  suggestCheckIn: true
+                })
+              });
+              initCheckInDialog.listen('MDCDialog:cancel', function () {
+                checkInDialog.remove();
+              })
+              listView();
+            })
+          } catch (e) {
+            console.log(e)
+          }
         }
       }
-    }
     }).catch(handleError)
   }, true);
 }

@@ -1,7 +1,12 @@
 body {
   margin: 0;
 }
-
+.mdc-top-app-bar__section--align-start {
+  padding-left: 10px;
+}
+.mt-10 {
+  margin-top: 10px;
+}
 #login-container {
   top: 10rem;
   position: relative;
@@ -527,36 +532,6 @@ body {
   padding-left: 0px;
 }
 
-.mdc-dialog__surface {
-  height: 100vh;
-  width: 100vw;
-}
-
-
-.mdc-dialog__body--scrollable {
-  min-height: -webkit-fill-available;
-  background-color: white !important;
-}
-
-footer.mdc-dialog__footer {
-  background-color: white;
-}
-
-#change-number-dialog .mdc-dialog__header {
-  padding: 10px 10px 0px 10px;
-  margin: 0 auto;
-}
-
-#change-number-dialog .mdc-dialog__surface {
-  width: 95vw;
-  height: initial;
-}
-
-#change-number-dialog .mdc-dialog__footer button,
-#location-select-dialog .mdc-dialog__footer button,
-#officeTemplate-select-dialog .mdc-dialog__footer button {
-  color: #44a3eb
-}
 
 .loader {
   border: 3px solid #3498db;
@@ -722,10 +697,6 @@ footer.mdc-dialog__footer {
 }
 
 
-.profile-container--main-small {
-  width: 40px;
-  height: 40px;
-}
 
 #refresh-login {
   width: 85vw !important;
@@ -914,12 +885,11 @@ footer.mdc-dialog__footer {
   margin-bottom: 14px;
 }
 
-.mdc-dialog__surface .mdc-dialog__header {
-  /* display: table;
-  margin: 0 auto;
-  padding-top: 0px;
-  padding-bottom: 10px; */
+.mdc-dialog__content {
+  padding-left: 24px;
+  padding-right: 24px;
 }
+
 
 .start-calendar-transition {
   filter: blur(15px);
@@ -1082,11 +1052,10 @@ input[type="datetime-local"] {
   width: 100%;
 }
 
-.header--icon-creator {
+.header--icon-creator , .empty-user-assignee, .profile-container--main-small {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  margin-top: 3px;
 }
 
 .back-icon--large {
@@ -1275,8 +1244,7 @@ input[type="datetime-local"] {
   font-size: 30px;
 }
 
-
-.round--surface {
+#success-dialog .mdc-dialog__surface {
   border-radius: 50%;
   width: 300px;
   height: 300px;
@@ -1326,6 +1294,7 @@ input[type="datetime-local"] {
     width: 100px;
   }
 }
+
 
 .link--span {
   text-decoration: none;
@@ -1584,7 +1553,9 @@ input[type="datetime-local"] {
   --mdc-theme-on-primary: white !important;
   --mdc-theme-on-secondary: #ffffff !important;
 }
-
+.mdc-list-item--selected {
+  color: #0399f4 !important;
+}
 
 .mdc-line-ripple {
   background-color: #44a3eb !important;
@@ -1731,8 +1702,8 @@ input[type="datetime-local"] {
 
 .list-photo-header {
   border-radius: 50%;
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
@@ -1768,11 +1739,7 @@ input[type="datetime-local"] {
   height: 55px;
 }
 
-.empty-user-assignee {
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-}
+
 
 #updateEmailDialog {
   background: rgba(0, 0, 0, 0.47);
@@ -1896,4 +1863,8 @@ input[type="datetime-local"] {
 .schedule-start-times , .schedule-end-times{
   margin-left: 29%;
   margin-right: 0;
+}
+
+.dialog-custom-backdrop {
+ background-color:  rgba(0,0,0,0.47)
 }

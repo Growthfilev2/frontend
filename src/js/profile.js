@@ -7,6 +7,10 @@ function profileView(pushState) {
   }
 
   document.body.style.backgroundColor = '#eeeeee';
+  const sectionStart = document.getElementById('section-start');
+  sectionStart.innerHTML = ''
+  sectionStart.appendChild(headerBackIcon())
+
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
   var req = indexedDB.open(dbName);
@@ -18,15 +22,13 @@ function profileView(pushState) {
       var record = event.target.result;
       rootObjectStore.put(record);
       rootTx.oncomplete = function () {
-        createProfileHeader();
+
         createProfilePanel(db).then(function (view) {
 
           if (!document.getElementById('app-current-panel')) return;
 
           document.getElementById('app-current-panel').innerHTML = view.outerHTML;
-          document.getElementById('close-profile--panel').addEventListener('click', function () {
-            backNav();
-          });
+        
 
           if (native.getName() === 'Android') {
             document.getElementById('uploadProfileImage').addEventListener('click', function () {
@@ -37,7 +39,7 @@ function profileView(pushState) {
               }
             })
           } else {
-            inputFile('uploadProfileImage').addEventListener('change', function () {
+            document.getElementById('uploadProfileImage').addEventListener('change', function () {
               readUploadedFile()
             });
           }
@@ -45,30 +47,12 @@ function profileView(pushState) {
           changeDisplayName(user);
           changeEmailAddress(user);
         })
-
       };
     };
   };
 }
 
-function inputFile(selector) {
-  return document.getElementById(selector);
-}
 
-function createProfileHeader() {
-
-  var backSpan = document.createElement('span');
-  backSpan.id = 'close-profile--panel';
-  var backIcon = document.createElement('i');
-  backIcon.className = 'material-icons';
-
-  backIcon.textContent = 'arrow_back';
-  backSpan.appendChild(backIcon);
-  modifyHeader({
-    id: 'app-main-header',
-    left: backSpan.outerHTML
-  });
-}
 
 function createProfilePanel(db) {
   return new Promise(function (resolve) {
@@ -188,40 +172,6 @@ function createProfilePanel(db) {
   })
 }
 
-function updateEmailDialog() {
-
-  if (!document.getElementById('updateEmailDialog')) {
-    var aside = document.createElement('aside');
-    aside.className = 'mdc-dialog mdc-dialog--open';
-    aside.id = 'updateEmailDialog';
-    var surface = document.createElement('div');
-    surface.className = 'mdc-dialog__surface';
-    surface.style.width = '90%';
-    surface.style.height = 'auto';
-    var section = document.createElement('section');
-    section.className = 'mdc-dialog__body';
-    section.id = 'refresh-login'
-
-    var footer = document.createElement('footer');
-    footer.className = 'mdc-dialog__footer';
-
-    var canel = document.createElement('button');
-    canel.type = 'button';
-    canel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel update-email-cancel';
-    canel.textContent = 'Cancel';
-    canel.style.backgroundColor = '#3498db';
-
-    footer.appendChild(canel);
-
-    surface.appendChild(section);
-    surface.appendChild(footer)
-    aside.appendChild(surface);
-    document.body.appendChild(aside);
-
-  }
-}
-
-
 function timeDiff(lastSignInTime) {
   var currentDate = moment().format('YYY-MM-DD HH:mm');
   var authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm');
@@ -230,9 +180,14 @@ function timeDiff(lastSignInTime) {
 }
 
 function newSignIn(value, field) {
-  updateEmailDialog()
+  
+  document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
   const dialogSelector = document.querySelector('#updateEmailDialog')
+  dialogSelector.querySelector('section').id = 'refresh-login'
   var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
+  emailDialog.listen('MDCDialog:cancel',function(evt){
+    dialogSelector.remove();
+  })
   emailDialog.show();
   try {
     if(!ui) {
@@ -264,7 +219,7 @@ function readUploadedFile(image) {
     return;
   }
 
-  var file = inputFile('uploadProfileImage').files[0];
+  var file = document.getElementById('uploadProfileImage').files[0];
   var reader = new FileReader();
 
   reader.addEventListener("load", function () {

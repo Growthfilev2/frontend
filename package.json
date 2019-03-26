@@ -4,12 +4,12 @@
   "description": "## File structure ``` |   index.html |   .gitignore |   package.json |   README.md | +---css |   |   conversation.css | +---js |   |   apiHandler.js |   |   conversation.js |   |   init.js |   |   panel.js |   |   services.js | ```",
   "main": "index.js",
   "scripts": {
-    "clean": "rm -r dist/*.js && rm -r dist/*.css",
-    "babel": "babel src/js --out-file dist/compiled.js --ignore 'src/js/apiHandler.js'",
-    "worker": "babel src/js/apiHandler.js --out-file dist/apiHandler.js",
-    "uglify": "uglifyjs dist/compiled.js -o dist/bundle.min.js -c -m && uglifyjs dist/apiHandler.js -o dist/apiHandler.js -c -m",
-    "build-css": "uglifycss src/css/app.css > dist/bundle.css",
-    "compile": "npm run clean && npm run babel && npm run worker && npm run uglify && npm run build-css && rm dist/compiled.js"
+    "clean": "rm -r dist/js/*.js && rm -r dist/css/bundle.css",
+    "babel": "babel src/js --out-file dist/js/compiled.js --ignore 'src/js/apiHandler.js'",
+    "worker": "babel src/js/apiHandler.js --out-file dist/js/apiHandler.js",
+    "uglify": "uglifyjs dist/js/compiled.js -o dist/js/bundle.min.js -c -m && uglifyjs dist/js/apiHandler.js -o dist/js/apiHandler.js -c -m",
+    "build-css": "uglifycss src/css/app.css > dist/css/bundle.css",
+    "compile": "npm run clean && npm run babel && npm run worker && npm run uglify && npm run build-css && rm dist/js/compiled.js"
   },
   "repository": {
     "type": "git",

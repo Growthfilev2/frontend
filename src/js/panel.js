@@ -252,34 +252,10 @@ function getActivityDataForList(activity, value, currentLocation) {
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
-      // const secondLineCss = setMarginForSecondLine(secondLine)
       resolve(activityListUI(value, secondLineParent))
     }
   })
 }
-
-function setMarginForSecondLine(secondLine) {
-  const nodes = secondLine.childNodes
-  if (nodes.length > 1) {
-    if (nodes[0].innerHTML && nodes[1].innerHTML) {
-      secondLine.style.marginTop = '-42px'
-      return secondLine;
-    }
-    secondLine.style.marginTop = '-35px'
-    return secondLine
-  }
-  secondLine.style.marginTop = '-35px'
-  return secondLine
-}
-
-function generateTextIfActivityIsNotPending(status) {
-  const textStatus = {
-    'CONFIRMED': 'Done',
-    'CANCELLED': 'Cancelled'
-  }
-  return textStatus[status]
-}
-
 
 
 function generateLastestSchedule(schedules, createdTime) {
@@ -484,17 +460,11 @@ function getRootRecord() {
       const rootStore = rootTx.objectStore('root')
       rootStore.get(dbName).onsuccess = function (event) {
         const data = event.target.result;
-        data ? record = data : record = null;
+        record = data;
       }
 
       rootTx.oncomplete = function () {
-        if (record) {
-          resolve(record)
-        } else {
-          reject({
-            message: 'No root record found from getRootRecord'
-          });
-        }
+        resolve(record)
       }
       rootTx.onerror = function () {
         reject({
@@ -513,10 +483,8 @@ function getRootRecord() {
 function createActivityIcon() {
   if (document.getElementById('create-activity')) return;
   getCountOfTemplates().then(function (count) {
-    if (count) {
-      createActivityIconDom()
-      return;
-    }
+    if(!count) return;
+    createActivityIconDom()
   }).catch(handleError);
 }
 
@@ -571,17 +539,14 @@ function createActivityIconDom() {
   parent.innerHTML = fab.outerHTML;
 
   document.querySelector('.create-activity').addEventListener('click', function (evt) {
-    callSubscriptionSelectorUI()
+    selectorUI({
+      record: '',
+      store: 'subscriptions',
+      suggestCheckIn: false
+    })
   })
 }
 
-function callSubscriptionSelectorUI(checkIn) {
-  selectorUI({
-    record: '',
-    store: 'subscriptions',
-    suggestCheckIn: checkIn
-  })
-}
 
 function listPanel() {
   if (document.getElementById('activity-list-main')) return
@@ -609,39 +574,29 @@ function creatListHeader(headerName) {
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
-    
+    const sectionStart = document.getElementById('section-start');
+   sectionStart.innerHTML =''
     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
-      const parentIconDiv = document.createElement('div')
-      parentIconDiv.className = 'profile--icon-header'
-
-      const menuIcon = document.createElement('div')
-      menuIcon.id = 'menu--panel'
 
       const object = document.createElement('object');
       object.className = 'list-photo-header';
       object.type = 'image/jpeg';
       object.data = userRecord.photoURL || './img/empty-user.jpg';
-
+      object.onclick = function(){
+        profileView(true)
+      }
       const icon = document.createElement('img');
       icon.src = './img/empty-user.jpg';
       icon.className = 'list-photo-header'
       object.appendChild(icon);
-
-      menuIcon.appendChild(object)
-
-      const headerText = document.createElement('p');
+    
+      const headerText = document.createElement('span');
       headerText.textContent = headerName;
-      menuIcon.appendChild(headerText)
-      parentIconDiv.appendChild(menuIcon)
-      modifyHeader({
-        id: 'app-main-header',
-        left: parentIconDiv.outerHTML,
-        right: ''
-      });
+      headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
+      
+      sectionStart.appendChild(object)
+      sectionStart.appendChild(headerText);
 
-      document.querySelector('.list-photo-header').addEventListener('click', function () {
-        profileView(true)
-      })
     })
   }
 }
@@ -659,24 +614,7 @@ function scrollToActivity() {
   }
 }
 
-function notificationWorker(type, updateTimestamp) {
-  return new Promise(function (resolve, reject) {
-    notification.postMessage({
-      dbName: firebase.auth().currentUser.uid,
-      type: type,
-      updateTimestamp: updateTimestamp
-    })
-    notification.onmessage = function (message) {
-      resolve(message.data);
-    }
 
-    notification.onerror = function (error) {
-      reject({
-        message: `${error.message} from notificationWorker at ${error.lineno}`
-      })
-    }
-  })
-}
 
 function modifyHeader(attr) {
 
@@ -691,4 +629,15 @@ function modifyHeader(attr) {
     right.innerHTML = attr.right
   }
 
+}
+
+function headerBackIcon(store){  
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
+  backIcon.textContent = 'arrow_back'
+  backIcon.onclick = function(){
+    if(!store) return backNav();
+    store === 'subscriptions' ?  listView() :updateCreateActivity(history.state[1], true);
+  }
+  return backIcon;
 }
