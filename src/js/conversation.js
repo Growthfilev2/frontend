@@ -431,11 +431,11 @@ function MapsCustomControl(customControlDiv, map, lat, lng) {
 }
 
 function createHeaderContent(db, id) {
-  const sectionStart= document.getElementById('section-start');
+  const sectionStart = document.getElementById('section-start');
   sectionStart.innerHTML = ''
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   let leftDiv = headerBackIcon()
-  
+
   activityObjectStore.get(id).onsuccess = function (event) {
 
     const record = event.target.result;
@@ -450,13 +450,13 @@ function createHeaderContent(db, id) {
       creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator'
       dataObject.appendChild(creatorImg);
-     
+
       var primarySpan = document.createElement('div');
       primarySpan.className = 'mdc-top-app-bar__title mdc-typography--subtitle2';
       const name = document.createElement('span')
       name.textContent = record.activityName;
       name.className = ''
-      primarySpan.onclick = function(){
+      primarySpan.onclick = function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
           if (id) {
             updateCreateActivity(record);
@@ -468,14 +468,14 @@ function createHeaderContent(db, id) {
       var info = document.createElement('span');
       // secondarySpan.className = 'mdc-list-item__secondary-text';
       info.textContent = 'Click here to see details';
-      
+
       sectionStart.appendChild(leftDiv);
       sectionStart.appendChild(dataObject);
       primarySpan.appendChild(name);
       primarySpan.appendChild(document.createElement('br'))
-      primarySpan.appendChild(info) 
+      primarySpan.appendChild(info)
       sectionStart.appendChild(primarySpan)
-    
+
     });
   }
 }
@@ -835,7 +835,10 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         Object.keys(filter).forEach(function (locationName) {
           array.push(filter[locationName])
         })
-        resolve(array)
+        const nearest = array.sort(function(a,b){
+          return a.accuracy - b.accuracy
+        })
+        resolve(nearest)
       }
       tx.onerror = function () {
         reject(tx.error)
@@ -858,12 +861,11 @@ function createTempRecord(office, template, prefill) {
       if (!selectedCombo) {
         return;
       }
-     
+
       let bareBonesScheduleArray;
-      if(prefill.schedule) {
+      if (prefill.schedule) {
         bareBonesScheduleArray = prefill.schedule
-      }
-      else {
+      } else {
         bareBonesScheduleArray = []
         selectedCombo.schedule.forEach(function (schedule) {
           const bareBonesSchedule = {}
@@ -873,10 +875,10 @@ function createTempRecord(office, template, prefill) {
           bareBonesScheduleArray.push(bareBonesSchedule)
         })
       }
-      if(prefill.attachment) {
-       Object.keys(prefill.attachment).forEach(function(key){
-         selectedCombo.attachment[key] = prefill.attachment[key]
-       })
+      if (prefill.attachment) {
+        Object.keys(prefill.attachment).forEach(function (key) {
+          selectedCombo.attachment[key] = prefill.attachment[key]
+        })
       }
       const bareBonesRecord = {
         office: selectedCombo.office,
@@ -906,7 +908,7 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-         
+
           let message;
           if (native.getName() === 'Android') {
             message = 'Make Sure you have set Location Mode to High Accuracy'
@@ -924,12 +926,12 @@ function createTempRecord(office, template, prefill) {
           const dialogEl = document.getElementById('location-fetch-dialog')
           const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
           fetchingLocationDialog.show();
-          if(native.getName() === 'Ios') {
-            window.addEventListener('iosLocation',function _iosLocation(e){
+          if (native.getName() === 'Ios') {
+            window.addEventListener('iosLocation', function _iosLocation(e) {
               dialogEl.remove();
               updateCreateActivity(bareBonesRecord)
-              window.removeEventListener('iosLocation',_iosLocation,true);
-            },true)
+              window.removeEventListener('iosLocation', _iosLocation, true);
+            }, true)
             return;
           }
           manageLocation().then(function (location) {
@@ -1101,12 +1103,12 @@ function updateCreateContainer(record, showSendButton) {
   activityName.textContent = record.activityName
   activityName.className = 'mdc-top-app-bar__title'
   let backIcon = headerBackIcon();
- 
+
   const sectionStart = document.getElementById('section-start')
   sectionStart.innerHTML = ''
   sectionStart.appendChild(backIcon);
   sectionStart.appendChild(activityName)
-  
+
   const container = document.createElement('div')
   container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'
 
@@ -1172,7 +1174,7 @@ function updateCreateActivity(record, showSendButton) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-  
+
     appView.innerHTML = updateCreateContainer(record, showSendButton).outerHTML
 
     const officeSection = document.getElementById('office--list')
@@ -1267,7 +1269,7 @@ function createCheckInVenue(venue, defaultSelected) {
 }
 
 function createSimpleLi(key, data) {
-  
+
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
 
@@ -1327,14 +1329,14 @@ function createSimpleLi(key, data) {
     undo.textContent = 'Undo'
     undo.onclick = function () {
       if (isLocationStatusWorking()) {
-      debugger
+        debugger
         document.querySelector('.undo-deleted').style.display = 'none'
         listItem.appendChild(loader('undo-delete-loader'));
         requestCreator('statusChange', {
           activityId: data.id,
           status: 'PENDING'
         })
-       
+
       }
     }
     listItem.appendChild(undo)
@@ -1574,8 +1576,8 @@ function createScheduleTable(data) {
     startDateInput.type = 'date'
     startDateInput.disabled = !data.canEdit
     startDateInput.className = 'mdc-text-field__input'
-   
-    
+
+
     sdDiv.appendChild(startDateInput)
 
     const stSpan = document.createElement("span")
@@ -1612,22 +1614,22 @@ function createScheduleTable(data) {
     endDateInput.disabled = !data.canEdit
     endDateInput.className = 'mdc-text-field__input'
     edDiv.appendChild(endDateInput)
-    if(data.template === 'leave') {
-      startDateInput.onchange = function(e){
+    if (data.template === 'leave') {
+      startDateInput.onchange = function (e) {
         const field = document.getElementById('Number-Of-Days')
-        if(field) {
-          const value = moment(endDateInput.value).diff(moment(startDateInput.value),'days') +1
-          if(value >=0 ){
+        if (field) {
+          const value = moment(endDateInput.value).diff(moment(startDateInput.value), 'days') + 1
+          if (value >= 0) {
 
             field.querySelector('input').value = value
           }
         }
       }
-      endDateInput.onchange = function(e){
+      endDateInput.onchange = function (e) {
         const field = document.getElementById('Number-Of-Days')
-        if(field) {
-          const value = moment(endDateInput.value).diff(moment(startDateInput.value),'days') +1
-          if(value >=0 ){
+        if (field) {
+          const value = moment(endDateInput.value).diff(moment(startDateInput.value), 'days') + 1
+          if (value >= 0) {
             field.querySelector('input').value = value
           }
         }
@@ -1724,11 +1726,11 @@ function createAttachmentContainer(data) {
       div.appendChild(label)
       console.log(data)
       let canEdit = data.canEdit
-      if(key === 'Number Of Days') {
+      if (key === 'Number Of Days') {
         const startDate = document.querySelector('#schedule--group .start--date1 input')
         const endDate = document.querySelector('#schedule--group .end--date1 input')
-        data.attachment[key].value = (moment(endDate.value).diff(startDate.value,'days')) + 1
-        console.log(moment(endDate.value).diff(startDate.value,'days') + 1);
+        data.attachment[key].value = (moment(endDate.value).diff(startDate.value, 'days')) + 1
+        console.log(moment(endDate.value).diff(startDate.value, 'days') + 1);
         canEdit = false
       }
       div.appendChild(createNumberInput(data.attachment[key].value, canEdit))
@@ -1818,46 +1820,71 @@ function createAttachmentContainer(data) {
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
 
-      const addButtonName = document.createElement('label')
-      addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-      const spanName = document.createElement('span')
-      spanName.className = 'mdc-fab__icon material-icons'
-      spanName.textContent = 'add'
-      addButtonName.appendChild(spanName)
-      div.appendChild(label)
-      const valueField = document.createElement('span')
-      valueField.textContent = data.attachment[key].value
-      valueField.className = 'data--value-list'
-      div.appendChild(valueField)
-      if (data.canEdit) {
-        hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
-          if (hasValue) {
-            div.appendChild(addButtonName);
-            div.classList.add('selector--margin')
-            addButtonName.onclick = function (evt) {
-              valueField.dataset.primary = ''
-              insertInputsIntoActivity(data)
-              history.replaceState(['updateCreateActivity', data], null, null)
+     
+      if (!data.canEdit) {
+     
+      createElement('span',{className:'data--value-list',textContent:key})
 
-              selectorUI({
-                record: data,
-                store: 'children',
-                attachment: {
-                  present: true,
-                  key: key,
-                  office: data.office,
-                  template: data.attachment[key].type,
-                  status: data.status
-                }
-              })
+      }
+      const customerSelectionTemplates = {
+        'tour plan': true
+      }
+      if (!customerSelectionTemplates[data.template]) return;
+      hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
+        const chooseExisting = createElement('button',{
+          className: 'mdc-fab',
+          textContent: 'Choose Existing'
+        })
+        new mdc.ripple.MDCRipple(chooseExisting)
+
+        chooseExisting.onclick = function (evt) {
+        
+          insertInputsIntoActivity(data)
+          history.replaceState(['updateCreateActivity', data], null, null);
+          selectorUI({
+            record: data,
+            store: 'children',
+            attachment: {
+              present: true,
+              key: key,
+              office: data.office,
+              template: data.attachment[key].type,
+              status: data.status
             }
-          }
+          })
+        }
+        div.appendChild(chooseExisting)
+      })
+      const createNew = createElement('span',{
+        className: 'mdc-fab',
+        textContent: 'Create New'
+      })
+      new mdc.ripple.MDCRipple(createNew)
+      createNew.onclick = function () {
+        getSubscription(data.office,'customer').then(function(record){
+          getLoction().then(function(location){
+            div.appendChild(createElement('span',{className:'label--text data--value-list',textContent:'Name'}))
+            div.appendChild(createSimpleInput('', true, '', 'Name', required))
+            div.appendChild(createElement('span',{className:'label--text data--value-list',textContent:record.venue[0].venueDescriptor}))
+            checkMapStoreForNearByLocation(data.office,location).then(function(nearestLocations){
+              div.appendChild(createSimpleInput(nearestLocations[0].location, true, '', record.venue[0].venueDescriptor, required))
+              const modLocation = {
+                lat:location.latitude,
+                lng:location.longitude
+              }
+              const mapDom = createElement('div',{id:'customer-address'})
+              appendMap(modLocation,mapDom)
+              mapDom.style.height = '200px';
+              
+            })
+         }).catch(function(error){
+          div.appendChild(createElement('span',{className:'info-attachment',textContent:'Failed to Detect Your Current Location. Choose From Exisintg Customer'}))
+         }) 
         })
       }
+      div.appendChild(createNew)
     }
-
-
-
+    
     const hr = document.createElement('hr')
     hr.className = 'attachment--divider'
     if (data.attachment[key].type === 'HH:MM') {
@@ -2503,8 +2530,8 @@ function createNumberInput(value, canEdit) {
   input.type = 'number'
   input.style.paddingTop = '0px'
   input.value = value
-  if(!canEdit) {
-    input.setAttribute('readonly','true')
+  if (!canEdit) {
+    input.setAttribute('readonly', 'true')
   }
   input.setAttribute('onkeypress', "return event.charCode >= 48 && event.charCode <= 57")
   const ripple = document.createElement('div')
@@ -2621,3 +2648,34 @@ function createSelectMenu(key, value, canEdit) {
   div.appendChild(ripple)
   return div
 }
+
+function createElement(tagName,attrs) {
+  const el = document.createElement(tagName)
+  Object.keys(attrs).forEach(function (attr) {
+    el[attr] = attrs[attr]
+  })
+  return el;
+}
+
+
+function getSubscription(office,template) {
+  return new Promise(function(resolve){
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['subscriptions']);
+      const subscription = tx.objectStore('subscriptions')
+      const officeTemplateCombo = subscription.index('officeTemplate')
+      const range = IDBKeyRange.only([office, template])
+      let record;
+      officeTemplateCombo.get(range).onsuccess = function (event) {
+        record = event.target.result
+      }
+      tx.oncomplete = function(){
+        resolve(record)
+      }
+    }
+  })
+}
+
