@@ -2620,3 +2620,32 @@ function createSelectMenu(key, value, canEdit) {
   div.appendChild(ripple)
   return div
 }
+
+function getRecipient() {
+ 
+  return new Promise(function(resolve){
+    const dbName = firebase.auth().currentUser.uid
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['children']);
+      const subscription = tx.objectStore('children')
+      let index =  subscription.index('template')
+      let record = [];
+      index.openCursor('recipient').onsuccess = function (event) {
+       const cursor  = event.target.result
+       if(!cursor) return;
+       console.log(cursor.value)
+       if(cursor.status ==='CANCELLED') {
+         cursor.continue();
+         return;
+       }
+       record.push(cursor.value)
+       cursor.continue();
+      }
+      tx.oncomplete = function(){
+        resolve(record)
+      }
+    }
+  })
+}

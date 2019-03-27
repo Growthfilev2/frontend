@@ -750,12 +750,13 @@ function emailVerify(notification) {
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
   span.textContent = notification.body
+  
 
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'email-update-dialog',
     showCancel: true,
     showAccept: true,
-    headerText: notification.title || 'Reminder',
+    headerText: notification.title,
     content: span
   }).outerHTML
   const dialogEl = document.getElementById('email-update-dialog')
@@ -774,7 +775,7 @@ function radioList(attr) {
   const li = document.createElement('li')
   li.className = `mdc-list-item mdc-ripple-surface--secondary`
   li.setAttribute('role', 'radio')
-  
+
   const span = document.createElement('span')
   span.className = 'mdc-list-item__graphic'
   const radio = document.createElement('div')
@@ -1038,7 +1039,34 @@ function runRead(value) {
   const keys = Object.keys(value);
   keys.forEach(function (key) {
     if (key === 'verifyEmail') {
-      emailVerify(JSON.parse(value[key]))
+      const notificationData = JSON.parse(value[key])
+      if (!notificationData.title || !notificationData.body) {
+        const content = {
+          title:'Reminder',
+          body:''
+        }
+        
+        let offices = {}
+        let reports = {}
+         
+        getRecipient().then(function (records) {
+        
+          if(!records.length) {
+            content.body = 'You have not set your email Address. Click Okay to set your email address'
+          }
+          else {
+            records.forEach(function (record) {
+              offices[record.office] = true
+              reports[record.attachment.Name.value] = true
+            })
+            
+            content.body = `You have been added a Recipient for ${ Object.keys(offices).join('&')} . Without Adding Email Address, you will not recieve ${Object.keys(reports).join(' & ')} Reports. Click Okay to set your email address`
+          }
+          emailVerify(content)
+        })
+        return;
+      }
+      emailVerify(notificationData)
       return;
     }
     if (key === 'read') {
@@ -1046,11 +1074,11 @@ function runRead(value) {
       return;
     }
     if (key === 'payroll') {
-      getRootRecord().then(function(record){
-        if(!record.offices) return;
-        if(Array.isArray(record.offices)) return;
-        if(!record.offices.length) return;
-        
+      getRootRecord().then(function (record) {
+        if (!record.offices) return;
+        if (Array.isArray(record.offices)) return;
+        if (!record.offices.length) return;
+
         createBlankPayrollDialog(JSON.parse(value[key]))
       })
       return;
