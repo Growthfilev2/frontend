@@ -745,7 +745,7 @@ function messageReceiver(response) {
 
 function emailVerify(notification) {
 
-  if (firebase.auth().currentUser.email) return emailUpdateSuccess();
+  // if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
@@ -755,7 +755,7 @@ function emailVerify(notification) {
     id: 'email-update-dialog',
     showCancel: true,
     showAccept: true,
-    headerText: notification.title,
+    headerText: notification.title || 'Reminder',
     content: span
   }).outerHTML
   const dialogEl = document.getElementById('email-update-dialog')

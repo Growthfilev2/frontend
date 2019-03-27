@@ -140,7 +140,7 @@ function fetchServerTime(body, meta) {
         }
     
         http(httpReq).then(function (response) {
-          console.log(response);
+         
           if (response.updateClient) {
             const title = 'Message';
             const message = 'There is a New version of your app available';
