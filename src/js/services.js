@@ -290,7 +290,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
       return;
     }
-    if(body === "") {
+    if (body === "") {
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
@@ -861,7 +861,7 @@ function createBlankPayrollDialog(notificationData) {
           if (data.template === el.value) {
             createTempRecord('Puja Capital', el.value, {
               schedule: data.schedule,
-              attachment:data.attachment
+              attachment: data.attachment
             });
             return;
           }
@@ -896,26 +896,44 @@ function initFirstLoad(response) {
 
 function updateApp(data) {
   if (native.getName() === 'Android') {
-    try {
-      AndroidInterface.updateApp(data.msg);
-    } catch (e) {
-      var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
-      var title = JSON.parse(data.msg).message;
-      const span = document.createElement('span')
-      span.className = 'mdc-typography--body1'
-      span.textContent = message
-      document.getElementById('dialog-container').innerHTML = dialog({
-        id: 'app-update-dialog',
-        showCancel: false,
-        showAccept: false,
-        headerText: title,
-        content: span
-      }).outerHTML
-      const dialogEl = document.getElementById('app-update-dialog')
-      const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
-      updateDialog.show()
-      sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
-    }
+  try {
+    AndroidInterface.updateApp(data.msg);
+  } catch (e) {
+  var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
+  var title = JSON.parse(data.msg).message;
+  const span = document.createElement('span')
+  span.className = 'mdc-typography--body1'
+  span.textContent = message
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'app-update-dialog',
+    showCancel: false,
+    showAccept: true,
+    headerText: title,
+    content: span
+  }).outerHTML
+  const dialogEl = document.getElementById('app-update-dialog')
+  const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
+  updateDialog.show()
+    updateDialog.listen('MDCDialog:accept', function () {
+      if(JSON.parse(native.getInfo()).appVersion === 7 ) {
+        setTimeout(function () {
+          updateDialog.show();
+        }, 500)
+        listView();
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: '',
+          registerToken: native.getFCMToken()
+        })
+      }
+      else {
+        dialogEl.remove();
+        listView();
+      }
+    })
+  }
+  sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
+  }
     return;
   }
   webkit.messageHandlers.updateApp.postMessage('Update App');
@@ -1037,9 +1055,14 @@ function removeChildNodes(parent) {
   }
 }
 
-function jniException (message,stack){
-  handleError({message:message,body:stack,androidException:true})
+function jniException(message, stack) {
+  handleError({
+    message: message,
+    body: stack,
+    androidException: true
+  })
 }
+
 function sendExceptionObject(exception, message, param) {
   handleError({
     message: `${message}`,
