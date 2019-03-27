@@ -2635,7 +2635,7 @@ function getRecipient() {
       index.openCursor('recipient').onsuccess = function (event) {
        const cursor  = event.target.result
        if(!cursor) return;
-       console.log(cursor.value)
+     
        if(cursor.status ==='CANCELLED') {
          cursor.continue();
          return;

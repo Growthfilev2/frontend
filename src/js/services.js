@@ -1059,8 +1059,7 @@ function runRead(value) {
               offices[record.office] = true
               reports[record.attachment.Name.value] = true
             })
-            
-            content.body = `You have been added a Recipient for ${ Object.keys(offices).join('&')} . Without Adding Email Address, you will not recieve ${Object.keys(reports).join(' & ')} Reports. Click Okay to set your email address`
+            content.body = `You have been added a Recipient for ${ Object.keys(offices).join('&')} . Without Adding Email Address, you will not recieve ${Object.keys(reports).join(' , ')} Reports. Click Okay to set your email address`
           }
           emailVerify(content)
         })
