@@ -290,7 +290,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
       return;
     }
-    if(body === "") {
+    if (body === "") {
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
@@ -743,19 +743,20 @@ function messageReceiver(response) {
 }
 
 
-function emailVerify() {
+function emailVerify(notification) {
 
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
-  span.textContent = 'Please Set your Email-id'
+  span.textContent = notification.body
+  
 
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'email-update-dialog',
     showCancel: true,
     showAccept: true,
-    headerText: 'Reminder',
+    headerText: notification.title,
     content: span
   }).outerHTML
   const dialogEl = document.getElementById('email-update-dialog')
@@ -772,11 +773,9 @@ function emailVerify() {
 
 function radioList(attr) {
   const li = document.createElement('li')
-  li.className = 'mdc-list-item mdc-ripple-surface--secondary'
+  li.className = `mdc-list-item mdc-ripple-surface--secondary`
   li.setAttribute('role', 'radio')
 
-  // li.setAttribute('aria-checked',"true")
-  // li.setAttribute('tabindex',"0")
   const span = document.createElement('span')
   span.className = 'mdc-list-item__graphic'
   const radio = document.createElement('div')
@@ -807,9 +806,10 @@ function radioList(attr) {
   radio.appendChild(background)
   span.appendChild(radio)
   const label = document.createElement('label')
-  label.textContent = attr.labelText
+  label.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
   label.style.padding = '8px 0px 8px 0px'
   label.style.width = '-webkit-fill-available'
+  label.style.display = 'contents';
   label.className = 'mdc-list-item__text'
   label.setAttribute('for', attr.id)
   li.appendChild(span)
@@ -820,12 +820,18 @@ function radioList(attr) {
 
 function createBlankPayrollDialog(notificationData) {
 
-  const ul = document.createElement('ul')
+  const div = document.createElement('div')
+  div.style.marginTop = '10px';
+
+  div.className = 'notification-message'
+  div.textContent = notificationData.body
+
+  const ul = document.createElement('ul');
   ul.className = 'mdc-list'
   ul.id = 'payroll-notification-list'
   ul.setAttribute('role', 'radiogroup');
-
-  notificationData.forEach(function (data) {
+  div.appendChild(ul)
+  notificationData.data.forEach(function (data) {
     let selected = false
     if (data.template === 'leave') {
       selected = true
@@ -836,32 +842,31 @@ function createBlankPayrollDialog(notificationData) {
       value: data.template,
       selected: selected
     }))
-
   })
 
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'blank-payroll-dialog',
     showAccept: true,
     showCancel: true,
-    headerText: 'Payroll Alert',
-    content: ul
+    headerText: notificationData.title,
+    content: div
   }).outerHTML
   const dialogEl = document.getElementById('blank-payroll-dialog');
   const payrollDialog = new mdc.dialog.MDCDialog(dialogEl);
   const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
   radioListInit.singleSelection = true
+  const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
+    return new mdc.radio.MDCRadio(el);
+  });
 
   payrollDialog.listen('MDCDialog:accept', function (evt) {
-    const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
-      return new mdc.radio.MDCRadio(el);
-    });
     leaveRadio.forEach(function (el) {
       if (el.checked) {
-        notificationData.forEach(function (data) {
+        notificationData.data.forEach(function (data) {
           if (data.template === el.value) {
             createTempRecord(data.office, el.value, {
               schedule: data.schedule,
-              attachment:data.attachment
+              attachment: data.attachment
             });
             return;
           }
@@ -907,17 +912,34 @@ function updateApp(data) {
       document.getElementById('dialog-container').innerHTML = dialog({
         id: 'app-update-dialog',
         showCancel: false,
-        showAccept: false,
+        showAccept: true,
         headerText: title,
         content: span
       }).outerHTML
       const dialogEl = document.getElementById('app-update-dialog')
       const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
       updateDialog.show()
-      sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
+      updateDialog.listen('MDCDialog:accept', function () {
+        if (JSON.parse(native.getInfo()).appVersion === 7) {
+          setTimeout(function () {
+            updateDialog.show();
+          }, 500)
+          listView();
+          requestCreator('now', {
+            device: native.getInfo(),
+            from: '',
+            registerToken: native.getFCMToken()
+          })
+        } else {
+          dialogEl.remove();
+          listView();
+        }
+      })
     }
+    sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
     return;
   }
+
   webkit.messageHandlers.updateApp.postMessage('Update App');
 }
 
@@ -1012,15 +1034,38 @@ function getInputText(selector) {
 
 
 function runRead(value) {
-  console.log(value)
   if (!localStorage.getItem('dbexist')) return
-
   if (!value) return requestCreator('Null', value);
-
   const keys = Object.keys(value);
   keys.forEach(function (key) {
     if (key === 'verifyEmail') {
-      emailVerify()
+      const notificationData = JSON.parse(value[key])
+      if (!notificationData.title || !notificationData.body) {
+        const content = {
+          title:'Reminder',
+          body:''
+        }
+        
+        let offices = {}
+        let reports = {}
+         
+        getRecipient().then(function (records) {
+        
+          if(!records.length) {
+            content.body = 'You have not set your email Address. Click Okay to set your email address'
+          }
+          else {
+            records.forEach(function (record) {
+              offices[record.office] = true
+              reports[record.attachment.Name.value] = true
+            })
+            content.body = `You have been added a Recipient for ${ Object.keys(offices).join('&')} . Without Adding Email Address, you will not recieve ${Object.keys(reports).join(' , ')} Reports. Click Okay to set your email address`
+          }
+          emailVerify(content)
+        })
+        return;
+      }
+      emailVerify(notificationData)
       return;
     }
     if (key === 'read') {
@@ -1028,7 +1073,13 @@ function runRead(value) {
       return;
     }
     if (key === 'payroll') {
-      createBlankPayrollDialog(JSON.parse(value[key]))
+      getRootRecord().then(function (record) {
+        if (!record.offices) return;
+        if (Array.isArray(record.offices)) return;
+        if (!record.offices.length) return;
+
+        createBlankPayrollDialog(JSON.parse(value[key]))
+      })
       return;
     }
   })
@@ -1040,9 +1091,14 @@ function removeChildNodes(parent) {
   }
 }
 
-function jniException (message,stack){
-  handleError({message:message,body:stack,androidException:true})
+function jniException(message, stack) {
+  handleError({
+    message: message,
+    body: stack,
+    androidException: true
+  })
 }
+
 function sendExceptionObject(exception, message, param) {
   handleError({
     message: `${message}`,

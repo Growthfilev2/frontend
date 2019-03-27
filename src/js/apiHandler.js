@@ -140,8 +140,7 @@ function fetchServerTime(body, meta) {
         }
     
         http(httpReq).then(function (response) {
-          console.log(response);
-
+         
           if (response.updateClient) {
             const title = 'Message';
             const message = 'There is a New version of your app available';
@@ -588,9 +587,9 @@ function updateMap(activity, param) {
             activityId: activity.activityId,
             latitude: newVenue.geopoint['_latitude'],
             longitude: newVenue.geopoint['_longitude'],
-            location: newVenue.location.toLowerCase(),
+            location: newVenue.location,
             template: activity.template,
-            address: newVenue.address.toLowerCase(),
+            address: newVenue.address,
             venueDescriptor: newVenue.venueDescriptor,
             status: activity.status,
             office: activity.office,
