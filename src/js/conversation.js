@@ -1574,7 +1574,8 @@ function createScheduleTable(data) {
     startDateInput.type = 'date'
     startDateInput.disabled = !data.canEdit
     startDateInput.className = 'mdc-text-field__input'
-
+   
+    
     sdDiv.appendChild(startDateInput)
 
     const stSpan = document.createElement("span")
@@ -1611,7 +1612,28 @@ function createScheduleTable(data) {
     endDateInput.disabled = !data.canEdit
     endDateInput.className = 'mdc-text-field__input'
     edDiv.appendChild(endDateInput)
+    if(data.template === 'leave') {
+      startDateInput.onchange = function(e){
+        const field = document.getElementById('Number-Of-Days')
+        if(field) {
+          const value = moment(endDateInput.value).diff(moment(startDateInput.value),'days') +1
+          if(value >=0 ){
 
+            field.querySelector('input').value = value
+          }
+          
+        }
+      }
+      endDateInput.onchange = function(e){
+        const field = document.getElementById('Number-Of-Days')
+        if(field) {
+          const value = moment(endDateInput.value).diff(moment(startDateInput.value),'days') +1
+          if(value >=0 ){
+            field.querySelector('input').value = value
+          }
+        }
+      }
+    }
     const etSpan = document.createElement("span")
     etSpan.className = 'mdc-list-item__meta'
 
@@ -1692,6 +1714,7 @@ function createAttachmentContainer(data) {
       div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key, required))
     } else {
       if (data.attachment[key].type === 'string') {
+        console.log(data.canEdit)
         div.appendChild(label)
         div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
       }
@@ -1700,7 +1723,16 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
-      div.appendChild(createNumberInput(data.attachment[key].value, data.canEdit))
+      console.log(data)
+      let canEdit = data.canEdit
+      if(key === 'Number Of Days') {
+        const startDate = document.querySelector('#schedule--group .start--date1 input')
+        const endDate = document.querySelector('#schedule--group .end--date1 input')
+        data.attachment[key].value = (moment(endDate.value).diff(startDate.value,'days')) + 1
+        console.log(moment(endDate.value).diff(startDate.value,'days') + 1);
+        canEdit = false
+      }
+      div.appendChild(createNumberInput(data.attachment[key].value, canEdit))
     }
 
     if (data.attachment[key].type === 'email') {
@@ -2465,13 +2497,6 @@ function createSimpleInput(value, canEdit, withIcon, key, required) {
 }
 
 function createNumberInput(value, canEdit) {
-  if (!canEdit) {
-    const simeplText = document.createElement('span')
-    simeplText.className = 'data--value-list'
-    simeplText.textContent = value
-    return simeplText
-  }
-
   const textField = document.createElement('div')
   textField.className = 'mdc-text-field data--value-list'
   const input = document.createElement('input')
@@ -2479,6 +2504,9 @@ function createNumberInput(value, canEdit) {
   input.type = 'number'
   input.style.paddingTop = '0px'
   input.value = value
+  if(!canEdit) {
+    input.setAttribute('readonly','true')
+  }
   input.setAttribute('onkeypress', "return event.charCode >= 48 && event.charCode <= 57")
   const ripple = document.createElement('div')
   ripple.className = 'mdc-line-ripple'

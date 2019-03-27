@@ -819,13 +819,19 @@ function radioList(attr) {
 }
 
 function createBlankPayrollDialog(notificationData) {
+  console.log(notificationData)
+  const div = document.createElement('div')
+  div.style.marginTop = '10px';
 
-  const ul = document.createElement('ul')
+  div.className = 'notification-message'
+  div.textContent = notificationData.message
+
+  const ul = document.createElement('ul');
   ul.className = 'mdc-list'
   ul.id = 'payroll-notification-list'
   ul.setAttribute('role', 'radiogroup');
-
-  notificationData.forEach(function (data) {
+  div.appendChild(ul)
+  notificationData.data.forEach(function (data) {
     let selected = false
     if (data.template === 'leave') {
       selected = true
@@ -843,8 +849,8 @@ function createBlankPayrollDialog(notificationData) {
     id: 'blank-payroll-dialog',
     showAccept: true,
     showCancel: true,
-    headerText: 'Payroll Alert',
-    content: ul
+    headerText: notificationData.title,
+    content: div
   }).outerHTML
   const dialogEl = document.getElementById('blank-payroll-dialog');
   const payrollDialog = new mdc.dialog.MDCDialog(dialogEl);
@@ -857,7 +863,7 @@ function createBlankPayrollDialog(notificationData) {
     });
     leaveRadio.forEach(function (el) {
       if (el.checked) {
-        notificationData.forEach(function (data) {
+        notificationData.data.forEach(function (data) {
           if (data.template === el.value) {
             createTempRecord('Puja Capital', el.value, {
               schedule: data.schedule,
@@ -896,46 +902,45 @@ function initFirstLoad(response) {
 
 function updateApp(data) {
   if (native.getName() === 'Android') {
-  try {
-    AndroidInterface.updateApp(data.msg);
-  } catch (e) {
-  var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
-  var title = JSON.parse(data.msg).message;
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = message
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'app-update-dialog',
-    showCancel: false,
-    showAccept: true,
-    headerText: title,
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('app-update-dialog')
-  const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
-  updateDialog.show()
-    updateDialog.listen('MDCDialog:accept', function () {
-      if(JSON.parse(native.getInfo()).appVersion === 7 ) {
-        setTimeout(function () {
-          updateDialog.show();
-        }, 500)
-        listView();
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        })
-      }
-      else {
-        dialogEl.remove();
-        listView();
-      }
-    })
-  }
-  sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
-  }
+    try {
+      AndroidInterface.updateApp(data.msg);
+    } catch (e) {
+      var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
+      var title = JSON.parse(data.msg).message;
+      const span = document.createElement('span')
+      span.className = 'mdc-typography--body1'
+      span.textContent = message
+      document.getElementById('dialog-container').innerHTML = dialog({
+        id: 'app-update-dialog',
+        showCancel: false,
+        showAccept: true,
+        headerText: title,
+        content: span
+      }).outerHTML
+      const dialogEl = document.getElementById('app-update-dialog')
+      const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
+      updateDialog.show()
+      updateDialog.listen('MDCDialog:accept', function () {
+        if (JSON.parse(native.getInfo()).appVersion === 7) {
+          setTimeout(function () {
+            updateDialog.show();
+          }, 500)
+          listView();
+          requestCreator('now', {
+            device: native.getInfo(),
+            from: '',
+            registerToken: native.getFCMToken()
+          })
+        } else {
+          dialogEl.remove();
+          listView();
+        }
+      })
+    }
+    sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
     return;
   }
+
   webkit.messageHandlers.updateApp.postMessage('Update App');
 }
 
