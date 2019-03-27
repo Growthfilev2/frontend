@@ -743,19 +743,19 @@ function messageReceiver(response) {
 }
 
 
-function emailVerify() {
+function emailVerify(notification) {
 
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
-  span.textContent = 'Please Set your Email-id'
+  span.textContent = notification.body
 
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'email-update-dialog',
     showCancel: true,
     showAccept: true,
-    headerText: 'Reminder',
+    headerText: notification.title,
     content: span
   }).outerHTML
   const dialogEl = document.getElementById('email-update-dialog')
@@ -772,11 +772,9 @@ function emailVerify() {
 
 function radioList(attr) {
   const li = document.createElement('li')
-  li.className = 'mdc-list-item mdc-ripple-surface--secondary'
+  li.className = `mdc-list-item mdc-ripple-surface--secondary`
   li.setAttribute('role', 'radio')
-
-  // li.setAttribute('aria-checked',"true")
-  // li.setAttribute('tabindex',"0")
+  
   const span = document.createElement('span')
   span.className = 'mdc-list-item__graphic'
   const radio = document.createElement('div')
@@ -807,9 +805,10 @@ function radioList(attr) {
   radio.appendChild(background)
   span.appendChild(radio)
   const label = document.createElement('label')
-  label.textContent = attr.labelText
+  label.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
   label.style.padding = '8px 0px 8px 0px'
   label.style.width = '-webkit-fill-available'
+  label.style.display = 'contents';
   label.className = 'mdc-list-item__text'
   label.setAttribute('for', attr.id)
   li.appendChild(span)
@@ -824,7 +823,7 @@ function createBlankPayrollDialog(notificationData) {
   div.style.marginTop = '10px';
 
   div.className = 'notification-message'
-  div.textContent = notificationData.message
+  div.textContent = notificationData.body
 
   const ul = document.createElement('ul');
   ul.className = 'mdc-list'
@@ -856,16 +855,16 @@ function createBlankPayrollDialog(notificationData) {
   const payrollDialog = new mdc.dialog.MDCDialog(dialogEl);
   const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
   radioListInit.singleSelection = true
+  const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
+    return new mdc.radio.MDCRadio(el);
+  });
 
   payrollDialog.listen('MDCDialog:accept', function (evt) {
-    const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
-      return new mdc.radio.MDCRadio(el);
-    });
     leaveRadio.forEach(function (el) {
       if (el.checked) {
         notificationData.data.forEach(function (data) {
           if (data.template === el.value) {
-            createTempRecord('Puja Capital', el.value, {
+            createTempRecord(data.office, el.value, {
               schedule: data.schedule,
               attachment: data.attachment
             });
@@ -1040,7 +1039,7 @@ function runRead(value) {
   const keys = Object.keys(value);
   keys.forEach(function (key) {
     if (key === 'verifyEmail') {
-      emailVerify()
+      emailVerify(JSON.parse(value[key]))
       return;
     }
     if (key === 'read') {

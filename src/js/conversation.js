@@ -1621,7 +1621,6 @@ function createScheduleTable(data) {
 
             field.querySelector('input').value = value
           }
-          
         }
       }
       endDateInput.onchange = function(e){
