@@ -513,6 +513,7 @@ function runAppChecks() {
             getRootRecord().then(function (record) {
            
               if (!record.offices) return;
+              if(!record.offices.length) return;
               const offices = record.offices
               const message = document.createElement('h1')
               message.className = 'mdc-typography--body1 mt-10'

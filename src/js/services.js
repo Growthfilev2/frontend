@@ -818,7 +818,7 @@ function radioList(attr) {
 }
 
 function createBlankPayrollDialog(notificationData) {
-  console.log(notificationData)
+
   const div = document.createElement('div')
   div.style.marginTop = '10px';
 
@@ -841,7 +841,6 @@ function createBlankPayrollDialog(notificationData) {
       value: data.template,
       selected: selected
     }))
-
   })
 
   document.getElementById('dialog-container').innerHTML = dialog({
@@ -1047,7 +1046,13 @@ function runRead(value) {
       return;
     }
     if (key === 'payroll') {
-      createBlankPayrollDialog(JSON.parse(value[key]))
+      getRootRecord().then(function(record){
+        if(!record.offices) return;
+        if(Array.isArray(record.offices)) return;
+        if(!record.offices.length) return;
+        
+        createBlankPayrollDialog(JSON.parse(value[key]))
+      })
       return;
     }
   })
