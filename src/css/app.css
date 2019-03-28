@@ -8,6 +8,14 @@ body {
   background-color: #0399f4 !important;
   color:white !important;
 }
+.text-area-basic.mdc-text-field__input {
+  width: 100% !important;
+  border-style: inset;
+  border-width: 1.5px;
+  border-color: #0399f4;
+  padding-top: 0px;
+  height: auto;
+}
 .filled-background {
   background-color: #f5f5f5;
 }

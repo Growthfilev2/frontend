@@ -1728,9 +1728,8 @@ function createAttachmentContainer(data) {
       if (data.attachment[key].type === 'string') {
         console.log(data.canEdit)
         div.appendChild(label)
-        div.appendChild(textAreaField(data.attachment[key].value,data.canEdit));
-        
-        // div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+        const field = textAreaField({value:data.attachment[key].value,readonly:data.canEdit,rows:2})
+        div.appendChild(field);        
       }
     }
 
@@ -2804,4 +2803,22 @@ function inputField(attr) {
     className: 'mdc-line-ripple'
   }))
   return field;
+}
+
+function textAreaField(attrs){
+  const textArea = createElement('textarea',{className:'text-area-basic mdc-text-field__input',rows:attrs.rows})
+  textArea.value = attrs.value
+  if(!attrs.readonly) {
+    textArea.setAttribute('readonly','true');
+  }
+  return textArea
+}
+
+function notchedOultine(){
+  const outline = createElement('div',{className:'mdc-notched-outline'})
+  const leading = createElement('div',{className:'mdc-notched-outline__leading'})
+  const trialing = createElement('div',{className:'mdc-notched-outline__trailing'})
+  outline.appendChild(leading)
+  outline.appendChild(trialing)
+  return outline
 }
