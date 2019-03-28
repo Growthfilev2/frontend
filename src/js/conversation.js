@@ -98,17 +98,17 @@ function commentPanel(id) {
   const commentCont = document.createElement('div')
   commentCont.className = 'comment--container'
 
-  const inputField = document.createElement('div')
-  inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
-  inputField.id = 'write--comment'
-  inputField.style.width = '100%';
+  const field = document.createElement('div')
+  field.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
+  field.id = 'write--comment'
+  field.style.width = '100%';
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input comment-field mdc-elevation--z4'
   input.type = 'text'
 
-  inputField.appendChild(input)
+  field.appendChild(input)
 
-  commentCont.appendChild(inputField)
+  commentCont.appendChild(field)
 
 
   const btn = document.createElement('button')
@@ -386,20 +386,27 @@ function hasMapsApiLoaded() {
 }
 
 
-function appendMap(location, el, options) {
+function AppendMap(location, el, options) {
+  this.options = options;
+  this.location = location
+  this.map = new google.maps.Map(el, this.options);
 
-  const map = new google.maps.Map(el, options);
-
-  var customControlDiv = document.createElement('div');
-  var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-  customControlDiv.index = 1;
-  map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-
-  const marker = new google.maps.Marker({
-    position: location,
-    map: map
-  });
+  // var customControlDiv = document.createElement('div');
+  // var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
+  // customControlDiv.index = 1;
+  // map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
 }
+AppendMap.prototype.getMarker = function(extras){
+  var markerConfig = {
+    position: this.location,
+    map: this.map,
+  }
+  Object.keys(extras).forEach(function(extra){
+    markerConfig[extra] = extras[extra]
+  })  
+  return new google.maps.Marker(markerConfig);
+}
+
 
 function MapsCustomControl(customControlDiv, map, lat, lng) {
   var controlUI = document.createElement('div');
@@ -1823,115 +1830,65 @@ function createAttachmentContainer(data) {
     }
 
 
+
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
-
-
-      if (!data.canEdit) {
-
-        createElement('span', {
-          className: 'data--value-list',
-          textContent: key
-        })
-
-      }
-      const customerSelectionTemplates = {
+      const customerAddition = {
         'tour plan': true
       }
-
-      if (!customerSelectionTemplates[data.template]) return;
+      div.appendChild(label)
+      const valueField = document.createElement('span')
+      valueField.textContent = data.attachment[key].value
+      valueField.className = 'data--value-list'
+      div.appendChild(valueField)
       hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
-        const chooseExisting = createElement('button', {
-          className: 'mdc-button shaped',
-          textContent: 'Choose Existing'
-        })
-        new mdc.ripple.MDCRipple(chooseExisting)
+      
+        if(hasValue){
+          const chooseExisting = createElement('button', {
+            className: 'mdc-button shaped mdc-typography--subtitle2 mdc-button--raised',
+            textContent: 'Choose existing'
+          });
+          new mdc.ripple.MDCRipple(chooseExisting);
+          div.appendChild(chooseExisting);
+          div.classList.add('selector--margin')
+          chooseExisting.onclick = function (evt) {
+            valueField.dataset.primary = ''
+            insertInputsIntoActivity(data)
+            history.replaceState(['updateCreateActivity', data], null, null)
 
-        chooseExisting.onclick = function (evt) {
-
-          insertInputsIntoActivity(data)
-          history.replaceState(['updateCreateActivity', data], null, null);
-          selectorUI({
-            record: data,
-            store: 'children',
-            attachment: {
-              present: true,
-              key: key,
-              office: data.office,
-              template: data.attachment[key].type,
-              status: data.status
-            }
-          })
-        }
-        div.appendChild(chooseExisting)
-      })
-      const createNew = createElement('button', {
-        className: 'mdc-button shaped',
-        textContent: 'Create New'
-      })
-      new mdc.ripple.MDCRipple(createNew)
-      createNew.onclick = function () {
-        getSubscription(data.office, 'customer').then(function (record) {
-          getLocation().then(function (location) {
-            div.appendChild(createElement('span', {
-              className: 'label--text data--value-list',
-              textContent: 'Name'
-            }))
-            div.appendChild(createSimpleInput('', true, '', 'Name', true))
-            div.appendChild(createElement('span', {
-              className: 'label--text data--value-list',
-              textContent: record.venue[0]
-            }))
-
-            checkMapStoreForNearByLocation(data.office, location).then(function (nearestLocations) {
-              div.appendChild(createSimpleInput(nearestLocations[0].location, true, '', record.venue[0], true))
-              const modLocation = {
-                lat: location.latitude,
-                lng: location.longitude
+            selectorUI({
+              record: data,
+              store: 'children',
+              attachment: {
+                present: true,
+                key: key,
+                office: data.office,
+                template: data.attachment[key].type,
+                status: data.status
               }
-              const mapDom = createElement('div', {
-                id: 'customer-address'
-              })
-              appendMap(modLocation, mapDom, {
-                zoom: 16,
-                center: location,
-                disableDefaultUI: true,
-                draggable: true,
-                animation: google.maps.Animation.DROP,
-              })
-              mapDom.style.height = '200px';
-              autocomplete.addListener('place_changed', function () {
-                let place = autocomplete.getPlace();
-                modLocation.lat = place.geometry.location.lat()
-                modLocation.lng = place.geometry.location.lng()
-                appendMap(modLocation, mapDom, {
-                  zoom: 16,
-                  center: location,
-                  disableDefaultUI: true,
-                  draggable: true,
-                  animation: google.maps.Animation.DROP,
-                })
-              })
-
-              google.maps.event.addListener(marker, 'dragend',
-                function (marker) {
-
-                  var latLng = marker.latLng;
-                  currentLatitude = latLng.lat();
-                  currentLongitude = latLng.lng();
-
-                });
-              div.appendChild(mapDom)
             })
-          }).catch(function (error) {
-            div.appendChild(createElement('span', {
-              className: 'info-attachment',
-              textContent: 'Failed to Detect Your Current Location. Choose From Exisintg Customer'
-            }))
-          })
-        })
+
+          }
+        }
+      });
+      if (customerAddition[data.template]) {
+        const createNew = createElement('button', {
+          className: 'mdc-button shaped mdc-typography--subtitle2 mdc-button--raised',
+          textContent: 'Create New'
+        });
+
+        new mdc.ripple.MDCRipple(createNew);
+        createNew.onclick = function(){
+          if(document.querySelector('.customer-form')) {
+            document.querySelector('.customer-form').remove();
+          }
+          div.appendChild(addNewCustomer(data))
+        }
+        div.appendChild(createNew)
+      
       }
-      div.appendChild(createNew)
     }
+
+
 
     const hr = document.createElement('hr')
     hr.className = 'attachment--divider'
@@ -2731,75 +2688,119 @@ function getSubscription(office, template) {
   })
 }
 
-function addNewCustomer(data, el) {
-  const container = createElement('div', {
-    className: 'customer-form'
-  });
-  hasAnyValueInChildren(data.office, data.template, data.status).then(function (value) {
-    if (!value) return;
-    const chooseExisting = createElement('button', {
-      className: 'mdc-button shaped',
-      textContent: 'Choose existing'
+function addNewCustomer(data) {
+    const container = createElement('div', {
+      className: 'customer-form'
     });
-    new mdc.ripple.MDCRipple(chooseExisting);
-    container.appendChild(chooseExisting)
-    chooseExisting.onclick = function () {
-      insertInputsIntoActivity(data)
-      history.replaceState(['updateCreateActivity', data], null, null);
-      selectorUI({
-        record: data,
-        store: 'children',
-        attachment: {
-          present: true,
-          key: key,
-          office: data.office,
-          template: data.attachment[key].type,
-          status: data.status
-        }
+
+    const locationErrorText = createElement('span', {
+      className: 'customer-location-error mdc-typography--subtitle1'
+    });
+
+   
+      container.style.height = '400px'
+      const name = inputField({
+        id: 'customer-name',
+        labelText: 'Customer Name',
+        className:'filled-background mdc-text-field--fullwidth mdc-text-field'
       })
+      console.log(name)
+      new mdc.textField.MDCTextField(name)
+      container.appendChild(name)
+      const address = inputField({
+        id: 'customer-name',
+        labelText: 'Customer Address',
+        className:'mdc-text-field--fullwidth filled-background mdc-text-field'
+      })
+      const addresInit = new mdc.textField.MDCTextField(address)
+      container.appendChild(address)
+      const options = {
+        componentRestrictions: {
+          country: "in"
+        }
+      }
+      addresInit['input_'].placeholder = ''
+      autocomplete = new google.maps.places.Autocomplete(addresInit['input_'], options);
+      autocomplete.addListener('place_changed', function () {
+        let place = autocomplete.getPlace();
+        const latlng = {
+          lat:place.geometry.location.lat(),
+          lng:place.geometry.location.lng()
+        }
+        const map = new AppendMap(latlng, mapDom,{
+          zoom: 16,
+          center: latlng,
+          disableDefaultUI: true,
+        })
+        const marker = map.getMarker({draggable:true});
+        console.log(marker);
+        google.maps.event.addListener(marker, 'dragend', function() {
+         
+          geocodePosition(marker.getPosition(),addresInit);
+        });
+
+      });
+      const mapDom = createElement('div', {
+        id: 'customer-address-map'
+      })
+
+      mapDom.style.minHeight = '200px';
+      getLocation().then(function (location) {
+        const modLocation = {
+          lat: location.latitude,
+          lng: location.longitude
+        }
+        const map = new AppendMap(modLocation, mapDom,{
+          zoom: 16,
+          center: modLocation,
+          disableDefaultUI: true,
+        })
+        const marker = map.getMarker({draggable:true});
+        container.appendChild(mapDom);
+        google.maps.event.addListener(marker, 'dragend', function() {
+         
+          geocodePosition(marker.getPosition(),addresInit);
+        });
+      }).catch(function (error) {
+        console.log(error)
+        locationErrorText.textContent = 'Failed to detect your current Location. Please Choose from existing Customers'
+      })
+      container.appendChild(locationErrorText);
+    return container;
+
+}
+function geocodePosition(pos,addresInit) {
+  const geocoder = new google.maps.Geocoder();
+  geocoder.geocode({
+    latLng: pos
+  }, function(responses) {
+    if (responses && responses.length > 0) {
+      addresInit.value = responses[0].formatted_address
+      console.log(responses)
+      console.log(responses[0].formatted_address);
+    } else {
+     console.log('Cannot determine address at this location.');
     }
-  })
-  const createNew = createElement('button', {
-    className: 'mdc-button shaped',
-    textContent: 'Create New'
-  })
-  new mdc.ripple.MDCRipple(createNew);
-
-  container.appendChild(createNew);
-  const locationErrorText = createElement('span',{className:'customer-location-error mdc-typography--subtitle1'});
-
-  createNew.onclick = function () {
-    container.style.height = '200px'
-    const name = inputField({id:'customer-name',labelText:'Customer Name'})
-    new mdc.textField.MDCTextField(name)
-    container.appendChild(name)
-    const address =  inputField({id:'customer-name',labelText:'Customer Address'})
-    new mdc.textField.MDCTextField(address)
-    container.appendChild(address)
-    const mapDom = createElement('div',{id:'customer-address-map'})
-    getLocation().then(function(location){
-      appendMap({lat:location.latitude,lng:location.longitude},mapDom)
-      container.appendChild(mapDom);
-    }).catch(function(error){ 
-      locationErrorText.textContent = 'Failed to detect your current Location. Please Choose from existing Customers'
-    })
-  }
+  });
 }
 
-function inputField(attr){
+function inputField(attr) {
   const field = createElement('div', {
-    className: 'mdc-text-field',
+    className: attr.className,
     id: attr.id
   })
   field.appendChild(createElement('input', {
     type: 'text',
-    id: attr.id+'-input'
+    id: attr.id + '-input',
+    className:'mdc-text-field__input'
   }))
   field.appendChild(createElement('label', {
-    className: 'mdc-floating-label mdc-floating-label--float-above',
-    for: attr.id+'-input',
+    className: 'mdc-floating-label',
+    for: attr.id + '-input',
     textContent: attr.labelText
   }))
-  field.appendChild(createElement('div',{className:'mdc-line-ripple'}))
+  field.appendChild(createElement('div', {
+    className: 'mdc-line-ripple'
+  }))
   return field;
 }

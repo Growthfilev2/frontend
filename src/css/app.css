@@ -4,6 +4,16 @@ body {
 .mdc-top-app-bar__section--align-start {
   padding-left: 10px;
 }
+.mdc-button {
+  background-color: #0399f4 !important;
+  color:white !important;
+}
+.filled-background {
+  background-color: #f5f5f5;
+}
+.mdc-button.shaped {
+  border-radius: 22px;
+}
 .mt-10 {
   margin-top: 10px;
 }
@@ -1093,8 +1103,6 @@ input[type="datetime-local"] {
 }
 
 .attachment-field .mdc-text-field {
-  margin-top: 0px !important;
-  height: 30px !important;
 }
 
 #assignees--list .mdc-list-item:nth-child(1) {
@@ -1418,9 +1426,9 @@ input[type="datetime-local"] {
 
 
 @media only screen and (max-width:400px) {
-  #attachment--list .mdc-text-field {
+  /* #attachment--list .mdc-text-field {
     width: 40%;
-  }
+  } */
 }
 
 #cancel-alert .mdc-dialog__surface {
