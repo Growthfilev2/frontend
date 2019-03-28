@@ -1714,7 +1714,9 @@ function createAttachmentContainer(data) {
       if (data.attachment[key].type === 'string') {
         console.log(data.canEdit)
         div.appendChild(label)
-        div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+        div.appendChild(textAreaField(data.attachment[key].value,data.canEdit));
+        
+        // div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
       }
     }
 
@@ -2648,4 +2650,26 @@ function getRecipient() {
       }
     }
   })
+}
+
+
+function textAreaField(value,canEdit){
+  const field = createElement('div',{className:'mdc-text-field mdc-text-field--textarea mdc-text-field--no-label'})
+  const textArea = createEmailInput('textarea',{className:'mdc-text-field__input',rows:'8',cols:'40'})
+  textArea.value = value
+  if(!canEdit) {
+    textArea.setAttribute('readonly','true');
+  }
+  field.appendChild(textArea)
+  field.appendChild(notchedOultine)
+  return field
+}
+
+function notchedOultine(){
+  const outline = createElement('div',{className:'mdc-notched-outline'})
+  const leading = createElement('div',{className:'mdc-notched-outline__leading'})
+  const trialing = createElement('div',{className:'mdc-notched-outline__trailing'})
+  outline.appendChild(leading)
+  outline.appendChild(trialing)
+  return outline
 }
