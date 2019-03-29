@@ -7,6 +7,7 @@ function conversation(id, pushState) {
       }
       fetchAddendumForComment(id)
     } else {
+      resetScroll()
       listView()
     }
   }).catch(handleError)
@@ -447,6 +448,7 @@ function createHeaderContent(db, id) {
           if (id) {
             updateCreateActivity(record);
           } else {
+            resetScroll()
             listView();
           }
         }).catch(handleError);
@@ -934,6 +936,7 @@ function createTempRecord(office, template, prefill) {
             setTimeout(function () {
               dialogEl.remove();
             }, 3000)
+            resetScroll()
             listView();
             handleError(error)
           })
@@ -1173,7 +1176,7 @@ function updateCreateActivity(record, showSendButton) {
     createVenueSection(record)
     createScheduleTable(record);
     createAttachmentContainer(record)
-    createAssigneeList(record, true, db)
+    createAssigneeList(record, db)
     createActivityCancellation(record);
     window.scrollTo(0, 0)
 
@@ -1427,12 +1430,10 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const selectorIcon = document.createElement('span')
   selectorIcon.className = 'mdc-list-item__meta'
-  const addLocation = document.createElement('label')
-  addLocation.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-  const locationBtnSpan = document.createElement('span')
-  locationBtnSpan.className = 'mdc-fab__icon material-icons'
-  locationBtnSpan.textContent = 'add_location'
-  addLocation.appendChild(locationBtnSpan)
+
+  const locationIcon = new Fab('add_location');
+  const addLocation = locationIcon.getButton();
+  addLocation.root_.classList.add('add--assignee-icon', 'attachment-selector-label')
 
   if (showVenueDesc) {
     const listItemLabel = document.createElement('span')
@@ -1474,8 +1475,8 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     if (record.canEdit) {
       selectorIcon.setAttribute('aria-hidden', 'true')
-      selectorIcon.appendChild(addLocation)
-      addLocation.onclick = function (evt) {
+      selectorIcon.appendChild(addLocation.root_)
+      addLocation.root_.onclick = function (evt) {
         insertInputsIntoActivity(record)
         history.replaceState(['updateCreateActivity', record], null, null)
 
@@ -1689,26 +1690,26 @@ function createAttachmentContainer(data) {
     const div = document.createElement('div')
     data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
-    
+
     if (data.canEdit) {
       div.classList.add('editable--true')
     }
-    const label = createElement('span',{className:'label--text',textContent:key})
-    
-    if(data.attachment[key].type === 'string') {
-      if(key === 'Name' || key === 'Number') {
-        div.appendChild(label)     
-        // const uniqueField = new InputField()
+    const label = createElement('span', {
+      className: 'label--text',
+      textContent: key
+    })
+
+    if (data.attachment[key].type === 'string') {
+      if (key === 'Name' || key === 'Number') {
+        div.appendChild(label)
         const uniqueField = new InputField();
         const uniqueFieldInit = uniqueField.withoutLabel();
-        uniqueFieldInit.root_.classList.add('filled-background','data--value-list','mdc-text-field--fullwidth')
         uniqueFieldInit.root_.id = key
         uniqueFieldInit.disabled = !data.canEdit
         uniqueFieldInit.value = data.attachment[key].value
         uniqueFieldInit['input_'].required = true;
-        div.appendChild(uniqueFieldInit.root_);      
-      }
-      else {
+        div.appendChild(uniqueFieldInit.root_);
+      } else {
         div.appendChild(label)
         const field = textAreaField({
           value: data.attachment[key].value,
@@ -1730,7 +1731,13 @@ function createAttachmentContainer(data) {
         console.log(moment(endDate.value).diff(startDate.value, 'days') + 1);
         canEdit = false
       }
-      div.appendChild(createNumberInput(data.attachment[key].value, canEdit))
+      const numberInput = new InputField();
+      const numberInit = numberInput.withoutLabel();
+      numberInit.input_.type = 'number';
+      numberInit.value = data.attachment[key].value
+      numberInit.disabled = !data.canEdit;
+      div.appendChild(numberInit.root_);
+
     }
 
     if (data.attachment[key].type === 'email') {
@@ -1742,7 +1749,6 @@ function createAttachmentContainer(data) {
       emailFieldInit.disabled = !data.canEdit;
       emailFieldInit['input_'].type = 'email'
 
-      emailFieldInit.root_.classList.add('filled-background','data--value-list','mdc-text-field--fullwidth')
       div.appendChild(emailFieldInit.root_)
     }
 
@@ -1750,17 +1756,22 @@ function createAttachmentContainer(data) {
       div.appendChild(label)
 
       div.classList.add('selector--margin')
-     
-      const dataVal = createElement('span',{className:'data--value-list',textContent:data.attachment[key].value})
+
+      const dataVal = createElement('span', {
+        className: 'data--value-list',
+        textContent: data.attachment[key].value
+      })
       dataVal.dataset.primary = ''
       div.appendChild(dataVal)
 
       if (data.canEdit) {
-        const addNumberButton = createElement('label',{className:'mdc-fab add--assignee-icon attachment-selector-label'})
-        const addNumberText = createElement('span',{className:'mdc-fab__icon material-icons',textContent:'person_add'})
-        addNumberButton.appendChild(addNumberText);  
-        div.appendChild(addNumberButton)
-        addNumberButton.onclick = function (evt) {
+        const addNumber = new Fab('person_add');
+        const addNumberButton = addNumber.getButton();
+     
+        addNumberButton['root_'].classList.add('add--assignee-icon','attachment-selector-label')
+      
+        div.appendChild(addNumberButton['root_'])
+        addNumberButton['root_'].onclick = function (evt) {
           insertInputsIntoActivity(data)
           history.replaceState(['updateCreateActivity', data], null, null)
           selectorUI({
@@ -1778,48 +1789,37 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type == 'HH:MM') {
       div.appendChild(label)
       const timeInput = new InputField();
-      const timeInputInit =  timeInput.withoutLabel();
-      timeInputInit.value = data.attachment[key].value  || moment("24", "HH:mm").format('HH:mm')
+      const timeInputInit = timeInput.withoutLabel();
+      timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
       timeInputInit.disabled = !data.canEdit;
-      timeInputInit.root_.classList.add('filled-background','data--value-list','mdc-text-field--fullwidth')
       timeInputInit.input_.type = 'time'
       div.appendChild(timeInputInit['root_']);
     }
-   
+
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
-      const selectField = selectMenu({id:convertKeyToId(key),data:['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']});
-      // div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
+      const selectField = selectMenu({
+        id: convertKeyToId(key),
+        data: ['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']
+      });
       div.appendChild(selectField.root_)
     }
 
     if (data.attachment[key].type === 'base64') {
-      const addCamera = document.createElement('label')
-      addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
-      addCamera.id = 'start-camera'
-
-      const span = document.createElement('span')
-      span.className = 'mdc-fab__icon material-icons'
-      span.textContent = 'add_a_photo'
-      addCamera.appendChild(span)
-
-      const imagePreview = document.createElement('ul')
-      imagePreview.className = 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
-
+      
+      const imagePreview = createElement('ul',{className:'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'})
       imagePreview.appendChild(setFilePath(data.attachment[key].value, key, true))
-
-
-      div.appendChild(imagePreview)
-
-
+  
       if (data.canEdit) {
-
-        div.appendChild(addCamera)
-        div.appendChild(imagePreview);
-        addCamera.onclick = function () {
+        const imageFab = new Fab('add_a_photo');
+        const imageFabInit = imageFab.getButton();
+        imageFabInit.root_.classList.add('attachment-selector-label','add--assignee-icon')
+        div.appendChild(imageFabInit.root_)
+        imageFabInit.root_.onclick = function () {
           readCameraFile()
         }
       }
+      div.appendChild(imagePreview)
     }
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
@@ -1834,14 +1834,15 @@ function createAttachmentContainer(data) {
       hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
 
         if (hasValue) {
-          const chooseExisting = createElement('button', {
-            className: 'mdc-button shaped mdc-typography--subtitle2 mdc-button--raised',
-            textContent: 'Choose existing'
-          });
-          new mdc.ripple.MDCRipple(chooseExisting);
-          div.appendChild(chooseExisting);
+          const chooseExisting = new Button('Choose Existing');
+          chooseExisting.raised();
+          chooseExisting.shaped();
+          const chooseExistingEl = chooseExisting.getButton();
+          chooseExistingEl.root_.classList.add('mdc-typography--subtitle2')
+       
+          div.appendChild(chooseExistingEl.root_);
           div.classList.add('selector--margin')
-          chooseExisting.onclick = function (evt) {
+          chooseExistingEl.root_.onclick = function (evt) {
             valueField.dataset.primary = ''
             insertInputsIntoActivity(data)
             history.replaceState(['updateCreateActivity', data], null, null)
@@ -1862,19 +1863,19 @@ function createAttachmentContainer(data) {
         }
       });
       if (customerAddition[data.template]) {
-        const createNew = createElement('button', {
-          className: 'mdc-button shaped mdc-typography--subtitle2 mdc-button--raised',
-          textContent: 'Create New'
-        });
+        const createNew = new Button('Create New')
+        createNew.raised();
+        createNew.shaped();
+        const createNewEl = createNew.getButton();
+        createNewEl.root_.classList.add('mdc-typography--subtitle2')
 
-        new mdc.ripple.MDCRipple(createNew);
-        createNew.onclick = function () {
+        createNewEl.root_.onclick = function () {
           if (document.querySelector('.customer-form')) {
             document.querySelector('.customer-form').remove();
           }
           div.appendChild(addNewCustomer(data))
         }
-        div.appendChild(createNew)
+        div.appendChild(createNewEl.root_)
 
       }
     }
@@ -1902,19 +1903,24 @@ function createAttachmentContainer(data) {
 
 
 
-function createAssigneeList(record, showLabel, db) {
+function createAssigneeList(record, db) {
   const parent = document.getElementById('assignees--list')
-  if (showLabel) {
+  const labelAdd = createElement('li', {
+    className: 'mdc-list-item label--text add--assignee-loader',
+    textContent: 'Assignees'
+  })
 
-    const labelAdd = document.createElement('li')
-    labelAdd.className = 'mdc-list-item label--text add--assignee-loader'
-    labelAdd.textContent = 'Assignees'
-    const labelButton = document.createElement('span')
-    labelButton.className = 'mdc-list-item__meta'
-    const addButton = document.createElement('div')
-    addButton.className = 'mdc-fab add--assignee-icon'
+  if (record.canEdit) {
 
-    addButton.onclick = function (evt) {
+    const labelButton = createElement('span', {
+      className: 'mdc-list-item__meta'
+    })
+
+    const fabAssignee = new Fab('person_add')
+    const addButton = fabAssignee.getButton();
+    addButton.root_.classList.add('add--assignee-icon');
+
+    addButton.root_.onclick = function (evt) {
       insertInputsIntoActivity(record)
       history.replaceState(['updateCreateActivity', record], null, null)
       selectorUI({
@@ -1925,19 +1931,12 @@ function createAssigneeList(record, showLabel, db) {
         }
       })
     }
-    const span = document.createElement('span')
-    span.className = 'mdc-fab__icon material-icons'
-    span.textContent = 'person_add'
-    addButton.appendChild(span)
-    labelButton.appendChild(addButton)
-
-
-    if (record.canEdit) {
-      labelAdd.appendChild(labelButton)
-    }
-
-    parent.appendChild(labelAdd)
+    labelButton.appendChild(addButton.root_)
+    labelAdd.appendChild(labelButton)
   }
+
+  parent.appendChild(labelAdd)
+
 
   record.assignees.forEach(function (number) {
     getUserRecord(db, number).then(function (record) {
@@ -2457,9 +2456,6 @@ function initializeAutocompleteGoogle(autocomplete, attr) {
       snacks("Please select a valid location")
       return
     }
-    //  document.getElementById('location--container').style.marginTop = '0px'
-
-
 
     const selectedAreaAttributes = {
       primary: place.name,
@@ -2479,131 +2475,6 @@ function initializeAutocompleteGoogle(autocomplete, attr) {
       updateCreateActivity(activity, true);
     }).catch(handleError)
   })
-}
-
-
-function createNumberInput(value, canEdit) {
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field data--value-list'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--type-number'
-  input.type = 'number'
-  input.style.paddingTop = '0px'
-  input.value = value
-  if (!canEdit) {
-    input.setAttribute('readonly', 'true')
-  }
-  input.setAttribute('onkeypress', "return event.charCode >= 48 && event.charCode <= 57")
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-
-  return textField
-}
-
-function createEmailInput(value, canEdit) {
-  if (!canEdit) {
-    const simeplText = document.createElement('span')
-    simeplText.className = 'data--value-list'
-    simeplText.textContent = value
-    return simeplText
-  }
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field data--value-list'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--type-email'
-  input.type = 'email'
-  input.placeholder = 'johndoe@example.com'
-  input.style.paddingTop = '0px'
-  input.value = value
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-
-  return textField
-}
-
-function createTimeInput(value, canEdit, attr) {
-  if (!canEdit) {
-    const simeplText = document.createElement('span')
-    simeplText.className = 'data--value-list'
-    if (attr.type === 'date') {
-      if (value) {
-        simeplText.textContent = moment(value).calendar()
-      } else {
-        simeplText.textContent = ''
-      }
-    }
-    return simeplText
-  }
-
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--type-time'
-  input.type = attr.type
-  input.style.borderBottom = 'none'
-
-  // attr.type === 'date' ? input.value = moment(value).format('DD-MM-YYYY') : input.value = value
-
-  if (attr.type === 'time') {
-    textField.classList.add('data--value-list')
-    input.style.width = '100%'
-    input.value = value || moment("24", "HH:mm").format('HH:mm')
-  };
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-  return textField
-}
-
-function createSelectMenu(key, value, canEdit) {
-  if (!canEdit) {
-    const span = document.createElement('span')
-    span.className = 'data--value-list'
-    span.textContent = value
-    return span
-  };
-
-  const div = document.createElement('div')
-  div.className = 'mdc-select data--value-list'
-  div.style.height = '32%;'
-  div.id = convertKeyToId(key)
-  div.dataset.value = key
-  div.dataset.primary = ''
-  const select = document.createElement('select')
-  select.className = 'mdc-select__native-control'
-  select.style.paddingRight = '0px';
-  const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-
-  for (var i = 0; i < weekdays.length; i++) {
-    const option = document.createElement('option')
-    option.value = weekdays[i]
-    option.textContent = weekdays[i]
-    if (value === weekdays[i]) {
-      option.setAttribute('selected', 'true')
-    }
-
-    select.appendChild(option)
-  }
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
-  label.textContent = ''
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-  div.appendChild(label)
-  div.appendChild(select)
-  div.appendChild(ripple)
-  return div
 }
 
 
@@ -2716,4 +2587,3 @@ function geocodePosition(pos, addresInit) {
     }
   });
 }
-

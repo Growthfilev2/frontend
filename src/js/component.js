@@ -9,7 +9,7 @@ function createElement(tagName, attrs) {
 function InputField() {}
 InputField.prototype.base = function () {
     return createElement('div', {
-        className: 'mdc-text-field',
+        className: 'mdc-text-field filled-background data--value-list mdc-text-field--fullwidth',
     });
 }
 InputField.prototype.input = function () {
@@ -107,6 +107,9 @@ Button.prototype.disabled = function(value){
 }
 Button.prototype.raised = function(){
     this.base.classList.add('mdc-button--raised');
+}
+Button.prototype.shaped = function(){
+    this.base.classList.add('shaped')
 }
 Button.prototype.selectorButton = function(){
     this.base.classList.add('selector-send','selector-submit--button')

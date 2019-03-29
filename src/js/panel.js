@@ -5,6 +5,12 @@ const scroll_namespace = {
 
 }
 
+function resetScroll(){
+  scroll_namespace.count =0;
+  scroll_namespace.size = 20;
+  scroll_namespace.skip = true
+}
+
 function initDomLoad() {
 
   if (document.querySelector('.init-loader')) {
@@ -150,7 +156,6 @@ function loadActivitiesFromListStore(currentLocation) {
 }
 
 function startCursor(currentLocation) {
-  console.log(currentLocation)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -525,7 +530,6 @@ function getCountOfTemplates() {
 function createActivityIconDom() {
  
   const fab = new Fab('add')
-  console.log(fab)
   const chooseSubscription = fab.getButton();  
   chooseSubscription.root_.classList.add('create-activity')
   chooseSubscription.root_.id = 'create-activity--icon'
@@ -628,7 +632,13 @@ function headerBackIcon(store){
   backIcon.textContent = 'arrow_back'
   backIcon.onclick = function(){
     if(!store) return backNav();
-    store === 'subscriptions' ?  listView() :updateCreateActivity(history.state[1], true);
+    if(store === 'subscriptions') {
+      resetScroll();
+      listView();
+    }
+    else {
+      updateCreateActivity(history.state[1], true);
+    }
   }
   return backIcon;
 }
