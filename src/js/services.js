@@ -1071,11 +1071,11 @@ function runRead(value) {
     if (key === 'read') {
       requestCreator('Null', value);
       return;
-    }
+    } 
     if (key === 'payroll') {
       getRootRecord().then(function (record) {
         if (!record.offices) return;
-        if (Array.isArray(record.offices)) return;
+        if (!Array.isArray(record.offices)) return;
         if (!record.offices.length) return;
 
         createBlankPayrollDialog(JSON.parse(value[key]))
