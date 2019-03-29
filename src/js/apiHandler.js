@@ -172,7 +172,7 @@ function fetchServerTime(body, meta) {
           };
           if(response.hasOwnProperty('removeFromOffice')){
             if(Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              removeFromOffice(response.removeFromOffice,user)
+              removeFromOffice(response.removeFromOffice,meta.user)
             }
           }
 

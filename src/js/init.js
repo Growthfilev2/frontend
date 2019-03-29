@@ -141,11 +141,11 @@ window.addEventListener('load', function () {
 
     if (!event.state) return;
     if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
+    
     const originalCount = scroll_namespace.count;
     if (originalCount) {
       scroll_namespace.size = originalCount
     }
-
     scroll_namespace.count = 0;
     window[event.state[0]]()
   }
@@ -158,6 +158,11 @@ function backNav() {
   history.back();
 }
 
+function resetScroll(){
+  scroll_namespace.count = 0;
+  scroll_namespace.size = 20;
+  scroll_namespace.skip = false;
+}
 function firebaseUiConfig(value) {
 
   return {

@@ -7,6 +7,7 @@ function conversation(id, pushState) {
       }
       fetchAddendumForComment(id)
     } else {
+      resetScroll()
       listView()
     }
   }).catch(handleError)
@@ -461,6 +462,7 @@ function createHeaderContent(db, id) {
           if (id) {
             updateCreateActivity(record);
           } else {
+            resetScroll()
             listView();
           }
         }).catch(handleError);
@@ -946,6 +948,7 @@ function createTempRecord(office, template, prefill) {
             setTimeout(function () {
               dialogEl.remove();
             }, 3000)
+            resetScroll()
             listView();
             handleError(error)
           })
