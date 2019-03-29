@@ -1838,7 +1838,7 @@ function createAttachmentContainer(data) {
           chooseExisting.raised();
           chooseExisting.shaped();
           const chooseExistingEl = chooseExisting.getButton();
-          chooseExistingEl.root_.classList.add('mdc-typography--subtitle2')
+          chooseExistingEl.root_.classList.add('mdc-typography--subtitle2','mdc-button--dense')
        
           div.appendChild(chooseExistingEl.root_);
           div.classList.add('selector--margin')
@@ -1867,7 +1867,7 @@ function createAttachmentContainer(data) {
         createNew.raised();
         createNew.shaped();
         const createNewEl = createNew.getButton();
-        createNewEl.root_.classList.add('mdc-typography--subtitle2')
+        createNewEl.root_.classList.add('mdc-typography--subtitle2','mdc-button--dense')
 
         createNewEl.root_.onclick = function () {
           if (document.querySelector('.customer-form')) {
@@ -2531,11 +2531,11 @@ function addNewCustomer(data) {
       country: "in"
     }
   });
-  customerLocationAutoComplete(mapDom);
-
   const mapDom = createElement('div', {
     id: 'customer-address-map'
   })
+  customerLocationAutoComplete(mapDom);
+
   mapDom.style.minHeight = '200px';
   getLocation().then(function (location) {
     const modLocation = {
