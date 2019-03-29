@@ -386,28 +386,6 @@ function hasMapsApiLoaded() {
 }
 
 
-function AppendMap(location, el, options) {
-  this.options = options;
-  this.location = location
-  this.map = new google.maps.Map(el, this.options);
-
-  // var customControlDiv = document.createElement('div');
-  // var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-  // customControlDiv.index = 1;
-  // map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-}
-AppendMap.prototype.getMarker = function(extras){
-  var markerConfig = {
-    position: this.location,
-    map: this.map,
-  }
-  Object.keys(extras).forEach(function(extra){
-    markerConfig[extra] = extras[extra]
-  })  
-  return new google.maps.Marker(markerConfig);
-}
-
-
 function MapsCustomControl(customControlDiv, map, lat, lng) {
   var controlUI = document.createElement('div');
 
@@ -1711,28 +1689,35 @@ function createAttachmentContainer(data) {
     const div = document.createElement('div')
     data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
-
+    
     if (data.canEdit) {
       div.classList.add('editable--true')
     }
-
-    const label = document.createElement('span')
-    label.className = 'label--text'
-    label.textContent = key
-
-    if (key === 'Name' || key === 'Number') {
-      div.appendChild(label)
-      const required = true
-      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key, required))
-    } else {
-      if (data.attachment[key].type === 'string') {
-        console.log(data.canEdit)
+    const label = createElement('span',{className:'label--text',textContent:key})
+    
+    if(data.attachment[key].type === 'string') {
+      if(key === 'Name' || key === 'Number') {
+        div.appendChild(label)     
+        // const uniqueField = new InputField()
+        const uniqueField = new InputField();
+        const uniqueFieldInit = uniqueField.withoutLabel();
+        uniqueFieldInit.root_.classList.add('filled-background','data--value-list','mdc-text-field--fullwidth')
+        uniqueFieldInit.root_.id = key
+        uniqueFieldInit.disabled = !data.canEdit
+        uniqueFieldInit.value = data.attachment[key].value
+        uniqueFieldInit['input_'].required = true;
+        div.appendChild(uniqueFieldInit.root_);      
+      }
+      else {
         div.appendChild(label)
-        const field = textAreaField({value:data.attachment[key].value,readonly:data.canEdit,rows:2})
-        div.appendChild(field);        
+        const field = textAreaField({
+          value: data.attachment[key].value,
+          readonly: data.canEdit,
+          rows: 2
+        })
+        div.appendChild(field);
       }
     }
-
 
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
@@ -1750,24 +1735,32 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'email') {
       div.appendChild(label)
-      div.appendChild(createEmailInput(data.attachment[key].value, data.canEdit))
+      const emailField = new InputField();
+      const emailFieldInit = emailField.withoutLabel();
+
+      emailFieldInit.value = data.attachment[key].value;
+      emailFieldInit.disabled = !data.canEdit;
+      emailFieldInit['input_'].type = 'email'
+
+      emailFieldInit.root_.classList.add('filled-background','data--value-list','mdc-text-field--fullwidth')
+      div.appendChild(emailFieldInit.root_)
     }
 
     if (data.attachment[key].type === 'phoneNumber') {
-      div.classList.add('selector--margin')
-      const addButton = document.createElement('label')
-      addButton.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-      const span = document.createElement('span')
-      span.className = 'mdc-fab__icon material-icons'
-      span.textContent = 'person_add'
-      addButton.appendChild(span)
+      div.appendChild(label)
 
-      const dataVal = document.createElement('span')
-      dataVal.className = 'data--value-list'
+      div.classList.add('selector--margin')
+     
+      const dataVal = createElement('span',{className:'data--value-list',textContent:data.attachment[key].value})
       dataVal.dataset.primary = ''
+      div.appendChild(dataVal)
+
       if (data.canEdit) {
-        div.appendChild(addButton)
-        addButton.onclick = function (evt) {
+        const addNumberButton = createElement('label',{className:'mdc-fab add--assignee-icon attachment-selector-label'})
+        const addNumberText = createElement('span',{className:'mdc-fab__icon material-icons',textContent:'person_add'})
+        addNumberButton.appendChild(addNumberText);  
+        div.appendChild(addNumberButton)
+        addNumberButton.onclick = function (evt) {
           insertInputsIntoActivity(data)
           history.replaceState(['updateCreateActivity', data], null, null)
           selectorUI({
@@ -1780,24 +1773,24 @@ function createAttachmentContainer(data) {
           })
         }
       }
-      div.appendChild(label)
-
-      dataVal.textContent = data.attachment[key].value
-      div.appendChild(dataVal)
     }
 
     if (data.attachment[key].type == 'HH:MM') {
       div.appendChild(label)
-      div.appendChild(createTimeInput(data.attachment[key].value, data.canEdit, {
-        simple: false,
-        type: 'time'
-      }))
+      const timeInput = new InputField();
+      const timeInputInit =  timeInput.withoutLabel();
+      timeInputInit.value = data.attachment[key].value  || moment("24", "HH:mm").format('HH:mm')
+      timeInputInit.disabled = !data.canEdit;
+      timeInputInit.root_.classList.add('filled-background','data--value-list','mdc-text-field--fullwidth')
+      timeInputInit.input_.type = 'time'
+      div.appendChild(timeInputInit['root_']);
     }
-
+   
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
-      div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
-
+      const selectField = selectMenu({id:convertKeyToId(key),data:['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']});
+      // div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
+      div.appendChild(selectField.root_)
     }
 
     if (data.attachment[key].type === 'base64') {
@@ -1829,8 +1822,6 @@ function createAttachmentContainer(data) {
       }
     }
 
-
-
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
       const customerAddition = {
         'tour plan': true
@@ -1841,8 +1832,8 @@ function createAttachmentContainer(data) {
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
       hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
-      
-        if(hasValue){
+
+        if (hasValue) {
           const chooseExisting = createElement('button', {
             className: 'mdc-button shaped mdc-typography--subtitle2 mdc-button--raised',
             textContent: 'Choose existing'
@@ -1877,14 +1868,14 @@ function createAttachmentContainer(data) {
         });
 
         new mdc.ripple.MDCRipple(createNew);
-        createNew.onclick = function(){
-          if(document.querySelector('.customer-form')) {
+        createNew.onclick = function () {
+          if (document.querySelector('.customer-form')) {
             document.querySelector('.customer-form').remove();
           }
           div.appendChild(addNewCustomer(data))
         }
         div.appendChild(createNew)
-      
+
       }
     }
 
@@ -2490,46 +2481,6 @@ function initializeAutocompleteGoogle(autocomplete, attr) {
   })
 }
 
-function createSimpleInput(value, canEdit, withIcon, key, required) {
-
-  if (!canEdit) {
-    const onlyText = document.createElement('span')
-    onlyText.className = 'data--value-list'
-    onlyText.textContent = value
-    return onlyText
-  }
-
-  const textField = document.createElement('div')
-  if (key && key.length < 15) {
-
-    textField.className = 'mdc-text-field data--value-list'
-  } else {
-    textField.className = 'mdc-text-field data--value-list-small'
-  }
-
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--value--update'
-  input.style.paddingTop = '0px'
-  input.value = value
-  input.required = required
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  if (withIcon) {
-
-    textField.id = 'search--bar--field'
-    input.id = 'search--bar-selector'
-    textField.classList.add('field-input')
-
-  }
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-  if (textField) {
-    const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
-  }
-  return textField
-}
 
 function createNumberInput(value, canEdit) {
   const textField = document.createElement('div')
@@ -2597,7 +2548,7 @@ function createTimeInput(value, canEdit, attr) {
   input.type = attr.type
   input.style.borderBottom = 'none'
 
-  attr.type === 'date' ? input.value = moment(value).format('DD-MM-YYYY') : input.value = value
+  // attr.type === 'date' ? input.value = moment(value).format('DD-MM-YYYY') : input.value = value
 
   if (attr.type === 'time') {
     textField.classList.add('data--value-list')
@@ -2611,10 +2562,6 @@ function createTimeInput(value, canEdit, attr) {
 
   textField.appendChild(input)
   textField.appendChild(ripple)
-  if (attr.simple) {
-    input.classList.remove('mdc-text-field__input')
-    return input
-  }
   return textField
 }
 
@@ -2624,7 +2571,8 @@ function createSelectMenu(key, value, canEdit) {
     span.className = 'data--value-list'
     span.textContent = value
     return span
-  }
+  };
+
   const div = document.createElement('div')
   div.className = 'mdc-select data--value-list'
   div.style.height = '32%;'
@@ -2658,14 +2606,6 @@ function createSelectMenu(key, value, canEdit) {
   return div
 }
 
-function createElement(tagName, attrs) {
-  const el = document.createElement(tagName)
-  Object.keys(attrs).forEach(function (attr) {
-    el[attr] = attrs[attr]
-  })
-  return el;
-}
-
 
 function getSubscription(office, template) {
   return new Promise(function (resolve) {
@@ -2689,136 +2629,91 @@ function getSubscription(office, template) {
 }
 
 function addNewCustomer(data) {
-    const container = createElement('div', {
-      className: 'customer-form'
+  const container = createElement('div', {
+    className: 'customer-form'
+  });
+  container.style.height = '400px'
+
+  const locationErrorText = createElement('span', {
+    className: 'customer-location-error mdc-typography--subtitle1'
+  });
+
+  const name = new InputField({
+    id: 'customer-name',
+    labelText: 'Customer Name',
+    className: 'filled-background mdc-text-field--fullwidth mdc-text-field'
+  })
+  console.log(name)
+  const address = new InputField({
+    id: 'customer-name',
+    labelText: 'Customer Address',
+    className: 'mdc-text-field--fullwidth filled-background mdc-text-field'
+  })
+  const nameField = name.withLabel();
+  const addressField = address.withLabel();
+  addressField['input_'].placeholder = ''
+  container.appendChild(nameField['root_'])
+  container.appendChild(addressField['root_'])
+
+  autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
+    componentRestrictions: {
+      country: "in"
+    }
+  });
+  customerLocationAutoComplete(mapDom);
+
+  const mapDom = createElement('div', {
+    id: 'customer-address-map'
+  })
+  mapDom.style.minHeight = '200px';
+  getLocation().then(function (location) {
+    const modLocation = {
+      lat: location.latitude,
+      lng: location.longitude
+    }
+    const map = new AppendMap(modLocation, mapDom)
+    const marker = map.getMarker({
+      draggable: true
     });
-
-    const locationErrorText = createElement('span', {
-      className: 'customer-location-error mdc-typography--subtitle1'
+    google.maps.event.addListener(marker, 'dragend', function () {
+      geocodePosition(marker.getPosition(), addressField['input_']);
     });
+  }).catch(function (error) {
+    locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+  })
 
-   
-      container.style.height = '400px'
-      const name = inputField({
-        id: 'customer-name',
-        labelText: 'Customer Name',
-        className:'filled-background mdc-text-field--fullwidth mdc-text-field'
-      })
-      console.log(name)
-      new mdc.textField.MDCTextField(name)
-      container.appendChild(name)
-      const address = inputField({
-        id: 'customer-name',
-        labelText: 'Customer Address',
-        className:'mdc-text-field--fullwidth filled-background mdc-text-field'
-      })
-      const addresInit = new mdc.textField.MDCTextField(address)
-      container.appendChild(address)
-      const options = {
-        componentRestrictions: {
-          country: "in"
-        }
-      }
-      addresInit['input_'].placeholder = ''
-      autocomplete = new google.maps.places.Autocomplete(addresInit['input_'], options);
-      autocomplete.addListener('place_changed', function () {
-        let place = autocomplete.getPlace();
-        const latlng = {
-          lat:place.geometry.location.lat(),
-          lng:place.geometry.location.lng()
-        }
-        const map = new AppendMap(latlng, mapDom,{
-          zoom: 16,
-          center: latlng,
-          disableDefaultUI: true,
-        })
-        const marker = map.getMarker({draggable:true});
-        console.log(marker);
-        google.maps.event.addListener(marker, 'dragend', function() {
-         
-          geocodePosition(marker.getPosition(),addresInit);
-        });
-
-      });
-      const mapDom = createElement('div', {
-        id: 'customer-address-map'
-      })
-
-      mapDom.style.minHeight = '200px';
-      getLocation().then(function (location) {
-        const modLocation = {
-          lat: location.latitude,
-          lng: location.longitude
-        }
-        const map = new AppendMap(modLocation, mapDom,{
-          zoom: 16,
-          center: modLocation,
-          disableDefaultUI: true,
-        })
-        const marker = map.getMarker({draggable:true});
-        container.appendChild(mapDom);
-        google.maps.event.addListener(marker, 'dragend', function() {
-         
-          geocodePosition(marker.getPosition(),addresInit);
-        });
-      }).catch(function (error) {
-        console.log(error)
-        locationErrorText.textContent = 'Failed to detect your current Location. Please Choose from existing Customers'
-      })
-      container.appendChild(locationErrorText);
-    return container;
-
+  container.appendChild(mapDom);
+  container.appendChild(locationErrorText);
+  return container;
 }
-function geocodePosition(pos,addresInit) {
+
+function customerLocationAutoComplete(el) {
+  autocomplete.addListener('place_changed', function () {
+    let place = autocomplete.getPlace();
+    const latlng = {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
+    }
+    const map = new AppendMap(latlng, el);
+    const marker = map.getMarker({
+      draggable: true
+    });
+    google.maps.event.addListener(marker, 'dragend', function () {
+      geocodePosition(marker.getPosition(), addressField['input_']);
+    });
+  });
+}
+
+function geocodePosition(pos, addresInit) {
   const geocoder = new google.maps.Geocoder();
   geocoder.geocode({
     latLng: pos
-  }, function(responses) {
+  }, function (responses) {
     if (responses && responses.length > 0) {
-      addresInit.value = responses[0].formatted_address
-      console.log(responses)
-      console.log(responses[0].formatted_address);
+      return responses[0].formatted_address
     } else {
-     console.log('Cannot determine address at this location.');
+      console.log('Cannot determine address at this location.');
     }
   });
 }
 
-function inputField(attr) {
-  const field = createElement('div', {
-    className: attr.className,
-    id: attr.id
-  })
-  field.appendChild(createElement('input', {
-    type: 'text',
-    id: attr.id + '-input',
-    className:'mdc-text-field__input'
-  }))
-  field.appendChild(createElement('label', {
-    className: 'mdc-floating-label',
-    for: attr.id + '-input',
-    textContent: attr.labelText
-  }))
-  field.appendChild(createElement('div', {
-    className: 'mdc-line-ripple'
-  }))
-  return field;
-}
-
-function textAreaField(attrs){
-  const textArea = createElement('textarea',{className:'text-area-basic mdc-text-field__input',rows:attrs.rows})
-  textArea.value = attrs.value
-  if(!attrs.readonly) {
-    textArea.setAttribute('readonly','true');
-  }
-  return textArea
-}
-
-function notchedOultine(){
-  const outline = createElement('div',{className:'mdc-notched-outline'})
-  const leading = createElement('div',{className:'mdc-notched-outline__leading'})
-  const trialing = createElement('div',{className:'mdc-notched-outline__trailing'})
-  outline.appendChild(leading)
-  outline.appendChild(trialing)
-  return outline
-}

@@ -517,7 +517,7 @@ body {
   background: white;
 }
 
-.create-activity .mdc-fab_icon {
+#create-activity--icon.create-activity .mdc-fab__icon {
   font-size: 53px;
 }
 
@@ -1102,8 +1102,9 @@ input[type="datetime-local"] {
 }
 
 .data--value-list {
-  margin-left: 10px;
-  color: black
+  margin-top: 0px;
+  margin-left: 0px;
+  width: -webkit-fill-available;
 }
 
 #schedule--list {

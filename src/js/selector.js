@@ -25,13 +25,16 @@ function selectorUI(data) {
   warning.id = 'selector-warning'
   container.appendChild(warning);
 
+  const submit = new Button('SELECT');
+  submit.raised()
   
-  const submitButton = document.createElement('button')
-  submitButton.textContent = 'SELECT'
-  submitButton.id = 'selector-submit-send'
-  submitButton.className = 'mdc-button selector-submit--button selector-send'
-  container.appendChild(submitButton)
+  submit.selectorButton();
+  const submitButton = submit.getButton();
+  submitButton.root_.id = 'selector-submit-send'
+  container.appendChild(submitButton.root_)
+
   parent.innerHTML = container.outerHTML;
+
   window.scrollTo(0, 0);
   let activityRecord = data.record
   let selectorStore;
@@ -57,10 +60,8 @@ function selectorUI(data) {
       initializeAutocompleteGoogle(autocomplete, data)
       getLocationForMapSelector(tx, data).then(function (count) {
         if(!count) {
-          document.getElementById('map-selector-search').style.display = 'none'
           document.getElementById('selector-submit-send').textContent = 'CANCEL'
           document.getElementById('data-list--container').appendChild(noSelectorResult('No Location Found'))
- 
         }
         handleClickListnersForMap(data,count)
       }).catch(console.log)
@@ -210,25 +211,25 @@ function fillChildrenInSelector(selectorStore, data, tx) {
       return;
     }
     // document.querySelector('.selector-send').classList.remove('hidden')
-    document.getElementById('selector-submit-send').onclick = function () {
-      const selector = document.querySelector('.mdc-radio.radio-selected');
-      if (!selector) {
-        document.getElementById('selector-warning').textContent = '* Please Select a Value'
-        return;
-      }
-      const radio = new mdc.radio.MDCRadio(selector)
-      const selectedField = JSON.parse(radio.value)
-      updateDomFromIDB(data.record, {
-        hash: 'children',
-        key: data.attachment.key
-      }, {
-        primary: selectedField.name
-      }).then(function (activity) {
-        updateCreateActivity(activity, true)
-      }).catch(function (error) {
-        console.log(error)
-      })
-    }
+    // document.getElementById('selector-submit-send').onclick = function () {
+    //   const selector = document.querySelector('.mdc-radio.radio-selected');
+    //   if (!selector) {
+    //     document.getElementById('selector-warning').textContent = '* Please Select a Value'
+    //     return;
+    //   }
+    //   const radio = new mdc.radio.MDCRadio(selector)
+    //   const selectedField = JSON.parse(radio.value)
+    //   updateDomFromIDB(data.record, {
+    //     hash: 'children',
+    //     key: data.attachment.key
+    //   }, {
+    //     primary: selectedField.name
+    //   }).then(function (activity) {
+    //     updateCreateActivity(activity, true)
+    //   }).catch(function (error) {
+    //     console.log(error)
+    //   })
+    // }
   }
 }
 
