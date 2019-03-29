@@ -102,11 +102,14 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
         }
        
         if(data.attachment.present) {
-            frag.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
+            assigneeLi.onclick = function () {
+                checkRadioInput(this, assigneeLi.dataset.value)
+              }
+            frag.appendChild(createSimpleAssigneeLi(cursor.value, createRadioInput(cursor.value.number)))
         }
         else {
             if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-                frag.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
+                frag.appendChild(createSimpleAssigneeLi(cursor.value, createCheckBox()))
             }
         }
         cursor.continue()

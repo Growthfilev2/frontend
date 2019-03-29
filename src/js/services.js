@@ -779,33 +779,7 @@ function radioList(attr) {
 
   const span = document.createElement('span')
   span.className = 'mdc-list-item__graphic'
-  const radio = document.createElement('div')
-  radio.className = 'mdc-radio'
-  const input = document.createElement('input')
-  input.className = 'mdc-radio__native-control'
-  input.setAttribute('type', 'radio')
-  input.setAttribute('id', attr.id)
-  input.setAttribute('name', 'list-radio-item-group')
-  input.setAttribute('value', attr.value)
-
-  if (attr.selected) {
-    li.setAttribute('aria-checked', "true")
-    li.classList.add('mdc-list-item--selected');
-    input.setAttribute('checked', "true")
-  } else {
-    li.setAttribute('aria-checked', "false")
-  }
-  const background = document.createElement('div')
-  background.className = 'mdc-radio__background'
-  const outer = document.createElement('div')
-  outer.className = 'mdc-radio__outer-circle'
-  const inner = document.createElement('div')
-  inner.className = 'mdc-radio__inner-circle'
-  background.appendChild(outer)
-  background.appendChild(inner);
-  radio.appendChild(input)
-  radio.appendChild(background)
-  span.appendChild(radio)
+  span.appendChild(createRadioInput(attr.value).root_);
   const label = document.createElement('label')
   label.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
   label.style.padding = '8px 0px 8px 0px'

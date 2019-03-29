@@ -1203,25 +1203,6 @@ function updateCreateActivity(record, showSendButton) {
       })
     }
 
-    if (document.querySelector('.mdc-select')) {
-      const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-      select.listen('change', () => {
-        updateDomFromIDB(record, {
-          hash: 'weekday',
-          key: select['root_'].dataset.value
-        }, {
-          primary: select.value
-        }).then(function (message) {
-          if (!document.getElementById('send-activity').dataset.progress) {
-
-            if (document.getElementById('send-activity').classList.contains('hidden')) {
-              document.getElementById('send-activity').classList.remove('hidden')
-            }
-          }
-        }).catch(handleError)
-      });
-    }
-
   }
 }
 
@@ -1802,7 +1783,14 @@ function createAttachmentContainer(data) {
         id: convertKeyToId(key),
         data: ['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']
       });
-      div.appendChild(selectField.root_)
+
+      selectField.listen('change', () => {
+        if (!document.getElementById('send-activity').dataset.progress) {
+          document.getElementById('send-activity').classList.remove('hidden')
+        }
+      });
+    
+      div.appendChild(selectField.root_);
     }
 
     if (data.attachment[key].type === 'base64') {
@@ -1947,11 +1935,10 @@ function createAssigneeList(record, db) {
 
 
 
-function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
-  const assigneeLi = document.createElement('li')
-  assigneeLi.classList.add('mdc-list-item', 'assignee-li')
+function createSimpleAssigneeLi(userRecord, metaType) {
+  const assigneeLi = createElement('li',{className:'mdc-list-item assignee-li'})
   if (!userRecord) return assigneeLi
-  assigneeLi.dataset.value = userRecord.mobile
+  
   const dataObject = document.createElement('object');
   dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
   dataObject.type = 'image/jpeg';
@@ -1980,16 +1967,10 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   assigneeListText.appendChild(assigneeListTextSecondary)
 
   const metaInput = document.createElement('span')
-  metaInput.className = 'mdc-list-item__meta material-icons'
-  if (showMetaInput) {
-    if (isCheckbox) {
-      metaInput.appendChild(createCheckBox(userRecord))
-    } else {
-      metaInput.appendChild(createRadioInput())
-      assigneeLi.onclick = function () {
-        checkRadioInput(this, assigneeLi.dataset.value)
-      }
-    }
+  metaInput.className = 'mdc-list-item__meta material-icons';
+
+  if (metaType) {
+    metaInput.appendChild(metaType.root_);
   }
   assigneeLi.appendChild(dataObject)
   assigneeLi.appendChild(assigneeListText)
@@ -1997,46 +1978,26 @@ function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
   return assigneeLi
 }
 
-function createRadioInput() {
-  const div = document.createElement("div")
-  div.className = 'mdc-radio radio-control-selector'
-  const input = document.createElement('input')
-  input.className = 'mdc-radio__native-control'
+function createRadioInput(value) {
+  const div = createElement('div',{className:'mdc-radio radio-control-selector'})
+  const input = createElement('input',{className:'mdc-radio__native-control'})
   input.type = 'radio'
-  input.name = 'radio'
-
-  const radioBckg = document.createElement('div')
-  radioBckg.className = 'mdc-radio__background'
-
-  const outerRadio = document.createElement('div')
-  outerRadio.className = 'mdc-radio__outer-circle'
-
-  const innerRadio = document.createElement("div")
-  innerRadio.className = 'mdc-radio__inner-circle'
+  input.value = value
+  const radioBckg = createElement('div',{className:'mdc-radio__background'})
+  const outerRadio = createElement('div',{className:'mdc-radio__outer-circle'})
+  const innerRadio = createElement('div',{className:'mdc-radio__inner-circle'})
   radioBckg.appendChild(outerRadio)
   radioBckg.appendChild(innerRadio)
-
   div.appendChild(input)
   div.appendChild(radioBckg)
-  return div
+  return new mdc.radio.MDCRadio(div);
 
 }
 
-function createCheckBox(userRecord) {
-
-  const checkbox = document.createElement('div')
-  checkbox.className = 'mdc-checkbox status-check'
-  checkbox.dataset.selected = userRecord.isSelected
-
-  const input = document.createElement("input")
-  input.className = 'mdc-checkbox__native-control'
-  input.type = 'checkbox'
-  input.onclick = function (evt) {
-
-    checkCheckboxInput(evt, userRecord)
-  }
-  const checkbox_bckg = document.createElement('div')
-  checkbox_bckg.className = 'mdc-checkbox__background'
+function createCheckBox() {
+  const checkbox = createElement('div',{className:'mdc-checkbox'});
+  const input = createElement('input',{className:'mdc-checkbox__native-control',type:'checkbox'})
+  const checkbox_bckg = createElement('div',{className:'mdc-checkbox__background'})
 
   const svg = `<svg class="mdc-checkbox__checkmark"
     viewBox="0 0 24 24">
@@ -2046,38 +2007,36 @@ function createCheckBox(userRecord) {
     </svg>
     <div class="mdc-checkbox__mixedmark"></div>`
 
-  const mixedmark = document.createElement('div')
-  mixedmark.className = 'mdc-checkbox__mixedmark'
-  checkbox_bckg.innerHTML = svg
+  checkbox_bckg.innerHTML = svg;
   checkbox.appendChild(input)
   checkbox.appendChild(checkbox_bckg)
 
-  return checkbox
+  return new mdc.checkbox.MDCCheckbox(checkbox)
 }
 
-function checkCheckboxInput(evt, record) {
+// function checkCheckboxInput(evt, record) {
 
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const objectStore = db.transaction('users', 'readwrite').objectStore('users')
-    if (record.hasOwnProperty('isSelected') && record.isSelected) {
-      evt.target.parentNode.dataset.selected = false
-      record.isSelected = false
+//   const dbName = firebase.auth().currentUser.uid
+//   const req = indexedDB.open(dbName)
+//   req.onsuccess = function () {
+//     const db = req.result
+//     const objectStore = db.transaction('users', 'readwrite').objectStore('users')
+//     if (record.hasOwnProperty('isSelected') && record.isSelected) {
+//       evt.target.parentNode.dataset.selected = false
+//       record.isSelected = false
 
-    } else {
-      evt.target.parentNode.dataset.selected = true
-      record.isSelected = true
+//     } else {
+//       evt.target.parentNode.dataset.selected = true
+//       record.isSelected = true
 
-    }
-    objectStore.put(record)
-    if (document.querySelectorAll('[data-selected="true"]').length) {
-      document.querySelector('.selector-send').dataset.type = ''
-      document.querySelector('.selector-send').textContent = 'SELECT'
-    }
-  }
-}
+//     }
+//     objectStore.put(record)
+//     if (document.querySelectorAll('[data-selected="true"]').length) {
+//       document.querySelector('.selector-send').dataset.type = ''
+//       document.querySelector('.selector-send').textContent = 'SELECT'
+//     }
+//   }
+// }
 
 function checkRadioInput(inherit, value) {
   document.getElementById('selector-submit-send').textContent = 'SELECT';

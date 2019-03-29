@@ -154,3 +154,7 @@ AppendMap.prototype.getMarker = function (extras) {
     })
     return new google.maps.Marker(markerConfig);
 }
+
+function ImageComponent(){
+
+}
