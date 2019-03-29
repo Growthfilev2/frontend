@@ -556,7 +556,6 @@ function fillUsersInSelector(data) {
         }
 
         if (data.record.hasOwnProperty('create')) {
-          resetSelectedContacts().then(function (selectedPeople) {
             if (!selectedPeople.length) {
               document.getElementById('selector-warning').textContent = '* Please Select A Contact'
               return
@@ -570,7 +569,6 @@ function fillUsersInSelector(data) {
               document.body.classList.remove('mdc-dialog-scroll-lock');
               updateCreateActivity(activity, true)
             }).catch(handleError)
-          })
           return
         }
         if (isLocationStatusWorking()) {
@@ -605,16 +603,11 @@ function noSelectorResult(text) {
 }
 
 function shareReq(data) {
-
-  resetSelectedContacts().then(function (people) {
-    const reqBody = {
-      'activityId': data.record.activityId,
-      'share': people
-    }
     document.querySelector('header').appendChild(progressBar())
-
-    requestCreator('share', reqBody)
-  })
+    requestCreator('share', {
+      'activityId': data.record.activityId,
+      'share': data.record.share
+    })
 }
 
 function addNewNumber(data) {
@@ -749,35 +742,6 @@ function numberNotExist(number) {
           resolve(false)
         }
       }
-    }
-  })
-}
-
-function resetSelectedContacts() {
-  return new Promise(function (resolve) {
-    const selectedUsers = []
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const objectStoreTx = db.transaction(['users'], 'readwrite')
-      const objectStore = objectStoreTx.objectStore('users')
-      objectStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) {
-
-          resolve(selectedUsers)
-          return
-        }
-        if (cursor.value.isSelected) {
-
-          selectedUsers.push(cursor.value.mobile)
-          cursor.value.isSelected = false
-          objectStore.put(cursor.value)
-        }
-        cursor.continue()
-      }
-
     }
   })
 }
@@ -1260,7 +1224,7 @@ function createSimpleLi(key, data) {
   if (key === 'children') {
     const metaInput = document.createElement('span')
     metaInput.className = 'mdc-list-item__meta'
-    metaInput.appendChild(createRadioInput())
+    metaInput.appendChild(createRadioInput().root_)
 
 
     listItem.textContent = data
@@ -1483,7 +1447,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   if (showMetaInput) {
 
-    metaInput.appendChild(createRadioInput())
+    metaInput.appendChild(createRadioInput().root_)
     listItem.onclick = function () {
       checkRadioInput(this, {
         location: venue.location,
@@ -2013,30 +1977,6 @@ function createCheckBox() {
 
   return new mdc.checkbox.MDCCheckbox(checkbox)
 }
-
-// function checkCheckboxInput(evt, record) {
-
-//   const dbName = firebase.auth().currentUser.uid
-//   const req = indexedDB.open(dbName)
-//   req.onsuccess = function () {
-//     const db = req.result
-//     const objectStore = db.transaction('users', 'readwrite').objectStore('users')
-//     if (record.hasOwnProperty('isSelected') && record.isSelected) {
-//       evt.target.parentNode.dataset.selected = false
-//       record.isSelected = false
-
-//     } else {
-//       evt.target.parentNode.dataset.selected = true
-//       record.isSelected = true
-
-//     }
-//     objectStore.put(record)
-//     if (document.querySelectorAll('[data-selected="true"]').length) {
-//       document.querySelector('.selector-send').dataset.type = ''
-//       document.querySelector('.selector-send').textContent = 'SELECT'
-//     }
-//   }
-// }
 
 function checkRadioInput(inherit, value) {
   document.getElementById('selector-submit-send').textContent = 'SELECT';
