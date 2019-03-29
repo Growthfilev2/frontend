@@ -637,7 +637,13 @@ function headerBackIcon(store){
   backIcon.textContent = 'arrow_back'
   backIcon.onclick = function(){
     if(!store) return backNav();
-    store === 'subscriptions' ?  listView() :updateCreateActivity(history.state[1], true);
+    if(store === 'subscriptions') {
+      resetScroll()
+      listView()
+    }
+    else {
+      updateCreateActivity(history.state[1], true);
+    }
   }
   return backIcon;
 }

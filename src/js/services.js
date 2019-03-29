@@ -96,6 +96,7 @@ function successDialog() {
   scroll_namespace.count = 0;
   scroll_namespace.size = 20;
   localStorage.removeItem('clickedActivity');
+  resetScroll()
   listView();
 }
 
@@ -562,6 +563,8 @@ function createAndroidDialog(title, body) {
 
     appDialog.listen('MDCDialog:accept', function () {
       dialogEl.remove();
+      resetScroll()
+
       listView();
     });
     appDialog.show();
@@ -710,6 +713,8 @@ function sendRequest(location, requestGenerator) {
       })
       setTimeout(function () {
         dialogEl.remove();
+        resetScroll()
+
         listView();
       }, 5000)
     });
@@ -924,6 +929,8 @@ function updateApp(data) {
           setTimeout(function () {
             updateDialog.show();
           }, 500)
+          resetScroll()
+
           listView();
           requestCreator('now', {
             device: native.getInfo(),
@@ -932,6 +939,8 @@ function updateApp(data) {
           })
         } else {
           dialogEl.remove();
+          resetScroll()
+
           listView();
         }
       })
@@ -995,6 +1004,7 @@ function officeRemovalSuccess(data) {
   officeRemovedDialog.listen('MDCDialog:accept', function () {
     dialogEl.remove();
     document.getElementById('app-current-panel').innerHTML = '';
+    resetScroll()
     listView();
   })
   officeRemovedDialog.show()
@@ -1002,7 +1012,6 @@ function officeRemovalSuccess(data) {
 }
 
 function androidStopRefreshing() {
-
   if (native.getName() !== 'Android') return;
   const appInfo = JSON.parse(native.getInfo())
   console.log(appInfo);
@@ -1011,8 +1020,7 @@ function androidStopRefreshing() {
     AndroidInterface.stopRefreshing(true);
   } catch (e) {
     sendExceptionObject(e, 'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing', [true])
-  }
-
+  }  
 }
 
 function onErrorMessage(error) {
