@@ -6,26 +6,34 @@ function selectorUI(data) {
   sectionStart.innerHTML = ''
   sectionStart.appendChild(headerBackIcon(data.store))
 
-  const container = createElement('div',{className:'selector-container mdc-top-app-bar--fixed-adjust'})
+  const container = createElement('div', {
+    className: 'selector-container mdc-top-app-bar--fixed-adjust'
+  })
   let field;
   if (data.store === 'map') {
-    field = new InputField().withLeadingIcon('search','Search Location');
+    field = new InputField().withLeadingIcon('search', 'Search Location');
     field.root_.id = 'map-selector-search'
     field.root_.classList.add('search-field')
     container.appendChild(field.root_);
   }
 
   if (data.store === 'users') {
-    field = new InputField().withLeadingIcon('search','Search Assignee');
+    field = new InputField().withLeadingIcon('search', 'Search Assignee');
     field.root_.id = 'users-selector-search'
     field.root_.classList.add('search-field')
     container.appendChild(field.root_);
   }
 
-  const ul = createElement('ul',{id:'data-list--container',className:'mdc-list'})
+  const ul = createElement('ul', {
+    id: 'data-list--container',
+    className: 'mdc-list'
+  })
   container.appendChild(ul)
 
-  const warning = createElement('span',{className:'selector-warning-text',id:'selector-warning'})
+  const warning = createElement('span', {
+    className: 'selector-warning-text',
+    id: 'selector-warning'
+  })
   container.appendChild(warning);
 
   const submit = new Button('SELECT');
@@ -35,13 +43,20 @@ function selectorUI(data) {
   submitButton.root_.id = 'selector-submit-send'
   container.appendChild(submitButton.root_)
   parent.appendChild(container);
-
+  const types = {
+    map:mapSelector,
+    subscriptions:fillSubscriptionInSelector,
+    users:userSelector,
+    children:childrenSelector
+  }
   window.scrollTo(0, 0);
- 
+
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result;
+    types[data.store](data,field);
+    
     //TODO: refcator later.
     if (data.store === 'map') {
       const tx = db.transaction([data.store]);
@@ -62,14 +77,12 @@ function selectorUI(data) {
       }).catch(console.log)
     }
     if (data.store === 'subscriptions') {
-
       fillSubscriptionInSelector(db, data)
-    }
+    };
     if (data.store === 'users') {
-      selectorStore = db.transaction(data.store).objectStore(data.store)
+      selectorStore = db.transaction(data.store).objectStore(data.store);
       initUserSelectorSearch(data, field);
-    }
-
+    };  
     if (data.store === 'children') {
       const tx = db.transaction([data.store])
       const store = tx.objectStore(data.store).index('templateStatus')
@@ -77,7 +90,15 @@ function selectorUI(data) {
     }
   }
 }
-
+function mapSelector(data,field){
+  const dbName = firebase.auth().currentUser.uid
+  const req = indexedDB.open(dbName)
+  req.onsuccess = function () {
+    const db = req.result;
+    const tx = db.transaction([data.store],'readonly');
+    
+  }
+}
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
     let count = 0;
@@ -141,9 +162,11 @@ function handleClickListnersForMap(data, count) {
     })
   }
 }
+
 function fillChildrenInSelector(selectorStore, data, tx) {
   const ul = document.getElementById('data-list--container')
   const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
+  
   selectorStore.openCursor(bound).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
@@ -151,37 +174,47 @@ function fillChildrenInSelector(selectorStore, data, tx) {
       cursor.continue();
       return;
     }
+
     if (cursor.value.attachment.Name) {
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
+      ul.appendChild(radioList({
+        labelText: cursor.value.attachment.Name.value,
+        value: cursor.value.attachment.Name.value
+      }))
     }
     if (cursor.value.attachment.Number) {
-      ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
+      ul.appendChild(radioList({
+        labelText: cursor.value.attachment.Number.value,
+        value: cursor.value.attachment.Number.value
+      }))
     }
     cursor.continue()
   }
   tx.oncomplete = function () {
     const btn = document.getElementById('selector-submit-send')
-   
-    // document.querySelector('.selector-send').classList.remove('hidden')
-    // document.getElementById('selector-submit-send').onclick = function () {
-    //   const selector = document.querySelector('.mdc-radio.radio-selected');
-    //   if (!selector) {
-    //     document.getElementById('selector-warning').textContent = '* Please Select a Value'
-    //     return;
-    //   }
-    //   const radio = new mdc.radio.MDCRadio(selector)
-    //   const selectedField = JSON.parse(radio.value)
-    //   updateDomFromIDB(data.record, {
-    //     hash: 'children',
-    //     key: data.attachment.key
-    //   }, {
-    //     primary: selectedField.name
-    //   }).then(function (activity) {
-    //     updateCreateActivity(activity, true)
-    //   }).catch(function (error) {
-    //     console.log(error)
-    //   })
-    // }
+    btn.onclick = function () {
+
+      if (!isLocationStatusWorking()) return;
+      const selectorWarning = document.getElementById('selector-warning');
+
+      const filtered = getSelectedRadio();
+
+      if (!filtered.length) {
+        selectorWarning.textContent = 'Please Select A Subscription'
+        return;
+      }
+      selectorWarning.textContent = ''
+      const value = JSON.parse(filtered[0].value);
+      updateDomFromIDB(data.record, {
+        hash: 'children',
+        key: data.attachment.key
+      }, {
+        primary: value.name
+      }).then(function (activity) {
+        updateCreateActivity(activity, true)
+      }).catch(function (error) {
+        console.log(error)
+      })
+    }
   }
 }
 
@@ -221,23 +254,19 @@ function fillSubscriptionInSelector(db, data) {
         if (!isLocationStatusWorking()) return;
         const selectorWarning = document.getElementById('selector-warning');
 
-        const checked = [].map.call(document.querySelectorAll('.mdc-radio'), function (el) {
-          return new mdc.radio.MDCRadio(el);
-        });
-        const filter = checked.filter(function (el) {
-          return el.checked;
-        })
-        if(!filter.length) {
+        const filtered = getSelectedRadio();
+        if (!filtered.length) {
           selectorWarning.textContent = 'Please Select A Subscription'
           return;
         }
         selectorWarning.textContent = ''
-        const value = JSON.parse(filter[0].value);
+        const value = JSON.parse(filtered[0].value);
         createTempRecord(value.office, value.template, data);
       }
     })
   }
 }
+
 function insertTemplateByOffice() {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -267,5 +296,15 @@ function insertTemplateByOffice() {
       }
     }
   })
+}
+
+function getSelectedRadio(){
+  const checked = [].map.call(document.querySelectorAll('.mdc-radio'), function (el) {
+    return new mdc.radio.MDCRadio(el);
+  });
+  const filter = checked.filter(function (el) {
+    return el.checked;
+  })
+  return filter;
 
 }

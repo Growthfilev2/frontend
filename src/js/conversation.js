@@ -1221,21 +1221,7 @@ function createSimpleLi(key, data) {
     listItem.appendChild(listItemLabel)
     listItem.appendChild(dataVal)
   }
-  if (key === 'children') {
-    const metaInput = document.createElement('span')
-    metaInput.className = 'mdc-list-item__meta'
-    metaInput.appendChild(createRadioInput().root_)
 
-
-    listItem.textContent = data
-    listItem.appendChild(metaInput)
-    listItem.onclick = function () {
-
-      checkRadioInput(this, {
-        name: data
-      })
-    }
-  }
   if (key === 'delete') {
     dataVal.className = 'mdc-list-item__graphic material-icons'
     dataVal.textContent = key
