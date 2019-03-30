@@ -1158,12 +1158,12 @@ input[type="datetime-local"] {
 }
 
 #data-list--container .mdc-list-item {
-  height: 100%;
+  /* height: 100%; */
 }
 
-#data-list--container li:nth-last-child(1) {
+/* #data-list--container li:nth-last-child(1) {
   margin-bottom: 70px;
-}
+} */
 
 .search-icon-input {
   font-size: 32px;
@@ -1569,6 +1569,9 @@ input[type="datetime-local"] {
   --mdc-theme-background: #ffffff !important;
   --mdc-theme-on-primary: white !important;
   --mdc-theme-on-secondary: #ffffff !important;
+}
+.mdc-ripple-surface--accent {
+  color: var(--mdc-theme-secondary);
 }
 .mdc-list-item--selected {
   color: #0399f4 !important;

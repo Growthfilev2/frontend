@@ -772,26 +772,7 @@ function emailVerify(notification) {
   emailDialog.show()
 }
 
-function radioList(attr) {
-  const li = document.createElement('li')
-  li.className = `mdc-list-item mdc-ripple-surface--secondary`
-  li.setAttribute('role', 'radio')
 
-  const span = document.createElement('span')
-  span.className = 'mdc-list-item__graphic'
-  span.appendChild(createRadioInput(attr.value).root_);
-  const label = document.createElement('label')
-  label.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
-  label.style.padding = '8px 0px 8px 0px'
-  label.style.width = '-webkit-fill-available'
-  label.style.display = 'contents';
-  label.className = 'mdc-list-item__text'
-  label.setAttribute('for', attr.id)
-  li.appendChild(span)
-  li.appendChild(label)
-
-  return li
-}
 
 function createBlankPayrollDialog(notificationData) {
 

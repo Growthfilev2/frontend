@@ -102,9 +102,7 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
         }
        
         if(data.attachment.present) {
-            assigneeLi.onclick = function () {
-                checkRadioInput(this, assigneeLi.dataset.value)
-              }
+           
             frag.appendChild(createSimpleAssigneeLi(cursor.value, createRadioInput(cursor.value.number)))
         }
         else {

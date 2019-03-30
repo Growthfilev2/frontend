@@ -7,13 +7,13 @@ function selectorUI(data) {
   sectionStart.appendChild(headerBackIcon(data.store))
   const container = document.createElement('div')
   container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
-  
-  if(data.store === 'map') {
-    container.appendChild(createSeachInput('map-selector-search','Search For Location'));
+
+  if (data.store === 'map') {
+    container.appendChild(createSeachInput('map-selector-search', 'Search For Location'));
   }
 
-  if(data.store === 'users'){
-    container.appendChild(createSeachInput('users-selector-search','Search Users'));
+  if (data.store === 'users') {
+    container.appendChild(createSeachInput('users-selector-search', 'Search Users'));
   }
 
   const ul = document.createElement('ul')
@@ -27,7 +27,7 @@ function selectorUI(data) {
 
   const submit = new Button('SELECT');
   submit.raised()
-  
+
   submit.selectorButton();
   const submitButton = submit.getButton();
   submitButton.root_.id = 'selector-submit-send'
@@ -44,7 +44,7 @@ function selectorUI(data) {
   req.onsuccess = function () {
     const db = req.result;
     if (data.store === 'map') {
-    
+
       const mapSeachInit = new mdc.textField.MDCTextField.attachTo(document.querySelector('#map-selector-search'));
 
       const tx = db.transaction([data.store]);
@@ -54,16 +54,16 @@ function selectorUI(data) {
           country: "in"
         }
       }
-    
+
       autocomplete = new google.maps.places.Autocomplete(input, options);
       input.placeholder = ''
       initializeAutocompleteGoogle(autocomplete, data)
       getLocationForMapSelector(tx, data).then(function (count) {
-        if(!count) {
+        if (!count) {
           document.getElementById('selector-submit-send').textContent = 'CANCEL'
           document.getElementById('data-list--container').appendChild(noSelectorResult('No Location Found'))
         }
-        handleClickListnersForMap(data,count)
+        handleClickListnersForMap(data, count)
       }).catch(console.log)
     }
     if (data.store === 'subscriptions') {
@@ -73,7 +73,7 @@ function selectorUI(data) {
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
       const userSearchInit = new mdc.textField.MDCTextField.attachTo(document.getElementById('users-selector-search'));
-      initUserSelectorSearch(data,userSearchInit);
+      initUserSelectorSearch(data, userSearchInit);
       resetSelectedContacts().then(function () {
         fillUsersInSelector(data)
       })
@@ -239,25 +239,23 @@ function fillSubscriptionInSelector(db, data) {
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
   grp.className = 'mdc-list-group'
-  const offices = []
+
   const tx = db.transaction(['subscriptions'])
   const store = tx.objectStore('subscriptions');
   const officeIndex = store.index('office')
   officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
     const cursor = event.target.result
-
     if (!cursor) return;
 
-    const headline3 = document.createElement('h3')
-    headline3.className = 'mdc-list-group__subheader subheader--group-small'
-    headline3.textContent = cursor.value.office
-    headline3.dataset.groupOffice = cursor.value.office
-    const ul = document.createElement('ul')
-    ul.className = 'mdc-list'
-    ul.dataset.selection = cursor.value.office
-    ul.setAttribute('aria-orientation', 'vertical')
-
-    offices.push(cursor.value.office)
+    const ul = createElement('ul', {
+      className: 'mdc-list mdc-list--avatar-list'
+    });
+    ul.setAttribute('role', 'radiogroup');
+    ul.dataset.groupName = cursor.value.office
+    const headline3 = createElement('h3', {
+      className: 'mdc-list-group__subheader subheader--group-small',
+      textContent: cursor.value.office
+    })
 
     grp.appendChild(headline3)
     grp.appendChild(ul)
@@ -265,95 +263,65 @@ function fillSubscriptionInSelector(db, data) {
   }
 
   tx.oncomplete = function () {
-    if (data.suggestCheckIn) {
-      const parent = document.getElementById('data-list--container')
-      const suggestion = document.createElement('div')
-      suggestion.className = 'suggest-checkin--view'
-      const icon = document.createElement('span')
-      icon.className = 'material-icons suggestion-icon'
-      icon.textContent = 'add_alert'
-      suggestion.appendChild(icon)
-
-      const text = document.createElement('span')
-      text.textContent = 'Check-In ?'
-      text.className = 'suggest-checkin--text'
-      suggestion.appendChild(icon)
-      suggestion.appendChild(text)
-      parent.insertBefore(suggestion, parent.childNodes[0]);
-    }
-    insertTemplateByOffice(offices, data.suggestCheckIn);
 
     mainUL.appendChild(grp)
+    insertTemplateByOffice().then(function () {
+      document.getElementById('selector-submit-send').onclick = function () {
 
-    document.getElementById('selector-submit-send').onclick = function () {
-      if (isLocationStatusWorking()) {
+        if (!isLocationStatusWorking()) return;
+        const selectorWarning = document.getElementById('selector-warning');
 
-        if (document.querySelector('.mdc-radio.radio-selected')) {
-          document.getElementById('selector-warning').textContent = ''
-          const radio = new mdc.radio.MDCRadio(document.querySelector('.mdc-radio.radio-selected'))
-          const selectedField = JSON.parse(radio.value);
-          document.getElementById('app-current-panel').dataset.view = 'create';
-          createTempRecord(selectedField.office, selectedField.template, data);
-        } else {
-          document.getElementById('selector-warning').textContent = 'Please Select a Template';
+        const checked = [].map.call(document.querySelectorAll('.mdc-radio'), function (el) {
+          return new mdc.radio.MDCRadio(el);
+        });
+        const filter = checked.filter(function (el) {
+          return el.checked;
+        })
+        if(!filter.length) {
+          selectorWarning.textContent = 'Please Select A Subscription'
+          return;
         }
+        selectorWarning.textContent = ''
+        const value = JSON.parse(filter[0].value);
+        createTempRecord(value.office, value.template, data);
       }
-    }
+    })
   }
 }
 
 
 
 
-function insertTemplateByOffice(offices, showCheckInFirst) {
+function insertTemplateByOffice() {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['subscriptions'], 'readonly');
+      const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
 
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  const frag = document.createDocumentFragment()
-  const checkInTemplate = []
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['subscriptions'], 'readonly');
-    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+      subscriptionObjectStore.openCursor().onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return
 
-    subscriptionObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) {
-        return
-      }
+        if (cursor.value.status === 'CANCELLED') {
+          cursor.continue()
+          return
+        }
 
-      if (cursor.value.status === 'CANCELLED') {
+        document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(radioList({
+          value: cursor.value,
+          labelText: cursor.value.template
+        }))
         cursor.continue()
-        return
       }
 
-      if (document.querySelector(`[data-selection="${cursor.value.office}"] [data-template="${cursor.value.template}"]`)) {
-        cursor.continue()
-        return
+      tx.oncomplete = function () {
+        resolve(true)
       }
-      if (showCheckInFirst && cursor.value.template === 'check-in') {
-        checkInTemplate.push({
-          [cursor.value.office]: createGroupList(cursor.value.office, cursor.value.template)
-        })
-        cursor.continue();
-        return;
-      }
-      document.querySelector(`[data-selection="${cursor.value.office}"]`).appendChild(createGroupList(cursor.value.office, cursor.value.template))
-
-      cursor.continue()
     }
-    tx.oncomplete = function () {
+  })
 
-      checkInTemplate.forEach(function (li) {
-        const keys = Object.keys(li);
-        keys.forEach(function (key) {
-          const el = document.querySelector(`[data-selection="${key}"]`);
-          el.insertBefore(li[key], el.childNodes[0])
-        })
-      });
-      document.querySelector('.selector-send').classList.remove('hidden');
-
-    }
-  }
 }
 
 
@@ -369,7 +337,11 @@ function createGroupList(office, template) {
 
   const metaInput = document.createElement('span')
   metaInput.className = 'mdc-list-item__meta'
-  metaInput.appendChild(createRadioInput())
+  metaInput.appendChild(createRadioInput({
+    office: office,
+    template: template
+  }).root_)
+
   li.onclick = function () {
     checkRadioInput(this, {
       office: office,

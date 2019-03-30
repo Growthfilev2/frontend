@@ -155,6 +155,34 @@ AppendMap.prototype.getMarker = function (extras) {
     return new google.maps.Marker(markerConfig);
 }
 
-function ImageComponent(){
-
+function radioList(attr) {
+    const li = document.createElement('li')
+    li.className = `mdc-list-item mdc-ripple-surface--secondary`
+    li.setAttribute('role', 'radio');
+    li.setAttribute('tabindex',"-1")
+    li.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
+    li.appendChild(createRadioInput(JSON.stringify(attr.value)))
+    return li;
 }
+
+function createRadioInput(value) {
+    const div = createElement('div',{className:'mdc-radio radio-control-selector mdc-list-item__meta'})
+    const input = createElement('input',{className:'mdc-radio__native-control'})
+    input.setAttribute('tabindex','-1');
+    input.checked;
+    input.setAttribute('name','listDemoRadioGroup')
+    input.setAttribute('tabindex','-1')
+    input.type = 'radio'
+    input.value = value
+    input.setAttribute('aria-labelledby','grp1')
+    const radioBckg = createElement('div',{className:'mdc-radio__background'})
+    const outerRadio = createElement('div',{className:'mdc-radio__outer-circle'})
+    const innerRadio = createElement('div',{className:'mdc-radio__inner-circle'})
+    radioBckg.appendChild(outerRadio)
+    radioBckg.appendChild(innerRadio)
+    div.appendChild(input)
+    div.appendChild(radioBckg)
+    return div;
+  
+  }
+  

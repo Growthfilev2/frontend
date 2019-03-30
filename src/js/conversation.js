@@ -1942,21 +1942,6 @@ function createSimpleAssigneeLi(userRecord, metaType) {
   return assigneeLi
 }
 
-function createRadioInput(value) {
-  const div = createElement('div',{className:'mdc-radio radio-control-selector'})
-  const input = createElement('input',{className:'mdc-radio__native-control'})
-  input.type = 'radio'
-  input.value = value
-  const radioBckg = createElement('div',{className:'mdc-radio__background'})
-  const outerRadio = createElement('div',{className:'mdc-radio__outer-circle'})
-  const innerRadio = createElement('div',{className:'mdc-radio__inner-circle'})
-  radioBckg.appendChild(outerRadio)
-  radioBckg.appendChild(innerRadio)
-  div.appendChild(input)
-  div.appendChild(radioBckg)
-  return new mdc.radio.MDCRadio(div);
-
-}
 
 function createCheckBox() {
   const checkbox = createElement('div',{className:'mdc-checkbox'});
