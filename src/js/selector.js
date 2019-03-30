@@ -42,6 +42,7 @@ function selectorUI(data) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result;
+    //TODO: refcator later.
     if (data.store === 'map') {
       const tx = db.transaction([data.store]);
       let input = field['input_'];
@@ -76,8 +77,6 @@ function selectorUI(data) {
     }
   }
 }
-
-
 
 function getLocationForMapSelector(tx, data) {
   return new Promise(function (resolve, reject) {
