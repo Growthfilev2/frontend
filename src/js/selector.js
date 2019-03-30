@@ -144,7 +144,6 @@ function handleClickListnersForMap(data, count) {
 function fillChildrenInSelector(selectorStore, data, tx) {
   const ul = document.getElementById('data-list--container')
   const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
-  let count = 0;
   selectorStore.openCursor(bound).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) return;
@@ -153,25 +152,16 @@ function fillChildrenInSelector(selectorStore, data, tx) {
       return;
     }
     if (cursor.value.attachment.Name) {
-      count++
       ul.appendChild(createSimpleLi('children', cursor.value.attachment.Name.value))
     }
     if (cursor.value.attachment.Number) {
-      count++
       ul.appendChild(createSimpleLi('children', cursor.value.attachment.Number.value))
     }
     cursor.continue()
   }
   tx.oncomplete = function () {
     const btn = document.getElementById('selector-submit-send')
-    if (!count) {
-      ul.appendChild(noSelectorResult('No Values Found'))
-      btn.textContent = 'CANCEL'
-      btn.onclick = function () {
-        updateCreateActivity(data.record, true);
-      }
-      return;
-    }
+   
     // document.querySelector('.selector-send').classList.remove('hidden')
     // document.getElementById('selector-submit-send').onclick = function () {
     //   const selector = document.querySelector('.mdc-radio.radio-selected');

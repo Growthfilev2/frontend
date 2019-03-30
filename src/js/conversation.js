@@ -2149,7 +2149,7 @@ function sendActivity(record) {
   const req = indexedDB.open(dbName)
   req.onsuccess = function (event) {
     const db = req.result
-    const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
+    const activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
 
     activityStore.get(record.activityId).onsuccess = function (event) {
       const record = event.target.result
@@ -2301,7 +2301,7 @@ function sendUpdateReq(requiredObject, record) {
     requiredObject.activityId = record.activityId
     document.querySelector('header').appendChild(progressBar())
     document.querySelector('#send-activity').classList.add('hidden')
-    requestCreator('update', requiredObject)
+    requestCreator('update', requiredObject);
     return
   }
 
