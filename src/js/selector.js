@@ -1,61 +1,55 @@
 function selectorUI(data) {
 
   const parent = document.getElementById('app-current-panel');
-
+  parent.innerHTML = ''
   const sectionStart = document.getElementById('section-start');
   sectionStart.innerHTML = ''
   sectionStart.appendChild(headerBackIcon(data.store))
-  const container = document.createElement('div')
-  container.className = 'selector-container mdc-top-app-bar--fixed-adjust'
 
+  const container = createElement('div',{className:'selector-container mdc-top-app-bar--fixed-adjust'})
+  let field;
   if (data.store === 'map') {
-    container.appendChild(createSeachInput('map-selector-search', 'Search For Location'));
+    field = new InputField().withLeadingIcon('search','Search Location');
+    field.root_.id = 'map-selector-search'
+    field.root_.classList.add('search-field')
+    container.appendChild(field.root_);
   }
 
   if (data.store === 'users') {
-    container.appendChild(createSeachInput('users-selector-search', 'Search Users'));
+    field = new InputField().withLeadingIcon('search','Search Assignee');
+    field.root_.id = 'users-selector-search'
+    field.root_.classList.add('search-field')
+    container.appendChild(field.root_);
   }
 
-  const ul = document.createElement('ul')
-  ul.id = 'data-list--container'
-  ul.className = 'mdc-list'
+  const ul = createElement('ul',{id:'data-list--container',className:'mdc-list'})
   container.appendChild(ul)
-  const warning = document.createElement('span')
-  warning.className = 'selector-warning-text'
-  warning.id = 'selector-warning'
+
+  const warning = createElement('span',{className:'selector-warning-text',id:'selector-warning'})
   container.appendChild(warning);
 
   const submit = new Button('SELECT');
   submit.raised()
-
   submit.selectorButton();
   const submitButton = submit.getButton();
   submitButton.root_.id = 'selector-submit-send'
   container.appendChild(submitButton.root_)
-
-  parent.innerHTML = container.outerHTML;
+  parent.appendChild(container);
 
   window.scrollTo(0, 0);
-  let activityRecord = data.record
-  let selectorStore;
-
+ 
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
     const db = req.result;
     if (data.store === 'map') {
-
-      const mapSeachInit = new mdc.textField.MDCTextField.attachTo(document.querySelector('#map-selector-search'));
-
       const tx = db.transaction([data.store]);
-      let input = mapSeachInit['input_'];
-      const options = {
+      let input = field['input_'];
+      autocomplete = new google.maps.places.Autocomplete(input, {
         componentRestrictions: {
           country: "in"
         }
-      }
-
-      autocomplete = new google.maps.places.Autocomplete(input, options);
+      });
       input.placeholder = ''
       initializeAutocompleteGoogle(autocomplete, data)
       getLocationForMapSelector(tx, data).then(function (count) {
@@ -72,11 +66,7 @@ function selectorUI(data) {
     }
     if (data.store === 'users') {
       selectorStore = db.transaction(data.store).objectStore(data.store)
-      const userSearchInit = new mdc.textField.MDCTextField.attachTo(document.getElementById('users-selector-search'));
-      initUserSelectorSearch(data, userSearchInit);
-      resetSelectedContacts().then(function () {
-        fillUsersInSelector(data)
-      })
+      initUserSelectorSearch(data, field);
     }
 
     if (data.store === 'children') {
@@ -119,30 +109,6 @@ function getLocationForMapSelector(tx, data) {
   })
 }
 
-
-function createSeachInput(id, labelText) {
-  const search = document.createElement('div')
-  search.id = id
-  search.className = 'mdc-text-field mdc-text-field--with-leading-icon search-field'
-  const icon = document.createElement('i')
-  icon.className = 'material-icons mdc-text-field__icon'
-  icon.textContent = 'search'
-  const input = document.createElement("input")
-  input.className = 'mdc-text-field__input'
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
-
-  label.textContent = labelText
-  search.appendChild(icon)
-  search.appendChild(input)
-  search.appendChild(ripple)
-  search.appendChild(label)
-  return search
-}
-
-
 function handleClickListnersForMap(data, count) {
 
 
@@ -176,9 +142,6 @@ function handleClickListnersForMap(data, count) {
     })
   }
 }
-
-
-
 function fillChildrenInSelector(selectorStore, data, tx) {
   const ul = document.getElementById('data-list--container')
   const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
@@ -233,8 +196,6 @@ function fillChildrenInSelector(selectorStore, data, tx) {
   }
 }
 
-
-
 function fillSubscriptionInSelector(db, data) {
   const mainUL = document.getElementById('data-list--container')
   const grp = document.createElement('div')
@@ -288,10 +249,6 @@ function fillSubscriptionInSelector(db, data) {
     })
   }
 }
-
-
-
-
 function insertTemplateByOffice() {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -322,33 +279,4 @@ function insertTemplateByOffice() {
     }
   })
 
-}
-
-
-
-function createGroupList(office, template) {
-
-  const li = document.createElement('li')
-  li.className = 'mdc-list-item transition-ease'
-  li.dataset.template = template
-  const span = document.createElement('span')
-  span.className = 'mdc-list-item__text'
-  span.textContent = template.toUpperCase()
-
-  const metaInput = document.createElement('span')
-  metaInput.className = 'mdc-list-item__meta'
-  metaInput.appendChild(createRadioInput({
-    office: office,
-    template: template
-  }).root_)
-
-  li.onclick = function () {
-    checkRadioInput(this, {
-      office: office,
-      template: template
-    })
-  }
-  li.appendChild(span)
-  li.appendChild(metaInput)
-  return li
 }

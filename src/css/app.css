@@ -1857,8 +1857,6 @@ input[type="datetime-local"] {
   margin-left: 20px;
   width: 89%;
   margin-top: 10px;
-  background-color: #80808017;
-  color: black;
 }
 
 .search-field .mdc-text-field__icon {

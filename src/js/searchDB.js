@@ -1,12 +1,10 @@
-function initUserSelectorSearch(data,userSearchField) {
+function initUserSelectorSearch(data,field) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function(){
         const db = req.result;
-        const searchField = userSearchField['input_'];
-        searchField.value = ''
         let objectStore = ''
         let frag = document.createDocumentFragment()
-        searchField.addEventListener('input', function (e) {
+        field.input_.addEventListener('input', function (e) {
             let searchString = e.target.value
             
             if (isNumber(searchString)) {

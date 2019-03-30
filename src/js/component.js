@@ -22,8 +22,8 @@ InputField.prototype.ripple = function () {
         className: 'mdc-line-ripple'
     })
 }
-InputField.prototype.label = function(){
-    return createElement('label',{className:'mdc-floating-label'})
+InputField.prototype.label = function(labelName){
+    return createElement('label',{className:'mdc-floating-label',textContent:labelName})
 }
 InputField.prototype.withoutLabel = function () {
     const field = this.base();
@@ -40,7 +40,18 @@ InputField.prototype.withLabel = function () {
     field.appendChild(this.ripple())
     return new mdc.textField.MDCTextField(field)
 }
+InputField.prototype.withLeadingIcon = function(iconName,labelName){
+    const field = this.base();
+    field.classList.remove('data--value-list', 'mdc-text-field--fullwidth')
+    field.classList.add('mdc-text-field--with-leading-icon')
+    const icon = createElement('i',{className:'material-icons mdc-text-field__icon',textContent:iconName})
+    field.appendChild(icon)
+    field.appendChild(this.input())
+    field.appendChild(this.label(labelName))
+    field.appendChild(this.ripple())
+    return new mdc.textField.MDCTextField(field);
 
+}
 function textAreaField(attrs) {
     const textArea = createElement('textarea', {
         className: 'text-area-basic mdc-text-field__input',
