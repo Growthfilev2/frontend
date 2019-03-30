@@ -481,116 +481,6 @@ function reinitCount(db, id) {
   transaction.oncomplete = function () {}
 }
 
-function fillUsersInSelector(data) {
-  const ul = document.getElementById('data-list--container')
-  const recordAssignees = data.record.assignees
-
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const transaction = db.transaction(['users']);
-    const store = transaction.objectStore('users')
-    document.querySelector('.selector-send').classList.remove('hidden');
-    const btn = document.getElementById('selector-submit-send')
-    btn.textContent = 'Add New Number';
-    btn.dataset.type = 'add-number'
-    let count = 0;
-    let alreadyPresent = {}
-
-    recordAssignees.forEach(function (assignee) {
-      if (typeof assignee === 'string') {
-        alreadyPresent[assignee] = true;
-      } else {
-        alreadyPresent[assignee.phoneNumber] = true
-      }
-    })
-    alreadyPresent[firebase.auth().currentUser.phoneNumber] = true
-
-    store.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
-
-      if (data.attachment.present) {
-        count++
-        ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
-      } else {
-        if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-          count++
-          ul.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
-        }
-      }
-      cursor.continue()
-    }
-
-    transaction.oncomplete = function () {
-      if (!count) {
-        ul.appendChild(noSelectorResult('No Contact Found'));
-        document.getElementById('users-selector-search').style.display = 'none';
-      }
-      btn.onclick = function () {
-        if (btn.dataset.type === 'add-number') {
-          document.getElementById('users-selector-search').style.display = 'none';
-          removeChildNodes(ul)
-          btn.remove();
-          addNewNumber(data)
-          return
-        }
-
-        if (data.attachment.present) {
-          const selector = document.querySelector('.mdc-radio.radio-selected');
-          if (!selector) {
-            document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-            return
-          }
-          const radio = new mdc.radio.MDCRadio(selector)
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: JSON.parse(radio.value)
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return;
-        }
-
-        if (data.record.hasOwnProperty('create')) {
-            if (!selectedPeople.length) {
-              document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-              return
-            }
-
-            updateDomFromIDB(data.record, {
-              hash: 'addOnlyAssignees',
-            }, {
-              primary: selectedPeople
-            }).then(function (activity) {
-              document.body.classList.remove('mdc-dialog-scroll-lock');
-              updateCreateActivity(activity, true)
-            }).catch(handleError)
-          return
-        }
-        if (isLocationStatusWorking()) {
-          shareReq(data)
-        }
-      }
-
-
-      const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-      selectedBoxes.forEach(function (box) {
-        if (box) {
-          const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-          mdcBox.checked = true
-          box.children[1].style.animation = 'none'
-          box.children[1].children[0].children[0].style.animation = 'none'
-        }
-      })
-    }
-  }
-
-}
-
 
 function noSelectorResult(text) {
   const noResult = document.createElement('div')
@@ -608,112 +498,6 @@ function shareReq(data) {
       'activityId': data.record.activityId,
       'share': data.record.share
     })
-}
-
-function addNewNumber(data) {
-  const container = document.createElement('div')
-  container.className = 'custom-number--container'
-
-
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input'
-  input.id = 'number-field'
-  input.type = 'number'
-  input.setAttribute('maxlength', '10')
-  input.setAttribute('size', '10')
-  input.required = true
-  input.onkeypress = function (event) {
-    return event.charCode >= 48 && event.charCode <= 57
-  }
-
-  input.oninput = function () {
-    if (this.value.length > this.maxLength) {
-      this.value = this.value.slice(0, this.maxLength)
-
-    } else if (this.value.length === this.maxLength) {
-      document.querySelector('.message-field').classList.remove('error-message')
-      this.classList.add('valid-input')
-      document.querySelector('.message-field').textContent = ''
-      document.getElementById('new-contact').disabled = false
-
-    } else {
-      document.querySelector('.message-field').classList.add('error-message')
-      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
-      document.getElementById('new-contact').disabled = true
-    }
-
-  }
-
-
-  const createButton = document.createElement('button')
-  createButton.className = 'mdc-button'
-  createButton.textContent = 'Add Contact'
-  createButton.id = 'new-contact'
-
-  createButton.onclick = function () {
-    const number = document.getElementById('number-field').value
-
-    const formattedNumber = formatNumber(number)
-    if (checkNumber(formattedNumber)) {
-
-      numberNotExist(formattedNumber).then(function (exist) {
-        if (exist) {
-          document.getElementById('new-contact').disabled = true
-          document.querySelector('.message-field').classList.add('error-message')
-          document.querySelector('.message-field').textContent = '* Contact already exist'
-          return
-        }
-
-        if (data.attachment.present) {
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: formattedNumber
-          }).then(function (activity) {
-            console.log(activity);
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-
-        if (data.record.hasOwnProperty('create')) {
-          updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees',
-          }, {
-            primary: [formattedNumber]
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-        if (isLocationStatusWorking()) {
-
-          newNumberReq(data, formattedNumber)
-        }
-      })
-
-    } else {
-      document.querySelector('.message-field').classList.add('error-message')
-      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
-      document.getElementById('new-contact').disabled = true
-
-    }
-
-  }
-
-  const message = document.createElement('p')
-  message.className = 'mdc-typography--subtitle2 message-field'
-  message.textContent = 'Enter new phone contact without country code'
-  message.id = 'helper-message'
-
-  container.appendChild(input)
-  container.appendChild(message)
-  container.appendChild(createButton)
-  document.querySelector('#data-list--container').appendChild(container)
-  const getNumber = new mdc.ripple.MDCRipple.attachTo(document.getElementById('new-contact'))
-
 }
 
 function newNumberReq(data, formattedNumber) {
@@ -959,49 +743,6 @@ function hasAnyValueInChildren(office, template, status) {
   })
 }
 
-function updateDomFromIDB(activityRecord, attr, data) {
-  return new Promise(function (resolve, reject) {
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result;
-      let thisActivity = activityRecord;
-
-      if (attr.hash === 'venue') {
-        thisActivity = updateVenue(thisActivity, attr, data);
-        updateLocalRecord(thisActivity, db).then(function (message) {
-          resolve(thisActivity)
-        }).catch(function (error) {
-          console.log(error)
-          reject(error)
-        })
-        return
-      }
-      //for create
-      if (attr.hash === 'addOnlyAssignees') {
-        if (!data.primary.length) return
-        data.primary.forEach(function (number) {
-          if (thisActivity.assignees.indexOf(number) > -1) return
-          thisActivity.assignees.push(number)
-        })
-        resolve(thisActivity);
-        return
-      }
-
-      if (attr.hash === 'weekday') return
-      if (!attr.hasOwnProperty('key')) return
-
-      thisActivity.attachment[attr.key].value = data.primary;
-
-      updateLocalRecord(thisActivity, db).then(function (message) {
-        resolve(thisActivity);
-      }).catch(function (error) {
-        reject(error)
-      })
-    }
-  })
-}
-
 
 function updateLocalRecord(thisActivity, db) {
   return new Promise(function (resolve, reject) {
@@ -1023,18 +764,7 @@ function updateLocalRecord(thisActivity, db) {
   })
 }
 
-function updateVenue(updatedActivity, attr, data) {
 
-  updatedActivity.venue.forEach(function (field) {
-    if (field.venueDescriptor === attr.key) {
-      field.location = data.primary
-      field.address = data.secondary.address
-      field.geopoint['_latitude'] = data.secondary.geopoint['_latitude']
-      field.geopoint['_longitude'] = data.secondary.geopoint['_longitude']
-    }
-  })
-  return updatedActivity
-}
 
 function convertKeyToId(key) {
   let str = key.replace(/-/g, '--')
@@ -1433,7 +1163,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   if (showMetaInput) {
 
-    metaInput.appendChild(createRadioInput().root_)
+    metaInput.appendChild(createRadioInput())
     listItem.onclick = function () {
       checkRadioInput(this, {
         location: venue.location,
@@ -2315,36 +2045,6 @@ function formAddressComponent(place) {
     ].join(' ');
   }
   return address
-}
-
-function initializeAutocompleteGoogle(autocomplete, attr) {
-
-  autocomplete.addListener('place_changed', function () {
-    let place = autocomplete.getPlace();
-
-    if (!place.geometry) {
-      snacks("Please select a valid location")
-      return
-    }
-
-    const selectedAreaAttributes = {
-      primary: place.name,
-      secondary: {
-        address: formAddressComponent(place),
-        geopoint: {
-          '_latitude': place.geometry.location.lat(),
-          '_longitude': place.geometry.location.lng()
-        }
-      }
-    }
-    updateDomFromIDB(attr.record, {
-      hash: 'venue',
-      key: attr.key
-    }, selectedAreaAttributes).then(function (activity) {
-
-      updateCreateActivity(activity, true);
-    }).catch(handleError)
-  })
 }
 
 
