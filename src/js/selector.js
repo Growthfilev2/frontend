@@ -21,6 +21,21 @@ function selectorUI(data) {
   submit.selectorButton();
   const submitButton = submit.getButton();
   submitButton.root_.id = 'selector-submit-send'
+  submitButton.root_.onclick = function(){
+    if (!isLocationStatusWorking()) return;
+    const selectorWarning = document.getElementById('selector-warning');
+
+    const filtered = getSelectedRadio();
+    
+    if (!filtered.length) {
+      selectorWarning.textContent = 'Please Select An Option'
+      return;
+    }
+    selectorWarning.textContent = ''
+    const value = JSON.parse(filtered[0].value);
+    modifyRecordWithValues(data,value);
+  }
+
   container.appendChild(submitButton.root_)
   window.scrollTo(0, 0);
   const types = {
@@ -31,6 +46,23 @@ function selectorUI(data) {
   }
 
 types[data.store](data, container);
+}
+
+function modifyRecordWithValues(data,value){
+if(data.store === 'map') {
+  const venue =  data.record.venue[0]
+  venue.address = value.address;
+  venue.location = value.location;
+  venue.geopoint.latitude = value.latitude;
+  venue.geopoint.longitude = value.longitude;
+  updateCreateActivity(data.record)
+}
+if(data.store === 'subscriptions') {
+  createTempRecord(value.office, value.template, data);
+}
+if(data.store === 'children') {
+  updateCreateActivity(data.record)
+}
 
 }
 function mapSelector(data, container) {
@@ -48,7 +80,25 @@ function mapSelector(data, container) {
       country: "in"
     }
   });
-  initializeAutocompleteGoogle(autocomplete, data);
+  autocomplete.addListener('place_changed', function () {
+    let place = autocomplete.getPlace();
+
+    if (!place.geometry) {
+      snacks("Please select a valid location")
+      return
+    }
+    const value = {
+      location:place.name,
+      address:formAddressComponent(place),
+      geopoint:{
+        latitude:place.geometry.location.lat(),
+        longitude:place.geometry.location.lng()
+      }
+    }
+    modifyRecordWithValues(data,value)
+    return;
+  })
+
   console.log(data)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
@@ -82,67 +132,11 @@ function mapSelector(data, container) {
     tx.oncomplete = function () {
       container.appendChild(ul);
       parent.appendChild(container);
-      const btn = document.querySelector('#selector-submit-send');
-      btn.onclick = function () {
-        const filtered = getSelectedRadio()
-        if(!filtered.length){
-          document.getElementById('selector-warning').textContent = '* Please Choose A Location'
-          return;
-        }
-        // handle for multiple venue :/
-        const value = JSON.parse(filtered[0].value);
-        
-        updateDomFromIDB(data.record, {
-          hash: 'venue',
-          key: data.key
-        }, {
-          primary: value.location,
-          secondary: {
-            address: value.address,
-            geopoint:{
-              _latitude:value.latitude,
-              _longitude:value.longitude
-            }
-          },
-        }).then(function (activity) {
-          updateCreateActivity(activity, true)
-        }).catch(function (error) {
-          console.log(error);
-        })
-      };
     }
   }
 };
 
-function initializeAutocompleteGoogle(autocomplete, attr) {
 
-  autocomplete.addListener('place_changed', function () {
-    let place = autocomplete.getPlace();
-
-    if (!place.geometry) {
-      snacks("Please select a valid location")
-      return
-    }
-
-    const selectedAreaAttributes = {
-      primary: place.name,
-      secondary: {
-        address: formAddressComponent(place),
-        geopoint: {
-          '_latitude': place.geometry.location.lat(),
-          '_longitude': place.geometry.location.lng()
-        }
-      }
-    }
-    updateDomFromIDB(attr.record, {
-      hash: 'venue',
-      key: attr.key
-    }, selectedAreaAttributes).then(function (activity) {
-
-      updateCreateActivity(activity, true);
-    }).catch(handleError)
-  })
-}
 function userSelector(data, container) {
   // to do user
   const parent = document.getElementById('app-current-panel')
@@ -405,29 +399,11 @@ function fillSubscriptionInSelector(data, container) {
 
     tx.oncomplete = function () {
       document.getElementById('app-current-panel').appendChild(container);
-
-      insertTemplateByOffice().then(function () {
-
-        document.getElementById('selector-submit-send').onclick = function () {
-
-          if (!isLocationStatusWorking()) return;
-          const selectorWarning = document.getElementById('selector-warning');
-
-          const filtered = getSelectedRadio();
-          if (!filtered.length) {
-            selectorWarning.textContent = 'Please Select A Subscription'
-            return;
-          }
-          selectorWarning.textContent = ''
-          const value = JSON.parse(filtered[0].value);
-          createTempRecord(value.office, value.template, data);
-        }
-      })
+      insertTemplateByOffice()
     }
   }
 }
 function insertTemplateByOffice() {
-  return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function () {
       const db = req.result
@@ -442,19 +418,15 @@ function insertTemplateByOffice() {
           cursor.continue()
           return
         }
-
         document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(radioList({
           value: cursor.value,
           labelText: cursor.value.template
         }))
         cursor.continue()
       }
-
       tx.oncomplete = function () {
-        resolve(true)
       }
     }
-  })
 }
 function fillChildrenInSelector(data) {
   const req = indexedDB.open(firebase.auth().currentUser.uid);
@@ -463,55 +435,56 @@ function fillChildrenInSelector(data) {
     const tx = db.transaction([data.store], 'readonly');
     const store = tx.objectStore(data.store)
     const ul = document.getElementById('data-list--container')
-    const bound = IDBKeyRange.bound([data.attachment.template, 'CONFIRMED'], [data.attachment.template, 'PENDING'])
+    const bound = IDBKeyRange.bound([data.key, 'CONFIRMED'], [data.key, 'PENDING'])
     store.openCursor(bound).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return;
-      if (data.attachment.office !== cursor.value.office) {
+      if (data.record.office !== cursor.value.office) {
         cursor.continue();
         return;
       }
-
       if (cursor.value.attachment.Name) {
-        ul.appendChild(radioList({
-          labelText: cursor.value.attachment.Name.value,
-          value: cursor.value.attachment.Name.value
-        }))
+        console.log(cursor.value)
+        // ul.appendChild(radioList({
+        //   labelText: cursor.value.attachment.Name.value,
+        //   value: cursor.value.attachment.Name.value
+        // }))
       }
       if (cursor.value.attachment.Number) {
-        ul.appendChild(radioList({
-          labelText: cursor.value.attachment.Number.value,
-          value: cursor.value.attachment.Number.value
-        }))
+        console.log(cursor.value)
+        // ul.appendChild(radioList({
+        //   labelText: cursor.value.attachment.Number.value,
+        //   value: cursor.value.attachment.Number.value
+        // }))
       }
       cursor.continue()
     }
     tx.oncomplete = function () {
-      const btn = document.getElementById('selector-submit-send')
-      btn.onclick = function () {
+      // const btn = document.getElementById('selector-submit-send')
+      // btn.onclick = function () {
 
-        if (!isLocationStatusWorking()) return;
-        const selectorWarning = document.getElementById('selector-warning');
+      //   if (!isLocationStatusWorking()) return;
+      //   const selectorWarning = document.getElementById('selector-warning');
 
-        const filtered = getSelectedRadio();
+      //   const filtered = getSelectedRadio();
 
-        if (!filtered.length) {
-          selectorWarning.textContent = 'Please Select A Subscription'
-          return;
-        }
-        selectorWarning.textContent = ''
-        const value = JSON.parse(filtered[0].value);
-        updateDomFromIDB(data.record, {
-          hash: 'children',
-          key: data.attachment.key
-        }, {
-          primary: value.name
-        }).then(function (activity) {
-          updateCreateActivity(activity, true)
-        }).catch(function (error) {
-          console.log(error)
-        })
-      }
+      //   if (!filtered.length) {
+      //     selectorWarning.textContent = 'Please Select A Subscription'
+      //     return;
+      //   }
+      //   selectorWarning.textContent = ''
+      //   const value = JSON.parse(filtered[0].value);
+      //   updateDomFromIDB(data.record, {
+      //     hash: 'children',
+      //     key: data.attachment.key
+      //   }, {
+      //     primary: value.name
+      //   }).then(function (activity) {
+      //     updateCreateActivity(activity, true)
+      //   }).catch(function (error) {
+      //     console.log(error)
+      //   })
+      // }
     }
 
   }
@@ -559,7 +532,6 @@ function updateDomFromIDB(activityRecord, attr, data) {
       if (!attr.hasOwnProperty('key')) return
 
       thisActivity.attachment[attr.key].value = data.primary;
-
       updateLocalRecord(thisActivity, db).then(function (message) {
         resolve(thisActivity);
       }).catch(function (error) {

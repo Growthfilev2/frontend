@@ -1518,13 +1518,8 @@ function createAttachmentContainer(data) {
             selectorUI({
               record: data,
               store: 'children',
-              attachment: {
-                present: true,
-                key: key,
-                office: data.office,
-                template: data.attachment[key].type,
-                status: data.status
-              }
+              key:key,
+              template:data.attachment[key].type
             })
 
           }
