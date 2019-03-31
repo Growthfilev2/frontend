@@ -492,45 +492,6 @@ function noSelectorResult(text) {
   return noResult
 }
 
-function shareReq(data) {
-    document.querySelector('header').appendChild(progressBar())
-    requestCreator('share', {
-      'activityId': data.record.activityId,
-      'share': data.record.share
-    })
-}
-
-function newNumberReq(data, formattedNumber) {
-  document.querySelector('header').appendChild(progressBar())
-
-  requestCreator('share', {
-    activityId: data.record.activityId,
-    'share': [formattedNumber]
-  })
-}
-
-function numberNotExist(number) {
-  return new Promise(function (resolve) {
-
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const store = db.transaction('users').objectStore('users')
-      store.get(number).onsuccess = function (event) {
-        const record = event.target.result
-        if (record) {
-
-          resolve(true)
-        } else {
-          resolve(false)
-        }
-      }
-    }
-  })
-}
-
-
 function checkMapStoreForNearByLocation(office, currentLocation) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -849,7 +810,7 @@ function updateCreateActivity(record, showSendButton) {
   } else {
     history.pushState(['updateCreateActivity', record], null, null)
   }
-
+  console.log(record)
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1144,9 +1105,6 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         selectorUI({
           record: record,
           store: 'map',
-          attachment: {
-            present: false
-          },
           key: venue.venueDescriptor
         })
       }
@@ -1438,10 +1396,8 @@ function createAttachmentContainer(data) {
           selectorUI({
             record: data,
             store: 'users',
-            attachment: {
-              present: true,
-              key: key
-            }
+            attachment:true,
+            key:key
           })
         }
       }
@@ -1518,8 +1474,7 @@ function createAttachmentContainer(data) {
             selectorUI({
               record: data,
               store: 'children',
-              key:key,
-              template:data.attachment[key].type
+              key:key
             })
 
           }
@@ -1589,9 +1544,6 @@ function createAssigneeList(record, db) {
       selectorUI({
         record: record,
         store: 'users',
-        attachment: {
-          present: false
-        }
       })
     }
     labelButton.appendChild(addButton.root_)

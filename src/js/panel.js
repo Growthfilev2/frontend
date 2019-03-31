@@ -536,7 +536,6 @@ function createActivityIconDom() {
 
   chooseSubscription.root_.onclick =function(){
     selectorUI({
-      record: '',
       store: 'subscriptions',
       suggestCheckIn: false
     })

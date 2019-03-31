@@ -32,11 +32,11 @@ InputField.prototype.withoutLabel = function () {
     field.appendChild(this.ripple())
     return new mdc.textField.MDCTextField(field)
 }
-InputField.prototype.withLabel = function () {
+InputField.prototype.withLabel = function (labelName) {
     const field = this.base();
     const input = this.input();
     field.appendChild(input);
-    field.appendChild(this.label())
+    field.appendChild(this.label(labelName))
     field.appendChild(this.ripple())
     return new mdc.textField.MDCTextField(field)
 }

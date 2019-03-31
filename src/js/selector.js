@@ -21,19 +21,19 @@ function selectorUI(data) {
   submit.selectorButton();
   const submitButton = submit.getButton();
   submitButton.root_.id = 'selector-submit-send'
-  submitButton.root_.onclick = function(){
+  submitButton.root_.onclick = function () {
     if (!isLocationStatusWorking()) return;
     const selectorWarning = document.getElementById('selector-warning');
 
     const filtered = getSelectedRadio();
-    
+
     if (!filtered.length) {
       selectorWarning.textContent = 'Please Select An Option'
       return;
     }
     selectorWarning.textContent = ''
     const value = JSON.parse(filtered[0].value);
-    modifyRecordWithValues(data,value);
+    modifyRecordWithValues(data, value);
   }
 
   container.appendChild(submitButton.root_)
@@ -45,26 +45,42 @@ function selectorUI(data) {
     children: fillChildrenInSelector
   }
 
-types[data.store](data, container);
+  types[data.store](data, container);
 }
 
-function modifyRecordWithValues(data,value){
-if(data.store === 'map') {
-  const venue =  data.record.venue[0]
-  venue.address = value.address;
-  venue.location = value.location;
-  venue.geopoint.latitude = value.latitude;
-  venue.geopoint.longitude = value.longitude;
-  updateCreateActivity(data.record)
-}
-if(data.store === 'subscriptions') {
-  createTempRecord(value.office, value.template, data);
-}
-if(data.store === 'children') {
-  updateCreateActivity(data.record)
+function modifyRecordWithValues(data, value) {
+  if (data.store === 'map') {
+    data.record.venue.forEach(function (venue) {
+      if (venue.venueDescriptor === data.key) {
+        venue.address = value.address;
+        venue.location = value.location;
+        venue.geopoint.latitude = value.latitude;
+        venue.geopoint.longitude = value.longitude;
+      }
+    })
+    updateCreateActivity(data.record)
+  }
+  if (data.store === 'subscriptions') {
+    createTempRecord(value.office, value.template, data);
+  }
+  if (data.store === 'children') {
+    data.record.attachment[data.key].value = value
+    updateCreateActivity(data.record)
+  };
+
+  if (data.store === 'users') {
+    if (btn.dataset.type === 'add-number') {
+      removeChildNodes(ul)
+      btn.remove();
+      addNewNumber(data)
+      return
+    }
+    debugger;
+   return insertNumberIntoRecord(data,value);
+  }
+  return;
 }
 
-}
 function mapSelector(data, container) {
   const parent = document.getElementById('app-current-panel')
   const field = new InputField().withLeadingIcon('search', 'Search Location');
@@ -88,14 +104,14 @@ function mapSelector(data, container) {
       return
     }
     const value = {
-      location:place.name,
-      address:formAddressComponent(place),
-      geopoint:{
-        latitude:place.geometry.location.lat(),
-        longitude:place.geometry.location.lng()
+      location: place.name,
+      address: formAddressComponent(place),
+      geopoint: {
+        latitude: place.geometry.location.lat(),
+        longitude: place.geometry.location.lng()
       }
     }
-    modifyRecordWithValues(data,value)
+    modifyRecordWithValues(data, value)
     return;
   })
 
@@ -122,11 +138,14 @@ function mapSelector(data, container) {
         cursor.continue();
         return;
       };
-      if(!cursor.value.latitude || !cursor.value.longitude) {
+      if (!cursor.value.latitude || !cursor.value.longitude) {
         cursor.continue();
         return;
       };
-      ul.appendChild(radioList({value:cursor.value,labelText:cursor.value.location}))
+      ul.appendChild(radioList({
+        value: cursor.value,
+        labelText: cursor.value.location
+      }))
       cursor.continue()
     }
     tx.oncomplete = function () {
@@ -146,7 +165,7 @@ function userSelector(data, container) {
   container.appendChild(field.root_);
   parent.appendChild(container);
   initUserSelectorSearch(data, field);
-  
+  // fillUsersInSelector(data)
 }
 
 function fillUsersInSelector(data) {
@@ -158,7 +177,6 @@ function fillUsersInSelector(data) {
     const db = req.result
     const transaction = db.transaction(['users']);
     const store = transaction.objectStore('users')
-    document.querySelector('.selector-send').classList.remove('hidden');
     const btn = document.getElementById('selector-submit-send')
     btn.textContent = 'Add New Number';
     btn.dataset.type = 'add-number'
@@ -178,8 +196,9 @@ function fillUsersInSelector(data) {
       const cursor = event.target.result
       if (!cursor) return
 
-      if (data.attachment.present) {
+      if (data.attachment) {
         count++
+
         ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
@@ -224,19 +243,19 @@ function fillUsersInSelector(data) {
         }
 
         if (data.record.hasOwnProperty('create')) {
-            if (!selectedPeople.length) {
-              document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-              return
-            }
+          if (!selectedPeople.length) {
+            document.getElementById('selector-warning').textContent = '* Please Select A Contact'
+            return
+          }
 
-            updateDomFromIDB(data.record, {
-              hash: 'addOnlyAssignees',
-            }, {
-              primary: selectedPeople
-            }).then(function (activity) {
-              document.body.classList.remove('mdc-dialog-scroll-lock');
-              updateCreateActivity(activity, true)
-            }).catch(handleError)
+          updateDomFromIDB(data.record, {
+            hash: 'addOnlyAssignees',
+          }, {
+            primary: selectedPeople
+          }).then(function (activity) {
+            document.body.classList.remove('mdc-dialog-scroll-lock');
+            updateCreateActivity(activity, true)
+          }).catch(handleError)
           return
         }
         if (isLocationStatusWorking()) {
@@ -259,109 +278,80 @@ function fillUsersInSelector(data) {
 
 }
 
-function addNewNumber(data) {
-  const container = document.createElement('div')
-  container.className = 'custom-number--container'
+function addNewNumber(data,container) {
+  const message = createElement('p', {
+    className: 'mdc-typography--subtitle2 message-field',
+    textContent: 'Enter new phone contact without country code',
+    id: 'helper-message'
+  })
 
+  const newContact = new Fab('add').extended('Add Contact');
+  newContact.root_.id = 'new-contact';
 
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input'
-  input.id = 'number-field'
-  input.type = 'number'
-  input.setAttribute('maxlength', '10')
-  input.setAttribute('size', '10')
-  input.required = true
-  input.onkeypress = function (event) {
+  const newNumberField = new InputField().withLabel('New Contact Number');
+  newNumberField.root_.id = 'number-field'
+  newNumberField.root_.type = 'number'
+  newNumberField.root_.setAttribute('maxlength', '10')
+  newNumberField.root_.setAttribute('size', '10')
+  newNumberField.root_.required = true
+  newNumberField.root_.onkeypress = function (event) {
     return event.charCode >= 48 && event.charCode <= 57
   }
 
-  input.oninput = function () {
+
+  newNumberField.root_.oninput = function () {
     if (this.value.length > this.maxLength) {
       this.value = this.value.slice(0, this.maxLength)
 
     } else if (this.value.length === this.maxLength) {
-      document.querySelector('.message-field').classList.remove('error-message')
+      message.classList.remove('error-message')
       this.classList.add('valid-input')
-      document.querySelector('.message-field').textContent = ''
-      document.getElementById('new-contact').disabled = false
-
+      message.textContent = ''
+      newContact.disabled(false)
     } else {
-      document.querySelector('.message-field').classList.add('error-message')
-      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
-      document.getElementById('new-contact').disabled = true
+      message.classList.add('error-message')
+      message.textContent = '* Please Enter a valid Number'
+      newContact.disabled(true)
     }
-
   }
 
-
-  const createButton = document.createElement('button')
-  createButton.className = 'mdc-button'
-  createButton.textContent = 'Add Contact'
-  createButton.id = 'new-contact'
-
-  createButton.onclick = function () {
-    const number = document.getElementById('number-field').value
-
+  newContact.root_.onclick = function () {
+    const number = newNumberField.value
     const formattedNumber = formatNumber(number)
-    if (checkNumber(formattedNumber)) {
 
-      numberNotExist(formattedNumber).then(function (exist) {
-        if (exist) {
-          document.getElementById('new-contact').disabled = true
-          document.querySelector('.message-field').classList.add('error-message')
-          document.querySelector('.message-field').textContent = '* Contact already exist'
-          return
-        }
+    if (!checkNumber(formattedNumber)) {
 
-        if (data.attachment.present) {
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: formattedNumber
-          }).then(function (activity) {
-            console.log(activity);
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-
-        if (data.record.hasOwnProperty('create')) {
-          updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees',
-          }, {
-            primary: [formattedNumber]
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-        if (isLocationStatusWorking()) {
-
-          newNumberReq(data, formattedNumber)
-        }
-      })
-
-    } else {
-      document.querySelector('.message-field').classList.add('error-message')
-      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
-      document.getElementById('new-contact').disabled = true
-
+      message.classList.add('error-message')
+      message.textContent = '* Please Enter a valid Number'
+      newNumberField.disabled(true);
+      return;
     }
-
+    insertNumberIntoRecord(data,formattedNumber);
+    return;
   }
 
-  const message = document.createElement('p')
-  message.className = 'mdc-typography--subtitle2 message-field'
-  message.textContent = 'Enter new phone contact without country code'
-  message.id = 'helper-message'
-
-  container.appendChild(input)
+  container.appendChild(newNumberField.root_)
   container.appendChild(message)
-  container.appendChild(createButton)
-  document.querySelector('#data-list--container').appendChild(container)
-  const getNumber = new mdc.ripple.MDCRipple.attachTo(document.getElementById('new-contact'))
+  container.appendChild(newContact.root_)
+  document.getElementById('data-list--container').appendChild(container)
+}
+
+function insertNumberIntoRecord(data,number){
+
+  if (data.attachment) {
+    data.record.attachment[data.key].value = formattedNumber
+    updateCreateActivity(data.record)
+    return
+  }
+
+  data.record.share.apply(data.record.share,number);
+  if (data.record.hasOwnProperty('create')) {
+    debugger;
+    updateCreateActivity(data.record, true)
+    return
+ }
+
+shareReq(data)
 
 }
 
@@ -403,39 +393,43 @@ function fillSubscriptionInSelector(data, container) {
     }
   }
 }
+
 function insertTemplateByOffice() {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const db = req.result
-      const tx = db.transaction(['subscriptions'], 'readonly');
-      const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
+  const req = indexedDB.open(firebase.auth().currentUser.uid)
+  req.onsuccess = function () {
+    const db = req.result
+    const tx = db.transaction(['subscriptions'], 'readonly');
+    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
 
-      subscriptionObjectStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return
+    subscriptionObjectStore.openCursor().onsuccess = function (event) {
+      const cursor = event.target.result
+      if (!cursor) return
 
-        if (cursor.value.status === 'CANCELLED') {
-          cursor.continue()
-          return
-        }
-        document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(radioList({
-          value: cursor.value,
-          labelText: cursor.value.template
-        }))
+      if (cursor.value.status === 'CANCELLED') {
         cursor.continue()
+        return
       }
-      tx.oncomplete = function () {
-      }
+      document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(radioList({
+        value: cursor.value,
+        labelText: cursor.value.template
+      }))
+      cursor.continue()
     }
+    tx.oncomplete = function () {}
+  }
 }
-function fillChildrenInSelector(data) {
+
+function fillChildrenInSelector(data, container) {
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
     const tx = db.transaction([data.store], 'readonly');
-    const store = tx.objectStore(data.store)
-    const ul = document.getElementById('data-list--container')
-    const bound = IDBKeyRange.bound([data.key, 'CONFIRMED'], [data.key, 'PENDING'])
+    const store = tx.objectStore(data.store).index('templateStatus')
+    const bound = IDBKeyRange.bound([data.key.toLowerCase(), 'CONFIRMED'], [data.key.toLowerCase(), 'PENDING'])
+    const ul = createElement('ul', {
+      className: 'mdc-list'
+    });
+
     store.openCursor(bound).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return;
@@ -443,53 +437,29 @@ function fillChildrenInSelector(data) {
         cursor.continue();
         return;
       }
+
       if (cursor.value.attachment.Name) {
-        console.log(cursor.value)
-        // ul.appendChild(radioList({
-        //   labelText: cursor.value.attachment.Name.value,
-        //   value: cursor.value.attachment.Name.value
-        // }))
+        ul.appendChild(radioList({
+          labelText: cursor.value.attachment.Name.value,
+          value: cursor.value.attachment.Name.value
+        }))
       }
       if (cursor.value.attachment.Number) {
-        console.log(cursor.value)
-        // ul.appendChild(radioList({
-        //   labelText: cursor.value.attachment.Number.value,
-        //   value: cursor.value.attachment.Number.value
-        // }))
+        ul.appendChild(radioList({
+          labelText: cursor.value.attachment.Number.value,
+          value: cursor.value.attachment.Number.value
+        }))
       }
       cursor.continue()
     }
     tx.oncomplete = function () {
-      // const btn = document.getElementById('selector-submit-send')
-      // btn.onclick = function () {
-
-      //   if (!isLocationStatusWorking()) return;
-      //   const selectorWarning = document.getElementById('selector-warning');
-
-      //   const filtered = getSelectedRadio();
-
-      //   if (!filtered.length) {
-      //     selectorWarning.textContent = 'Please Select A Subscription'
-      //     return;
-      //   }
-      //   selectorWarning.textContent = ''
-      //   const value = JSON.parse(filtered[0].value);
-      //   updateDomFromIDB(data.record, {
-      //     hash: 'children',
-      //     key: data.attachment.key
-      //   }, {
-      //     primary: value.name
-      //   }).then(function (activity) {
-      //     updateCreateActivity(activity, true)
-      //   }).catch(function (error) {
-      //     console.log(error)
-      //   })
-      // }
+      container.appendChild(ul)
+      document.getElementById('app-current-panel').appendChild(container);
     }
-
   }
 
 }
+
 function getSelectedRadio() {
   const checked = [].map.call(document.querySelectorAll('.mdc-radio'), function (el) {
     return new mdc.radio.MDCRadio(el);
@@ -500,55 +470,13 @@ function getSelectedRadio() {
   return filter;
 
 }
-function updateDomFromIDB(activityRecord, attr, data) {
-  return new Promise(function (resolve, reject) {
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result;
-      let thisActivity = activityRecord;
-  
-      if (attr.hash === 'venue') {
-        thisActivity = updateVenue(thisActivity, attr, data);
-        updateLocalRecord(thisActivity, db).then(function (message) {
-          resolve(thisActivity)
-        }).catch(function (error) {
-          console.log(error)
-          reject(error)
-        })
-        return
-      }
-      //for create
-      if (attr.hash === 'addOnlyAssignees') {
-        if (!data.primary.length) return
-        data.primary.forEach(function (number) {
-          if (thisActivity.assignees.indexOf(number) > -1) return
-          thisActivity.assignees.push(number)
-        })
-        resolve(thisActivity);
-        return
-      }
 
-      if (!attr.hasOwnProperty('key')) return
 
-      thisActivity.attachment[attr.key].value = data.primary;
-      updateLocalRecord(thisActivity, db).then(function (message) {
-        resolve(thisActivity);
-      }).catch(function (error) {
-        reject(error)
-      })
-    }
+function shareReq(data) {
+  if (!isLocationStatusWorking()) return;
+  document.querySelector('header').appendChild(progressBar())
+  requestCreator('share', {
+    'activityId': data.record.activityId,
+    'share': data.record.share
   })
-}
-function updateVenue(updatedActivity, attr, data) {
-
-  updatedActivity.venue.forEach(function (field) {
-    if (field.venueDescriptor === attr.key) {
-      field.location = data.primary
-      field.address = data.secondary.address
-      field.geopoint['_latitude'] = data.secondary.geopoint['_latitude']
-      field.geopoint['_longitude'] = data.secondary.geopoint['_longitude']
-    }
-  })
-  return updatedActivity
 }
