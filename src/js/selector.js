@@ -17,15 +17,15 @@ function selectorUI(data) {
   })
   container.appendChild(warning);
   let buttonText = 'SELECT'
-  if(data.store === 'users'){
+  if (data.store === 'users') {
     buttonText = 'Add New Number'
-  }  
+  }
   const submit = new Button(buttonText);
   submit.raised()
   submit.selectorButton();
   const submitButton = submit.getButton();
   submitButton.root_.id = 'selector-submit-send'
-  if(data.store === 'users') {
+  if (data.store === 'users') {
     submitButton.root_.dataset.type = 'add-number'
   }
   submitButton.root_.onclick = function () {
@@ -38,10 +38,10 @@ function selectorUI(data) {
       return;
     }
     selectorWarning.textContent = ''
-    const  value = JSON.parse(filtered[0].value);
+    const value = JSON.parse(filtered[0].value);
     modifyRecordWithValues(data, value);
   }
-  if(data.store !== 'users') {
+  if (data.store !== 'users') {
     container.appendChild(submitButton.root_)
   }
   window.scrollTo(0, 0);
@@ -76,7 +76,7 @@ function modifyRecordWithValues(data, value) {
     data.record.attachment[data.key].value = value
     updateCreateActivity(data.record)
   };
-  
+
   return;
 }
 
@@ -162,19 +162,19 @@ function userSelector(data, container) {
   field.root_.id = 'users-selector-search'
   field.root_.classList.add('search-field')
   container.appendChild(field.root_);
-  
+
   parent.appendChild(container);
-  initUserSelectorSearch(data, field,container);
-  
-  
+  initUserSelectorSearch(data, field, container);
+
+
 
   const ul = createElement('ul', {
     className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line',
-    id:'user-selector-list'
+    id: 'user-selector-list'
   });
 
   ul.setAttribute('role', 'group');
-  ul.setAttribute('aria-label','User List With Check Box');
+  ul.setAttribute('aria-label', 'User List With Check Box');
   container.appendChild(ul);
   const recordAssignees = data.record.assignees
   const userSubmit = new Button('Add New Number');
@@ -183,26 +183,26 @@ function userSelector(data, container) {
   const userSubmitButton = userSubmit.getButton();
   userSubmitButton.root_.dataset.type = 'add-number';
   userSubmitButton.root_.id = 'selector-submit-send'
-  userSubmitButton.root_.onclick = function(){
-      if(userSubmitButton.root_.dataset.type === 'add-number') {
-        addNewNumber(data,container);
-        return;
-      }
-      let filterClassName = '.mdc-radio'
-      if(!data.attachment) {
-        filterClassName = '.mdc-checkbox'
-      }
-      const filtered = getSelectedList(filterClassName)
-      if(!filtered) {
-        container.querySelector('#selector-warning').textContent = 'Please Choose An Option'
-        return;
-      }
-      const numbers = [];
-      filtered.forEach(function(el){
-        numbers.push(JSON.parse(el.value))
-      })
-      insertNumberIntoRecord(data,numbers)
-    
+  userSubmitButton.root_.onclick = function () {
+    if (userSubmitButton.root_.dataset.type === 'add-number') {
+      addNewNumber(data, container);
+      return;
+    }
+    let filterClassName = '.mdc-radio'
+    if (!data.attachment) {
+      filterClassName = '.mdc-checkbox'
+    }
+    const filtered = getSelectedList(filterClassName)
+    if (!filtered) {
+      container.querySelector('#selector-warning').textContent = 'Please Choose An Option'
+      return;
+    }
+    const numbers = [];
+    filtered.forEach(function (el) {
+      numbers.push(JSON.parse(el.value))
+    })
+    insertNumberIntoRecord(data, numbers)
+
   }
   container.appendChild(userSubmitButton.root_)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -229,20 +229,22 @@ function userSelector(data, container) {
       if (data.attachment) {
         count++
         const radioButton = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(cursor.value.mobile)))
-        radioButton.root_.onclick = function(){
-         data.record.attachment[data.key].value = JSON.parse(radioButton.value)
-         updateCreateActivity(data.record,true)
+        radioButton.root_.onclick = function () {
+          data.record.attachment[data.key].value = JSON.parse(radioButton.value)
+          updateCreateActivity(data.record, true)
         }
         ul.appendChild(createSimpleAssigneeLi(cursor.value, radioButton))
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
           count++
-          const checkbox = createCheckBox({value:cursor.value.mobile});
-          checkbox.root_.onclick = function(){
+          const checkbox = createCheckBox({
+            value: cursor.value.mobile
+          });
+          checkbox.root_.onclick = function () {
             container.querySelector('#selector-submit-send').dataset.type = '';
             container.querySelector('#selector-submit-send').textContent = 'SELECT';
           }
-          ul.appendChild(createSimpleAssigneeLi(cursor.value,checkbox))
+          ul.appendChild(createSimpleAssigneeLi(cursor.value, checkbox))
         }
       }
       cursor.continue()
@@ -253,18 +255,23 @@ function userSelector(data, container) {
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
       };
-      
+
       document.getElementById('app-current-panel').appendChild(container);
     }
   }
 }
 
 
-function addNewNumber(data,container) {
+function addNewNumber(data, container) {
   document.body.style.backgroundColor = 'white';
   removeChildNodes(container)
-  const newNumberCont = createElement('div',{className:'new-number-container'})
-  const headline = createElement('h2',{className:'mdc-typography--headline5 new-contact-headline',textContent:'Add a new Phone Number'})
+  const newNumberCont = createElement('div', {
+    className: 'new-number-container'
+  })
+  const headline = createElement('h2', {
+    className: 'mdc-typography--headline5 new-contact-headline',
+    textContent: 'Add a new Phone Number'
+  })
   const message = createElement('p', {
     className: 'mdc-typography--subtitle2 message-field',
     textContent: 'Enter new phone contact without country code',
@@ -286,7 +293,7 @@ function addNewNumber(data,container) {
   }
 
   newNumberField.input_.oninput = function () {
-   
+
     if (this.value.length > this.maxLength) {
       this.value = this.value.slice(0, this.maxLength)
 
@@ -311,7 +318,7 @@ function addNewNumber(data,container) {
       newNumberField.disabled(true);
       return;
     }
-    insertNumberIntoRecord(data,[formattedNumber]);
+    insertNumberIntoRecord(data, [formattedNumber]);
     return;
   }
   newNumberCont.appendChild(headline);
@@ -322,20 +329,20 @@ function addNewNumber(data,container) {
   document.getElementById('app-current-panel').appendChild(container)
 }
 
-function insertNumberIntoRecord(data,number){
+function insertNumberIntoRecord(data, number) {
 
   if (data.attachment) {
     data.record.attachment[data.key].value = number[0]
-    updateCreateActivity(data.record,true)
+    updateCreateActivity(data.record, true)
     return
   }
 
   if (data.record.hasOwnProperty('create')) {
-    data.record.assignees.push.apply(data.record.assignees,number);
+    data.record.assignees.push.apply(data.record.assignees, number);
     updateCreateActivity(data.record, true)
     return
- };
-shareReq(data,number)
+  };
+  shareReq(data, number)
 
 }
 
@@ -404,53 +411,37 @@ function insertTemplateByOffice() {
 }
 
 function fillChildrenInSelector(data, container) {
-  const req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    const db = req.result;
-    const tx = db.transaction([data.store], 'readonly');
-    const store = tx.objectStore(data.store).index('templateStatus')
-    const bound = IDBKeyRange.bound([data.record.attachment[data.key].type, 'CONFIRMED'], [data.record.attachment[data.key].type, 'PENDING'])
-    const ul = createElement('ul', {
-      className: 'mdc-list'
-    });
+  const ul = createElement('ul', {
+    className: 'mdc-list'
+  });
+  data.results.forEach(function (value) {
 
-    store.openCursor(bound).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return;
-      if (data.record.office !== cursor.value.office) {
-        cursor.continue();
-        return;
-      }
-
-      if (cursor.value.attachment.Name) {
-        ul.appendChild(radioList({
-          labelText: cursor.value.attachment.Name.value,
-          value: cursor.value.attachment.Name.value
-        }))
-      }
-      if (cursor.value.attachment.Number) {
-        ul.appendChild(radioList({
-          labelText: cursor.value.attachment.Number.value,
-          value: cursor.value.attachment.Number.value
-        }))
-      }
-      cursor.continue()
+    if (value.attachment.Name) {
+      ul.appendChild(radioList({
+        labelText: value.attachment.Name.value,
+        value: value.attachment.Name.value
+      }))
     }
-    tx.oncomplete = function () {
-      container.appendChild(ul)
-      document.getElementById('app-current-panel').appendChild(container);
+    if (value.attachment.Number) {
+      ul.appendChild(radioList({
+        labelText: value.attachment.Number.value,
+        value: value.attachment.Number.value
+      }))
     }
-  }
-
+  })
+  container.appendChild(ul)
+  document.getElementById('app-current-panel').appendChild(container);
 }
+
+
 
 function getSelectedList(className) {
 
   const checked = [].map.call(document.querySelectorAll(className), function (el) {
-    if(className === '.mdc-radio') {
+    if (className === '.mdc-radio') {
       return new mdc.radio.MDCRadio(el);
     }
-    if(className === '.mdc-checkbox') {
+    if (className === '.mdc-checkbox') {
       return new mdc.checkbox.MDCCheckbox(el);
     }
   });
@@ -460,7 +451,7 @@ function getSelectedList(className) {
   return filter;
 }
 
-function shareReq(data,number) {
+function shareReq(data, number) {
   if (!isLocationStatusWorking()) return;
   document.querySelector('header').appendChild(progressBar())
   requestCreator('share', {

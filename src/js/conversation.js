@@ -670,6 +670,7 @@ function createTempRecord(office, template, prefill) {
 function hasAnyValueInChildren(office, template) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
+  const results;
   return new Promise(function (resolve) {
 
     req.onsuccess = function () {
@@ -686,11 +687,11 @@ function hasAnyValueInChildren(office, template) {
           cursor.continue();
           return;
         }
-        count++
+        results.push(cursor.value)
         cursor.continue()
       }
       tx.oncomplete = function(){
-        resolve(count)
+        resolve(results)
       }
     }
   })
@@ -1450,9 +1451,9 @@ function createAttachmentContainer(data) {
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
-      hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (hasValue) {
+      hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
 
-        if (hasValue) {
+        if (results.length) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
           chooseExistingEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'add--assignee-icon', 'attachment-selector-label')
@@ -1468,7 +1469,8 @@ function createAttachmentContainer(data) {
             selectorUI({
               record: data,
               store: 'children',
-              key: key
+              key: key,
+              results:results
             })
 
           }
@@ -1480,7 +1482,7 @@ function createAttachmentContainer(data) {
             createNew.shaped();
             const createNewEl = createNew.getButton();
             createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
-            if(!hasValue) {
+            if(results.length) {
               createNewEl.root_.style.marginRight ='0px';
             }
             createNewEl.root_.onclick = function () {
