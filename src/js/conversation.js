@@ -830,12 +830,10 @@ function updateCreateActivity(record, showSendButton) {
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        if (isLocationStatusWorking()) {
-
+        if(!isLocationStatusWorking()) return;
           this.dataset.progress = true
-          sendActivity(record)
-        }
-      })
+          insertInputsIntoActivity(record, true)
+      });
     }
 
     const inputFields = document.querySelectorAll('.update-create--activity input');
@@ -1440,13 +1438,6 @@ function createAttachmentContainer(data) {
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
 
-      // const addButtonName = document.createElement('label')
-      // addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-      // const spanName = document.createElement('span')
-      // spanName.className = 'mdc-fab__icon material-icons'
-      // spanName.textContent = 'add'
-      // addButtonName.appendChild(spanName)
-
 
       const customerAddition = {
         'tour plan': true,
@@ -1468,15 +1459,11 @@ function createAttachmentContainer(data) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
           chooseExistingEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'add--assignee-icon', 'attachment-selector-label')
-          // buttonCont.appendChild(chooseExistingEl.root_)
           div.appendChild(chooseExistingEl.root_)
 
 
           div.classList.add('selector--margin')
           chooseExistingEl.root_.onclick = function (evt) {
-            // if(document.querySelector('.create-new-customer-btn')) {
-            //   document.querySelector('.create-new-customer-btn').classList.add('hidden')
-            // }
             valueField.dataset.primary = ''
             insertInputsIntoActivity(data)
             history.replaceState(['updateCreateActivity', data], null, null)
@@ -1805,25 +1792,6 @@ function createActivityCancellation(record) {
   }
 }
 
-function sendActivity(record) {
-
-  // if (record.hasOwnProperty('create')) {
-  //   insertInputsIntoActivity(record, true)
-  //   return
-  // }
-
-  // const dbName = firebase.auth().currentUser.uid
-  // const req = indexedDB.open(dbName)
-  // req.onsuccess = function (event) {
-  //   const db = req.result
-  //   const activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
-
-  //   activityStore.get(record.activityId).onsuccess = function (event) {
-  // const record = event.target.result
-  insertInputsIntoActivity(record, true)
-  // }
-  // }
-}
 
 function concatDateWithTime(date, time) {
   const dateConcat = moment(date + " " + time)
