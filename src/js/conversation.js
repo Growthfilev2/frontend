@@ -1501,8 +1501,6 @@ function createAttachmentContainer(data) {
       }
     }
 
-
-
     const hr = document.createElement('hr')
     hr.className = 'attachment--divider'
     if (data.attachment[key].type === 'HH:MM') {
