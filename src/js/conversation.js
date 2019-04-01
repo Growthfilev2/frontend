@@ -1484,7 +1484,7 @@ function createAttachmentContainer(data) {
           }
         }
       });
-      if (customerAddition[data.template]) {
+      if (customerAddition[data.template] && data.attachment.hasOwnProperty('Customer')) {
         const createNew = new Button('Create New')
         createNew.raised();
         createNew.shaped();
