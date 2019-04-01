@@ -331,13 +331,8 @@ function createComment(db, addendum, currentUser) {
           lat: addendum.location['_latitude'],
           lng: addendum.location['_longitude']
         }
-
-        appendMap(loc, mapDom, {
-          zoom: 16,
-          center: location,
-          disableDefaultUI: true,
-
-        });
+        const map = new AppendMap(loc,mapDom)
+        map.getMarker();
         if (showMap) {
           mapDom.style.height = '200px'
           mapIcon.textContent = 'arrow_drop_down'
@@ -1082,12 +1077,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       }
-      const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`)
-      appendMap(loc, mapParent, {
-        zoom: 16,
-        center: location,
-        disableDefaultUI: true
-      })
+      const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`);
+      const map = new AppendMap(loc, mapParent)
+      map.getMarker();
       if (showMap) {
         mapParent.style.height = '200px';
       } else {
@@ -1775,22 +1767,22 @@ function createActivityCancellation(record) {
 
 function sendActivity(record) {
 
-  if (record.hasOwnProperty('create')) {
-    insertInputsIntoActivity(record, true)
-    return
-  }
+  // if (record.hasOwnProperty('create')) {
+  //   insertInputsIntoActivity(record, true)
+  //   return
+  // }
 
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function (event) {
-    const db = req.result
-    const activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
+  // const dbName = firebase.auth().currentUser.uid
+  // const req = indexedDB.open(dbName)
+  // req.onsuccess = function (event) {
+  //   const db = req.result
+  //   const activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
 
-    activityStore.get(record.activityId).onsuccess = function (event) {
-      const record = event.target.result
+  //   activityStore.get(record.activityId).onsuccess = function (event) {
+      // const record = event.target.result
       insertInputsIntoActivity(record, true)
-    }
-  }
+    // }
+  // }
 }
 
 function concatDateWithTime(date, time) {
@@ -1909,8 +1901,8 @@ function insertInputsIntoActivity(record, send) {
 
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
-        latitude: record.venue[i].geopoint['_latitude'] || "",
-        longitude: record.venue[i].geopoint['_longitude'] || ""
+        latitude: record.venue[i].geopoint['latitude'] || "",
+        longitude: record.venue[i].geopoint['longitude'] || ""
       }
       if (record.venue[i].hasOwnProperty('showIcon')) {
         delete record.venue[i].showIcon

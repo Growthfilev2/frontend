@@ -161,9 +161,12 @@ AppendMap.prototype.getMarker = function (extras) {
         position: this.location,
         map: this.map,
     }
-    Object.keys(extras).forEach(function (extra) {
-        markerConfig[extra] = extras[extra]
-    })
+    if(extras){
+
+        Object.keys(extras).forEach(function (extra) {
+            markerConfig[extra] = extras[extra]
+        })
+    }
     return new google.maps.Marker(markerConfig);
 }
 

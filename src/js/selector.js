@@ -164,12 +164,13 @@ function userSelector(data, container) {
   container.appendChild(field.root_);
   
   parent.appendChild(container);
-  initUserSelectorSearch(data, field);
+  initUserSelectorSearch(data, field,container);
   
   
 
   const ul = createElement('ul', {
-    className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line'
+    className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line',
+    id:'user-selector-list'
   });
 
   ul.setAttribute('role', 'group');
