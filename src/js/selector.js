@@ -1,4 +1,5 @@
 function selectorUI(data) {
+  document.body.style.backgroundColor = 'white';
 
   const parent = document.getElementById('app-current-panel');
   parent.innerHTML = ''
@@ -15,28 +16,34 @@ function selectorUI(data) {
     id: 'selector-warning'
   })
   container.appendChild(warning);
-
-  const submit = new Button('SELECT');
+  let buttonText = 'SELECT'
+  if(data.store === 'users'){
+    buttonText = 'Add New Number'
+  }  
+  const submit = new Button(buttonText);
   submit.raised()
   submit.selectorButton();
   const submitButton = submit.getButton();
   submitButton.root_.id = 'selector-submit-send'
+  if(data.store === 'users') {
+    submitButton.root_.dataset.type = 'add-number'
+  }
   submitButton.root_.onclick = function () {
     if (!isLocationStatusWorking()) return;
-    const selectorWarning = document.getElementById('selector-warning');
-
-    const filtered = getSelectedRadio();
-
+    const selectorWarning = container.querySelector('#selector-warning');
+    let filterClass = '.mdc-radio'
+    const filtered = getSelectedList(filterClass);
     if (!filtered.length) {
       selectorWarning.textContent = 'Please Select An Option'
       return;
     }
     selectorWarning.textContent = ''
-    const value = JSON.parse(filtered[0].value);
+    const  value = JSON.parse(filtered[0].value);
     modifyRecordWithValues(data, value);
   }
-
-  container.appendChild(submitButton.root_)
+  if(data.store !== 'users') {
+    container.appendChild(submitButton.root_)
+  }
   window.scrollTo(0, 0);
   const types = {
     map: mapSelector,
@@ -50,6 +57,7 @@ function selectorUI(data) {
 
 function modifyRecordWithValues(data, value) {
   if (data.store === 'map') {
+
     data.record.venue.forEach(function (venue) {
       if (venue.venueDescriptor === data.key) {
         venue.address = value.address;
@@ -61,23 +69,14 @@ function modifyRecordWithValues(data, value) {
     updateCreateActivity(data.record)
   }
   if (data.store === 'subscriptions') {
+
     createTempRecord(value.office, value.template, data);
   }
   if (data.store === 'children') {
     data.record.attachment[data.key].value = value
     updateCreateActivity(data.record)
   };
-
-  if (data.store === 'users') {
-    if (btn.dataset.type === 'add-number') {
-      removeChildNodes(ul)
-      btn.remove();
-      addNewNumber(data)
-      return
-    }
-    debugger;
-   return insertNumberIntoRecord(data,value);
-  }
+  
   return;
 }
 
@@ -163,23 +162,53 @@ function userSelector(data, container) {
   field.root_.id = 'users-selector-search'
   field.root_.classList.add('search-field')
   container.appendChild(field.root_);
+  
   parent.appendChild(container);
   initUserSelectorSearch(data, field);
-  // fillUsersInSelector(data)
-}
+  
+  
 
-function fillUsersInSelector(data) {
-  const ul = document.getElementById('data-list--container')
+  const ul = createElement('ul', {
+    className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line'
+  });
+
+  ul.setAttribute('role', 'group');
+  ul.setAttribute('aria-label','User List With Check Box');
+  container.appendChild(ul);
   const recordAssignees = data.record.assignees
-
+  const userSubmit = new Button('Add New Number');
+  userSubmit.raised();
+  userSubmit.selectorButton();
+  const userSubmitButton = userSubmit.getButton();
+  userSubmitButton.root_.dataset.type = 'add-number';
+  userSubmitButton.root_.id = 'selector-submit-send'
+  userSubmitButton.root_.onclick = function(){
+    if(this.dataset.type === 'add-number'){
+      addNewNumber(data,container)
+    }
+    else {
+      let filterClassName = '.mdc-radio'
+      if(!data.attachment) {
+        filterClassName = '.mdc-checkbox'
+      }
+      const filtered = getSelectedList(filterClassName)
+      if(!filtered) {
+        container.querySelector('#selector-warning').textContent = 'Please Choose An Option'
+        return;
+      }
+      const numbers = [];
+      filtered.forEach(function(el){
+        numbers.push(JSON.parse(el.value))
+      })
+      insertNumberIntoRecord(data,numbers)
+    }
+  }
+  container.appendChild(userSubmitButton.root_)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     const transaction = db.transaction(['users']);
-    const store = transaction.objectStore('users')
-    const btn = document.getElementById('selector-submit-send')
-    btn.textContent = 'Add New Number';
-    btn.dataset.type = 'add-number'
+    const store = transaction.objectStore('users');
     let count = 0;
     let alreadyPresent = {}
 
@@ -198,12 +227,17 @@ function fillUsersInSelector(data) {
 
       if (data.attachment) {
         count++
-
-        ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
+        const radioButton = new mdc.radio.MDCRadio(createRadioInput({value:cursor.value.mobile}))
+        ul.appendChild(createSimpleAssigneeLi(cursor.value, radioButton))
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
           count++
-          ul.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
+          const checkbox = createCheckBox({value:cursor.value.mobile});
+          checkbox.root_.onclick = function(){
+            container.querySelector('#selector-submit-send').dataset.type = '';
+            container.querySelector('#selector-submit-send').textContent = 'SELECT';
+          }
+          ul.appendChild(createSimpleAssigneeLi(cursor.value,checkbox))
         }
       }
       cursor.continue()
@@ -213,72 +247,19 @@ function fillUsersInSelector(data) {
       if (!count) {
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
-      }
-      btn.onclick = function () {
-        if (btn.dataset.type === 'add-number') {
-          document.getElementById('users-selector-search').style.display = 'none';
-          removeChildNodes(ul)
-          btn.remove();
-          addNewNumber(data)
-          return
-        }
-
-        if (data.attachment.present) {
-          const selector = document.querySelector('.mdc-radio.radio-selected');
-          if (!selector) {
-            document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-            return
-          }
-          const radio = new mdc.radio.MDCRadio(selector)
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: JSON.parse(radio.value)
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return;
-        }
-
-        if (data.record.hasOwnProperty('create')) {
-          if (!selectedPeople.length) {
-            document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-            return
-          }
-
-          updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees',
-          }, {
-            primary: selectedPeople
-          }).then(function (activity) {
-            document.body.classList.remove('mdc-dialog-scroll-lock');
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-        if (isLocationStatusWorking()) {
-          shareReq(data)
-        }
-      }
-
-
-      const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-      selectedBoxes.forEach(function (box) {
-        if (box) {
-          const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-          mdcBox.checked = true
-          box.children[1].style.animation = 'none'
-          box.children[1].children[0].children[0].style.animation = 'none'
-        }
-      })
+      };
+      
+      document.getElementById('app-current-panel').appendChild(container);
     }
   }
-
 }
 
+
 function addNewNumber(data,container) {
+  document.body.style.backgroundColor = 'white';
+  removeChildNodes(container)
+  const newNumberCont = createElement('div',{className:'new-number-container'})
+  const headline = createElement('h2',{className:'mdc-typography--headline5 new-contact-headline',textContent:'Add a new Phone Number'})
   const message = createElement('p', {
     className: 'mdc-typography--subtitle2 message-field',
     textContent: 'Enter new phone contact without country code',
@@ -288,18 +269,19 @@ function addNewNumber(data,container) {
   const newContact = new Fab('add').extended('Add Contact');
   newContact.root_.id = 'new-contact';
 
-  const newNumberField = new InputField().withLabel('New Contact Number');
+  const newNumberField = new InputField().withoutLabel();
   newNumberField.root_.id = 'number-field'
   newNumberField.root_.type = 'number'
-  newNumberField.root_.setAttribute('maxlength', '10')
-  newNumberField.root_.setAttribute('size', '10')
-  newNumberField.root_.required = true
-  newNumberField.root_.onkeypress = function (event) {
+  newNumberField.input_.placeholder = 'Enter A New Phone Number'
+  newNumberField.input_.setAttribute('maxlength', '10')
+  newNumberField.input_.setAttribute('size', '10')
+  newNumberField.input_.required = true
+  newNumberField.input_.onkeypress = function (event) {
     return event.charCode >= 48 && event.charCode <= 57
   }
 
-
-  newNumberField.root_.oninput = function () {
+  newNumberField.input_.oninput = function () {
+   
     if (this.value.length > this.maxLength) {
       this.value = this.value.slice(0, this.maxLength)
 
@@ -307,11 +289,9 @@ function addNewNumber(data,container) {
       message.classList.remove('error-message')
       this.classList.add('valid-input')
       message.textContent = ''
-      newContact.disabled(false)
     } else {
       message.classList.add('error-message')
       message.textContent = '* Please Enter a valid Number'
-      newContact.disabled(true)
     }
   }
 
@@ -326,14 +306,15 @@ function addNewNumber(data,container) {
       newNumberField.disabled(true);
       return;
     }
-    insertNumberIntoRecord(data,formattedNumber);
+    insertNumberIntoRecord(data,[formattedNumber]);
     return;
   }
-
-  container.appendChild(newNumberField.root_)
-  container.appendChild(message)
-  container.appendChild(newContact.root_)
-  document.getElementById('data-list--container').appendChild(container)
+  newNumberCont.appendChild(headline);
+  newNumberCont.appendChild(newNumberField.root_)
+  newNumberCont.appendChild(message)
+  newNumberCont.appendChild(newContact.root_)
+  container.appendChild(newNumberCont)
+  document.getElementById('app-current-panel').appendChild(container)
 }
 
 function insertNumberIntoRecord(data,number){
@@ -344,9 +325,8 @@ function insertNumberIntoRecord(data,number){
     return
   }
 
-  data.record.share.apply(data.record.share,number);
+  data.record.assignees.push.apply(data.record.assignees,number);
   if (data.record.hasOwnProperty('create')) {
-    debugger;
     updateCreateActivity(data.record, true)
     return
  }
@@ -460,9 +440,15 @@ function fillChildrenInSelector(data, container) {
 
 }
 
-function getSelectedRadio() {
-  const checked = [].map.call(document.querySelectorAll('.mdc-radio'), function (el) {
-    return new mdc.radio.MDCRadio(el);
+function getSelectedList(className) {
+
+  const checked = [].map.call(document.querySelectorAll(className), function (el) {
+    if(className === '.mdc-radio') {
+      return new mdc.radio.MDCRadio(el);
+    }
+    if(className === '.mdc-checkbox') {
+      return new mdc.checkbox.MDCCheckbox(el);
+    }
   });
   const filter = checked.filter(function (el) {
     return el.checked;

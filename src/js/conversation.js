@@ -1563,68 +1563,40 @@ function createAssigneeList(record, db) {
 
 
 function createSimpleAssigneeLi(userRecord, metaType) {
-  const assigneeLi = createElement('li',{className:'mdc-list-item assignee-li'})
+  const assigneeLi = createElement('li',{className:'mdc-list-item'})
   if (!userRecord) return assigneeLi
-  
-  const dataObject = document.createElement('object');
-  dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
-  dataObject.type = 'image/jpeg';
-  dataObject.className = 'mdc-list-item__graphic';
 
-  const photoGraphic = document.createElement('img')
-  photoGraphic.src = './img/empty-user.jpg'
-  photoGraphic.className = 'empty-user-assignee'
+  const dataObject = createElement('object',{className:'mdc-list-item__graphic',data:userRecord.photoURL || './img/empty-user.jpg',type:'image/jpeg'})
+  const photoGraphic = createElement('img',{className:'empty-user-assignee',src:'./img/empty-user.jpg'})
   dataObject.appendChild(photoGraphic)
-  const assigneeListText = document.createElement('span')
-  assigneeListText.classList.add('mdc-list-item__text')
-  const assigneeName = document.createElement('span')
-  assigneeName.className = 'mdc-list-item__primary-text'
+  
 
-  const assigneeListTextSecondary = document.createElement('span')
-  assigneeListTextSecondary.classList.add('mdc-list-item__secondary-text')
+  const assigneeListText = createElement('span',{className:'mdc-list-item_text'})
+  const name = createElement('span',{className:'mdc-list-item__primary-text'})
+  const number = createElement('span',{className:'mdc-list-item__secondary-text'})
 
   if (!userRecord.displayName) {
-    assigneeName.textContent = userRecord.mobile
+    name.textContent = userRecord.mobile
   } else {
-    assigneeName.textContent = userRecord.displayName
-    assigneeListTextSecondary.textContent = userRecord.mobile
+    name.textContent = userRecord.displayName
+    number.textContent = userRecord.mobile
   }
 
-  assigneeListText.appendChild(assigneeName)
-  assigneeListText.appendChild(assigneeListTextSecondary)
+  assigneeListText.appendChild(name)
+  assigneeListText.appendChild(number)
 
-  const metaInput = document.createElement('span')
-  metaInput.className = 'mdc-list-item__meta material-icons';
 
-  if (metaType) {
-    metaInput.appendChild(metaType.root_);
-  }
   assigneeLi.appendChild(dataObject)
   assigneeLi.appendChild(assigneeListText)
-  assigneeLi.appendChild(metaInput)
+  if (metaType) {
+    assigneeLi.setAttribute("role","checkbox")
+    assigneeLi.appendChild(metaType.root_);
+}
   return assigneeLi
 }
 
 
-function createCheckBox() {
-  const checkbox = createElement('div',{className:'mdc-checkbox'});
-  const input = createElement('input',{className:'mdc-checkbox__native-control',type:'checkbox'})
-  const checkbox_bckg = createElement('div',{className:'mdc-checkbox__background'})
 
-  const svg = `<svg class="mdc-checkbox__checkmark"
-    viewBox="0 0 24 24">
-    <path class="mdc-checkbox__checkmark-path"
-    fill="none"
-    d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-    </svg>
-    <div class="mdc-checkbox__mixedmark"></div>`
-
-  checkbox_bckg.innerHTML = svg;
-  checkbox.appendChild(input)
-  checkbox.appendChild(checkbox_bckg)
-
-  return new mdc.checkbox.MDCCheckbox(checkbox)
-}
 
 function checkRadioInput(inherit, value) {
   document.getElementById('selector-submit-send').textContent = 'SELECT';

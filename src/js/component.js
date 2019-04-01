@@ -133,11 +133,12 @@ function Fab(name){
     button.appendChild(this.span)
     this.base = button;
 }
-Fab.prototype =  Object.create(new Button())
+Fab.prototype = Object.create(new Button())
 Fab.prototype.extended = function(labelName){
-    this.base.classList.add('mdc-fab-extended')
+    this.base.classList.add('mdc-fab--extended')
     const label = createElement('label',{className:'mdc-fab__label',textContent:labelName})
     this.base.appendChild(label);
+    return this.getButton();   
 }
 
 function AppendMap(location, el) {
@@ -196,4 +197,24 @@ function createRadioInput(value) {
     return div;
   
   }
+  function createCheckBox(attr) {
+    console.log(attr)
+    const checkbox = createElement('div',{className:'mdc-checkbox mdc-list-item__meta'});
+    const input = createElement('input',{className:'mdc-checkbox__native-control',type:'checkbox',value:JSON.stringify(attr.value)})
+    input.setAttribute('tabindex','-1')
+    const checkbox_bckg = createElement('div',{className:'mdc-checkbox__background'})
   
+    const svg = `<svg class="mdc-checkbox__checkmark"
+      viewBox="0 0 24 24">
+      <path class="mdc-checkbox__checkmark-path"
+      fill="none"
+      d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+      </svg>
+      <div class="mdc-checkbox__mixedmark"></div>`
+    
+    checkbox_bckg.innerHTML = svg;
+    checkbox.appendChild(input)
+    checkbox.appendChild(checkbox_bckg);
+  
+    return new mdc.checkbox.MDCCheckbox(checkbox)
+  }
