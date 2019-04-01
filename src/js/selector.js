@@ -409,7 +409,7 @@ function fillChildrenInSelector(data, container) {
     const db = req.result;
     const tx = db.transaction([data.store], 'readonly');
     const store = tx.objectStore(data.store).index('templateStatus')
-    const bound = IDBKeyRange.bound([data.key.toLowerCase(), 'CONFIRMED'], [data.key.toLowerCase(), 'PENDING'])
+    const bound = IDBKeyRange.bound([data.record.attachment[data.key].type, 'CONFIRMED'], [data.record.attachment[data.key].type, 'PENDING'])
     const ul = createElement('ul', {
       className: 'mdc-list'
     });

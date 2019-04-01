@@ -667,7 +667,7 @@ function createTempRecord(office, template, prefill) {
 
 }
 
-function hasAnyValueInChildren(office, template, status) {
+function hasAnyValueInChildren(office, template) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   return new Promise(function (resolve) {
@@ -682,9 +682,11 @@ function hasAnyValueInChildren(office, template, status) {
       store.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
-        if (cursor.value.template === template && cursor.value.office === office && status != 'CANCELLED') {
-          count++
+        if(cursor.value.office !== office) {
+          cursor.continue();
+          return;
         }
+        count++
         cursor.continue()
       }
       tx.oncomplete = function(){
@@ -1460,7 +1462,7 @@ function createAttachmentContainer(data) {
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
-      hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
+      hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (hasValue) {
 
         if (hasValue) {
           const chooseExisting = new Fab('add');
@@ -2129,9 +2131,9 @@ function geocodePosition(pos, addressField, currentLocation) {
 
 
     } else {
-      const locationText = document.querySelector('.customer-location-error')
+      let locationText = document.querySelector('.customer-location-error')      
       if (locationText) {
-        locationText = 'Failed To Detect This Location, Please Try Again'
+        locationText.textContent = 'Failed To Detect This Location, Please Try Again'
       }
     }
   });
