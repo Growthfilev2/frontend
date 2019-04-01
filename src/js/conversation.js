@@ -1445,9 +1445,7 @@ function createAttachmentContainer(data) {
       };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      let buttonCont = createElement('div', {
-        className: 'customer-button-container'
-      })
+     
 
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
