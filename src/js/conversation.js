@@ -931,6 +931,7 @@ function createSimpleLi(key, data) {
     listItem.appendChild(listItemLabel)
     listItem.classList.add('undo-delete-activity')
     const undo = document.createElement('button')
+    undo.style.color = 'white';
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {

@@ -326,13 +326,13 @@ function insertNumberIntoRecord(data,number){
     return
   }
 
-  data.record.assignees.push.apply(data.record.assignees,number);
   if (data.record.hasOwnProperty('create')) {
+    data.record.assignees.push.apply(data.record.assignees,number);
     updateCreateActivity(data.record, true)
     return
- }
-
-shareReq(data)
+ };
+console.log(number)
+shareReq(data,number)
 
 }
 
@@ -455,15 +455,13 @@ function getSelectedList(className) {
     return el.checked;
   })
   return filter;
-
 }
 
-
-function shareReq(data) {
+function shareReq(data,number) {
   if (!isLocationStatusWorking()) return;
   document.querySelector('header').appendChild(progressBar())
   requestCreator('share', {
     'activityId': data.record.activityId,
-    'share': data.record.share
+    'share': number
   })
 }
