@@ -1047,33 +1047,10 @@ function runRead(value) {
   const keys = Object.keys(value);
   keys.forEach(function (key) {
     if (key === 'verifyEmail') {
-      const notificationData = JSON.parse(value[key])
-      if (!notificationData.title || !notificationData.body) {
-        const content = {
-          title:'Reminder',
-          body:''
-        }
-        
-        let offices = {}
-        let reports = {}
-         
-        getRecipient().then(function (records) {
-        
-          if(!records.length) {
-            content.body = 'You have not set your email Address. Click Okay to set your email address'
-          }
-          else {
-            records.forEach(function (record) {
-              offices[record.office] = true
-              reports[record.attachment.Name.value] = true
-            })
-            content.body = `You have been added a Recipient for ${ Object.keys(offices).join('&')} . Without Adding Email Address, you will not recieve ${Object.keys(reports).join(' , ')} Reports. Click Okay to set your email address`
-          }
-          emailVerify(content)
-        })
-        return;
-      }
-      emailVerify(notificationData)
+      setTimeout(function(){
+        const notificationData = JSON.parse(value[key])
+        emailVerify(notificationData)
+      },500)
       return;
     }
     if (key === 'read') {
@@ -1081,13 +1058,9 @@ function runRead(value) {
       return;
     } 
     if (key === 'payroll') {
-      getRootRecord().then(function (record) {
-        if (!record.offices) return;
-        if (!Array.isArray(record.offices)) return;
-        if (!record.offices.length) return;
-
+      setTimeout(function(){
         createBlankPayrollDialog(JSON.parse(value[key]))
-      })
+      },500)
       return;
     }
   })
