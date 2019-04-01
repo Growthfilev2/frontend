@@ -184,10 +184,10 @@ function userSelector(data, container) {
   userSubmitButton.root_.dataset.type = 'add-number';
   userSubmitButton.root_.id = 'selector-submit-send'
   userSubmitButton.root_.onclick = function(){
-    if(this.dataset.type === 'add-number'){
-      addNewNumber(data,container)
-    }
-    else {
+      if(userSubmitButton.root_.dataset.type === 'add-number') {
+        addNewNumber(data,container);
+        return;
+      }
       let filterClassName = '.mdc-radio'
       if(!data.attachment) {
         filterClassName = '.mdc-checkbox'
@@ -202,7 +202,7 @@ function userSelector(data, container) {
         numbers.push(JSON.parse(el.value))
       })
       insertNumberIntoRecord(data,numbers)
-    }
+    
   }
   container.appendChild(userSubmitButton.root_)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -228,7 +228,11 @@ function userSelector(data, container) {
 
       if (data.attachment) {
         count++
-        const radioButton = new mdc.radio.MDCRadio(createRadioInput({value:cursor.value.mobile}))
+        const radioButton = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(cursor.value.mobile)))
+        radioButton.root_.onclick = function(){
+         data.record.attachment[data.key].value = JSON.parse(radioButton.value)
+         updateCreateActivity(data.record,true)
+        }
         ul.appendChild(createSimpleAssigneeLi(cursor.value, radioButton))
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
@@ -321,8 +325,8 @@ function addNewNumber(data,container) {
 function insertNumberIntoRecord(data,number){
 
   if (data.attachment) {
-    data.record.attachment[data.key].value = formattedNumber
-    updateCreateActivity(data.record)
+    data.record.attachment[data.key].value = number[0]
+    updateCreateActivity(data.record,true)
     return
   }
 
@@ -331,7 +335,6 @@ function insertNumberIntoRecord(data,number){
     updateCreateActivity(data.record, true)
     return
  };
-console.log(number)
 shareReq(data,number)
 
 }

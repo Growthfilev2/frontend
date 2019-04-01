@@ -1441,10 +1441,16 @@ function createAttachmentContainer(data) {
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
       const customerAddition = {
-        'tour plan': true
+        'tour plan': true,
+        'dsr':true,
+        'duty roster':true
       }
       div.appendChild(label)
       const valueField = document.createElement('span')
+      let buttonCont;
+      if(data.attachment[key].value) {
+        buttonCont = createElement('div',{className:'customer-button-container'})
+      }
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
@@ -1456,8 +1462,13 @@ function createAttachmentContainer(data) {
           chooseExisting.shaped();
           const chooseExistingEl = chooseExisting.getButton();
           chooseExistingEl.root_.classList.add('mdc-typography--subtitle2','mdc-button--dense')
-       
-          div.appendChild(chooseExistingEl.root_);
+          if(buttonCont) {
+            buttonCont.appendChild(chooseExistingEl.root_)
+            div.appendChild(buttonCont)
+          }
+          else {
+            div.appendChild(chooseExistingEl.root_);
+          }
           div.classList.add('selector--margin')
           chooseExistingEl.root_.onclick = function (evt) {
             valueField.dataset.primary = ''
@@ -1486,8 +1497,12 @@ function createAttachmentContainer(data) {
           }
           div.appendChild(addNewCustomer(data))
         }
-        div.appendChild(createNewEl.root_)
-
+        if(buttonCont) {
+          buttonCont.appendChild(createNewEl.root_)
+        }
+        else {
+          div.appendChild(createNewEl.root_)
+        }
       }
     }
 
