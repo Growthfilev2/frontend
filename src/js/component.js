@@ -141,10 +141,10 @@ Fab.prototype.extended = function(labelName){
     return this.getButton();   
 }
 
-function AppendMap(location, el) {
+function AppendMap(location, el,zoom) {
     this.location = location
     this.options = {
-        zoom: 16,
+        zoom: zoom || 16,
         center: this.location,
         disableDefaultUI: true,
     };

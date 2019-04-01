@@ -1108,15 +1108,12 @@ input[type="datetime-local"] {
 
 .data--value-list {
   margin-top: 0px;
-  margin-left: 0px;
+  margin-left: 5%;
   width: -webkit-fill-available;
 }
 
 #schedule--list {
   padding-left: 15px;
-}
-
-.attachment-field .mdc-text-field {
 }
 
 #assignees--list .mdc-list-item:nth-child(1) {
@@ -1465,6 +1462,11 @@ input[type="datetime-local"] {
 }
 
 
+.create-new-customer-btn {
+  margin-right: 15px;
+  margin-top: -5px;
+  float: right;
+}
 
 .custom-number--container {
   display: table;
@@ -1473,7 +1475,19 @@ input[type="datetime-local"] {
   width: 90%;
 
 }
-
+.customer-form {
+  min-height: 400px;
+  margin-top: 5%;
+}
+.customer-form .mdc-text-field {
+  margin-top: 10px;
+}
+.customer-form #customer-address-map {
+    min-height: 400px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 20px;
+}
 .custom-number--container .mdc-text-field__input {
   letter-spacing: 17px;
   font-size: 30px;

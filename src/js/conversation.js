@@ -331,7 +331,7 @@ function createComment(db, addendum, currentUser) {
           lat: addendum.location['_latitude'],
           lng: addendum.location['_longitude']
         }
-        const map = new AppendMap(loc,mapDom)
+        const map = new AppendMap(loc, mapDom)
         map.getMarker();
         if (showMap) {
           mapDom.style.height = '200px'
@@ -673,28 +673,23 @@ function hasAnyValueInChildren(office, template, status) {
   return new Promise(function (resolve) {
 
     req.onsuccess = function () {
-      const db = req.result
-      const childrenStore = db.transaction('children').objectStore('children')
+      const db = req.result;
+      const tx = db.transaction(['children'])
+      const store = tx.objectStore('children').index('templateStatus');
+      const bound = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
       let count = 0;
-      let result = false
-      childrenStore.openCursor().onsuccess = function (event) {
+     
+      store.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
-        if (!cursor) {
-          if (count === 0) {
-            result = false
-            resolve(result)
-          } else {
-            result = true
-            resolve(result)
-          }
-          return
-        }
+        if (!cursor) return;
         if (cursor.value.template === template && cursor.value.office === office && status != 'CANCELLED') {
           count++
         }
         cursor.continue()
       }
-
+      tx.oncomplete = function(){
+        resolve(count)
+      }
     }
   })
 }
@@ -1379,9 +1374,9 @@ function createAttachmentContainer(data) {
       if (data.canEdit) {
         const addNumber = new Fab('person_add');
         const addNumberButton = addNumber.getButton();
-     
-        addNumberButton['root_'].classList.add('add--assignee-icon','attachment-selector-label')
-      
+
+        addNumberButton['root_'].classList.add('add--assignee-icon', 'attachment-selector-label')
+
         div.appendChild(addNumberButton['root_'])
         addNumberButton['root_'].onclick = function (evt) {
           insertInputsIntoActivity(data)
@@ -1389,8 +1384,8 @@ function createAttachmentContainer(data) {
           selectorUI({
             record: data,
             store: 'users',
-            attachment:true,
-            key:key
+            attachment: true,
+            key: key
           })
         }
       }
@@ -1418,19 +1413,21 @@ function createAttachmentContainer(data) {
           document.getElementById('send-activity').classList.remove('hidden')
         }
       });
-    
+
       div.appendChild(selectField.root_);
     }
 
     if (data.attachment[key].type === 'base64') {
-      
-      const imagePreview = createElement('ul',{className:'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'})
+
+      const imagePreview = createElement('ul', {
+        className: 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
+      })
       imagePreview.appendChild(setFilePath(data.attachment[key].value, key, true))
-  
+
       if (data.canEdit) {
         const imageFab = new Fab('add_a_photo');
         const imageFabInit = imageFab.getButton();
-        imageFabInit.root_.classList.add('attachment-selector-label','add--assignee-icon')
+        imageFabInit.root_.classList.add('attachment-selector-label', 'add--assignee-icon')
         div.appendChild(imageFabInit.root_)
         imageFabInit.root_.onclick = function () {
           readCameraFile()
@@ -1440,32 +1437,44 @@ function createAttachmentContainer(data) {
     }
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
+
+      // const addButtonName = document.createElement('label')
+      // addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
+      // const spanName = document.createElement('span')
+      // spanName.className = 'mdc-fab__icon material-icons'
+      // spanName.textContent = 'add'
+      // addButtonName.appendChild(spanName)
+
+
       const customerAddition = {
         'tour plan': true,
-        'dsr':true,
-        'duty roster':true
+        'dsr': true,
+        'duty roster': true
       };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      let buttonCont = createElement('div',{className:'customer-button-container'})
-    
+      let buttonCont = createElement('div', {
+        className: 'customer-button-container'
+      })
+
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
       hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
 
         if (hasValue) {
-          const chooseExisting = new Button('Choose Existing');
-          chooseExisting.raised();
-          chooseExisting.shaped();
+          const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
-          chooseExistingEl.root_.classList.add('mdc-typography--subtitle2','mdc-button--dense')
-            buttonCont.appendChild(chooseExistingEl.root_)
-            div.appendChild(buttonCont)
-          
-          
+          chooseExistingEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'add--assignee-icon', 'attachment-selector-label')
+          // buttonCont.appendChild(chooseExistingEl.root_)
+          div.appendChild(chooseExistingEl.root_)
+
+
           div.classList.add('selector--margin')
           chooseExistingEl.root_.onclick = function (evt) {
+            // if(document.querySelector('.create-new-customer-btn')) {
+            //   document.querySelector('.create-new-customer-btn').classList.add('hidden')
+            // }
             valueField.dataset.primary = ''
             insertInputsIntoActivity(data)
             history.replaceState(['updateCreateActivity', data], null, null)
@@ -1473,32 +1482,37 @@ function createAttachmentContainer(data) {
             selectorUI({
               record: data,
               store: 'children',
-              key:key
+              key: key
             })
 
           }
         }
-      });
-      if (customerAddition[data.template]) {
-        if(key === 'Customer') {
+        if (customerAddition[data.template]) {
+          if (key === 'Customer') {
 
-        
-        const createNew = new Button('Create New')
-        createNew.raised();
-        createNew.shaped();
-        const createNewEl = createNew.getButton();
-        createNewEl.root_.classList.add('mdc-typography--subtitle2','mdc-button--dense')
+            if(data.hasOwnProperty('create')) {
+              if(data.attachment.Customer.value) return;
+            }
+           
+            const createNew = new Button('Create New')
+            createNew.raised();
+            createNew.shaped();
+            const createNewEl = createNew.getButton();
+            createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
 
-        createNewEl.root_.onclick = function () {
-          if (document.querySelector('.customer-form')) {
-            document.querySelector('.customer-form').remove();
+            createNewEl.root_.onclick = function () {
+              this.classList.add("hidden")
+            
+              if (document.querySelector('.customer-form')) {
+                document.querySelector('.customer-form').remove();
+              }
+              div.appendChild(addNewCustomer(data))
+            }
+            div.appendChild(createNewEl.root_)
           }
-          div.appendChild(addNewCustomer(data))
         }
-          buttonCont.appendChild(createNewEl.root_)
-          div.appendChild(buttonCont)
-      }
-      }
+      });
+
     }
 
     const hr = document.createElement('hr')
@@ -1564,17 +1578,32 @@ function createAssigneeList(record, db) {
 
 
 function createSimpleAssigneeLi(userRecord, metaType) {
-  const assigneeLi = createElement('li',{className:'mdc-list-item'})
+  const assigneeLi = createElement('li', {
+    className: 'mdc-list-item'
+  })
   if (!userRecord) return assigneeLi
 
-  const dataObject = createElement('object',{className:'mdc-list-item__graphic',data:userRecord.photoURL || './img/empty-user.jpg',type:'image/jpeg'})
-  const photoGraphic = createElement('img',{className:'empty-user-assignee',src:'./img/empty-user.jpg'})
+  const dataObject = createElement('object', {
+    className: 'mdc-list-item__graphic',
+    data: userRecord.photoURL || './img/empty-user.jpg',
+    type: 'image/jpeg'
+  })
+  const photoGraphic = createElement('img', {
+    className: 'empty-user-assignee',
+    src: './img/empty-user.jpg'
+  })
   dataObject.appendChild(photoGraphic)
-  
 
-  const assigneeListText = createElement('span',{className:'mdc-list-item_text'})
-  const name = createElement('span',{className:'mdc-list-item__primary-text'})
-  const number = createElement('span',{className:'mdc-list-item__secondary-text'})
+
+  const assigneeListText = createElement('span', {
+    className: 'mdc-list-item_text'
+  })
+  const name = createElement('span', {
+    className: 'mdc-list-item__primary-text'
+  })
+  const number = createElement('span', {
+    className: 'mdc-list-item__secondary-text'
+  })
 
   if (!userRecord.displayName) {
     name.textContent = userRecord.mobile
@@ -1590,9 +1619,9 @@ function createSimpleAssigneeLi(userRecord, metaType) {
   assigneeLi.appendChild(dataObject)
   assigneeLi.appendChild(assigneeListText)
   if (metaType) {
-    assigneeLi.setAttribute("role","checkbox")
+    assigneeLi.setAttribute("role", "checkbox")
     assigneeLi.appendChild(metaType.root_);
-}
+  }
   return assigneeLi
 }
 
@@ -1788,9 +1817,9 @@ function sendActivity(record) {
   //   const activityStore = db.transaction('activity', 'readwrite').objectStore('activity');
 
   //   activityStore.get(record.activityId).onsuccess = function (event) {
-      // const record = event.target.result
-      insertInputsIntoActivity(record, true)
-    // }
+  // const record = event.target.result
+  insertInputsIntoActivity(record, true)
+  // }
   // }
 }
 
@@ -1835,7 +1864,6 @@ function insertInputsIntoActivity(record, send) {
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
 
@@ -1993,7 +2021,6 @@ function addNewCustomer(data) {
   const container = createElement('div', {
     className: 'customer-form'
   });
-  container.style.height = '400px'
 
   const locationErrorText = createElement('span', {
     className: 'customer-location-error mdc-typography--subtitle1'
@@ -2002,17 +2029,19 @@ function addNewCustomer(data) {
   const name = new InputField({
     id: 'customer-name',
     labelText: 'Customer Name',
-    className: 'filled-background mdc-text-field--fullwidth mdc-text-field'
+    className: 'filled-background mdc-text-field--fullwidth mdc-text-field',
+
   })
-  console.log(name)
   const address = new InputField({
     id: 'customer-name',
     labelText: 'Customer Address',
     className: 'mdc-text-field--fullwidth filled-background mdc-text-field'
   })
-  const nameField = name.withLabel();
-  const addressField = address.withLabel();
-  addressField['input_'].placeholder = ''
+  const nameField = name.withoutLabel();
+  nameField.input_.placeholder = 'Customer Name'
+  nameField.value = data.attachment.Customer.value;
+  const addressField = address.withoutLabel();
+  addressField['input_'].placeholder = 'Customer Address'
   container.appendChild(nameField['root_'])
   container.appendChild(addressField['root_'])
 
@@ -2024,22 +2053,24 @@ function addNewCustomer(data) {
   const mapDom = createElement('div', {
     id: 'customer-address-map'
   })
-  customerLocationAutoComplete(mapDom);
+  customerLocationAutoComplete(mapDom, container, addressField);
 
-  mapDom.style.minHeight = '200px';
   getLocation().then(function (location) {
     const modLocation = {
       lat: location.latitude,
       lng: location.longitude
     }
-    const map = new AppendMap(modLocation, mapDom)
+    geocodePosition(modLocation, addressField, location)
+    const map = new AppendMap(modLocation, mapDom, 18)
     const marker = map.getMarker({
       draggable: true
     });
     google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition(), addressField['input_']);
+      geocodePosition(marker.getPosition(), addressField);
     });
   }).catch(function (error) {
+    mapDom.style.minHeight = '0px';
+    container.style.minHeight = '0px';
     locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
   })
 
@@ -2048,32 +2079,60 @@ function addNewCustomer(data) {
   return container;
 }
 
-function customerLocationAutoComplete(el) {
+function customerLocationAutoComplete(el, container, addressField) {
   autocomplete.addListener('place_changed', function () {
     let place = autocomplete.getPlace();
     const latlng = {
       lat: place.geometry.location.lat(),
       lng: place.geometry.location.lng()
     }
-    const map = new AppendMap(latlng, el);
+    const map = new AppendMap(latlng, el, 18);
     const marker = map.getMarker({
       draggable: true
     });
+    el.style.minHeight = '400px'
+    container.style.minHeight = '400px'
     google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition(), addressField['input_']);
+      geocodePosition(marker.getPosition(), addressField);
     });
   });
 }
 
-function geocodePosition(pos, addresInit) {
+function geocodePosition(pos, addressField, currentLocation) {
   const geocoder = new google.maps.Geocoder();
   geocoder.geocode({
     latLng: pos
   }, function (responses) {
     if (responses && responses.length > 0) {
-      return responses[0].formatted_address
+      if (!currentLocation || responses.length == 1) {
+        addressField.value = responses[0].formatted_address
+        return;
+      }
+      const data = responses.slice(0, 2);
+
+      let rawDistances = []
+      data.forEach(function (value) {
+
+        rawDistances.push({
+          distance: calculateDistanceBetweenTwoPoints(currentLocation, {
+            latitude: value.geometry.location.lat(),
+            longitude: value.geometry.location.lng()
+          }),
+          address: value.formatted_address
+        })
+      })
+      const nearest = rawDistances.sort(function (a, b) {
+        return a.distance - b.distance
+      })
+      addressField.value = nearest[0].address
+
+
+
     } else {
-      console.log('Cannot determine address at this location.');
+      const locationText = document.querySelector('.customer-location-error')
+      if (locationText) {
+        locationText = 'Failed To Detect This Location, Please Try Again'
+      }
     }
   });
 }
