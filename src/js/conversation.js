@@ -1444,13 +1444,11 @@ function createAttachmentContainer(data) {
         'tour plan': true,
         'dsr':true,
         'duty roster':true
-      }
+      };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      let buttonCont;
-      if(data.attachment[key].value) {
-        buttonCont = createElement('div',{className:'customer-button-container'})
-      }
+      let buttonCont = createElement('div',{className:'customer-button-container'})
+    
       valueField.textContent = data.attachment[key].value
       valueField.className = 'data--value-list'
       div.appendChild(valueField)
@@ -1462,13 +1460,10 @@ function createAttachmentContainer(data) {
           chooseExisting.shaped();
           const chooseExistingEl = chooseExisting.getButton();
           chooseExistingEl.root_.classList.add('mdc-typography--subtitle2','mdc-button--dense')
-          if(buttonCont) {
             buttonCont.appendChild(chooseExistingEl.root_)
             div.appendChild(buttonCont)
-          }
-          else {
-            div.appendChild(chooseExistingEl.root_);
-          }
+          
+          
           div.classList.add('selector--margin')
           chooseExistingEl.root_.onclick = function (evt) {
             valueField.dataset.primary = ''
@@ -1484,7 +1479,10 @@ function createAttachmentContainer(data) {
           }
         }
       });
-      if (customerAddition[data.template] && data.attachment.hasOwnProperty('Customer')) {
+      if (customerAddition[data.template]) {
+        if(key === 'Customer') {
+
+        
         const createNew = new Button('Create New')
         createNew.raised();
         createNew.shaped();
@@ -1497,12 +1495,9 @@ function createAttachmentContainer(data) {
           }
           div.appendChild(addNewCustomer(data))
         }
-        if(buttonCont) {
           buttonCont.appendChild(createNewEl.root_)
-        }
-        else {
-          div.appendChild(createNewEl.root_)
-        }
+          div.appendChild(buttonCont)
+      }
       }
     }
 
