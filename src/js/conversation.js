@@ -1006,7 +1006,6 @@ function createVenueSection(record) {
         }
       })
     })
-
     return;
   }
 
@@ -1476,19 +1475,16 @@ function createAttachmentContainer(data) {
 
           }
         }
-        if (customerAddition[data.template]) {
-          if (key === 'Customer') {
+        if (customerAddition[data.template] && key === 'Customer') {
 
-            if(data.hasOwnProperty('create')) {
-              if(data.attachment.Customer.value) return;
-            }
-           
             const createNew = new Button('Create New')
             createNew.raised();
             createNew.shaped();
             const createNewEl = createNew.getButton();
             createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
-
+            if(!hasValue) {
+              createNewEl.root_.style.marginRight ='0px';
+            }
             createNewEl.root_.onclick = function () {
               this.classList.add("hidden")
             
@@ -1499,7 +1495,7 @@ function createAttachmentContainer(data) {
             }
             div.appendChild(createNewEl.root_)
           }
-        }
+        
       });
 
     }
