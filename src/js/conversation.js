@@ -677,9 +677,7 @@ function hasAnyValueInChildren(office, template) {
       const db = req.result;
       const tx = db.transaction(['children'])
       const store = tx.objectStore('children').index('templateStatus');
-      const bound = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
-      let count = 0;
-     
+      const bound = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])  
       store.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
@@ -693,27 +691,6 @@ function hasAnyValueInChildren(office, template) {
       tx.oncomplete = function(){
         resolve(results)
       }
-    }
-  })
-}
-
-
-function updateLocalRecord(thisActivity, db) {
-  return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['activity'], 'readwrite');
-    const store = tx.objectStore('activity');
-    let updatedActivity = thisActivity;
-
-    if (!updatedActivity.hasOwnProperty('create')) {
-      store.put(updatedActivity)
-    }
-    tx.oncomplete = function () {
-      resolve("activity object store updated with value")
-    }
-    tx.onerror = function () {
-      reject({
-        message: `${tx.error.message} from updateLocalRecord`
-      });
     }
   })
 }
@@ -1465,7 +1442,6 @@ function createAttachmentContainer(data) {
             valueField.dataset.primary = ''
             insertInputsIntoActivity(data)
             history.replaceState(['updateCreateActivity', data], null, null)
-
             selectorUI({
               record: data,
               store: 'children',

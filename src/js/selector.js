@@ -415,7 +415,6 @@ function fillChildrenInSelector(data, container) {
     className: 'mdc-list'
   });
   data.results.forEach(function (value) {
-
     if (value.attachment.Name) {
       ul.appendChild(radioList({
         labelText: value.attachment.Name.value,
