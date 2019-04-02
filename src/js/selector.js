@@ -41,7 +41,12 @@ function selectorUI(data) {
     const value = JSON.parse(filtered[0].value);
     modifyRecordWithValues(data, value);
   }
-  if (data.store !== 'users') {
+  const radioListType = {
+    users:true,
+    children:true,
+    map:true
+  }
+  if (!radioListType[data.store]) {
     container.appendChild(submitButton.root_)
   }
   window.scrollTo(0, 0);
@@ -416,10 +421,16 @@ function fillChildrenInSelector(data, container) {
   });
   data.results.forEach(function (value) {
     if (value.attachment.Name) {
-      ul.appendChild(radioList({
+      const radioListEl = radioList({
         labelText: value.attachment.Name.value,
         value: value.attachment.Name.value
-      }))
+      });
+      radioListEl.querySelector('.mdc-radio input').onclick = function(){
+        data.record.attachment[data.key].value = JSON.parse(this.value);
+        updateCreateActivity(data.record,true);
+        return;
+      }
+      ul.appendChild(radioListEl)
     }
     if (value.attachment.Number) {
       ul.appendChild(radioList({

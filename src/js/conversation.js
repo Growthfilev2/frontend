@@ -670,7 +670,7 @@ function createTempRecord(office, template, prefill) {
 function hasAnyValueInChildren(office, template) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
-  const results;
+  let results = [];
   return new Promise(function (resolve) {
 
     req.onsuccess = function () {
