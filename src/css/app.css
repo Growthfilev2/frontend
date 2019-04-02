@@ -1505,14 +1505,13 @@ input[type="datetime-local"] {
 
 }
 .customer-form {
-  min-height: 400px;
   margin-top: 5%;
 }
 .customer-form .mdc-text-field {
   margin-top: 10px;
 }
 .customer-form #customer-address-map {
-    min-height: 400px;
+   
     position: relative;
     overflow: hidden;
     margin-top: 10px;

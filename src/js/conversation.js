@@ -647,7 +647,6 @@ function createTempRecord(office, template, prefill) {
         });
         return
       }
-
       selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
         bareBonesVenue.venueDescriptor = venue
@@ -660,7 +659,29 @@ function createTempRecord(office, template, prefill) {
 
         bareBonesVenueArray.push(bareBonesVenue);
       });
-      bareBonesRecord.venue = bareBonesVenueArray
+      bareBonesRecord.venue = bareBonesVenueArray;
+      if (template === 'tour plan' || template === 'dsr' || template === 'duty roster') {
+        getSubscription(office, 'customer').then(function (customerRecord) {
+          if (customerRecord) {
+            const vd = customerRecord.venue[0]
+            customerRecord.venue = [{
+              venueDescriptor: vd,
+              location: '',
+              address: '',
+              geopoint: {
+                'latitude': '',
+                'longitude': ''
+              }
+            }]
+
+            bareBonesRecord['customerRecord'] = customerRecord
+            updateCreateActivity(bareBonesRecord)
+          } else {
+            updateCreateActivity(bareBonesRecord)
+          }
+        })
+        return;
+      }
       updateCreateActivity(bareBonesRecord)
     }
   }
@@ -875,7 +896,7 @@ function createSimpleLi(key, data) {
 
   if (key === 'Office') {
     dataVal.className = 'data--value-list'
-    dataVal.style.marginLeft= '15px';
+    dataVal.style.marginLeft = '15px';
     dataVal.textContent = data.office
     listItemLabel.textContent = key
     listItem.appendChild(listItemLabel)
@@ -926,13 +947,13 @@ function createSimpleLi(key, data) {
 }
 
 function createVenueSection(record) {
-  if(record.template === 'customer') return;
+  if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
 
   const venueSection = document.getElementById('venue--list');
 
   if (record.template === 'check-in') {
-    if(record.hasOwnProperty('create')) {
+    if (record.hasOwnProperty('create')) {
       getRootRecord().then(function (rootRecord) {
         checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
           if (!results.length) return;
@@ -942,7 +963,7 @@ function createVenueSection(record) {
           checkInDesc.textContent = record.venue[0].venueDescriptor
           checkInDesc.style.height = '50px'
           checkInDesc.style.paddingRight = '11px';
-  
+
           const meta = document.createElement('span')
           meta.className = 'mdc-list-item__meta'
           const uncheck = document.createElement('label')
@@ -955,13 +976,13 @@ function createVenueSection(record) {
           meta.appendChild(uncheck)
           checkInDesc.appendChild(meta)
           venueSection.appendChild(checkInDesc)
-  
+
           if (results.length == 1) {
             defaultSelected = true
           }
-  
+
           results.forEach(function (result) {
-  
+
             const form = document.createElement('div');
             form.className = 'mdc-form-field check-in-form'
             const label = document.createElement('label')
@@ -974,8 +995,8 @@ function createVenueSection(record) {
             mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
             venueSection.appendChild(mapDom);
           })
-  
-  
+
+
           const uncheckFab = document.getElementById('uncheck-checkin');
           if (uncheckFab) {
             uncheckFab.addEventListener('click', function () {
@@ -987,8 +1008,7 @@ function createVenueSection(record) {
           }
         })
       })
-    }
-    else {
+    } else {
       if (!record.venue[0].location || !record.venue[0].address) {
         document.getElementById('venue--list').style.display = 'none'
       }
@@ -1284,7 +1304,7 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'string') {
       if (key === 'Name' || key === 'Number') {
 
-        if(data.template !== 'customer') {
+        if (data.template !== 'customer') {
 
           const uniqueField = new InputField();
           const uniqueFieldInit = uniqueField.withoutLabel();
@@ -1294,13 +1314,11 @@ function createAttachmentContainer(data) {
           uniqueFieldInit['input_'].required = true;
           uniqueFieldInit['input_'].placeholder = 'Enter Value'
           div.appendChild(uniqueFieldInit.root_);
-        }
-        else {
+        } else {
           div.appendChild(label);
-          const customerForm = addNewCustomer(data,div)
+          const customerForm = addNewCustomer(data, div)
           customerForm.style.marginTop = '0px';
           div.appendChild(customerForm)
-          
         }
       } else {
 
@@ -1348,7 +1366,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'phoneNumber') {
       div.appendChild(label)
-      div.classList.add('selector--margin','mdc-form-field')
+      div.classList.add('selector--margin', 'mdc-form-field')
       if (data.attachment[key].value) {
         div.style.padding = '5px 15px 5px 15px'
         const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
@@ -1437,12 +1455,53 @@ function createAttachmentContainer(data) {
       div.appendChild(label)
       const valueField = document.createElement('span')
       if (data.attachment[key].value) {
+       
         const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
         valueField.listen('MDCChip:removal', function (e) {
           data.attachment[key].value = ''
-         if(key === 'Customer') {
-           div.appendChild(createNewButton(data,div).root_)
-        }
+          if (key === 'Customer') {
+            div.classList.remove('mdc-form-field');
+            if (div.querySelector('.mdc-chip-set')) {
+              div.querySelector('.mdc-chip-set').remove();
+            }
+            if(data.customerRecord){
+              data.customerRecord.venue[0].address = ''
+              data.customerRecord.venue[0].location = ''
+              data.customerRecord.venue[0].geopoint.latitude = ''
+              data.customerRecord.venue[0].geopoint.longitude = ''
+            }
+            else {
+              data.venue[0].address = ''
+              data.venue[0].location = ''
+              data.venue[0].geopoint.latitude = ''
+              data.venue[0].geopoint.longitude = ''
+            }
+            div.appendChild(addNewCustomer(data))
+          }
+        })
+        valueField.listen('MDCChip:interaction',function(e){
+          console.log(e)
+          if(key === 'Customer') {
+          
+            if(data.customerRecord){
+              if(data.customerRecord.venue[0].location) {
+                div.classList.remove('mdc-form-field');
+                if (div.querySelector('.mdc-chip-set')) {
+                  div.querySelector('.mdc-chip-set').remove();
+                }
+                div.appendChild(addNewCustomer(data))
+              }
+            }
+            else {
+              if(data.venue[0].location) {
+                div.classList.remove('mdc-form-field');
+                if (div.querySelector('.mdc-chip-set')) {
+                  div.querySelector('.mdc-chip-set').remove();
+                }
+                div.appendChild(addNewCustomer(data))
+              }
+            }
+          }
         })
         valueField.root_.classList.add('data--value-list', 'label--text')
         div.appendChild(valueField.root_)
@@ -1472,14 +1531,17 @@ function createAttachmentContainer(data) {
           }
         }
         if (customerAddition[data.template] && key === 'Customer') {
+
           if (data.attachment['Customer'].value) {
             div.classList.add('mdc-form-field');
           } else {
-            div.classList.remove('mdc-form-field'); 
+            div.classList.remove('mdc-form-field');
             if (!results.length) {
               createNewEl.root_.style.marginRight = '0px';
             }
-            div.appendChild(createNewButton(data,div).root_)
+
+            div.appendChild(addNewCustomer(data))
+            
           }
         }
 
@@ -1497,41 +1559,6 @@ function createAttachmentContainer(data) {
       document.querySelector(`.${data.attachment[key].type}--group`).appendChild(div)
     }
   })
-}
-
-
-function createNewButton(data,div) {
-  const createNew = new Button('Create New')
-  createNew.raised();
-  createNew.shaped();
-  let open = false
-  const createNewEl = createNew.getButton();
-  createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
-  createNewEl.root_.onclick = function () {
-    open = !open;
-    if (document.querySelector('.customer-form')) {
-      document.querySelector('.customer-form').remove();
-    }
-    if(open){
-      this.textContent = 'CANCEL'
-      div.querySelector('#customer-selection-btn').classList.add('hidden');
-      this.style.right = '1rem';
-      this.style.marginRight = '0px'
-      div.classList.remove('mdc-form-field');
-      if(div.querySelector('.mdc-chip-set')) {
-        div.querySelector('.mdc-chip-set').remove();
-      }
-      div.appendChild(addNewCustomer(data))
-    }
-    else {
-      this.textContent = 'Create New'
-      this.style.right = '2.5rem';
-      this.style.marginRight = '15px'
-      div.querySelector('#customer-selection-btn').classList.remove('hidden');
-    }
-
-  }
-  return createNewEl;
 }
 
 
@@ -1824,6 +1851,21 @@ function insertInputsIntoActivity(record, send) {
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   }
 
+  const customerData = document.querySelector('.customer-form');
+  if (customerData) {
+    const types = {
+      'tour plan': true,
+      'duty roster': true,
+      'dsr': true
+    }
+    if (record.template === 'customer') {
+      // const name = 
+    } else {
+      if (types[record.template]) {
+
+      }
+    }
+  }
   const allNumberTypes = document.querySelectorAll('.number')
   for (var i = 0; i < allNumberTypes.length; i++) {
     let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
@@ -1915,7 +1957,7 @@ function insertInputsIntoActivity(record, send) {
         latitude: record.venue[i].geopoint['latitude'] || "",
         longitude: record.venue[i].geopoint['longitude'] || ""
       }
-     
+
     }
   }
 
@@ -2011,104 +2053,161 @@ function addNewCustomer(data) {
   })
   const nameField = name.withoutLabel();
   nameField.input_.placeholder = 'Customer Name'
-  // nameField.value = data.attachment.Customer.value;
+  nameField.input_.id = 'customer-name'
+  nameField.input_.onchange =function(e){
+    if(data.customerRecord) {
+      data.customerRecord.attachment.Name.value += e.target.value 
+      data.attachment.Customer.value += e.target.value;
+    }
+    else {
+      data.attachment.Name.value += e.target.value 
+    }
+  }
   const addressField = address.withoutLabel();
   addressField['input_'].placeholder = 'Customer Address'
-  const mapHeading = createElement('h2',{className:'mdc-typography--subtitle2',textContent:'Drag Marker to pinpoint your location more accurately'})
+  addressField.input_.id = 'customer-address'
+
   container.appendChild(nameField['root_'])
   container.appendChild(addressField['root_'])
-  container.appendChild(mapHeading);
-  autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
+
+  const mapDom = createElement('div', {
+    id: 'customer-address-map'
+  })
+  var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
     componentRestrictions: {
       country: "in"
     }
   });
-  const mapDom = createElement('div', {
-    id: 'customer-address-map'
-  })
-  customerLocationAutoComplete(mapDom, container, addressField);
+  autocomplete.addListener('place_changed', function () {
 
-  getLocation().then(function (location) {
-    locationErrorText.textContent = ''
-
-    const modLocation = {
-      lat: location.latitude,
-      lng: location.longitude
+    let place = autocomplete.getPlace();
+    const latlng = {
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
     }
-    geocodePosition(modLocation, addressField, location)
+    const map = new AppendMap(latlng, mapDom, 18);
+    const marker = map.getMarker({
+      draggable: true
+    });
+
+    if (data.customerRecord) {
+      data.customerRecord.venue[0].address = formAddressComponent(place),
+        data.customerRecord.venue[0].location = place.name,
+        data.customerRecord.venue[0].geopoint = {
+          latitude: place.geometry.location.lat(),
+          longitude: place.geometry.location.lng()
+        }
+    } else {
+      data.venue[0] = formAddressComponent(place),
+        data.venue[0].location = place.name,
+        data.venue[0].geopoint = {
+          latitude: place.geometry.location.lat(),
+          longitude: place.geometry.location.lng()
+        }
+    }
+    console.log(data)
+    mapDom.style.minHeight = '400px'
+    container.style.minHeight = '400px'
+    container.querySelector('.customer-location-error').textContent = ''
+
+    google.maps.event.addListener(marker, 'dragend', function () {
+      geocodePosition(marker.getPosition(), data).then(function (updatedRecord) {
+        if (updatedRecord.customerRecord) {
+          addressField.value = updatedRecord.customerRecord.venue[0].address
+        } else {
+          addressField.value = updatedRecord.venue[0].address
+        }
+      }).catch(function (error) {
+        handleError({
+          message: 'geocode Error in autocomplete listener for' + data.template,
+          body: JSON.stringify(error)
+        })
+        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+      })
+    });
+  });
+
+  if (data.template === 'customer') {
+   
+    nameField.value = data.attachment.Name.value;
+    
+  } else {
+    nameField.value = data.customerRecord.attachment.Name.value;
+    nameField.value = data.attachment.Customer.value;
+    if(data.customerRecord.venue[0].location) {
+
+    
+    addressField.value = data.customerRecord.venue[0].address;
+    mapDom.style.minHeight = '400px'
+    container.style.minHeight = '400px'
+    const modLocation = {
+      lat: data.customerRecord.venue[0].geopoint.latitude,
+      lng: data.customerRecord.venue[0].geopoint.longitude
+    }
     const map = new AppendMap(modLocation, mapDom, 18)
     const marker = map.getMarker({
       draggable: true
     });
     google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition(), addressField);
+      geocodePosition(marker.getPosition(), data).then(function (updatedRecord) {
+        if (updatedRecord.customerRecord) {
+          addressField.value = updatedRecord.customerRecord.venue[0].address
+        } else {
+          addressField.value = updatedRecord.venue[0].address
+        }
+      }).catch(function (error) {
+        handleError({
+          message: 'geocode Error in autocomplete listener for' + data.template,
+          body: JSON.stringify(error)
+        })
+        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+      })
     });
-  }).catch(function (error) {
-    mapDom.style.minHeight = '0px';
-    container.style.minHeight = '0px';
-    locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
-  })
+  }
+  }
 
   container.appendChild(mapDom);
   container.appendChild(locationErrorText);
   return container;
 }
 
-function customerLocationAutoComplete(el, container, addressField) {
-  autocomplete.addListener('place_changed', function () {
-    let place = autocomplete.getPlace();
-    const latlng = {
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng()
-    }
-    const map = new AppendMap(latlng, el, 18);
-    const marker = map.getMarker({
-      draggable: true
+
+
+function geocodePosition(pos, data) {
+  return new Promise(function (resolve) {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+      latLng: pos
+    }, function (responses) {
+      if (responses && responses.length > 0) {
+        const value = responses[0]
+
+        return resolve(modifyVenueRecordWithGeocode(data, value))
+
+      } else {
+        return resolve(false)
+      }
+    }, function (error) {
+      reject(error)
     });
-    el.style.minHeight = '400px'
-    container.style.minHeight = '400px'
-    container.querySelector('.customer-location-error').textContent = ''
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition(), addressField);
-    });
-  });
+  })
 }
 
-function geocodePosition(pos, addressField, currentLocation) {
-  const geocoder = new google.maps.Geocoder();
-  geocoder.geocode({
-    latLng: pos
-  }, function (responses) {
-    if (responses && responses.length > 0) {
-      if (!currentLocation || responses.length == 1) {
-        addressField.value = responses[0].formatted_address
-        return;
-      }
-      const data = responses.slice(0, 2);
-
-      let rawDistances = []
-      data.forEach(function (value) {
-
-        rawDistances.push({
-          distance: calculateDistanceBetweenTwoPoints(currentLocation, {
-            latitude: value.geometry.location.lat(),
-            longitude: value.geometry.location.lng()
-          }),
-          address: value.formatted_address
-        })
-      })
-      const nearest = rawDistances.sort(function (a, b) {
-        return a.distance - b.distance
-      })
-      addressField.value = nearest[0].address
-
-
-
-    } else {
-      let locationText = document.querySelector('.customer-location-error')
-      if (locationText) {
-        locationText.textContent = 'Failed To Detect This Location, Please Try Again'
-      }
+function modifyVenueRecordWithGeocode(data, value) {
+  const venueMod = {
+    location: value.formatted_address,
+    address: value.formatted_address,
+    geopoint: {
+      latitude: value.geometry.location.lat(),
+      longitude: value.geometry.location.lng()
     }
-  });
+  }
+  if (data.template === 'customer') {
+    venueMod.venueDescriptor = data.venue[0].venueDescriptor,
+      data.venue[0] = venueMod
+  } else {
+    venueMod.venueDescriptor = data.customerRecord.venue[0].venueDescriptor,
+      data.customerRecord.venue[0] = venueMod
+  }
+  return data;
 }

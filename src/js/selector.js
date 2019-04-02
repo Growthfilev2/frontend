@@ -422,6 +422,13 @@ function fillChildrenInSelector(data, container) {
       });
       radioListEl.querySelector('.mdc-radio input').onclick = function () {
         data.record.attachment[data.key].value = JSON.parse(this.value);
+        if(data.record.customerRecord) {
+
+          data.record.customerRecord.venue[0].geopoint.latitude = ''
+          data.record.customerRecord.venue[0].geopoint.longitude = ''
+          data.record.customerRecord.venue[0].location = ''
+          data.record.customerRecord.venue[0].address = ''
+        }
         updateCreateActivity(data.record, true);
         return;
       }
