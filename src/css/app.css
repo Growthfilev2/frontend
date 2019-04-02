@@ -300,8 +300,9 @@ body {
 
 
 .add--assignee-icon {
-  position: absolute;
-  right: 1rem;
+  /* position: absolute;
+  right: 1rem; */
+  float: right;
   width: 30px;
   height: 30px;
   margin-top: 1px;
@@ -883,7 +884,7 @@ body {
 
 }
 #attachment--list .mdc-form-field >label {
-  margin-right: 0px;
+  /* margin-right: 0px; */
 }
 
 .attachment input {

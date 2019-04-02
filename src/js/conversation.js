@@ -677,18 +677,18 @@ function hasAnyValueInChildren(office, template) {
       const db = req.result;
       const tx = db.transaction(['children'])
       const store = tx.objectStore('children').index('templateStatus');
-      const bound = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])  
+      const bound = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
       store.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
-        if(cursor.value.office !== office) {
+        if (cursor.value.office !== office) {
           cursor.continue();
           return;
         }
         results.push(cursor.value)
         cursor.continue()
       }
-      tx.oncomplete = function(){
+      tx.oncomplete = function () {
         resolve(results)
       }
     }
@@ -753,7 +753,7 @@ function updateCreateContainer(record, showSendButton) {
     if (TOTAL_LIST_TYPES[i] === 'schedule') {
       container.appendChild(listGroup)
     } else {
-    
+
       containerList.id = TOTAL_LIST_TYPES[i] + '--list'
       container.appendChild(containerList)
     }
@@ -808,9 +808,9 @@ function updateCreateActivity(record, showSendButton) {
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        if(!isLocationStatusWorking()) return;
-          this.dataset.progress = true
-          insertInputsIntoActivity(record, true)
+        if (!isLocationStatusWorking()) return;
+        this.dataset.progress = true
+        insertInputsIntoActivity(record, true)
       });
     }
 
@@ -1295,7 +1295,7 @@ function createAttachmentContainer(data) {
         uniqueFieldInit['input_'].required = true;
         div.appendChild(uniqueFieldInit.root_);
       } else {
-       
+
         div.appendChild(label)
         const field = textAreaField({
           value: data.attachment[key].value,
@@ -1343,16 +1343,16 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'phoneNumber') {
       div.appendChild(label)
       div.classList.add('selector--margin')
-      if(data.attachment[key].value) {
+      if (data.attachment[key].value) {
         div.style.padding = '5px 15px 5px 15px'
-        const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value,data.canEdit));
-        dataVal.listen('MDCChip:removal',function(e){
+        const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        dataVal.listen('MDCChip:removal', function (e) {
           console.log(e.detail.root)
           data.attachment[key].value = ''
           console.log(data)
         })
-        dataVal.root_.classList.add('data--value-list','label--text')
-        dataVal.root_.dataset.primary = ''    
+        dataVal.root_.classList.add('data--value-list', 'label--text')
+        dataVal.root_.dataset.primary = ''
         div.appendChild(dataVal.root_)
       }
 
@@ -1424,7 +1424,7 @@ function createAttachmentContainer(data) {
     }
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
-      div.classList.remove('mdc-form-field');
+
       const customerAddition = {
         'tour plan': true,
         'dsr': true,
@@ -1432,15 +1432,16 @@ function createAttachmentContainer(data) {
       };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      if(data.attachment[key].value) {
+      if (data.attachment[key].value) {
         div.style.padding = '5px 15px 5px 15px'
-        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value,data.canEdit));
-        valueField.listen('MDCChip:removal',function(e){
-          console.log(e.detail.root)
+        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        valueField.listen('MDCChip:removal', function (e) {
           data.attachment[key].value = ''
-          console.log(data)
+         if(key === 'Customer') {
+           div.appendChild(createNewButton(data,div).root_)
+        }
         })
-        valueField.root_.classList.add('data--value-list','label--text')        
+        valueField.root_.classList.add('data--value-list', 'label--text')
         div.appendChild(valueField.root_)
       }
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
@@ -1449,6 +1450,7 @@ function createAttachmentContainer(data) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
           chooseExistingEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'add--assignee-icon', 'attachment-selector-label')
+          chooseExistingEl.root_.id = 'customer-selection-btn'
           div.appendChild(chooseExistingEl.root_)
 
 
@@ -1461,33 +1463,23 @@ function createAttachmentContainer(data) {
               record: data,
               store: 'children',
               key: key,
-              results:results
+              results: results
             })
 
           }
         }
         if (customerAddition[data.template] && key === 'Customer') {
-
-            const createNew = new Button('Create New')
-            createNew.raised();
-            createNew.shaped();
-            
-            const createNewEl = createNew.getButton();
-            createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
-            if(!results.length) {
-              createNewEl.root_.style.marginRight ='0px';
+          if (data.attachment['Customer'].value) {
+            div.classList.add('mdc-form-field');
+          } else {
+            div.classList.remove('mdc-form-field'); 
+            if (!results.length) {
+              createNewEl.root_.style.marginRight = '0px';
             }
-            createNewEl.root_.onclick = function () {
-              this.classList.add("hidden")
-            
-              if (document.querySelector('.customer-form')) {
-                document.querySelector('.customer-form').remove();
-              }
-              div.appendChild(addNewCustomer(data))
-            }
-            div.appendChild(createNewEl.root_)
+            div.appendChild(createNewButton(data,div).root_)
           }
-        
+        }
+
       });
 
     }
@@ -1504,6 +1496,40 @@ function createAttachmentContainer(data) {
   })
 }
 
+
+function createNewButton(data,div) {
+  const createNew = new Button('Create New')
+  createNew.raised();
+  createNew.shaped();
+  let open = false
+  const createNewEl = createNew.getButton();
+  createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
+  createNewEl.root_.onclick = function () {
+    open = !open;
+    if (document.querySelector('.customer-form')) {
+      document.querySelector('.customer-form').remove();
+    }
+    if(open){
+      this.textContent = 'CANCEL'
+      div.querySelector('#customer-selection-btn').classList.add('hidden');
+      this.style.right = '1rem';
+      this.style.marginRight = '0px'
+      div.classList.remove('mdc-form-field');
+      if(div.querySelector('.mdc-chip-set')) {
+        div.querySelector('.mdc-chip-set').remove();
+      }
+      div.appendChild(addNewCustomer(data))
+    }
+    else {
+      this.textContent = 'Create New'
+      this.style.right = '2.5rem';
+      this.style.marginRight = '15px'
+      div.querySelector('#customer-selection-btn').classList.remove('hidden');
+    }
+
+  }
+  return createNewEl;
+}
 
 
 function createAssigneeList(record, db) {
@@ -2007,6 +2033,8 @@ function addNewCustomer(data) {
   customerLocationAutoComplete(mapDom, container, addressField);
 
   getLocation().then(function (location) {
+    locationErrorText.textContent = ''
+
     const modLocation = {
       lat: location.latitude,
       lng: location.longitude
@@ -2043,6 +2071,7 @@ function customerLocationAutoComplete(el, container, addressField) {
     });
     el.style.minHeight = '400px'
     container.style.minHeight = '400px'
+    container.querySelector('.customer-location-error').textContent = ''
     google.maps.event.addListener(marker, 'dragend', function () {
       geocodePosition(marker.getPosition(), addressField);
     });
@@ -2080,7 +2109,7 @@ function geocodePosition(pos, addressField, currentLocation) {
 
 
     } else {
-      let locationText = document.querySelector('.customer-location-error')      
+      let locationText = document.querySelector('.customer-location-error')
       if (locationText) {
         locationText.textContent = 'Failed To Detect This Location, Please Try Again'
       }
