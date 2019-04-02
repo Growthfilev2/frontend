@@ -875,6 +875,7 @@ function createSimpleLi(key, data) {
 
   if (key === 'Office') {
     dataVal.className = 'data--value-list'
+    dataVal.style.marginLeft= '15px';
     dataVal.textContent = data.office
     listItemLabel.textContent = key
     listItem.appendChild(listItemLabel)
@@ -925,68 +926,75 @@ function createSimpleLi(key, data) {
 }
 
 function createVenueSection(record) {
+  if(record.template === 'customer') return;
+  if (record.venue.length === 0) return;
 
   const venueSection = document.getElementById('venue--list');
 
-  if (record.template === 'check-in' && record.hasOwnProperty('create')) {
-
-    getRootRecord().then(function (rootRecord) {
-      checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-        if (!results.length) return;
-        let defaultSelected = false;
-        const checkInDesc = document.createElement('li')
-        checkInDesc.className = 'mdc-list-item label--text'
-        checkInDesc.textContent = record.venue[0].venueDescriptor
-        checkInDesc.style.height = '50px'
-        checkInDesc.style.paddingRight = '11px';
-
-        const meta = document.createElement('span')
-        meta.className = 'mdc-list-item__meta'
-        const uncheck = document.createElement('label')
-        uncheck.id = 'uncheck-checkin'
-        uncheck.className = 'mdc-fab add--assignee-icon'
-        const span = document.createElement('span')
-        span.className = 'mdc-fab__icon material-icons'
-        span.textContent = 'clear';
-        uncheck.appendChild(span);
-        meta.appendChild(uncheck)
-        checkInDesc.appendChild(meta)
-        venueSection.appendChild(checkInDesc)
-
-        if (results.length == 1) {
-          defaultSelected = true
-        }
-
-        results.forEach(function (result) {
-
-          const form = document.createElement('div');
-          form.className = 'mdc-form-field check-in-form'
-          const label = document.createElement('label')
-          label.setAttribute('for', 'check-in-radio');
-          label.textContent = result.location
-          form.appendChild(label);
-          form.appendChild(createCheckInVenue(result, defaultSelected))
-          venueSection.appendChild(form);
-          const mapDom = document.createElement('div');
-          mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
-          venueSection.appendChild(mapDom);
-        })
-
-
-        const uncheckFab = document.getElementById('uncheck-checkin');
-        if (uncheckFab) {
-          uncheckFab.addEventListener('click', function () {
-            document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-              const radio = new mdc.radio.MDCRadio(el)
-              radio.checked = false
-            });
+  if (record.template === 'check-in') {
+    if(record.hasOwnProperty('create')) {
+      getRootRecord().then(function (rootRecord) {
+        checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+          if (!results.length) return;
+          let defaultSelected = false;
+          const checkInDesc = document.createElement('li')
+          checkInDesc.className = 'mdc-list-item label--text'
+          checkInDesc.textContent = record.venue[0].venueDescriptor
+          checkInDesc.style.height = '50px'
+          checkInDesc.style.paddingRight = '11px';
+  
+          const meta = document.createElement('span')
+          meta.className = 'mdc-list-item__meta'
+          const uncheck = document.createElement('label')
+          uncheck.id = 'uncheck-checkin'
+          uncheck.className = 'mdc-fab add--assignee-icon'
+          const span = document.createElement('span')
+          span.className = 'mdc-fab__icon material-icons'
+          span.textContent = 'clear';
+          uncheck.appendChild(span);
+          meta.appendChild(uncheck)
+          checkInDesc.appendChild(meta)
+          venueSection.appendChild(checkInDesc)
+  
+          if (results.length == 1) {
+            defaultSelected = true
+          }
+  
+          results.forEach(function (result) {
+  
+            const form = document.createElement('div');
+            form.className = 'mdc-form-field check-in-form'
+            const label = document.createElement('label')
+            label.setAttribute('for', 'check-in-radio');
+            label.textContent = result.location
+            form.appendChild(label);
+            form.appendChild(createCheckInVenue(result, defaultSelected))
+            venueSection.appendChild(form);
+            const mapDom = document.createElement('div');
+            mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
+            venueSection.appendChild(mapDom);
           })
-        }
+  
+  
+          const uncheckFab = document.getElementById('uncheck-checkin');
+          if (uncheckFab) {
+            uncheckFab.addEventListener('click', function () {
+              document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+                const radio = new mdc.radio.MDCRadio(el)
+                radio.checked = false
+              });
+            })
+          }
+        })
       })
-    })
+    }
+    else {
+      if (!record.venue[0].location || !record.venue[0].address) {
+        document.getElementById('venue--list').style.display = 'none'
+      }
+    }
     return;
   }
-
   record.venue.forEach(function (venue) {
 
     venueSection.appendChild(createVenueLi(venue, true, record))
@@ -994,16 +1002,6 @@ function createVenueSection(record) {
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
     venueSection.appendChild(mapDom)
   });
-
-  if (record.template === 'check-in') {
-    if (!record.venue[0].location || !record.venue[0].address) {
-      document.getElementById('venue--list').style.display = 'none'
-    }
-  }
-
-  if (record.venue.length === 0) {
-    document.getElementById('venue--list').style.display = 'none'
-  }
 }
 
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
@@ -1272,7 +1270,7 @@ function createAttachmentContainer(data) {
   Object.keys(data.attachment).forEach(function (key) {
 
     const div = document.createElement('div')
-    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field mdc-form-field HHMM` : div.className = `attachment-field mdc-form-field ${data.attachment[key].type}`
+    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field  ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
 
     if (data.canEdit) {
@@ -1284,16 +1282,26 @@ function createAttachmentContainer(data) {
     })
 
     if (data.attachment[key].type === 'string') {
-      div.classList.add('full-width')
       if (key === 'Name' || key === 'Number') {
-        div.appendChild(label)
-        const uniqueField = new InputField();
-        const uniqueFieldInit = uniqueField.withoutLabel();
-        uniqueFieldInit.root_.id = key
-        uniqueFieldInit.disabled = !data.canEdit
-        uniqueFieldInit.value = data.attachment[key].value
-        uniqueFieldInit['input_'].required = true;
-        div.appendChild(uniqueFieldInit.root_);
+
+        if(data.template !== 'customer') {
+
+          const uniqueField = new InputField();
+          const uniqueFieldInit = uniqueField.withoutLabel();
+          uniqueFieldInit.root_.id = key
+          uniqueFieldInit.disabled = !data.canEdit
+          uniqueFieldInit.value = data.attachment[key].value
+          uniqueFieldInit['input_'].required = true;
+          uniqueFieldInit['input_'].placeholder = 'Enter Value'
+          div.appendChild(uniqueFieldInit.root_);
+        }
+        else {
+          div.appendChild(label);
+          const customerForm = addNewCustomer(data,div)
+          customerForm.style.marginTop = '0px';
+          div.appendChild(customerForm)
+          
+        }
       } else {
 
         div.appendChild(label)
@@ -1308,7 +1316,6 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
-      div.classList.add('full-width')
       console.log(data)
       let canEdit = data.canEdit
       if (key === 'Number Of Days') {
@@ -1329,7 +1336,6 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'email') {
       div.appendChild(label)
-      div.classList.add('full-width')
       const emailField = new InputField();
       const emailFieldInit = emailField.withoutLabel();
 
@@ -1342,7 +1348,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'phoneNumber') {
       div.appendChild(label)
-      div.classList.add('selector--margin')
+      div.classList.add('selector--margin','mdc-form-field')
       if (data.attachment[key].value) {
         div.style.padding = '5px 15px 5px 15px'
         const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
@@ -1378,7 +1384,6 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type == 'HH:MM') {
       div.appendChild(label)
-      div.classList.add('full-width')
       const timeInput = new InputField();
       const timeInputInit = timeInput.withoutLabel();
       timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
@@ -1389,7 +1394,6 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
-      div.classList.add('full-width')
       const selectField = selectMenu({
         id: convertKeyToId(key),
         data: ['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']
@@ -1424,7 +1428,7 @@ function createAttachmentContainer(data) {
     }
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
-
+      div.classList.add('mdc-form-field')
       const customerAddition = {
         'tour plan': true,
         'dsr': true,
@@ -1433,7 +1437,6 @@ function createAttachmentContainer(data) {
       div.appendChild(label)
       const valueField = document.createElement('span')
       if (data.attachment[key].value) {
-        div.style.padding = '5px 15px 5px 15px'
         const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
         valueField.listen('MDCChip:removal', function (e) {
           data.attachment[key].value = ''
@@ -1898,19 +1901,13 @@ function insertInputsIntoActivity(record, send) {
       if (radio.checked) {
         const venueData = JSON.parse(el.value);
         record.venue[0].geopoint = {
-          latitude: venueData.latitude,
-          longitude: venueData.longitude
+          latitude: venueData.latitude || '',
+          longitude: venueData.longitude || ''
         }
         record.venue[0].location = venueData.location
         record.venue[0].address = venueData.address
       }
     });
-    if (!record.venue[0].location || !record.venue[0].address) {
-      record.venue[0].geopoint = {
-        latitude: '',
-        longitude: ''
-      }
-    }
   } else {
 
     for (var i = 0; i < record.venue.length; i++) {
@@ -1918,9 +1915,7 @@ function insertInputsIntoActivity(record, send) {
         latitude: record.venue[i].geopoint['latitude'] || "",
         longitude: record.venue[i].geopoint['longitude'] || ""
       }
-      if (record.venue[i].hasOwnProperty('showIcon')) {
-        delete record.venue[i].showIcon
-      }
+     
     }
   }
 
@@ -2016,12 +2011,13 @@ function addNewCustomer(data) {
   })
   const nameField = name.withoutLabel();
   nameField.input_.placeholder = 'Customer Name'
-  nameField.value = data.attachment.Customer.value;
+  // nameField.value = data.attachment.Customer.value;
   const addressField = address.withoutLabel();
   addressField['input_'].placeholder = 'Customer Address'
+  const mapHeading = createElement('h2',{className:'mdc-typography--subtitle2',textContent:'Drag Marker to pinpoint your location more accurately'})
   container.appendChild(nameField['root_'])
   container.appendChild(addressField['root_'])
-
+  container.appendChild(mapHeading);
   autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
     componentRestrictions: {
       country: "in"

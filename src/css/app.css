@@ -1146,6 +1146,7 @@ input[type="datetime-local"] {
   margin-top: 0px;
   position: absolute;
   right: 1rem;
+  top: 0.5rem;
 }
 .chip-text {
   white-space: nowrap;
@@ -1436,10 +1437,15 @@ input[type="datetime-local"] {
 
 .mdc-text-field.data--value-list {
   margin-bottom: 0px;
+  margin-top: 2%;
 }
 
 #Weekly-Off {
   margin-top: -10px;
+  width: -webkit-fill-available
+}
+#Weekly-Off .mdc-select__native-control {
+  padding: 0px;
 }
 
 #viewImage--dialog-component .mdc-dialog__surface {
@@ -1509,7 +1515,7 @@ input[type="datetime-local"] {
     min-height: 400px;
     position: relative;
     overflow: hidden;
-    margin-top: 20px;
+    margin-top: 10px;
 }
 .custom-number--container .mdc-text-field__input {
   letter-spacing: 17px;
