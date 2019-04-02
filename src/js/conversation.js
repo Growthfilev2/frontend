@@ -753,7 +753,7 @@ function updateCreateContainer(record, showSendButton) {
     if (TOTAL_LIST_TYPES[i] === 'schedule') {
       container.appendChild(listGroup)
     } else {
-
+    
       containerList.id = TOTAL_LIST_TYPES[i] + '--list'
       container.appendChild(containerList)
     }
@@ -1272,18 +1272,19 @@ function createAttachmentContainer(data) {
   Object.keys(data.attachment).forEach(function (key) {
 
     const div = document.createElement('div')
-    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field ${data.attachment[key].type}`
+    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field mdc-form-field HHMM` : div.className = `attachment-field mdc-form-field ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
 
     if (data.canEdit) {
       div.classList.add('editable--true')
     }
-    const label = createElement('span', {
+    const label = createElement('label', {
       className: 'label--text',
       textContent: key
     })
 
     if (data.attachment[key].type === 'string') {
+      div.classList.add('full-width')
       if (key === 'Name' || key === 'Number') {
         div.appendChild(label)
         const uniqueField = new InputField();
@@ -1294,6 +1295,7 @@ function createAttachmentContainer(data) {
         uniqueFieldInit['input_'].required = true;
         div.appendChild(uniqueFieldInit.root_);
       } else {
+       
         div.appendChild(label)
         const field = textAreaField({
           value: data.attachment[key].value,
@@ -1306,6 +1308,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
+      div.classList.add('full-width')
       console.log(data)
       let canEdit = data.canEdit
       if (key === 'Number Of Days') {
@@ -1326,6 +1329,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'email') {
       div.appendChild(label)
+      div.classList.add('full-width')
       const emailField = new InputField();
       const emailFieldInit = emailField.withoutLabel();
 
@@ -1338,15 +1342,19 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'phoneNumber') {
       div.appendChild(label)
-
       div.classList.add('selector--margin')
-
-      const dataVal = createElement('span', {
-        className: 'data--value-list',
-        textContent: data.attachment[key].value
-      })
-      dataVal.dataset.primary = ''
-      div.appendChild(dataVal)
+      if(data.attachment[key].value) {
+        div.style.padding = '5px 15px 5px 15px'
+        const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value,data.canEdit));
+        dataVal.listen('MDCChip:removal',function(e){
+          console.log(e.detail.root)
+          data.attachment[key].value = ''
+          console.log(data)
+        })
+        dataVal.root_.classList.add('data--value-list','label--text')
+        dataVal.root_.dataset.primary = ''    
+        div.appendChild(dataVal.root_)
+      }
 
       if (data.canEdit) {
         const addNumber = new Fab('person_add');
@@ -1370,6 +1378,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type == 'HH:MM') {
       div.appendChild(label)
+      div.classList.add('full-width')
       const timeInput = new InputField();
       const timeInputInit = timeInput.withoutLabel();
       timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
@@ -1380,6 +1389,7 @@ function createAttachmentContainer(data) {
 
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
+      div.classList.add('full-width')
       const selectField = selectMenu({
         id: convertKeyToId(key),
         data: ['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']
@@ -1414,8 +1424,7 @@ function createAttachmentContainer(data) {
     }
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
-
-
+      div.classList.remove('mdc-form-field');
       const customerAddition = {
         'tour plan': true,
         'dsr': true,
@@ -1423,11 +1432,17 @@ function createAttachmentContainer(data) {
       };
       div.appendChild(label)
       const valueField = document.createElement('span')
-     
-
-      valueField.textContent = data.attachment[key].value
-      valueField.className = 'data--value-list'
-      div.appendChild(valueField)
+      if(data.attachment[key].value) {
+        div.style.padding = '5px 15px 5px 15px'
+        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value,data.canEdit));
+        valueField.listen('MDCChip:removal',function(e){
+          console.log(e.detail.root)
+          data.attachment[key].value = ''
+          console.log(data)
+        })
+        valueField.root_.classList.add('data--value-list','label--text')        
+        div.appendChild(valueField.root_)
+      }
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
 
         if (results.length) {
@@ -1456,6 +1471,7 @@ function createAttachmentContainer(data) {
             const createNew = new Button('Create New')
             createNew.raised();
             createNew.shaped();
+            
             const createNewEl = createNew.getButton();
             createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
             if(!results.length) {
@@ -1476,21 +1492,14 @@ function createAttachmentContainer(data) {
 
     }
 
-    const hr = document.createElement('hr')
-    hr.className = 'attachment--divider'
     if (data.attachment[key].type === 'HH:MM') {
-
       document.querySelector('.HHMM--group').appendChild(div)
-      document.querySelector('.HHMM--group').appendChild(hr)
     } else if (key === 'Name') {
       document.querySelector('.Name--group').appendChild(div)
-      document.querySelector('.Name--group').appendChild(hr)
     } else if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
       document.querySelector('.Template--group').appendChild(div)
-      document.querySelector('.Template--group').appendChild(hr)
     } else {
       document.querySelector(`.${data.attachment[key].type}--group`).appendChild(div)
-      document.querySelector(`.${data.attachment[key].type}--group`).appendChild(hr)
     }
   })
 }

@@ -300,10 +300,11 @@ body {
 
 
 .add--assignee-icon {
-  float: right;
+  position: absolute;
+  right: 1rem;
   width: 30px;
   height: 30px;
-  margin-top: 10px;
+  margin-top: 1px;
 }
 
 .assignee-li span:nth-child(3) {
@@ -868,13 +869,21 @@ body {
 
 .label--text {
   color: #0399f4 !important;
+  font-size: 18px;
+  font-weight: 400;
 }
 
 .attachment-field {
-  padding: 5Px 0px 5px 0px;
+  padding: 10Px 0px 10px 0px;
   padding-left: 15px;
   padding-right: 15px;
+  border-bottom: 1px solid lightgrey;
+  width: -webkit-fill-available;
+  min-height: 30px;
 
+}
+#attachment--list .mdc-form-field >label {
+  margin-right: 0px;
 }
 
 .attachment input {
@@ -1016,7 +1025,8 @@ input[type="datetime-local"] {
 }
 
 .attachment-selector-label {
-  margin-top: -5px;
+  /* margin-top: -5px; */
+  
 }
 
 .mdc-fab .mdc-fab__icon {
@@ -1107,9 +1117,10 @@ input[type="datetime-local"] {
 }
 
 .data--value-list {
-  margin-top: 0px;
+  /* margin-top: 0px;
   margin-left: 5%;
-  width: -webkit-fill-available;
+  width: -webkit-fill-available; */
+  font-size: 18px;
 }
 
 #schedule--list {
@@ -1132,8 +1143,15 @@ input[type="datetime-local"] {
 
 #assignees--list .add--assignee-icon {
   margin-top: 0px;
+  position: absolute;
+  right: 1rem;
 }
-
+.chip-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
 #assignees--list {
   padding-top: 5px;
   position: relative;
@@ -1373,7 +1391,10 @@ input[type="datetime-local"] {
 }
 
 .attachment--divider {
-  opacity: 0.5
+  opacity: 0.5;
+}
+.full-width {
+  width: -webkit-fill-available;
 }
 
 #schedule--group {
@@ -1463,9 +1484,10 @@ input[type="datetime-local"] {
 
 
 .create-new-customer-btn {
-  margin-right: 15px;
-  margin-top: -5px;
-  float: right;
+ position: absolute;
+
+ right: 2.5rem;
+ margin-right: 15px;
 }
 
 .custom-number--container {
@@ -1588,7 +1610,7 @@ input[type="datetime-local"] {
 }
 
 #attachment--list {
-  padding-top: 10px;
+  /* padding-top: 10px; */
 }
 
 :root {

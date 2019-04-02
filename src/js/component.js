@@ -221,3 +221,20 @@ function createRadioInput(value) {
   
     return new mdc.checkbox.MDCCheckbox(checkbox)
   }
+
+  function chipSet(text,canEdit){
+      const div = createElement('div',{className:'mdc-chip-set'});
+
+        const chip = createElement('div',{className:'mdc-chip mdc-chip--selected'})
+        
+        const textEl = createElement("div",{className:'mdc-chip__text chip-text',textContent:text})
+        chip.appendChild(textEl)
+        if(canEdit) {
+            const icon = createElement('i',{className:'material-icons mdc-chip__icon mdc-chip__icon--trailing',textContent:'cancel'})
+            icon.setAttribute('tabindex','0')
+            icon.setAttribute('role','button')
+            chip.appendChild(icon)
+        }
+        div.appendChild(chip)
+      return div;
+  }
