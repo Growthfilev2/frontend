@@ -39,12 +39,15 @@ function selectorUI(data) {
     }
     selectorWarning.textContent = ''
     const value = JSON.parse(filtered[0].value);
-    modifyRecordWithValues(data, value);
+    if (data.store === 'subscriptions') {
+      createTempRecord(value.office, value.template, data);
+    }
+    return;
   }
   const radioListType = {
-    users:true,
-    children:true,
-    map:true
+    users: true,
+    children: true,
+    map: true
   }
   if (!radioListType[data.store]) {
     container.appendChild(submitButton.root_)
@@ -58,31 +61,6 @@ function selectorUI(data) {
   }
 
   types[data.store](data, container);
-}
-
-function modifyRecordWithValues(data, value) {
-  if (data.store === 'map') {
-
-    data.record.venue.forEach(function (venue) {
-      if (venue.venueDescriptor === data.key) {
-        venue.address = value.address;
-        venue.location = value.location;
-        venue.geopoint.latitude = value.latitude;
-        venue.geopoint.longitude = value.longitude;
-      }
-    })
-    updateCreateActivity(data.record)
-  }
-  if (data.store === 'subscriptions') {
-
-    createTempRecord(value.office, value.template, data);
-  }
-  if (data.store === 'children') {
-    data.record.attachment[data.key].value = value
-    updateCreateActivity(data.record)
-  };
-
-  return;
 }
 
 function mapSelector(data, container) {
@@ -115,7 +93,7 @@ function mapSelector(data, container) {
         longitude: place.geometry.location.lng()
       }
     }
-    modifyRecordWithValues(data, value)
+    updateCreateActivity(updateVenue(data,value).record, true)
     return;
   })
 
@@ -146,10 +124,16 @@ function mapSelector(data, container) {
         cursor.continue();
         return;
       };
-      ul.appendChild(radioList({
+      const radioListMap = radioList({
         value: cursor.value,
         labelText: cursor.value.location
-      }))
+      })
+      radioListMap.querySelector('.mdc-radio input').onclick = function () {
+       
+        const value = JSON.parse(this.value)
+        updateCreateActivity(updateVenue(data,value).record, true)
+      }
+      ul.appendChild(radioListMap)
       cursor.continue()
     }
     tx.oncomplete = function () {
@@ -159,6 +143,17 @@ function mapSelector(data, container) {
   }
 };
 
+function updateVenue(data,value){
+  data.record.venue.forEach(function (venue) {
+    if (venue.venueDescriptor === data.key) {
+      venue.address = value.address;
+      venue.location = value.location;
+      venue.geopoint.latitude = value.latitude;
+      venue.geopoint.longitude = value.longitude;
+    }
+  })
+  return data
+}
 
 function userSelector(data, container) {
   // to do user
@@ -425,9 +420,9 @@ function fillChildrenInSelector(data, container) {
         labelText: value.attachment.Name.value,
         value: value.attachment.Name.value
       });
-      radioListEl.querySelector('.mdc-radio input').onclick = function(){
+      radioListEl.querySelector('.mdc-radio input').onclick = function () {
         data.record.attachment[data.key].value = JSON.parse(this.value);
-        updateCreateActivity(data.record,true);
+        updateCreateActivity(data.record, true);
         return;
       }
       ul.appendChild(radioListEl)

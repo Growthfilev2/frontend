@@ -1458,7 +1458,7 @@ function createAttachmentContainer(data) {
             createNew.shaped();
             const createNewEl = createNew.getButton();
             createNewEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'create-new-customer-btn')
-            if(results.length) {
+            if(!results.length) {
               createNewEl.root_.style.marginRight ='0px';
             }
             createNewEl.root_.onclick = function () {
