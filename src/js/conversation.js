@@ -333,7 +333,10 @@ function createComment(db, addendum, currentUser) {
           lat: addendum.location['_latitude'],
           lng: addendum.location['_longitude']
         }
-        const map = new AppendMap(loc, mapDom)
+        const map = new AppendMap(mapDom)
+        map.setLocation(loc)
+        map.setZoom(18)
+        
         map.getMarker();
         if (showMap) {
           mapDom.style.height = '200px'
@@ -1100,7 +1103,9 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lng: venue.geopoint['_longitude']
       }
       const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`);
-      const map = new AppendMap(loc, mapParent)
+      const map = new AppendMap(mapParent)
+      map.setZoom(18)
+      map.setLocation(loc)
       map.getMarker();
       if (showMap) {
         mapParent.style.height = '200px';
@@ -1903,18 +1908,18 @@ function concatDateWithTime(date, time) {
 function insertInputsIntoActivity(record, send) {
   const allStringTypes = document.querySelectorAll('.string');
 
-  for (var i = 0; i < allStringTypes.length; i++) {
-    let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
+  // for (var i = 0; i < allStringTypes.length; i++) {
+  //   let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
 
-    if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
-      if (send) {
-        snacks('Please provide an input for the field “Name” ')
-      }
-      return;
-    }
+  //   if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
+  //     if (send) {
+  //       snacks('Please provide an input for the field “Name” ')
+  //     }
+  //     return;
+  //   }
 
-    record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
-  }
+  //   record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
+  // }
 
   // const customerData = document.querySelector('.customer-form');
   // if (customerData) {
@@ -1931,25 +1936,25 @@ function insertInputsIntoActivity(record, send) {
   //     }
   //   }
   // }
-  const allNumberTypes = document.querySelectorAll('.number')
-  for (var i = 0; i < allNumberTypes.length; i++) {
-    let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
-    record.attachment[convertIdToKey(allNumberTypes[i].id)].value = inputValue
-  }
+  // const allNumberTypes = document.querySelectorAll('.number')
+  // for (var i = 0; i < allNumberTypes.length; i++) {
+  //   let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
+  //   record.attachment[convertIdToKey(allNumberTypes[i].id)].value = inputValue
+  // }
 
-  const allEmailTypes = document.querySelectorAll('.email')
-  for (var i = 0; i < allEmailTypes.length; i++) {
-    let inputValue = allEmailTypes[i].querySelector('.mdc-text-field__input').value
-    record.attachment[convertIdToKey(allEmailTypes[i].id)].value = inputValue
-  }
+  // const allEmailTypes = document.querySelectorAll('.email')
+  // for (var i = 0; i < allEmailTypes.length; i++) {
+  //   let inputValue = allEmailTypes[i].querySelector('.mdc-text-field__input').value
+  //   record.attachment[convertIdToKey(allEmailTypes[i].id)].value = inputValue
+  // }
 
-  const allTimeTypes = document.querySelectorAll('.HHMM')
-  for (var i = 0; i < allTimeTypes.length; i++) {
-    console.log(allTimeTypes[i].querySelector('.mdc-text-field__input'))
-    let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
-    console.log(inputValue)
-    record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
-  }
+  // const allTimeTypes = document.querySelectorAll('.HHMM')
+  // for (var i = 0; i < allTimeTypes.length; i++) {
+  //   console.log(allTimeTypes[i].querySelector('.mdc-text-field__input'))
+  //   let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
+  //   console.log(inputValue)
+  //   record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
+  // }
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
@@ -2010,29 +2015,14 @@ function insertInputsIntoActivity(record, send) {
       schedule: record.schedule,
       attachment: record.attachment
     }
-    if (record.template === 'check-in') {
-
-      document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-        const radio = new mdc.radio.MDCRadio(el);
-        if (radio.checked) {
-          const venueData = JSON.parse(el.value);
-          record.venue[0].geopoint = {
-            latitude: venueData.latitude || '',
-            longitude: venueData.longitude || ''
-          }
-          record.venue[0].location = venueData.location
-          record.venue[0].address = venueData.address
-        }
-      });
-    } else {
+  
   
       for (var i = 0; i < record.venue.length; i++) {
         record.venue[i].geopoint = {
           latitude: record.venue[i].geopoint['_latitude'] || "",
           longitude: record.venue[i].geopoint['_longitude'] || ""
         }
-  
-      }
+
     }
   
     debugger;
