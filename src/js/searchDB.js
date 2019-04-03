@@ -1,22 +1,20 @@
-function initUserSelectorSearch(data,userSearchField) {
+function initUserSelectorSearch(data,field,container) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function(){
         const db = req.result;
-        const searchField = userSearchField['input_'];
-        searchField.value = ''
         let objectStore = ''
         let frag = document.createDocumentFragment()
-        searchField.addEventListener('input', function (e) {
+        field.input_.addEventListener('input', function (e) {
             let searchString = e.target.value
             
             if (isNumber(searchString)) {
                 objectStore = db.transaction('users').objectStore('users')
-                searchUsersDB(formatNumber(searchString), objectStore, frag, data)
+                searchUsersDB(formatNumber(searchString), objectStore, frag, data,container)
                 return
             }
             frag = document.createDocumentFragment()
             objectStore = db.transaction('users').objectStore('users').index('displayName')
-            searchUsersDB(formatName(searchString), objectStore, frag, data)
+            searchUsersDB(formatName(searchString), objectStore, frag, data,container)
         })
     }
 }
@@ -56,10 +54,10 @@ function checkNumber(number) {
     return expression.test(number)
 }
 
-function searchUsersDB(searchTerm, objectStore, frag, data) {
+function searchUsersDB(searchTerm, objectStore, frag, data,container) {
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm, searchTerm + '\uffff')
-    const ul = document.getElementById('data-list--container')
+    const ul = document.getElementById('user-selector-list')
     const assignees = data.record.assignees
     const alreadyPresent = {}
     assignees.forEach(function(assignee){
@@ -91,22 +89,21 @@ function searchUsersDB(searchTerm, objectStore, frag, data) {
 
             ul.appendChild(frag)
 
-            const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-            selectedBoxes.forEach(function (box) {
-                const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-                mdcBox.checked = true
-                box.children[1].style.animation = 'none'
-                box.children[1].children[0].children[0].style.animation = 'none'
-            })
             return
         }
-       
-        if(data.attachment.present) {
-            frag.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
+        
+        if(data.attachment) {
+            const radioButton = new mdc.radio.MDCRadio(createRadioInput({value:cursor.value.mobile}))
+            frag.appendChild(createSimpleAssigneeLi(cursor.value, radioButton))
         }
         else {
             if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-                frag.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
+                const checkbox = createCheckBox({value:cursor.value.mobile});
+                checkbox.root_.onclick = function(){
+                  container.querySelector('#selector-submit-send').dataset.type = '';
+                  container.querySelector('#selector-submit-send').textContent = 'SELECT';
+                }
+                frag.appendChild(createSimpleAssigneeLi(cursor.value,checkbox))
             }
         }
         cursor.continue()

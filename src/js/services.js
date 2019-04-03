@@ -93,8 +93,7 @@ function successDialog() {
     dialogEl.remove();
     document.body.classList.remove('mdc-dialog-scroll-lock');
   }, 1000);
-  scroll_namespace.count = 0;
-  scroll_namespace.size = 20;
+  resetScroll();
   localStorage.removeItem('clickedActivity');
   resetScroll()
   listView();
@@ -776,52 +775,7 @@ function emailVerify(notification) {
   emailDialog.show()
 }
 
-function radioList(attr) {
-  const li = document.createElement('li')
-  li.className = `mdc-list-item mdc-ripple-surface--secondary`
-  li.setAttribute('role', 'radio')
 
-  const span = document.createElement('span')
-  span.className = 'mdc-list-item__graphic'
-  const radio = document.createElement('div')
-  radio.className = 'mdc-radio'
-  const input = document.createElement('input')
-  input.className = 'mdc-radio__native-control'
-  input.setAttribute('type', 'radio')
-  input.setAttribute('id', attr.id)
-  input.setAttribute('name', 'list-radio-item-group')
-  input.setAttribute('value', attr.value)
-
-  if (attr.selected) {
-    li.setAttribute('aria-checked', "true")
-    li.classList.add('mdc-list-item--selected');
-    input.setAttribute('checked', "true")
-  } else {
-    li.setAttribute('aria-checked', "false")
-  }
-  const background = document.createElement('div')
-  background.className = 'mdc-radio__background'
-  const outer = document.createElement('div')
-  outer.className = 'mdc-radio__outer-circle'
-  const inner = document.createElement('div')
-  inner.className = 'mdc-radio__inner-circle'
-  background.appendChild(outer)
-  background.appendChild(inner);
-  radio.appendChild(input)
-  radio.appendChild(background)
-  span.appendChild(radio)
-  const label = document.createElement('label')
-  label.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
-  label.style.padding = '8px 0px 8px 0px'
-  label.style.width = '-webkit-fill-available'
-  label.style.display = 'contents';
-  label.className = 'mdc-list-item__text'
-  label.setAttribute('for', attr.id)
-  li.appendChild(span)
-  li.appendChild(label)
-
-  return li
-}
 
 function createBlankPayrollDialog(notificationData) {
 
@@ -930,7 +884,6 @@ function updateApp(data) {
             updateDialog.show();
           }, 500)
           resetScroll()
-
           listView();
           requestCreator('now', {
             device: native.getInfo(),
@@ -1044,53 +997,22 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
   if (!value) return requestCreator('Null', value);
-  const keys = Object.keys(value);
-  keys.forEach(function (key) {
-    if (key === 'verifyEmail') {
-      const notificationData = JSON.parse(value[key])
-      if (!notificationData.title || !notificationData.body) {
-        const content = {
-          title:'Reminder',
-          body:''
-        }
-        
-        let offices = {}
-        let reports = {}
-         
-        getRecipient().then(function (records) {
-        
-          if(!records.length) {
-            content.body = 'You have not set your email Address. Click Okay to set your email address'
-          }
-          else {
-            records.forEach(function (record) {
-              offices[record.office] = true
-              reports[record.attachment.Name.value] = true
-            })
-            content.body = `You have been added a Recipient for ${ Object.keys(offices).join('&')} . Without Adding Email Address, you will not recieve ${Object.keys(reports).join(' , ')} Reports. Click Okay to set your email address`
-          }
-          emailVerify(content)
-        })
-        return;
-      }
+  setTimeout(function(){
+    if(value.read) {
+      requestCreator('Null', value)
+      return;
+    }
+    const notificationData = JSON.parse(value[key])
+    if(history.state[0] !== 'listView') return;
+    if(value.verifyEmail) {
       emailVerify(notificationData)
       return;
     }
-    if (key === 'read') {
-      requestCreator('Null', value);
-      return;
-    } 
-    if (key === 'payroll') {
-      getRootRecord().then(function (record) {
-        if (!record.offices) return;
-        if (!Array.isArray(record.offices)) return;
-        if (!record.offices.length) return;
-
-        createBlankPayrollDialog(JSON.parse(value[key]))
-      })
+    if(value.payroll) {
+      createBlankPayrollDialog(notificationData)
       return;
     }
-  })
+  },200)
 }
 
 function removeChildNodes(parent) {

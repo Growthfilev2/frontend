@@ -297,7 +297,7 @@ function startApp(start) {
         } else {
           getInstantLocation = true
         }
-
+        resetScroll();
         listView();
         requestCreator('now', {
           device: native.getInfo(),
@@ -551,6 +551,7 @@ function runAppChecks() {
               initCheckInDialog.listen('MDCDialog:cancel', function () {
                 checkInDialog.remove();
               })
+              resetScroll();
               listView();
             })
           } catch (e) {
