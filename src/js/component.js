@@ -76,7 +76,8 @@ function selectMenu(attr) {
     for (var i = 0; i < attr.data.length; i++) {
         select.appendChild(createElement('option', {
             textContent: attr.data[i],
-            vale: attr.data[i]
+            vale: attr.data[i],
+            selected:attr.data[i] === attr.selected ? true: false
         }));
     }
     const label = createElement('label', {
@@ -141,15 +142,26 @@ Fab.prototype.extended = function(labelName){
     return this.getButton();   
 }
 
-function AppendMap(location, el,zoom) {
-    this.location = location
+function AppendMap(el) {
+    this.el = el;
     this.options = {
-        zoom: zoom || 16,
-        center: this.location,
-        disableDefaultUI: true,
-    };
-    this.map = new google.maps.Map(el, this.options);
+        zoom:16,
+        disableDefaultUI:true
+    }
+    this.location = ''
 }
+AppendMap.prototype.setLocation = function(location){
+    this.options.center = location
+    this.location = location
+}
+AppendMap.prototype.setZoom = function(zoom){
+    this.options.zoom = zoom
+}
+
+AppendMap.prototype.map = function(){
+    return new google.maps.Map(this.el,this.options);
+}
+
 AppendMap.prototype.withCustomControl = function () {
     var customControlDiv = document.createElement('div');
     var customControl = new MapsCustomControl(customControlDiv, map, this.location.lat, this.location.lng);
@@ -159,15 +171,36 @@ AppendMap.prototype.withCustomControl = function () {
 AppendMap.prototype.getMarker = function (extras) {
     var markerConfig = {
         position: this.location,
-        map: this.map,
+        map: this.map(),
     }
     if(extras){
-
         Object.keys(extras).forEach(function (extra) {
             markerConfig[extra] = extras[extra]
         })
     }
+    this.el.style.height = '400px';
+
     return new google.maps.Marker(markerConfig);
+}
+AppendMap.prototype.geocodeCustomerMarker = function(marker){
+    return new Promise(function(resolve,reject){
+
+        google.maps.event.addListener(marker, 'dragend', function () {
+            geocodePosition(marker.getPosition(), data).then(function (updatedRecord) {
+                if (updatedRecord.customerRecord) {
+                    addressField.value = updatedRecord.customerRecord.venue[0].address
+                } else {
+                    addressField.value = updatedRecord.venue[0].address
+                }
+            }).catch(function (error) {
+                handleError({
+                    message: 'geocode Error in autocomplete listener for' + data.template,
+                    body: JSON.stringify(error)
+                })
+                locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+            })
+        });
+    });
 }
 
 function radioList(attr) {

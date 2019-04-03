@@ -20,6 +20,7 @@ function initDomLoad() {
   if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
   }
+  document.body.classList.remove('mdc-dialog-scroll-lock')
 
   listPanel()
   creatListHeader('Activities');

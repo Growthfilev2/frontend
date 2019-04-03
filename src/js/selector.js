@@ -1,5 +1,6 @@
 function selectorUI(data) {
   document.body.style.backgroundColor = 'white';
+  document.body.classList.remove('mdc-dialog-scroll-lock')
 
   const parent = document.getElementById('app-current-panel');
   parent.innerHTML = ''
@@ -166,8 +167,6 @@ function userSelector(data, container) {
   parent.appendChild(container);
   initUserSelectorSearch(data, field, container);
 
-
-
   const ul = createElement('ul', {
     className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line',
     id: 'user-selector-list'
@@ -201,7 +200,8 @@ function userSelector(data, container) {
     filtered.forEach(function (el) {
       numbers.push(JSON.parse(el.value))
     })
-    insertNumberIntoRecord(data, numbers)
+    insertNumberIntoRecord(data, numbers);
+
 
   }
   container.appendChild(userSubmitButton.root_)
@@ -422,13 +422,13 @@ function fillChildrenInSelector(data, container) {
       });
       radioListEl.querySelector('.mdc-radio input').onclick = function () {
         data.record.attachment[data.key].value = JSON.parse(this.value);
-        if(data.record.customerRecord) {
+        // if(data.record.customerRecord) {
 
-          data.record.customerRecord.venue[0].geopoint.latitude = ''
-          data.record.customerRecord.venue[0].geopoint.longitude = ''
-          data.record.customerRecord.venue[0].location = ''
-          data.record.customerRecord.venue[0].address = ''
-        }
+        //   data.record.customerRecord.venue[0].geopoint.latitude = ''
+        //   data.record.customerRecord.venue[0].geopoint.longitude = ''
+        //   data.record.customerRecord.venue[0].location = ''
+        //   data.record.customerRecord.venue[0].address = ''
+        // }
         updateCreateActivity(data.record, true);
         return;
       }

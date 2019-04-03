@@ -1,4 +1,6 @@
 function conversation(id, pushState) {
+  document.body.classList.remove('mdc-dialog-scroll-lock')
+
   window.removeEventListener('scroll', handleScroll, false)
   checkIfRecordExists('activity', id).then(function (id) {
     if (id) {
@@ -600,7 +602,6 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-
           let message;
           if (native.getName() === 'Android') {
             message = 'Make Sure you have set Location Mode to High Accuracy'
@@ -660,32 +661,42 @@ function createTempRecord(office, template, prefill) {
         bareBonesVenueArray.push(bareBonesVenue);
       });
       bareBonesRecord.venue = bareBonesVenueArray;
-      if (template === 'tour plan' || template === 'dsr' || template === 'duty roster') {
-        getSubscription(office, 'customer').then(function (customerRecord) {
-          if (customerRecord) {
-            const vd = customerRecord.venue[0]
-            customerRecord.venue = [{
-              venueDescriptor: vd,
-              location: '',
-              address: '',
-              geopoint: {
-                'latitude': '',
-                'longitude': ''
-              }
-            }]
+      if (template === 'tour plan' || template === 'dsr' || template === 'duty roster' || template === 'customer') {
+        getLocation().then(function (userLocation) {
+          geocodePosition({
+            lat: userLocation.latitude,
+            lng: userLocation.longitude
+          }).then(function (result) {
+          
+            return createBlendedCustomerRecord(bareBonesRecord, result)
+          });
+        }).catch(function (error) {
+          console.log(error)
 
-            bareBonesRecord['customerRecord'] = customerRecord
-            updateCreateActivity(bareBonesRecord)
-          } else {
-            updateCreateActivity(bareBonesRecord)
-          }
+          return createBlendedCustomerRecord(bareBonesRecord)
         })
         return;
       }
       updateCreateActivity(bareBonesRecord)
     }
   }
+}
 
+function createBlendedCustomerRecord(bareBonesRecord,geocodeResult) {
+
+  if (bareBonesRecord.template === 'customer'){
+    let newVenue = [createVenueObjectWithGeoCode(bareBonesRecord.venue[0].venueDescriptor,geocodeResult)];
+    bareBonesRecord.venue = newVenue
+    return updateCreateActivity(bareBonesRecord)
+  }
+  
+  getSubscription(bareBonesRecord.office, 'customer').then(function (customerRecord) {
+    if (!customerRecord) return updateCreateActivity(bareBonesRecord);
+      customerRecord.venue = [createVenueObjectWithGeoCode(customerRecord.venue[0],geocodeResult)];
+      bareBonesRecord['customerRecord'] = customerRecord;
+      updateCreateActivity(bareBonesRecord)
+      return;
+    })
 }
 
 function hasAnyValueInChildren(office, template) {
@@ -989,31 +1000,51 @@ function createVenueSection(record) {
             label.setAttribute('for', 'check-in-radio');
             label.textContent = result.location
             form.appendChild(label);
-            form.appendChild(createCheckInVenue(result, defaultSelected))
+            
+            const radio =  new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
+            if(record.venue[0].location === result.location) {
+              radio.checked = true
+            }
+            radio.root_.querySelector('input').onclick = function(){
+             const value = JSON.parse(this.value)
+             record.venue[0].location = value.location;
+             record.venue[0].address = value.address;
+             record.venue[0].geopoint._latitude = value.latitude;
+             record.venue[0].geopoint._longitude = value.longitude;
+            }
+            form.appendChild(radio.root_)
+            // form.appendChild(createCheckInVenue(result, defaultSelected))
             venueSection.appendChild(form);
             const mapDom = document.createElement('div');
             mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
             venueSection.appendChild(mapDom);
           })
 
-
           const uncheckFab = document.getElementById('uncheck-checkin');
           if (uncheckFab) {
             uncheckFab.addEventListener('click', function () {
-              document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+              document.querySelectorAll('.mdc-radio').forEach(function (el) {
                 const radio = new mdc.radio.MDCRadio(el)
                 radio.checked = false
+                record.venue[0].location = ''
+                record.venue[0].address = ''
+                record.venue[0].geopoint._latitude = ''
+                record.venue[0].geopoint._longitude = ''
               });
             })
           }
         })
       })
-    } else {
-      if (!record.venue[0].location || !record.venue[0].address) {
-        document.getElementById('venue--list').style.display = 'none'
-      }
-    }
-    return;
+    }  
+    else {
+      record.venue.forEach(function (venue) {
+        venueSection.appendChild(createVenueLi(venue, true, record))
+        const mapDom = document.createElement('div');
+        mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
+        venueSection.appendChild(mapDom)
+      });
+    }  
+   return;
   }
   record.venue.forEach(function (venue) {
 
@@ -1082,7 +1113,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.setAttribute('aria-hidden', 'true')
       selectorIcon.appendChild(addLocation.root_)
       addLocation.root_.onclick = function (evt) {
-        insertInputsIntoActivity(record)
+        // insertInputsIntoActivity(record)
         history.replaceState(['updateCreateActivity', record], null, null)
 
         selectorUI({
@@ -1312,7 +1343,10 @@ function createAttachmentContainer(data) {
           uniqueFieldInit.disabled = !data.canEdit
           uniqueFieldInit.value = data.attachment[key].value
           uniqueFieldInit['input_'].required = true;
-          uniqueFieldInit['input_'].placeholder = 'Enter Value'
+          uniqueFieldInit['input_'].placeholder = 'Enter Value';
+          uniqueField.input_.onchange = function(e){
+            data.attachment[key].value += e.target.value
+          }
           div.appendChild(uniqueFieldInit.root_);
         } else {
           div.appendChild(label);
@@ -1328,6 +1362,9 @@ function createAttachmentContainer(data) {
           readonly: data.canEdit,
           rows: 2
         })
+        field.onchange = function(e){
+          data.attachment[key].value += e.target.value
+        }
         div.appendChild(field);
       }
     }
@@ -1347,7 +1384,15 @@ function createAttachmentContainer(data) {
       const numberInit = numberInput.withoutLabel();
       numberInit.input_.type = 'number';
       numberInit.value = data.attachment[key].value
-      numberInit.disabled = !data.canEdit;
+      if(data.canEdit) {
+        numberInit.input_.onchange = function(e){
+          data.attachment[key].value += e.target.value
+        }
+      }
+      else {
+        numberInit.disabled = true;
+      }
+
       div.appendChild(numberInit.root_);
 
     }
@@ -1358,7 +1403,14 @@ function createAttachmentContainer(data) {
       const emailFieldInit = emailField.withoutLabel();
 
       emailFieldInit.value = data.attachment[key].value;
-      emailFieldInit.disabled = !data.canEdit;
+      if(canEdit) {
+        emailFieldInit['input_'].onchange = function(e){
+          data.attachment[key].value += e.target.value;
+        }
+      }
+      else {
+        emailFieldInit.disabled = true;
+      }
       emailFieldInit['input_'].type = 'email'
 
       div.appendChild(emailFieldInit.root_)
@@ -1405,22 +1457,34 @@ function createAttachmentContainer(data) {
       const timeInput = new InputField();
       const timeInputInit = timeInput.withoutLabel();
       timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
-      timeInputInit.disabled = !data.canEdit;
+      if(data.canEdit) {
+        timeInputInit.input_.onchange = function(e){
+          data.attachment[key].value = e.target.value
+        }
+      }
+      else {
+        timeInputInit.disabled = true
+      }
       timeInputInit.input_.type = 'time'
       div.appendChild(timeInputInit['root_']);
     }
 
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
+      const selected = data.attachment[key].value;
+
       const selectField = selectMenu({
         id: convertKeyToId(key),
-        data: ['Sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'Monday']
+        data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
+        selected:selected
       });
 
-      selectField.listen('change', () => {
+      selectField.listen('change', (e) => {
         if (!document.getElementById('send-activity').dataset.progress) {
           document.getElementById('send-activity').classList.remove('hidden')
         }
+
+        data.attachment[key].value = e.target.value
       });
 
       div.appendChild(selectField.root_);
@@ -1454,58 +1518,59 @@ function createAttachmentContainer(data) {
       };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      if (data.attachment[key].value) {
-       
-        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
-        valueField.listen('MDCChip:removal', function (e) {
-          data.attachment[key].value = ''
-          if (key === 'Customer') {
-            div.classList.remove('mdc-form-field');
-            if (div.querySelector('.mdc-chip-set')) {
-              div.querySelector('.mdc-chip-set').remove();
-            }
-            if(data.customerRecord){
-              data.customerRecord.venue[0].address = ''
-              data.customerRecord.venue[0].location = ''
-              data.customerRecord.venue[0].geopoint.latitude = ''
-              data.customerRecord.venue[0].geopoint.longitude = ''
-            }
-            else {
-              data.venue[0].address = ''
-              data.venue[0].location = ''
-              data.venue[0].geopoint.latitude = ''
-              data.venue[0].geopoint.longitude = ''
-            }
-            div.appendChild(addNewCustomer(data))
-          }
-        })
-        valueField.listen('MDCChip:interaction',function(e){
-          console.log(e)
-          if(key === 'Customer') {
-          
-            if(data.customerRecord){
-              if(data.customerRecord.venue[0].location) {
-                div.classList.remove('mdc-form-field');
-                if (div.querySelector('.mdc-chip-set')) {
-                  div.querySelector('.mdc-chip-set').remove();
-                }
-                div.appendChild(addNewCustomer(data))
-              }
-            }
-            else {
-              if(data.venue[0].location) {
-                div.classList.remove('mdc-form-field');
-                if (div.querySelector('.mdc-chip-set')) {
-                  div.querySelector('.mdc-chip-set').remove();
-                }
-                div.appendChild(addNewCustomer(data))
-              }
-            }
-          }
-        })
-        valueField.root_.classList.add('data--value-list', 'label--text')
-        div.appendChild(valueField.root_)
-      }
+      // if (data.attachment[key].value) {
+
+      //   const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+      //   valueField.listen('MDCChip:removal', function (e) {
+      //     data.attachment[key].value = ''
+      //     if (key === 'Customer') {
+      //       div.classList.remove('mdc-form-field');
+      //       if (div.querySelector('.mdc-chip-set')) {
+      //         div.querySelector('.mdc-chip-set').remove();
+      //       }
+      //       if (data.customerRecord) {
+      //         data.customerRecord.venue[0].address = ''
+      //         data.customerRecord.venue[0].location = ''
+      //         data.customerRecord.venue[0].geopoint.latitude = ''
+      //         data.customerRecord.venue[0].geopoint.longitude = ''
+      //       } else {
+      //         data.venue[0].address = ''
+      //         data.venue[0].location = ''
+      //         data.venue[0].geopoint.latitude = ''
+      //         data.venue[0].geopoint.longitude = ''
+      //       }
+      //       div.appendChild(addNewCustomer(data))
+      //     }
+      //   })
+      //   if (key === 'Customer') {
+      //     valueField.listen('MDCChip:interaction', function (e) {
+      //       console.log(e)
+
+      //       if (data.customerRecord) {
+      //         if (data.customerRecord.attachment.Customer.value === data.attachment.Name.value) {
+      //           div.classList.remove('mdc-form-field');
+      //           if (div.querySelector('.mdc-chip-set')) {
+      //             div.querySelector('.mdc-chip-set').remove();
+      //           }
+      //           div.appendChild(addNewCustomer(data))
+      //         }
+
+      //       }
+      //       // else {
+      //       //   if(data.venue[0].location) {
+      //       //     div.classList.remove('mdc-form-field');
+      //       //     if (div.querySelector('.mdc-chip-set')) {
+      //       //       div.querySelector('.mdc-chip-set').remove();
+      //       //     }
+      //       //     div.appendChild(addNewCustomer(data))
+      //       //   }
+      //       // }
+
+      //     })
+      //   }
+      //   valueField.root_.classList.add('data--value-list', 'label--text')
+      //   div.appendChild(valueField.root_)
+      // }
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
 
         if (results.length) {
@@ -1540,8 +1605,8 @@ function createAttachmentContainer(data) {
               createNewEl.root_.style.marginRight = '0px';
             }
 
-            div.appendChild(addNewCustomer(data))
-            
+            div.appendChild(addNewCustomer(data.customerRecord))
+
           }
         }
 
@@ -1851,21 +1916,21 @@ function insertInputsIntoActivity(record, send) {
     record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   }
 
-  const customerData = document.querySelector('.customer-form');
-  if (customerData) {
-    const types = {
-      'tour plan': true,
-      'duty roster': true,
-      'dsr': true
-    }
-    if (record.template === 'customer') {
-      // const name = 
-    } else {
-      if (types[record.template]) {
+  // const customerData = document.querySelector('.customer-form');
+  // if (customerData) {
+  //   const types = {
+  //     'tour plan': true,
+  //     'duty roster': true,
+  //     'dsr': true
+  //   }
+  //   if (record.template === 'customer') {
+  //     // const name = 
+  //   } else {
+  //     if (types[record.template]) {
 
-      }
-    }
-  }
+  //     }
+  //   }
+  // }
   const allNumberTypes = document.querySelectorAll('.number')
   for (var i = 0; i < allNumberTypes.length; i++) {
     let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
@@ -1880,7 +1945,9 @@ function insertInputsIntoActivity(record, send) {
 
   const allTimeTypes = document.querySelectorAll('.HHMM')
   for (var i = 0; i < allTimeTypes.length; i++) {
+    console.log(allTimeTypes[i].querySelector('.mdc-text-field__input'))
     let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
+    console.log(inputValue)
     record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
   }
 
@@ -1888,7 +1955,6 @@ function insertInputsIntoActivity(record, send) {
   for (let i = 0; i < imagesInAttachments.length; i++) {
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
-
 
   let sd;
   let st;
@@ -1936,38 +2002,40 @@ function insertInputsIntoActivity(record, send) {
 
   }
 
-  if (record.template === 'check-in') {
 
-    document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-      const radio = new mdc.radio.MDCRadio(el);
-      if (radio.checked) {
-        const venueData = JSON.parse(el.value);
-        record.venue[0].geopoint = {
-          latitude: venueData.latitude || '',
-          longitude: venueData.longitude || ''
-        }
-        record.venue[0].location = venueData.location
-        record.venue[0].address = venueData.address
-      }
-    });
-  } else {
-
-    for (var i = 0; i < record.venue.length; i++) {
-      record.venue[i].geopoint = {
-        latitude: record.venue[i].geopoint['latitude'] || "",
-        longitude: record.venue[i].geopoint['longitude'] || ""
-      }
-
-    }
-  }
-
-  const requiredObject = {
-    venue: record.venue,
-    schedule: record.schedule,
-    attachment: record.attachment
-  }
-
+  
   if (send) {
+    const requiredObject = {
+      venue: record.venue,
+      schedule: record.schedule,
+      attachment: record.attachment
+    }
+    if (record.template === 'check-in') {
+
+      document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
+        const radio = new mdc.radio.MDCRadio(el);
+        if (radio.checked) {
+          const venueData = JSON.parse(el.value);
+          record.venue[0].geopoint = {
+            latitude: venueData.latitude || '',
+            longitude: venueData.longitude || ''
+          }
+          record.venue[0].location = venueData.location
+          record.venue[0].address = venueData.address
+        }
+      });
+    } else {
+  
+      for (var i = 0; i < record.venue.length; i++) {
+        record.venue[i].geopoint = {
+          latitude: record.venue[i].geopoint['_latitude'] || "",
+          longitude: record.venue[i].geopoint['_longitude'] || ""
+        }
+  
+      }
+    }
+  
+    debugger;
     sendUpdateReq(requiredObject, record)
   }
 
@@ -2031,7 +2099,7 @@ function getSubscription(office, template) {
   })
 }
 
-function addNewCustomer(data) {
+function addNewCustomer(customerRecord) {
   const container = createElement('div', {
     className: 'customer-form'
   });
@@ -2052,70 +2120,82 @@ function addNewCustomer(data) {
     className: 'mdc-text-field--fullwidth filled-background mdc-text-field'
   })
   const nameField = name.withoutLabel();
+  nameField.value = customerRecord.attachment.Name.value;
   nameField.input_.placeholder = 'Customer Name'
   nameField.input_.id = 'customer-name'
-  nameField.input_.onchange =function(e){
-    if(data.customerRecord) {
-      data.customerRecord.attachment.Name.value += e.target.value 
-      data.attachment.Customer.value += e.target.value;
-    }
-    else {
-      data.attachment.Name.value += e.target.value 
-    }
+  nameField.input_.required = true;
+  nameField.input_.onchange = function (e) {
+    customerRecord.attachment.Name.value += e.target.value
   }
   const addressField = address.withoutLabel();
   addressField['input_'].placeholder = 'Customer Address'
   addressField.input_.id = 'customer-address'
-
+  addressField.value = customerRecord.venue[0].address
   container.appendChild(nameField['root_'])
   container.appendChild(addressField['root_'])
 
   const mapDom = createElement('div', {
     id: 'customer-address-map'
   })
+  const customerMap = new AppendMap(mapDom);
+  customerMap.setZoom(18);
+  let marker;
+  if (customerRecord.venue[0].location) {
+    customerMap.setLocation({
+      lat: customerRecord.venue[0].geopoint._latitude,
+      lng: customerRecord.venue[0].geopoint._longitude
+    });
+
+    marker = customerMap.getMarker({
+      draggable: true
+    });
+    container.style.minHeight = '400px'
+    google.maps.event.addListener(marker, 'dragend', function () {
+      geocodePosition(marker.getPosition()).then(function (result) {
+        addressField.value = result.formatted_address;
+        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor,result);
+        if( document.querySelector('#send-activity')) {
+          document.querySelector('#send-activity').classList.remove('hidden')
+        }
+      })
+    });
+  }
+
   var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
     componentRestrictions: {
       country: "in"
     }
   });
+
   autocomplete.addListener('place_changed', function () {
 
     let place = autocomplete.getPlace();
-    const latlng = {
+    if( document.querySelector('#send-activity')) {
+      document.querySelector('#send-activity').classList.remove('hidden')
+    }
+
+    customerMap.setLocation({
       lat: place.geometry.location.lat(),
       lng: place.geometry.location.lng()
-    }
-    const map = new AppendMap(latlng, mapDom, 18);
-    const marker = map.getMarker({
-      draggable: true
     });
 
-    if (data.customerRecord) {
-      data.customerRecord.venue[0].address = formAddressComponent(place),
-        data.customerRecord.venue[0].location = place.name,
-        data.customerRecord.venue[0].geopoint = {
-          latitude: place.geometry.location.lat(),
-          longitude: place.geometry.location.lng()
-        }
-    } else {
-      data.venue[0] = formAddressComponent(place),
-        data.venue[0].location = place.name,
-        data.venue[0].geopoint = {
-          latitude: place.geometry.location.lat(),
-          longitude: place.geometry.location.lng()
-        }
-    }
-    console.log(data)
-    mapDom.style.minHeight = '400px'
+    marker = customerMap.getMarker({
+      draggable: true
+    });
+    console.log(customerRecord)
+
+    customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor,place)
+
+    console.log(customerRecord)
+
     container.style.minHeight = '400px'
-    container.querySelector('.customer-location-error').textContent = ''
 
     google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition(), data).then(function (updatedRecord) {
-        if (updatedRecord.customerRecord) {
-          addressField.value = updatedRecord.customerRecord.venue[0].address
-        } else {
-          addressField.value = updatedRecord.venue[0].address
+      geocodePosition(marker.getPosition()).then(function (result) {
+        addressField.value = result.formatted_address;
+        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor,result);
+        if(document.querySelector('#send-activity')) {
+          document.querySelector('#send-activity').classList.remove('hidden')
         }
       }).catch(function (error) {
         handleError({
@@ -2126,46 +2206,6 @@ function addNewCustomer(data) {
       })
     });
   });
-
-  if (data.template === 'customer') {
-   
-    nameField.value = data.attachment.Name.value;
-    
-  } else {
-    nameField.value = data.customerRecord.attachment.Name.value;
-    nameField.value = data.attachment.Customer.value;
-    if(data.customerRecord.venue[0].location) {
-
-    
-    addressField.value = data.customerRecord.venue[0].address;
-    mapDom.style.minHeight = '400px'
-    container.style.minHeight = '400px'
-    const modLocation = {
-      lat: data.customerRecord.venue[0].geopoint.latitude,
-      lng: data.customerRecord.venue[0].geopoint.longitude
-    }
-    const map = new AppendMap(modLocation, mapDom, 18)
-    const marker = map.getMarker({
-      draggable: true
-    });
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition(), data).then(function (updatedRecord) {
-        if (updatedRecord.customerRecord) {
-          addressField.value = updatedRecord.customerRecord.venue[0].address
-        } else {
-          addressField.value = updatedRecord.venue[0].address
-        }
-      }).catch(function (error) {
-        handleError({
-          message: 'geocode Error in autocomplete listener for' + data.template,
-          body: JSON.stringify(error)
-        })
-        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
-      })
-    });
-  }
-  }
-
   container.appendChild(mapDom);
   container.appendChild(locationErrorText);
   return container;
@@ -2182,8 +2222,8 @@ function geocodePosition(pos, data) {
       if (responses && responses.length > 0) {
         const value = responses[0]
 
-        return resolve(modifyVenueRecordWithGeocode(data, value))
-
+        // return resolve(modifyVenueRecordWithGeocode(data, value))
+        return resolve(value)
       } else {
         return resolve(false)
       }
@@ -2194,14 +2234,7 @@ function geocodePosition(pos, data) {
 }
 
 function modifyVenueRecordWithGeocode(data, value) {
-  const venueMod = {
-    location: value.formatted_address,
-    address: value.formatted_address,
-    geopoint: {
-      latitude: value.geometry.location.lat(),
-      longitude: value.geometry.location.lng()
-    }
-  }
+  const venueMod = createVenueObjectWithGeoCode(value)
   if (data.template === 'customer') {
     venueMod.venueDescriptor = data.venue[0].venueDescriptor,
       data.venue[0] = venueMod
@@ -2210,4 +2243,30 @@ function modifyVenueRecordWithGeocode(data, value) {
       data.customerRecord.venue[0] = venueMod
   }
   return data;
+}
+
+function createVenueObjectWithGeoCode(vd,geocode) {
+  const venueMod = {
+    location: geocode ? geocode.formatted_address : '',
+    address: geocode ? geocode.formatted_address : '',
+    geopoint: {
+      _latitude: geocode ?  geocode.geometry.location.lat() : '',
+      _longitude: geocode ?  geocode.geometry.location.lng() : ''
+    },
+    venueDescriptor:vd
+  }
+  return venueMod;
+}
+
+function createVenueObjectWithAutoComplete(vd,place) {
+  const venueMod = {
+    location: place ? place.name : '',
+    address: place ? formAddressComponent(place) : '',
+    geopoint: {
+      _latitude: place ? place.geometry.location.lat() : '',
+      _longitude: place ? place.geometry.location.lng() : ''
+    },
+    venueDescriptor:vd
+  }
+  return venueMod;
 }

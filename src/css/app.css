@@ -1904,6 +1904,14 @@ input[type="datetime-local"] {
   overflow: hidden;
 
 }
+.mdc-form-field.check-in-form label {
+  width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-weight: 400
+}
 
 #uncheck-checkin {
   margin-top: 0px;
