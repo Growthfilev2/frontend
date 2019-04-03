@@ -207,11 +207,15 @@ function radioList(attr) {
     const li = document.createElement('li')
     li.className = `mdc-list-item mdc-ripple-surface--secondary`
     li.setAttribute('role', 'radio');
-    li.setAttribute('tabindex',"-1")
-    li.textContent = attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1);
+    li.setAttribute('tabindex',"-1");
+    const textSpan = createElement('span',{className:'mdc-list-item__text'})
+    const primaryText = createElement('span',{className:'mdc-list-item__primary-text',textContent:attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1)})
+    textSpan.appendChild(primaryText)
+    li.appendChild(textSpan);
     li.appendChild(createRadioInput(JSON.stringify(attr.value)))
     return li;
 }
+
 
 function createRadioInput(value) {
     const div = createElement('div',{className:'mdc-radio radio-control-selector mdc-list-item__meta'})

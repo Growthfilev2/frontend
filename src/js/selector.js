@@ -198,6 +198,7 @@ function userSelector(data, container) {
     filtered.forEach(function (el) {
       numbers.push(JSON.parse(el.value))
     })
+    console.log(numbers);
     insertNumberIntoRecord(data, numbers);
 
 

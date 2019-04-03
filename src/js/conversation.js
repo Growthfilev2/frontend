@@ -1597,18 +1597,58 @@ function createAttachmentContainer(data) {
           }
         }
         if (customerAddition[data.template] && key === 'Customer') {
-
           if (data.attachment['Customer'].value) {
-            div.classList.add('mdc-form-field');
+            if (data.attachment['Customer'].value !== data.customerRecord.attachment.Name.value) {
+              const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+              valueField.root_.classList.add('data--value-list', 'label--text')
+              div.appendChild(valueField.root_);
+
+              valueField.listen('MDCChip:removal', function (e) {
+                  data.attachment[key].value = ''
+                    div.classList.remove('mdc-form-field');
+                    if (div.querySelector('.mdc-chip-set')) {
+                      div.querySelector('.mdc-chip-set').remove();
+                    }
+                    if (data.customerRecord) {
+                      data.customerRecord.venue[0].address = ''
+                      data.customerRecord.venue[0].location = ''
+                      data.customerRecord.venue[0].geopoint._latitude = ''
+                      data.customerRecord.venue[0].geopoint._longitude = ''
+                      data.customerRecord.attachment.Name.value = ''
+                      div.appendChild(addNewCustomer(data.customerRecord))
+                    } else {
+                      data.venue[0].address = ''
+                      data.venue[0].location = ''
+                      data.venue[0].geopoint._latitude = ''
+                      data.venue[0].geopoint._longitude = ''
+                      data.attachment.Name.value = ''
+
+                      div.appendChild(addNewCustomer(data))
+
+                    }
+                    
+                  
+                })
+            } else {
+              div.classList.add('mdc-form-field');
+              div.classList.remove('mdc-form-field');
+              if (!results.length) {
+                createNewEl.root_.style.marginRight = '0px';
+              }
+              div.appendChild(addNewCustomer(data.customerRecord))
+            }
           } else {
             div.classList.remove('mdc-form-field');
             if (!results.length) {
               createNewEl.root_.style.marginRight = '0px';
             }
-
             div.appendChild(addNewCustomer(data.customerRecord))
-
           }
+          // if (data.attachment['Customer'].value) {
+          // } else {
+
+
+          // }
         }
 
       });
@@ -1975,15 +2015,15 @@ function insertInputsIntoActivity(record, send) {
 
   if (send) {
     const reqArray = [];
-   
-    if(record.customerRecord) {
+
+    if (record.customerRecord) {
       const customerRec = {
-        share:[],
-        office:record.customerRecord.office,
-        venue:record.customerRecord.venue,
-        schedule:record.customerRecord.schedule,
-        attachment:record.customerRecord.attachment,
-        template:record.customerRecord.template
+        share: [],
+        office: record.customerRecord.office,
+        venue: record.customerRecord.venue,
+        schedule: record.customerRecord.schedule,
+        attachment: record.customerRecord.attachment,
+        template: record.customerRecord.template
       }
       for (var i = 0; i < record.customerRecord.venue.length; i++) {
         record.customerRecord.venue[i].geopoint = {
@@ -2001,47 +2041,46 @@ function insertInputsIntoActivity(record, send) {
         longitude: record.venue[i].geopoint['_longitude'] || ''
       }
     }
-    
-    const orignialReq = {
-      share:record.assignees,
-      office:record.office,
-      venue:record.venue,
-      schedule:record.schedule,
-      attachment:record.attachment,
-      template:record.template
+    let share;
+    if (!record.hasOwnProperty('create')) {
+      share = []
+      for (var i = 0; i < record.assignees.length; i++) {
+        if (typeof record.assignees[i] === 'object') {
+          share.push(record.assignees[i].phoneNumber)
+        }
+      }
+    } else {
+      share = record.assignees
     }
-   
+    const orignialReq = {
+      share: share,
+      office: record.office,
+      venue: record.venue,
+      schedule: record.schedule,
+      attachment: record.attachment,
+      template: record.template
+    }
+    if (!record.hasOwnProperty('create')) {
+      orignialReq.activityId = record.activityId
+    }
+
     reqArray.push(orignialReq);
 
-    sendUpdateReq(reqArray)
+    sendUpdateReq(reqArray, record)
   }
 
 }
 
-function sendUpdateReq(requiredObject) {
+function sendUpdateReq(requiredObject, record) {
 
-  // if (!record.hasOwnProperty('create')) {
-  //   requiredObject.activityId = record.activityId
-  //   document.querySelector('header').appendChild(progressBar())
-  //   document.querySelector('#send-activity').classList.add('hidden')
-  //   requestCreator('update', requiredObject);
-  //   return
-  // }
-  debugger;
-  
+  document.querySelector('header').appendChild(progressBar())
+  document.querySelector('#send-activity').classList.add('hidden')
+  if (!record.hasOwnProperty('create')) {
+    requestCreator('update', requiredObject[0])
+    return;
+  }
   requestCreator('create', requiredObject[0])
-  setTimeout(function(){
-    // requestCreator('create', requiredObject[1])
 
-  },1000)
-  // setTimeout(function(){
-  // requiredObject.forEach(function (reqRecord) {
-  //   document.querySelector('header').appendChild(progressBar())
-  //   document.querySelector('#send-activity').classList.add('hidden')
-
-  //     requestCreator('create', reqRecord)
-  //   })
-  // },500)
 }
 
 function checkSpacesInString(input) {
