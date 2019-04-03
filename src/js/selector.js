@@ -89,10 +89,8 @@ function mapSelector(data, container) {
     const value = {
       location: place.name,
       address: formAddressComponent(place),
-      geopoint: {
-        latitude: place.geometry.location.lat(),
-        longitude: place.geometry.location.lng()
-      }
+      latitude: place.geometry.location.lat(),
+      longitude: place.geometry.location.lng()
     }
     updateCreateActivity(updateVenue(data,value).record, true)
     return;
@@ -149,8 +147,8 @@ function updateVenue(data,value){
     if (venue.venueDescriptor === data.key) {
       venue.address = value.address;
       venue.location = value.location;
-      venue.geopoint.latitude = value.latitude;
-      venue.geopoint.longitude = value.longitude;
+      venue.geopoint._latitude = value.latitude;
+      venue.geopoint._longitude = value.longitude;
     }
   })
   return data

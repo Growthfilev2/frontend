@@ -2019,8 +2019,8 @@ function insertInputsIntoActivity(record, send) {
   
       for (var i = 0; i < record.venue.length; i++) {
         record.venue[i].geopoint = {
-          latitude: record.venue[i].geopoint['_latitude'] || "",
-          longitude: record.venue[i].geopoint['_longitude'] || ""
+          latitude: record.venue[i].geopoint['_latitude'] ||  '',
+          longitude: record.venue[i].geopoint['_longitude'] ||  ''
         }
 
     }
