@@ -336,7 +336,7 @@ function createComment(db, addendum, currentUser) {
         const map = new AppendMap(mapDom)
         map.setLocation(loc)
         map.setZoom(18)
-        
+
         map.getMarker();
         if (showMap) {
           mapDom.style.height = '200px'
@@ -670,7 +670,7 @@ function createTempRecord(office, template, prefill) {
             lat: userLocation.latitude,
             lng: userLocation.longitude
           }).then(function (result) {
-          
+
             return createBlendedCustomerRecord(bareBonesRecord, result)
           });
         }).catch(function (error) {
@@ -685,21 +685,21 @@ function createTempRecord(office, template, prefill) {
   }
 }
 
-function createBlendedCustomerRecord(bareBonesRecord,geocodeResult) {
+function createBlendedCustomerRecord(bareBonesRecord, geocodeResult) {
 
-  if (bareBonesRecord.template === 'customer'){
-    let newVenue = [createVenueObjectWithGeoCode(bareBonesRecord.venue[0].venueDescriptor,geocodeResult)];
+  if (bareBonesRecord.template === 'customer') {
+    let newVenue = [createVenueObjectWithGeoCode(bareBonesRecord.venue[0].venueDescriptor, geocodeResult)];
     bareBonesRecord.venue = newVenue
     return updateCreateActivity(bareBonesRecord)
   }
-  
+
   getSubscription(bareBonesRecord.office, 'customer').then(function (customerRecord) {
     if (!customerRecord) return updateCreateActivity(bareBonesRecord);
-      customerRecord.venue = [createVenueObjectWithGeoCode(customerRecord.venue[0],geocodeResult)];
-      bareBonesRecord['customerRecord'] = customerRecord;
-      updateCreateActivity(bareBonesRecord)
-      return;
-    })
+    customerRecord.venue = [createVenueObjectWithGeoCode(customerRecord.venue[0], geocodeResult)];
+    bareBonesRecord['customerRecord'] = customerRecord;
+    updateCreateActivity(bareBonesRecord)
+    return;
+  })
 }
 
 function hasAnyValueInChildren(office, template) {
@@ -1003,17 +1003,17 @@ function createVenueSection(record) {
             label.setAttribute('for', 'check-in-radio');
             label.textContent = result.location
             form.appendChild(label);
-            
-            const radio =  new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
-            if(record.venue[0].location === result.location) {
+
+            const radio = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
+            if (record.venue[0].location === result.location) {
               radio.checked = true
             }
-            radio.root_.querySelector('input').onclick = function(){
-             const value = JSON.parse(this.value)
-             record.venue[0].location = value.location;
-             record.venue[0].address = value.address;
-             record.venue[0].geopoint._latitude = value.latitude;
-             record.venue[0].geopoint._longitude = value.longitude;
+            radio.root_.querySelector('input').onclick = function () {
+              const value = JSON.parse(this.value)
+              record.venue[0].location = value.location;
+              record.venue[0].address = value.address;
+              record.venue[0].geopoint._latitude = value.latitude;
+              record.venue[0].geopoint._longitude = value.longitude;
             }
             form.appendChild(radio.root_)
             // form.appendChild(createCheckInVenue(result, defaultSelected))
@@ -1038,16 +1038,15 @@ function createVenueSection(record) {
           }
         })
       })
-    }  
-    else {
+    } else {
       record.venue.forEach(function (venue) {
         venueSection.appendChild(createVenueLi(venue, true, record))
         const mapDom = document.createElement('div');
         mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
         venueSection.appendChild(mapDom)
       });
-    }  
-   return;
+    }
+    return;
   }
   record.venue.forEach(function (venue) {
 
@@ -1118,7 +1117,7 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
       selectorIcon.setAttribute('aria-hidden', 'true')
       selectorIcon.appendChild(addLocation.root_)
       addLocation.root_.onclick = function (evt) {
-        // insertInputsIntoActivity(record)
+        insertInputsIntoActivity(record)
         history.replaceState(['updateCreateActivity', record], null, null)
 
         selectorUI({
@@ -1349,7 +1348,7 @@ function createAttachmentContainer(data) {
           uniqueFieldInit.value = data.attachment[key].value
           uniqueFieldInit['input_'].required = true;
           uniqueFieldInit['input_'].placeholder = 'Enter Value';
-          uniqueField.input_.onchange = function(e){
+          uniqueField.input_.onchange = function (e) {
             data.attachment[key].value += e.target.value
           }
           div.appendChild(uniqueFieldInit.root_);
@@ -1367,7 +1366,7 @@ function createAttachmentContainer(data) {
           readonly: data.canEdit,
           rows: 2
         })
-        field.onchange = function(e){
+        field.onchange = function (e) {
           data.attachment[key].value += e.target.value
         }
         div.appendChild(field);
@@ -1389,12 +1388,11 @@ function createAttachmentContainer(data) {
       const numberInit = numberInput.withoutLabel();
       numberInit.input_.type = 'number';
       numberInit.value = data.attachment[key].value
-      if(data.canEdit) {
-        numberInit.input_.onchange = function(e){
+      if (data.canEdit) {
+        numberInit.input_.onchange = function (e) {
           data.attachment[key].value += e.target.value
         }
-      }
-      else {
+      } else {
         numberInit.disabled = true;
       }
 
@@ -1408,12 +1406,11 @@ function createAttachmentContainer(data) {
       const emailFieldInit = emailField.withoutLabel();
 
       emailFieldInit.value = data.attachment[key].value;
-      if(canEdit) {
-        emailFieldInit['input_'].onchange = function(e){
+      if (canEdit) {
+        emailFieldInit['input_'].onchange = function (e) {
           data.attachment[key].value += e.target.value;
         }
-      }
-      else {
+      } else {
         emailFieldInit.disabled = true;
       }
       emailFieldInit['input_'].type = 'email'
@@ -1462,12 +1459,11 @@ function createAttachmentContainer(data) {
       const timeInput = new InputField();
       const timeInputInit = timeInput.withoutLabel();
       timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
-      if(data.canEdit) {
-        timeInputInit.input_.onchange = function(e){
+      if (data.canEdit) {
+        timeInputInit.input_.onchange = function (e) {
           data.attachment[key].value = e.target.value
         }
-      }
-      else {
+      } else {
         timeInputInit.disabled = true
       }
       timeInputInit.input_.type = 'time'
@@ -1481,7 +1477,7 @@ function createAttachmentContainer(data) {
       const selectField = selectMenu({
         id: convertKeyToId(key),
         data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
-        selected:selected
+        selected: selected
       });
 
       selectField.listen('change', (e) => {
@@ -1921,7 +1917,10 @@ function insertInputsIntoActivity(record, send) {
   //   record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   // }
 
-  
+  if (record.customerRecord) {
+    record.attachment.Customer.value = record.customerRecord.attachment.Name.value
+  }
+
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
@@ -1974,47 +1973,75 @@ function insertInputsIntoActivity(record, send) {
 
   }
 
-
-  
   if (send) {
-    const requiredObject = {
-      venue: record.venue,
-      schedule: record.schedule,
-      attachment: record.attachment
-    }
-  
-  
-      for (var i = 0; i < record.venue.length; i++) {
-        record.venue[i].geopoint = {
-          latitude: record.venue[i].geopoint['_latitude'] ||  '',
-          longitude: record.venue[i].geopoint['_longitude'] ||  ''
+    const reqArray = [];
+   
+    if(record.customerRecord) {
+      const customerRec = {
+        share:[],
+        office:record.customerRecord.office,
+        venue:record.customerRecord.venue,
+        schedule:record.customerRecord.schedule,
+        attachment:record.customerRecord.attachment,
+        template:record.customerRecord.template
+      }
+      for (var i = 0; i < record.customerRecord.venue.length; i++) {
+        record.customerRecord.venue[i].geopoint = {
+          latitude: record.customerRecord.venue[i].geopoint['_latitude'] || '',
+          longitude: record.customerRecord.venue[i].geopoint['_longitude'] || ''
         }
-
+      }
+      reqArray.push(customerRec);
+      delete record.customerRecord;
     }
-  
-    debugger;
-    sendUpdateReq(requiredObject, record)
+
+    for (var i = 0; i < record.venue.length; i++) {
+      record.venue[i].geopoint = {
+        latitude: record.venue[i].geopoint['_latitude'] || '',
+        longitude: record.venue[i].geopoint['_longitude'] || ''
+      }
+    }
+    
+    const orignialReq = {
+      share:record.assignees,
+      office:record.office,
+      venue:record.venue,
+      schedule:record.schedule,
+      attachment:record.attachment,
+      template:record.template
+    }
+   
+    reqArray.push(orignialReq);
+
+    sendUpdateReq(reqArray)
   }
 
 }
 
-function sendUpdateReq(requiredObject, record) {
+function sendUpdateReq(requiredObject) {
 
-  if (!record.hasOwnProperty('create')) {
-    requiredObject.activityId = record.activityId
-    document.querySelector('header').appendChild(progressBar())
-    document.querySelector('#send-activity').classList.add('hidden')
-    requestCreator('update', requiredObject);
-    return
-  }
+  // if (!record.hasOwnProperty('create')) {
+  //   requiredObject.activityId = record.activityId
+  //   document.querySelector('header').appendChild(progressBar())
+  //   document.querySelector('#send-activity').classList.add('hidden')
+  //   requestCreator('update', requiredObject);
+  //   return
+  // }
+  debugger;
+  
+  requestCreator('create', requiredObject[0])
+  setTimeout(function(){
+    // requestCreator('create', requiredObject[1])
 
-  requiredObject.office = record.office
-  requiredObject.template = record.template
-  requiredObject.share = record.assignees
+  },1000)
+  // setTimeout(function(){
+  // requiredObject.forEach(function (reqRecord) {
+  //   document.querySelector('header').appendChild(progressBar())
+  //   document.querySelector('#send-activity').classList.add('hidden')
 
-  document.querySelector('header').appendChild(progressBar())
-  document.querySelector('#send-activity').classList.add('hidden')
-  requestCreator('create', requiredObject)
+  //     requestCreator('create', reqRecord)
+  //   })
+  // },500)
 }
 
 function checkSpacesInString(input) {
@@ -2083,6 +2110,7 @@ function addNewCustomer(customerRecord) {
   nameField.input_.required = true;
   nameField.input_.onchange = function (e) {
     customerRecord.attachment.Name.value += e.target.value
+
   }
   const addressField = address.withoutLabel();
   addressField['input_'].placeholder = 'Customer Address'
@@ -2110,8 +2138,8 @@ function addNewCustomer(customerRecord) {
     google.maps.event.addListener(marker, 'dragend', function () {
       geocodePosition(marker.getPosition()).then(function (result) {
         addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor,result);
-        if( document.querySelector('#send-activity')) {
+        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+        if (document.querySelector('#send-activity')) {
           document.querySelector('#send-activity').classList.remove('hidden')
         }
       })
@@ -2127,7 +2155,7 @@ function addNewCustomer(customerRecord) {
   autocomplete.addListener('place_changed', function () {
 
     let place = autocomplete.getPlace();
-    if( document.querySelector('#send-activity')) {
+    if (document.querySelector('#send-activity')) {
       document.querySelector('#send-activity').classList.remove('hidden')
     }
 
@@ -2141,7 +2169,7 @@ function addNewCustomer(customerRecord) {
     });
     console.log(customerRecord)
 
-    customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor,place)
+    customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
 
     console.log(customerRecord)
 
@@ -2150,8 +2178,8 @@ function addNewCustomer(customerRecord) {
     google.maps.event.addListener(marker, 'dragend', function () {
       geocodePosition(marker.getPosition()).then(function (result) {
         addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor,result);
-        if(document.querySelector('#send-activity')) {
+        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+        if (document.querySelector('#send-activity')) {
           document.querySelector('#send-activity').classList.remove('hidden')
         }
       }).catch(function (error) {
@@ -2202,20 +2230,20 @@ function modifyVenueRecordWithGeocode(data, value) {
   return data;
 }
 
-function createVenueObjectWithGeoCode(vd,geocode) {
+function createVenueObjectWithGeoCode(vd, geocode) {
   const venueMod = {
     location: geocode ? geocode.formatted_address : '',
     address: geocode ? geocode.formatted_address : '',
     geopoint: {
-      _latitude: geocode ?  geocode.geometry.location.lat() : '',
-      _longitude: geocode ?  geocode.geometry.location.lng() : ''
+      _latitude: geocode ? geocode.geometry.location.lat() : '',
+      _longitude: geocode ? geocode.geometry.location.lng() : ''
     },
-    venueDescriptor:vd
+    venueDescriptor: vd
   }
   return venueMod;
 }
 
-function createVenueObjectWithAutoComplete(vd,place) {
+function createVenueObjectWithAutoComplete(vd, place) {
   const venueMod = {
     location: place ? place.name : '',
     address: place ? formAddressComponent(place) : '',
@@ -2223,7 +2251,7 @@ function createVenueObjectWithAutoComplete(vd,place) {
       _latitude: place ? place.geometry.location.lat() : '',
       _longitude: place ? place.geometry.location.lng() : ''
     },
-    venueDescriptor:vd
+    venueDescriptor: vd
   }
   return venueMod;
 }
