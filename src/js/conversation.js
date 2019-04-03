@@ -1906,7 +1906,7 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, send) {
-  const allStringTypes = document.querySelectorAll('.string');
+  // const allStringTypes = document.querySelectorAll('.string');
 
   // for (var i = 0; i < allStringTypes.length; i++) {
   //   let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
@@ -1921,40 +1921,7 @@ function insertInputsIntoActivity(record, send) {
   //   record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   // }
 
-  // const customerData = document.querySelector('.customer-form');
-  // if (customerData) {
-  //   const types = {
-  //     'tour plan': true,
-  //     'duty roster': true,
-  //     'dsr': true
-  //   }
-  //   if (record.template === 'customer') {
-  //     // const name = 
-  //   } else {
-  //     if (types[record.template]) {
-
-  //     }
-  //   }
-  // }
-  // const allNumberTypes = document.querySelectorAll('.number')
-  // for (var i = 0; i < allNumberTypes.length; i++) {
-  //   let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
-  //   record.attachment[convertIdToKey(allNumberTypes[i].id)].value = inputValue
-  // }
-
-  // const allEmailTypes = document.querySelectorAll('.email')
-  // for (var i = 0; i < allEmailTypes.length; i++) {
-  //   let inputValue = allEmailTypes[i].querySelector('.mdc-text-field__input').value
-  //   record.attachment[convertIdToKey(allEmailTypes[i].id)].value = inputValue
-  // }
-
-  // const allTimeTypes = document.querySelectorAll('.HHMM')
-  // for (var i = 0; i < allTimeTypes.length; i++) {
-  //   console.log(allTimeTypes[i].querySelector('.mdc-text-field__input'))
-  //   let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
-  //   console.log(inputValue)
-  //   record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
-  // }
+  
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
