@@ -1425,9 +1425,10 @@ function createAttachmentContainer(data) {
         div.style.padding = '5px 15px 5px 15px'
         const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
         dataVal.listen('MDCChip:removal', function (e) {
-          console.log(e.detail.root)
           data.attachment[key].value = ''
-          console.log(data)
+          if(document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }         
         })
         dataVal.root_.classList.add('data--value-list', 'label--text')
         dataVal.root_.dataset.primary = ''
@@ -1519,59 +1520,34 @@ function createAttachmentContainer(data) {
       };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      // if (data.attachment[key].value) {
+  
+      if (data.attachment[key].value) {
 
-      //   const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
-      //   valueField.listen('MDCChip:removal', function (e) {
-      //     data.attachment[key].value = ''
-      //     if (key === 'Customer') {
-      //       div.classList.remove('mdc-form-field');
-      //       if (div.querySelector('.mdc-chip-set')) {
-      //         div.querySelector('.mdc-chip-set').remove();
-      //       }
-      //       if (data.customerRecord) {
-      //         data.customerRecord.venue[0].address = ''
-      //         data.customerRecord.venue[0].location = ''
-      //         data.customerRecord.venue[0].geopoint.latitude = ''
-      //         data.customerRecord.venue[0].geopoint.longitude = ''
-      //       } else {
-      //         data.venue[0].address = ''
-      //         data.venue[0].location = ''
-      //         data.venue[0].geopoint.latitude = ''
-      //         data.venue[0].geopoint.longitude = ''
-      //       }
-      //       div.appendChild(addNewCustomer(data))
-      //     }
-      //   })
-      //   if (key === 'Customer') {
-      //     valueField.listen('MDCChip:interaction', function (e) {
-      //       console.log(e)
+        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        div.appendChild(valueField.root_)
+        valueField.listen('MDCChip:removal', function (e) {
+          data.attachment[key].value = ''
+          if(document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden');
+          }
+          if (key === 'Customer' && data.hasOwnProperty('create')) {
+            if (data.customerRecord) {
+              data.customerRecord.venue[0].address = ''
+              data.customerRecord.venue[0].location = ''
+              data.customerRecord.venue[0].geopoint._latitude = ''
+              data.customerRecord.venue[0].geopoint._longitude = ''
+              data.customerRecord.attachment.Name.value = ''
+            }
+            valueField.root_.parentNode.replaceChild(addNewCustomerButton(data, div).root_, valueField.root_);
+          }
+        })
+      } else {
+      if (key === 'Customer' && data.hasOwnProperty('create')) {
+        div.appendChild(addNewCustomerButton(data, div).root_);
 
-      //       if (data.customerRecord) {
-      //         if (data.customerRecord.attachment.Customer.value === data.attachment.Name.value) {
-      //           div.classList.remove('mdc-form-field');
-      //           if (div.querySelector('.mdc-chip-set')) {
-      //             div.querySelector('.mdc-chip-set').remove();
-      //           }
-      //           div.appendChild(addNewCustomer(data))
-      //         }
+        }
+      }
 
-      //       }
-      //       // else {
-      //       //   if(data.venue[0].location) {
-      //       //     div.classList.remove('mdc-form-field');
-      //       //     if (div.querySelector('.mdc-chip-set')) {
-      //       //       div.querySelector('.mdc-chip-set').remove();
-      //       //     }
-      //       //     div.appendChild(addNewCustomer(data))
-      //       //   }
-      //       // }
-
-      //     })
-      //   }
-      //   valueField.root_.classList.add('data--value-list', 'label--text')
-      //   div.appendChild(valueField.root_)
-      // }
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
 
         if (results.length) {
@@ -1579,8 +1555,7 @@ function createAttachmentContainer(data) {
           const chooseExistingEl = chooseExisting.getButton();
           chooseExistingEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'add--assignee-icon', 'attachment-selector-label')
           chooseExistingEl.root_.id = 'customer-selection-btn'
-          div.appendChild(chooseExistingEl.root_)
-
+          div.appendChild(chooseExistingEl.root_);
 
           div.classList.add('selector--margin')
           chooseExistingEl.root_.onclick = function (evt) {
@@ -1596,61 +1571,6 @@ function createAttachmentContainer(data) {
 
           }
         }
-        if (customerAddition[data.template] && key === 'Customer') {
-          if (data.attachment['Customer'].value) {
-            if (data.attachment['Customer'].value !== data.customerRecord.attachment.Name.value) {
-              const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
-              valueField.root_.classList.add('data--value-list', 'label--text')
-              div.appendChild(valueField.root_);
-
-              valueField.listen('MDCChip:removal', function (e) {
-                  data.attachment[key].value = ''
-                    div.classList.remove('mdc-form-field');
-                    if (div.querySelector('.mdc-chip-set')) {
-                      div.querySelector('.mdc-chip-set').remove();
-                    }
-                    if (data.customerRecord) {
-                      data.customerRecord.venue[0].address = ''
-                      data.customerRecord.venue[0].location = ''
-                      data.customerRecord.venue[0].geopoint._latitude = ''
-                      data.customerRecord.venue[0].geopoint._longitude = ''
-                      data.customerRecord.attachment.Name.value = ''
-                      div.appendChild(addNewCustomer(data.customerRecord))
-                    } else {
-                      data.venue[0].address = ''
-                      data.venue[0].location = ''
-                      data.venue[0].geopoint._latitude = ''
-                      data.venue[0].geopoint._longitude = ''
-                      data.attachment.Name.value = ''
-
-                      div.appendChild(addNewCustomer(data))
-
-                    }
-                    
-                  
-                })
-            } else {
-              div.classList.add('mdc-form-field');
-              div.classList.remove('mdc-form-field');
-              if (!results.length) {
-                createNewEl.root_.style.marginRight = '0px';
-              }
-              div.appendChild(addNewCustomer(data.customerRecord))
-            }
-          } else {
-            div.classList.remove('mdc-form-field');
-            if (!results.length) {
-              createNewEl.root_.style.marginRight = '0px';
-            }
-            div.appendChild(addNewCustomer(data.customerRecord))
-          }
-          // if (data.attachment['Customer'].value) {
-          // } else {
-
-
-          // }
-        }
-
       });
 
     }
@@ -1667,6 +1587,62 @@ function createAttachmentContainer(data) {
   })
 }
 
+function addNewCustomerButton(data, div) {
+  const createNewButton = new Button('Create New');
+  const createInit = createNewButton.getButton();
+  let show = false;
+  createInit.root_.onclick = function () {
+    show = !show;
+    if (show) {
+      showCustomerContainer(data, div)
+      this.textContent = 'Cancel';
+    } else {
+      hideCustomerContainer(data, div,this)
+      this.textContent = 'Create New';
+    }
+  }
+  return createInit;
+}
+
+function showCustomerContainer(data, div) {
+  div.classList.remove('mdc-form-field')
+
+  if (data.customerRecord) {
+  
+    div.appendChild(addNewCustomer(data.customerRecord,data));
+  } else {
+    div.appendChild(addNewCustomer(data))
+  }
+  if( div.querySelector('#customer-selection-btn')) {
+    div.querySelector('#customer-selection-btn').classList.add('hidden')
+  }
+
+}
+
+function hideCustomerContainer(data, div) {
+  div.classList.add('mdc-form-field')
+  if (document.querySelector('.customer-form')) {
+    document.querySelector('.customer-form').remove();
+  }
+  if (data.customerRecord) {
+    data.customerRecord.venue[0].address = ''
+    data.customerRecord.venue[0].location = ''
+    data.customerRecord.venue[0].geopoint._latitude = ''
+    data.customerRecord.venue[0].geopoint._longitude = ''
+    data.customerRecord.attachment.Name.value = ''
+   
+
+  } else {
+    data.venue[0].address = ''
+    data.venue[0].location = ''
+    data.venue[0].geopoint._latitude = ''
+    data.venue[0].geopoint._longitude = ''
+  }
+  if(div.querySelector('#customer-selection-btn')) {
+
+    div.querySelector('#customer-selection-btn').classList.remove('hidden')
+  }
+}
 
 function createAssigneeList(record, db) {
   const parent = document.getElementById('assignees--list')
@@ -1957,10 +1933,9 @@ function insertInputsIntoActivity(record, send) {
   //   record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
   // }
 
-  if (record.customerRecord) {
-    record.attachment.Customer.value = record.customerRecord.attachment.Name.value
-  }
-
+  // if (record.customerRecord) {
+  //   record.attachment.Customer.value = record.customerRecord.attachment.Name.value
+  // }
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
@@ -2017,22 +1992,25 @@ function insertInputsIntoActivity(record, send) {
     const reqArray = [];
 
     if (record.customerRecord) {
-      const customerRec = {
-        share: [],
-        office: record.customerRecord.office,
-        venue: record.customerRecord.venue,
-        schedule: record.customerRecord.schedule,
-        attachment: record.customerRecord.attachment,
-        template: record.customerRecord.template
-      }
-      for (var i = 0; i < record.customerRecord.venue.length; i++) {
-        record.customerRecord.venue[i].geopoint = {
-          latitude: record.customerRecord.venue[i].geopoint['_latitude'] || '',
-          longitude: record.customerRecord.venue[i].geopoint['_longitude'] || ''
+      if(record.customerRecord.attachment.Name.value) {
+
+        const customerRec = {
+          share: [],
+          office: record.customerRecord.office,
+          venue: record.customerRecord.venue,
+          schedule: record.customerRecord.schedule,
+          attachment: record.customerRecord.attachment,
+          template: record.customerRecord.template
         }
+        for (var i = 0; i < record.customerRecord.venue.length; i++) {
+          record.customerRecord.venue[i].geopoint = {
+            latitude: record.customerRecord.venue[i].geopoint['_latitude'] || '',
+            longitude: record.customerRecord.venue[i].geopoint['_longitude'] || ''
+          }
+        }
+        reqArray.push(customerRec);
       }
-      reqArray.push(customerRec);
-      delete record.customerRecord;
+      // delete record.customerRecord;
     }
 
     for (var i = 0; i < record.venue.length; i++) {
@@ -2122,7 +2100,7 @@ function getSubscription(office, template) {
   })
 }
 
-function addNewCustomer(customerRecord) {
+function addNewCustomer(customerRecord,data) {
   const container = createElement('div', {
     className: 'customer-form'
   });
@@ -2149,7 +2127,9 @@ function addNewCustomer(customerRecord) {
   nameField.input_.required = true;
   nameField.input_.onchange = function (e) {
     customerRecord.attachment.Name.value += e.target.value
-
+    if(data && data.customerRecord) {
+        data.attachment.Customer.value += e.target.value
+    }
   }
   const addressField = address.withoutLabel();
   addressField['input_'].placeholder = 'Customer Address'

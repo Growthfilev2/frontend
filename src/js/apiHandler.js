@@ -292,14 +292,23 @@ function share(body, meta) {
 
 function update(body, meta) {
   return new Promise(function (resolve, reject) {
+    // if(body.template === 'tour plan') {
+    //   if(body.customerRecord) {
+    //     if(!body.customerRecord.attachment.Name.value) {
+    //       delete body.customerRecord;
+    //     }
+    //   }
+    // }
     const req = {
       method: 'PATCH',
       url: `${meta.apiUrl}activities/update`,
       body: JSON.stringify(body),
       token: meta.user.token
     }
+
     http(req)
       .then(function (success) {
+
         instantUpdateDB(body, 'update', meta.user).then(function () {
           resolve(true)
         })
@@ -530,10 +539,11 @@ function instantUpdateDB(data, type, user) {
           record.attachment = data.attachment
           for (var i = 0; i < record.venue.length; i++) {
             record.venue[i].geopoint = {
-              '_latitude': data.venue[i].geopoint['_latitude'],
-              '_longitude': data.venue[i].geopoint['_longitude']
+              '_latitude': data.venue[i].geopoint['latitude'],
+              '_longitude': data.venue[i].geopoint['longitude']
             }
           }
+          debugger;
           objStore.put(record)
 
         }

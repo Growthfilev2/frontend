@@ -637,6 +637,7 @@ function headerBackIcon(store){
       listView();
     }
     else {
+
       updateCreateActivity(history.state[1], true);
     }
   }
