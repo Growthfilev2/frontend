@@ -1,8 +1,27 @@
 body {
   margin: 0;
+  background-color: white;
 }
 .mdc-top-app-bar__section--align-start {
   padding-left: 10px;
+}
+.mdc-button {
+  background-color: #0399f4 !important;
+  color:white !important;
+}
+.text-area-basic.mdc-text-field__input {
+  width: 100% !important;
+  border-style: inset;
+  border-width: 1.5px;
+  border-color: #0399f4;
+  padding-top: 0px;
+  height: auto;
+}
+.filled-background {
+  background-color: #f5f5f5;
+}
+.mdc-button.shaped {
+  border-radius: 22px;
 }
 .mt-10 {
   margin-top: 10px;
@@ -281,10 +300,12 @@ body {
 
 
 .add--assignee-icon {
+  /* position: absolute;
+  right: 1rem; */
   float: right;
   width: 30px;
   height: 30px;
-  margin-top: 10px;
+  margin-top: 1px;
 }
 
 .assignee-li span:nth-child(3) {
@@ -461,7 +482,7 @@ body {
   padding: 10px 0px 10px 0px;
 }
 
-.create-activity {
+.create-activity, .add-number {
   position: fixed;
   bottom: 1rem;
   right: 1rem;
@@ -495,18 +516,22 @@ body {
 }
 
 .selector-container {
-  height: 100vh;
+  /* height: 100vh; */
   background: white;
 }
+.selector-container ul.mdc-list--avatar-list{
+  margin-bottom: 10%
+}
 
-.create-activity .mdc-fab_icon {
+#create-activity--icon.create-activity .mdc-fab__icon {
   font-size: 53px;
 }
+
 
 /* share--container */
 
 @media(min-width: 1024px) {
-  .create-activity {
+  .create-activity, .add-number {
     bottom: 1.5rem;
     right: 1.5rem;
   }
@@ -845,13 +870,21 @@ body {
 
 .label--text {
   color: #0399f4 !important;
+  font-size: 18px;
+  font-weight: 400;
 }
 
 .attachment-field {
-  padding: 5Px 0px 5px 0px;
+  padding: 10Px 0px 10px 0px;
   padding-left: 15px;
   padding-right: 15px;
+  border-bottom: 1px solid lightgrey;
+  width: -webkit-fill-available;
+  min-height: 30px;
 
+}
+#attachment--list .mdc-form-field >label {
+  /* margin-right: 0px; */
 }
 
 .attachment input {
@@ -993,7 +1026,8 @@ input[type="datetime-local"] {
 }
 
 .attachment-selector-label {
-  margin-top: -5px;
+  /* margin-top: -5px; */
+  
 }
 
 .mdc-fab .mdc-fab__icon {
@@ -1084,17 +1118,14 @@ input[type="datetime-local"] {
 }
 
 .data--value-list {
-  margin-left: 10px;
-  color: black
+  /* margin-top: 0px;
+  margin-left: 5%;
+  width: -webkit-fill-available; */
+  font-size: 18px;
 }
 
 #schedule--list {
   padding-left: 15px;
-}
-
-.attachment-field .mdc-text-field {
-  margin-top: 0px !important;
-  height: 30px !important;
 }
 
 #assignees--list .mdc-list-item:nth-child(1) {
@@ -1113,8 +1144,16 @@ input[type="datetime-local"] {
 
 #assignees--list .add--assignee-icon {
   margin-top: 0px;
+  position: absolute;
+  right: 1rem;
+  top: 0.5rem;
 }
-
+.chip-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
 #assignees--list {
   padding-top: 5px;
   position: relative;
@@ -1141,12 +1180,12 @@ input[type="datetime-local"] {
 }
 
 #data-list--container .mdc-list-item {
-  height: 100%;
+  /* height: 100%; */
 }
 
-#data-list--container li:nth-last-child(1) {
+/* #data-list--container li:nth-last-child(1) {
   margin-bottom: 70px;
-}
+} */
 
 .search-icon-input {
   font-size: 32px;
@@ -1354,7 +1393,10 @@ input[type="datetime-local"] {
 }
 
 .attachment--divider {
-  opacity: 0.5
+  opacity: 0.5;
+}
+.full-width {
+  width: -webkit-fill-available;
 }
 
 #schedule--group {
@@ -1395,10 +1437,15 @@ input[type="datetime-local"] {
 
 .mdc-text-field.data--value-list {
   margin-bottom: 0px;
+  margin-top: 2%;
 }
 
 #Weekly-Off {
   margin-top: -10px;
+  width: -webkit-fill-available
+}
+#Weekly-Off .mdc-select__native-control {
+  padding: 0px;
 }
 
 #viewImage--dialog-component .mdc-dialog__surface {
@@ -1418,9 +1465,9 @@ input[type="datetime-local"] {
 
 
 @media only screen and (max-width:400px) {
-  #attachment--list .mdc-text-field {
+  /* #attachment--list .mdc-text-field {
     width: 40%;
-  }
+  } */
 }
 
 #cancel-alert .mdc-dialog__surface {
@@ -1442,8 +1489,15 @@ input[type="datetime-local"] {
   background-color: #0399f4;
 }
 
-.undo-deleted {
-  color: #0399f4 !important;
+.subscription-selector .mdc-list-item__primary-text{
+  margin-bottom: 0px;
+}
+
+.create-new-customer-btn {
+  margin-right: 15px;
+ /* position: absolute;
+ right: 2.5rem;
+ margin-right: 15px; */
 }
 
 .custom-number--container {
@@ -1453,7 +1507,18 @@ input[type="datetime-local"] {
   width: 90%;
 
 }
-
+.customer-form {
+  margin-top: 7%;
+}
+.customer-form .mdc-text-field {
+  margin-top: 10px;
+}
+.customer-form #customer-address-map {
+   
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+}
 .custom-number--container .mdc-text-field__input {
   letter-spacing: 17px;
   font-size: 30px;
@@ -1467,14 +1532,25 @@ input[type="datetime-local"] {
   width: inherit;
 }
 
-#new-contact {
-  background-color: #0399f4 !important;
-  color: white;
+#number-field {
   display: table;
   margin: 0 auto;
-  margin-top: 10%;
+  width: 89%;
 }
-
+.new-contact-headline {
+  text-align:center;
+}
+#new-contact {
+  width: 89%;
+  font-size: 20px;
+  display: block;
+  margin: 0 auto;
+}
+#new-contact span {
+  font-weight: 600;
+  font-size: 20px;
+  vertical-align: sub;
+}
 .message-field {
   text-align: center;
 }
@@ -1543,7 +1619,7 @@ input[type="datetime-local"] {
 }
 
 #attachment--list {
-  padding-top: 10px;
+  /* padding-top: 10px; */
 }
 
 :root {
@@ -1552,6 +1628,9 @@ input[type="datetime-local"] {
   --mdc-theme-background: #ffffff !important;
   --mdc-theme-on-primary: white !important;
   --mdc-theme-on-secondary: #ffffff !important;
+}
+.mdc-ripple-surface--accent {
+  color: var(--mdc-theme-secondary);
 }
 .mdc-list-item--selected {
   color: #0399f4 !important;
@@ -1828,17 +1907,23 @@ input[type="datetime-local"] {
   overflow: hidden;
 
 }
+.mdc-form-field.check-in-form label {
+  width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-weight: 400
+}
 
 #uncheck-checkin {
   margin-top: 0px;
 }
 
 .search-field {
-  margin-left: 20px;
+  margin-left: 15px;
   width: 89%;
   margin-top: 10px;
-  background-color: #80808017;
-  color: black;
 }
 
 .search-field .mdc-text-field__icon {

@@ -1,4 +1,6 @@
 function conversation(id, pushState) {
+  document.body.classList.remove('mdc-dialog-scroll-lock')
+
   window.removeEventListener('scroll', handleScroll, false)
   checkIfRecordExists('activity', id).then(function (id) {
     if (id) {
@@ -99,17 +101,17 @@ function commentPanel(id) {
   const commentCont = document.createElement('div')
   commentCont.className = 'comment--container'
 
-  const inputField = document.createElement('div')
-  inputField.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
-  inputField.id = 'write--comment'
-  inputField.style.width = '100%';
+  const field = document.createElement('div')
+  field.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
+  field.id = 'write--comment'
+  field.style.width = '100%';
   const input = document.createElement('input')
   input.className = 'mdc-text-field__input comment-field mdc-elevation--z4'
   input.type = 'text'
 
-  inputField.appendChild(input)
+  field.appendChild(input)
 
-  commentCont.appendChild(inputField)
+  commentCont.appendChild(field)
 
 
   const btn = document.createElement('button')
@@ -331,8 +333,11 @@ function createComment(db, addendum, currentUser) {
           lat: addendum.location['_latitude'],
           lng: addendum.location['_longitude']
         }
+        const map = new AppendMap(mapDom)
+        map.setLocation(loc)
+        map.setZoom(18)
 
-        appendMap(loc, mapDom);
+        map.getMarker();
         if (showMap) {
           mapDom.style.height = '200px'
           mapIcon.textContent = 'arrow_drop_down'
@@ -382,25 +387,6 @@ function hasMapsApiLoaded() {
 }
 
 
-function appendMap(location, el) {
-
-  const map = new google.maps.Map(el, {
-    zoom: 16,
-    center: location,
-    disableDefaultUI: true
-  });
-
-  var customControlDiv = document.createElement('div');
-  var customControl = new MapsCustomControl(customControlDiv, map, location.lat, location.lng);
-  customControlDiv.index = 1;
-  map.controls[google.maps.ControlPosition.TOP_LEFT].push(customControlDiv);
-
-  const marker = new google.maps.Marker({
-    position: location,
-    map: map
-  });
-}
-
 function MapsCustomControl(customControlDiv, map, lat, lng) {
   var controlUI = document.createElement('div');
 
@@ -432,11 +418,11 @@ function MapsCustomControl(customControlDiv, map, lat, lng) {
 }
 
 function createHeaderContent(db, id) {
-  const sectionStart= document.getElementById('section-start');
+  const sectionStart = document.getElementById('section-start');
   sectionStart.innerHTML = ''
   const activityObjectStore = db.transaction('activity').objectStore('activity')
   let leftDiv = headerBackIcon()
-  
+
   activityObjectStore.get(id).onsuccess = function (event) {
 
     const record = event.target.result;
@@ -451,13 +437,13 @@ function createHeaderContent(db, id) {
       creatorImg.src = './img/empty-user.jpg';
       creatorImg.className = 'header--icon-creator'
       dataObject.appendChild(creatorImg);
-     
+
       var primarySpan = document.createElement('div');
       primarySpan.className = 'mdc-top-app-bar__title mdc-typography--subtitle2';
       const name = document.createElement('span')
       name.textContent = record.activityName;
       name.className = ''
-      primarySpan.onclick = function(){
+      primarySpan.onclick = function () {
         checkIfRecordExists('activity', record.activityId).then(function (id) {
           if (id) {
             updateCreateActivity(record);
@@ -470,14 +456,14 @@ function createHeaderContent(db, id) {
       var info = document.createElement('span');
       // secondarySpan.className = 'mdc-list-item__secondary-text';
       info.textContent = 'Click here to see details';
-      
+
       sectionStart.appendChild(leftDiv);
       sectionStart.appendChild(dataObject);
       primarySpan.appendChild(name);
       primarySpan.appendChild(document.createElement('br'))
-      primarySpan.appendChild(info) 
+      primarySpan.appendChild(info)
       sectionStart.appendChild(primarySpan)
-    
+
     });
   }
 }
@@ -495,118 +481,6 @@ function reinitCount(db, id) {
   transaction.oncomplete = function () {}
 }
 
-function fillUsersInSelector(data) {
-  const ul = document.getElementById('data-list--container')
-  const recordAssignees = data.record.assignees
-
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const transaction = db.transaction(['users']);
-    const store = transaction.objectStore('users')
-    document.querySelector('.selector-send').classList.remove('hidden');
-    const btn = document.getElementById('selector-submit-send')
-    btn.textContent = 'Add New Number';
-    btn.dataset.type = 'add-number'
-    let count = 0;
-    let alreadyPresent = {}
-
-    recordAssignees.forEach(function (assignee) {
-      if (typeof assignee === 'string') {
-        alreadyPresent[assignee] = true;
-      } else {
-        alreadyPresent[assignee.phoneNumber] = true
-      }
-    })
-    alreadyPresent[firebase.auth().currentUser.phoneNumber] = true
-
-    store.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
-
-      if (data.attachment.present) {
-        count++
-        ul.appendChild(createSimpleAssigneeLi(cursor.value, true, false))
-      } else {
-        if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-          count++
-          ul.appendChild(createSimpleAssigneeLi(cursor.value, true, true))
-        }
-      }
-      cursor.continue()
-    }
-
-    transaction.oncomplete = function () {
-      if (!count) {
-        ul.appendChild(noSelectorResult('No Contact Found'));
-        document.getElementById('users-selector-search').style.display = 'none';
-      }
-      btn.onclick = function () {
-        if (btn.dataset.type === 'add-number') {
-          document.getElementById('users-selector-search').style.display = 'none';
-          removeChildNodes(ul)
-          btn.remove();
-          addNewNumber(data)
-          return
-        }
-
-        if (data.attachment.present) {
-          const selector = document.querySelector('.mdc-radio.radio-selected');
-          if (!selector) {
-            document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-            return
-          }
-          const radio = new mdc.radio.MDCRadio(selector)
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: JSON.parse(radio.value)
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return;
-        }
-
-        if (data.record.hasOwnProperty('create')) {
-          resetSelectedContacts().then(function (selectedPeople) {
-            if (!selectedPeople.length) {
-              document.getElementById('selector-warning').textContent = '* Please Select A Contact'
-              return
-            }
-
-            updateDomFromIDB(data.record, {
-              hash: 'addOnlyAssignees',
-            }, {
-              primary: selectedPeople
-            }).then(function (activity) {
-              document.body.classList.remove('mdc-dialog-scroll-lock');
-              updateCreateActivity(activity, true)
-            }).catch(handleError)
-          })
-          return
-        }
-        if (isLocationStatusWorking()) {
-          shareReq(data)
-        }
-      }
-
-
-      const selectedBoxes = document.querySelectorAll('[data-selected="true"]');
-      selectedBoxes.forEach(function (box) {
-        if (box) {
-          const mdcBox = new mdc.checkbox.MDCCheckbox.attachTo(box);
-          mdcBox.checked = true
-          box.children[1].style.animation = 'none'
-          box.children[1].children[0].children[0].style.animation = 'none'
-        }
-      })
-    }
-  }
-
-}
-
 
 function noSelectorResult(text) {
   const noResult = document.createElement('div')
@@ -617,185 +491,6 @@ function noSelectorResult(text) {
   noResult.appendChild(p)
   return noResult
 }
-
-function shareReq(data) {
-
-  resetSelectedContacts().then(function (people) {
-    const reqBody = {
-      'activityId': data.record.activityId,
-      'share': people
-    }
-    document.querySelector('header').appendChild(progressBar())
-
-    requestCreator('share', reqBody)
-  })
-}
-
-function addNewNumber(data) {
-  const container = document.createElement('div')
-  container.className = 'custom-number--container'
-
-
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input'
-  input.id = 'number-field'
-  input.type = 'number'
-  input.setAttribute('maxlength', '10')
-  input.setAttribute('size', '10')
-  input.required = true
-  input.onkeypress = function (event) {
-    return event.charCode >= 48 && event.charCode <= 57
-  }
-
-  input.oninput = function () {
-    if (this.value.length > this.maxLength) {
-      this.value = this.value.slice(0, this.maxLength)
-
-    } else if (this.value.length === this.maxLength) {
-      document.querySelector('.message-field').classList.remove('error-message')
-      this.classList.add('valid-input')
-      document.querySelector('.message-field').textContent = ''
-      document.getElementById('new-contact').disabled = false
-
-    } else {
-      document.querySelector('.message-field').classList.add('error-message')
-      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
-      document.getElementById('new-contact').disabled = true
-    }
-
-  }
-
-
-  const createButton = document.createElement('button')
-  createButton.className = 'mdc-button'
-  createButton.textContent = 'Add Contact'
-  createButton.id = 'new-contact'
-
-  createButton.onclick = function () {
-    const number = document.getElementById('number-field').value
-
-    const formattedNumber = formatNumber(number)
-    if (checkNumber(formattedNumber)) {
-
-      numberNotExist(formattedNumber).then(function (exist) {
-        if (exist) {
-          document.getElementById('new-contact').disabled = true
-          document.querySelector('.message-field').classList.add('error-message')
-          document.querySelector('.message-field').textContent = '* Contact already exist'
-          return
-        }
-
-        if (data.attachment.present) {
-          updateDomFromIDB(data.record, {
-            hash: '',
-            key: data.attachment.key
-          }, {
-            primary: formattedNumber
-          }).then(function (activity) {
-            console.log(activity);
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-
-        if (data.record.hasOwnProperty('create')) {
-          updateDomFromIDB(data.record, {
-            hash: 'addOnlyAssignees',
-          }, {
-            primary: [formattedNumber]
-          }).then(function (activity) {
-
-            updateCreateActivity(activity, true)
-          }).catch(handleError)
-          return
-        }
-        if (isLocationStatusWorking()) {
-
-          newNumberReq(data, formattedNumber)
-        }
-      })
-
-    } else {
-      document.querySelector('.message-field').classList.add('error-message')
-      document.querySelector('.message-field').textContent = '* Please Enter a valid Number'
-      document.getElementById('new-contact').disabled = true
-
-    }
-
-  }
-
-  const message = document.createElement('p')
-  message.className = 'mdc-typography--subtitle2 message-field'
-  message.textContent = 'Enter new phone contact without country code'
-  message.id = 'helper-message'
-
-  container.appendChild(input)
-  container.appendChild(message)
-  container.appendChild(createButton)
-  document.querySelector('#data-list--container').appendChild(container)
-  const getNumber = new mdc.ripple.MDCRipple.attachTo(document.getElementById('new-contact'))
-
-}
-
-function newNumberReq(data, formattedNumber) {
-  document.querySelector('header').appendChild(progressBar())
-
-  requestCreator('share', {
-    activityId: data.record.activityId,
-    'share': [formattedNumber]
-  })
-}
-
-function numberNotExist(number) {
-  return new Promise(function (resolve) {
-
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const store = db.transaction('users').objectStore('users')
-      store.get(number).onsuccess = function (event) {
-        const record = event.target.result
-        if (record) {
-
-          resolve(true)
-        } else {
-          resolve(false)
-        }
-      }
-    }
-  })
-}
-
-function resetSelectedContacts() {
-  return new Promise(function (resolve) {
-    const selectedUsers = []
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result
-      const objectStoreTx = db.transaction(['users'], 'readwrite')
-      const objectStore = objectStoreTx.objectStore('users')
-      objectStore.openCursor().onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) {
-
-          resolve(selectedUsers)
-          return
-        }
-        if (cursor.value.isSelected) {
-
-          selectedUsers.push(cursor.value.mobile)
-          cursor.value.isSelected = false
-          objectStore.put(cursor.value)
-        }
-        cursor.continue()
-      }
-
-    }
-  })
-}
-
 
 function checkMapStoreForNearByLocation(office, currentLocation) {
   return new Promise(function (resolve, reject) {
@@ -837,7 +532,10 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         Object.keys(filter).forEach(function (locationName) {
           array.push(filter[locationName])
         })
-        resolve(array)
+        const nearest = array.sort(function (a, b) {
+          return a.accuracy - b.accuracy
+        })
+        resolve(nearest)
       }
       tx.onerror = function () {
         reject(tx.error)
@@ -860,12 +558,11 @@ function createTempRecord(office, template, prefill) {
       if (!selectedCombo) {
         return;
       }
-     
+
       let bareBonesScheduleArray;
-      if(prefill.schedule) {
+      if (prefill.schedule) {
         bareBonesScheduleArray = prefill.schedule
-      }
-      else {
+      } else {
         bareBonesScheduleArray = []
         selectedCombo.schedule.forEach(function (schedule) {
           const bareBonesSchedule = {}
@@ -875,10 +572,10 @@ function createTempRecord(office, template, prefill) {
           bareBonesScheduleArray.push(bareBonesSchedule)
         })
       }
-      if(prefill.attachment) {
-       Object.keys(prefill.attachment).forEach(function(key){
-         selectedCombo.attachment[key] = prefill.attachment[key]
-       })
+      if (prefill.attachment) {
+        Object.keys(prefill.attachment).forEach(function (key) {
+          selectedCombo.attachment[key] = prefill.attachment[key]
+        })
       }
       const bareBonesRecord = {
         office: selectedCombo.office,
@@ -908,7 +605,6 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-         
           let message;
           if (native.getName() === 'Android') {
             message = 'Make Sure you have set Location Mode to High Accuracy'
@@ -926,12 +622,12 @@ function createTempRecord(office, template, prefill) {
           const dialogEl = document.getElementById('location-fetch-dialog')
           const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
           fetchingLocationDialog.show();
-          if(native.getName() === 'Ios') {
-            window.addEventListener('iosLocation',function _iosLocation(e){
+          if (native.getName() === 'Ios') {
+            window.addEventListener('iosLocation', function _iosLocation(e) {
               dialogEl.remove();
               updateCreateActivity(bareBonesRecord)
-              window.removeEventListener('iosLocation',_iosLocation,true);
-            },true)
+              window.removeEventListener('iosLocation', _iosLocation, true);
+            }, true)
             return;
           }
           manageLocation().then(function (location) {
@@ -955,7 +651,6 @@ function createTempRecord(office, template, prefill) {
         });
         return
       }
-
       selectedCombo.venue.forEach(function (venue) {
         const bareBonesVenue = {}
         bareBonesVenue.venueDescriptor = venue
@@ -968,121 +663,81 @@ function createTempRecord(office, template, prefill) {
 
         bareBonesVenueArray.push(bareBonesVenue);
       });
-      bareBonesRecord.venue = bareBonesVenueArray
+      bareBonesRecord.venue = bareBonesVenueArray;
+      if (template === 'tour plan' || template === 'dsr' || template === 'duty roster' || template === 'customer') {
+        getLocation().then(function (userLocation) {
+          geocodePosition({
+            lat: userLocation.latitude,
+            lng: userLocation.longitude
+          }).then(function (result) {
+
+            return createBlendedCustomerRecord(bareBonesRecord, result)
+          });
+        }).catch(function (error) {
+          console.log(error)
+
+          return createBlendedCustomerRecord(bareBonesRecord)
+        })
+        return;
+      }
       updateCreateActivity(bareBonesRecord)
     }
   }
-
 }
 
-function hasAnyValueInChildren(office, template, status) {
+function createBlendedCustomerRecord(bareBonesRecord, geocodeResult) {
+
+  if (bareBonesRecord.template === 'customer') {
+    let newVenue = [createVenueObjectWithGeoCode(bareBonesRecord.venue[0].venueDescriptor, geocodeResult)];
+    bareBonesRecord.venue = newVenue
+    return updateCreateActivity(bareBonesRecord)
+  }
+
+  getSubscription(bareBonesRecord.office, 'customer').then(function (customerRecord) {
+    if (!customerRecord) return updateCreateActivity(bareBonesRecord);
+    customerRecord.venue = [createVenueObjectWithGeoCode(customerRecord.venue[0], geocodeResult)];
+    bareBonesRecord['customerRecord'] = customerRecord;
+    updateCreateActivity(bareBonesRecord)
+    return;
+  })
+}
+
+function hasAnyValueInChildren(office, template,customerName) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
+  let results = [];
   return new Promise(function (resolve) {
 
     req.onsuccess = function () {
-      const db = req.result
-      const childrenStore = db.transaction('children').objectStore('children')
-      let count = 0;
-      let result = false
-      childrenStore.openCursor().onsuccess = function (event) {
+      const db = req.result;
+      const tx = db.transaction(['children'])
+      const store = tx.objectStore('children').index('templateStatus');
+      const bound = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
+      store.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
-        if (!cursor) {
-          if (count === 0) {
-            result = false
-            resolve(result)
-          } else {
-            result = true
-            resolve(result)
-          }
-          return
+        if (!cursor) return;
+        if (cursor.value.office !== office) {
+          cursor.continue();
+          return;
         }
-        if (cursor.value.template === template && cursor.value.office === office && status != 'CANCELLED') {
-          count++
+        if(customerName && template === 'customer'){
+          if(cursor.value.attachment.Name.value === customerName) {
+            results.push(cursor.value)
+          }
+        }
+        else {
+          results.push(cursor.value)
         }
         cursor.continue()
       }
-
-    }
-  })
-}
-
-function updateDomFromIDB(activityRecord, attr, data) {
-  return new Promise(function (resolve, reject) {
-    const dbName = firebase.auth().currentUser.uid
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result;
-      let thisActivity = activityRecord;
-
-      if (attr.hash === 'venue') {
-        thisActivity = updateVenue(thisActivity, attr, data);
-        updateLocalRecord(thisActivity, db).then(function (message) {
-          resolve(thisActivity)
-        }).catch(function (error) {
-          console.log(error)
-          reject(error)
-        })
-        return
+      tx.oncomplete = function () {
+        resolve(results)
       }
-      //for create
-      if (attr.hash === 'addOnlyAssignees') {
-        if (!data.primary.length) return
-        data.primary.forEach(function (number) {
-          if (thisActivity.assignees.indexOf(number) > -1) return
-          thisActivity.assignees.push(number)
-        })
-        resolve(thisActivity);
-        return
-      }
-
-      if (attr.hash === 'weekday') return
-      if (!attr.hasOwnProperty('key')) return
-
-      thisActivity.attachment[attr.key].value = data.primary;
-
-      updateLocalRecord(thisActivity, db).then(function (message) {
-        resolve(thisActivity);
-      }).catch(function (error) {
-        reject(error)
-      })
     }
   })
 }
 
 
-function updateLocalRecord(thisActivity, db) {
-  return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['activity'], 'readwrite');
-    const store = tx.objectStore('activity');
-    let updatedActivity = thisActivity;
-
-    if (!updatedActivity.hasOwnProperty('create')) {
-      store.put(updatedActivity)
-    }
-    tx.oncomplete = function () {
-      resolve("activity object store updated with value")
-    }
-    tx.onerror = function () {
-      reject({
-        message: `${tx.error.message} from updateLocalRecord`
-      });
-    }
-  })
-}
-
-function updateVenue(updatedActivity, attr, data) {
-
-  updatedActivity.venue.forEach(function (field) {
-    if (field.venueDescriptor === attr.key) {
-      field.location = data.primary
-      field.address = data.secondary.address
-      field.geopoint['_latitude'] = data.secondary.geopoint['_latitude']
-      field.geopoint['_longitude'] = data.secondary.geopoint['_longitude']
-    }
-  })
-  return updatedActivity
-}
 
 function convertKeyToId(key) {
   let str = key.replace(/-/g, '--')
@@ -1104,12 +759,12 @@ function updateCreateContainer(record, showSendButton) {
   activityName.textContent = record.activityName
   activityName.className = 'mdc-top-app-bar__title'
   let backIcon = headerBackIcon();
- 
+
   const sectionStart = document.getElementById('section-start')
   sectionStart.innerHTML = ''
   sectionStart.appendChild(backIcon);
   sectionStart.appendChild(activityName)
-  
+
   const container = document.createElement('div')
   container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'
 
@@ -1162,12 +817,15 @@ function updateCreateContainer(record, showSendButton) {
 }
 
 function updateCreateActivity(record, showSendButton) {
+  if (document.querySelector('.mdc-linear-progress')) {
+    document.querySelector('.mdc-linear-progress').remove();
+  }
   if (history.state[0] === 'updateCreateActivity') {
     history.replaceState(['updateCreateActivity', record], null, null)
   } else {
     history.pushState(['updateCreateActivity', record], null, null)
   }
-
+  console.log(record)
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   req.onsuccess = function () {
@@ -1175,7 +833,7 @@ function updateCreateActivity(record, showSendButton) {
 
     // create base container for activity update/create
     const appView = document.getElementById('app-current-panel')
-  
+
     appView.innerHTML = updateCreateContainer(record, showSendButton).outerHTML
 
     const officeSection = document.getElementById('office--list')
@@ -1188,19 +846,17 @@ function updateCreateActivity(record, showSendButton) {
     createVenueSection(record)
     createScheduleTable(record);
     createAttachmentContainer(record)
-    createAssigneeList(record, true, db)
+    createAssigneeList(record, db)
     createActivityCancellation(record);
     window.scrollTo(0, 0)
 
 
     if (document.getElementById('send-activity')) {
       document.getElementById('send-activity').addEventListener('click', function () {
-        if (isLocationStatusWorking()) {
-
-          this.dataset.progress = true
-          sendActivity(record)
-        }
-      })
+        if (!isLocationStatusWorking()) return;
+        this.dataset.progress = true
+        insertInputsIntoActivity(record, true)
+      });
     }
 
     const inputFields = document.querySelectorAll('.update-create--activity input');
@@ -1213,25 +869,6 @@ function updateCreateActivity(record, showSendButton) {
           }
         }
       })
-    }
-
-    if (document.querySelector('.mdc-select')) {
-      const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-      select.listen('change', () => {
-        updateDomFromIDB(record, {
-          hash: 'weekday',
-          key: select['root_'].dataset.value
-        }, {
-          primary: select.value
-        }).then(function (message) {
-          if (!document.getElementById('send-activity').dataset.progress) {
-
-            if (document.getElementById('send-activity').classList.contains('hidden')) {
-              document.getElementById('send-activity').classList.remove('hidden')
-            }
-          }
-        }).catch(handleError)
-      });
     }
 
   }
@@ -1270,7 +907,7 @@ function createCheckInVenue(venue, defaultSelected) {
 }
 
 function createSimpleLi(key, data) {
-  
+
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
 
@@ -1283,26 +920,13 @@ function createSimpleLi(key, data) {
 
   if (key === 'Office') {
     dataVal.className = 'data--value-list'
+    dataVal.style.marginLeft = '15px';
     dataVal.textContent = data.office
     listItemLabel.textContent = key
     listItem.appendChild(listItemLabel)
     listItem.appendChild(dataVal)
   }
-  if (key === 'children') {
-    const metaInput = document.createElement('span')
-    metaInput.className = 'mdc-list-item__meta'
-    metaInput.appendChild(createRadioInput())
 
-
-    listItem.textContent = data
-    listItem.appendChild(metaInput)
-    listItem.onclick = function () {
-
-      checkRadioInput(this, {
-        name: data
-      })
-    }
-  }
   if (key === 'delete') {
     dataVal.className = 'mdc-list-item__graphic material-icons'
     dataVal.textContent = key
@@ -1326,6 +950,7 @@ function createSimpleLi(key, data) {
     listItem.appendChild(listItemLabel)
     listItem.classList.add('undo-delete-activity')
     const undo = document.createElement('button')
+    undo.style.color = 'white';
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
@@ -1336,7 +961,7 @@ function createSimpleLi(key, data) {
           activityId: data.id,
           status: 'PENDING'
         })
-       
+
       }
     }
     listItem.appendChild(undo)
@@ -1346,69 +971,93 @@ function createSimpleLi(key, data) {
 }
 
 function createVenueSection(record) {
+  if (record.template === 'customer') return;
+  if (record.venue.length === 0) return;
 
   const venueSection = document.getElementById('venue--list');
 
-  if (record.template === 'check-in' && record.hasOwnProperty('create')) {
+  if (record.template === 'check-in') {
+    if (record.hasOwnProperty('create')) {
+      getRootRecord().then(function (rootRecord) {
+        checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+          if (!results.length) return;
+          let defaultSelected = false;
+          const checkInDesc = document.createElement('li')
+          checkInDesc.className = 'mdc-list-item label--text'
+          checkInDesc.textContent = record.venue[0].venueDescriptor
+          checkInDesc.style.height = '50px'
+          checkInDesc.style.paddingRight = '11px';
 
-    getRootRecord().then(function (rootRecord) {
-      checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-        if (!results.length) return;
-        let defaultSelected = false;
-        const checkInDesc = document.createElement('li')
-        checkInDesc.className = 'mdc-list-item label--text'
-        checkInDesc.textContent = record.venue[0].venueDescriptor
-        checkInDesc.style.height = '50px'
-        checkInDesc.style.paddingRight = '11px';
+          const meta = document.createElement('span')
+          meta.className = 'mdc-list-item__meta'
+          const uncheck = document.createElement('label')
+          uncheck.id = 'uncheck-checkin'
+          uncheck.className = 'mdc-fab add--assignee-icon'
+          const span = document.createElement('span')
+          span.className = 'mdc-fab__icon material-icons'
+          span.textContent = 'clear';
+          uncheck.appendChild(span);
+          meta.appendChild(uncheck)
+          checkInDesc.appendChild(meta)
+          venueSection.appendChild(checkInDesc)
 
-        const meta = document.createElement('span')
-        meta.className = 'mdc-list-item__meta'
-        const uncheck = document.createElement('label')
-        uncheck.id = 'uncheck-checkin'
-        uncheck.className = 'mdc-fab add--assignee-icon'
-        const span = document.createElement('span')
-        span.className = 'mdc-fab__icon material-icons'
-        span.textContent = 'clear';
-        uncheck.appendChild(span);
-        meta.appendChild(uncheck)
-        checkInDesc.appendChild(meta)
-        venueSection.appendChild(checkInDesc)
+          if (results.length == 1) {
+            defaultSelected = true
+          }
 
-        if (results.length == 1) {
-          defaultSelected = true
-        }
+          results.forEach(function (result) {
 
-        results.forEach(function (result) {
+            const form = document.createElement('div');
+            form.className = 'mdc-form-field check-in-form'
+            const label = document.createElement('label')
+            label.setAttribute('for', 'check-in-radio');
+            label.textContent = result.location
+            form.appendChild(label);
 
-          const form = document.createElement('div');
-          form.className = 'mdc-form-field check-in-form'
-          const label = document.createElement('label')
-          label.setAttribute('for', 'check-in-radio');
-          label.textContent = result.location
-          form.appendChild(label);
-          form.appendChild(createCheckInVenue(result, defaultSelected))
-          venueSection.appendChild(form);
-          const mapDom = document.createElement('div');
-          mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
-          venueSection.appendChild(mapDom);
-        })
-
-
-        const uncheckFab = document.getElementById('uncheck-checkin');
-        if (uncheckFab) {
-          uncheckFab.addEventListener('click', function () {
-            document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-              const radio = new mdc.radio.MDCRadio(el)
-              radio.checked = false
-            });
+            const radio = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
+            if (record.venue[0].location === result.location) {
+              radio.checked = true
+            }
+            radio.root_.querySelector('input').onclick = function () {
+              const value = JSON.parse(this.value)
+              record.venue[0].location = value.location;
+              record.venue[0].address = value.address;
+              record.venue[0].geopoint._latitude = value.latitude;
+              record.venue[0].geopoint._longitude = value.longitude;
+            }
+            form.appendChild(radio.root_)
+            // form.appendChild(createCheckInVenue(result, defaultSelected))
+            venueSection.appendChild(form);
+            const mapDom = document.createElement('div');
+            mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
+            venueSection.appendChild(mapDom);
           })
-        }
-      })
-    })
 
+          const uncheckFab = document.getElementById('uncheck-checkin');
+          if (uncheckFab) {
+            uncheckFab.addEventListener('click', function () {
+              document.querySelectorAll('.mdc-radio').forEach(function (el) {
+                const radio = new mdc.radio.MDCRadio(el)
+                radio.checked = false
+                record.venue[0].location = ''
+                record.venue[0].address = ''
+                record.venue[0].geopoint._latitude = ''
+                record.venue[0].geopoint._longitude = ''
+              });
+            })
+          }
+        })
+      })
+    } else {
+      record.venue.forEach(function (venue) {
+        venueSection.appendChild(createVenueLi(venue, true, record))
+        const mapDom = document.createElement('div');
+        mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
+        venueSection.appendChild(mapDom)
+      });
+    }
     return;
   }
-
   record.venue.forEach(function (venue) {
 
     venueSection.appendChild(createVenueLi(venue, true, record))
@@ -1416,16 +1065,6 @@ function createVenueSection(record) {
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
     venueSection.appendChild(mapDom)
   });
-
-  if (record.template === 'check-in') {
-    if (!record.venue[0].location || !record.venue[0].address) {
-      document.getElementById('venue--list').style.display = 'none'
-    }
-  }
-
-  if (record.venue.length === 0) {
-    document.getElementById('venue--list').style.display = 'none'
-  }
 }
 
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
@@ -1442,12 +1081,10 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
   const selectorIcon = document.createElement('span')
   selectorIcon.className = 'mdc-list-item__meta'
-  const addLocation = document.createElement('label')
-  addLocation.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-  const locationBtnSpan = document.createElement('span')
-  locationBtnSpan.className = 'mdc-fab__icon material-icons'
-  locationBtnSpan.textContent = 'add_location'
-  addLocation.appendChild(locationBtnSpan)
+
+  const locationIcon = new Fab('add_location');
+  const addLocation = locationIcon.getButton();
+  addLocation.root_.classList.add('add--assignee-icon', 'attachment-selector-label')
 
   if (showVenueDesc) {
     const listItemLabel = document.createElement('span')
@@ -1474,8 +1111,11 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
         lat: venue.geopoint['_latitude'],
         lng: venue.geopoint['_longitude']
       }
-      const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`)
-      appendMap(loc, mapParent)
+      const mapParent = document.querySelector(`.map-detail.${convertKeyToId(venue.venueDescriptor)}`);
+      const map = new AppendMap(mapParent)
+      map.setZoom(18)
+      map.setLocation(loc)
+      map.getMarker();
       if (showMap) {
         mapParent.style.height = '200px';
       } else {
@@ -1485,17 +1125,14 @@ function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
 
     if (record.canEdit) {
       selectorIcon.setAttribute('aria-hidden', 'true')
-      selectorIcon.appendChild(addLocation)
-      addLocation.onclick = function (evt) {
+      selectorIcon.appendChild(addLocation.root_)
+      addLocation.root_.onclick = function (evt) {
         insertInputsIntoActivity(record)
         history.replaceState(['updateCreateActivity', record], null, null)
 
         selectorUI({
           record: record,
           store: 'map',
-          attachment: {
-            present: false
-          },
           key: venue.venueDescriptor
         })
       }
@@ -1576,8 +1213,8 @@ function createScheduleTable(data) {
     startDateInput.type = 'date'
     startDateInput.disabled = !data.canEdit
     startDateInput.className = 'mdc-text-field__input'
-   
-    
+
+
     sdDiv.appendChild(startDateInput)
 
     const stSpan = document.createElement("span")
@@ -1614,22 +1251,22 @@ function createScheduleTable(data) {
     endDateInput.disabled = !data.canEdit
     endDateInput.className = 'mdc-text-field__input'
     edDiv.appendChild(endDateInput)
-    if(data.template === 'leave') {
-      startDateInput.onchange = function(e){
+    if (data.template === 'leave') {
+      startDateInput.onchange = function (e) {
         const field = document.getElementById('Number-Of-Days')
-        if(field) {
-          const value = moment(endDateInput.value).diff(moment(startDateInput.value),'days') +1
-          if(value >=0 ){
+        if (field) {
+          const value = moment(endDateInput.value).diff(moment(startDateInput.value), 'days') + 1
+          if (value >= 0) {
 
             field.querySelector('input').value = value
           }
         }
       }
-      endDateInput.onchange = function(e){
+      endDateInput.onchange = function (e) {
         const field = document.getElementById('Number-Of-Days')
-        if(field) {
-          const value = moment(endDateInput.value).diff(moment(startDateInput.value),'days') +1
-          if(value >=0 ){
+        if (field) {
+          const value = moment(endDateInput.value).diff(moment(startDateInput.value), 'days') + 1
+          if (value >= 0) {
             field.querySelector('input').value = value
           }
         }
@@ -1698,225 +1335,368 @@ function createAttachmentContainer(data) {
   Object.keys(data.attachment).forEach(function (key) {
 
     const div = document.createElement('div')
-    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field ${data.attachment[key].type}`
+    data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field  ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
 
     if (data.canEdit) {
       div.classList.add('editable--true')
     }
+    const label = createElement('label', {
+      className: 'label--text',
+      textContent: key
+    })
 
-    const label = document.createElement('span')
-    label.className = 'label--text'
-    label.textContent = key
+    if (data.attachment[key].type === 'string') {
+      if (key === 'Name' || key === 'Number') {
 
-    if (key === 'Name' || key === 'Number') {
-      div.appendChild(label)
-      const required = true
-      div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key, required))
-    } else {
-      if (data.attachment[key].type === 'string') {
-        console.log(data.canEdit)
+        if (data.template !== 'customer') {
+          div.appendChild(label)
+          const uniqueField = new InputField();
+          const uniqueFieldInit = uniqueField.withoutLabel();
+          uniqueFieldInit.root_.id = key
+          uniqueFieldInit.disabled = !data.canEdit
+          uniqueFieldInit.value = data.attachment[key].value
+          uniqueFieldInit['input_'].required = true;
+          uniqueFieldInit['input_'].placeholder = 'Enter Value';
+          uniqueFieldInit.input_.onchange = function (e) {
+            data.attachment[key].value += e.target.value
+          }
+          div.appendChild(uniqueFieldInit.root_);
+        } else {
+          div.appendChild(label);
+          const customerForm = addNewCustomer(data, div)
+          customerForm.style.marginTop = '0px';
+          div.appendChild(customerForm)
+        }
+      } else {
+
         div.appendChild(label)
-        div.appendChild(createSimpleInput(data.attachment[key].value, data.canEdit, '', key))
+        const field = textAreaField({
+          value: data.attachment[key].value,
+          readonly: data.canEdit,
+          rows: 2
+        })
+        field.onchange = function (e) {
+          data.attachment[key].value += e.target.value
+        }
+        div.appendChild(field);
       }
     }
-
 
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
       console.log(data)
       let canEdit = data.canEdit
-      if(key === 'Number Of Days') {
+      if (key === 'Number Of Days') {
         const startDate = document.querySelector('#schedule--group .start--date1 input')
         const endDate = document.querySelector('#schedule--group .end--date1 input')
-        data.attachment[key].value = (moment(endDate.value).diff(startDate.value,'days')) + 1
-        console.log(moment(endDate.value).diff(startDate.value,'days') + 1);
+        data.attachment[key].value = (moment(endDate.value).diff(startDate.value, 'days')) + 1
+        console.log(moment(endDate.value).diff(startDate.value, 'days') + 1);
         canEdit = false
       }
-      div.appendChild(createNumberInput(data.attachment[key].value, canEdit))
+      const numberInput = new InputField();
+      const numberInit = numberInput.withoutLabel();
+      numberInit.input_.type = 'number';
+      numberInit.value = data.attachment[key].value
+      if (data.canEdit) {
+        numberInit.input_.onchange = function (e) {
+          data.attachment[key].value += e.target.value
+        }
+      } else {
+        numberInit.disabled = true;
+      }
+
+      div.appendChild(numberInit.root_);
+
     }
 
     if (data.attachment[key].type === 'email') {
       div.appendChild(label)
-      div.appendChild(createEmailInput(data.attachment[key].value, data.canEdit))
+      const emailField = new InputField();
+      const emailFieldInit = emailField.withoutLabel();
+
+      emailFieldInit.value = data.attachment[key].value;
+      if (canEdit) {
+        emailFieldInit['input_'].onchange = function (e) {
+          data.attachment[key].value += e.target.value;
+        }
+      } else {
+        emailFieldInit.disabled = true;
+      }
+      emailFieldInit['input_'].type = 'email'
+
+      div.appendChild(emailFieldInit.root_)
     }
 
     if (data.attachment[key].type === 'phoneNumber') {
-      div.classList.add('selector--margin')
-      const addButton = document.createElement('label')
-      addButton.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-      const span = document.createElement('span')
-      span.className = 'mdc-fab__icon material-icons'
-      span.textContent = 'person_add'
-      addButton.appendChild(span)
+      div.appendChild(label)
+      div.classList.add('selector--margin', 'mdc-form-field')
+      if (data.attachment[key].value) {
+        div.style.padding = '5px 15px 5px 15px'
+        const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        dataVal.listen('MDCChip:removal', function (e) {
+          data.attachment[key].value = ''
+          if(document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }         
+        })
+        dataVal.root_.classList.add('data--value-list', 'label--text')
+        dataVal.root_.dataset.primary = ''
+        div.appendChild(dataVal.root_)
+      }
 
-      const dataVal = document.createElement('span')
-      dataVal.className = 'data--value-list'
-      dataVal.dataset.primary = ''
       if (data.canEdit) {
-        div.appendChild(addButton)
-        addButton.onclick = function (evt) {
+        const addNumber = new Fab('person_add');
+        const addNumberButton = addNumber.getButton();
+
+        addNumberButton['root_'].classList.add('add--assignee-icon', 'attachment-selector-label')
+
+        div.appendChild(addNumberButton['root_'])
+        addNumberButton['root_'].onclick = function (evt) {
           insertInputsIntoActivity(data)
           history.replaceState(['updateCreateActivity', data], null, null)
           selectorUI({
             record: data,
             store: 'users',
-            attachment: {
-              present: true,
-              key: key
-            }
+            attachment: true,
+            key: key
           })
         }
       }
-      div.appendChild(label)
-
-      dataVal.textContent = data.attachment[key].value
-      div.appendChild(dataVal)
     }
 
     if (data.attachment[key].type == 'HH:MM') {
       div.appendChild(label)
-      div.appendChild(createTimeInput(data.attachment[key].value, data.canEdit, {
-        simple: false,
-        type: 'time'
-      }))
+      const timeInput = new InputField();
+      const timeInputInit = timeInput.withoutLabel();
+      timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
+      if (data.canEdit) {
+        timeInputInit.input_.onchange = function (e) {
+          data.attachment[key].value = e.target.value
+        }
+      } else {
+        timeInputInit.disabled = true
+      }
+      timeInputInit.input_.type = 'time'
+      div.appendChild(timeInputInit['root_']);
     }
 
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
-      div.appendChild(createSelectMenu(key, data.attachment[key].value, data.canEdit))
+      const selected = data.attachment[key].value;
 
+      const selectField = selectMenu({
+        id: convertKeyToId(key),
+        data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
+        selected: selected
+      });
+
+      selectField.listen('change', (e) => {
+        if (!document.getElementById('send-activity').dataset.progress) {
+          document.getElementById('send-activity').classList.remove('hidden')
+        }
+
+        data.attachment[key].value = e.target.value
+      });
+
+      div.appendChild(selectField.root_);
     }
 
     if (data.attachment[key].type === 'base64') {
-      const addCamera = document.createElement('label')
-      addCamera.className = 'mdc-fab attachment-selector-label add--assignee-icon'
-      addCamera.id = 'start-camera'
 
-      const span = document.createElement('span')
-      span.className = 'mdc-fab__icon material-icons'
-      span.textContent = 'add_a_photo'
-      addCamera.appendChild(span)
-
-      const imagePreview = document.createElement('ul')
-      imagePreview.className = 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
-
+      const imagePreview = createElement('ul', {
+        className: 'image-preview--attachment mdc-image-list standard-image-list mdc-image-list--with-text-protection'
+      })
       imagePreview.appendChild(setFilePath(data.attachment[key].value, key, true))
 
-
-      div.appendChild(imagePreview)
-
-
       if (data.canEdit) {
-
-        div.appendChild(addCamera)
-        div.appendChild(imagePreview);
-        addCamera.onclick = function () {
+        const imageFab = new Fab('add_a_photo');
+        const imageFabInit = imageFab.getButton();
+        imageFabInit.root_.classList.add('attachment-selector-label', 'add--assignee-icon')
+        div.appendChild(imageFabInit.root_)
+        imageFabInit.root_.onclick = function () {
           readCameraFile()
         }
       }
+      div.appendChild(imagePreview)
     }
-
 
     if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
-
-      const addButtonName = document.createElement('label')
-      addButtonName.className = 'mdc-fab add--assignee-icon attachment-selector-label'
-      const spanName = document.createElement('span')
-      spanName.className = 'mdc-fab__icon material-icons'
-      spanName.textContent = 'add'
-      addButtonName.appendChild(spanName)
+      div.classList.add('mdc-form-field')
+      const customerAddition = {
+        'tour plan': true,
+        'dsr': true,
+        'duty roster': true
+      };
       div.appendChild(label)
       const valueField = document.createElement('span')
-      valueField.textContent = data.attachment[key].value
-      valueField.className = 'data--value-list'
-      div.appendChild(valueField)
-      if (data.canEdit) {
-        hasAnyValueInChildren(data.office, data.attachment[key].type, data.status).then(function (hasValue) {
-          if (hasValue) {
-            div.appendChild(addButtonName);
-            div.classList.add('selector--margin')
-            addButtonName.onclick = function (evt) {
-              valueField.dataset.primary = ''
-              insertInputsIntoActivity(data)
-              history.replaceState(['updateCreateActivity', data], null, null)
+  
+      if (data.attachment[key].value) {
 
-              selectorUI({
-                record: data,
-                store: 'children',
-                attachment: {
-                  present: true,
-                  key: key,
-                  office: data.office,
-                  template: data.attachment[key].type,
-                  status: data.status
-                }
+        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        div.appendChild(valueField.root_)
+        valueField.listen('MDCChip:removal', function (e) {
+          data.attachment[key].value = ''
+          if(document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden');
+          }
+          if (key === 'Customer' && data.hasOwnProperty('create')) {
+            if (data.customerRecord) {
+              getLocation().then(function(location){
+                geocodePosition({
+                  lat: location.latitude,
+                  lng: location.longitude
+                }).then(function (result) {
+                    data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+                });
+              }).catch(function(error){
+                data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
               })
+              data.customerRecord.attachment.Name.value = ''
             }
+            valueField.root_.parentNode.replaceChild(addNewCustomerButton(data, div).root_, valueField.root_);
           }
         })
+      } else {
+      if (key === 'Customer' && data.hasOwnProperty('create')) {
+        div.appendChild(addNewCustomerButton(data, div).root_);
+
+        }
       }
+
+      hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
+
+        if (results.length) {
+          const chooseExisting = new Fab('add');
+          const chooseExistingEl = chooseExisting.getButton();
+          chooseExistingEl.root_.classList.add('mdc-typography--subtitle2', 'mdc-button--dense', 'add--assignee-icon', 'attachment-selector-label')
+          chooseExistingEl.root_.id = 'customer-selection-btn'
+          div.appendChild(chooseExistingEl.root_);
+
+          div.classList.add('selector--margin')
+          chooseExistingEl.root_.onclick = function (evt) {
+            valueField.dataset.primary = ''
+            insertInputsIntoActivity(data)
+            history.replaceState(['updateCreateActivity', data], null, null)
+            selectorUI({
+              record: data,
+              store: 'children',
+              key: key,
+              results: results
+            })
+
+          }
+        }
+      });
+
     }
 
-
-
-    const hr = document.createElement('hr')
-    hr.className = 'attachment--divider'
     if (data.attachment[key].type === 'HH:MM') {
-
       document.querySelector('.HHMM--group').appendChild(div)
-      document.querySelector('.HHMM--group').appendChild(hr)
     } else if (key === 'Name') {
       document.querySelector('.Name--group').appendChild(div)
-      document.querySelector('.Name--group').appendChild(hr)
     } else if (!availTypes.hasOwnProperty(data.attachment[key].type)) {
       document.querySelector('.Template--group').appendChild(div)
-      document.querySelector('.Template--group').appendChild(hr)
     } else {
       document.querySelector(`.${data.attachment[key].type}--group`).appendChild(div)
-      document.querySelector(`.${data.attachment[key].type}--group`).appendChild(hr)
     }
   })
 }
 
+function addNewCustomerButton(data, div) {
 
+  const createNewButton = new Button('Create New')
+  createNewButton.shaped();
+  createNewButton.raised();
+  const createInit = createNewButton.getButton();
+  createInit.root_.classList.add('create-new-customer-btn')
+  let show = false;
+  createInit.root_.onclick = function () {
+    show = !show;
+    if (show) {
+      showCustomerContainer(data, div)
+      this.textContent = 'Cancel';
+      this.style.float = 'right';
+      this.style.marginRight = '0px'
+    } else {
+      hideCustomerContainer(data, div,this)
+      this.textContent = 'Create New';
+      this.style.marginRight = '15px'
+    }
+  }
+  return createInit;
+}
 
-function createAssigneeList(record, showLabel, db) {
+function showCustomerContainer(data, div) {
+  div.classList.remove('mdc-form-field')
+
+  if (data.customerRecord) {
+  
+    div.appendChild(addNewCustomer(data.customerRecord,data));
+  } else {
+    div.appendChild(addNewCustomer(data))
+  }
+  if( div.querySelector('#customer-selection-btn')) {
+    div.querySelector('#customer-selection-btn').classList.add('hidden')
+  }
+
+}
+
+function hideCustomerContainer(data, div) {
+  div.classList.add('mdc-form-field')
+  if (document.querySelector('.customer-form')) {
+    document.querySelector('.customer-form').remove();
+  }
+  if (data.customerRecord) {
+    getLocation().then(function(location){
+      geocodePosition({
+        lat: location.latitude,
+        lng: location.longitude
+      }).then(function (result) {
+          data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+      });
+    }).catch(function(error){
+      data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+    })
+    data.customerRecord.attachment.Name.value = ''
+  } 
+  if(div.querySelector('#customer-selection-btn')) {
+
+    div.querySelector('#customer-selection-btn').classList.remove('hidden')
+  }
+}
+
+function createAssigneeList(record, db) {
   const parent = document.getElementById('assignees--list')
-  if (showLabel) {
+  const labelAdd = createElement('li', {
+    className: 'mdc-list-item label--text add--assignee-loader',
+    textContent: 'Assignees'
+  })
 
-    const labelAdd = document.createElement('li')
-    labelAdd.className = 'mdc-list-item label--text add--assignee-loader'
-    labelAdd.textContent = 'Assignees'
-    const labelButton = document.createElement('span')
-    labelButton.className = 'mdc-list-item__meta'
-    const addButton = document.createElement('div')
-    addButton.className = 'mdc-fab add--assignee-icon'
+  if (record.canEdit) {
 
-    addButton.onclick = function (evt) {
+    const labelButton = createElement('span', {
+      className: 'mdc-list-item__meta'
+    })
+
+    const fabAssignee = new Fab('person_add')
+    const addButton = fabAssignee.getButton();
+    addButton.root_.classList.add('add--assignee-icon');
+
+    addButton.root_.onclick = function (evt) {
       insertInputsIntoActivity(record)
       history.replaceState(['updateCreateActivity', record], null, null)
       selectorUI({
         record: record,
         store: 'users',
-        attachment: {
-          present: false
-        }
       })
     }
-    const span = document.createElement('span')
-    span.className = 'mdc-fab__icon material-icons'
-    span.textContent = 'person_add'
-    addButton.appendChild(span)
-    labelButton.appendChild(addButton)
-
-
-    if (record.canEdit) {
-      labelAdd.appendChild(labelButton)
-    }
-
-    parent.appendChild(labelAdd)
+    labelButton.appendChild(addButton.root_)
+    labelAdd.appendChild(labelButton)
   }
+
+  parent.appendChild(labelAdd)
+
 
   record.assignees.forEach(function (number) {
     getUserRecord(db, number).then(function (record) {
@@ -1927,137 +1707,56 @@ function createAssigneeList(record, showLabel, db) {
 
 
 
-function createSimpleAssigneeLi(userRecord, showMetaInput, isCheckbox) {
-  const assigneeLi = document.createElement('li')
-  assigneeLi.classList.add('mdc-list-item', 'assignee-li')
+function createSimpleAssigneeLi(userRecord, metaType) {
+  const assigneeLi = createElement('li', {
+    className: 'mdc-list-item'
+  })
   if (!userRecord) return assigneeLi
-  assigneeLi.dataset.value = userRecord.mobile
-  const dataObject = document.createElement('object');
-  dataObject.data = userRecord.photoURL || './img/empty-user.jpg';
-  dataObject.type = 'image/jpeg';
-  dataObject.className = 'mdc-list-item__graphic';
 
-  const photoGraphic = document.createElement('img')
-  photoGraphic.src = './img/empty-user.jpg'
-  photoGraphic.className = 'empty-user-assignee'
+  const dataObject = createElement('object', {
+    className: 'mdc-list-item__graphic',
+    data: userRecord.photoURL || './img/empty-user.jpg',
+    type: 'image/jpeg'
+  })
+  const photoGraphic = createElement('img', {
+    className: 'empty-user-assignee',
+    src: './img/empty-user.jpg'
+  })
   dataObject.appendChild(photoGraphic)
-  const assigneeListText = document.createElement('span')
-  assigneeListText.classList.add('mdc-list-item__text')
-  const assigneeName = document.createElement('span')
-  assigneeName.className = 'mdc-list-item__primary-text'
 
-  const assigneeListTextSecondary = document.createElement('span')
-  assigneeListTextSecondary.classList.add('mdc-list-item__secondary-text')
+
+  const assigneeListText = createElement('span', {
+    className: 'mdc-list-item_text'
+  })
+  const name = createElement('span', {
+    className: 'mdc-list-item__primary-text'
+  })
+  const number = createElement('span', {
+    className: 'mdc-list-item__secondary-text'
+  })
 
   if (!userRecord.displayName) {
-    assigneeName.textContent = userRecord.mobile
+    name.textContent = userRecord.mobile
   } else {
-    assigneeName.textContent = userRecord.displayName
-    assigneeListTextSecondary.textContent = userRecord.mobile
+    name.textContent = userRecord.displayName
+    number.textContent = userRecord.mobile
   }
 
-  assigneeListText.appendChild(assigneeName)
-  assigneeListText.appendChild(assigneeListTextSecondary)
+  assigneeListText.appendChild(name)
+  assigneeListText.appendChild(number)
 
-  const metaInput = document.createElement('span')
-  metaInput.className = 'mdc-list-item__meta material-icons'
-  if (showMetaInput) {
-    if (isCheckbox) {
-      metaInput.appendChild(createCheckBox(userRecord))
-    } else {
-      metaInput.appendChild(createRadioInput())
-      assigneeLi.onclick = function () {
-        checkRadioInput(this, assigneeLi.dataset.value)
-      }
-    }
-  }
+
   assigneeLi.appendChild(dataObject)
   assigneeLi.appendChild(assigneeListText)
-  assigneeLi.appendChild(metaInput)
+  if (metaType) {
+    assigneeLi.setAttribute("role", "checkbox")
+    assigneeLi.appendChild(metaType.root_);
+  }
   return assigneeLi
 }
 
-function createRadioInput() {
-  const div = document.createElement("div")
-  div.className = 'mdc-radio radio-control-selector'
-  const input = document.createElement('input')
-  input.className = 'mdc-radio__native-control'
-  input.type = 'radio'
-  input.name = 'radio'
 
-  const radioBckg = document.createElement('div')
-  radioBckg.className = 'mdc-radio__background'
 
-  const outerRadio = document.createElement('div')
-  outerRadio.className = 'mdc-radio__outer-circle'
-
-  const innerRadio = document.createElement("div")
-  innerRadio.className = 'mdc-radio__inner-circle'
-  radioBckg.appendChild(outerRadio)
-  radioBckg.appendChild(innerRadio)
-
-  div.appendChild(input)
-  div.appendChild(radioBckg)
-  return div
-
-}
-
-function createCheckBox(userRecord) {
-
-  const checkbox = document.createElement('div')
-  checkbox.className = 'mdc-checkbox status-check'
-  checkbox.dataset.selected = userRecord.isSelected
-
-  const input = document.createElement("input")
-  input.className = 'mdc-checkbox__native-control'
-  input.type = 'checkbox'
-  input.onclick = function (evt) {
-
-    checkCheckboxInput(evt, userRecord)
-  }
-  const checkbox_bckg = document.createElement('div')
-  checkbox_bckg.className = 'mdc-checkbox__background'
-
-  const svg = `<svg class="mdc-checkbox__checkmark"
-    viewBox="0 0 24 24">
-    <path class="mdc-checkbox__checkmark-path"
-    fill="none"
-    d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
-    </svg>
-    <div class="mdc-checkbox__mixedmark"></div>`
-
-  const mixedmark = document.createElement('div')
-  mixedmark.className = 'mdc-checkbox__mixedmark'
-  checkbox_bckg.innerHTML = svg
-  checkbox.appendChild(input)
-  checkbox.appendChild(checkbox_bckg)
-
-  return checkbox
-}
-
-function checkCheckboxInput(evt, record) {
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function () {
-    const db = req.result
-    const objectStore = db.transaction('users', 'readwrite').objectStore('users')
-    if (record.hasOwnProperty('isSelected') && record.isSelected) {
-      evt.target.parentNode.dataset.selected = false
-      record.isSelected = false
-
-    } else {
-      evt.target.parentNode.dataset.selected = true
-      record.isSelected = true
-
-    }
-    objectStore.put(record)
-    if (document.querySelectorAll('[data-selected="true"]').length) {
-      document.querySelector('.selector-send').dataset.type = ''
-      document.querySelector('.selector-send').textContent = 'SELECT'
-    }
-  }
-}
 
 function checkRadioInput(inherit, value) {
   document.getElementById('selector-submit-send').textContent = 'SELECT';
@@ -2234,25 +1933,6 @@ function createActivityCancellation(record) {
   }
 }
 
-function sendActivity(record) {
-
-  if (record.hasOwnProperty('create')) {
-    insertInputsIntoActivity(record, true)
-    return
-  }
-
-  const dbName = firebase.auth().currentUser.uid
-  const req = indexedDB.open(dbName)
-  req.onsuccess = function (event) {
-    const db = req.result
-    const activityStore = db.transaction('activity', 'readwrite').objectStore('activity')
-
-    activityStore.get(record.activityId).onsuccess = function (event) {
-      const record = event.target.result
-      insertInputsIntoActivity(record, true)
-    }
-  }
-}
 
 function concatDateWithTime(date, time) {
   const dateConcat = moment(date + " " + time)
@@ -2260,45 +1940,11 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, send) {
-  const allStringTypes = document.querySelectorAll('.string');
-
-  for (var i = 0; i < allStringTypes.length; i++) {
-    let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
-
-    if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
-      if (send) {
-        snacks('Please provide an input for the field “Name” ')
-      }
-      return;
-    }
-
-    record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
-  }
-
-  const allNumberTypes = document.querySelectorAll('.number')
-  for (var i = 0; i < allNumberTypes.length; i++) {
-    let inputValue = Number(allNumberTypes[i].querySelector('.mdc-text-field__input').value)
-    record.attachment[convertIdToKey(allNumberTypes[i].id)].value = inputValue
-  }
-
-  const allEmailTypes = document.querySelectorAll('.email')
-  for (var i = 0; i < allEmailTypes.length; i++) {
-    let inputValue = allEmailTypes[i].querySelector('.mdc-text-field__input').value
-    record.attachment[convertIdToKey(allEmailTypes[i].id)].value = inputValue
-  }
-
-  const allTimeTypes = document.querySelectorAll('.HHMM')
-  for (var i = 0; i < allTimeTypes.length; i++) {
-    let inputValue = allTimeTypes[i].querySelector('.mdc-text-field__input').value
-    record.attachment[convertIdToKey(allTimeTypes[i].id)].value = inputValue
-  }
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
-
     record.attachment[convertKeyToId(imagesInAttachments[i].dataset.photoKey)].value = imagesInAttachments[i].dataset.value
   }
-
 
   let sd;
   let st;
@@ -2346,68 +1992,85 @@ function insertInputsIntoActivity(record, send) {
 
   }
 
-  if (record.template === 'check-in') {
+  if (send) {
+    const reqArray = [];
 
-    document.querySelectorAll('.mdc-radio.checkin').forEach(function (el) {
-      const radio = new mdc.radio.MDCRadio(el);
-      if (radio.checked) {
-        const venueData = JSON.parse(el.value);
-        record.venue[0].geopoint = {
-          latitude: venueData.latitude,
-          longitude: venueData.longitude
+    if (record.customerRecord) {
+      if(record.customerRecord.attachment.Name.value) {
+
+        const customerRec = {
+          share: [],
+          office: record.customerRecord.office,
+          venue: record.customerRecord.venue,
+          schedule: record.customerRecord.schedule,
+          attachment: record.customerRecord.attachment,
+          template: record.customerRecord.template
         }
-        record.venue[0].location = venueData.location
-        record.venue[0].address = venueData.address
+        for (var i = 0; i < record.customerRecord.venue.length; i++) {
+          record.customerRecord.venue[i].geopoint = {
+            latitude: record.customerRecord.venue[i].geopoint['_latitude'] || '',
+            longitude: record.customerRecord.venue[i].geopoint['_longitude'] || ''
+          }
+        }
+        reqArray.push(customerRec);
       }
-    });
-    if (!record.venue[0].location || !record.venue[0].address) {
-      record.venue[0].geopoint = {
-        latitude: '',
-        longitude: ''
-      }
+   
     }
-  } else {
 
     for (var i = 0; i < record.venue.length; i++) {
       record.venue[i].geopoint = {
-        latitude: record.venue[i].geopoint['_latitude'] || "",
-        longitude: record.venue[i].geopoint['_longitude'] || ""
-      }
-      if (record.venue[i].hasOwnProperty('showIcon')) {
-        delete record.venue[i].showIcon
+        latitude: record.venue[i].geopoint['_latitude'] || '',
+        longitude: record.venue[i].geopoint['_longitude'] || ''
       }
     }
-  }
+    let share;
+    if (!record.hasOwnProperty('create')) {
+      share = []
+      for (var i = 0; i < record.assignees.length; i++) {
+        if (typeof record.assignees[i] === 'object') {
+          share.push(record.assignees[i].phoneNumber)
+        }
+      }
+    } else {
+      share = record.assignees
+    }
+    const orignialReq = {
+      share: share,
+      office: record.office,
+      venue: record.venue,
+      schedule: record.schedule,
+      attachment: record.attachment,
+      template: record.template
+    }
+    if (!record.hasOwnProperty('create')) {
+      orignialReq.activityId = record.activityId
+    }
 
-  const requiredObject = {
-    venue: record.venue,
-    schedule: record.schedule,
-    attachment: record.attachment
+    reqArray.push(orignialReq);
+    sendUpdateReq(reqArray, record)
   }
-
-  if (send) {
-    sendUpdateReq(requiredObject, record)
-  }
-
 }
 
 function sendUpdateReq(requiredObject, record) {
 
-  if (!record.hasOwnProperty('create')) {
-    requiredObject.activityId = record.activityId
-    document.querySelector('header').appendChild(progressBar())
-    document.querySelector('#send-activity').classList.add('hidden')
-    requestCreator('update', requiredObject)
-    return
-  }
-
-  requiredObject.office = record.office
-  requiredObject.template = record.template
-  requiredObject.share = record.assignees
-
   document.querySelector('header').appendChild(progressBar())
   document.querySelector('#send-activity').classList.add('hidden')
-  requestCreator('create', requiredObject)
+
+  if (!record.hasOwnProperty('create')) {
+    requestCreator('update', requiredObject[0])
+    return;
+  };
+  if(record.customerRecord) {
+    hasAnyValueInChildren(record.customerRecord.office,'customer',record.customerRecord.attachment.Name.value).then(function(results){
+      if(!results.length) return  requestCreator('create', requiredObject);
+      if(results[0].attachment.Name.value = record.customerRecord.attachment.Name.value) {
+        requiredObject.shift();
+      }
+      requestCreator('create', requiredObject);
+    })
+    return
+  }
+  requestCreator('create', requiredObject);
 }
 
 function checkSpacesInString(input) {
@@ -2415,240 +2078,211 @@ function checkSpacesInString(input) {
   return false
 }
 
-
-function initializeAutocompleteGoogle(autocomplete, attr) {
-
-  autocomplete.addListener('place_changed', function () {
-    let place = autocomplete.getPlace();
-
-    if (!place.geometry) {
-      snacks("Please select a valid location")
-      return
-    }
-    //  document.getElementById('location--container').style.marginTop = '0px'
-
-    var address = '';
-    if (place.address_components) {
-      address = [
-        (place.address_components[0] && place.address_components[0].short_name || ''),
-        (place.address_components[1] && place.address_components[1].short_name || ''),
-        (place.address_components[2] && place.address_components[2].short_name || '')
-      ].join(' ');
-    }
-
-    const selectedAreaAttributes = {
-      primary: place.name,
-      secondary: {
-        address: address,
-        geopoint: {
-          '_latitude': place.geometry.location.lat(),
-          '_longitude': place.geometry.location.lng()
-        }
-      }
-    }
-    updateDomFromIDB(attr.record, {
-      hash: 'venue',
-      key: attr.key
-    }, selectedAreaAttributes).then(function (activity) {
-
-      updateCreateActivity(activity, true);
-    }).catch(handleError)
-  })
+function formAddressComponent(place) {
+  var address = '';
+  if (place.address_components) {
+    address = [
+      (place.address_components[0] && place.address_components[0].short_name || ''),
+      (place.address_components[1] && place.address_components[1].short_name || ''),
+      (place.address_components[2] && place.address_components[2].short_name || '')
+    ].join(' ');
+  }
+  return address
 }
 
-function createSimpleInput(value, canEdit, withIcon, key, required) {
 
-  if (!canEdit) {
-    const onlyText = document.createElement('span')
-    onlyText.className = 'data--value-list'
-    onlyText.textContent = value
-    return onlyText
-  }
-
-  const textField = document.createElement('div')
-  if (key && key.length < 15) {
-
-    textField.className = 'mdc-text-field data--value-list'
-  } else {
-    textField.className = 'mdc-text-field data--value-list-small'
-  }
-
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--value--update'
-  input.style.paddingTop = '0px'
-  input.value = value
-  input.required = required
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  if (withIcon) {
-
-    textField.id = 'search--bar--field'
-    input.id = 'search--bar-selector'
-    textField.classList.add('field-input')
-
-  }
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-  if (textField) {
-    const jsTField = new mdc.textField.MDCTextField.attachTo(textField)
-  }
-  return textField
-}
-
-function createNumberInput(value, canEdit) {
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field data--value-list'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--type-number'
-  input.type = 'number'
-  input.style.paddingTop = '0px'
-  input.value = value
-  if(!canEdit) {
-    input.setAttribute('readonly','true')
-  }
-  input.setAttribute('onkeypress', "return event.charCode >= 48 && event.charCode <= 57")
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-
-  return textField
-}
-
-function createEmailInput(value, canEdit) {
-  if (!canEdit) {
-    const simeplText = document.createElement('span')
-    simeplText.className = 'data--value-list'
-    simeplText.textContent = value
-    return simeplText
-  }
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field data--value-list'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--type-email'
-  input.type = 'email'
-  input.placeholder = 'johndoe@example.com'
-  input.style.paddingTop = '0px'
-  input.value = value
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-
-  return textField
-}
-
-function createTimeInput(value, canEdit, attr) {
-  if (!canEdit) {
-    const simeplText = document.createElement('span')
-    simeplText.className = 'data--value-list'
-    if (attr.type === 'date') {
-      if (value) {
-        simeplText.textContent = moment(value).calendar()
-      } else {
-        simeplText.textContent = ''
-      }
-    }
-    return simeplText
-  }
-
-  const textField = document.createElement('div')
-  textField.className = 'mdc-text-field'
-  const input = document.createElement('input')
-  input.className = 'mdc-text-field__input input--type-time'
-  input.type = attr.type
-  input.style.borderBottom = 'none'
-
-  attr.type === 'date' ? input.value = moment(value).format('DD-MM-YYYY') : input.value = value
-
-  if (attr.type === 'time') {
-    textField.classList.add('data--value-list')
-    input.style.width = '100%'
-    input.value = value || moment("24", "HH:mm").format('HH:mm')
-  };
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-
-
-  textField.appendChild(input)
-  textField.appendChild(ripple)
-  if (attr.simple) {
-    input.classList.remove('mdc-text-field__input')
-    return input
-  }
-  return textField
-}
-
-function createSelectMenu(key, value, canEdit) {
-  if (!canEdit) {
-    const span = document.createElement('span')
-    span.className = 'data--value-list'
-    span.textContent = value
-    return span
-  }
-  const div = document.createElement('div')
-  div.className = 'mdc-select data--value-list'
-  div.style.height = '32%;'
-  div.id = convertKeyToId(key)
-  div.dataset.value = key
-  div.dataset.primary = ''
-  const select = document.createElement('select')
-  select.className = 'mdc-select__native-control'
-  select.style.paddingRight = '0px';
-  const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-
-  for (var i = 0; i < weekdays.length; i++) {
-    const option = document.createElement('option')
-    option.value = weekdays[i]
-    option.textContent = weekdays[i]
-    if (value === weekdays[i]) {
-      option.setAttribute('selected', 'true')
-    }
-
-    select.appendChild(option)
-  }
-  const label = document.createElement('label')
-  label.className = 'mdc-floating-label'
-  label.textContent = ''
-
-  const ripple = document.createElement('div')
-  ripple.className = 'mdc-line-ripple'
-  div.appendChild(label)
-  div.appendChild(select)
-  div.appendChild(ripple)
-  return div
-}
-
-function getRecipient() {
- 
-  return new Promise(function(resolve){
+function getSubscription(office, template) {
+  return new Promise(function (resolve) {
     const dbName = firebase.auth().currentUser.uid
     const req = indexedDB.open(dbName)
     req.onsuccess = function () {
       const db = req.result
-      const tx = db.transaction(['children']);
-      const subscription = tx.objectStore('children')
-      let index =  subscription.index('template')
-      let record = [];
-      index.openCursor('recipient').onsuccess = function (event) {
-       const cursor  = event.target.result
-       if(!cursor) return;
-     
-       if(cursor.status ==='CANCELLED') {
-         cursor.continue();
-         return;
-       }
-       record.push(cursor.value)
-       cursor.continue();
+      const tx = db.transaction(['subscriptions']);
+      const subscription = tx.objectStore('subscriptions')
+      const officeTemplateCombo = subscription.index('officeTemplate')
+      const range = IDBKeyRange.only([office, template])
+      let record;
+      officeTemplateCombo.get(range).onsuccess = function (event) {
+        record = event.target.result
       }
-      tx.oncomplete = function(){
+      tx.oncomplete = function () {
         resolve(record)
       }
     }
   })
+}
+
+function addNewCustomer(customerRecord,data) {
+  const container = createElement('div', {
+    className: 'customer-form'
+  });
+
+  const locationErrorText = createElement('span', {
+    className: 'customer-location-error mdc-typography--subtitle1'
+  });
+
+  const name = new InputField({
+    id: 'customer-name',
+    labelText: 'Customer Name',
+    className: 'filled-background mdc-text-field--fullwidth mdc-text-field',
+
+  })
+  const address = new InputField({
+    id: 'customer-name',
+    labelText: 'Customer Address',
+    className: 'mdc-text-field--fullwidth filled-background mdc-text-field'
+  })
+  const nameField = name.withoutLabel();
+  nameField.value = customerRecord.attachment.Name.value;
+  nameField.input_.placeholder = 'Customer Name'
+  nameField.input_.id = 'customer-name'
+  nameField.input_.required = true;
+  nameField.input_.onchange = function (e) {
+    customerRecord.attachment.Name.value += e.target.value
+    if(data && data.customerRecord) {
+        data.attachment.Customer.value += e.target.value
+    }
+  }
+  const addressField = address.withoutLabel();
+  addressField['input_'].placeholder = 'Customer Address'
+  addressField.input_.id = 'customer-address'
+  addressField.value = customerRecord.venue[0].address
+  container.appendChild(nameField['root_'])
+  container.appendChild(addressField['root_'])
+
+  const mapDom = createElement('div', {
+    id: 'customer-address-map'
+  })
+  const customerMap = new AppendMap(mapDom);
+  customerMap.setZoom(18);
+  let marker;
+  if (customerRecord.venue[0].location) {
+    customerMap.setLocation({
+      lat: customerRecord.venue[0].geopoint._latitude,
+      lng: customerRecord.venue[0].geopoint._longitude
+    });
+
+    marker = customerMap.getMarker({
+      draggable: true
+    });
+    container.style.minHeight = '400px'
+    google.maps.event.addListener(marker, 'dragend', function () {
+      geocodePosition(marker.getPosition()).then(function (result) {
+        addressField.value = result.formatted_address;
+        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+        if (document.querySelector('#send-activity')) {
+          document.querySelector('#send-activity').classList.remove('hidden')
+        }
+      })
+    });
+  }
+
+  var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
+    componentRestrictions: {
+      country: "in"
+    }
+  });
+
+  autocomplete.addListener('place_changed', function () {
+
+    let place = autocomplete.getPlace();
+    if (document.querySelector('#send-activity')) {
+      document.querySelector('#send-activity').classList.remove('hidden')
+    }
+
+    customerMap.setLocation({
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
+    });
+
+    marker = customerMap.getMarker({
+      draggable: true
+    });
+    console.log(customerRecord)
+
+    customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
+
+    console.log(customerRecord)
+
+    container.style.minHeight = '400px'
+
+    google.maps.event.addListener(marker, 'dragend', function () {
+      geocodePosition(marker.getPosition()).then(function (result) {
+        addressField.value = result.formatted_address;
+        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+        if (document.querySelector('#send-activity')) {
+          document.querySelector('#send-activity').classList.remove('hidden')
+        }
+      }).catch(function (error) {
+        handleError({
+          message: 'geocode Error in autocomplete listener for' + data.template,
+          body: JSON.stringify(error)
+        })
+        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+      })
+    });
+  });
+  container.appendChild(mapDom);
+  container.appendChild(locationErrorText);
+  return container;
+}
+
+
+
+function geocodePosition(pos, data) {
+  return new Promise(function (resolve) {
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+      latLng: pos
+    }, function (responses) {
+      if (responses && responses.length > 0) {
+        const value = responses[0]
+
+        // return resolve(modifyVenueRecordWithGeocode(data, value))
+        return resolve(value)
+      } else {
+        return resolve(false)
+      }
+    }, function (error) {
+      reject(error)
+    });
+  })
+}
+
+function modifyVenueRecordWithGeocode(data, value) {
+  const venueMod = createVenueObjectWithGeoCode(value)
+  if (data.template === 'customer') {
+    venueMod.venueDescriptor = data.venue[0].venueDescriptor,
+      data.venue[0] = venueMod
+  } else {
+    venueMod.venueDescriptor = data.customerRecord.venue[0].venueDescriptor,
+      data.customerRecord.venue[0] = venueMod
+  }
+  return data;
+}
+
+function createVenueObjectWithGeoCode(vd, geocode) {
+  const venueMod = {
+    location: geocode ? geocode.formatted_address : '',
+    address: geocode ? geocode.formatted_address : '',
+    geopoint: {
+      _latitude: geocode ? geocode.geometry.location.lat() : '',
+      _longitude: geocode ? geocode.geometry.location.lng() : ''
+    },
+    venueDescriptor: vd
+  }
+  return venueMod;
+}
+
+function createVenueObjectWithAutoComplete(vd, place) {
+  const venueMod = {
+    location: place ? place.name : '',
+    address: place ? formAddressComponent(place) : '',
+    geopoint: {
+      _latitude: place ? place.geometry.location.lat() : '',
+      _longitude: place ? place.geometry.location.lng() : ''
+    },
+    venueDescriptor: vd
+  }
+  return venueMod;
 }

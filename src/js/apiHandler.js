@@ -292,14 +292,23 @@ function share(body, meta) {
 
 function update(body, meta) {
   return new Promise(function (resolve, reject) {
+    // if(body.template === 'tour plan') {
+    //   if(body.customerRecord) {
+    //     if(!body.customerRecord.attachment.Name.value) {
+    //       delete body.customerRecord;
+    //     }
+    //   }
+    // }
     const req = {
       method: 'PATCH',
       url: `${meta.apiUrl}activities/update`,
       body: JSON.stringify(body),
       token: meta.user.token
     }
+
     http(req)
       .then(function (success) {
+
         instantUpdateDB(body, 'update', meta.user).then(function () {
           resolve(true)
         })
@@ -308,20 +317,24 @@ function update(body, meta) {
   })
 }
 
-function create(body, meta) {
-  console.log(body)
-  return new Promise(function (resolve, reject) {
+function create(createReq, meta) {
+  
+  console.log(createReq)
+  const promiseArray = [];
+  createReq.forEach(function(requestBody){
     const req = {
       method: 'POST',
       url: `${meta.apiUrl}activities/create`,
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
       token: meta.user.token
     }
-    http(req)
-      .then(function (success) {
-        resolve(true)
-      })
-      .catch(sendApiFailToMainThread)
+    promiseArray.push(http(req))
+  })
+  return new Promise(function (resolve, reject) {
+    if(!promiseArray.length) return;
+    Promise.all(promiseArray).then(function(){
+      resolve(true)
+    }).catch(sendApiFailToMainThread)
   })
 }
 
@@ -530,8 +543,8 @@ function instantUpdateDB(data, type, user) {
           record.attachment = data.attachment
           for (var i = 0; i < record.venue.length; i++) {
             record.venue[i].geopoint = {
-              '_latitude': data.venue[i].geopoint['_latitude'],
-              '_longitude': data.venue[i].geopoint['_longitude']
+              '_latitude': data.venue[i].geopoint['latitude'],
+              '_longitude': data.venue[i].geopoint['longitude']
             }
           }
           objStore.put(record)

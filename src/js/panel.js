@@ -5,6 +5,12 @@ const scroll_namespace = {
 
 }
 
+function resetScroll(){
+  scroll_namespace.count =0;
+  scroll_namespace.size = 20;
+  scroll_namespace.skip = true
+}
+
 function initDomLoad() {
 
   if (document.querySelector('.init-loader')) {
@@ -14,6 +20,7 @@ function initDomLoad() {
   if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
   }
+  document.body.classList.remove('mdc-dialog-scroll-lock')
 
   listPanel()
   creatListHeader('Activities');
@@ -150,7 +157,6 @@ function loadActivitiesFromListStore(currentLocation) {
 }
 
 function startCursor(currentLocation) {
-  console.log(currentLocation)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result;
@@ -481,7 +487,7 @@ function getRootRecord() {
 }
 
 function createActivityIcon() {
-  if (document.getElementById('create-activity')) return;
+  if (document.getElementById('create-activity--icon')) return;
   getCountOfTemplates().then(function (count) {
     if(!count) return;
     createActivityIconDom()
@@ -523,28 +529,20 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom() {
-  const parent = document.getElementById('create-activity--parent')
-  const fab = document.createElement('button')
-  fab.className = 'mdc-fab create-activity'
-  fab.id = 'create-activity'
-  fab.setAttribute('aria-label', 'Add')
-  const span = document.createElement('span')
-  span.className = 'mdc-fab_icon material-icons'
-  span.id = 'activity-create--icon'
+ 
+  const fab = new Fab('add')
+  const chooseSubscription = fab.getButton();  
+  chooseSubscription.root_.classList.add('create-activity')
+  chooseSubscription.root_.id = 'create-activity--icon'
 
-  span.textContent = 'add'
-
-
-  fab.appendChild(span)
-  parent.innerHTML = fab.outerHTML;
-
-  document.querySelector('.create-activity').addEventListener('click', function (evt) {
+  chooseSubscription.root_.onclick =function(){
     selectorUI({
-      record: '',
       store: 'subscriptions',
       suggestCheckIn: false
     })
-  })
+  } 
+
+  document.getElementById('activity-list-main').appendChild(chooseSubscription.root_);
 }
 
 
@@ -560,10 +558,7 @@ function listPanel() {
 
   listCard.appendChild(listUl)
 
-  const fabParent = document.createElement('div')
-  fabParent.id = 'create-activity--parent'
-  listCard.appendChild(fabParent);
-
+ 
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 
 }
