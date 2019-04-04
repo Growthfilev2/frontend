@@ -654,8 +654,17 @@ function requestCreator(requestType, requestBody) {
           'accuracy': location.accuracy,
           'provider': location.provider
         };
-        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-        requestBody['geopoint'] = geopoints;
+
+        if(requestType === 'create') {
+          requestBody.forEach(function(body){
+            body.timestamp = fetchCurrentTime(rootRecord.serverTime);
+            body.geopoint = geopoints
+          })
+        }
+        else {
+          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+          requestBody['geopoint'] = geopoints;
+        }
         requestGenerator.body = requestBody;
 
         requestGenerator.meta.user.token = token;

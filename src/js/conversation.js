@@ -702,7 +702,7 @@ function createBlendedCustomerRecord(bareBonesRecord, geocodeResult) {
   })
 }
 
-function hasAnyValueInChildren(office, template) {
+function hasAnyValueInChildren(office, template,customerName) {
   const dbName = firebase.auth().currentUser.uid
   const req = indexedDB.open(dbName)
   let results = [];
@@ -720,7 +720,14 @@ function hasAnyValueInChildren(office, template) {
           cursor.continue();
           return;
         }
-        results.push(cursor.value)
+        if(customerName && template === 'customer'){
+          if(cursor.value.attachment.Name.value === customerName) {
+            results.push(cursor.value)
+          }
+        }
+        else {
+          results.push(cursor.value)
+        }
         cursor.continue()
       }
       tx.oncomplete = function () {
@@ -810,6 +817,9 @@ function updateCreateContainer(record, showSendButton) {
 }
 
 function updateCreateActivity(record, showSendButton) {
+  if (document.querySelector('.mdc-linear-progress')) {
+    document.querySelector('.mdc-linear-progress').remove();
+  }
   if (history.state[0] === 'updateCreateActivity') {
     history.replaceState(['updateCreateActivity', record], null, null)
   } else {
@@ -1340,7 +1350,7 @@ function createAttachmentContainer(data) {
       if (key === 'Name' || key === 'Number') {
 
         if (data.template !== 'customer') {
-
+          div.appendChild(label)
           const uniqueField = new InputField();
           const uniqueFieldInit = uniqueField.withoutLabel();
           uniqueFieldInit.root_.id = key
@@ -1348,7 +1358,7 @@ function createAttachmentContainer(data) {
           uniqueFieldInit.value = data.attachment[key].value
           uniqueFieldInit['input_'].required = true;
           uniqueFieldInit['input_'].placeholder = 'Enter Value';
-          uniqueField.input_.onchange = function (e) {
+          uniqueFieldInit.input_.onchange = function (e) {
             data.attachment[key].value += e.target.value
           }
           div.appendChild(uniqueFieldInit.root_);
@@ -1532,10 +1542,16 @@ function createAttachmentContainer(data) {
           }
           if (key === 'Customer' && data.hasOwnProperty('create')) {
             if (data.customerRecord) {
-              data.customerRecord.venue[0].address = ''
-              data.customerRecord.venue[0].location = ''
-              data.customerRecord.venue[0].geopoint._latitude = ''
-              data.customerRecord.venue[0].geopoint._longitude = ''
+              getLocation().then(function(location){
+                geocodePosition({
+                  lat: location.latitude,
+                  lng: location.longitude
+                }).then(function (result) {
+                    data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+                });
+              }).catch(function(error){
+                data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+              })
               data.customerRecord.attachment.Name.value = ''
             }
             valueField.root_.parentNode.replaceChild(addNewCustomerButton(data, div).root_, valueField.root_);
@@ -1588,17 +1604,24 @@ function createAttachmentContainer(data) {
 }
 
 function addNewCustomerButton(data, div) {
-  const createNewButton = new Button('Create New');
+
+  const createNewButton = new Button('Create New')
+  createNewButton.shaped();
+  createNewButton.raised();
   const createInit = createNewButton.getButton();
+  createInit.root_.classList.add('create-new-customer-btn')
   let show = false;
   createInit.root_.onclick = function () {
     show = !show;
     if (show) {
       showCustomerContainer(data, div)
       this.textContent = 'Cancel';
+      this.style.float = 'right';
+      this.style.marginRight = '0px'
     } else {
       hideCustomerContainer(data, div,this)
       this.textContent = 'Create New';
+      this.style.marginRight = '15px'
     }
   }
   return createInit;
@@ -1625,19 +1648,18 @@ function hideCustomerContainer(data, div) {
     document.querySelector('.customer-form').remove();
   }
   if (data.customerRecord) {
-    data.customerRecord.venue[0].address = ''
-    data.customerRecord.venue[0].location = ''
-    data.customerRecord.venue[0].geopoint._latitude = ''
-    data.customerRecord.venue[0].geopoint._longitude = ''
+    getLocation().then(function(location){
+      geocodePosition({
+        lat: location.latitude,
+        lng: location.longitude
+      }).then(function (result) {
+          data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+      });
+    }).catch(function(error){
+      data.customerRecord.venue  = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+    })
     data.customerRecord.attachment.Name.value = ''
-   
-
-  } else {
-    data.venue[0].address = ''
-    data.venue[0].location = ''
-    data.venue[0].geopoint._latitude = ''
-    data.venue[0].geopoint._longitude = ''
-  }
+  } 
   if(div.querySelector('#customer-selection-btn')) {
 
     div.querySelector('#customer-selection-btn').classList.remove('hidden')
@@ -1918,24 +1940,6 @@ function concatDateWithTime(date, time) {
 }
 
 function insertInputsIntoActivity(record, send) {
-  // const allStringTypes = document.querySelectorAll('.string');
-
-  // for (var i = 0; i < allStringTypes.length; i++) {
-  //   let inputValue = allStringTypes[i].querySelector('.mdc-text-field__input').value
-
-  //   if (allStringTypes[i].querySelector('.mdc-text-field__input').required && checkSpacesInString(inputValue)) {
-  //     if (send) {
-  //       snacks('Please provide an input for the field “Name” ')
-  //     }
-  //     return;
-  //   }
-
-  //   record.attachment[convertIdToKey(allStringTypes[i].id)].value = inputValue
-  // }
-
-  // if (record.customerRecord) {
-  //   record.attachment.Customer.value = record.customerRecord.attachment.Name.value
-  // }
 
   const imagesInAttachments = document.querySelectorAll('.image-preview--attachment  object')
   for (let i = 0; i < imagesInAttachments.length; i++) {
@@ -2010,7 +2014,7 @@ function insertInputsIntoActivity(record, send) {
         }
         reqArray.push(customerRec);
       }
-      // delete record.customerRecord;
+   
     }
 
     for (var i = 0; i < record.venue.length; i++) {
@@ -2045,19 +2049,28 @@ function insertInputsIntoActivity(record, send) {
     reqArray.push(orignialReq);
     sendUpdateReq(reqArray, record)
   }
-
 }
 
 function sendUpdateReq(requiredObject, record) {
 
   document.querySelector('header').appendChild(progressBar())
   document.querySelector('#send-activity').classList.add('hidden')
+  console.log(requiredObject);
   if (!record.hasOwnProperty('create')) {
     requestCreator('update', requiredObject[0])
     return;
   }
-  
-  requestCreator('create', requiredObject[0])
+  if(record.customerRecord) {
+    hasAnyValueInChildren(record.customerRecord.office,'customer',record.customerRecord.attachment.Name.value).then(function(results){
+      if(!results.length) return  requestCreator('create', requiredObject);
+      if(results[0].attachment.Name.value = record.customerRecord.attachment.Name.value) {
+        requiredObject.shift();
+      }
+      requestCreator('create', requiredObject);
+    })
+    return
+  }
+  requestCreator('create', requiredObject);
 
 }
 

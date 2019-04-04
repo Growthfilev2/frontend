@@ -317,20 +317,24 @@ function update(body, meta) {
   })
 }
 
-function create(body, meta) {
-  console.log(body)
-  return new Promise(function (resolve, reject) {
+function create(createReq, meta) {
+  
+  console.log(createReq)
+  const promiseArray = [];
+  createReq.forEach(function(requestBody){
     const req = {
       method: 'POST',
       url: `${meta.apiUrl}activities/create`,
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
       token: meta.user.token
     }
-    http(req)
-      .then(function (success) {
-        resolve(true)
-      })
-      .catch(sendApiFailToMainThread)
+    promiseArray.push(http(req))
+  })
+  return new Promise(function (resolve, reject) {
+    if(!promiseArray.length) return;
+    Promise.all(promiseArray).then(function(){
+      resolve(true)
+    }).catch(sendApiFailToMainThread)
   })
 }
 
@@ -543,7 +547,6 @@ function instantUpdateDB(data, type, user) {
               '_longitude': data.venue[i].geopoint['longitude']
             }
           }
-          debugger;
           objStore.put(record)
 
         }

@@ -41,6 +41,9 @@ function selectorUI(data) {
     selectorWarning.textContent = ''
     const value = JSON.parse(filtered[0].value);
     if (data.store === 'subscriptions') {
+      if(value.template === 'dsr' || value.template === 'duty roster' || value.template === 'tour plan') {
+        document.querySelector('header').appendChild(progressBar())
+      }
       createTempRecord(value.office, value.template, data);
     }
     return;
@@ -363,7 +366,7 @@ function fillSubscriptionInSelector(data, container) {
       if (!cursor) return;
 
       const ul = createElement('ul', {
-        className: 'mdc-list mdc-list--avatar-list'
+        className: 'mdc-list mdc-list--avatar-list subscription-selector'
       });
       ul.setAttribute('role', 'radiogroup');
       ul.dataset.groupName = cursor.value.office

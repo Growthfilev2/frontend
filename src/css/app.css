@@ -1489,12 +1489,15 @@ input[type="datetime-local"] {
   background-color: #0399f4;
 }
 
+.subscription-selector .mdc-list-item__primary-text{
+  margin-bottom: 0px;
+}
 
 .create-new-customer-btn {
- position: absolute;
-
+  margin-right: 15px;
+ /* position: absolute;
  right: 2.5rem;
- margin-right: 15px;
+ margin-right: 15px; */
 }
 
 .custom-number--container {
@@ -1505,7 +1508,7 @@ input[type="datetime-local"] {
 
 }
 .customer-form {
-  margin-top: 5%;
+  margin-top: 7%;
 }
 .customer-form .mdc-text-field {
   margin-top: 10px;
