@@ -2055,11 +2055,11 @@ function sendUpdateReq(requiredObject, record) {
 
   document.querySelector('header').appendChild(progressBar())
   document.querySelector('#send-activity').classList.add('hidden')
-  console.log(requiredObject);
+
   if (!record.hasOwnProperty('create')) {
     requestCreator('update', requiredObject[0])
     return;
-  }
+  };
   if(record.customerRecord) {
     hasAnyValueInChildren(record.customerRecord.office,'customer',record.customerRecord.attachment.Name.value).then(function(results){
       if(!results.length) return  requestCreator('create', requiredObject);
@@ -2071,7 +2071,6 @@ function sendUpdateReq(requiredObject, record) {
     return
   }
   requestCreator('create', requiredObject);
-
 }
 
 function checkSpacesInString(input) {
