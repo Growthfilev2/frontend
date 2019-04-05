@@ -981,7 +981,7 @@ function createVenueSection(record) {
       getRootRecord().then(function (rootRecord) {
         checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
           if (!results.length) return;
-          let defaultSelected = false;
+        
           const checkInDesc = document.createElement('li')
           checkInDesc.className = 'mdc-list-item label--text'
           checkInDesc.textContent = record.venue[0].venueDescriptor
@@ -1001,11 +1001,8 @@ function createVenueSection(record) {
           checkInDesc.appendChild(meta)
           venueSection.appendChild(checkInDesc)
 
-          if (results.length == 1) {
-            defaultSelected = true
-          }
-
-          results.forEach(function (result) {
+        
+          results.forEach(function (result,idx) {
 
             const form = document.createElement('div');
             form.className = 'mdc-form-field check-in-form'
@@ -1015,9 +1012,15 @@ function createVenueSection(record) {
             form.appendChild(label);
 
             const radio = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
-            if (record.venue[0].location === result.location) {
+            if (!idx) {
+              const value = result;
               radio.checked = true
+              record.venue[0].location = value.location;
+              record.venue[0].address = value.address;
+              record.venue[0].geopoint._latitude = value.latitude;
+              record.venue[0].geopoint._longitude = value.longitude;
             }
+
             radio.root_.querySelector('input').onclick = function () {
               const value = JSON.parse(this.value)
               record.venue[0].location = value.location;
@@ -1049,6 +1052,7 @@ function createVenueSection(record) {
         })
       })
     } else {
+      if(!record.venue[0].location || !record.venue[0].address) return;
       record.venue.forEach(function (venue) {
         venueSection.appendChild(createVenueLi(venue, true, record))
         const mapDom = document.createElement('div');
