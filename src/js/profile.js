@@ -249,11 +249,7 @@ function sendBase64ImageToBackblaze(base64) {
 }
 
 function authUpdatedError(error) {
-  if (error.message !== 'auth/invalid-email') {
-    handleError({
-      message: `${error.message} from authUpdatedError`
-    })
-  }
+ 
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }
