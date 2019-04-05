@@ -367,7 +367,6 @@ function fillSubscriptionInSelector(data, container) {
     const tx = db.transaction([data.store], 'readonly');
     const store = tx.objectStore(data.store)
     const officeIndex = store.index('office');
-
     const grp = createElement('div', {
       className: 'mdc-list-group',
       id: 'data-list--container'
@@ -394,18 +393,17 @@ function fillSubscriptionInSelector(data, container) {
 
     tx.oncomplete = function () {
       document.getElementById('app-current-panel').appendChild(container);
-      insertTemplateByOffice()
+      insertTemplateByOffice(grp)
     }
   }
 }
 
-function insertTemplateByOffice() {
+function insertTemplateByOffice(grp) {
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction(['subscriptions'], 'readonly');
     const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
-
     subscriptionObjectStore.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -414,7 +412,8 @@ function insertTemplateByOffice() {
         cursor.continue()
         return
       }
-      if (document.querySelector(`[data-group-name="${cursor.value.office}"] [data-name="${cursor.value.template}"]`)) {
+
+      if (grp.querySelector(`[data-group-name="${cursor.value.office}"] [data-name="${cursor.value.template}"]`)) {
         cursor.continue();
         return;
       }
@@ -424,12 +423,12 @@ function insertTemplateByOffice() {
       })
       templateList.dataset.name = cursor.value.template;
 
-      document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(templateList)
+      grp.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(templateList)
       cursor.continue()
     }
-    tx.oncomplete = function () {}
   }
 }
+
 
 function fillChildrenInSelector(data, container) {
   const ul = createElement('ul', {

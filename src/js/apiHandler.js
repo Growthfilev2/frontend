@@ -183,9 +183,7 @@ function fetchServerTime(body, meta) {
           
         }).catch(sendApiFailToMainThread)
       }
-      tx.onerror = function(){
-        console.log(tx.error)
-      }
+    
     }
   })
 }
@@ -1023,16 +1021,21 @@ function getUniqueOfficeCount(param) {
       tx.oncomplete = function () {
         resolve(offices);
       }
-      tx.onerror = function () {
-        reject({
-          message: tx.error.message
-        })
+      tx.onerror = function () {  
+        if(tx){
+          reject({  
+            message: tx.error.message,
+            body:JSON.stringify(tx.error)
+          })
+        }
       }
     }
     req.onerror = function () {
-      reject({
-        message: req.error.message
-      })
+      if(req){
+        reject({
+          message: req.error.message
+        })
+      }
     }
   })
 }
@@ -1057,9 +1060,11 @@ function setUniqueOffice(offices, param) {
         resolve(true)
       }
       tx.onerror = function () {
-        reject({
-          message: tx.error.message
-        })
+        if(tx){
+         reject({
+            message: tx.error.message
+          })
+        }
       }
     }
   })
