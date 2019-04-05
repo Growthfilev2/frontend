@@ -206,6 +206,7 @@ AppendMap.prototype.geocodeCustomerMarker = function(marker){
 function radioList(attr) {
     const li = document.createElement('li')
     li.className = `mdc-list-item mdc-ripple-surface--secondary`
+   
     li.setAttribute('role', 'radio');
     li.setAttribute('tabindex',"-1");
     const textSpan = createElement('span',{className:'mdc-list-item__text'})

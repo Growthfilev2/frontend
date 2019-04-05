@@ -402,10 +402,17 @@ function insertTemplateByOffice() {
         cursor.continue()
         return
       }
-      document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(radioList({
+      if(document.querySelector(`[data-group-name="${cursor.value.office}"] [data-name="${cursor.value.template}"]`)) {
+        cursor.continue();
+        return;
+      }
+      const templateList = radioList({
         value: cursor.value,
-        labelText: cursor.value.template
-      }))
+        labelText: cursor.value.template,
+      })
+      templateList.dataset.name = cursor.value.template;
+
+      document.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(templateList)
       cursor.continue()
     }
     tx.oncomplete = function () {}
