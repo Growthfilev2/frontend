@@ -108,7 +108,7 @@ function mapSelector(data, container) {
     const office = data.record.office;
     const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
     const ul = createElement('ul', {
-      className: 'mdc-list mdc-list--avatar-list'
+      className: 'mdc-list mdc-list--avatar-list map-selector-list'
     });
     ul.setAttribute('role', 'radiogroup');
     store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
@@ -126,10 +126,15 @@ function mapSelector(data, container) {
         cursor.continue();
         return;
       };
+      if(document.querySelector(`.map-selector-list [data-name="${cursor.value.location}"]`)) {
+        cursor.continue();
+        return;
+      }
       const radioListMap = radioList({
         value: cursor.value,
         labelText: cursor.value.location
       })
+      radioListMap.dataset.name = cursor.value.location
       radioListMap.querySelector('.mdc-radio input').onclick = function () {
        
         const value = JSON.parse(this.value)
