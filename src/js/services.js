@@ -619,11 +619,7 @@ function requestCreator(requestType, requestBody) {
       requestGenerator.meta.user.token = token;
 
       apiHandler.postMessage(requestGenerator);
-    }).catch(function (error) {
-      handleError({
-        message: error.code
-      })
-    });
+    }).catch(console.log);
   } else {
 
     getRootRecord().then(function (rootRecord) {
