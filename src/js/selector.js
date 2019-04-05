@@ -41,7 +41,7 @@ function selectorUI(data) {
     selectorWarning.textContent = ''
     const value = JSON.parse(filtered[0].value);
     if (data.store === 'subscriptions') {
-      if(value.template === 'dsr' || value.template === 'duty roster' || value.template === 'tour plan') {
+      if (value.template === 'dsr' || value.template === 'duty roster' || value.template === 'tour plan') {
         document.querySelector('header').appendChild(progressBar())
       }
       createTempRecord(value.office, value.template, data);
@@ -95,7 +95,7 @@ function mapSelector(data, container) {
       latitude: place.geometry.location.lat(),
       longitude: place.geometry.location.lng()
     }
-    updateCreateActivity(updateVenue(data,value).record, true)
+    updateCreateActivity(updateVenue(data, value).record, true)
     return;
   })
 
@@ -126,7 +126,7 @@ function mapSelector(data, container) {
         cursor.continue();
         return;
       };
-      if(document.querySelector(`.map-selector-list [data-name="${cursor.value.location}"]`)) {
+      if (ul.querySelector(`[data-name="${cursor.value.location}"]`)) {
         cursor.continue();
         return;
       }
@@ -136,9 +136,9 @@ function mapSelector(data, container) {
       })
       radioListMap.dataset.name = cursor.value.location
       radioListMap.querySelector('.mdc-radio input').onclick = function () {
-       
+
         const value = JSON.parse(this.value)
-        updateCreateActivity(updateVenue(data,value).record, true)
+        updateCreateActivity(updateVenue(data, value).record, true)
       }
       ul.appendChild(radioListMap)
       cursor.continue()
@@ -150,7 +150,7 @@ function mapSelector(data, container) {
   }
 };
 
-function updateVenue(data,value){
+function updateVenue(data, value) {
   data.record.venue.forEach(function (venue) {
     if (venue.venueDescriptor === data.key) {
       venue.address = value.address;
@@ -232,7 +232,10 @@ function userSelector(data, container) {
     store.openCursor().onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
-
+      if (ul.querySelector(`[data-number="${cursor.value.mobile}"]`)) {
+        cursor.continue();
+        return;
+      }
       if (data.attachment) {
         count++
         const radioButton = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(cursor.value.mobile)))
@@ -240,7 +243,9 @@ function userSelector(data, container) {
           data.record.attachment[data.key].value = JSON.parse(radioButton.value)
           updateCreateActivity(data.record, true)
         }
-        ul.appendChild(createSimpleAssigneeLi(cursor.value, radioButton))
+        const assigneeLi = createSimpleAssigneeLi(cursor.value, radioButton)
+        assigneeLi.dataset.number = cursor.value.mobile
+        ul.appendChild(assigneeLi)
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
           count++
@@ -251,7 +256,9 @@ function userSelector(data, container) {
             container.querySelector('#selector-submit-send').dataset.type = '';
             container.querySelector('#selector-submit-send').textContent = 'SELECT';
           }
-          ul.appendChild(createSimpleAssigneeLi(cursor.value, checkbox))
+          const assigneeLi = createSimpleAssigneeLi(cursor.value, checkbox)
+          assigneeLi.dataset.number = cursor.value.mobile
+          ul.appendChild(assigneeLi)
         }
       }
       cursor.continue()
@@ -407,7 +414,7 @@ function insertTemplateByOffice() {
         cursor.continue()
         return
       }
-      if(document.querySelector(`[data-group-name="${cursor.value.office}"] [data-name="${cursor.value.template}"]`)) {
+      if (document.querySelector(`[data-group-name="${cursor.value.office}"] [data-name="${cursor.value.template}"]`)) {
         cursor.continue();
         return;
       }
@@ -429,24 +436,34 @@ function fillChildrenInSelector(data, container) {
     className: 'mdc-list'
   });
   data.results.forEach(function (value) {
-    if (value.attachment.Name) {
-      const radioListEl = radioList({
-        labelText: value.attachment.Name.value,
-        value: value.attachment.Name.value
-      });
-      radioListEl.querySelector('.mdc-radio input').onclick = function () {
-        data.record.attachment[data.key].value = JSON.parse(this.value);
-        
-        updateCreateActivity(data.record, true);
-        return;
+
+    if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
+      if (value.attachment.Name) {
+
+        const radioListEl = radioList({
+          labelText: value.attachment.Name.value,
+          value: value.attachment.Name.value
+        });
+        radioListEl.dataset.value = value.attachment.Name.value
+        radioListEl.querySelector('.mdc-radio input').onclick = function () {
+          data.record.attachment[data.key].value = JSON.parse(this.value);
+
+          updateCreateActivity(data.record, true);
+          return;
+        }
+        ul.appendChild(radioListEl)
+
       }
-      ul.appendChild(radioListEl)
-    }
-    if (value.attachment.Number) {
-      ul.appendChild(radioList({
-        labelText: value.attachment.Number.value,
-        value: value.attachment.Number.value
-      }))
+      if (value.attachment.Number) {
+
+        const radioListEl = radioList({
+          labelText: value.attachment.Number.value,
+          value: value.attachment.Number.value
+        })
+        radioListEl.dataset.value = value.attachment.Number.value
+        ul.appendChild(radioListEl)
+
+      }
     }
   })
   container.appendChild(ul)
