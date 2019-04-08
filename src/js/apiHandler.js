@@ -77,12 +77,8 @@ function http(request) {
 
       if (xhr.readyState === 4) {
 
-        if (!xhr.status) {
-          requestHandlerResponse('android-stop-refreshing', 400)
-          return;
-        }
-
-
+        if (!xhr.status) return;
+      
         if (xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
@@ -142,27 +138,7 @@ function fetchServerTime(body, meta) {
         http(httpReq).then(function (response) {
          
           if (response.updateClient) {
-            const title = 'Message';
-            const message = 'There is a New version of your app available';
-    
-            const button = {
-              text: 'Update',
-              show: true,
-              clickAction: {
-                redirection: {
-                  text: 'com.growthfile.growthfileNew',
-                  value: true
-                }
-              }
-            }
-    
-            const alertData = JSON.stringify({
-              title: title,
-              message: message,
-              cancelable: false,
-              button: button
-            })
-            requestHandlerResponse('update-app', 200, alertData, '')
+            requestHandlerResponse('update-app', 200)
             return
           }
     
@@ -1097,7 +1073,6 @@ function updateIDB(meta) {
       http(req)
         .then(function (response) {
           if (!response) return;       
-          requestHandlerResponse('android-stop-refreshing', 200)
           successResponse(response,meta)
         }).catch(sendApiFailToMainThread)
     }

@@ -42,23 +42,7 @@ let native = function () {
           id: '',
         })
       }
-
-      if (this.getName() === 'Android') {
-        try {
-          return AndroidInterface.getDeviceId();
-        } catch (e) {
-          sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
-
-          return JSON.stringify({
-            baseOs: this.getName(),
-            deviceBrand: '',
-            deviceModel: '',
-            appVersion: 7,
-            osVersion: '',
-            id: '',
-          })
-        }
-      }
+      if (this.getName() === 'Android')  return getDeviceInfomation();
       return this.getIosInfo();
     }
   }
@@ -92,11 +76,26 @@ let app = function () {
   }
 }();
 
+function getDeviceInfomation() {
+  try {
+    return {
+      'id': AndroidInterface.getId(),
+      'deviceBrand': AndroidInterface.getDeviceBrand(),
+      'deviceModel': AndroidInterface.getDeviceMode(),
+      'osVersion': AndroidInterface.getOsVersion(),
+      'baseOs': AndroidInterface.getBaseOs(),
+      'radioVersion': AndroidInterface.getRadioVersion(),
+      'appVersion': AndroidInterface.getAppVersion()
+    }
+  } catch (e) {
+    return JSON.parse(AndroidInterface.getDeviceId());
+  }
+}
 
 window.addEventListener('load', function () {
-  
+
   layoutGrid()
- 
+
 
   firebase.initializeApp(appKey.getKeys())
 
@@ -148,7 +147,7 @@ window.addEventListener('load', function () {
 
     if (!event.state) return;
     if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
-    
+
     const originalCount = scroll_namespace.count;
     if (originalCount) {
       scroll_namespace.size = originalCount
@@ -165,11 +164,12 @@ function backNav() {
   history.back();
 }
 
-function resetScroll(){
+function resetScroll() {
   scroll_namespace.count = 0;
   scroll_namespace.size = 20;
   scroll_namespace.skip = false;
 }
+
 function firebaseUiConfig(value) {
 
   return {
@@ -256,8 +256,8 @@ function startApp(start) {
       return
     }
 
-    if(appKey.getMode()==='production') {
-      if(!native.getInfo()) {
+    if (appKey.getMode() === 'production') {
+      if (!native.getInfo()) {
         redirect();
         return;
       }
@@ -272,7 +272,7 @@ function startApp(start) {
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
-        
+
         db.onerror = function () {
           handleError({
             message: `${db.error.message} from startApp on upgradeneeded`
@@ -301,7 +301,7 @@ function startApp(start) {
         resetScroll();
         listView();
         requestCreator('now', {
-          device: native.getInfo(),
+          device: JSON.stringify(native.getInfo()),
           from: '',
           registerToken: native.getFCMToken()
         })
@@ -517,9 +517,9 @@ function runAppChecks() {
         if (history.state[0] === 'listView') {
           try {
             getRootRecord().then(function (record) {
-           
+
               if (!record.offices) return;
-              if(!record.offices.length) return;
+              if (!record.offices.length) return;
               const offices = record.offices
               const message = document.createElement('h1')
               message.className = 'mdc-typography--body1 mt-10'
