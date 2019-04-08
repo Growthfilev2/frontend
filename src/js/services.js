@@ -785,7 +785,6 @@ function emailVerify(notification) {
 }
 
 
-
 function createBlankPayrollDialog(notificationData) {
 
   const div = document.createElement('div')
@@ -831,8 +830,9 @@ function createBlankPayrollDialog(notificationData) {
     leaveRadio.forEach(function (el) {
       if (el.checked) {
         notificationData.data.forEach(function (data) {
-          if (data.template === el.value) {
-            createTempRecord(data.office, el.value, {
+          const value = JSON.parse(el.value)
+          if (data.template === value) {
+            createTempRecord(data.office, value, {
               schedule: data.schedule,
               attachment: data.attachment
             });
