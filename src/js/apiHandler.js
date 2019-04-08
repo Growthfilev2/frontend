@@ -106,7 +106,7 @@ function fetchServerTime(body, meta) {
   const parsedDeviceInfo = JSON.parse(currentDevice);
   let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
   const req = indexedDB.open(meta.user.uid);
-    
+      
   req.onsuccess = function(){
     const db = req.result;
     const tx = db.transaction(['root'],'readwrite');

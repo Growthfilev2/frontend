@@ -81,11 +81,11 @@ function getDeviceInfomation() {
     return {
       'id': AndroidInterface.getId(),
       'deviceBrand': AndroidInterface.getDeviceBrand(),
-      'deviceModel': AndroidInterface.getDeviceMode(),
+      'deviceModel': AndroidInterface.getDeviceModel(),
       'osVersion': AndroidInterface.getOsVersion(),
       'baseOs': AndroidInterface.getBaseOs(),
       'radioVersion': AndroidInterface.getRadioVersion(),
-      'appVersion': AndroidInterface.getAppVersion()
+      'appVersion': Number(AndroidInterface.getAppVersion())
     }
   } catch (e) {
     return JSON.parse(AndroidInterface.getDeviceId());

@@ -274,7 +274,21 @@ function getLocation() {
     })
   })
 }
-
+function createGeolocationApiRequestBody(){
+  const mcc = AndroidInterface.getMobileCountryCode();
+  const mnc = AndroidInterface.getMobileNetworkCode();
+  const radioType = AndroidInterface.getRadioType();
+  const carrier = AndroidInterface.getCarrier();
+  const wifiAccessPoints = AndroidInterface.getWifiAccessPoints();
+  const body = {
+    mcc:mcc,
+    mnc:mnc,
+    radioType:radioType,
+    carrier:carrier,
+    wifiAccessPoints:wifiAccessPoints
+  }
+  console.log(body)
+}
 function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
@@ -725,11 +739,11 @@ var receiverCaller = {
   'removed-from-office': officeRemovalSuccess,
   'revoke-session': revokeSession,
   'notification': successDialog,
-  'android-stop-refreshing': androidStopRefreshing,
   'apiFail': apiFail,
 };
 
 function messageReceiver(response) {
+
   receiverCaller[response.data.type](response.data);
 }
 
