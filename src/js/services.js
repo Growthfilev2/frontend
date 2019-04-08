@@ -543,55 +543,39 @@ function sortedByAccuracy(geoData) {
 
 
 function createAndroidDialog(title, body) {
-  try {
-    AndroidInterface.showDialog(title, body);
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ', [title, body])
-    const span = document.createElement('span')
-    span.className = 'mdc-typography--body1'
-    span.textContent = body;
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'alert-dialog',
-      showCancel: false,
-      showAccept: true,
-      content: span,
-      headerText: title
-    }).outerHTML
-    const dialogEl = document.querySelector('#alert-dialog');
-    var appDialog = new mdc.dialog.MDCDialog(dialogEl);
-
-    appDialog.listen('MDCDialog:accept', function () {
-      dialogEl.remove();
-      resetScroll()
-
-      listView();
-    });
-    appDialog.show();
-  }
+  const span = document.createElement('span')
+  span.className = 'mdc-typography--body1'
+  span.textContent = body;
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'alert-dialog',
+    showCancel: false,
+    showAccept: true,
+    content: span,
+    headerText: title
+  }).outerHTML
+  const dialogEl = document.querySelector('#alert-dialog');
+  var appDialog = new mdc.dialog.MDCDialog(dialogEl);
+  appDialog.listen('MDCDialog:accept', function () {
+    dialogEl.remove();
+  });
+  appDialog.show();
 }
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
+  let title = '';
+  let message = '';
 
-  try {
-    if (!AndroidInterface.isLocationPermissionGranted()) {
-      createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
-      return;
-    }
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission', []);
-    return true;
+  if (!AndroidInterface.isLocationPermissionGranted()) {
+    title = 'Location Permission'
+    message = 'Please Allow Growthfile location access.'
   }
 
-  try {
-    if (!AndroidInterface.isConnectionActive()) {
-      createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
-      return;
-    }
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 7: AndroidInterface.isConnectionActive  at isLocationStatusWorking', [])
-    return true;
+  if (!AndroidInterface.isConnectionActive()) {
+    title = 'No Connectivity'
+    message = 'Please Check your Internet Connectivity'
   }
+  createAndroidDialog(title, message)
   return true
 }
 

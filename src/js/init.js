@@ -42,7 +42,7 @@ let native = function () {
           id: '',
         })
       }
-      if (this.getName() === 'Android')  return getDeviceInfomation();
+      if (this.getName() === 'Android') return getDeviceInfomation();
       return this.getIosInfo();
     }
   }
@@ -102,22 +102,16 @@ window.addEventListener('load', function () {
   const title = 'Device Incompatibility'
   const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
-    try {
-      AndroidInterface.showDialog(title, message);
-    } catch (e) {
-      const span = document.createElement('span')
-      span.textContent = message;
-      span.className = 'mdc-typography--body1'
-
-      sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
-      document.getElementById('dialog-container').innerHTML = dialog({
-        id: 'device-incompatibility-dialog',
-        headerText: title,
-        content: span
-      }).outerHTML
-      const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
-      incompatibilityDialog.show()
-    }
+    const span = document.createElement('span')
+    span.textContent = message;
+    span.className = 'mdc-typography--body1'
+    document.getElementById('dialog-container').innerHTML = dialog({
+      id: 'device-incompatibility-dialog',
+      headerText: title,
+      content: span
+    }).outerHTML
+    const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
+    incompatibilityDialog.show()
     return
   }
 
