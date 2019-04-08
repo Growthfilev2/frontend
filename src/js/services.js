@@ -1010,13 +1010,15 @@ function runRead(value) {
     if(value.read) {
       requestCreator('Null', value)
       return;
-    }
-    const notificationData = JSON.parse(value[key])  
+    };
+
     if(value.verifyEmail) {
+      const notificationData = JSON.parse(value.verifyEmail)  
       emailVerify(notificationData)
       return;
     }
     if(value.payroll) {
+      const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
       return;
     }
