@@ -754,7 +754,7 @@ function messageReceiver(response) {
 
 function emailVerify(notification) {
 
-  // if (firebase.auth().currentUser.email) return emailUpdateSuccess();
+  if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
@@ -827,8 +827,9 @@ function createBlankPayrollDialog(notificationData) {
     leaveRadio.forEach(function (el) {
       if (el.checked) {
         notificationData.data.forEach(function (data) {
-          if (data.template === el.value) {
-            createTempRecord(data.office, el.value, {
+          const value = JSON.parse(el.value)
+          if (data.template === value) {
+            createTempRecord(data.office, value, {
               schedule: data.schedule,
               attachment: data.attachment
             });
@@ -1007,13 +1008,14 @@ function runRead(value) {
       requestCreator('Null', value)
       return;
     }
-    const notificationData = JSON.parse(value[key])
     if(history.state[0] !== 'listView') return;
     if(value.verifyEmail) {
+      const notificationData = JSON.parse(value.verifyEmail)
       emailVerify(notificationData)
       return;
     }
     if(value.payroll) {
+      const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
       return;
     }
