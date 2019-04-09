@@ -25,32 +25,39 @@ let native = function () {
         id: splitByName[5],
         initConnection: splitByName[6]
       }
+      if(localStorage.getItem('iosUUID')) {
+        localStorage.removeItem('iosUUID');
+      }
 
-      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
+      localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
-      return localStorage.getItem('iosUUID');
+      return localStorage.getItem('deviceInfo') || localStorage.getItem('iosUUID');
     },
     getInfo: function () {
       if (!this.getName()) {
         return false
       }
-
       if (this.getName() === 'Android') {
+        let deviceInfo;
         try {
-          return AndroidInterface.getDeviceId();
+          deviceInfo = AndroidInterface.getDeviceId();
+          localStorage.setItem('deviceInfo',deviceInfo);
+          
         } catch (e) {
           sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
 
-          return JSON.stringify({
+           deviceInfo =JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 7,
+            appVersion: 9,
             osVersion: '',
             id: '',
           })
+          localStorage.setItem('deviceInfo',deviceInfo);
         }
+        return deviceInfo
       }
       return this.getIosInfo();
     }

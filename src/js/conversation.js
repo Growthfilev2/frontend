@@ -1049,11 +1049,15 @@ function createVenueSection(record) {
         })
       })
     } else {
+
       record.venue.forEach(function (venue) {
-        venueSection.appendChild(createVenueLi(venue, true, record))
-        const mapDom = document.createElement('div');
-        mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-        venueSection.appendChild(mapDom)
+        if(venue.location && venue.address) {
+
+          venueSection.appendChild(createVenueLi(venue, true, record))
+          const mapDom = document.createElement('div');
+          mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
+          venueSection.appendChild(mapDom)
+        }
       });
     }
     return;
