@@ -280,13 +280,14 @@ function createGeolocationApiRequestBody(){
   const radioType = AndroidInterface.getRadioType();
   const carrier = AndroidInterface.getCarrier();
   const wifiAccessPoints = AndroidInterface.getWifiAccessPoints();
+  const cellTowers = AndroidInterface.getCellTowerInformation();
   const body = {};
 
   if(mcc){
-    body.mcc = mcc
+    body.homeMobileCountryCode = mcc
   }
   if(mnc) {
-    body.mnc = mnc
+    body.homeMobileNetworkCode = mnc
   }
   if(radioType){
     body.radioType = radioType
@@ -294,9 +295,12 @@ function createGeolocationApiRequestBody(){
   if(carrier) {
     body.carrier = carrier
   }
-  console.log(wifiAccessPoints);
-  if(wifiAccessPoints){
-    body.wifiAccessPoints = JSON.parse(wifiAccessPoints['wifiAccessPoints']);
+  
+  // if(wifiAccessPoints){
+  //   body.wifiAccessPoints = JSON.parse(wifiAccessPoints);
+  // }
+  if(cellTowers) {
+    body.cellTowers = JSON.parse(cellTowers);
   }
   console.log(body)
   geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
