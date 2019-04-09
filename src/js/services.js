@@ -274,6 +274,26 @@ function getLocation() {
     })
   })
 }
+
+function CreateGeolocationBody(){
+  this.mcc = AndroidInterface.getMobileCountryCode();
+  this.mnc = AndroidInterface.getMobileNetworkCode();
+  this.radioType = AndroidInterface.getRadioType();
+  this.carrier = AndroidInterface.getCarrier();
+  this.wifiAccessPoints;
+  this.cellTowers;
+}
+CreateGeolocationBody.prototype.getMcc = function(){
+  return this.mcc
+}
+CreateGeolocationBody.prototype.getMnc = function(){
+  return this.mnc;
+}
+CreateGeolocationBody.prototype.getRadioType = function(){
+  return this.radioType
+}
+
+
 function createGeolocationApiRequestBody(){
   const mcc = AndroidInterface.getMobileCountryCode();
   const mnc = AndroidInterface.getMobileNetworkCode();
@@ -296,11 +316,11 @@ function createGeolocationApiRequestBody(){
     body.carrier = carrier
   }
   
-  // if(wifiAccessPoints){
-  //   body.wifiAccessPoints = JSON.parse(wifiAccessPoints);
-  // }
+  if(wifiAccessPoints){
+    body.wifiAccessPoints = wifiAccessPoints;
+  }
   if(cellTowers) {
-    body.cellTowers = JSON.parse(cellTowers);
+    body.cellTowers = cellTowers
   }
   console.log(body)
   geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
