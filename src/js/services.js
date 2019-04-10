@@ -282,17 +282,14 @@ function handleGeoLocationApi(holder, htmlLocation) {
     const allLocations = [];
     try {
       if(JSON.parse(localStorage.getItem('deviceInfo')).appVersion >= 10 ) {
-          const cellularInformation = new CellularInformation();
-          debugger;
-          body = cellularInformation.getRequestBody();
-          debugger
+          body = getCellularInformation()
           console.log(body)
       }
       else {
         body = AndroidInterface.getCellularData()
       }
     } catch (e) {
-      debugger;
+     
       if (htmlLocation) {
         resolve(htmlLocation)
         return;

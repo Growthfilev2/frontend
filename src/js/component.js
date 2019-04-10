@@ -1,25 +1,51 @@
 
 
-function CellularInformation() {
-    this.mcc;
-    this.mnc;
-    this.carrier;
-    this.radioType;
+function getCellularInformation(){
+    const mcc = AndroidInterface.getMobileCountryCode()
+    const mnc = AndroidInterface.getMobileNetworkCode()
+    const radioType = AndroidInterface.getRadioType()
+    const carrier = AndroidInterface.getCarrier()
+    const wifiQueryString = AndroidInterface.getWifiAccessPoints()
+    const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+    let wifiAccessPointsArray = [];
+    let cellTowerArray = [];
+    if(wifiQueryString) {
+        wifiAccessPointsArray = parseQuery(wifiQueryString)
+    }
+    if(cellTowerQueryString){
+        cellTowerArray = parseQuery(cellTowerQueryString)
+    }
+    const body = {}
+
+    if (mcc) {
+        body.homeMobileCountryCode = mcc
+    }
+    if (mnc) {
+        body.homeMobileNetworkCode = mnc
+    }
+    if (carrier) {
+        body.carrier =carrier
+    }
+    if (radioType) {
+        body.radioType =radioType
+    }
+
+    if (wifiAccessPointsArray.length) {
+        body.wifiAccessPoints = wifiAccessPointsArray
+    }
+    if (cellTowerArray.length) {
+        body.cellTowers = cellTowerArray;
+    }
+    if(wifiAccessPointsArray.length && cellTowerArray.length) {
+        body.considerIp = false
+    }
+    else {
+        body.considerIp = true
+    }
+    return JSON.stringify(body)
 }
 
-CellularInformation.prototype.getMcc = function () {
-    return AndroidInterface.getMobileCountryCode()
-}
-CellularInformation.prototype.getMnc = function () {
-    return AndroidInterface.getMobileNetworkCode();
-}
-CellularInformation.prototype.getRadioType = function () {
-    return AndroidInterface.getRadioType()
-}
-CellularInformation.prototype.getCarrier = function () {
-    return AndroidInterface.getCarrier()
-}
-CellularInformation.prototype.parseQuery = function(queryString){
+function parseQuery(queryString){
     var array = [];
     const splitBySeperator = queryString.split(",")
         splitBySeperator.forEach(function (value) {
@@ -28,56 +54,12 @@ CellularInformation.prototype.parseQuery = function(queryString){
     })
     return array;
 }
-CellularInformation.prototype.getWifiAccessPoints = function () {
-    const wifiQueryString = AndroidInterface.getWifiAccessPoints();
-    if (wifiQueryString) {
-       return this.parseQuery(wifiQueryString);
-    }
-    return [];
-}
-CellularInformation.prototype.getCellTowers = function () {
-    const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
-    if(cellTowerQueryString) {
-        return this.parseQuery(cellTowerQueryString)
-    }
-    return [];
-}
-CellularInformation.prototype.getRequestBody = function () {
-    const body= {}
-    this.mcc = Number(this.getMcc());
-    this.mnc = Number(this.getMnc());
-    this.carrier = this.getCarrier();
-    this.radioType = this.getRadioType();
 
-    if (this.mcc) {
-        body.homeMobileCountryCode = this.mcc
-    }
-    if (this.mnc) {
-        body.homeMobileNetworkCode = this.mnc
-    }
-    if (this.carrier) {
-        body.carrier =this.carrier
-    }
-    if (this.radioType) {
-        body.radioType = this.radioType
-    }
-    const wap = this.getWifiAccessPoints();
-
-    if (wap.length) {
-        body.wifiAccessPoints = wap
-    }
-    const cellData = this.getCellTowers();
-    if (cellData.length) {
-        body.cellTowers = cellData;
-    }
-    if(wap.length && cellData.length) {
-        body.considerIp = false
-    }
-    else {
-        body.considerIp = true
-    }
-
-    return JSON.stringify(body)
+function CellularInformation() {
+    this.mcc;
+    this.mnc;
+    this.carrier;
+    this.radioType;
 }
 
 function queryPatramsToObject(url) {
