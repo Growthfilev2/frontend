@@ -1375,7 +1375,6 @@ function createAttachmentContainer(data) {
           div.appendChild(customerForm)
         }
       } else {
-
         div.appendChild(label)
         const field = textAreaField({
           value: data.attachment[key].value,
@@ -1384,7 +1383,9 @@ function createAttachmentContainer(data) {
         })
         field.oninput = function (e) {
           data.attachment[key].value += e.target.value
-          document.getElementById('send-activity').classList.remove('hidden')
+          if(document.getElementById('send-activity')) {
+            document.getElementById('send-activity').classList.remove('hidden')
+          }
 
         }
         div.appendChild(field);
