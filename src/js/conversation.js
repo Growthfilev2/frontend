@@ -1382,7 +1382,7 @@ function createAttachmentContainer(data) {
           readonly: data.canEdit,
           rows: 2
         })
-        field.onchange = function (e) {
+        field.oninput = function (e) {
           data.attachment[key].value += e.target.value
         }
         div.appendChild(field);
