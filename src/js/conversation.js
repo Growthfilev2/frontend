@@ -859,6 +859,7 @@ function updateCreateActivity(record, showSendButton) {
       });
     }
 
+  
     const inputFields = document.querySelectorAll('.update-create--activity input');
     for (var i = 0; i < inputFields.length; i++) {
       inputFields[i].addEventListener('input', function (e) {
@@ -1382,8 +1383,9 @@ function createAttachmentContainer(data) {
           readonly: data.canEdit,
           rows: 2
         })
-        field.onchange = function (e) {
+        field.oninput = function (e) {
           data.attachment[key].value += e.target.value
+          document.getElementById('send-activity').classList.remove('hidden')
         }
         div.appendChild(field);
       }
