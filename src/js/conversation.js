@@ -1383,7 +1383,7 @@ function createAttachmentContainer(data) {
         })
         field.oninput = function (e) {
           data.attachment[key].value += e.target.value
-          if(document.getElementById('send-activity')) {
+          if (!document.getElementById('send-activity').dataset.progress) {
             document.getElementById('send-activity').classList.remove('hidden')
           }
 
