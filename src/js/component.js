@@ -1,10 +1,12 @@
+getMcc = > 
+
 function CellularInformation() {
     this.mcc;
     this.mnc;
     this.carrier;
     this.radioType;
-    
 }
+
 CellularInformation.prototype.getMcc = function () {
     return AndroidInterface.getMobileCountryCode()
 }
@@ -17,34 +19,28 @@ CellularInformation.prototype.getRadioType = function () {
 CellularInformation.prototype.getCarrier = function () {
     return AndroidInterface.getCarrier()
 }
-CellularInformation.prototype.getWifiAccessPoints = function () {
-    const wifiQueryString = AndroidInterface.getWifiAccessPoints();
-    const array = []
-
-    if (wifiQueryString) {
-        const splitBySeperator = wifiQueryString.split(",")
+CellularInformation.prototype.parseQuery = function(queryString){
+    var array = [];
+    const splitBySeperator = queryString.split(",")
         splitBySeperator.forEach(function (value) {
             const url = new URLSearchParams(value);
             array.push(queryPatramsToObject(url))
-        })
+    })
+    return array;
+}
+CellularInformation.prototype.getWifiAccessPoints = function () {
+    const wifiQueryString = AndroidInterface.getWifiAccessPoints();
+    if (wifiQueryString) {
+       return this.parseQuery(wifiQueryString);
     }
-    console.log(array)
-    return array
+    return [];
 }
 CellularInformation.prototype.getCellTowers = function () {
     const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
-    const array = []
-    if (cellTowerQueryString) {
-        const splitBySeperator = cellTowerQueryString.split(",")
-        splitBySeperator.forEach(function (value) {
-            const url = new URLSearchParams(value);
-            array.push(queryPatramsToObject(url))
-        })
-
+    if(cellTowerQueryString) {
+        return this.parseQuery(cellTowerQueryString)
     }
-    console.log(array)
-
-    return array
+    return [];
 }
 CellularInformation.prototype.getRequestBody = function () {
     const body= {}
@@ -67,13 +63,20 @@ CellularInformation.prototype.getRequestBody = function () {
     }
     const wap = this.getWifiAccessPoints();
 
-    if (wap) {
+    if (wap.length) {
         body.wifiAccessPoints = wap
     }
     const cellData = this.getCellTowers();
-    if (cellData) {
+    if (cellData.length) {
         body.cellTowers = cellData;
     }
+    if(wap.length && cellData.length) {
+        body.considerIp = false
+    }
+    else {
+        body.considerIp = true
+    }
+
     return JSON.stringify(body)
 }
 
