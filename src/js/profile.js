@@ -249,7 +249,6 @@ function sendBase64ImageToBackblaze(base64) {
 }
 
 function authUpdatedError(error) {
- 
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }

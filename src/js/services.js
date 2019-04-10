@@ -242,7 +242,7 @@ function getLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
         holder['html5'] = {
           body: '',
           result: htmlLocation
@@ -275,64 +275,79 @@ function getLocation() {
   })
 }
 
-function CreateGeolocationBody(){
+function CellularInformation() {
   this.mcc = AndroidInterface.getMobileCountryCode();
   this.mnc = AndroidInterface.getMobileNetworkCode();
   this.radioType = AndroidInterface.getRadioType();
   this.carrier = AndroidInterface.getCarrier();
-  this.wifiAccessPoints;
-  this.cellTowers;
+  this.wifiAccessPoints ='';
+  this.cellTowers = '';
 }
-CreateGeolocationBody.prototype.getMcc = function(){
+CellularInformation.prototype.getMcc = function () {
   return this.mcc
 }
-CreateGeolocationBody.prototype.getMnc = function(){
+CellularInformation.prototype.getMnc = function () {
   return this.mnc;
 }
-CreateGeolocationBody.prototype.getRadioType = function(){
+CellularInformation.prototype.getRadioType = function () {
   return this.radioType
 }
-
-
-function createGeolocationApiRequestBody(){
-  const mcc = AndroidInterface.getMobileCountryCode();
-  const mnc = AndroidInterface.getMobileNetworkCode();
-  const radioType = AndroidInterface.getRadioType();
-  const carrier = AndroidInterface.getCarrier();
-  const wifiAccessPoints = AndroidInterface.getWifiAccessPoints();
-  const cellTowers = AndroidInterface.getCellTowerInformation();
-  const body = {};
-
-  if(mcc){
-    body.homeMobileCountryCode = mcc
+CellularInformation.prototype.getWifiAccessPoints = function(){
+  const wifiQueryString = AndroidInterface.getWifiAccessPoints();
+  if(wifiQueryString) {
+    const splitBySeperator = wifiQueryString.split(",")
+    const array = []
+    splitBySeperator.forEach(function(value){
+      const url = new URLSearchParams(value);
+        array.push(queryPatramsToObject(url.entries))
+    })
+    return this.wifiAccessPoints
   }
-  if(mnc) {
-    body.homeMobileNetworkCode = mnc
-  }
-  if(radioType){
-    body.radioType = radioType
-  }
-  if(carrier) {
-    body.carrier = carrier
-  }
-  
-  if(wifiAccessPoints){
-    body.wifiAccessPoints = wifiAccessPoints;
-  }
-  if(cellTowers) {
-    body.cellTowers = cellTowers
-  }
-  console.log(body)
-  geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
-    console.log(cellLocation)
-  }).catch(console.log)
 }
+CellularInformation.prototype.getCellTowers = function(){
+const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+if(cellTowerQueryString){
+  const splitBySeperator = wifiQueryString.split(",")
+  const array = []
+  splitBySeperator.forEach(function(value){
+    const url = new URLSearchParams(value);
+      array.push(queryPatramsToObject(url.entries))
+  })
+  return this.cellTowers
+  }
+}
+CellularInformation.prototype.getRequestBody = function(){
+  return JSON.stringify({
+    homeMobileCountryCode:this.mcc,
+    homeMobileNetworkCode:this.mnc,
+    carrier:this.carrier,
+    radioType:this.radioType,
+    wifiAccessPoints:this.getWifiAccessPoints(),
+    cellTowers:this.getCellTowers()
+  })
+}
+
+
+function queryPatramsToObject(entries){
+  let result = {};
+  for(let entry of entries) {
+    result[entry[0]] = entry[1]
+  }
+  return result;
+}
+
 function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
     const allLocations = [];
     try {
-      body = AndroidInterface.getCellularData()
+      if(JSON.parse(localStorage.getItem('deviceInfo')).appVersion >= 10 ) {
+          const cellularInformation = new CellularInformation();
+          body = cellularInformation.getRequestBody();
+      }
+      else {
+        body = AndroidInterface.getCellularData()
+      }
     } catch (e) {
       if (htmlLocation) {
         resolve(htmlLocation)
@@ -615,19 +630,17 @@ function createAndroidDialog(title, body) {
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
-  let title = '';
-  let message = '';
+
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
-    title = 'Location Permission'
-    message = 'Please Allow Growthfile location access.'
+    createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
+    return
   }
 
   if (!AndroidInterface.isConnectionActive()) {
-    title = 'No Connectivity'
-    message = 'Please Check your Internet Connectivity'
+    createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity')
+    return
   }
-  createAndroidDialog(title, message)
   return true
 }
 
@@ -788,7 +801,7 @@ function messageReceiver(response) {
 
 function emailVerify(notification) {
 
-  // if (firebase.auth().currentUser.email) return emailUpdateSuccess();
+  if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
@@ -813,7 +826,6 @@ function emailVerify(notification) {
   })
   emailDialog.show()
 }
-
 
 
 function createBlankPayrollDialog(notificationData) {
@@ -861,8 +873,10 @@ function createBlankPayrollDialog(notificationData) {
     leaveRadio.forEach(function (el) {
       if (el.checked) {
         notificationData.data.forEach(function (data) {
-          if (data.template === el.value) {
-            createTempRecord(data.office, el.value, {
+          const value = JSON.parse(el.value)
+          if (data.template === value) {
+            if (!isLocationStatusWorking()) return;
+            createTempRecord(data.office, value, {
               schedule: data.schedule,
               attachment: data.attachment
             });
@@ -1005,18 +1019,19 @@ function runRead(value) {
     if (value.read) {
       requestCreator('Null', value)
       return;
-    }
-    const notificationData = JSON.parse(value[key])
-    if (history.state[0] !== 'listView') return;
+    };
+
     if (value.verifyEmail) {
+      const notificationData = JSON.parse(value.verifyEmail)
       emailVerify(notificationData)
       return;
     }
     if (value.payroll) {
+      const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
       return;
     }
-  }, 200)
+  }, 500)
 }
 
 function removeChildNodes(parent) {
