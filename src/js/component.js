@@ -1,4 +1,4 @@
-getMcc = > 
+
 
 function CellularInformation() {
     this.mcc;
