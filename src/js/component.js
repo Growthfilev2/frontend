@@ -1,3 +1,80 @@
+function CellularInformation() {}
+CellularInformation.prototype.getMcc = function () {
+  return AndroidInterface.getMobileCountryCode()
+}
+CellularInformation.prototype.getMnc = function () {
+  return AndroidInterface.getMobileNetworkCode();
+}
+CellularInformation.prototype.getRadioType = function () {
+  return AndroidInterface.getRadioType()
+}
+CellularInformation.prototype.getCarrier = function(){
+ return  AndroidInterface.getCarrier()
+}
+CellularInformation.prototype.getWifiAccessPoints = function(){
+  const wifiQueryString = AndroidInterface.getWifiAccessPoints();
+  if(wifiQueryString) {
+    const splitBySeperator = wifiQueryString.split(",")
+    const array = []
+    splitBySeperator.forEach(function(value){
+      const url = new URLSearchParams(value);
+        array.push(queryPatramsToObject(url.entries))
+    })
+  }
+  console.log(this.array)
+  return this.array
+}
+CellularInformation.prototype.getCellTowers = function(){
+const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+if(cellTowerQueryString){
+  const splitBySeperator = wifiQueryString.split(",")
+  const array = []
+  splitBySeperator.forEach(function(value){
+    const url = new URLSearchParams(value);
+      array.push(queryPatramsToObject(url.entries))
+  })
+ 
+  }
+  console.log(this.array)
+
+  return this.array
+}
+CellularInformation.prototype.getRequestBody = function(){
+  const body = {}
+  if(this.mcc) {
+    body.homeMobileCountryCode = this.getMcc()
+  }
+  if(this.mnc){
+    body.homeMobileNetworkCode = this.getMnc()
+  }
+  if(this.carrier) {
+    body.carrier = this.getCarrier();
+  }
+  if(this.radioType){
+    body.radioType = this.getRadioType()
+  }
+  const wap = this.getWifiAccessPoints();
+
+  if(wap){
+    body.wifiAccessPoints = wap
+  }
+  const cellData = this.getCellTowers();
+  if(cellData){
+    body.cellTowers = cellData;
+  }
+  return JSON.stringify(body)
+}
+
+function queryPatramsToObject(entries){
+    let result = {};
+    entries.forEach(function(entry){
+      result[entry[0]] = entry[1]
+    })
+    
+    return result;
+  }
+  
+
 function createElement(tagName, attrs) {
     const el = document.createElement(tagName)
     Object.keys(attrs).forEach(function (attr) {

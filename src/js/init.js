@@ -93,7 +93,7 @@ let app = function () {
 }();
 
 function getDeviceInfomation() {
-  const currentDevice = localStorage.getItem('deviceInfo');
+  const currentDevice = localStorage.getItem('deviceInfo');     
   if(!currentDevice) return AndroidInterface.getDeviceId();
 
   if(JSON.parse(currentDevice).appVersion >=10) {

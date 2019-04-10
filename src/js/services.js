@@ -275,66 +275,6 @@ function getLocation() {
   })
 }
 
-function CellularInformation() {
-  this.mcc = AndroidInterface.getMobileCountryCode();
-  this.mnc = AndroidInterface.getMobileNetworkCode();
-  this.radioType = AndroidInterface.getRadioType();
-  this.carrier = AndroidInterface.getCarrier();
-  this.wifiAccessPoints ='';
-  this.cellTowers = '';
-}
-CellularInformation.prototype.getMcc = function () {
-  return this.mcc
-}
-CellularInformation.prototype.getMnc = function () {
-  return this.mnc;
-}
-CellularInformation.prototype.getRadioType = function () {
-  return this.radioType
-}
-CellularInformation.prototype.getWifiAccessPoints = function(){
-  const wifiQueryString = AndroidInterface.getWifiAccessPoints();
-  if(wifiQueryString) {
-    const splitBySeperator = wifiQueryString.split(",")
-    const array = []
-    splitBySeperator.forEach(function(value){
-      const url = new URLSearchParams(value);
-        array.push(queryPatramsToObject(url.entries))
-    })
-    return this.wifiAccessPoints
-  }
-}
-CellularInformation.prototype.getCellTowers = function(){
-const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
-if(cellTowerQueryString){
-  const splitBySeperator = wifiQueryString.split(",")
-  const array = []
-  splitBySeperator.forEach(function(value){
-    const url = new URLSearchParams(value);
-      array.push(queryPatramsToObject(url.entries))
-  })
-  return this.cellTowers
-  }
-}
-CellularInformation.prototype.getRequestBody = function(){
-  return JSON.stringify({
-    homeMobileCountryCode:this.mcc,
-    homeMobileNetworkCode:this.mnc,
-    carrier:this.carrier,
-    radioType:this.radioType,
-    wifiAccessPoints:this.getWifiAccessPoints(),
-    cellTowers:this.getCellTowers()
-  })
-}
-
-
-function queryPatramsToObject(entries){
-  let result = {};
-  for(let entry of entries) {
-    result[entry[0]] = entry[1]
-  }
-  return result;
-}
 
 function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
@@ -343,12 +283,16 @@ function handleGeoLocationApi(holder, htmlLocation) {
     try {
       if(JSON.parse(localStorage.getItem('deviceInfo')).appVersion >= 10 ) {
           const cellularInformation = new CellularInformation();
+          debugger;
           body = cellularInformation.getRequestBody();
+          debugger
+          console.log(body)
       }
       else {
         body = AndroidInterface.getCellularData()
       }
     } catch (e) {
+      debugger;
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
