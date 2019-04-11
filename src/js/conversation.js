@@ -694,7 +694,10 @@ function createBlendedCustomerRecord(bareBonesRecord, geocodeResult) {
   }
 
   getSubscription(bareBonesRecord.office, 'customer').then(function (customerRecord) {
-    if (!customerRecord) return updateCreateActivity(bareBonesRecord);
+    if (!customerRecord) {
+      bareBonesRecord.customerRecord = false
+      return updateCreateActivity(bareBonesRecord);
+    }
     customerRecord.venue = [createVenueObjectWithGeoCode(customerRecord.venue[0], geocodeResult)];
     bareBonesRecord['customerRecord'] = customerRecord;
     updateCreateActivity(bareBonesRecord)
@@ -1365,8 +1368,8 @@ function createAttachmentContainer(data) {
           uniqueFieldInit.value = data.attachment[key].value
           uniqueFieldInit['input_'].required = true;
           uniqueFieldInit['input_'].placeholder = 'Enter Value';
-          uniqueFieldInit.input_.onchange = function (e) {
-            data.attachment[key].value += e.target.value
+          uniqueFieldInit.input_.oninput = function (e) {
+            data.attachment[key].value = e.target.value
           }
           div.appendChild(uniqueFieldInit.root_);
         } else {
@@ -1383,7 +1386,7 @@ function createAttachmentContainer(data) {
           rows: 2
         })
         field.oninput = function (e) {
-          data.attachment[key].value += e.target.value
+          data.attachment[key].value = e.target.value
           if (!document.getElementById('send-activity').dataset.progress) {
             document.getElementById('send-activity').classList.remove('hidden')
           }  
@@ -1408,8 +1411,8 @@ function createAttachmentContainer(data) {
       numberInit.input_.type = 'number';
       numberInit.value = data.attachment[key].value
       if (data.canEdit) {
-        numberInit.input_.onchange = function (e) {
-          data.attachment[key].value += e.target.value
+        numberInit.input_.oninput = function (e) {
+          data.attachment[key].value = e.target.value
         }
       } else {
         numberInit.disabled = true;
@@ -1426,8 +1429,8 @@ function createAttachmentContainer(data) {
 
       emailFieldInit.value = data.attachment[key].value;
       if (canEdit) {
-        emailFieldInit['input_'].onchange = function (e) {
-          data.attachment[key].value += e.target.value;
+        emailFieldInit['input_'].oninput = function (e) {
+          data.attachment[key].value = e.target.value;
         }
       } else {
         emailFieldInit.disabled = true;
@@ -1480,7 +1483,7 @@ function createAttachmentContainer(data) {
       const timeInputInit = timeInput.withoutLabel();
       timeInputInit.value = data.attachment[key].value || moment("24", "HH:mm").format('HH:mm')
       if (data.canEdit) {
-        timeInputInit.input_.onchange = function (e) {
+        timeInputInit.input_.oninput = function (e) {
           data.attachment[key].value = e.target.value
         }
       } else {
@@ -1567,7 +1570,8 @@ function createAttachmentContainer(data) {
           }
         })
       } else {
-      if (key === 'Customer' && data.hasOwnProperty('create')) {
+      if (key === 'Customer' && data.hasOwnProperty('create') && data.customerRecord) {
+        
         div.appendChild(addNewCustomerButton(data, div).root_);
 
         }
@@ -1645,7 +1649,7 @@ function showCustomerContainer(data, div) {
   } else {
     div.appendChild(addNewCustomer(data))
   }
-  if( div.querySelector('#customer-selection-btn')) {
+  if(div.querySelector('#customer-selection-btn')) {
     div.querySelector('#customer-selection-btn').classList.add('hidden')
   }
 
@@ -2146,10 +2150,10 @@ function addNewCustomer(customerRecord,data) {
   nameField.input_.placeholder = 'Customer Name'
   nameField.input_.id = 'customer-name'
   nameField.input_.required = true;
-  nameField.input_.onchange = function (e) {
-    customerRecord.attachment.Name.value += e.target.value
+  nameField.input_.oninput = function (e) {
+    customerRecord.attachment.Name.value = e.target.value
     if(data && data.customerRecord) {
-        data.attachment.Customer.value += e.target.value
+        data.attachment.Customer.value = e.target.value
     }
   }
   const addressField = address.withoutLabel();

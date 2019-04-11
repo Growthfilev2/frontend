@@ -318,7 +318,6 @@ function update(body, meta) {
 }
 
 function create(createReq, meta) {
-  
   console.log(createReq)
   const promiseArray = [];
   createReq.forEach(function(requestBody){
