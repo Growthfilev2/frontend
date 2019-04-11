@@ -28,6 +28,7 @@
     "babel-loader": "^7.1.5",
     "babel-minify": "^0.5.0",
     "babel-preset-env": "^1.7.0",
+    "grunt-cache-bust": "^1.7.0",
     "uglifycss": "0.0.29"
   },
   "dependencies": {

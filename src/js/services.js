@@ -240,13 +240,13 @@ function manageLocation() {
 function getLocation() {
   return new Promise(function (resolve, reject) {
     const holder = {}
-    // if (native.getName() === 'Android') {
+    if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        // if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
-        // holder['html5'] = {
-        //   body: '',
-        //   result: htmlLocation
-        // }
+        if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
+        holder['html5'] = {
+          body: '',
+          result: htmlLocation
+        }
         handleGeoLocationApi(holder, htmlLocation).then(function (location) {
           resolve(location)
         })
@@ -264,14 +264,14 @@ function getLocation() {
           })
         })
       })
-    //   return;
-    // }
+      return;
+    }
 
-    // html5Geolocation().then(function (location) {
-    //   resolve(location)
-    // }).catch(function (error) {
-    //   reject(error)
-    // })
+    html5Geolocation().then(function (location) {
+      resolve(location)
+    }).catch(function (error) {
+      reject(error)
+    })
   })
 }
 
@@ -281,15 +281,12 @@ function handleGeoLocationApi(holder, htmlLocation) {
     let body;
     const allLocations = [];
     try {
-      // if(JSON.parse(localStorage.getItem('deviceInfo')).appVersion >= 10 ) {
-          body = getCellularInformation()
-         
-          console.log(body)
-          debugger;
-          // }
-      // else {
-      //   body = AndroidInterface.getCellularData()
-      // }
+      if(JSON.parse(localStorage.getItem('deviceInfo')).appVersion >= 10 ) {
+          body = getCellularInformation()         
+        }
+      else {
+        body = AndroidInterface.getCellularData()
+      }
     } catch (e) {
      
       if (htmlLocation) {

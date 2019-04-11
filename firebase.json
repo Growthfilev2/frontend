@@ -17,7 +17,7 @@
       "headers": [ {
         "key": "Cache-Control",
         "value": "max-age=3600"
-      } ]
+      }]
     }],
     "public": "dist",
     "ignore": [
