@@ -1,6 +1,7 @@
 
 
 function getCellularInformation(){
+  
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
     const radioType = AndroidInterface.getRadioType()
