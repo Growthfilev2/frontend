@@ -1385,7 +1385,9 @@ function createAttachmentContainer(data) {
         })
         field.oninput = function (e) {
           data.attachment[key].value += e.target.value
-          document.getElementById('send-activity').classList.remove('hidden')
+          if (!document.getElementById('send-activity').dataset.progress) {
+            document.getElementById('send-activity').classList.remove('hidden')
+          }  
         }
         div.appendChild(field);
       }
