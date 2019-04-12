@@ -134,6 +134,7 @@ function commentPanel(id) {
   document.querySelector('.comment-field').oninput = function (evt) {
     if (!evt.target.value || !evt.target.value.replace(/\s/g, '').length) {
       toggleCommentButton(false)
+
     } else {
       toggleCommentButton(true)
     }
@@ -1340,10 +1341,7 @@ function createAttachmentContainer(data) {
     'number': '',
     'email': ''
   }
-
-
   Object.keys(data.attachment).forEach(function (key) {
-
     const div = document.createElement('div')
     data.attachment[key].type === 'HH:MM' ? div.className = `attachment-field HHMM` : div.className = `attachment-field  ${data.attachment[key].type}`
     div.id = convertKeyToId(key)
@@ -1496,20 +1494,27 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'weekday') {
       div.appendChild(label)
       const selected = data.attachment[key].value;
-
+    
       const selectField = selectMenu({
         id: convertKeyToId(key),
         data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
         selected: selected
       });
+      console.log(selectField)
+      if(data.canEdit) {
 
-      selectField.listen('change', (e) => {
-        if (!document.getElementById('send-activity').dataset.progress) {
-          document.getElementById('send-activity').classList.remove('hidden')
-        }
-
-        data.attachment[key].value = e.target.value
-      });
+        selectField.listen('change', (e) => {
+          if (!document.getElementById('send-activity').dataset.progress) {
+            document.getElementById('send-activity').classList.remove('hidden')
+          }
+          
+          data.attachment[key].value = e.target.value
+        });
+      }
+      else {
+        selectField.root_.classList.add('mdc-select--disabled');
+        selectField.nativeControl_.setAttribute('disabled','true');
+      }
 
       div.appendChild(selectField.root_);
     }
@@ -2150,6 +2155,10 @@ function addNewCustomer(customerRecord,data) {
   nameField.input_.placeholder = 'Customer Name'
   nameField.input_.id = 'customer-name'
   nameField.input_.required = true;
+  if(!data.canEdit) {
+    nameField.root_.classList.add('mdc-text-field--disabled')
+    nameField.input_.setAttribute('disabled','true')
+  }
   nameField.input_.oninput = function (e) {
     customerRecord.attachment.Name.value = e.target.value
     if(data && data.customerRecord) {
@@ -2160,6 +2169,10 @@ function addNewCustomer(customerRecord,data) {
   addressField['input_'].placeholder = 'Customer Address'
   addressField.input_.id = 'customer-address'
   addressField.value = customerRecord.venue[0].address
+  if(!data.canEdit) {
+    addressField.root_.classList.add('mdc-text-field--disabled')
+    addressField.input_.setAttribute('disabled','true')
+  }
   container.appendChild(nameField['root_'])
   container.appendChild(addressField['root_'])
 
@@ -2174,20 +2187,27 @@ function addNewCustomer(customerRecord,data) {
       lat: customerRecord.venue[0].geopoint._latitude,
       lng: customerRecord.venue[0].geopoint._longitude
     });
-
-    marker = customerMap.getMarker({
-      draggable: true
-    });
     container.style.minHeight = '400px'
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition()).then(function (result) {
-        addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
-        if (document.querySelector('#send-activity')) {
-          document.querySelector('#send-activity').classList.remove('hidden')
-        }
-      })
-    });
+    if(data.canEdit) {
+
+      marker = customerMap.getMarker({
+        draggable: true
+      });
+    
+      google.maps.event.addListener(marker, 'dragend', function () {
+        geocodePosition(marker.getPosition()).then(function (result) {
+          addressField.value = result.formatted_address;
+          customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+          if (document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }
+        })
+      });
+    }
+    else {
+      marker = customerMap.getMarker();
+      
+    } 
   }
 
   var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
@@ -2208,33 +2228,36 @@ function addNewCustomer(customerRecord,data) {
       lng: place.geometry.location.lng()
     });
 
-    marker = customerMap.getMarker({
-      draggable: true
-    });
-    console.log(customerRecord)
-
+   
     customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
-
-    console.log(customerRecord)
-
     container.style.minHeight = '400px'
+    if(data.canEdit){
 
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition()).then(function (result) {
-        addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
-        if (document.querySelector('#send-activity')) {
-          document.querySelector('#send-activity').classList.remove('hidden')
-        }
-      }).catch(function (error) {
-        handleError({
-          message: 'geocode Error in autocomplete listener for' + data.template,
-          body: JSON.stringify(error)
+      marker = customerMap.getMarker({
+        draggable: true
+      });
+      
+      google.maps.event.addListener(marker, 'dragend', function () {
+        geocodePosition(marker.getPosition()).then(function (result) {
+          addressField.value = result.formatted_address;
+          customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+          if (document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }
+        }).catch(function (error) {
+          handleError({
+            message: 'geocode Error in autocomplete listener for' + data.template,
+            body: JSON.stringify(error)
+          })
+          locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
         })
-        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
-      })
+      });
+    }
+    else {
+      marker = customerMap.getMarker();
+      
+    }
     });
-  });
   container.appendChild(mapDom);
   container.appendChild(locationErrorText);
   return container;
