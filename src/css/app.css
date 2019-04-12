@@ -1951,3 +1951,7 @@ input[type="datetime-local"] {
 .dialog-custom-backdrop {
  background-color:  rgba(0,0,0,0.47)
 }
+
+.mdc-text-field--disabled input {
+  color: black !important;
+}
