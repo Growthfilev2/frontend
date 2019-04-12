@@ -1,5 +1,3 @@
-
-
 function getCellularInformation(){
   
     const mcc = AndroidInterface.getMobileCountryCode()
@@ -19,10 +17,10 @@ function getCellularInformation(){
     const body = {}
 
     if (mcc) {
-        body.homeMobileCountryCode = mcc
+        body.homeMobileCountryCode = Number(mcc)
     }
     if (mnc) {
-        body.homeMobileNetworkCode = mnc
+        body.homeMobileNetworkCode = Number(mnc)
     }
     if (carrier) {
         body.carrier =carrier
@@ -54,13 +52,6 @@ function parseQuery(queryString){
             array.push(queryPatramsToObject(url))
     })
     return array;
-}
-
-function CellularInformation() {
-    this.mcc;
-    this.mnc;
-    this.carrier;
-    this.radioType;
 }
 
 function queryPatramsToObject(url) {

@@ -242,11 +242,11 @@ function getLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
-        holder['html5'] = {
-          body: '',
-          result: htmlLocation
-        }
+        // if (htmlLocation.accuracy >= 350) return resolve(htmlLocation);
+        // holder['html5'] = {
+        //   body: '',
+        //   result: htmlLocation
+        // }
         handleGeoLocationApi(holder, htmlLocation).then(function (location) {
           resolve(location)
         })
@@ -280,23 +280,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
     const allLocations = [];
-    try {
-      if(JSON.parse(localStorage.getItem('deviceInfo')).appVersion >= 10 ) {
-          body = getCellularInformation()         
-        }
-      else {
-        body = AndroidInterface.getCellularData()
-      }
-    } catch (e) {
-     
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
-      sendExceptionObject(e, 'CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi', []);
-      reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
-      return;
-    }
+    body = getCellularInformation()
     if (body === "") {
       if (htmlLocation) {
         resolve(htmlLocation)
@@ -304,13 +288,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       }
       reject("empty string from AndroidInterface.getCellularData");
     }
-    if (!Object.keys(JSON.parse(body)).length) {
-      if (htmlLocation) {
-        return resolve(htmlLocation);
-      }
-      return reject('Empty Object returned from getCellularData method')
-    }
-
+    
     geolocationApi(body).then(function (cellLocation) {
       if (cellLocation.accuracy <= 350) return resolve(cellLocation);
 
@@ -576,7 +554,7 @@ function isLocationStatusWorking() {
     createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
     return
   }
-
+  
   if (!AndroidInterface.isConnectionActive()) {
     createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity')
     return
@@ -965,13 +943,14 @@ function runRead(value) {
       const notificationData = JSON.parse(value.verifyEmail)
       emailVerify(notificationData)
       return;
-    }
+    };
+    
     if (value.payroll) {
       const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
       return;
     }
-  }, 500)
+  }, 1500)
 }
 
 function removeChildNodes(parent) {
