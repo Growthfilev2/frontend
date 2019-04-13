@@ -758,7 +758,7 @@ function messageReceiver(response) {
 
 function emailVerify(notification) {
 
-  if (firebase.auth().currentUser.email) return emailUpdateSuccess();
+  if (firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
@@ -1022,7 +1022,7 @@ function runRead(value) {
       createBlankPayrollDialog(notificationData)
       return;
     }
-  },500)
+  },1500)
 }
 
 function removeChildNodes(parent) {
