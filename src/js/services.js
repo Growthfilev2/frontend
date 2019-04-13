@@ -757,13 +757,12 @@ function messageReceiver(response) {
 
 
 function emailVerify(notification) {
-
+  if(firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
   span.textContent = notification.body
-  
 
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'email-update-dialog',
