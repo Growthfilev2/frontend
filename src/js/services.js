@@ -280,6 +280,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
     const allLocations = [];
+    
     body = getCellularInformation()
     console.log(body)
     if (body === "") {
@@ -556,9 +557,14 @@ function isLocationStatusWorking() {
     return
   }
   
-  if (!AndroidInterface.isConnectionActive()) {
-    createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity')
-    return
+  // if (!AndroidInterface.isConnectionActive()) {
+  //   createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity')
+  //   return
+  // }
+
+  if(JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
+    createAndroidDialog('Wifi Availability', 'Please Turn on your Wifi, to Improve location accuracy')
+    return AndroidInterface.isWifiOn();
   }
   return true
 }
