@@ -556,15 +556,13 @@ function isLocationStatusWorking() {
     createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
     return
   }
-  
-  // if (!AndroidInterface.isConnectionActive()) {
-  //   createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity')
-  //   return
-  // }
 
   if(JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
-    createAndroidDialog('Wifi Availability', 'Please Turn on your Wifi, to Improve location accuracy')
-    return AndroidInterface.isWifiOn();
+    if(!AndroidInterface.isWifiOn()) {
+      createAndroidDialog('Wifi Availability', 'Please Turn on your Wifi, to Improve location accuracy')
+      return;
+    }
+    return true;
   }
   return true
 }

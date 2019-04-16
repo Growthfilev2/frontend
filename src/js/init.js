@@ -110,30 +110,19 @@ function getDeviceInfomation() {
 
   return AndroidInterface.getDeviceId();
 }
+window.addEventListener("load",function(){
 
-window.addEventListener('load', function () {
-
-  layoutGrid()
-
-
-  firebase.initializeApp(appKey.getKeys())
-
-  const title = 'Device Incompatibility'
-  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-  if (!window.Worker && !window.indexedDB) {
-    const span = document.createElement('span')
-    span.textContent = message;
-    span.className = 'mdc-typography--body1'
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'device-incompatibility-dialog',
-      headerText: title,
-      content: span
-    }).outerHTML
-    const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
-    incompatibilityDialog.show()
-    return
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function(registeration){
+      console.log('sw registered with scope :', registeration.scope);
+    },function(err){
+      console.log('sw registeration failed :',err);
+    })
   }
-
+  firebase.initializeApp(appKey.getKeys())
+      
+  layoutGrid()
+  
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -170,7 +159,8 @@ window.addEventListener('load', function () {
   }
 
   startApp(true)
-})
+
+  })
 
 
 function backNav() {
@@ -260,7 +250,21 @@ function layoutGrid() {
 }
 
 function startApp(start) {
-
+  const title = 'Device Incompatibility'
+  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
+  if (!window.Worker && !window.indexedDB) {
+    const span = document.createElement('span')
+    span.textContent = message;
+    span.className = 'mdc-typography--body1'
+    document.getElementById('dialog-container').innerHTML = dialog({
+      id: 'device-incompatibility-dialog',
+      headerText: title,
+      content: span
+    }).outerHTML
+    const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
+    incompatibilityDialog.show()
+    return
+  }
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {

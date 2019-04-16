@@ -974,6 +974,9 @@ input[type="datetime-local"] {
   width: 30px;
   height: 30px;
 }
+.mdc-fab {
+  background-color: #0399f4 !important;
+}
 
 .activity--share-container {
   display: table;

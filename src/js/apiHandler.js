@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js');
 
 let deviceInfo;
 let currentDevice;
