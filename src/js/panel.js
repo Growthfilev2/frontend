@@ -12,7 +12,7 @@ function resetScroll(){
 }
 
 function initDomLoad() {
-
+ 
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   }

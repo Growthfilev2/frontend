@@ -1412,9 +1412,7 @@ function createAttachmentContainer(data) {
       } else {
         numberInit.disabled = true;
       }
-
       div.appendChild(numberInit.root_);
-
     }
 
     if (data.attachment[key].type === 'email') {

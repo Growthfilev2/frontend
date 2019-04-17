@@ -529,6 +529,7 @@ function runAppChecks() {
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
 
     isEmployeeOnLeave().then(function (onLeave) {
+      
       if (onLeave) return
       if (e.detail) {
         if (history.state[0] === 'listView') {
