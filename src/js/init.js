@@ -119,6 +119,7 @@ window.addEventListener("load",function(){
       console.log('sw registeration failed :',err);
     })
   }
+ 
   firebase.initializeApp(appKey.getKeys())
       
   layoutGrid()

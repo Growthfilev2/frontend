@@ -10,8 +10,8 @@
         "source": "growthfile-testing.firebaseapp.com/v1/**",
         "destination": "/v1/index.html"
       },{
-        "source": "growthfile-testing.firebaseapp.com/v2/**",
-        "destination": "/v2/index.html"
+        "source": "**",
+        "destination": "/index.html"
       }],
       "headers": [{
           "source": "**/*.@(jpg|jpeg|gif|png)",
