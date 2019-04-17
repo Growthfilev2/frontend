@@ -43,7 +43,6 @@ let native = function () {
         try {
           deviceInfo = getDeviceInfomation();
           localStorage.setItem('deviceInfo',deviceInfo);
-          
         } catch (e) {
           sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
 
@@ -51,7 +50,7 @@ let native = function () {
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 9,
+            appVersion: 10,
             osVersion: '',
             id: '',
           })
@@ -117,7 +116,8 @@ window.addEventListener("load",function(){
       console.log('sw registered with scope :', registeration.scope);
     },function(err){
       console.log('sw registeration failed :',err);
-    })
+    });
+    
   }
  
   firebase.initializeApp(appKey.getKeys())
@@ -269,6 +269,10 @@ function startApp(start) {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
+      if(document.getElementById('start-loader')) {
+        document.getElementById('start-loader').remove();
+      }
+      
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
