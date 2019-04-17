@@ -44,6 +44,7 @@ function selectorUI(data) {
       if (value.template === 'dsr' || value.template === 'duty roster' || value.template === 'tour plan') {
         document.querySelector('header').appendChild(progressBar())
       }
+      if(!isLocationStatusWorking()) return;
       createTempRecord(value.office, value.template, data);
     }
     return;

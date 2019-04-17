@@ -25,39 +25,39 @@ let native = function () {
         id: splitByName[5],
         initConnection: splitByName[6]
       }
+      if(localStorage.getItem('iosUUID')) {
+        localStorage.removeItem('iosUUID');
+      }
 
-      localStorage.setItem('iosUUID', JSON.stringify(deviceInfo))
+      localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
-      return localStorage.getItem('iosUUID');
+      return localStorage.getItem('deviceInfo') || localStorage.getItem('iosUUID');
     },
     getInfo: function () {
       if (!this.getName()) {
-        return JSON.stringify({
-          baseOs: this.getName(),
-          deviceBrand: '',
-          deviceModel: '',
-          appVersion: 7,
-          osVersion: '',
-          id: '',
-        })
+        return false
       }
-
       if (this.getName() === 'Android') {
+        let deviceInfo;
         try {
-          return AndroidInterface.getDeviceId();
+          deviceInfo = getDeviceInfomation();
+          localStorage.setItem('deviceInfo',deviceInfo);
+          
         } catch (e) {
           sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
 
-          return JSON.stringify({
+           deviceInfo =JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
-            appVersion: 7,
+            appVersion: 9,
             osVersion: '',
             id: '',
           })
+          localStorage.setItem('deviceInfo',deviceInfo);
         }
+        return deviceInfo
       }
       return this.getIosInfo();
     }
@@ -92,36 +92,37 @@ let app = function () {
   }
 }();
 
+function getDeviceInfomation() {
+  const currentDevice = localStorage.getItem('deviceInfo');     
+  if(!currentDevice) return AndroidInterface.getDeviceId();
 
-window.addEventListener('load', function () {
-  
-  layoutGrid()
- 
-
-  firebase.initializeApp(appKey.getKeys())
-
-  const title = 'Device Incompatibility'
-  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-  if (!window.Worker && !window.indexedDB) {
-    try {
-      AndroidInterface.showDialog(title, message);
-    } catch (e) {
-      const span = document.createElement('span')
-      span.textContent = message;
-      span.className = 'mdc-typography--body1'
-
-      sendExceptionObject(e, 'Catch Type 1: AndroidInterface.showDialog at window.onload', [title, message])
-      document.getElementById('dialog-container').innerHTML = dialog({
-        id: 'device-incompatibility-dialog',
-        headerText: title,
-        content: span
-      }).outerHTML
-      const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
-      incompatibilityDialog.show()
-    }
-    return
+  if(JSON.parse(currentDevice).appVersion >=10) {
+    return JSON.stringify({
+      'id': AndroidInterface.getId(),
+      'deviceBrand': AndroidInterface.getDeviceBrand(),
+      'deviceModel': AndroidInterface.getDeviceModel(),
+      'osVersion': AndroidInterface.getOsVersion(),
+      'baseOs': AndroidInterface.getBaseOs(),
+      'radioVersion': AndroidInterface.getRadioVersion(),
+      'appVersion': Number(AndroidInterface.getAppVersion())
+    })
   }
 
+  return AndroidInterface.getDeviceId();
+}
+window.addEventListener("load",function(){
+
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function(registeration){
+      console.log('sw registered with scope :', registeration.scope);
+    },function(err){
+      console.log('sw registeration failed :',err);
+    })
+  }
+  firebase.initializeApp(appKey.getKeys())
+      
+  layoutGrid()
+  
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -148,7 +149,7 @@ window.addEventListener('load', function () {
 
     if (!event.state) return;
     if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
-    
+
     const originalCount = scroll_namespace.count;
     if (originalCount) {
       scroll_namespace.size = originalCount
@@ -158,18 +159,20 @@ window.addEventListener('load', function () {
   }
 
   startApp(true)
-})
+
+  })
 
 
 function backNav() {
   history.back();
 }
 
-function resetScroll(){
+function resetScroll() {
   scroll_namespace.count = 0;
   scroll_namespace.size = 20;
   scroll_namespace.skip = false;
 }
+
 function firebaseUiConfig(value) {
 
   return {
@@ -247,7 +250,21 @@ function layoutGrid() {
 }
 
 function startApp(start) {
-
+  const title = 'Device Incompatibility'
+  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
+  if (!window.Worker && !window.indexedDB) {
+    const span = document.createElement('span')
+    span.textContent = message;
+    span.className = 'mdc-typography--body1'
+    document.getElementById('dialog-container').innerHTML = dialog({
+      id: 'device-incompatibility-dialog',
+      headerText: title,
+      content: span
+    }).outerHTML
+    const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
+    incompatibilityDialog.show()
+    return
+  }
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -256,8 +273,8 @@ function startApp(start) {
       return
     }
 
-    if(appKey.getMode()==='production') {
-      if(!native.getInfo()) {
+    if (appKey.getMode() === 'production') {
+      if (!native.getInfo()) {
         redirect();
         return;
       }
@@ -272,7 +289,7 @@ function startApp(start) {
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
-        
+
         db.onerror = function () {
           handleError({
             message: `${db.error.message} from startApp on upgradeneeded`
@@ -509,17 +526,19 @@ function initLocation() {
 }
 
 function runAppChecks() {
+ 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
 
     isEmployeeOnLeave().then(function (onLeave) {
+      
       if (onLeave) return
       if (e.detail) {
         if (history.state[0] === 'listView') {
           try {
             getRootRecord().then(function (record) {
-           
+
               if (!record.offices) return;
-              if(!record.offices.length) return;
+              if (!record.offices.length) return;
               const offices = record.offices
               const message = document.createElement('h1')
               message.className = 'mdc-typography--body1 mt-10'

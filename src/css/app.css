@@ -974,6 +974,9 @@ input[type="datetime-local"] {
   width: 30px;
   height: 30px;
 }
+.mdc-fab {
+  background-color: #0399f4 !important;
+}
 
 .activity--share-container {
   display: table;
@@ -1118,9 +1121,7 @@ input[type="datetime-local"] {
 }
 
 .data--value-list {
-  /* margin-top: 0px;
-  margin-left: 5%;
-  width: -webkit-fill-available; */
+  padding-left: 15px;
   font-size: 18px;
 }
 

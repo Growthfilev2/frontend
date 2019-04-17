@@ -243,6 +243,7 @@ function statusChange(db, id) {
       switchControl.checked = true
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
+      console.log(isLocationStatusWorking())
       if (isLocationStatusWorking()) {
         changeStatusRequest(switchControl, record)
       } else {
@@ -253,6 +254,7 @@ function statusChange(db, id) {
 }
 
 function resetStatusConfirmation(switchControl, record) {
+
   if (record.status === 'CONFIRMED') {
     switchControl.checked = true
   } else {
@@ -920,7 +922,6 @@ function createSimpleLi(key, data) {
 
   if (key === 'Office') {
     dataVal.className = 'data--value-list'
-    dataVal.style.marginLeft = '15px';
     dataVal.textContent = data.office
     listItemLabel.textContent = key
     listItem.appendChild(listItemLabel)
@@ -954,7 +955,7 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-      if (isLocationStatusWorking()) {
+      if(!isLocationStatusWorking()) return;
         document.querySelector('.undo-deleted').style.display = 'none'
         listItem.appendChild(loader('undo-delete-loader'));
         requestCreator('statusChange', {
@@ -962,7 +963,7 @@ function createSimpleLi(key, data) {
           status: 'PENDING'
         })
 
-      }
+      
     }
     listItem.appendChild(undo)
   }
@@ -1052,12 +1053,14 @@ function createVenueSection(record) {
         })
       })
     } else {
-      if(!record.venue[0].location || !record.venue[0].address) return;
       record.venue.forEach(function (venue) {
-        venueSection.appendChild(createVenueLi(venue, true, record))
-        const mapDom = document.createElement('div');
-        mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-        venueSection.appendChild(mapDom)
+        if(venue.location && venue.address) {
+
+          venueSection.appendChild(createVenueLi(venue, true, record))
+          const mapDom = document.createElement('div');
+          mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
+          venueSection.appendChild(mapDom)
+        }
       });
     }
     return;
@@ -1409,9 +1412,7 @@ function createAttachmentContainer(data) {
       } else {
         numberInit.disabled = true;
       }
-
       div.appendChild(numberInit.root_);
-
     }
 
     if (data.attachment[key].type === 'email') {

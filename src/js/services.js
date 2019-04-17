@@ -5,7 +5,7 @@ function handleError(error) {
   if (!errorInStorage.hasOwnProperty(error.message)) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
-    error.device = native.getInfo();
+    error.device = JSON.stringify(native.getInfo());
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -275,21 +275,13 @@ function getLocation() {
   })
 }
 
+
 function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
     const allLocations = [];
-    try {
-      body = AndroidInterface.getCellularData()
-    } catch (e) {
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
-      sendExceptionObject(e, 'CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi', []);
-      reject('CATCH Type 4 : AndroidInterface.getCellularData at handleGeolocationApi')
-      return;
-    }
+    body = getCellularInformation()
+    console.log(body)
     if (body === "") {
       if (htmlLocation) {
         resolve(htmlLocation)
@@ -297,13 +289,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       }
       reject("empty string from AndroidInterface.getCellularData");
     }
-    if (!Object.keys(JSON.parse(body)).length) {
-      if (htmlLocation) {
-        return resolve(htmlLocation);
-      }
-      return reject('Empty Object returned from getCellularData method')
-    }
-
+    
     geolocationApi(body).then(function (cellLocation) {
       if (cellLocation.accuracy <= 350) return resolve(cellLocation);
 
@@ -543,53 +529,37 @@ function sortedByAccuracy(geoData) {
 
 
 function createAndroidDialog(title, body) {
-  try {
-    AndroidInterface.showDialog(title, body);
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 1:AndroidInterface.showDialog at createAndroidDialog ', [title, body])
-    const span = document.createElement('span')
-    span.className = 'mdc-typography--body1'
-    span.textContent = body;
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'alert-dialog',
-      showCancel: false,
-      showAccept: true,
-      content: span,
-      headerText: title
-    }).outerHTML
-    const dialogEl = document.querySelector('#alert-dialog');
-    var appDialog = new mdc.dialog.MDCDialog(dialogEl);
-
-    appDialog.listen('MDCDialog:accept', function () {
-      dialogEl.remove();
-      resetScroll()
-
-      listView();
-    });
-    appDialog.show();
-  }
+  const span = document.createElement('span')
+  span.className = 'mdc-typography--body1'
+  span.textContent = body;
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'alert-dialog',
+    showCancel: false,
+    showAccept: true,
+    content: span,
+    headerText: title
+  }).outerHTML
+  const dialogEl = document.querySelector('#alert-dialog');
+  var appDialog = new mdc.dialog.MDCDialog(dialogEl);
+  appDialog.listen('MDCDialog:accept', function () {
+    dialogEl.remove();
+  });
+  appDialog.show();
 }
 
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
 
-  try {
-    if (!AndroidInterface.isLocationPermissionGranted()) {
-      createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
-      return;
-    }
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 6: AndroidInterface.isLocationPermissionGranted at locationPermission', []);
-    return true;
+  if (!AndroidInterface.isLocationPermissionGranted()) {
+    createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
+    return
   }
 
-  try {
-    if (!AndroidInterface.isConnectionActive()) {
-      createAndroidDialog('No Connectivity', 'Please Check your Internet Connectivity');
+  if(JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
+    if(!AndroidInterface.isWifiOn()) {
+      createAndroidDialog('Wifi Availability', 'Please Turn on your Wifi, to Improve location accuracy')
       return;
     }
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 7: AndroidInterface.isConnectionActive  at isLocationStatusWorking', [])
     return true;
   }
   return true
@@ -651,13 +621,12 @@ function requestCreator(requestType, requestBody) {
           'provider': location.provider
         };
 
-        if(requestType === 'create') {
-          requestBody.forEach(function(body){
+        if (requestType === 'create') {
+          requestBody.forEach(function (body) {
             body.timestamp = fetchCurrentTime(rootRecord.serverTime);
             body.geopoint = geopoints
           })
-        }
-        else {
+        } else {
           requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
           requestBody['geopoint'] = geopoints;
         }
@@ -707,7 +676,6 @@ function sendRequest(location, requestGenerator) {
       }
 
       var body = {
-        deviceInfo: native.getInfo(),
         storedLocation: record.location,
         cellTower: cellTowerInfo
       };
@@ -743,11 +711,11 @@ var receiverCaller = {
   'removed-from-office': officeRemovalSuccess,
   'revoke-session': revokeSession,
   'notification': successDialog,
-  'android-stop-refreshing': androidStopRefreshing,
   'apiFail': apiFail,
 };
 
 function messageReceiver(response) {
+
   receiverCaller[response.data.type](response.data);
 }
 
@@ -759,7 +727,7 @@ function emailVerify(notification) {
   const span = document.createElement('h1')
   span.className = 'mdc-typography--body1'
   span.textContent = notification.body
-  
+
 
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'email-update-dialog',
@@ -779,7 +747,6 @@ function emailVerify(notification) {
   })
   emailDialog.show()
 }
-
 
 
 function createBlankPayrollDialog(notificationData) {
@@ -829,6 +796,7 @@ function createBlankPayrollDialog(notificationData) {
         notificationData.data.forEach(function (data) {
           const value = JSON.parse(el.value)
           if (data.template === value) {
+            if (!isLocationStatusWorking()) return;
             createTempRecord(data.office, value, {
               schedule: data.schedule,
               attachment: data.attachment
@@ -864,51 +832,26 @@ function initFirstLoad(response) {
   return;
 }
 
-function updateApp(data) {
-  if (native.getName() === 'Android') {
-    try {
-      AndroidInterface.updateApp(data.msg);
-    } catch (e) {
-      var message = 'Please Install the Latest version from google play store , to Use Growthfile. After Updating the App, close Growthfile and open again ';
-      var title = JSON.parse(data.msg).message;
-      const span = document.createElement('span')
-      span.className = 'mdc-typography--body1'
-      span.textContent = message
-      document.getElementById('dialog-container').innerHTML = dialog({
-        id: 'app-update-dialog',
-        showCancel: false,
-        showAccept: true,
-        headerText: title,
-        content: span
-      }).outerHTML
-      const dialogEl = document.getElementById('app-update-dialog')
-      const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
-      updateDialog.show()
-      updateDialog.listen('MDCDialog:accept', function () {
-        if (JSON.parse(native.getInfo()).appVersion === 7) {
-          setTimeout(function () {
-            updateDialog.show();
-          }, 500)
-          resetScroll()
-          listView();
-          requestCreator('now', {
-            device: native.getInfo(),
-            from: '',
-            registerToken: native.getFCMToken()
-          })
-        } else {
-          dialogEl.remove();
-          resetScroll()
-
-          listView();
-        }
-      })
-    }
-    sendExceptionObject(e, 'CATCH Type 8: AndroidInterface.updateApp at updateApp', [JSON.stringify(data.msg)])
-    return;
-  }
-
-  webkit.messageHandlers.updateApp.postMessage('Update App');
+function updateApp() {
+  if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
+  var message = 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.'
+  var title = 'New Update Avaialble'
+  const span = document.createElement('span')
+  span.className = 'mdc-typography--body1'
+  span.textContent = message
+  document.getElementById('dialog-container').innerHTML = dialog({
+    id: 'app-update-dialog',
+    showCancel: false,
+    showAccept: true,
+    headerText: title,
+    content: span
+  }).outerHTML
+  const dialogEl = document.getElementById('app-update-dialog')
+  const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
+  updateDialog.show()
+  updateDialog.listen('MDCDialog:accept', function () {
+    AndroidInterface.openGooglePlayStore('com.growthfile.growthfileNew')
+  })
 }
 
 function revokeSession() {
@@ -970,17 +913,7 @@ function officeRemovalSuccess(data) {
   return
 }
 
-function androidStopRefreshing() {
-  if (native.getName() !== 'Android') return;
-  const appInfo = JSON.parse(native.getInfo())
-  console.log(appInfo);
-  if (appInfo.appVersion >= 8) return;
-  try {
-    AndroidInterface.stopRefreshing(true);
-  } catch (e) {
-    sendExceptionObject(e, 'CATCH Type 9:AndroidInterface.stopRefreshing at androidStopRefreshing', [true])
-  }  
-}
+
 
 function onErrorMessage(error) {
 
@@ -1003,23 +936,24 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
   if (!value) return requestCreator('Null', value);
-  setTimeout(function(){
-    if(value.read) {
+  setTimeout(function () {
+    if (value.read) {
       requestCreator('Null', value)
       return;
-    }
-    if(history.state[0] !== 'listView') return;
-    if(value.verifyEmail) {
+    };
+
+    if (value.verifyEmail) {
       const notificationData = JSON.parse(value.verifyEmail)
       emailVerify(notificationData)
       return;
-    }
-    if(value.payroll) {
+    };
+    
+    if (value.payroll) {
       const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
       return;
     }
-  },200)
+  }, 1500)
 }
 
 function removeChildNodes(parent) {

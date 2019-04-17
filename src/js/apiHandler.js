@@ -1,4 +1,4 @@
-importScripts('../external/js/moment.min.js');
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js');
 
 let deviceInfo;
 let currentDevice;
@@ -77,12 +77,8 @@ function http(request) {
 
       if (xhr.readyState === 4) {
 
-        if (!xhr.status) {
-          requestHandlerResponse('android-stop-refreshing', 400)
-          return;
-        }
-
-
+        if (!xhr.status) return;
+      
         if (xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
@@ -110,7 +106,7 @@ function fetchServerTime(body, meta) {
   const parsedDeviceInfo = JSON.parse(currentDevice);
   let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
   const req = indexedDB.open(meta.user.uid);
-    
+      
   req.onsuccess = function(){
     const db = req.result;
     const tx = db.transaction(['root'],'readwrite');
@@ -142,27 +138,7 @@ function fetchServerTime(body, meta) {
         http(httpReq).then(function (response) {
          
           if (response.updateClient) {
-            const title = 'Message';
-            const message = 'There is a New version of your app available';
-    
-            const button = {
-              text: 'Update',
-              show: true,
-              clickAction: {
-                redirection: {
-                  text: 'com.growthfile.growthfileNew',
-                  value: true
-                }
-              }
-            }
-    
-            const alertData = JSON.stringify({
-              title: title,
-              message: message,
-              cancelable: false,
-              button: button
-            })
-            requestHandlerResponse('update-app', 200, alertData, '')
+            requestHandlerResponse('update-app', 200)
             return
           }
     
@@ -854,6 +830,7 @@ function createListStore(activity, counter, param) {
         }
       }
       if(typeof activity.creator === 'object'){
+        
         requiredData.creator = {
           number: activity.creator.phoneNumber,
           photo: activity.creator.photoURL,
@@ -1097,7 +1074,6 @@ function updateIDB(meta) {
       http(req)
         .then(function (response) {
           if (!response) return;       
-          requestHandlerResponse('android-stop-refreshing', 200)
           successResponse(response,meta)
         }).catch(sendApiFailToMainThread)
     }
