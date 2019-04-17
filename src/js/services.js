@@ -242,11 +242,11 @@ function getLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        holder['html5'] = {
-          body: '',
-          result: htmlLocation
-        }
+        // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        // holder['html5'] = {
+        //   body: '',
+        //   result: htmlLocation
+        // }
         handleGeoLocationApi(holder, htmlLocation).then(function (location) {
           resolve(location)
         })
@@ -551,13 +551,13 @@ function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
-    createAndroidDialog('Location Permission', 'Please Allow Growthfile location access.')
+    createAndroidDialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.')
     return
   }
 
   if(JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
     if(!AndroidInterface.isWifiOn()) {
-      createAndroidDialog('Wifi Availability', 'Please Turn on your Wifi, to Improve location accuracy')
+      createAndroidDialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.')
       return;
     }
     return true;
