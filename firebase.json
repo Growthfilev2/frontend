@@ -4,40 +4,23 @@
       "source": "**/*.@(jpg|jpeg|gif|png)",
       "headers": [ {
         "key": "Cache-Control",
-        "value": "max-age=7200"
+        "value": "max-age=0"
       }]
     },{
       "source": "**/*.@(js)",
       "headers": [ {
         "key": "Access-Control-Allow-Origin",
         "value": "*"
-      }]
-    }, {
-      "source" :"sw.js",
-      "headers":[{
+      },{
         "key":"Cache-Control",
         "value":"max-age=0"
       }]
     },
     {
-      "source" :"external/js/firebaseui.js",
-      "headers":[{
-        "key":"Cache-Control",
-        "value":"max-age=3600"
-      }]
-    },
-    {
-      "source" :"external/css/firebaseui.css",
-      "headers":[{
-        "key":"Cache-Control",
-        "value":"max-age=3600"
-      }]
-    },
-    {
-      "source": "css/bundle1.css",
+      "source": "**/*.@(css)",
       "headers": [ {
         "key": "Cache-Control",
-        "value": "max-age=20"
+        "value": "max-age=0"
       }]
     }],
     "public": "dist",

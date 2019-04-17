@@ -526,6 +526,7 @@ function initLocation() {
 }
 
 function runAppChecks() {
+ 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
 
     isEmployeeOnLeave().then(function (onLeave) {
