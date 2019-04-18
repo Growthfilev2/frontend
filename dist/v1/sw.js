@@ -1,12 +1,15 @@
 // new version of service worker is installed. Hello This is a new file
 
-var CACHE_NAME = 'gf-98'
+var CACHE_NAME = 'gf-232'
 self.addEventListener('install', function (event) {
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
             return cache.addAll([
+                '/v1/index.html',
                 '/v1/external/js/material.js',
                 '/v1/external/css/material.min.css',
+                '/v1/external/js/firebase-app.js',
+                '/v1/external/js/firebase-auth.js',
                 '/v1/external/js/firebaseui.js',
                 '/v1/external/css/firebaseui.css',
                 '/v1/css/bundle.css',
@@ -37,10 +40,14 @@ self.addEventListener('activate', function (event) {
     )
 })
 self.addEventListener('fetch', function (event) {
+   
     if (event.request.mode === 'navigate' || (event.request.method === 'GET' && event.request.headers.get('accept').includes('text/html'))) {
-        console.log(event.request.url)
+        console.log(event.request.url);
         event.respondWith(
-            fetch(event.request.url).catch(error => {
+             caches.match(event.request).then(function (response) {
+                return response || fetch(event.request)
+            }).catch(error => {
+             
                 // Return the offline page
                 return caches.match('offline.html');
             })
@@ -55,4 +62,3 @@ self.addEventListener('fetch', function (event) {
         )
     }
 })
-
