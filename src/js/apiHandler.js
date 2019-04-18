@@ -104,7 +104,7 @@ function fetchServerTime(body, meta) {
   return new Promise(function (resolve) {
   currentDevice = body.device;
   const parsedDeviceInfo = JSON.parse(currentDevice);
-  let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&registrationToken=${body.registerToken}`
+  let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
   const req = indexedDB.open(meta.user.uid);
       
   req.onsuccess = function(){
@@ -292,7 +292,6 @@ function update(body, meta) {
 }
 
 function create(createReq, meta) {
-  
   console.log(createReq)
   const promiseArray = [];
   createReq.forEach(function(requestBody){

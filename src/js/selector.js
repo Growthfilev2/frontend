@@ -437,7 +437,7 @@ function fillChildrenInSelector(data, container) {
   });
   data.results.forEach(function (value) {
 
-    if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
+  
       if (value.attachment.Name) {
 
         const radioListEl = radioList({
@@ -445,6 +445,8 @@ function fillChildrenInSelector(data, container) {
           value: value.attachment.Name.value
         });
         radioListEl.dataset.value = value.attachment.Name.value
+
+        if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
         radioListEl.querySelector('.mdc-radio input').onclick = function () {
           data.record.attachment[data.key].value = JSON.parse(this.value);
 
@@ -452,7 +454,8 @@ function fillChildrenInSelector(data, container) {
           return;
         }
         ul.appendChild(radioListEl)
-
+          
+        }
       }
       if (value.attachment.Number) {
 
@@ -461,10 +464,10 @@ function fillChildrenInSelector(data, container) {
           value: value.attachment.Number.value
         })
         radioListEl.dataset.value = value.attachment.Number.value
-        ul.appendChild(radioListEl)
-
+        if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
+          ul.appendChild(radioListEl)
+        }
       }
-    }
   })
   container.appendChild(ul)
   document.getElementById('app-current-panel').appendChild(container);

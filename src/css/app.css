@@ -2029,3 +2029,7 @@ input[type="datetime-local"] {
 	right: 0;
 	padding: 5%;
 }
+.mdc-text-field--disabled input {
+  color: black !important;
+
+}

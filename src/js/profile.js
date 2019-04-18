@@ -368,7 +368,4 @@ function emailVerificationError(error) {
     document.querySelector('.init-loader').remove()
   };
   
-  handleError({
-    message: `${error.message} from emailVerificationError`
-  })
 }
