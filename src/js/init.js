@@ -113,7 +113,7 @@ window.addEventListener("load",function(){
 
   if('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function(registeration){
-     
+
       console.log('sw registered with scope :', registeration.scope);
     },function(err){
       console.log('sw registeration failed :',err);
