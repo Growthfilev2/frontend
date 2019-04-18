@@ -1,6 +1,6 @@
 // new version of service worker is installed. Hello This is a new file
 
-var CACHE_NAME = 'gf-3'
+var CACHE_NAME = 'gf-1'
 const cacheToAdd = [
     '/v1/',
     '/v1/external/js/firebase-app.js',
