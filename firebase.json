@@ -35,9 +35,12 @@
           "key": "Cache-Control",
           "value": "max-age=0"
         }]
+      },{
+        "source": "/v1/**",
+        "headers": [{
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        }]
       }]
   }
-
-
-
 }

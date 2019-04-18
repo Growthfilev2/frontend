@@ -136,7 +136,7 @@ function fetchServerTime(body, meta) {
         }
     
         http(httpReq).then(function (response) {
-         
+       
           if (response.updateClient) {
             requestHandlerResponse('update-app', 200)
             return

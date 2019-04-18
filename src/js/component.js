@@ -250,7 +250,9 @@ AppendMap.prototype.setZoom = function (zoom) {
 }
 
 AppendMap.prototype.map = function () {
-    return new google.maps.Map(this.el, this.options);
+
+        return new google.maps.Map(this.el, this.options);
+
 }
 
 AppendMap.prototype.withCustomControl = function () {

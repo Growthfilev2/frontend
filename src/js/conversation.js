@@ -383,10 +383,15 @@ function getUserRecord(db, data) {
 }
 
 function hasMapsApiLoaded() {
-  if (typeof google === 'object' && typeof google.maps === 'object') {
-    return true
+  try {
+    if (typeof google === 'object' && typeof google.maps === 'object') {
+      return true
+    }
+    return false
   }
-  return false
+  catch(e){
+    return false;
+  }
 }
 
 
@@ -2212,11 +2217,9 @@ if (customerRecord.venue[0].location) {
   });
   container.style.minHeight = '400px'
   if (moveMarker) {
-
     marker = customerMap.getMarker({
       draggable: true
     });
-
     google.maps.event.addListener(marker, 'dragend', function () {
       geocodePosition(marker.getPosition()).then(function (result) {
         addressField.value = result.formatted_address;
@@ -2228,7 +2231,6 @@ if (customerRecord.venue[0].location) {
     });
   } else {
     marker = customerMap.getMarker();
-
   }
 }
 
