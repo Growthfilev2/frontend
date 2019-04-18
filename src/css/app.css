@@ -974,6 +974,9 @@ input[type="datetime-local"] {
   width: 30px;
   height: 30px;
 }
+.mdc-fab {
+  background-color: #0399f4 !important;
+}
 
 .activity--share-container {
   display: table;
@@ -1952,6 +1955,81 @@ input[type="datetime-local"] {
  background-color:  rgba(0,0,0,0.47)
 }
 
+
+.circular {
+	animation: rotate 1.5s linear infinite;
+	height: 100px;
+	transform-origin: center center;
+	width: 100px;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+}
+
+.path {
+	stroke-dasharray: 1, 200;
+	stroke-dashoffset: 0;
+	animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+	stroke-linecap: round;
+}
+
+@keyframes rotate {
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes dash {
+	0% {
+		stroke-dasharray: 1, 200;
+		stroke-dashoffset: 0;
+	}
+
+	50% {
+		stroke-dasharray: 89, 200;
+		stroke-dashoffset: -35px;
+	}
+
+	100% {
+		stroke-dasharray: 89, 200;
+		stroke-dashoffset: -124px;
+	}
+}
+
+@keyframes color {
+	100%,
+  0% {
+		stroke: #0399f4;
+	}
+
+	40% {
+		stroke: #0399f4;
+	}
+
+	66% {
+		stroke:#0399f4;
+	}
+
+	80%,
+  90% {
+		stroke: #0399f4;
+	}
+}
+
+
+
+.showbox {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 5%;
+}
 .mdc-text-field--disabled input {
   color: black !important;
+
 }

@@ -1,35 +1,46 @@
 {
   "hosting": {
-    "headers": [ {
-      "source": "**/*.@(jpg|jpeg|gif|png)",
-      "headers": [ {
-        "key": "Cache-Control",
-        "value": "max-age=7200"
-      }]
-    },{
-      "source": "**/*.@(js)",
-      "headers": [ {
-        "key": "Access-Control-Allow-Origin",
-        "value": "*"
-      }]
-    }, {
-      "source": "**/*.@(js|html|css)",
-      "headers": [ {
-        "key": "Cache-Control",
-        "value": "max-age=3600"
-      } ]
-    }],
     "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
+    "rewrites": [{
+      "source": "growthfile-testing.firebaseapp.com/v1/**",
+      "destination": "/v1/index.html"
+    }, {
+      "source": "growthfile-testing.firebaseapp.com",
+      "destination": "/index.html"
+    }],
+    "headers": [{
+        "source": "**/*.@(jpg|jpeg|gif|png)",
+        "headers": [{
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        }]
+      }, {
+        "source": "**/*.@(js)",
+        "headers": [{
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }, {
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        }]
+      },
       {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
+        "source": "**/*.@(css)",
+        "headers": [{
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        }]
+      },{
+        "source": "/v1/**",
+        "headers": [{
+          "key": "Cache-Control",
+          "value": "max-age=0"
+        }]
+      }]
   }
 }

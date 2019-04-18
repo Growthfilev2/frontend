@@ -367,5 +367,5 @@ function emailVerificationError(error) {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   };
-
+  
 }

@@ -244,6 +244,7 @@ function statusChange(db, id) {
       switchControl.checked = true
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
+      console.log(isLocationStatusWorking())
       if (isLocationStatusWorking()) {
         changeStatusRequest(switchControl, record)
       } else {
@@ -254,6 +255,7 @@ function statusChange(db, id) {
 }
 
 function resetStatusConfirmation(switchControl, record) {
+
   if (record.status === 'CONFIRMED') {
     switchControl.checked = true
   } else {
@@ -381,10 +383,15 @@ function getUserRecord(db, data) {
 }
 
 function hasMapsApiLoaded() {
-  if (typeof google === 'object' && typeof google.maps === 'object') {
-    return true
+  try {
+    if (typeof google === 'object' && typeof google.maps === 'object') {
+      return true
+    }
+    return false
   }
-  return false
+  catch(e){
+    return false;
+  }
 }
 
 
@@ -957,7 +964,7 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-      if (isLocationStatusWorking()) {
+      if(!isLocationStatusWorking()) return;
         document.querySelector('.undo-deleted').style.display = 'none'
         listItem.appendChild(loader('undo-delete-loader'));
         requestCreator('statusChange', {
@@ -965,7 +972,7 @@ function createSimpleLi(key, data) {
           status: 'PENDING'
         })
 
-      }
+      
     }
     listItem.appendChild(undo)
   }
@@ -1055,7 +1062,6 @@ function createVenueSection(record) {
         })
       })
     } else {
-
       record.venue.forEach(function (venue) {
         if (venue.location && venue.address) {
 
@@ -1414,9 +1420,7 @@ function createAttachmentContainer(data) {
       } else {
         numberInit.disabled = true;
       }
-
       div.appendChild(numberInit.root_);
-
     }
 
     if (data.attachment[key].type === 'email') {
@@ -2212,11 +2216,9 @@ if (customerRecord.venue[0].location) {
   });
   container.style.minHeight = '400px'
   if (moveMarker) {
-
     marker = customerMap.getMarker({
       draggable: true
     });
-
     google.maps.event.addListener(marker, 'dragend', function () {
       geocodePosition(marker.getPosition()).then(function (result) {
         addressField.value = result.formatted_address;
@@ -2228,7 +2230,6 @@ if (customerRecord.venue[0].location) {
     });
   } else {
     marker = customerMap.getMarker();
-
   }
 }
 
