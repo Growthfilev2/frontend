@@ -25,7 +25,7 @@ let native = function () {
         id: splitByName[5],
         initConnection: splitByName[6]
       }
-      if(localStorage.getItem('iosUUID')) {
+      if (localStorage.getItem('iosUUID')) {
         localStorage.removeItem('iosUUID');
       }
 
@@ -42,11 +42,11 @@ let native = function () {
         let deviceInfo;
         try {
           deviceInfo = getDeviceInfomation();
-          localStorage.setItem('deviceInfo',deviceInfo);
+          localStorage.setItem('deviceInfo', deviceInfo);
         } catch (e) {
           sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
 
-           deviceInfo =JSON.stringify({
+          deviceInfo = JSON.stringify({
             baseOs: this.getName(),
             deviceBrand: '',
             deviceModel: '',
@@ -54,7 +54,7 @@ let native = function () {
             osVersion: '',
             id: '',
           })
-          localStorage.setItem('deviceInfo',deviceInfo);
+          localStorage.setItem('deviceInfo', deviceInfo);
         }
         return deviceInfo
       }
@@ -92,39 +92,33 @@ let app = function () {
 }();
 
 function getDeviceInfomation() {
-  const currentDevice = localStorage.getItem('deviceInfo');     
-  if(!currentDevice) return AndroidInterface.getDeviceId();
+  return JSON.stringify({
+    'id': AndroidInterface.getId(),
+    'deviceBrand': AndroidInterface.getDeviceBrand(),
+    'deviceModel': AndroidInterface.getDeviceModel(),
+    'osVersion': AndroidInterface.getOsVersion(),
+    'baseOs': AndroidInterface.getBaseOs(),
+    'radioVersion': AndroidInterface.getRadioVersion(),
+    'appVersion': Number(AndroidInterface.getAppVersion())
+  })
 
-  if(JSON.parse(currentDevice).appVersion >=10) {
-    return JSON.stringify({
-      'id': AndroidInterface.getId(),
-      'deviceBrand': AndroidInterface.getDeviceBrand(),
-      'deviceModel': AndroidInterface.getDeviceModel(),
-      'osVersion': AndroidInterface.getOsVersion(),
-      'baseOs': AndroidInterface.getBaseOs(),
-      'radioVersion': AndroidInterface.getRadioVersion(),
-      'appVersion': Number(AndroidInterface.getAppVersion())
-    })
-  }
-
-  return AndroidInterface.getDeviceId();
 }
-window.addEventListener("load",function(){
+window.addEventListener("load", function () {
 
-  if('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(function(registeration){
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function (registeration) {
 
       console.log('sw registered with scope :', registeration.scope);
-    },function(err){
-      console.log('sw registeration failed :',err);
+    }, function (err) {
+      console.log('sw registeration failed :', err);
     });
 
   }
- 
+
   firebase.initializeApp(appKey.getKeys())
-      
+
   layoutGrid()
-  
+
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -162,7 +156,7 @@ window.addEventListener("load",function(){
 
   startApp(true)
 
-  })
+})
 
 
 function backNav() {
@@ -270,10 +264,10 @@ function startApp(start) {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      if(document.getElementById('start-loader')) {
+      if (document.getElementById('start-loader')) {
         document.getElementById('start-loader').remove();
       }
-      
+
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
@@ -532,11 +526,11 @@ function initLocation() {
 }
 
 function runAppChecks() {
- 
+
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
 
     isEmployeeOnLeave().then(function (onLeave) {
-      
+
       if (onLeave) return
       if (e.detail) {
         if (history.state[0] === 'listView') {
