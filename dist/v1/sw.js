@@ -1,4 +1,4 @@
-// new version of service worker is installed. Hello This is a new file
+// Service Worker
 
 var CACHE_NAME = 'gf-1'
 const cacheToAdd = [
