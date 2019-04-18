@@ -57,9 +57,11 @@ self.addEventListener('fetch', function (event) {
         event.respondWith(
             caches.open(CACHE_NAME).then(function (cache) {
                 console.log(event.request)
-                return cache.match(event.request).then(function (response) {
-                    return response || fetch(event.request)
-                })
+                if(event.request.method === "GET") {
+                    return cache.match(event.request).then(function (response) {
+                        return response || fetch(event.request)
+                    })
+                }
             })
         )
     }
