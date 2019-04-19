@@ -1,6 +1,6 @@
 // Service Worker Version 2
 
-var CACHE_NAME = 'gf-2'
+var CACHE_NAME = 'gf-3'
 const cacheToAdd = [
     '/v1/',
     '/v1/external/js/firebase-app.js',
@@ -42,11 +42,11 @@ self.addEventListener('activate', function (event) {
     )
 })
 self.addEventListener('fetch', function (event) {
-   
+
     if (event.request.mode === 'navigate' || (event.request.method === 'GET' && event.request.headers.get('accept').includes('text/html'))) {
         console.log(event.request.url);
         event.respondWith(
-             caches.match(event.request).then(function (response) {
+            caches.match(event.request).then(function (response) {
                 return response || fetch(event.request);
             }).catch(error => {
                 // Return the offline page
@@ -57,11 +57,11 @@ self.addEventListener('fetch', function (event) {
         event.respondWith(
             caches.open(CACHE_NAME).then(function (cache) {
                 console.log(event.request)
-                if(event.request.method === "GET") {
-                    return cache.match(event.request).then(function (response) {
-                        return response || fetch(event.request)
-                    })
-                }
+
+                return cache.match(event.request).then(function (response) {
+                    return response || fetch(event.request)
+                })
+
             })
         )
     }
