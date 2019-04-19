@@ -202,9 +202,8 @@ function startCursor(currentLocation) {
 
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if(document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      }
+      document.getElementById('start-loader').classList.add('hidden')
+      
       
       if (!ul) return
       ul.appendChild(fragment)
@@ -489,7 +488,6 @@ function getRootRecord() {
 }
 
 function createActivityIcon() {
-  if (document.getElementById('create-activity--icon')) return;
   getCountOfTemplates().then(function (count) {
     if(!count) return;
     createActivityIconDom()
@@ -543,7 +541,7 @@ function createActivityIconDom() {
       suggestCheckIn: false
     })
   } 
-
+  if (document.getElementById('create-activity--icon')) return;
   document.getElementById('activity-list-main').appendChild(chooseSubscription.root_);
 }
 
@@ -552,7 +550,7 @@ function listPanel() {
   if (document.getElementById('activity-list-main')) return
 
   const listCard = document.createElement('div')
-  listCard.className = 'mdc-card panel-card mdc-top-app-bar--fixed-adjust'
+  listCard.className = 'mdc-card panel-card'
   listCard.id = 'activity-list-main'
   const listUl = document.createElement('ul')
   listUl.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
@@ -568,12 +566,12 @@ function listPanel() {
 
 
 function creatListHeader(headerName) {
+ 
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
-    const sectionStart = document.getElementById('section-start');
-   sectionStart.innerHTML =''
     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
+      const sectionStart = document.getElementById('section-start');
 
       const object = document.createElement('object');
       object.className = 'list-photo-header';
@@ -590,7 +588,7 @@ function creatListHeader(headerName) {
       const headerText = document.createElement('span');
       headerText.textContent = headerName;
       headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
-      
+      sectionStart.innerHTML =''
       sectionStart.appendChild(object)
       sectionStart.appendChild(headerText);
 

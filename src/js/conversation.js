@@ -85,7 +85,7 @@ function commentPanel(id) {
   }
 
   const commentPanel = document.createElement('div')
-  commentPanel.className = 'activity--chat-card-container  mdc-top-app-bar--fixed-adjust panel-card'
+  commentPanel.className = 'activity--chat-card-container panel-card'
 
   const chatCont = document.createElement('div')
   chatCont.id = 'chat-container'
@@ -105,8 +105,9 @@ function commentPanel(id) {
   field.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
   field.id = 'write--comment'
   field.style.width = '100%';
+  field.style.backgroundColor = 'white';
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input comment-field mdc-elevation--z4'
+  input.className = 'comment-field mdc-elevation--z4'
   input.type = 'text'
 
   field.appendChild(input)
@@ -388,8 +389,7 @@ function hasMapsApiLoaded() {
       return true
     }
     return false
-  }
-  catch(e){
+  } catch (e) {
     return false;
   }
 }
@@ -613,48 +613,31 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-          let message;
-          if (native.getName() === 'Android') {
-            message = 'Make Sure you have set Location Mode to High Accuracy'
-          } else {
-            message = 'Please wait.'
-          }
-          const span = document.createElement('span')
-          span.className = 'mdc-typography--body1'
-          span.textContent = message
-          document.getElementById('dialog-container').innerHTML = dialog({
-            id: 'location-fetch-dialog',
-            content: span,
-            headerText: 'Fetching Location'
-          }).outerHTML
-          const dialogEl = document.getElementById('location-fetch-dialog')
-          const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
-          fetchingLocationDialog.show();
+          document.getElementById('start-loader').classList.remove('hidden');
+
           if (native.getName() === 'Ios') {
             window.addEventListener('iosLocation', function _iosLocation(e) {
-              dialogEl.remove();
-              updateCreateActivity(bareBonesRecord)
+              document.getElementById('start-loader').classList.add('hidden')
+              updateCreateActivity(bareBonesRecord);
               window.removeEventListener('iosLocation', _iosLocation, true);
             }, true)
             return;
           }
           manageLocation().then(function (location) {
-            dialogEl.remove();
+            document.getElementById('start-loader').classList.add('hidden')
+
             updateCreateActivity(bareBonesRecord)
           }).catch(function (error) {
+            document.getElementById('start-loader').classList.add('hidden');
+            const locationErrorDialog = new Dialog('Location Error','There was a problem in detecting your location. Please try again later').create();
+            locationErrorDialog.open();
 
-            let errorMessage = 'There was a problem in detecting your location'
-            if (native.getName() === 'Android') {
-              errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
-            }
-            dialogEl.querySelector('.mdc-dialog__header__title').textContent = 'Failed To Get Current Location';
-            dialogEl.querySelector('section span').textContent = errorMessage;
-            setTimeout(function () {
-              dialogEl.remove();
-            }, 3000)
-            resetScroll()
-            listView();
-            handleError(error)
+            locationErrorDialog.listen('MDCDialog:closed', function (evt) {
+              resetScroll()
+              listView();
+              handleError(error)
+            })
+            alertDialog.open();
           })
         });
         return
@@ -776,7 +759,7 @@ function updateCreateContainer(record, showSendButton) {
   sectionStart.appendChild(activityName)
 
   const container = document.createElement('div')
-  container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'
+  container.className = 'update-create--activity'
 
   const TOTAL_LIST_TYPES = ['office', 'venue', 'schedule', 'attachment', 'assignees']
 
@@ -964,15 +947,15 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-      if(!isLocationStatusWorking()) return;
-        document.querySelector('.undo-deleted').style.display = 'none'
-        listItem.appendChild(loader('undo-delete-loader'));
-        requestCreator('statusChange', {
-          activityId: data.id,
-          status: 'PENDING'
-        })
+      if (!isLocationStatusWorking()) return;
+      document.querySelector('.undo-deleted').style.display = 'none'
+      listItem.appendChild(loader('undo-delete-loader'));
+      requestCreator('statusChange', {
+        activityId: data.id,
+        status: 'PENDING'
+      })
 
-      
+
     }
     listItem.appendChild(undo)
   }
@@ -1328,7 +1311,7 @@ function createScheduleTable(data) {
 
 
 function createAttachmentContainer(data) {
- 
+
   const ordering = ['Name', 'Number', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
 
   ordering.forEach(function (order) {
@@ -1402,13 +1385,13 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
       console.log(data)
- 
+
       if (key === 'Number Of Days') {
         const startDate = document.querySelector('#schedule--group .start--date1 input')
         const endDate = document.querySelector('#schedule--group .end--date1 input')
         data.attachment[key].value = (moment(endDate.value).diff(startDate.value, 'days')) + 1
         console.log(moment(endDate.value).diff(startDate.value, 'days') + 1);
-       
+
       }
       const numberInput = new InputField();
       const numberInit = numberInput.withoutLabel();
@@ -1586,7 +1569,7 @@ function createAttachmentContainer(data) {
       }
 
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
-      
+
         if (results.length && data.canEdit) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
@@ -1872,7 +1855,6 @@ function openImage(imageSrc) {
   const largeImage = document.createElement('img')
   largeImage.src = imageSrc;
   largeImage.style.width = '100%';
-
   document.getElementById('dialog-container').innerHTML = dialog({
     id: 'viewImage--dialog-component',
     headerText: 'Photo',
@@ -2170,121 +2152,120 @@ function addNewCustomer(customerRecord, data) {
   }
 
 
-nameField.input_.oninput = function (e) {
-  customerRecord.attachment.Name.value = e.target.value
-  if (data && data.customerRecord) {
-    data.attachment.Customer.value = e.target.value
+  nameField.input_.oninput = function (e) {
+    customerRecord.attachment.Name.value = e.target.value
+    if (data && data.customerRecord) {
+      data.attachment.Customer.value = e.target.value
+    }
   }
-}
-const addressField = address.withoutLabel();
-addressField['input_'].placeholder = 'Customer Address'
-addressField.input_.id = 'customer-address'
-addressField.value = customerRecord.venue[0].address
-if (data && customerRecord) {
-  if (!data.canEdit) {
+  const addressField = address.withoutLabel();
+  addressField['input_'].placeholder = 'Customer Address'
+  addressField.input_.id = 'customer-address'
+  addressField.value = customerRecord.venue[0].address
+  if (data && customerRecord) {
+    if (!data.canEdit) {
+      addressField.root_.classList.add('mdc-text-field--disabled')
+      addressField.input_.setAttribute('disabled', 'true')
+    }
+  } else if (!customerRecord.canEdit) {
+
     addressField.root_.classList.add('mdc-text-field--disabled')
     addressField.input_.setAttribute('disabled', 'true')
   }
-} else if (!customerRecord.canEdit) {
 
-  addressField.root_.classList.add('mdc-text-field--disabled')
-  addressField.input_.setAttribute('disabled', 'true')
-}
-
-let moveMarker = false;
-if (data && customerRecord) {
-  moveMarker = true
-}
-else {
+  let moveMarker = false;
+  if (data && customerRecord) {
+    moveMarker = true
+  } else {
     moveMarker = customerRecord.canEdit
 
-}   
-
-
-container.appendChild(nameField['root_'])
-container.appendChild(addressField['root_'])
-
-const mapDom = createElement('div', {
-  id: 'customer-address-map'
-})
-const customerMap = new AppendMap(mapDom);
-customerMap.setZoom(18);
-let marker;
-if (customerRecord.venue[0].location) {
-  customerMap.setLocation({
-    lat: customerRecord.venue[0].geopoint._latitude,
-    lng: customerRecord.venue[0].geopoint._longitude
-  });
-  container.style.minHeight = '400px'
-  if (moveMarker) {
-    marker = customerMap.getMarker({
-      draggable: true
-    });
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition()).then(function (result) {
-        addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
-        if (document.querySelector('#send-activity')) {
-          document.querySelector('#send-activity').classList.remove('hidden')
-        }
-      })
-    });
-  } else {
-    marker = customerMap.getMarker();
-  }
-}
-
-var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
-  componentRestrictions: {
-    country: "in"
-  }
-});
-
-autocomplete.addListener('place_changed', function () {
-
-  let place = autocomplete.getPlace();
-  if (document.querySelector('#send-activity')) {
-    document.querySelector('#send-activity').classList.remove('hidden')
   }
 
-  customerMap.setLocation({
-    lat: place.geometry.location.lat(),
-    lng: place.geometry.location.lng()
-  });
 
+  container.appendChild(nameField['root_'])
+  container.appendChild(addressField['root_'])
 
-  customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
-  container.style.minHeight = '400px'
-
-  if (moveMarker) {
-
-    marker = customerMap.getMarker({
-      draggable: true
+  const mapDom = createElement('div', {
+    id: 'customer-address-map'
+  })
+  const customerMap = new AppendMap(mapDom);
+  customerMap.setZoom(18);
+  let marker;
+  if (customerRecord.venue[0].location) {
+    customerMap.setLocation({
+      lat: customerRecord.venue[0].geopoint._latitude,
+      lng: customerRecord.venue[0].geopoint._longitude
     });
-
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition()).then(function (result) {
-        addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
-        if (document.querySelector('#send-activity')) {
-          document.querySelector('#send-activity').classList.remove('hidden')
-        }
-      }).catch(function (error) {
-        handleError({
-          message: 'geocode Error in autocomplete listener for' + data.template,
-          body: JSON.stringify(error)
+    container.style.minHeight = '400px'
+    if (moveMarker) {
+      marker = customerMap.getMarker({
+        draggable: true
+      });
+      google.maps.event.addListener(marker, 'dragend', function () {
+        geocodePosition(marker.getPosition()).then(function (result) {
+          addressField.value = result.formatted_address;
+          customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+          if (document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }
         })
-        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
-      })
-    });
-  } else {
-    marker = customerMap.getMarker();
-
+      });
+    } else {
+      marker = customerMap.getMarker();
+    }
   }
-});
-container.appendChild(mapDom);
-container.appendChild(locationErrorText);
-return container;
+
+  var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
+    componentRestrictions: {
+      country: "in"
+    }
+  });
+
+  autocomplete.addListener('place_changed', function () {
+
+    let place = autocomplete.getPlace();
+    if (document.querySelector('#send-activity')) {
+      document.querySelector('#send-activity').classList.remove('hidden')
+    }
+
+    customerMap.setLocation({
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
+    });
+
+
+    customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
+    container.style.minHeight = '400px'
+
+    if (moveMarker) {
+
+      marker = customerMap.getMarker({
+        draggable: true
+      });
+
+      google.maps.event.addListener(marker, 'dragend', function () {
+        geocodePosition(marker.getPosition()).then(function (result) {
+          addressField.value = result.formatted_address;
+          customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+          if (document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }
+        }).catch(function (error) {
+          handleError({
+            message: 'geocode Error in autocomplete listener for' + data.template,
+            body: JSON.stringify(error)
+          })
+          locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+        })
+      });
+    } else {
+      marker = customerMap.getMarker();
+
+    }
+  });
+  container.appendChild(mapDom);
+  container.appendChild(locationErrorText);
+  return container;
 }
 
 

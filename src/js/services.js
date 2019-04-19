@@ -17,57 +17,7 @@ function loader(nameClass) {
   return div;
 }
 
-function dialog(attr) {
-  const aside = document.createElement('aside')
 
-  aside.id = attr.id
-  aside.className = 'mdc-dialog dialog-custom-backdrop'
-  aside.role = 'alertdialog'
-
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-  if (attr.headerText) {
-    const header = document.createElement('header');
-    header.className = 'mdc-dialog__header'
-    const headerText = document.createElement('h2')
-    headerText.className = 'mdc-dialog__header__title'
-    headerText.textContent = attr.headerText
-    header.appendChild(headerText)
-    dialogSurface.appendChild(header);
-  }
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__content'
-  if (attr.content) {
-    section.appendChild(attr.content)
-  }
-  dialogSurface.appendChild(section)
-
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-  if (attr.showCancel) {
-
-    var cancel = document.createElement('button');
-    cancel.type = 'button';
-    cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-    cancel.textContent = 'cancel';
-    cancel.style.backgroundColor = '#3498db';
-    footer.appendChild(cancel)
-  }
-  if (attr.showAccept) {
-    var accept = document.createElement('button');
-    accept.type = 'button';
-    accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    accept.textContent = 'Okay';
-    accept.style.backgroundColor = '#3498db';
-    footer.appendChild(accept)
-  }
-
-  dialogSurface.appendChild(footer)
-  aside.appendChild(dialogSurface)
-  return aside;
-}
 
 function successDialog() {
 

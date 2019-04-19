@@ -76,6 +76,46 @@ function createElement(tagName, attrs) {
     return el;
 }
 
+function Dialog(title,content){
+    this.title = title;
+    this.content = content;
+
+}
+Dialog.prototype.create = function(){
+    const parent = createElement('div',{className:'mdc-dialog',role:'alertDialog'})
+    parent.setAttribute('aria-modal','true')
+    parent.setAttribute('aria-labelledby','Title')
+    parent.setAttribute('aria-describedby','content')
+    const container = createElement('div',{className:'mdc-dialog__container'})
+    const surface = createElement('div',{className:'mdc-dialog__surface'})
+    const h2 = createElement('h2',{className:'mdc-dialog__title',textContent:this.title})
+    const contentContainer = createElement('div',{className:'mdc-dialog__content'});
+    if(this.content instanceof HTMLElement) {
+        contentContainer.appendChild(this.content)
+    }
+    else {
+        contentContainer.textContent = this.content
+    }
+    const footer = createElement('footer',{className:'mdc-dialog__actions'})
+    const cancelButton = createElement('button',{className:'mdc-button mdc-dialog__button',type:'button',textContent:'cancel'})
+    cancelButton.setAttribute('data-mdc-dialog-action','close')
+    const okButton = createElement('button',{className:'mdc-button mdc-dialog__button',type:'button',textContent:'okay'})
+    okButton.setAttribute('data-mdc-dialog-action','accept')
+    footer.appendChild(cancelButton)
+    footer.appendChild(okButton);
+    surface.appendChild(h2)
+    surface.appendChild(contentContainer)
+    surface.appendChild(footer)
+    container.appendChild(surface)
+    parent.appendChild(container);
+    parent.appendChild(createElement('div',{className:'mdc-dialog__scrim'}))
+    const dialogParent = document.getElementById('dialog-container')
+    dialogParent.innerHTML = ''
+    dialogParent.appendChild(parent)
+    return new mdc.dialog.MDCDialog(parent);
+}
+
+
 function InputField() {}
 InputField.prototype.base = function () {
     return createElement('div', {
@@ -195,6 +235,7 @@ function Button(name) {
     this.base = button;
 }
 Button.prototype.getButton = function () {
+    console.log(this)
     return new mdc.ripple.MDCRipple(this.base)
 }
 Button.prototype.disabled = function (value) {
@@ -208,6 +249,18 @@ Button.prototype.shaped = function () {
 }
 Button.prototype.selectorButton = function () {
     this.base.classList.add('selector-send', 'selector-submit--button')
+}
+function iconButton(attr){
+    this.base = createElement('button', {
+        className: 'mdc-icon-button ' +attr.className,
+        id:attr.id
+    });
+    this.base.setAttribute('aria-label',attr.label);
+    this.base.setAttribute('aria-hidden','true')
+    this.base.setAttribute('aria-pressed','false');
+    this.base.appendChild(createElement('i',{className:'material-icons mdc-icon-button__icon mdc-icon-button__icon--on',textContent:attr.initialState}))
+    this.base.appendChild(createElement('i',{className:'material-icons mdc-icon-button__icon',textContent:attr.finalState}))
+    return new mdc.iconButton.MDCIconButtonToggle(this.base)
 }
 
 function Fab(name) {
@@ -232,6 +285,7 @@ Fab.prototype.extended = function (labelName) {
     this.base.appendChild(label);
     return this.getButton();
 }
+
 
 function AppendMap(el) {
     this.el = el;

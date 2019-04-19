@@ -1,4 +1,5 @@
 const appKey = new AppKeys();
+
 let ui;
 let native = function () {
   return {
@@ -101,19 +102,37 @@ function getDeviceInfomation() {
     'radioVersion': AndroidInterface.getRadioVersion(),
     'appVersion': Number(AndroidInterface.getAppVersion())
   })
-
 }
+
+window.onpopstate = function (event) {
+
+  if (!event.state) return;
+  if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
+
+  const originalCount = scroll_namespace.count;
+  if (originalCount) {
+    scroll_namespace.size = originalCount
+  }
+  scroll_namespace.count = 0;
+  window[event.state[0]]()
+}
+
+function backNav() {
+  history.back();
+}
+
+
 window.addEventListener("load", function () {
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(function (registeration) {
+  // if ('serviceWorker' in navigator) {
+  //   navigator.serviceWorker.register('sw.js').then(function (registeration) {
 
-      console.log('sw registered with scope :', registeration.scope);
-    }, function (err) {
-      console.log('sw registeration failed :', err);
-    });
+  //     console.log('sw registered with scope :', registeration.scope);
+  //   }, function (err) {
+  //     console.log('sw registeration failed :', err);
+  //   });
 
-  }``
+  // }
   firebase.initializeApp(appKey.getKeys())
   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
@@ -131,35 +150,16 @@ window.addEventListener("load", function () {
       LTS: "h:mm:ss A",
       L: "DD/MM/YY",
     },
-
     months: [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
       'August', 'September', 'October', 'November', 'December'
     ]
-
   })
-
-  window.onpopstate = function (event) {
-
-    if (!event.state) return;
-    if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
-
-    const originalCount = scroll_namespace.count;
-    if (originalCount) {
-      scroll_namespace.size = originalCount
-    }
-    scroll_namespace.count = 0;
-    window[event.state[0]]()
-  }
 
   startApp(true)
 
 })
 
-
-function backNav() {
-  history.back();
-}
 
 function resetScroll() {
   scroll_namespace.count = 0;
@@ -220,28 +220,14 @@ function userSignedOut() {
 
 
 function startApp(start) {
-  const title = 'Device Incompatibility'
-  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
   if (!window.Worker && !window.indexedDB) {
-    const span = document.createElement('span')
-    span.textContent = message;
-    span.className = 'mdc-typography--body1'
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'device-incompatibility-dialog',
-      headerText: title,
-      content: span
-    }).outerHTML
-    const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
-    incompatibilityDialog.show()
+    //TODO: show view instead of dialog
     return
   }
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      }
-
+      document.getElementById('start-loader').classList.add('hidden')
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
@@ -501,58 +487,40 @@ function initLocation() {
 
 function runAppChecks() {
 
-  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+  // window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+  //   if (!e.detail) return;
+  //   isEmployeeOnLeave().then(function (onLeave) {
+  //     if (onLeave) return
+  //     if (history.state[0] !== 'listView') return;
+      
+      try {
+        getRootRecord().then(function (record) {
 
-    isEmployeeOnLeave().then(function (onLeave) {
+          if (!record.offices) return;
+          if (!record.offices.length) return;
+          const offices = record.offices
+          const checkInDialog = new Dialog('Check-In Reminder','Do you want to create a Check-In ?').create();
+          checkInDialog.open()
+          checkInDialog.listen('MDCDialog:closed', function (evt) {
+            console.log(evt)
+            if (evt.detail.action !== 'accept') return;
+            if (!isLocationStatusWorking()) return;
 
-      if (onLeave) return
-      if (e.detail) {
-        if (history.state[0] === 'listView') {
-          try {
-            getRootRecord().then(function (record) {
-
-              if (!record.offices) return;
-              if (!record.offices.length) return;
-              const offices = record.offices
-              const message = document.createElement('h1')
-              message.className = 'mdc-typography--body1 mt-10'
-              message.textContent = 'Do you want to create a Check-In ?'
-              document.getElementById('dialog-container').innerHTML = dialog({
-                id: 'suggest-checkIn-dialog',
-                headerText: 'Check-In Reminder',
-                content: message,
-                showCancel: true,
-                showAccept: true
-              }).outerHTML
-              const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
-              var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
-              initCheckInDialog.show();
-              initCheckInDialog.listen('MDCDialog:accept', function (evt) {
-                if (!isLocationStatusWorking()) return;
-
-                if (offices.length === 1) {
-                  createTempRecord(offices[0], 'check-in', {
-                    suggestCheckIn: true
-                  });
-                  return;
-                }
-                selectorUI({
-                  record: '',
-                  store: 'subscriptions',
-                  suggestCheckIn: true
-                })
-              });
-              initCheckInDialog.listen('MDCDialog:cancel', function () {
-                checkInDialog.remove();
-              })
-              resetScroll();
-              listView();
+            if (offices.length === 1) {
+              createTempRecord(offices[0], 'check-in');
+              return;
+            }
+            selectorUI({
+              store: 'subscriptions'
             })
-          } catch (e) {
-            console.log(e)
-          }
-        }
+          })
+          resetScroll();
+          listView();
+        })
+      } catch (e) {
+        console.log(e)
       }
-    }).catch(handleError)
-  }, true);
+
+  //   }).catch(handleError)
+  // }, true);
 }

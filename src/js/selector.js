@@ -9,7 +9,7 @@ function selectorUI(data) {
   sectionStart.appendChild(headerBackIcon(data.store))
 
   const container = createElement('div', {
-    className: 'selector-container mdc-top-app-bar--fixed-adjust'
+    className: 'selector-container'
   })
 
   const warning = createElement('span', {

@@ -27,7 +27,7 @@ body {
   margin-top: 10px;
 }
 #login-container {
-  top: 10rem;
+  top: 5rem;
   position: relative;
 }
 
@@ -146,6 +146,7 @@ body {
   width: 85%;
   display: block;
   margin: 0 auto;
+  font-size: 20px;
 }
 
 .send--container {
@@ -2027,7 +2028,8 @@ input[type="datetime-local"] {
 	bottom: 0;
 	left: 0;
 	right: 0;
-	padding: 5%;
+  padding: 5%;
+  background-color: rgba(255,255,255,.7);
 }
 .mdc-text-field--disabled input {
   color: black !important;

@@ -1,0 +1,171 @@
+:root {
+    --mdc-theme-primary: #0399f4;
+    --mdc-theme-secondary: white;
+    --mdc-theme-background: rgb(204, 199, 199);
+}
+
+.profile-image {
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+}
+
+body {
+    margin: 0;
+}
+
+.demo-card {
+    min-height: 100vh;
+}
+
+.p-10 {
+    padding: 10px;
+}
+
+#edit-button {
+    background-color: var(--mdc-theme-primary);
+    border-radius: 50%;
+    position: fixed;
+    bottom: 47.5rem;
+    right: 1rem;
+    width: 60px;
+    height: 60px;
+}
+#edit-button.without-tabs-des {
+    bottom: 54.5rem;
+}
+
+.white {
+    color: white;
+}
+
+.fs-30 {
+    font-size: 30px !important;
+}
+
+.meta-icon{
+    vertical-align: middle;
+    color: var(--mdc-theme-background);
+    padding-right: 10px;
+}
+
+.mb-0 {
+    margin-bottom: 0px !important;
+}
+
+.mt-0 {
+    margin-top: 0px !important;
+}
+.pb-20 {
+    padding-bottom: 20px;
+}
+.pt-20 {
+    padding-top: 20px;
+}
+.pt-10 {
+    padding-top: 10px;
+}
+.supervisior {
+    margin-left: -8px;
+}
+
+.chip-info {
+    width: 18px;
+    height: 18px;
+    font-size: 18px !important;
+    margin: 0 -4px 0 4px;
+    color: rgba(0, 0, 0, .54);
+}
+
+.dot {
+    height: 5px;
+    width: 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-alert {
+    width: 10px;
+    height: 10px;
+    margin-left: -10px;
+    vertical-align: top;
+    background-color: red;
+}
+.dot-alert-btn {
+    width: 12px;
+    height: 12px;
+    margin-top: -17px;
+    margin-left: -20px;
+}
+.mdc-card__actions {
+    background-color:#d3d3d382;
+}
+.hidden {
+    display: none !important;
+}
+
+.full-width {
+    width: 100%;
+}
+
+#name, #email {
+    margin-top: 10%
+}
+#email.recp{
+    margin-top: 2%;
+}
+
+.middle {
+    transition: .5s ease;
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .middle i {
+    font-size: 100px;
+    font-weight: 600;
+
+  }
+  
+  .container .image {
+    opacity: 0.3;
+  }
+  
+  .container .middle {
+    opacity: 1;
+  }
+  
+  .text {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    padding: 16px 32px;
+  }
+  
+
+  .edit-body {
+    margin-top: 5%;
+  }
+
+  .seperator {
+    box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0.2), 0px 0px 0px 0px rgba(0, 0, 0, 0.14), 0px 0px 0px 0px rgba(0,0,0,.12);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: #e0e0e0;
+  }
+  
+  .mdc-chip-set.supervisor {
+      margin-left: -10px;
+  }
+
+  .content {
+    display: none;
+  }
+  
+  .content--active {
+    display: block;
+  }

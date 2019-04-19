@@ -5,11 +5,11 @@ function profileView(pushState) {
   if (window.addEventListener) {
     window.removeEventListener('scroll', handleScroll, false)
   }
-  
-  document.body.style.backgroundColor = '#eeeeee';
+
   const sectionStart = document.getElementById('section-start');
   sectionStart.innerHTML = ''
   sectionStart.appendChild(headerBackIcon())
+  document.getElementById('app-current-panel').innerHTML = '';
 
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
@@ -27,29 +27,81 @@ function profileView(pushState) {
 
           if (!document.getElementById('app-current-panel')) return;
 
-          document.getElementById('app-current-panel').innerHTML = view.outerHTML;
-        
+          document.getElementById('app-current-panel').appendChild(baseCard())
+          
 
-          if (native.getName() === 'Android') {
-            document.getElementById('uploadProfileImage').addEventListener('click', function () {
-              try {
-                AndroidInterface.openImagePicker();
-              }catch(e){
-                sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
-              }
-            })
-          } else {
-            document.getElementById('uploadProfileImage').addEventListener('change', function () {
-              readUploadedFile()
-            });
-          }
+          // if (native.getName() === 'Android') {
+          //   document.getElementById('uploadProfileImage').addEventListener('click', function () {
+          //     try {
+          //       AndroidInterface.openImagePicker();
+          //     }catch(e){
+          //       sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
+          //     }
+          //   })
+          // } else {
+          //   document.getElementById('uploadProfileImage').addEventListener('change', function () {
+          //     readUploadedFile()
+          //   });
+          // }
 
-          changeDisplayName(user);
-          changeEmailAddress(user);
+          // changeDisplayName(user);
+          // changeEmailAddress(user);
         })
       };
     };
   };
+}
+
+function baseCard(){
+  const card = createElement('div',{className:'mdc-card demo-card'})
+  const primaryAction = createElement('div',{className:'mdc-card__primary-action demo-card__primary-action'})
+  const cardMedia = createElement('div',{className:'mdc-card__media mdc-card__media--16-9 demo-card__media'})
+  cardMedia.style.backgroundImage= `url(${firebase.auth().currentUser.photoURL})`
+  
+  const editButton = iconButton({id:'edit-profile',className:'without-icon-edit' ,label:'edit-profile-button',initialState:'edit',finalState:'check'});
+
+  const viewContainer = createElement('div',{className:'demo-card__primary p-10'})
+  const editContainer = createElement('div',{className:'mdc-typography mdc-typography--body2 p-10 hidden',id:'card-body-edit'})
+
+
+  primaryAction.appendChild(cardMedia);
+  primaryAction.appendChild(editButton.root_);
+  viewContainer.appendChild(profileBasicInfo())
+  primaryAction.appendChild(viewContainer)
+  primaryAction.appendChild(editContainer);
+  card.appendChild(primaryAction)
+  return card;
+}
+function profileBasicInfo(){
+  const basicInfoSeperator = createElement('div',{className:'basic-info seperator'})
+  const name = createElement('h1',{className:'mdc-typography--headline5 mb-0 mt-0',id:'view-name',textContent:firebase.auth().currentUser.displayName})
+  const email = createElement('h1',{className:'mdc-typography--headline6 mb-0 mt-0'})
+  const emailIcon =  createElement('i',{className:'material-icons meta-icon',textContent:'email'})
+  const emailValue = createElement('span',{textContent:firebase.auth().currentUser.email})
+  email.appendChild(emailIcon)
+  email.appendChild(emailValue)
+
+  const phone = createElement('h1',{className:'mdc-typography--headline6 mt-0'})
+  const phoneIcon = createElement('i',{className:'material-icons meta-icon',textContent:'phone'})
+  const phoneValue = createElement('span',{className:'mdc-typography--headline6',textContent:firebase.auth().currentUser.phoneNumber})
+  phone.appendChild(phoneIcon)
+  phone.appendChild(phoneValue)
+
+  basicInfoSeperator.appendChild(name)
+  basicInfoSeperator.appendChild(email)
+  basicInfoSeperator.appendChild(phone)
+  return basicInfoSeperator
+}
+
+function createOfficeDetailView(){
+  const container = createElement('div',{className:'office-info seperator'})
+  getEmployeeDetails().then(function(employeeDetails){
+      const details = employeeDetails.attachment
+          Object.keys(details).forEach(function(detailName){
+              container.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:details[detailName].value}))
+          })
+          container.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:firebase.auth().meta.lastSignInTime}))
+  }); 
 }
 
 
