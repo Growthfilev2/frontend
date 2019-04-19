@@ -113,11 +113,9 @@ window.addEventListener("load", function () {
       console.log('sw registeration failed :', err);
     });
 
-  }
-
+  }``
   firebase.initializeApp(appKey.getKeys())
-
-  layoutGrid()
+  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
     calendar: {
@@ -220,30 +218,6 @@ function userSignedOut() {
   ui.start('#login-container', firebaseUiConfig());
 }
 
-function layoutGrid() {
-  const layout = document.createElement('div')
-  layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
-  layout.id = "main-layout-app"
-  const layoutInner = document.createElement('div')
-  layoutInner.className = 'mdc-layout-grid__inner cell-space'
-
-  const currentPanel = document.createElement('div')
-  currentPanel.id = 'app-current-panel'
-  currentPanel.className = 'mdc-layout-grid__cell--span-12'
-
-  const snackbar = document.createElement('div')
-  snackbar.id = 'snackbar-container'
-
-  const dialogContainer = document.createElement('div')
-  dialogContainer.id = 'dialog-container'
-
-  layoutInner.appendChild(currentPanel)
-  layoutInner.appendChild(snackbar)
-  layout.appendChild(layoutInner)
-  layout.appendChild(dialogContainer)
-  document.getElementById('growthfile').innerHTML = layout.outerHTML
-  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-}
 
 function startApp(start) {
   const title = 'Device Incompatibility'
