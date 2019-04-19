@@ -33,11 +33,13 @@ function listView() {
 
   getSizeOfListStore().then(function (size) {
     if (!size) {
+      if(document.getElementById('start-loader')) {
+        document.getElementById('start-loader').remove();
+      };
       appendTextContentInListView('No activities Found');
       return;
     }
     if (size > 20) {
-
       window.addEventListener('scroll', handleScroll, false)
     }
 
@@ -148,6 +150,9 @@ function loadActivitiesFromListStore(currentLocation) {
     }
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
+      if(document.getElementById('start-loader')) {
+        document.getElementById('start-loader').remove();
+      };
       if (!ul) return
       ul.innerHTML = ''
       ul.appendChild(fragment)
