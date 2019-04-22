@@ -141,7 +141,7 @@ Dialog.prototype.create = function () {
 function InputField() {}
 InputField.prototype.base = function () {
     return createElement('div', {
-        className: 'mdc-text-field filled-background data--value-list mdc-text-field--fullwidth',
+        className: 'mdc-text-field filled-background  mdc-text-field--fullwidth',
     });
 }
 InputField.prototype.input = function () {
@@ -205,9 +205,12 @@ function textAreaField(attrs) {
 
 function selectMenu(attr) {
     const div = createElement('div', {
-        className: 'mdc-select data--value-list'
+        className: 'mdc-select'
+    });
+    const icon = createElement('i', {
+        className: 'mdc-select__dropdown-icon'
     })
-    div.id = attr.id
+
     const select = createElement('select', {
         className: 'mdc-select__native-control'
     })
@@ -215,16 +218,19 @@ function selectMenu(attr) {
     for (var i = 0; i < attr.data.length; i++) {
         select.appendChild(createElement('option', {
             textContent: attr.data[i],
-            vale: attr.data[i],
+            value: attr.data[i],
             selected: attr.data[i] === attr.selected ? true : false
         }));
     }
     const label = createElement('label', {
-        className: 'mdc-floating-label'
-    })
-    label.textContent = ''
-    div.appendChild(label)
+        className: 'mdc-floating-label',
+        textContent: attr.labelText
+    });
+
+    div.appendChild(icon)
     div.appendChild(select)
+
+    div.appendChild(label)
     const rippleField = new InputField();
     div.appendChild(rippleField.ripple())
     return new mdc.select.MDCSelect(div)
@@ -386,13 +392,13 @@ function radioList(attr) {
 
     if (!attr.index) {
         li.setAttribute('tabindex', "0");
-        li.setAttribute('aria-checked',"true")
+        li.setAttribute('aria-checked', "true")
     }
     const itemGraphic = createElement('span', {
         className: 'mdc-list-item__graphic'
     })
     itemGraphic.appendChild(createRadioInput(attr))
-    
+
     const label = createElement('label', {
         className: 'mdc-list-item__text',
         textContent: attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1)
@@ -415,7 +421,7 @@ function createRadioInput(attr) {
     input.setAttribute('name', 'listDemoRadioGroup')
     input.type = 'radio'
     input.value = JSON.stringify(attr.value),
-    input.id = 'list-radio-item-' + attr.index
+        input.id = 'list-radio-item-' + attr.index
     const radioBckg = createElement('div', {
         className: 'mdc-radio__background'
     })

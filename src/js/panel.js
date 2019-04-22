@@ -247,7 +247,6 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (currentLocation) {
         venueSpan = generateLatestVenue(venues, currentLocation);
       }
-
       if (venueSpan && !dateSpan) {
         secondLineVenue.textContent = venueSpan;
         secondLineVenue.style.maxWidth = '70%';

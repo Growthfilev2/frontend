@@ -19,7 +19,7 @@ body {
   height: auto;
 }
 .filled-background {
-  background-color: #f5f5f5;
+  background-color: #f5f5f5 !important;
 }
 .mdc-button.shaped {
   border-radius: 22px;
@@ -1434,12 +1434,8 @@ input[type="datetime-local"] {
   margin-top: 2%;
 }
 
-#Weekly-Off {
-  margin-top: -10px;
-  width: -webkit-fill-available
-}
-#Weekly-Off .mdc-select__native-control {
-  padding: 0px;
+.mdc-select {
+  width: 100%;
 }
 
 #viewImage--dialog-component .mdc-dialog__surface {

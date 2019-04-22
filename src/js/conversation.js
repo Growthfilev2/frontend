@@ -1425,13 +1425,13 @@ function createAttachmentContainer(data) {
     }
 
     if (data.attachment[key].type === 'weekday') {
-      div.appendChild(label)
+      // div.appendChild(label)
       const selected = data.attachment[key].value;
 
       const selectField = selectMenu({
-        id: convertKeyToId(key),
         data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
-        selected: selected
+        selected:selected,
+        labelText:key
       });
       console.log(selectField)
       if (data.canEdit) {
@@ -1440,7 +1440,6 @@ function createAttachmentContainer(data) {
           if (!document.getElementById('send-activity').dataset.progress) {
             document.getElementById('send-activity').classList.remove('hidden')
           }
-
           data.attachment[key].value = e.target.value
         });
       } else {
