@@ -723,9 +723,6 @@ body {
   opacity: 1;
 }
 
-
-
-
 #change-number--menu {
   top: 40px !important;
 }
@@ -1249,7 +1246,10 @@ input[type="datetime-local"] {
 
 .subheader--group-small {
   text-align: right;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
+  margin-bottom: 0;
+  color: #0399f4;
+  font-weight: 500;
 }
 
 .data--value-list-small {

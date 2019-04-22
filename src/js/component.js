@@ -389,9 +389,10 @@ function radioList(attr) {
         li.setAttribute('aria-checked',"true")
     }
     const itemGraphic = createElement('span', {
-        className: 'mdc-list-item__text'
+        className: 'mdc-list-item__graphic'
     })
     itemGraphic.appendChild(createRadioInput(attr))
+    
     const label = createElement('label', {
         className: 'mdc-list-item__text',
         textContent: attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1)

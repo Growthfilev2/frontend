@@ -651,6 +651,7 @@ function createBlankPayrollDialog(notificationData) {
 
   const payrollDialog = new Dialog(notificationData.title, container).create();
   payrollDialog.open();
+  
   const radioListInit = new mdc.list.MDCList(ul)
   radioListInit.singleSelection = true
 
