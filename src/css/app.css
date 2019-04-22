@@ -5,8 +5,9 @@ body {
 .mdc-top-app-bar__section--align-start {
   padding-left: 10px;
 }
-.mdc-button {
-  background-color: #0399f4 !important;
+
+.mdc-button:not([disabled]) {
+  background-color: #0399f4  !important;
   color:white !important;
 }
 .text-area-basic.mdc-text-field__input {
@@ -1284,55 +1285,151 @@ input[type="datetime-local"] {
   margin-top: -9px;
   font-size: 30px;
 }
-
-#success-dialog .mdc-dialog__surface {
-  border-radius: 50%;
-  width: 300px;
-  height: 300px;
-  background-color: #0399f4;
-  ;
-  transform: scale(0.38) !important;
-  z-index: 99999;
-  /* transition: 1s ease; */
-}
-
-.success--container {
+/**
+ * Extracted from: SweetAlert
+ * Modified by: Istiak Tridip
+ */
+ .success-checkmark {
+  width: 40%;
+  height: 40%;
   position: absolute;
-  top: 25%;
-  left: 27%;
-  font-size: 40px;
+  top: 40%;
+  left:40%;
 }
-
-.success--check {
-  color: #ffffff;
-  animation: checking 1s ease both;
-
-  border: solid 12px white;
+.success-checkmark .check-icon {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  border-radius: 50%;
+  box-sizing: content-box;
+  border: 4px solid #0399f4;
+  background-color: #0399f4;
+}
+.success-checkmark .check-icon::before {
+  top: 3px;
+  left: -2px;
+  width: 30px;
+  transform-origin: 100% 50%;
+  border-radius: 100px 0 0 100px;
+}
+.success-checkmark .check-icon::after {
+  top: 0;
+  left: 30px;
   width: 60px;
-  height: 60px;
-  margin: 65px 0 0 0px;
-  border-top: none;
-  border-right: none;
-  transform: rotate(-45deg);
-  transform-origin: top left;
-  box-shadow: -5px 5px 0 0 rgba(0, 0, 0, .5);
+  transform-origin: 0 50%;
+  border-radius: 0 100px 100px 0;
+  animation: rotate-circle 4.25s ease-in;
 }
+.success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
+  content: '';
+  height: 100px;
+  position: absolute;
+  transform: rotate(-45deg);
+}
+.success-checkmark .check-icon .icon-line {
+  height: 5px;
+  background-color: white;
+  display: block;
+  border-radius: 2px;
+  position: absolute;
+  z-index: 10;
+}
+.success-checkmark .check-icon .icon-line.line-tip {
+  top: 46px;
+  left: 14px;
+  width: 25px;
+  transform: rotate(45deg);
+  animation: icon-line-tip 0.75s;
+}
+.success-checkmark .check-icon .icon-line.line-long {
+  top: 38px;
+  right: 8px;
+  width: 47px;
+  transform: rotate(-45deg);
+  animation: icon-line-long 0.75s;
+}
+.success-checkmark .check-icon .icon-circle {
+  top: -4px;
+  left: -4px;
+  z-index: 10;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  position: absolute;
+  box-sizing: content-box;
+  border: 4px solid #0399f4
+}
+.success-checkmark .check-icon .icon-fix {
+  top: 8px;
+  width: 5px;
+  left: 26px;
+  z-index: 1;
+  height: 85px;
+  position: absolute;
+  transform: rotate(-45deg);
 
-@keyframes checking {
+}
+@keyframes rotate-circle {
   0% {
-    opacity: 0;
-    width: 0;
-    height: 0;
+    transform: rotate(-45deg);
   }
-
-  50% {
-    opacity: 1;
-    width: 0;
-    height: 60px;
+  5% {
+    transform: rotate(-45deg);
   }
-
+  12% {
+    transform: rotate(-405deg);
+  }
   100% {
-    width: 100px;
+    transform: rotate(-405deg);
+  }
+}
+@keyframes icon-line-tip {
+  0% {
+    width: 0;
+    left: 1px;
+    top: 19px;
+  }
+  54% {
+    width: 0;
+    left: 1px;
+    top: 19px;
+  }
+  70% {
+    width: 50px;
+    left: -8px;
+    top: 37px;
+  }
+  84% {
+    width: 17px;
+    left: 21px;
+    top: 48px;
+  }
+  100% {
+    width: 25px;
+    left: 14px;
+    top: 45px;
+  }
+}
+@keyframes icon-line-long {
+  0% {
+    width: 0;
+    right: 46px;
+    top: 54px;
+  }
+  65% {
+    width: 0;
+    right: 46px;
+    top: 54px;
+  }
+  84% {
+    width: 55px;
+    right: 0px;
+    top: 35px;
+  }
+  100% {
+    width: 47px;
+    right: 8px;
+    top: 38px;
   }
 }
 
@@ -1620,19 +1717,15 @@ input[type="datetime-local"] {
   height: 50px;
 }
 
-#attachment--list {
-  /* padding-top: 10px; */
-}
-
-:root {
-  --mdc-theme-primary: #eeeeee !important;
+:root { 
+   --mdc-theme-primary: #eeeeee !important;
   --mdc-theme-secondary: #0399f4 !important;
   --mdc-theme-background: #ffffff !important;
   --mdc-theme-on-primary: white !important;
-  --mdc-theme-on-secondary: #ffffff !important;
+  --mdc-theme-on-secondary: #ffffff !important; 
 }
 .mdc-ripple-surface--accent {
-  color: var(--mdc-theme-secondary);
+   color: var(--mdc-theme-secondary);
 }
 .mdc-list-item--selected {
   color: #0399f4 !important;
@@ -1683,7 +1776,7 @@ input[type="datetime-local"] {
 /** menu **/
 :not(.mdc-list--non-interactive)> :not(.mdc-list-item--disabled).mdc-list-item::before,
 :not(.mdc-list--non-interactive)> :not(.mdc-list-item--disabled).mdc-list-item::after {
-  background-color: #ffffff !important;
+  /* background-color: #ffffff !important; */
 }
 
 /** list **/
@@ -1763,6 +1856,9 @@ input[type="datetime-local"] {
   font-size: 1.8rem;
 }
 
+.notification-message {
+  margin-top: '10px';
+}
 #search--bar-selector {
   border-bottom: 0px;
 }

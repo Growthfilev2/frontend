@@ -487,11 +487,11 @@ function initLocation() {
 
 function runAppChecks() {
 
-  // window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-  //   if (!e.detail) return;
-  //   isEmployeeOnLeave().then(function (onLeave) {
-  //     if (onLeave) return
-  //     if (history.state[0] !== 'listView') return;
+  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    if (!e.detail) return;
+    isEmployeeOnLeave().then(function (onLeave) {
+      if (onLeave) return
+      if (history.state[0] !== 'listView') return;
       
       try {
         getRootRecord().then(function (record) {
@@ -521,6 +521,6 @@ function runAppChecks() {
         console.log(e)
       }
 
-  //   }).catch(handleError)
-  // }, true);
+    }).catch(handleError)
+  }, true);
 }

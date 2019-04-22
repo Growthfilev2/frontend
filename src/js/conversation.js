@@ -625,19 +625,16 @@ function createTempRecord(office, template, prefill) {
           }
           manageLocation().then(function (location) {
             document.getElementById('start-loader').classList.add('hidden')
-
             updateCreateActivity(bareBonesRecord)
           }).catch(function (error) {
             document.getElementById('start-loader').classList.add('hidden');
             const locationErrorDialog = new Dialog('Location Error','There was a problem in detecting your location. Please try again later').create();
             locationErrorDialog.open();
-
             locationErrorDialog.listen('MDCDialog:closed', function (evt) {
               resetScroll()
               listView();
               handleError(error)
             })
-            alertDialog.open();
           })
         });
         return
@@ -1818,8 +1815,11 @@ function setFilePath(str, key, show) {
   dataObject.appendChild(img);
 
   dataObject.onclick = function () {
-    openImage(this.data)
+    // dataObject.style.width = '100%';    
+    const imageDialog = new Dialog('Photo',dataObject).create();
+    imageDialog.open();
   }
+
   container.appendChild(dataObject)
   li.appendChild(container)
 
@@ -1849,29 +1849,6 @@ function readCameraFile() {
   }
 }
 
-function openImage(imageSrc) {
-
-  if (!imageSrc) return;
-  const largeImage = document.createElement('img')
-  largeImage.src = imageSrc;
-  largeImage.style.width = '100%';
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'viewImage--dialog-component',
-    headerText: 'Photo',
-    content: largeImage,
-    showCancel: true,
-    showAccept: true
-  }).outerHTML
-  const dialogEl = document.querySelector('#viewImage--dialog-component')
-  const imageDialog = new mdc.dialog.MDCDialog.attachTo(dialogEl);
-  imageDialog.listen('MDCDialog:accept', function (evt) {
-    dialogEl.remove()
-  })
-  imageDialog.listen('MDCDialog:cancel', function (evt) {
-    dialogEl.remove()
-  })
-  imageDialog.show()
-}
 
 function createActivityCancellation(record) {
   if (!record.canEdit) return
@@ -1904,25 +1881,10 @@ function createActivityCancellation(record) {
     if (!record.canEdit) return;
 
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
-      const span = document.createElement('span')
-      span.className = 'mdc-typography--body1'
-      span.textContent = 'Are you sure you want to delete this activity ? '
-      document.getElementById('dialog-container').innerHTML = dialog({
-        id: 'cancel-alert',
-        headerText: `${record.activityName} will be deleted`,
-        showCancel: true,
-        showAccept: true,
-        content: span
-      }).outerHTML
-      const dialogEl = document.querySelector('#cancel-alert')
-      var cancelDialog = new mdc.dialog.MDCDialog(dialogEl);
-
-      cancelDialog.lastFocusedTarget = evt.target;
-      cancelDialog.show();
-      cancelDialog.listen('MDCDialog:cancel', function () {
-        dialogEl.remove()
-      })
-      cancelDialog.listen('MDCDialog:accept', function () {
+      const deleteActivityDialog = new Dialog(`${record.activityName} will be deleted`,'Are you sure you want to delete this activity ? ').create();
+      deleteActivityDialog.open();
+      deleteActivityDialog.listen('MDCDialog:closed',function(evt){
+        if(evt.detail.action !== 'accept') return;
         if (!isLocationStatusWorking()) return;
         document.querySelector('.delete-activity').style.display = 'none';
         document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
@@ -1930,7 +1892,6 @@ function createActivityCancellation(record) {
           activityId: record.activityId,
           status: 'CANCELLED',
         })
-        dialogEl.remove()
       })
     })
   }

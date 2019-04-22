@@ -1,5 +1,5 @@
-function getCellularInformation(){
-  
+function getCellularInformation() {
+
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
     const radioType = AndroidInterface.getRadioType()
@@ -8,10 +8,10 @@ function getCellularInformation(){
     const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
     let wifiAccessPointsArray = [];
     let cellTowerArray = [];
-    if(wifiQueryString) {
+    if (wifiQueryString) {
         wifiAccessPointsArray = parseQuery(wifiQueryString)
     }
-    if(cellTowerQueryString){
+    if (cellTowerQueryString) {
         cellTowerArray = parseQuery(cellTowerQueryString)
     }
     const body = {}
@@ -23,10 +23,10 @@ function getCellularInformation(){
         body.homeMobileNetworkCode = Number(mnc)
     }
     if (carrier) {
-        body.carrier =carrier
+        body.carrier = carrier
     }
     if (radioType) {
-        body.radioType =radioType
+        body.radioType = radioType
     }
 
     if (wifiAccessPointsArray.length) {
@@ -35,21 +35,20 @@ function getCellularInformation(){
     if (cellTowerArray.length) {
         body.cellTowers = cellTowerArray;
     }
-    if(wifiAccessPointsArray.length && cellTowerArray.length) {
+    if (wifiAccessPointsArray.length && cellTowerArray.length) {
         body.considerIp = false
-    }
-    else {
+    } else {
         body.considerIp = true
     }
     return JSON.stringify(body)
 }
 
-function parseQuery(queryString){
+function parseQuery(queryString) {
     var array = [];
     const splitBySeperator = queryString.split(",")
-        splitBySeperator.forEach(function (value) {
-            const url = new URLSearchParams(value);
-            array.push(queryPatramsToObject(url))
+    splitBySeperator.forEach(function (value) {
+        const url = new URLSearchParams(value);
+        array.push(queryPatramsToObject(url))
     })
     return array;
 }
@@ -76,31 +75,52 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function Dialog(title,content){
+function Dialog(title, content) {
     this.title = title;
     this.content = content;
 
 }
-Dialog.prototype.create = function(){
-    const parent = createElement('div',{className:'mdc-dialog',role:'alertDialog'})
-    parent.setAttribute('aria-modal','true')
-    parent.setAttribute('aria-labelledby','Title')
-    parent.setAttribute('aria-describedby','content')
-    const container = createElement('div',{className:'mdc-dialog__container'})
-    const surface = createElement('div',{className:'mdc-dialog__surface'})
-    const h2 = createElement('h2',{className:'mdc-dialog__title',textContent:this.title})
-    const contentContainer = createElement('div',{className:'mdc-dialog__content'});
-    if(this.content instanceof HTMLElement) {
+Dialog.prototype.create = function () {
+    const parent = createElement('div', {
+        className: 'mdc-dialog',
+        role: 'alertDialog'
+    })
+    parent.setAttribute('aria-modal', 'true')
+    parent.setAttribute('aria-labelledby', 'Title')
+    parent.setAttribute('aria-describedby', 'content')
+    const container = createElement('div', {
+        className: 'mdc-dialog__container'
+    })
+    const surface = createElement('div', {
+        className: 'mdc-dialog__surface'
+    })
+    const h2 = createElement('h2', {
+        className: 'mdc-dialog__title',
+        textContent: this.title
+    })
+    const contentContainer = createElement('div', {
+        className: 'mdc-dialog__content'
+    });
+    if (this.content instanceof HTMLElement) {
         contentContainer.appendChild(this.content)
-    }
-    else {
+    } else {
         contentContainer.textContent = this.content
     }
-    const footer = createElement('footer',{className:'mdc-dialog__actions'})
-    const cancelButton = createElement('button',{className:'mdc-button mdc-dialog__button',type:'button',textContent:'cancel'})
-    cancelButton.setAttribute('data-mdc-dialog-action','close')
-    const okButton = createElement('button',{className:'mdc-button mdc-dialog__button',type:'button',textContent:'okay'})
-    okButton.setAttribute('data-mdc-dialog-action','accept')
+    const footer = createElement('footer', {
+        className: 'mdc-dialog__actions'
+    })
+    const cancelButton = createElement('button', {
+        className: 'mdc-button mdc-dialog__button',
+        type: 'button',
+        textContent: 'cancel'
+    })
+    cancelButton.setAttribute('data-mdc-dialog-action', 'close')
+    const okButton = createElement('button', {
+        className: 'mdc-button mdc-dialog__button',
+        type: 'button',
+        textContent: 'okay'
+    })
+    okButton.setAttribute('data-mdc-dialog-action', 'accept')
     footer.appendChild(cancelButton)
     footer.appendChild(okButton);
     surface.appendChild(h2)
@@ -108,7 +128,9 @@ Dialog.prototype.create = function(){
     surface.appendChild(footer)
     container.appendChild(surface)
     parent.appendChild(container);
-    parent.appendChild(createElement('div',{className:'mdc-dialog__scrim'}))
+    parent.appendChild(createElement('div', {
+        className: 'mdc-dialog__scrim'
+    }))
     const dialogParent = document.getElementById('dialog-container')
     dialogParent.innerHTML = ''
     dialogParent.appendChild(parent)
@@ -250,16 +272,23 @@ Button.prototype.shaped = function () {
 Button.prototype.selectorButton = function () {
     this.base.classList.add('selector-send', 'selector-submit--button')
 }
-function iconButton(attr){
+
+function iconButton(attr) {
     this.base = createElement('button', {
-        className: 'mdc-icon-button ' +attr.className,
-        id:attr.id
+        className: 'mdc-icon-button ' + attr.className,
+        id: attr.id
     });
-    this.base.setAttribute('aria-label',attr.label);
-    this.base.setAttribute('aria-hidden','true')
-    this.base.setAttribute('aria-pressed','false');
-    this.base.appendChild(createElement('i',{className:'material-icons mdc-icon-button__icon mdc-icon-button__icon--on',textContent:attr.initialState}))
-    this.base.appendChild(createElement('i',{className:'material-icons mdc-icon-button__icon',textContent:attr.finalState}))
+    this.base.setAttribute('aria-label', attr.label);
+    this.base.setAttribute('aria-hidden', 'true')
+    this.base.setAttribute('aria-pressed', 'false');
+    this.base.appendChild(createElement('i', {
+        className: 'material-icons mdc-icon-button__icon mdc-icon-button__icon--on',
+        textContent: attr.initialState
+    }))
+    this.base.appendChild(createElement('i', {
+        className: 'material-icons mdc-icon-button__icon',
+        textContent: attr.finalState
+    }))
     return new mdc.iconButton.MDCIconButtonToggle(this.base)
 }
 
@@ -305,7 +334,7 @@ AppendMap.prototype.setZoom = function (zoom) {
 
 AppendMap.prototype.map = function () {
 
-        return new google.maps.Map(this.el, this.options);
+    return new google.maps.Map(this.el, this.options);
 
 }
 
@@ -352,38 +381,40 @@ AppendMap.prototype.geocodeCustomerMarker = function (marker) {
 
 function radioList(attr) {
     const li = document.createElement('li')
-    li.className = `mdc-list-item mdc-ripple-surface--secondary`
-
+    li.className = `mdc-list-item`
     li.setAttribute('role', 'radio');
-    li.setAttribute('tabindex', "-1");
-    const textSpan = createElement('span', {
+
+    if (!attr.index) {
+        li.setAttribute('tabindex', "0");
+        li.setAttribute('aria-checked',"true")
+    }
+    const itemGraphic = createElement('span', {
         className: 'mdc-list-item__text'
     })
-    const primaryText = createElement('span', {
-        className: 'mdc-list-item__primary-text',
+    itemGraphic.appendChild(createRadioInput(attr))
+    const label = createElement('label', {
+        className: 'mdc-list-item__text',
         textContent: attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1)
     })
-    textSpan.appendChild(primaryText)
-    li.appendChild(textSpan);
-    li.appendChild(createRadioInput(JSON.stringify(attr.value)))
+    label.setAttribute('for', 'list-radio-item-' + attr.index);
+    li.appendChild(itemGraphic);
+    li.appendChild(label)
     return li;
 }
 
 
-function createRadioInput(value) {
+
+function createRadioInput(attr) {
     const div = createElement('div', {
-        className: 'mdc-radio radio-control-selector mdc-list-item__meta'
+        className: 'mdc-radio'
     })
     const input = createElement('input', {
         className: 'mdc-radio__native-control'
-    })
-    input.setAttribute('tabindex', '-1');
-    input.checked;
+    });
     input.setAttribute('name', 'listDemoRadioGroup')
-    input.setAttribute('tabindex', '-1')
     input.type = 'radio'
-    input.value = value
-    input.setAttribute('aria-labelledby', 'grp1')
+    input.value = JSON.stringify(attr.value),
+    input.id = 'list-radio-item-' + attr.index
     const radioBckg = createElement('div', {
         className: 'mdc-radio__background'
     })

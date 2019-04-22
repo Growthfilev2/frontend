@@ -30,7 +30,7 @@ function initDomLoad() {
 function listView() {
   history.pushState(['listView'], null, null)
   initDomLoad();
-
+  // TODO simplify
   getSizeOfListStore().then(function (size) {
     if (!size) {
       appendTextContentInListView('No activities Found');

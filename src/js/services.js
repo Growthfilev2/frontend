@@ -20,33 +20,27 @@ function loader(nameClass) {
 
 
 function successDialog() {
+  const checkMark = createElement('div',{className:'success-checkmark',id:'success-check'})
+  const icon = createElement('div',{className:'check-icon'})
+  const lineTip = createElement('span',{className:'icon-line line-tip'})
+  const lineLong = createElement('span',{className:'icon-line line-long'})
+  const circle = createElement('div',{className:'icon-circle'})
+  const fix = createElement('div',{className:'icon-fix'})
+  
+  icon.appendChild(lineTip)
+  icon.appendChild(lineLong);
+  icon.appendChild(circle)
+  icon.appendChild(fix)
+  checkMark.appendChild(icon);
+  document.body.appendChild(checkMark);
 
-  var content = document.createElement('div');
-  content.className = 'success--container';
-
-  var icon = document.createElement('div');
-  icon.className = 'success--check';
-
-  content.appendChild(icon);
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'success-dialog',
-    headerText: '',
-    showCancel: false,
-    showAccept: false,
-    content: content
-  }).outerHTML
-  const dialogEl = document.querySelector('#success-dialog')
-  var successDialog = new mdc.dialog.MDCDialog(dialogEl);
-  successDialog.show();
-
-  setTimeout(function () {
-    dialogEl.remove();
-    document.body.classList.remove('mdc-dialog-scroll-lock');
-  }, 1000);
-  resetScroll();
-  localStorage.removeItem('clickedActivity');
-  resetScroll()
-  listView();
+  // setTimeout(function () {
+  //   document.getElementById('success-check').remove();
+  //   resetScroll();
+  //   localStorage.removeItem('clickedActivity');
+  //   resetScroll()
+  //   listView();
+  // }, 1000);
 }
 
 
@@ -239,7 +233,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       }
       reject("empty string from AndroidInterface.getCellularData");
     }
-    
+
     geolocationApi(body).then(function (cellLocation) {
       if (cellLocation.accuracy <= 350) return resolve(cellLocation);
 
@@ -475,39 +469,19 @@ function sortedByAccuracy(geoData) {
   return result[0];
 }
 
-
-
-
-function createAndroidDialog(title, body) {
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = body;
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'alert-dialog',
-    showCancel: false,
-    showAccept: true,
-    content: span,
-    headerText: title
-  }).outerHTML
-  const dialogEl = document.querySelector('#alert-dialog');
-  var appDialog = new mdc.dialog.MDCDialog(dialogEl);
-  appDialog.listen('MDCDialog:accept', function () {
-    dialogEl.remove();
-  });
-  appDialog.show();
-}
-
 function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
-    createAndroidDialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.')
+    const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.');
+    alertDialog.open();
     return
   }
 
-  if(JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
-    if(!AndroidInterface.isWifiOn()) {
-      createAndroidDialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.')
+  if (JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
+    if (!AndroidInterface.isWifiOn()) {
+      const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.');
+      alertDialog.open();
       return;
     }
     return true;
@@ -598,48 +572,24 @@ function requestCreator(requestType, requestBody) {
 
 
 function sendRequest(location, requestGenerator) {
-
   if (location.latitude && location.longitude && location.accuracy) {
-
     apiHandler.postMessage(requestGenerator);
   } else {
-
-    const span = document.createElement('span')
-    span.className = 'mdc-typography--body1'
-    span.textContent = 'There was a Problem in detecting your location. Please Try again later'
-
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'location-fetch-dialog',
-      content: span
-    }).outerHTML
-    const dialogEl = document.getElementById('location-fetch-dialog')
-    const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
-    fetchingLocationDialog.show();
-
-    getRootRecord().then(function (record) {
-      var cellTowerInfo = void 0;
-      try {
-        cellTowerInfo = AndroidInterface.getCellularData();
-      } catch (e) {
-        cellTowerInfo = e.message;
-        sendExceptionObject(e, 'CATCH Type 4: AndroidInterface.getCullarData at sendRequest', [])
-      }
-
-      var body = {
-        storedLocation: record.location,
-        cellTower: cellTowerInfo
-      };
-      handleError({
-        message: 'No Locations Found in indexedDB',
-        body: JSON.stringify(body)
-      })
-      setTimeout(function () {
-        dialogEl.remove();
+    const locationErrorDialog = new Dialog('Location Error', 'There was a Problem in detecting your location. Please Try again later').create();
+    locationErrorDialog.open();
+    locationErrorDialog.listen('MDCDialog:closed', function (evt) {
+      getRootRecord().then(function (record) {
+        handleError({
+          message: 'No Locations Found in indexedDB',
+          body: JSON.stringify({
+            storedLocation: record.location,
+            cellTower: getCellularInformation()
+          })
+        })
         resetScroll()
-
         listView();
-      }, 5000)
-    });
+      })
+    })
   }
 }
 
@@ -671,98 +621,58 @@ function messageReceiver(response) {
 
 
 function emailVerify(notification) {
-  if(firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
+  if (firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
-
-  const span = document.createElement('h1')
-  span.className = 'mdc-typography--body1'
-  span.textContent = notification.body
-
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'email-update-dialog',
-    showCancel: true,
-    showAccept: true,
-    headerText: notification.title,
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('email-update-dialog')
-  const emailDialog = new mdc.dialog.MDCDialog(dialogEl);
-  emailDialog.listen('MDCDialog:accept', function () {
-    dialogEl.remove()
+  const emailVerifyDialog = new Dialog(notification.title, notification.body);
+  emailVerifyDialog.open();
+  emailVerifyDialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
     profileView(true);
   })
-  emailDialog.listen('MDCDialog:cancel', function () {
-    dialogEl.remove()
-  })
-  emailDialog.show()
 }
 
 
 function createBlankPayrollDialog(notificationData) {
-
-  const div = document.createElement('div')
-  div.style.marginTop = '10px';
-
-  div.className = 'notification-message'
-  div.textContent = notificationData.body
-
-  const ul = document.createElement('ul');
-  ul.className = 'mdc-list'
-  ul.id = 'payroll-notification-list'
-  ul.setAttribute('role', 'radiogroup');
-  div.appendChild(ul)
-  notificationData.data.forEach(function (data) {
-    let selected = false
-    if (data.template === 'leave') {
-      selected = true
-    }
-    ul.appendChild(radioList({
-      labelText: data.template,
-      id: convertKeyToId(data.template),
-      value: data.template,
-      selected: selected
-    }))
-  })
-
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'blank-payroll-dialog',
-    showAccept: true,
-    showCancel: true,
-    headerText: notificationData.title,
-    content: div
-  }).outerHTML
-  const dialogEl = document.getElementById('blank-payroll-dialog');
-  const payrollDialog = new mdc.dialog.MDCDialog(dialogEl);
-  const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
-  radioListInit.singleSelection = true
-  const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
-    return new mdc.radio.MDCRadio(el);
+  const container = createElement('div', {
+    className: 'notification-message',
+    textContent: notificationData.body
   });
 
-  payrollDialog.listen('MDCDialog:accept', function (evt) {
-    leaveRadio.forEach(function (el) {
-      if (el.checked) {
-        notificationData.data.forEach(function (data) {
-          const value = JSON.parse(el.value)
-          if (data.template === value) {
-            if (!isLocationStatusWorking()) return;
-            createTempRecord(data.office, value, {
-              schedule: data.schedule,
-              attachment: data.attachment
-            });
-            return;
-          }
-        })
-        return;
-      }
-    })
-    dialogEl.remove();
+  const ul = createElement('ul', {
+    className: 'mdc-list',
+    id: 'payroll-notification-list'
   })
-  payrollDialog.listen('MDCDialog:cancel', function (evt) {
-    dialogEl.remove()
-  })
-  payrollDialog.show()
+  ul.setAttribute('role', 'radiogroup')
 
+  notificationData.data.forEach(function (data, idx) {
+    ul.appendChild(radioList({
+      labelText: data.template,
+      index: idx,
+      value: data,
+    }))
+  })
+  container.appendChild(ul);
+
+  const payrollDialog = new Dialog(notificationData.title, container).create();
+  payrollDialog.open();
+  const radioListInit = new mdc.list.MDCList(ul)
+  radioListInit.singleSelection = true
+
+  payrollDialog.listen('MDCDialog:opened', function (evt) {
+    radioListInit.layout();
+    radioListInit.listElements.map(function (el) {
+      return new mdc.ripple.MDCRipple.attachTo(el)
+    })
+  })
+  payrollDialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
+    if (!isLocationStatusWorking()) return;
+    const value = JSON.parse(document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value)
+    createTempRecord(value.office, value.template, {
+      schedule: value.schedule,
+      attachment: value.attachment
+    });
+  })
 }
 
 function initFirstLoad(response) {
@@ -783,22 +693,17 @@ function initFirstLoad(response) {
 
 function updateApp() {
   if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
-  var message = 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.'
-  var title = 'New Update Avaialble'
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = message
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'app-update-dialog',
-    showCancel: false,
-    showAccept: true,
-    headerText: title,
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('app-update-dialog')
-  const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
-  updateDialog.show()
-  updateDialog.listen('MDCDialog:accept', function () {
+  const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
+
+  updateAppDialog.open();
+  updateAppDialog.scrimClickAction = ''
+  updateAppDialog.listen('MDCDialog:opened', function () {
+    const cancelButton = updateAppDialog.buttons_[0];
+    cancelButton.setAttribute('disabled', 'true');
+
+  })
+  updateAppDialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
     AndroidInterface.openGooglePlayStore('com.growthfile.growthfileNew')
   })
 }
@@ -840,25 +745,13 @@ function apiFail(data) {
 }
 
 function officeRemovalSuccess(data) {
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = 'You have been removed from ' + data.msg.join(' & ');
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'office-removal-dialog',
-    showAccept: true,
-    showCancel: false,
-    headerText: 'Reminder',
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('office-removal-dialog')
-  const officeRemovedDialog = new mdc.dialog.MDCDialog(dialogEl);
-  officeRemovedDialog.listen('MDCDialog:accept', function () {
-    dialogEl.remove();
+  const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
+  officeRemoveDialog.open();
+  officeRemoveDialog.listen('MDCDialog:closed', function () {
     document.getElementById('app-current-panel').innerHTML = '';
     resetScroll()
     listView();
-  })
-  officeRemovedDialog.show()
+  });
   return
 }
 
@@ -896,7 +789,7 @@ function runRead(value) {
       emailVerify(notificationData)
       return;
     };
-    
+
     if (value.payroll) {
       const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
