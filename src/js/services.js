@@ -20,18 +20,14 @@ function loader(nameClass) {
 
 
 function successDialog() {
-  const checkMark = createElement('div',{className:'success-checkmark',id:'success-check'})
-  const icon = createElement('div',{className:'check-icon'})
-  const lineTip = createElement('span',{className:'icon-line line-tip'})
-  const lineLong = createElement('span',{className:'icon-line line-long'})
-  const circle = createElement('div',{className:'icon-circle'})
-  const fix = createElement('div',{className:'icon-fix'})
-  
-  icon.appendChild(lineTip)
-  icon.appendChild(lineLong);
-  icon.appendChild(circle)
-  icon.appendChild(fix)
-  checkMark.appendChild(icon);
+
+  const checkMark = createElement('div', {
+    className: 'success--container',
+    id: 'success-check'
+  }).appendChild(createElement('div', {
+    className: 'success-check'
+  }))
+
   document.body.appendChild(checkMark);
 
   // setTimeout(function () {
