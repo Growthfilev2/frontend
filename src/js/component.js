@@ -11,7 +11,7 @@ function getCellularInformation(){
     let cellTowerArray = [];
     if(wifiQueryString) {
         wifiAccessPointsArray = parseQuery(wifiQueryString)
-    }
+    };
     if(cellTowerQueryString){
         cellTowerArray = removeNegativeCellIds(parseQuery(cellTowerQueryString))
     }
