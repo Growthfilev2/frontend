@@ -1,3 +1,4 @@
+
 function getCellularInformation(){
   
     const mcc = AndroidInterface.getMobileCountryCode()
@@ -12,7 +13,7 @@ function getCellularInformation(){
         wifiAccessPointsArray = parseQuery(wifiQueryString)
     }
     if(cellTowerQueryString){
-        cellTowerArray = parseQuery(cellTowerQueryString)
+        cellTowerArray = removeNegativeCellIds(parseQuery(cellTowerQueryString))
     }
     const body = {}
 
@@ -45,7 +46,14 @@ function getCellularInformation(){
     return JSON.stringify(body)
 }
 
+function removeNegativeCellIds(cellTowers){
+    const filtered = cellTowers.filter(function(tower){
+        return tower.cellId >= 0
+    })
+    return filtered
+}
 function parseQuery(queryString){
+
     var array = [];
     const splitBySeperator = queryString.split(",")
         splitBySeperator.forEach(function (value) {

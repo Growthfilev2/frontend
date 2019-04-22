@@ -1,6 +1,6 @@
-// Service Worker Version 3
+// Service Worker Version 4
 
-var CACHE_NAME = 'gf-3'
+var CACHE_NAME = 'gf-4'
 const cacheToAdd = [
     '/v1/',
     '/v1/external/js/firebase-app.js',
@@ -60,6 +60,7 @@ self.addEventListener('fetch', function (event) {
                 return cache.match(event.request).then(function (response) {
                     return response || fetch(event.request)
                 })
+
             })
         )
     }
