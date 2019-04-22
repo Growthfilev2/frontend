@@ -231,38 +231,23 @@ function timeDiff(lastSignInTime) {
   return moment(currentDate).diff(moment(authSignInTime), 'minutes');
 }
 
-function newSignIn(value, field) {
-  
-  document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
-  const dialogSelector = document.querySelector('#updateEmailDialog')
-  dialogSelector.querySelector('section').id = 'refresh-login'
-  var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
-  emailDialog.listen('MDCDialog:cancel',function(evt){
-    dialogSelector.remove();
-  })
-  emailDialog.show();
-  try {
+function newSignIn(value) {
+
+  const signInDialog = new Dialog('',createElement('div',{id:'refresh-login'})).create();
+  signInDialog.open();
+  signInDialog.listen('MDCDialog:opened',function(evt){
     if(!ui) {
       ui  = new firebaseui.auth.AuthUI(firebase.auth())
     }
     ui.start('#refresh-login', firebaseUiConfig(value));
+    signInDialog.container_.querySelector('footer').remove();
+    signInDialog.container_.querySelector('h2').remove();
     setTimeout(function () {
       document.querySelector('.firebaseui-id-phone-number').disabled = true;
       document.querySelector('.firebaseui-label').remove();
       document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
     }, 500)
-    emailDialog.listen('MDCDialog:cancel', function () {
-      field.value = firebase.auth().currentUser.email;
-      dialogSelector.remove();
-    });
-  } catch (e) {
-    dialogSelector.remove();
-    console.log(e);
-    handleError({
-      message: `${e.message} from newSignIn function during email updation`
-    });
-    snacks('Please try again later');
-  }
+  })
 }
 
 function readUploadedFile(image) {
@@ -389,7 +374,7 @@ function emailValidation(emailField) {
   if (timeDiff(auth.metadata.lastSignInTime) <= 2) {
     updateEmail(auth, value);
   } else {
-    newSignIn(value, emailField);
+    newSignIn(value);
   }
 }
 

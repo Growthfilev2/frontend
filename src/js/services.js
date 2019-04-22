@@ -20,23 +20,23 @@ function loader(nameClass) {
 
 
 function successDialog() {
-
   const checkMark = createElement('div', {
     className: 'success--container',
-    id: 'success-check'
-  }).appendChild(createElement('div', {
-    className: 'success-check'
-  }))
-
+    id:'success-animation'
+  })
+  const check = createElement('div', {
+    className: 'success--check'
+  })
+  checkMark.appendChild(check);
   document.body.appendChild(checkMark);
 
-  // setTimeout(function () {
-  //   document.getElementById('success-check').remove();
-  //   resetScroll();
-  //   localStorage.removeItem('clickedActivity');
-  //   resetScroll()
-  //   listView();
-  // }, 1000);
+  setTimeout(function () {
+    document.getElementById('success-animation').remove();
+    resetScroll();
+    localStorage.removeItem('clickedActivity');
+    resetScroll()
+    listView();
+  }, 1500);
 }
 
 

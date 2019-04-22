@@ -123,7 +123,13 @@ function backNav() {
 
 
 window.addEventListener("load", function () {
-
+  firebase.initializeApp(appKey.getKeys())
+  if (appKey.getMode() === 'production') {
+    if (!native.getInfo()) {
+      redirect();
+      return;
+    }
+  }
   // if ('serviceWorker' in navigator) {
   //   navigator.serviceWorker.register('sw.js').then(function (registeration) {
 
@@ -133,7 +139,6 @@ window.addEventListener("load", function () {
   //   });
 
   // }
-  firebase.initializeApp(appKey.getKeys())
   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
@@ -155,9 +160,14 @@ window.addEventListener("load", function () {
       'August', 'September', 'October', 'November', 'December'
     ]
   })
+  
+  if (!window.Worker && !window.indexedDB) {
+    //TODO: show view instead of dialog
+    return;
+  }
+
 
   startApp(true)
-
 })
 
 
@@ -173,9 +183,6 @@ function firebaseUiConfig(value) {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         if (value) {
-          if (document.querySelector('#updateEmailDialog')) {
-            document.querySelector('#updateEmailDialog').remove();
-          }
           updateEmail(authResult.user, value);
           return false;
         }
@@ -220,10 +227,7 @@ function userSignedOut() {
 
 
 function startApp(start) {
-  if (!window.Worker && !window.indexedDB) {
-    //TODO: show view instead of dialog
-    return
-  }
+ 
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -231,13 +235,6 @@ function startApp(start) {
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
-    }
-
-    if (appKey.getMode() === 'production') {
-      if (!native.getInfo()) {
-        redirect();
-        return;
-      }
     }
 
     if (!localStorage.getItem('error')) {
@@ -262,19 +259,6 @@ function startApp(start) {
       req.onsuccess = function () {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        let getInstantLocation = false;
-        if (native.getName() !== 'Android') {
-          try {
-            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-
-          } catch (e) {
-            sendExceptionObject(e, 'Catch Type 2: webkit.messageHandlers.startLocationService', ['start fetchin location'])
-            getInstantLocation = true
-
-          }
-        } else {
-          getInstantLocation = true
-        }
         resetScroll();
         listView();
         requestCreator('now', {
@@ -282,12 +266,16 @@ function startApp(start) {
           from: '',
           registerToken: native.getFCMToken()
         })
-        runAppChecks()
 
-        if (!getInstantLocation) return;
-        manageLocation().then(console.log).catch(function (error) {
-          handleError(error)
-        })
+        runAppChecks()
+        if(native.getName !== 'Android') {
+          webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+        }
+        else {
+          manageLocation().then(console.log).catch(function (error) {
+            handleError(error)
+          })
+        }
       }
       req.onerror = function () {
         handleError({
@@ -471,6 +459,7 @@ function redirect() {
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
+    console.log(error)
     window.location = 'https://www.growthfile.com';
     handleError({
       message: `${error} from redirect`
