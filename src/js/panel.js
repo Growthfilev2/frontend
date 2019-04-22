@@ -259,7 +259,7 @@ function getActivityDataForList(activity, value, currentLocation) {
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
-      resolve(activityListUI(value, secondLineParent))
+      resolve(new mdc.ripple.MDCRipple.attachTo(activityListUI(value, secondLineParent)).root_)
     }
   })
 }

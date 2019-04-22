@@ -628,7 +628,7 @@ function createTempRecord(office, template, prefill) {
             updateCreateActivity(bareBonesRecord)
           }).catch(function (error) {
             document.getElementById('start-loader').classList.add('hidden');
-            const locationErrorDialog = new Dialog('Location Error','There was a problem in detecting your location. Please try again later').create();
+            const locationErrorDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
             locationErrorDialog.open();
             locationErrorDialog.listen('MDCDialog:closed', function (evt) {
               resetScroll()
@@ -866,36 +866,6 @@ function updateCreateActivity(record, showSendButton) {
 }
 
 
-function createCheckInVenue(venue, defaultSelected) {
-
-  const radio = document.createElement('div')
-  radio.className = 'mdc-radio checkin'
-  radio.value = JSON.stringify(venue)
-
-  const input = document.createElement('input')
-  input.className = 'mdc-radio__native-control'
-  input.type = 'radio'
-  input.setAttribute('name', 'radios');
-
-  if (defaultSelected) {
-    input.setAttribute('checked', 'true')
-  }
-  const background = document.createElement('div')
-  background.className = 'mdc-radio__background'
-  const outer = document.createElement('div')
-  outer.className = 'mdc-radio__outer-circle'
-  const inner = document.createElement('div')
-  inner.className = 'mdc-radio__inner-circle'
-
-  background.appendChild(outer)
-  background.appendChild(inner)
-  radio.appendChild(input)
-  radio.appendChild(background)
-  let showMap = false;
-
-  return radio
-
-}
 
 function createSimpleLi(key, data) {
 
@@ -963,80 +933,59 @@ function createSimpleLi(key, data) {
 function createVenueSection(record) {
   if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
-
-  const venueSection = document.getElementById('venue--list');
-
+  const parentList =  document.getElementById('venue--list')
   if (record.template === 'check-in') {
+
     if (record.hasOwnProperty('create')) {
       getRootRecord().then(function (rootRecord) {
         checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
           if (!results.length) return;
+           parentList.className = 'mdc-list'
+           parentList.setAttribute('role','radiogroup')
 
-          const checkInDesc = document.createElement('li')
-          checkInDesc.className = 'mdc-list-item label--text'
+          const checkInDesc = document.createElement('div')
           checkInDesc.textContent = record.venue[0].venueDescriptor
-          checkInDesc.style.height = '50px'
           checkInDesc.style.paddingRight = '11px';
-
+          
           const meta = document.createElement('span')
-          meta.className = 'mdc-list-item__meta'
-          const uncheck = document.createElement('label')
           uncheck.id = 'uncheck-checkin'
           uncheck.className = 'mdc-fab add--assignee-icon'
           const span = document.createElement('span')
           span.className = 'mdc-fab__icon material-icons'
           span.textContent = 'clear';
           uncheck.appendChild(span);
-          meta.appendChild(uncheck)
+
           checkInDesc.appendChild(meta)
-          venueSection.appendChild(checkInDesc)
+          // parentList.appendChild(checkInDesc)
 
 
           results.forEach(function (result, idx) {
+            const checkInEls = radioList({
+              value: result,
+              index: idx,
+              labelText: result.location
+            })
+            new mdc.ripple.MDCRipple.attachTo(checkInEls);
+            parentList.appendChild(checkInEls)
 
-            const form = document.createElement('div');
-            form.className = 'mdc-form-field check-in-form'
-            const label = document.createElement('label')
-            label.setAttribute('for', 'check-in-radio');
-            label.textContent = result.location
-            form.appendChild(label);
-
-            const radio = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
-            if (!idx) {
-              const value = result;
-              radio.checked = true
-              record.venue[0].location = value.location;
-              record.venue[0].address = value.address;
-              record.venue[0].geopoint._latitude = value.latitude;
-              record.venue[0].geopoint._longitude = value.longitude;
-            }
-
-            radio.root_.querySelector('input').onclick = function () {
-              const value = JSON.parse(this.value)
-              record.venue[0].location = value.location;
-              record.venue[0].address = value.address;
-              record.venue[0].geopoint._latitude = value.latitude;
-              record.venue[0].geopoint._longitude = value.longitude;
-            }
-            form.appendChild(radio.root_)
-            // form.appendChild(createCheckInVenue(result, defaultSelected))
-            venueSection.appendChild(form);
-            const mapDom = document.createElement('div');
-            mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
-            venueSection.appendChild(mapDom);
           })
+
+          const venueSection = new mdc.list.MDCList(parentList);
+          venueSection.singleSelection = true;
 
           const uncheckFab = document.getElementById('uncheck-checkin');
           if (uncheckFab) {
             uncheckFab.addEventListener('click', function () {
-              document.querySelectorAll('.mdc-radio').forEach(function (el) {
-                const radio = new mdc.radio.MDCRadio(el)
-                radio.checked = false
-                record.venue[0].location = ''
-                record.venue[0].address = ''
-                record.venue[0].geopoint._latitude = ''
-                record.venue[0].geopoint._longitude = ''
-              });
+              // venueSection.foundation_.setSelectedIndex();
+
+              // document.querySelectorAll('.mdc-radio').forEach(function (el) {
+              //   const radio = new mdc.radio.MDCRadio(el)
+              //   radio.checked = false
+              //   record.venue[0].location = ''
+              //   record.venue[0].address = ''
+              //   record.venue[0].geopoint._latitude = ''
+              //   record.venue[0].geopoint._longitude = ''
+              // });
             })
           }
         })
@@ -1045,10 +994,10 @@ function createVenueSection(record) {
       record.venue.forEach(function (venue) {
         if (venue.location && venue.address) {
 
-          venueSection.appendChild(createVenueLi(venue, true, record))
+          parentList.appendChild(createVenueLi(venue, true, record))
           const mapDom = document.createElement('div');
           mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-          venueSection.appendChild(mapDom)
+          parentList.appendChild(mapDom)
         }
       });
     }
@@ -1056,10 +1005,10 @@ function createVenueSection(record) {
   }
   record.venue.forEach(function (venue) {
 
-    venueSection.appendChild(createVenueLi(venue, true, record))
+    parentList.appendChild(createVenueLi(venue, true, record))
     const mapDom = document.createElement('div');
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-    venueSection.appendChild(mapDom)
+    parentList.appendChild(mapDom)
   });
 }
 
@@ -1816,7 +1765,7 @@ function setFilePath(str, key, show) {
 
   dataObject.onclick = function () {
     // dataObject.style.width = '100%';    
-    const imageDialog = new Dialog('Photo',dataObject).create();
+    const imageDialog = new Dialog('Photo', dataObject).create();
     imageDialog.open();
   }
 
@@ -1881,10 +1830,10 @@ function createActivityCancellation(record) {
     if (!record.canEdit) return;
 
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
-      const deleteActivityDialog = new Dialog(`${record.activityName} will be deleted`,'Are you sure you want to delete this activity ? ').create();
+      const deleteActivityDialog = new Dialog(`${record.activityName} will be deleted`, 'Are you sure you want to delete this activity ? ').create();
       deleteActivityDialog.open();
-      deleteActivityDialog.listen('MDCDialog:closed',function(evt){
-        if(evt.detail.action !== 'accept') return;
+      deleteActivityDialog.listen('MDCDialog:closed', function (evt) {
+        if (evt.detail.action !== 'accept') return;
         if (!isLocationStatusWorking()) return;
         document.querySelector('.delete-activity').style.display = 'none';
         document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
