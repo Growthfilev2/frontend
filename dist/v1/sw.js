@@ -1,4 +1,4 @@
-// Service Worker Version 2
+// Service Worker Version 3
 
 var CACHE_NAME = 'gf-3'
 const cacheToAdd = [
@@ -57,11 +57,9 @@ self.addEventListener('fetch', function (event) {
         event.respondWith(
             caches.open(CACHE_NAME).then(function (cache) {
                 console.log(event.request)
-
                 return cache.match(event.request).then(function (response) {
                     return response || fetch(event.request)
                 })
-
             })
         )
     }
