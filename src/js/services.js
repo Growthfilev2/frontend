@@ -281,7 +281,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
     let body;
     const allLocations = [];
     body = getCellularInformation()
-    console.log(body)
+  
     if (body === "") {
       if (htmlLocation) {
         resolve(htmlLocation)
