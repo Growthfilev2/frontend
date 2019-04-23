@@ -44,7 +44,7 @@ function selectorUI(data) {
       if (value.template === 'dsr' || value.template === 'duty roster' || value.template === 'tour plan') {
         document.querySelector('header').appendChild(progressBar())
       }
-      if(!isLocationStatusWorking()) return;
+      if (!isLocationStatusWorking()) return;
       createTempRecord(value.office, value.template, data);
     }
     return;
@@ -135,22 +135,23 @@ function mapSelector(data, container) {
       const radioListMap = radioList({
         value: cursor.value,
         labelText: cursor.value.location,
-        index:index
+        index: index
       })
       radioListMap.dataset.name = cursor.value.location
-
-      radioListMap.querySelector('.mdc-radio input').onclick = function () {
-
-        const value = JSON.parse(this.value)
-        updateCreateActivity(updateVenue(data, value).record, true)
-      }
       new mdc.ripple.MDCRipple.attachTo(radioListMap);
       ul.appendChild(radioListMap)
       index++
       cursor.continue()
     }
     tx.oncomplete = function () {
-      new mdc.list.MDCList(ul).singleSelection = true;
+      const mapListInit = new mdc.list.MDCList(ul)
+      mapListInit.singleSelection = true;
+      mapListInit.listen('MDCList:action', function (evt) {
+
+        const value = JSON.parse(ul.querySelector('#list-radio-item-' + evt.detail.index).value)
+        updateCreateActivity(updateVenue(data, value).record, true)
+
+      })
       container.appendChild(ul);
       parent.appendChild(container);
     }
@@ -388,7 +389,7 @@ function fillSubscriptionInSelector(data, container) {
       });
       ul.setAttribute('role', 'radiogroup');
       ul.dataset.groupName = cursor.value.office
-    
+
       const headline3 = createElement('h3', {
         className: 'mdc-list-group__subheader subheader--group-small',
         textContent: cursor.value.office
@@ -401,9 +402,13 @@ function fillSubscriptionInSelector(data, container) {
     }
 
     tx.oncomplete = function () {
-
+      const listItems = document.getElementById('data-list--container').querySelectorAll('.mdc-list');
+      uls.forEach(function (ul) {
+        new mdc.list.MDCList(ul).singleSelection = true;
+        
+      })
       document.getElementById('app-current-panel').appendChild(container);
-      
+
       insertTemplateByOffice(grp)
     }
   }
@@ -432,7 +437,7 @@ function insertTemplateByOffice(grp) {
       const templateList = radioList({
         value: cursor.value,
         labelText: cursor.value.template,
-        index:index
+        index: index
       })
       new mdc.ripple.MDCRipple.attachTo(templateList);
       templateList.dataset.name = cursor.value.template;
@@ -441,10 +446,11 @@ function insertTemplateByOffice(grp) {
       index++
       cursor.continue()
     }
-    tx.oncomplete = function(){
+    tx.oncomplete = function () {
       const uls = document.getElementById('data-list--container').querySelectorAll('.mdc-list');
-      uls.forEach(function(ul){
-        new mdc.list.MDCList(ul).singleSelection = true
+      uls.forEach(function (ul) {
+        new mdc.list.MDCList(ul).singleSelection = true;
+
       })
     }
   }
@@ -455,46 +461,25 @@ function fillChildrenInSelector(data, container) {
   const ul = createElement('ul', {
     className: 'mdc-list'
   });
-  data.results.forEach(function (value,idx) {
+  data.results.forEach(function (value, idx) {
+    const radioListEl = radioList({
+      labelText: value.attachment.Name.value || value.attachment.Number.value,
+      value: value.attachment.Name.value || value.attachment.Number.value,
+      index: idx
+    });
 
-  
-      if (value.attachment.Name) {
-
-        const radioListEl = radioList({
-          labelText: value.attachment.Name.value,
-          value: value.attachment.Name.value,
-          index:idx
-        });
-
-        radioListEl.dataset.value = value.attachment.Name.value
-        
-        if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
-          radioListEl.querySelector('.mdc-radio input').onclick = function () {
-            data.record.attachment[data.key].value = JSON.parse(this.value);
-            
-            updateCreateActivity(data.record, true);
-            return;
-          }
-          ul.appendChild(radioListEl)
-          new mdc.ripple.MDCRipple.attachTo(radioListEl);
-        
-        }
-      }
-      if (value.attachment.Number) {
-
-        const radioListEl = radioList({
-          labelText: value.attachment.Number.value,
-          value: value.attachment.Number.value,
-          index:idx
-        })
-        radioListEl.dataset.value = value.attachment.Number.value
-        if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
-          ul.appendChild(radioListEl)
-        }
-        new mdc.ripple.MDCRipple.attachTo(radioListEl);
-      }
+    radioListEl.dataset.value = value.attachment.Name.value || value.attachment.Number.value
+    if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
+      ul.appendChild(radioListEl)
+      new mdc.ripple.MDCRipple.attachTo(radioListEl);
+    }
   })
-  new mdc.list.MDCList(ul).singleSelection = true
+  const listInit = new mdc.list.MDCList(ul)
+  listInit.singleSelection = true
+  listInit.listen('MDCList:action', function (evt) {
+    data.record.attachment[data.key].value = JSON.parse(ul.querySelector('#list-radio-item-' + evt.detail.index).value);
+    updateCreateActivity(data.record, true);
+  })
   container.appendChild(ul)
   document.getElementById('app-current-panel').appendChild(container);
 }

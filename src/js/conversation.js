@@ -1383,7 +1383,7 @@ function createAttachmentContainer(data) {
             document.querySelector('#send-activity').classList.remove('hidden')
           }
         })
-        dataVal.root_.classList.add('data--value-list', 'label--text')
+        dataVal.root_.classList.add('label--text')
         dataVal.root_.dataset.primary = ''
         div.appendChild(dataVal.root_)
       }
