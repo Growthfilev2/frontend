@@ -527,57 +527,83 @@ function initLocation() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    if (!e.detail) return;
 
     isEmployeeOnLeave().then(function (onLeave) {
 
       if (onLeave) return
-      if (e.detail) {
-        if (history.state[0] === 'listView') {
-          try {
-            getRootRecord().then(function (record) {
+      if (history.state[0] !== 'listView') return;
 
-              if (!record.offices) return;
-              if (!record.offices.length) return;
-              const offices = record.offices
-              const message = document.createElement('h1')
-              message.className = 'mdc-typography--body1 mt-10'
-              message.textContent = 'Do you want to create a Check-In ?'
-              document.getElementById('dialog-container').innerHTML = dialog({
-                id: 'suggest-checkIn-dialog',
-                headerText: 'Check-In Reminder',
-                content: message,
-                showCancel: true,
-                showAccept: true
-              }).outerHTML
-              const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
-              var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
-              initCheckInDialog.show();
-              initCheckInDialog.listen('MDCDialog:accept', function (evt) {
-                if (!isLocationStatusWorking()) return;
+      getUniqueOfficeCount().then(function (offices) {
+        const message = document.createElement('h1')
+        message.className = 'mdc-typography--body1 mt-10'
+        message.textContent = 'Do you want to create a Check-In ?'
+        document.getElementById('dialog-container').innerHTML = dialog({
+          id: 'suggest-checkIn-dialog',
+          headerText: 'Check-In Reminder',
+          content: message,
+          showCancel: true,
+          showAccept: true
+        }).outerHTML
+        const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
+        var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
+        initCheckInDialog.show();
+        initCheckInDialog.listen('MDCDialog:accept', function (evt) {
+          if (!isLocationStatusWorking()) return;
 
-                if (offices.length === 1) {
-                  createTempRecord(offices[0], 'check-in', {
-                    suggestCheckIn: true
-                  });
-                  return;
-                }
-                selectorUI({
-                  record: '',
-                  store: 'subscriptions',
-                  suggestCheckIn: true
-                })
-              });
-              initCheckInDialog.listen('MDCDialog:cancel', function () {
-                checkInDialog.remove();
-              })
-              resetScroll();
-              listView();
-            })
-          } catch (e) {
-            console.log(e)
+          if (offices.length === 1) {
+            createTempRecord(offices[0], 'check-in', {
+              suggestCheckIn: true
+            });
+            return;
           }
-        }
-      }
+          selectorUI({
+            record: '',
+            store: 'subscriptions',
+            suggestCheckIn: true
+          })
+        });
+        initCheckInDialog.listen('MDCDialog:cancel', function () {
+          checkInDialog.remove();
+        })
+        resetScroll();
+        listView();
+      })
+
     }).catch(handleError)
   }, true);
+}
+
+function getUniqueOfficeCount() {
+
+  return new Promise(function (resolve, reject) {
+   
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    let offices = []
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['activity']);
+      const activityStore = tx.objectStore('activity').index('office');
+      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return;
+        offices.push(cursor.value.office)
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        resolve(offices);
+      }
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message,
+          body: JSON.stringify(tx.error)
+        })
+      }
+    }
+    req.onerror = function () {
+      reject({
+        message: req.error.message
+      })
+    }
+  })
 }
