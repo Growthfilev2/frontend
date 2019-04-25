@@ -1,6 +1,5 @@
 function conversation(id, pushState) {
   document.body.classList.remove('mdc-dialog-scroll-lock')
-
   window.removeEventListener('scroll', handleScroll, false)
   checkIfRecordExists('activity', id).then(function (id) {
     if (id) {

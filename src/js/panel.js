@@ -12,10 +12,11 @@ function resetScroll() {
 }
 
 function initDomLoad() {
-
+  console.log("dom load started. finally")
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
-  }
+  };
+  
 
   if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();

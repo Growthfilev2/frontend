@@ -19,7 +19,12 @@ let native = function () {
       const queryString = new URLSearchParams(iosDeviceInfo);
       var deviceInfo = {}
       queryString.forEach(function(val,key){
-        deviceInfo[key] = val
+        if(key === 'appVersion') {
+          deviceInfo[key] = Number(val)
+        }
+        else {
+          deviceInfo[key] = val
+        }
       })
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
@@ -96,7 +101,6 @@ function getDeviceInfomation() {
 
 }
 window.addEventListener("load", function () {
-  console.log(this.navigator.platform)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
 
@@ -297,12 +301,9 @@ function startApp(start) {
         let getInstantLocation = false;
         if (native.getName() !== 'Android') {
           try {
-            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-
-          } catch (e) {
-            sendExceptionObject(e, 'Catch Type 2: webkit.messageHandlers.startLocationService', ['start fetchin location'])
+            webkit.messageHandlers.locationService.postMessage('start');
+          } catch (e) {            
             getInstantLocation = true
-
           }
         } else {
           getInstantLocation = true
