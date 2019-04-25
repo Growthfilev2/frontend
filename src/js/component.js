@@ -1,12 +1,17 @@
 
 function getCellularInformation(){
   
+    let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
     const radioType = AndroidInterface.getRadioType()
     const carrier = AndroidInterface.getCarrier()
     const wifiQueryString = AndroidInterface.getWifiAccessPoints()
-    const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+        try {
+            cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+        }catch(e){
+            console.log(e)
+        }
     let wifiAccessPointsArray = [];
     let cellTowerArray = [];
     if(wifiQueryString) {

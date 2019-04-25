@@ -672,19 +672,34 @@ function createTempRecord(office, template, prefill) {
       });
       bareBonesRecord.venue = bareBonesVenueArray;
       if (template === 'tour plan' || template === 'dsr' || template === 'duty roster' || template === 'customer') {
-        getLocation().then(function (userLocation) {
-          geocodePosition({
-            lat: userLocation.latitude,
-            lng: userLocation.longitude
-          }).then(function (result) {
-
-            return createBlendedCustomerRecord(bareBonesRecord, result)
-          });
-        }).catch(function (error) {
-          console.log(error)
-
-          return createBlendedCustomerRecord(bareBonesRecord)
-        })
+        
+        if(native.getName() === 'Android') {
+          getLocation().then(function (userLocation) {
+            geocodePosition({
+              lat: userLocation.latitude,
+              lng: userLocation.longitude
+            }).then(function (result) {
+  
+              return createBlendedCustomerRecord(bareBonesRecord, result)
+            });
+          }).catch(function (error) {
+            console.log(error)
+  
+            return createBlendedCustomerRecord(bareBonesRecord)
+          })
+        }
+        else {
+          window.addEventListener('iosLocation', function _iosLocation(e) {
+            geocodePosition({
+              lat: e.detail.latitude,
+              lng: e.detail.longitude
+            }).then(function (result) {
+  
+              return createBlendedCustomerRecord(bareBonesRecord, result)
+            });
+            window.removeEventListener('iosLocation', _iosLocation, true);
+          }, true)
+        }
         return;
       }
       updateCreateActivity(bareBonesRecord)
