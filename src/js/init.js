@@ -14,25 +14,22 @@ let native = function () {
     getName: function () {
       return localStorage.getItem('deviceType');
     },
-    setIosInfo: function (iosDeviceInfo) {
-      const splitByName = iosDeviceInfo.split("&")
-      const deviceInfo = {
-        baseOs: splitByName[0],
-        deviceBrand: splitByName[1],
-        deviceModel: splitByName[2],
-        appVersion: Number(splitByName[3]),
-        osVersion: splitByName[4],
-        id: splitByName[5],
-        initConnection: splitByName[6]
-      }
-      if (localStorage.getItem('iosUUID')) {
-        localStorage.removeItem('iosUUID');
-      }
 
+    setIosInfo: function (iosDeviceInfo) {
+      const queryString = new URLSearchParams(iosDeviceInfo);
+      var deviceInfo = {}
+      queryString.forEach(function(val,key){
+        if(key === 'appVersion') {
+          deviceInfo[key] = Number(val)
+        }
+        else {
+          deviceInfo[key] = val
+        }
+      })
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
-      return localStorage.getItem('deviceInfo') || localStorage.getItem('iosUUID');
+      return localStorage.getItem('deviceInfo');
     },
     getInfo: function () {
       if (!this.getName()) {
@@ -104,7 +101,6 @@ function getDeviceInfomation() {
 
 }
 window.addEventListener("load", function () {
-
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
 
@@ -305,12 +301,9 @@ function startApp(start) {
         let getInstantLocation = false;
         if (native.getName() !== 'Android') {
           try {
-            webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
-
-          } catch (e) {
-            sendExceptionObject(e, 'Catch Type 2: webkit.messageHandlers.startLocationService', ['start fetchin location'])
+            webkit.messageHandlers.locationService.postMessage('start');
+          } catch (e) {            
             getInstantLocation = true
-
           }
         } else {
           getInstantLocation = true
@@ -528,57 +521,83 @@ function initLocation() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    if (!e.detail) return;
 
     isEmployeeOnLeave().then(function (onLeave) {
 
       if (onLeave) return
-      if (e.detail) {
-        if (history.state[0] === 'listView') {
-          try {
-            getRootRecord().then(function (record) {
+      if (history.state[0] !== 'listView') return;
 
-              if (!record.offices) return;
-              if (!record.offices.length) return;
-              const offices = record.offices
-              const message = document.createElement('h1')
-              message.className = 'mdc-typography--body1 mt-10'
-              message.textContent = 'Do you want to create a Check-In ?'
-              document.getElementById('dialog-container').innerHTML = dialog({
-                id: 'suggest-checkIn-dialog',
-                headerText: 'Check-In Reminder',
-                content: message,
-                showCancel: true,
-                showAccept: true
-              }).outerHTML
-              const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
-              var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
-              initCheckInDialog.show();
-              initCheckInDialog.listen('MDCDialog:accept', function (evt) {
-                if (!isLocationStatusWorking()) return;
+      getUniqueOfficeCount().then(function (offices) {
+        const message = document.createElement('h1')
+        message.className = 'mdc-typography--body1 mt-10'
+        message.textContent = 'Do you want to create a Check-In ?'
+        document.getElementById('dialog-container').innerHTML = dialog({
+          id: 'suggest-checkIn-dialog',
+          headerText: 'Check-In Reminder',
+          content: message,
+          showCancel: true,
+          showAccept: true
+        }).outerHTML
+        const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
+        var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
+        initCheckInDialog.show();
+        initCheckInDialog.listen('MDCDialog:accept', function (evt) {
+          if (!isLocationStatusWorking()) return;
 
-                if (offices.length === 1) {
-                  createTempRecord(offices[0], 'check-in', {
-                    suggestCheckIn: true
-                  });
-                  return;
-                }
-                selectorUI({
-                  record: '',
-                  store: 'subscriptions',
-                  suggestCheckIn: true
-                })
-              });
-              initCheckInDialog.listen('MDCDialog:cancel', function () {
-                checkInDialog.remove();
-              })
-              resetScroll();
-              listView();
-            })
-          } catch (e) {
-            console.log(e)
+          if (offices.length === 1) {
+            createTempRecord(offices[0], 'check-in', {
+              suggestCheckIn: true
+            });
+            return;
           }
-        }
-      }
+          selectorUI({
+            record: '',
+            store: 'subscriptions',
+            suggestCheckIn: true
+          })
+        });
+        initCheckInDialog.listen('MDCDialog:cancel', function () {
+          checkInDialog.remove();
+        })
+        resetScroll();
+        listView();
+      })
+
     }).catch(handleError)
   }, true);
+}
+
+function getUniqueOfficeCount() {
+
+  return new Promise(function (resolve, reject) {
+   
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    let offices = []
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['activity']);
+      const activityStore = tx.objectStore('activity').index('office');
+      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return;
+        offices.push(cursor.value.office)
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        return resolve(offices);
+      }
+      tx.onerror = function () {
+       return reject({
+          message: tx.error.message,
+          body: JSON.stringify(tx.error)
+        })
+      }
+    }
+    req.onerror = function () {
+      return reject({
+        message: req.error.message
+      })
+    }
+  })
 }

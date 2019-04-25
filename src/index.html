@@ -49,19 +49,7 @@
     <div id="growthfile">
        
     </div>
-    <script>
-      if('serviceWorker' in navigator) {
-        window.addEventListener("load",function(){
-          navigator.serviceWorker.register('sw.js').then(function(registeration){
-            console.log('sw registered with scope :', registeration.scope);
-          },function(err){
-            console.log('sw registeration failed :',err);
-          })
-          initApp();
-        })
-      }
-      
-      </script>
+  
 </body>
 
 </html>

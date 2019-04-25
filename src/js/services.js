@@ -252,7 +252,7 @@ function getLocation() {
         })
       }).catch(function (htmlError) {
         handleGeoLocationApi(holder).then(function (location) {
-          resolve(location)
+          resolve(location);
         }).catch(function (error) {
           reject({
             message: 'Both HTML and Geolocation failed to fetch location.',
@@ -280,17 +280,23 @@ function handleGeoLocationApi(holder, htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
     const allLocations = [];
-    body = getCellularInformation()
-  
-    if (body === "") {
+    try {
+      body = getCellularInformation()
+    }catch(e){
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
       }
-      reject("empty string from AndroidInterface.getCellularData");
+      reject(e.message);
     }
-
-    
+    if(!Object.keys(JSON.parse(body)).length) {
+      if (htmlLocation) {
+        resolve(htmlLocation)
+        return;
+      }
+      reject("empty object from getCellularInformation");
+    }
+  
     geolocationApi(body).then(function (cellLocation) {
       if (cellLocation.accuracy <= 350) return resolve(cellLocation);
 

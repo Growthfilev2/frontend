@@ -5,17 +5,17 @@ const scroll_namespace = {
 
 }
 
-function resetScroll(){
-  scroll_namespace.count =0;
+function resetScroll() {
+  scroll_namespace.count = 0;
   scroll_namespace.size = 20;
   scroll_namespace.skip = true
 }
 
 function initDomLoad() {
-
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
-  }
+  };
+  
 
   if (document.querySelector('.mdc-linear-progress')) {
     document.querySelector('.mdc-linear-progress').remove();
@@ -33,7 +33,7 @@ function listView() {
 
   getSizeOfListStore().then(function (size) {
     if (!size) {
-      if(document.getElementById('start-loader')) {
+      if (document.getElementById('start-loader')) {
         document.getElementById('start-loader').remove();
       };
       appendTextContentInListView('No activities Found');
@@ -107,12 +107,12 @@ function updateEl(activities, rootRecord) {
 
         if (!rootRecord.location) {
           getActivityDataForList(activityStore, record).then(function (li) {
-            if(!ul) return
+            if (!ul) return
             ul.insertBefore(li, ul.childNodes[0])
           })
         } else {
           getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
-            if(!ul) return
+            if (!ul) return
             ul.insertBefore(li, ul.childNodes[0])
           })
         }
@@ -150,7 +150,7 @@ function loadActivitiesFromListStore(currentLocation) {
     }
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if(document.getElementById('start-loader')) {
+      if (document.getElementById('start-loader')) {
         document.getElementById('start-loader').remove();
       };
       if (!ul) return
@@ -176,7 +176,7 @@ function startCursor(currentLocation) {
 
       const cursor = event.target.result;
       if (!cursor) return;
-      
+
       if (advanceCount) {
         if (!scroll_namespace.skip) {
           scroll_namespace.skip = true
@@ -207,10 +207,10 @@ function startCursor(currentLocation) {
 
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if(document.getElementById('start-loader')) {
+      if (document.getElementById('start-loader')) {
         document.getElementById('start-loader').remove();
       }
-      
+
       if (!ul) return
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
@@ -381,7 +381,7 @@ function activityListUI(data, secondLine) {
   }
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
   const dataObject = document.createElement('object');
-  
+
   dataObject.data = data.creator.photo || './img/empty-user.jpg';
   dataObject.type = 'image/jpeg';
   dataObject.className = 'mdc-list-item__graphic material-icons'
@@ -496,35 +496,28 @@ function getRootRecord() {
 function createActivityIcon() {
   if (document.getElementById('create-activity--icon')) return;
   getCountOfTemplates().then(function (count) {
-    if(!count) return;
+    if (!count) return;
     createActivityIconDom()
   }).catch(handleError);
 }
 
-
 function getCountOfTemplates() {
 
   return new Promise(function (resolve, reject) {
-    let count = 0;
+
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['subscriptions'], 'readonly');
-      const subscriptionObjectStore = tx.objectStore('subscriptions').index('office')
-      subscriptionObjectStore.openCursor(null, 'nextunique').onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        count++;
-        cursor.continue();
+      const subscriptionObjectStore = tx.objectStore('subscriptions');
+      const countReq = subscriptionObjectStore.count();
+      countReq.onsuccess = function () {
+        return resolve(countReq.result)
       }
-      tx.oncomplete = function () {
-        resolve(count)
+      countReq.onerror = function () {
+        return reject(countReq.error)
       }
-      tx.onerror = function () {
-        reject({
-          message: `${tx.error.message} from getCountOfTemplates`
-        });
-      }
+
     }
     req.onerror = function () {
       reject({
@@ -536,18 +529,18 @@ function getCountOfTemplates() {
 
 
 function createActivityIconDom() {
- 
+
   const fab = new Fab('add')
-  const chooseSubscription = fab.getButton();  
+  const chooseSubscription = fab.getButton();
   chooseSubscription.root_.classList.add('create-activity')
   chooseSubscription.root_.id = 'create-activity--icon'
 
-  chooseSubscription.root_.onclick =function(){
+  chooseSubscription.root_.onclick = function () {
     selectorUI({
       store: 'subscriptions',
       suggestCheckIn: false
     })
-  } 
+  }
 
   document.getElementById('activity-list-main').appendChild(chooseSubscription.root_);
 }
@@ -565,7 +558,7 @@ function listPanel() {
 
   listCard.appendChild(listUl)
 
- 
+
   document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
 
 }
@@ -577,25 +570,25 @@ function creatListHeader(headerName) {
   req.onsuccess = function () {
     const db = req.result;
     const sectionStart = document.getElementById('section-start');
-   sectionStart.innerHTML =''
+    sectionStart.innerHTML = ''
     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
 
       const object = document.createElement('object');
       object.className = 'list-photo-header';
       object.type = 'image/jpeg';
       object.data = userRecord.photoURL || './img/empty-user.jpg';
-      object.onclick = function(){
+      object.onclick = function () {
         profileView(true)
       }
       const icon = document.createElement('img');
       icon.src = './img/empty-user.jpg';
       icon.className = 'list-photo-header'
       object.appendChild(icon);
-    
+
       const headerText = document.createElement('span');
       headerText.textContent = headerName;
       headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
-      
+
       sectionStart.appendChild(object)
       sectionStart.appendChild(headerText);
 
@@ -633,17 +626,16 @@ function modifyHeader(attr) {
 
 }
 
-function headerBackIcon(store){  
+function headerBackIcon(store) {
   const backIcon = document.createElement('i')
   backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
   backIcon.textContent = 'arrow_back'
-  backIcon.onclick = function(){
-    if(!store) return backNav();
-    if(store === 'subscriptions') {
+  backIcon.onclick = function () {
+    if (!store) return backNav();
+    if (store === 'subscriptions') {
       resetScroll()
       listView()
-    }
-    else {
+    } else {
       updateCreateActivity(history.state[1], true);
     }
   }
