@@ -15,25 +15,22 @@ let native = function () {
     getName: function () {
       return localStorage.getItem('deviceType');
     },
-    setIosInfo: function (iosDeviceInfo) {
-      const splitByName = iosDeviceInfo.split("&")
-      const deviceInfo = {
-        baseOs: splitByName[0],
-        deviceBrand: splitByName[1],
-        deviceModel: splitByName[2],
-        appVersion: Number(splitByName[3]),
-        osVersion: splitByName[4],
-        id: splitByName[5],
-        initConnection: splitByName[6]
-      }
-      if (localStorage.getItem('iosUUID')) {
-        localStorage.removeItem('iosUUID');
-      }
 
+    setIosInfo: function (iosDeviceInfo) {
+      const queryString = new URLSearchParams(iosDeviceInfo);
+      var deviceInfo = {}
+      queryString.forEach(function(val,key){
+        if(key === 'appVersion') {
+          deviceInfo[key] = Number(val)
+        }
+        else {
+          deviceInfo[key] = val
+        }
+      })
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
-      return localStorage.getItem('deviceInfo') || localStorage.getItem('iosUUID');
+      return localStorage.getItem('deviceInfo');
     },
     getInfo: function () {
       if (!this.getName()) {
@@ -130,15 +127,13 @@ window.addEventListener("load", function () {
       return;
     }
   }
-  // if ('serviceWorker' in navigator) {
-  //   navigator.serviceWorker.register('sw.js').then(function (registeration) {
-
-  //     console.log('sw registered with scope :', registeration.scope);
-  //   }, function (err) {
-  //     console.log('sw registeration failed :', err);
-  //   });
-
-  // }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function (registeration) {
+      console.log('sw registered with scope :', registeration.scope);
+    }, function (err) {
+      console.log('sw registeration failed :', err);
+    });
+  }
   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
@@ -259,6 +254,16 @@ function startApp(start) {
       req.onsuccess = function () {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
+        let getInstantLocation = false;
+        if (native.getName() !== 'Android') {
+          try {
+            webkit.messageHandlers.locationService.postMessage('start');
+          } catch (e) {            
+            getInstantLocation = true
+          }
+        } else {
+          getInstantLocation = true
+        }
         resetScroll();
         listView();
         requestCreator('now', {
@@ -481,35 +486,63 @@ function runAppChecks() {
     isEmployeeOnLeave().then(function (onLeave) {
       if (onLeave) return
       if (history.state[0] !== 'listView') return;
-      
-      try {
-        getRootRecord().then(function (record) {
 
-          if (!record.offices) return;
-          if (!record.offices.length) return;
-          const offices = record.offices
-          const checkInDialog = new Dialog('Check-In Reminder','Do you want to create a Check-In ?').create();
-          checkInDialog.open()
-          checkInDialog.listen('MDCDialog:closed', function (evt) {
-            console.log(evt)
-            if (evt.detail.action !== 'accept') return;
-            if (!isLocationStatusWorking()) return;
+      getUniqueOfficeCount().then(function (offices) {
+        if(!offices.length) return;
 
-            if (offices.length === 1) {
-              createTempRecord(offices[0], 'check-in');
-              return;
-            }
-            selectorUI({
-              store: 'subscriptions'
-            })
+        const checkInDialog = new Dialog('Check-In Reminder','Do you want to create a Check-In ?').create();
+        checkInDialog.open()
+        checkInDialog.listen('MDCDialog:closed', function (evt) {
+          console.log(evt)
+          if (evt.detail.action !== 'accept') return;
+          if (!isLocationStatusWorking()) return;
+
+          if (offices.length === 1) {
+            createTempRecord(offices[0], 'check-in');
+            return;
+          }
+          selectorUI({
+            store: 'subscriptions'
           })
-          resetScroll();
-          listView();
         })
-      } catch (e) {
-        console.log(e)
-      }
+        resetScroll();
+        listView();
+      })
 
     }).catch(handleError)
   }, true);
+}
+
+function getUniqueOfficeCount() {
+
+  return new Promise(function (resolve, reject) {
+   
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    let offices = []
+    req.onsuccess = function () {
+      const db = req.result
+      const tx = db.transaction(['activity']);
+      const activityStore = tx.objectStore('activity').index('office');
+      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return;
+        offices.push(cursor.value.office)
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        return resolve(offices);
+      }
+      tx.onerror = function () {
+       return reject({
+          message: tx.error.message,
+          body: JSON.stringify(tx.error)
+        })
+      }
+    }
+    req.onerror = function () {
+      return reject({
+        message: req.error.message
+      })
+    }
+  })
 }

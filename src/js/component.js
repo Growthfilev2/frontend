@@ -1,18 +1,24 @@
-function getCellularInformation() {
 
+function getCellularInformation(){
+  
+    let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
     const radioType = AndroidInterface.getRadioType()
     const carrier = AndroidInterface.getCarrier()
     const wifiQueryString = AndroidInterface.getWifiAccessPoints()
-    const cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+        try {
+            cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+        }catch(e){
+            console.log(e)
+        }
     let wifiAccessPointsArray = [];
     let cellTowerArray = [];
     if (wifiQueryString) {
         wifiAccessPointsArray = parseQuery(wifiQueryString)
-    }
-    if (cellTowerQueryString) {
-        cellTowerArray = parseQuery(cellTowerQueryString)
+    };
+    if(cellTowerQueryString){
+        cellTowerArray = removeNegativeCellIds(parseQuery(cellTowerQueryString))
     }
     const body = {}
 
@@ -43,7 +49,14 @@ function getCellularInformation() {
     return JSON.stringify(body)
 }
 
-function parseQuery(queryString) {
+function removeNegativeCellIds(cellTowers){
+    const filtered = cellTowers.filter(function(tower){
+        return tower.cellId >= 0
+    })
+    return filtered
+}
+function parseQuery(queryString){
+
     var array = [];
     const splitBySeperator = queryString.split(",")
     splitBySeperator.forEach(function (value) {

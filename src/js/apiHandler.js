@@ -100,7 +100,6 @@ function http(request) {
 }
 
 function fetchServerTime(body, meta) {
-  console.log(body)
   return new Promise(function (resolve) {
   currentDevice = body.device;
   const parsedDeviceInfo = JSON.parse(currentDevice);
@@ -942,16 +941,6 @@ function successResponse(read, param) {
         });
       })
     })
-
-    getUniqueOfficeCount(param).then(function (offices) {
-      setUniqueOffice(offices, param).then(console.log).catch(function (error) {
-        instant(JSON.stringify(error), param.user)
-      })
-    }).catch(function (error) {
-      instant(JSON.stringify(error), param.user)
-    });
-
-
   }
 }
 
@@ -976,76 +965,6 @@ function updateRoot(param, read) {
     }
   })
 }
-
-
-function getUniqueOfficeCount(param) {
-
-  return new Promise(function (resolve, reject) {
-    const dbName = param.user.uid
-    const req = indexedDB.open(dbName)
-    let offices = []
-    req.onsuccess = function () {
-      const db = req.result
-      const tx = db.transaction(['activity']);
-      const activityStore = tx.objectStore('activity').index('office');
-      activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return;
-        offices.push(cursor.value.office)
-        cursor.continue()
-      }
-      tx.oncomplete = function () {
-        resolve(offices);
-      }
-      tx.onerror = function () {  
-        if(tx){
-          reject({  
-            message: tx.error.message,
-            body:JSON.stringify(tx.error)
-          })
-        }
-      }
-    }
-    req.onerror = function () {
-      if(req){
-        reject({
-          message: req.error.message
-        })
-      }
-    }
-  })
-}
-
-function setUniqueOffice(offices, param) {
-  return new Promise(function (resolve, reject) {
-
-    const dbName = param.user.uid;
-    const req = indexedDB.open(dbName)
-
-    req.onsuccess = function () {
-      const db = req.result
-      const tx = db.transaction(['root'], 'readwrite')
-      const rootObjectStore = tx.objectStore('root');
-      rootObjectStore.get(dbName).onsuccess = function (event) {
-        const record = event.target.result
-        record.offices = offices
-        rootObjectStore.put(record)
-      };
-
-      tx.oncomplete = function () {
-        resolve(true)
-      }
-      tx.onerror = function () {
-        if(tx){
-         reject({
-            message: tx.error.message
-          })
-        }
-      }
-    }
-  })
-}
-
 
 function updateIDB(meta) {
   

@@ -109,7 +109,6 @@ function createOfficeDetailView(){
 function createProfilePanel(db) {
   return new Promise(function (resolve) {
     
-  
   getUserRecord(db,firebase.auth().currentUser.phoneNumber).then(function(userRecord){
     
       var profileView = document.createElement('div');
