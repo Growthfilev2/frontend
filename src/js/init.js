@@ -14,25 +14,17 @@ let native = function () {
     getName: function () {
       return localStorage.getItem('deviceType');
     },
-    setIosInfo: function (iosDeviceInfo) {
-      const splitByName = iosDeviceInfo.split("&")
-      const deviceInfo = {
-        baseOs: splitByName[0],
-        deviceBrand: splitByName[1],
-        deviceModel: splitByName[2],
-        appVersion: Number(splitByName[3]),
-        osVersion: splitByName[4],
-        id: splitByName[5],
-        initConnection: splitByName[6]
-      }
-      if (localStorage.getItem('iosUUID')) {
-        localStorage.removeItem('iosUUID');
-      }
 
+    setIosInfo: function (iosDeviceInfo) {
+      const queryString = new URLSearchParams(iosDeviceInfo);
+      var deviceInfo = {}
+      queryString.forEach(function(val,key){
+        deviceInfo[key] = val
+      })
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
-      return localStorage.getItem('deviceInfo') || localStorage.getItem('iosUUID');
+      return localStorage.getItem('deviceInfo');
     },
     getInfo: function () {
       if (!this.getName()) {
@@ -104,6 +96,7 @@ function getDeviceInfomation() {
 
 }
 window.addEventListener("load", function () {
+  console.log(this.navigator.platform)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
 
@@ -591,17 +584,17 @@ function getUniqueOfficeCount() {
         cursor.continue()
       }
       tx.oncomplete = function () {
-        resolve(offices);
+        return resolve(offices);
       }
       tx.onerror = function () {
-        reject({
+       return reject({
           message: tx.error.message,
           body: JSON.stringify(tx.error)
         })
       }
     }
     req.onerror = function () {
-      reject({
+      return reject({
         message: req.error.message
       })
     }
