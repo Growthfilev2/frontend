@@ -242,11 +242,11 @@ function getLocation() {
     const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
-        // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        // holder['html5'] = {
-        //   body: '',
-        //   result: htmlLocation
-        // }
+        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        holder['html5'] = {
+          body: '',
+          result: htmlLocation
+        }
         handleGeoLocationApi(holder, htmlLocation).then(function (location) {
           resolve(location)
         })
