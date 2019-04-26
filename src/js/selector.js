@@ -373,9 +373,25 @@ function fillSubscriptionInSelector(data, container) {
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction([data.store], 'readonly');
-    const store = tx.objectStore(data.store)
+    const store = tx.objectStore(data.store);
     const officeIndex = store.index('office');
-   
+    const offices = [];
+    officeIndex.openCursor(null,'nextunique').onsuccess = function(event){
+      const cursor = event.target.result;
+      if(!cursor) return;
+      // if(cursor.value.status === 'CANCELLED') {
+      //   cursor.continue();
+      //   return;
+      // }
+      offices.push(cursor.value.office);
+      cursor.continue();
+    }
+    tx.oncomplete = function(){
+      console.log(offices)
+      console.log(tabBar(offices))
+      document.getElementById('app-current-panel').appendChild(tabBar(offices).root_);
+    }
+    
   }
 }
 

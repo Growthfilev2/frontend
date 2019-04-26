@@ -150,6 +150,38 @@ Dialog.prototype.create = function () {
     return new mdc.dialog.MDCDialog(parent);
 }
 
+function tabBar(headers){
+    const parent = createElement('div',{className:'mdc-tab-bar'});
+    parent.setAttribute('role','tablist');
+    const scroller = createElement('div',{className:'mdc-tab-scroller'});
+    const area = createElement('div',{className:'mdc-tab-scroller__scroll-area'});
+    const content = createElement('div',{className:'mdc-tab-scroller__scroll-content'});
+    headers.forEach(function(value,idx){
+        const button = createElement('button',{className:'mdc-tab mdc-tab--active'})
+        button.setAttribute('role','tab');
+        const indicator = createElement('span',{className:'mdc-tab-indicator'})
+        indicator.appendChild(createElement('span',{className:'mdc-tab-indicator__content mdc-tab-indicator__content--underline'}))
+        if(!idx) {
+            button.setAttribute("aria-selected","true")
+            button.setAttribute("tabindex","0")
+            indicator.classList.add('mdc-tab-indicator--active')
+        }
+        const buttonContent = createElement('div',{className:'mdc-tab__content'})
+        const label = createElement('span',{className:'mdc-tab__text-label',textContent:value})
+        buttonContent.appendChild(label)
+        
+        const ripple = createElement('span',{className:'mdc-tab__ripple'})
+
+        button.appendChild(buttonContent)
+        button.appendChild(indicator)
+        button.appendChild(ripple);
+        content.appendChild(button);
+    });
+    area.appendChild(content)
+    scroller.appendChild(area)
+    parent.appendChild(scroller)
+    return new mdc.tabBar.MDCTabBar(parent);
+}
 
 function InputField() {}
 InputField.prototype.base = function () {

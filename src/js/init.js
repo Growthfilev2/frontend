@@ -221,7 +221,7 @@ function startApp(start) {
     }
 
     if (start) {
-      const req = indexedDB.open(auth.uid, 3);
+      const req = indexedDB.open(auth.uid, 4);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -232,10 +232,17 @@ function startApp(start) {
           })
           return;
         }
-        createObjectStores(db, auth.uid)
+        if(evt.oldVersion < 4) {
+          createObjectStores(db, auth.uid)
+        }
+        else {
+          const subscriptionStore = req.transaction.objectStore('subscriptions')
+          subscriptionStore.createIndex('status','status');
+        }
       }
 
       req.onsuccess = function () {
+        db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         resetScroll();
@@ -455,11 +462,11 @@ function initLocation() {
 
 function runAppChecks() {
 
-  // window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-  //   if (!e.detail) return;
-  //   isEmployeeOnLeave().then(function (onLeave) {
-  //     if (onLeave) return
-  //     if (history.state[0] !== 'listView') return;
+  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    if (!e.detail) return;
+    isEmployeeOnLeave().then(function (onLeave) {
+      if (onLeave) return
+      if (history.state[0] !== 'listView') return;
 
       getUniqueOfficeCount().then(function (offices) {
         if(!offices.length) return;
@@ -483,8 +490,8 @@ function runAppChecks() {
         listView();
       })
 
-  //   }).catch(handleError)
-  // }, true);
+    }).catch(handleError)
+  }, true);
 }
 
 function getUniqueOfficeCount() {
