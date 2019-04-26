@@ -17,6 +17,22 @@ body {
   /* background-color: #0399f4  !important;
   color:white !important; */
 }
+
+.content {
+  display: none;
+}
+
+.content--active {
+  display: block;
+}
+.slide-left  {
+  transition: 1s;
+  left: 0;
+}
+.slide-right{
+  transition: 1s;
+  right: 0;
+}
 .text-area-basic.mdc-text-field__input {
   width: 100% !important;
   border-style: inset;
@@ -1616,8 +1632,9 @@ input[type="datetime-local"] {
 }
 
 :root { 
-   --mdc-theme-primary: #eeeeee !important;
-  --mdc-theme-secondary: #0399f4 !important;
+  
+   --mdc-theme-primary: #0399f4 !important;
+  --mdc-theme-secondary: #eeeeee !important;
   --mdc-theme-background: #ffffff !important;
   --mdc-theme-on-primary: white !important;
   --mdc-theme-on-secondary: #ffffff !important; 

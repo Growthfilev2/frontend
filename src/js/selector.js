@@ -369,29 +369,55 @@ function insertNumberIntoRecord(data, number) {
 }
 
 function fillSubscriptionInSelector(data, container) {
+  const panel = document.getElementById('app-current-panel')
   const req = indexedDB.open(firebase.auth().currentUser.uid)
+  let index = 0;
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction([data.store], 'readonly');
     const store = tx.objectStore(data.store);
-    const officeIndex = store.index('office');
-    const offices = [];
-    officeIndex.openCursor(null,'nextunique').onsuccess = function(event){
+    const statusIndex = store.index('status');
+    const officesObject = {}
+    const tabBarInit = tabBarBase();
+    let tabContentContainer;
+    panel.appendChild(tabBarInit);
+
+    statusIndex.openCursor(IDBKeyRange.bound('CONFIRMED', 'PENDING')).onsuccess = function (event) {
       const cursor = event.target.result;
-      if(!cursor) return;
-      // if(cursor.value.status === 'CANCELLED') {
-      //   cursor.continue();
-      //   return;
-      // }
-      offices.push(cursor.value.office);
+      if (!cursor) return;
+      if (officesObject[cursor.value.office]) {
+        tabContentContainer = panel.querySelector(`[data-office="${cursor.value.office}"]`)
+      } else {
+        tabBarInit.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({
+          name: cursor.value.office,
+          index: index
+        }))
+        tabContentContainer = createElement('ul', {
+          className: 'content mdc-list'
+        })
+        tabContentContainer.setAttribute('role','radiogroup')
+        tabContentContainer.dataset.office = cursor.value.office
+        index == 0 ? tabContentContainer.classList.add('content--active') : '';
+
+        panel.appendChild(tabContentContainer)
+        officesObject[cursor.value.office] = true
+      };
+      tabContentContainer.appendChild(radioList({index:index,labelText:cursor.value.template,value:cursor.value}))
+      index++
       cursor.continue();
     }
-    tx.oncomplete = function(){
-      console.log(offices)
-      console.log(tabBar(offices))
-      document.getElementById('app-current-panel').appendChild(tabBar(offices).root_);
+    tx.oncomplete = function () {
+      const tabBar = new mdc.tabBar.MDCTabBar(tabBarInit);
+      console.log(tabBar);
+      var contentEls = document.querySelectorAll('.content');
+      tabBar.listen('MDCTabBar:activated', function (evt) {
+
+        document.querySelector('.content--active').classList.remove('content--active');
+        contentEls[event.detail.index].classList.add('content--active');
+      });
+
     }
-    
+
   }
 }
 

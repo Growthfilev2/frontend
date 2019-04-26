@@ -221,7 +221,7 @@ function startApp(start) {
     }
 
     if (start) {
-      const req = indexedDB.open(auth.uid, 4);
+      const req = window.indexedDB.open(auth.uid, 4);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -232,13 +232,18 @@ function startApp(start) {
           })
           return;
         }
-        if(evt.oldVersion < 4) {
+        
+        if(!evt.oldVersion) {
           createObjectStores(db, auth.uid)
         }
         else {
-          const subscriptionStore = req.transaction.objectStore('subscriptions')
-          subscriptionStore.createIndex('status','status');
+
+          if(evt.oldVersion < 4) {
+            const subscriptionStore = req.transaction.objectStore('subscriptions')
+            subscriptionStore.createIndex('status','status');
+          }
         }
+       
       }
 
       req.onsuccess = function () {
@@ -399,7 +404,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('office', 'office')
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
-
+  subscriptions.createIndex('status','status')
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
