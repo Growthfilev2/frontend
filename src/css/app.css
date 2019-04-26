@@ -5,10 +5,17 @@ body {
 .mdc-top-app-bar__section--align-start {
   padding-left: 10px;
 }
+.mdc-dialog footer .mdc-button:nth-child(1):not([disabled]) {
+  color: red;
+}
+
+.mdc-dialog footer .mdc-button:nth-child(2) {
+  color: #0399f4;
+}
 
 .mdc-button:not([disabled]) {
-  background-color: #0399f4  !important;
-  color:white !important;
+  /* background-color: #0399f4  !important;
+  color:white !important; */
 }
 .text-area-basic.mdc-text-field__input {
   width: 100% !important;

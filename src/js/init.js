@@ -1,5 +1,4 @@
 const appKey = new AppKeys();
-
 let ui;
 let native = function () {
   return {
@@ -61,33 +60,20 @@ let native = function () {
   }
 }();
 
-let app = function () {
-  return {
-
-    today: function (format) {
-      if (!format) return moment();
-      return moment().format(format);
-    },
-
-    tomorrow: function () {
-      return moment(this.today()).add(1, 'day');
-    },
-    isNewDay: function (auth) {
-      var today = localStorage.getItem('today');
-      if (!today) {
-        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
-        return true;
-      }
-      const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
-      if (isSame) {
-        return false;
-      } else {
-        localStorage.setItem('today', moment().format('YYYY-MM-DD'))
-        return true
-      }
-    }
+function isNewDay(){
+  var today = localStorage.getItem('today');
+  if (!today) {
+    localStorage.setItem('today', moment().format('YYYY-MM-DD'));
+    return true;
   }
-}();
+  const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
+  if (isSame) {
+    return false;
+  } else {
+    localStorage.setItem('today', moment().format('YYYY-MM-DD'))
+    return true
+  }
+}
 
 function getDeviceInfomation() {
   return JSON.stringify({
@@ -127,13 +113,13 @@ window.addEventListener("load", function () {
       return;
     }
   }
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(function (registeration) {
-      console.log('sw registered with scope :', registeration.scope);
-    }, function (err) {
-      console.log('sw registeration failed :', err);
-    });
-  }
+  // if ('serviceWorker' in navigator) {
+  //   navigator.serviceWorker.register('sw.js').then(function (registeration) {
+  //     console.log('sw registered with scope :', registeration.scope);
+  //   }, function (err) {
+  //     console.log('sw registeration failed :', err);
+  //   });
+  // }
   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
@@ -160,8 +146,6 @@ window.addEventListener("load", function () {
     //TODO: show view instead of dialog
     return;
   }
-
-
   startApp(true)
 })
 
@@ -254,16 +238,6 @@ function startApp(start) {
       req.onsuccess = function () {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        let getInstantLocation = false;
-        if (native.getName() !== 'Android') {
-          try {
-            webkit.messageHandlers.locationService.postMessage('start');
-          } catch (e) {            
-            getInstantLocation = true
-          }
-        } else {
-          getInstantLocation = true
-        }
         resetScroll();
         listView();
         requestCreator('now', {
@@ -274,7 +248,7 @@ function startApp(start) {
 
         runAppChecks()
         if(native.getName !== 'Android') {
-          webkit.messageHandlers.startLocationService.postMessage('start fetchin location');
+          webkit.messageHandlers.locationService.postMessage('start');
         }
         else {
           manageLocation().then(console.log).catch(function (error) {
@@ -481,11 +455,11 @@ function initLocation() {
 
 function runAppChecks() {
 
-  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-    if (!e.detail) return;
-    isEmployeeOnLeave().then(function (onLeave) {
-      if (onLeave) return
-      if (history.state[0] !== 'listView') return;
+  // window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+  //   if (!e.detail) return;
+  //   isEmployeeOnLeave().then(function (onLeave) {
+  //     if (onLeave) return
+  //     if (history.state[0] !== 'listView') return;
 
       getUniqueOfficeCount().then(function (offices) {
         if(!offices.length) return;
@@ -509,8 +483,8 @@ function runAppChecks() {
         listView();
       })
 
-    }).catch(handleError)
-  }, true);
+  //   }).catch(handleError)
+  // }, true);
 }
 
 function getUniqueOfficeCount() {

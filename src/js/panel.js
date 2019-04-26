@@ -31,7 +31,7 @@ function listView() {
   history.pushState(['listView'], null, null)
   initDomLoad();
   // TODO simplify
-  getSizeOfListStore().then(function (size) {
+  getCountOfStore('list').then(function (size) {
     if (!size) {
       if (document.getElementById('start-loader')) {
         document.getElementById('start-loader').remove();
@@ -62,13 +62,13 @@ function appendTextContentInListView(textContent) {
 }
 
 
-function getSizeOfListStore() {
+function getCountOfStore(storeName) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['list'])
-      const store = tx.objectStore('list');
+      const tx = db.transaction([storeName])
+      const store = tx.objectStore(storeName);
       var countReq = store.count();
       countReq.onsuccess = function () {
         resolve(countReq.result)
@@ -492,37 +492,12 @@ function getRootRecord() {
 }
 
 function createActivityIcon() {
-  getCountOfTemplates().then(function (count) {
+  getCountOfStore('subscriptions').then(function (count) {
     if (!count) return;
     createActivityIconDom()
   }).catch(handleError);
 }
 
-function getCountOfTemplates() {
-
-  return new Promise(function (resolve, reject) {
-
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['subscriptions'], 'readonly');
-      const subscriptionObjectStore = tx.objectStore('subscriptions');
-      const countReq = subscriptionObjectStore.count();
-      countReq.onsuccess = function () {
-        return resolve(countReq.result)
-      }
-      countReq.onerror = function () {
-        return reject(countReq.error)
-      }
-
-    }
-    req.onerror = function () {
-      reject({
-        message: `${req.error.message} from getCountOfTemplates`
-      });
-    }
-  })
-}
 
 
 function createActivityIconDom() {

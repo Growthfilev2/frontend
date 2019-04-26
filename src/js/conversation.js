@@ -37,14 +37,13 @@ function checkIfRecordExists(store, id) {
       });
     }
   })
-
 }
 
 function fetchAddendumForComment(id) {
   if (!id) return;
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
-
+  
   req.onsuccess = function () {
     const db = req.result
     const transaction = db.transaction(['addendum'], 'readonly');
@@ -79,10 +78,8 @@ function fetchAddendumForComment(id) {
 
 
 function commentPanel(id) {
-  if (document.querySelector('.activity--chat-card-container')) {
-    return
-  }
-
+  if (document.querySelector('.activity--chat-card-container')) return
+  
   const commentPanel = document.createElement('div')
   commentPanel.className = 'activity--chat-card-container panel-card'
 
@@ -132,14 +129,10 @@ function commentPanel(id) {
   document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
 
   document.querySelector('.comment-field').oninput = function (evt) {
-    if (!evt.target.value || !evt.target.value.replace(/\s/g, '').length) {
-      toggleCommentButton(false)
-
-    } else {
-      toggleCommentButton(true)
-    }
+    toggleCommentButton(evt.target.value && evt.target.value.replace(/\s/g, '').length)
+    
   }
-
+  
   document.getElementById('send-chat--input').onclick = function () {
     if (!isLocationStatusWorking()) return;
     let comment = document.querySelector('.comment-field').value;
@@ -244,24 +237,18 @@ function statusChange(db, id) {
       switchControl.checked = true
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
-      console.log(isLocationStatusWorking())
-      if (isLocationStatusWorking()) {
-        changeStatusRequest(switchControl, record)
-      } else {
-        resetStatusConfirmation(switchControl, record);
+
+      if(!isLocationStatusWorking()){
+        record.status === 'CONFIRMED' ?  switchControl.checked = true : switchControl.checked = false
+        return
       }
+      changeStatusRequest(switchControl, record)
+     
     }
   }
 }
 
-function resetStatusConfirmation(switchControl, record) {
 
-  if (record.status === 'CONFIRMED') {
-    switchControl.checked = true
-  } else {
-    switchControl.checked = false
-  }
-}
 
 function changeStatusRequest(switchControl, record) {
   document.querySelector('.form-field-status').classList.add('hidden');
@@ -273,12 +260,13 @@ function changeStatusRequest(switchControl, record) {
       activityId: record.activityId,
       status: 'CONFIRMED'
     })
-  } else {
-    requestCreator('statusChange', {
+    return;
+  } 
+  requestCreator('statusChange', {
       activityId: record.activityId,
       status: 'PENDING'
-    })
-  }
+  })
+  
 }
 
 function createComment(db, addendum, currentUser) {
@@ -300,7 +288,7 @@ function createComment(db, addendum, currentUser) {
 
     getUserRecord(db, addendum.user).then(function (record) {
       if (record.displayName) {
-        user.textContent = record.displayName
+        user.textContent = record.displayName 
       } else {
         user.textContent = record.mobile
       }
@@ -394,7 +382,7 @@ function hasMapsApiLoaded() {
 }
 
 
-function MapsCustomControl(customControlDiv, map, lat, lng) {
+function MapsCustomControl(customControlDiv, lat, lng) {
   var controlUI = document.createElement('div');
 
   controlUI.style.backgroundColor = '#fff';

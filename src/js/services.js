@@ -405,7 +405,7 @@ function updateLocationInRoot(finalLocation) {
       var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
 
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-        "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+        "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || isNewDay()
       });
       window.dispatchEvent(suggestCheckIn);
 
@@ -759,8 +759,6 @@ function officeRemovalSuccess(data) {
   return
 }
 
-
-
 function onErrorMessage(error) {
 
   const body = {
@@ -799,7 +797,7 @@ function runRead(value) {
       createBlankPayrollDialog(notificationData)
       return;
     }
-  }, 1500)
+  }, 500)
 }
 
 function removeChildNodes(parent) {
