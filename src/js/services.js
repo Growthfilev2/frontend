@@ -291,7 +291,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
     }
     if(!Object.keys(JSON.parse(body)).length) {
       if (htmlLocation) {
-        resolve(htmlLocation)
+        resolve(htmlLocation);
         return;
       }
       reject("empty object from getCellularInformation");
@@ -555,22 +555,28 @@ function createAndroidDialog(title, body) {
 }
 
 function isLocationStatusWorking() {
+  const requiredWifi = {
+    'samsung':true,
+    'OnePlus':true
+  }
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
     createAndroidDialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.')
     return
   }
-
-  if(JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
+  const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
+  if(requiredWifi[brand]) {
     if(!AndroidInterface.isWifiOn()) {
-      createAndroidDialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.')
+      createAndroidDialog('Improve Location Accuracy', `${brand} devices requires Wi-fi to be turned on to get precise location. Please Turn On Your Wi-fi.`)
       return;
     }
     return true;
   }
   return true
 }
+
+
 
 function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;

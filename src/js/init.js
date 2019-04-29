@@ -310,6 +310,7 @@ function startApp(start) {
         }
         resetScroll();
         listView();
+       
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
