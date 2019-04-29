@@ -411,13 +411,10 @@ function fillSubscriptionInSelector(data, container) {
       console.log(tabBar);
       var contentEls = document.querySelectorAll('.content');
       tabBar.listen('MDCTabBar:activated', function (evt) {
-
         document.querySelector('.content--active').classList.remove('content--active');
         contentEls[event.detail.index].classList.add('content--active');
       });
-
     }
-
   }
 }
 
