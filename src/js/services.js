@@ -687,7 +687,7 @@ function sendRequest(location, requestGenerator) {
     getRootRecord().then(function (record) {
       var cellTowerInfo = void 0;
       try {
-        cellTowerInfo = AndroidInterface.getCellularData();
+        cellTowerInfo = getCellularInformation();
       } catch (e) {
         cellTowerInfo = e.message;
         sendExceptionObject(e, 'CATCH Type 4: AndroidInterface.getCullarData at sendRequest', [])
