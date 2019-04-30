@@ -629,14 +629,6 @@ function createTempRecord(office, template, prefill) {
           const dialogEl = document.getElementById('location-fetch-dialog')
           const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
           fetchingLocationDialog.show();
-          if (native.getName() === 'Ios') {
-            window.addEventListener('iosLocation', function _iosLocation(e) {
-              dialogEl.remove();
-              updateCreateActivity(bareBonesRecord)
-              window.removeEventListener('iosLocation', _iosLocation, true);
-            }, true)
-            return;
-          }
           manageLocation().then(function (location) {
             dialogEl.remove();
             updateCreateActivity(bareBonesRecord)
@@ -673,8 +665,8 @@ function createTempRecord(office, template, prefill) {
       bareBonesRecord.venue = bareBonesVenueArray;
       if (template === 'tour plan' || template === 'dsr' || template === 'duty roster' || template === 'customer') {
         
-        if(native.getName() === 'Android') {
-          getLocation().then(function (userLocation) {
+      
+          manageLocation().then(function (userLocation) {
             geocodePosition({
               lat: userLocation.latitude,
               lng: userLocation.longitude
@@ -687,19 +679,7 @@ function createTempRecord(office, template, prefill) {
   
             return createBlendedCustomerRecord(bareBonesRecord)
           })
-        }
-        else {
-          window.addEventListener('iosLocation', function _iosLocation(e) {
-            geocodePosition({
-              lat: e.detail.latitude,
-              lng: e.detail.longitude
-            }).then(function (result) {
-  
-              return createBlendedCustomerRecord(bareBonesRecord, result)
-            });
-            window.removeEventListener('iosLocation', _iosLocation, true);
-          }, true)
-        }
+     
         return;
       }
       updateCreateActivity(bareBonesRecord)
@@ -1575,16 +1555,18 @@ function createAttachmentContainer(data) {
           }
           if (key === 'Customer' && data.hasOwnProperty('create')) {
             if (data.customerRecord) {
-              getLocation().then(function (location) {
-                geocodePosition({
-                  lat: location.latitude,
-                  lng: location.longitude
-                }).then(function (result) {
-                  data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
-                });
-              }).catch(function (error) {
-                data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
-              })
+          
+                manageLocation().then(function (location) {
+                  geocodePosition({
+                    lat: location.latitude,
+                    lng: location.longitude
+                  }).then(function (result) {
+                    data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+                  });
+                }).catch(function (error) {
+                  data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+                })
+             
               data.customerRecord.attachment.Name.value = ''
             }
             valueField.root_.parentNode.replaceChild(addNewCustomerButton(data, div).root_, valueField.root_);
@@ -1682,16 +1664,17 @@ function hideCustomerContainer(data, div) {
     document.querySelector('.customer-form').remove();
   }
   if (data.customerRecord) {
-    getLocation().then(function (location) {
-      geocodePosition({
-        lat: location.latitude,
-        lng: location.longitude
-      }).then(function (result) {
-        data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
-      });
-    }).catch(function (error) {
-      data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
-    })
+   
+      manageLocation().then(function (location) {
+        geocodePosition({
+          lat: location.latitude,
+          lng: location.longitude
+        }).then(function (result) {
+          data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+        });
+      }).catch(function (error) {
+        data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+      })
     data.customerRecord.attachment.Name.value = ''
   }
   if (div.querySelector('#customer-selection-btn')) {

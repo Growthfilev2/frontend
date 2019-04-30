@@ -18,11 +18,10 @@ let native = function () {
     setIosInfo: function (iosDeviceInfo) {
       const queryString = new URLSearchParams(iosDeviceInfo);
       var deviceInfo = {}
-      queryString.forEach(function(val,key){
-        if(key === 'appVersion') {
+      queryString.forEach(function (val, key) {
+        if (key === 'appVersion') {
           deviceInfo[key] = Number(val)
-        }
-        else {
+        } else {
           deviceInfo[key] = val
         }
       })
@@ -299,29 +298,19 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         let getInstantLocation = false;
-        if (native.getName() !== 'Android') {
-          try {
-            webkit.messageHandlers.locationService.postMessage('start');
-          } catch (e) {            
-            getInstantLocation = true
-          }
-        } else {
-          getInstantLocation = true
-        }
+
         resetScroll();
         listView();
-       
+
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
-        })
-        runAppChecks()
+        });
 
-        if (!getInstantLocation) return;
-        manageLocation().then(console.log).catch(function (error) {
-          handleError(error)
-        })
+        runAppChecks()
+        manageLocation().then(console.log).catch(console.log)
+
       }
       req.onerror = function () {
         handleError({
@@ -572,7 +561,7 @@ function runAppChecks() {
 function getUniqueOfficeCount() {
 
   return new Promise(function (resolve, reject) {
-   
+
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     let offices = []
     req.onsuccess = function () {
@@ -589,7 +578,7 @@ function getUniqueOfficeCount() {
         return resolve(offices);
       }
       tx.onerror = function () {
-       return reject({
+        return reject({
           message: tx.error.message,
           body: JSON.stringify(tx.error)
         })
