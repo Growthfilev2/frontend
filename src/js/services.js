@@ -229,7 +229,7 @@ function handleRequestBody(request) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName === 'Android') {
+      if (native.getName() === 'Android') {
         updateLocationInRoot(location)
       };
       console.log(location.provider)
@@ -352,8 +352,6 @@ function handleGeoLocationApi(holder, htmlLocation) {
 
           })
         }
-
-
         Object.keys(holder).forEach(function (key) {
           allLocations.push(holder[key].result)
         })
