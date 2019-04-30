@@ -229,10 +229,13 @@ function handleRequestBody(request) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      updateLocationInRoot(location)
+      if (native.getName === 'Android') {
+        updateLocationInRoot(location)
+      };
+      console.log(location.provider)
       resolve(location)
     }).catch(function (error) {
-      reject(error)
+      reject(error);
     })
   })
 }
@@ -266,12 +269,20 @@ function getLocation() {
       })
       return;
     }
+    try {
+      webkit.messageHandlers.locationService.postMessage('start');
+      window.addEventListener('iosLocation', function _iosLocation(e) {
+        resolve(e.detail)
+        window.removeEventListener('iosLocation', _iosLocation, true);
+      }, true)
+    } catch (e) {
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
+    }
 
-    html5Geolocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
   })
 }
 
@@ -282,21 +293,21 @@ function handleGeoLocationApi(holder, htmlLocation) {
     const allLocations = [];
     try {
       body = getCellularInformation()
-    }catch(e){
+    } catch (e) {
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
       }
       reject(e.message);
     }
-    if(!Object.keys(JSON.parse(body)).length) {
+    if (!Object.keys(JSON.parse(body)).length) {
       if (htmlLocation) {
         resolve(htmlLocation);
         return;
       }
       reject("empty object from getCellularInformation");
     }
-  
+
     geolocationApi(body).then(function (cellLocation) {
       if (cellLocation.accuracy <= 350) return resolve(cellLocation);
 
@@ -381,8 +392,12 @@ function handleGeoLocationApi(holder, htmlLocation) {
 }
 
 function iosLocationError(error) {
-  manageLocation().then(console.log).catch(console.log);
-  handleError(error)
+  html5Geolocation().then(function (location) {
+    updateLocationInRoot(location)
+  }).catch(function (error) {
+    reject(error)
+  })
+  handleError(error);
 }
 
 function html5Geolocation() {
@@ -421,7 +436,6 @@ function html5Geolocation() {
       resolve(bestAccuracy[0]);
       return;
     }).catch(function (error) {
-
       reject({
         message: error.message.message
       })
@@ -556,8 +570,8 @@ function createAndroidDialog(title, body) {
 
 function isLocationStatusWorking() {
   const requiredWifi = {
-    'samsung':true,
-    'OnePlus':true
+    'samsung': true,
+    'OnePlus': true
   }
   if (native.getName() !== 'Android') return true;
 
@@ -566,8 +580,8 @@ function isLocationStatusWorking() {
     return
   }
   const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
-  if(requiredWifi[brand]) {
-    if(!AndroidInterface.isWifiOn()) {
+  if (requiredWifi[brand]) {
+    if (!AndroidInterface.isWifiOn()) {
       createAndroidDialog('Improve Location Accuracy', `${brand} devices requires Wi-fi to be turned on to get precise Location. Please Turn On Your Wifi.`)
       return;
     }
@@ -610,14 +624,7 @@ function requestCreator(requestType, requestBody) {
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
       if (isLocationOld) {
-        if (native.getName() === 'Android') {
-          promises.push(manageLocation())
-        } else {
-          window.addEventListener('iosLocation', function _iosLocation(e) {
-            promises.push(e.detail)
-            window.removeEventListener('iosLocation', _iosLocation, true)
-          }, true)
-        }
+        promises.push(manageLocation())
       }
 
       Promise.all(promises).then(function (result) {
@@ -734,7 +741,7 @@ function messageReceiver(response) {
 
 
 function emailVerify(notification) {
-  if(firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
+  if (firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
 
   const span = document.createElement('h1')
@@ -932,7 +939,8 @@ function onErrorMessage(error) {
   const body = {
     'line-number': error.lineno,
     'file': error.filename,
-    'col-number': error.colno
+    'col-number': error.colno,
+    'stack':error.stack
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
@@ -959,13 +967,13 @@ function runRead(value) {
       emailVerify(notificationData)
       return;
     };
-    
+
     if (value.payroll) {
       const notificationData = JSON.parse(value.payroll)
       createBlankPayrollDialog(notificationData)
       return;
     }
-  }, 1500)
+  }, 500)
 }
 
 function removeChildNodes(parent) {
