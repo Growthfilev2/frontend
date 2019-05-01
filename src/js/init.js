@@ -503,9 +503,7 @@ function redirect() {
 
 
 function initLocation() {
-  manageLocation().then(console.log).catch(function (error) {
-    handleError(error)
-  });
+  manageLocation().then(console.log).catch(console.log);
 }
 
 function runAppChecks() {

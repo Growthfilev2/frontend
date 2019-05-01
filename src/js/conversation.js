@@ -645,7 +645,7 @@ function createTempRecord(office, template, prefill) {
             }, 3000)
             resetScroll()
             listView();
-            handleError(error)
+          
           })
         });
         return

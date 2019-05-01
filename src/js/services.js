@@ -5,7 +5,6 @@ function handleError(error) {
   if (!errorInStorage.hasOwnProperty(error.message)) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
-    error.device = JSON.stringify(native.getInfo());
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -235,6 +234,7 @@ function manageLocation() {
       console.log(location.provider)
       resolve(location)
     }).catch(function (error) {
+      handleError(error);
       reject(error);
     })
   })
@@ -242,27 +242,26 @@ function manageLocation() {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-    const holder = {}
+  
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        holder['html5'] = {
-          body: '',
-          result: htmlLocation
-        }
-        handleGeoLocationApi(holder, htmlLocation).then(function (location) {
-          resolve(location)
+        handleGeoLocationApi(htmlLocation).then(function (cellLocation) {
+          if(htmlLocation.accuracy < cellLocation.accuracy) {
+            return resolve(htmlLocation)
+          }
+          return resolve(cellLocation)
         })
       }).catch(function (htmlError) {
-        handleGeoLocationApi(holder).then(function (location) {
-          resolve(location);
+        handleGeoLocationApi().then(function (location) {
+          return resolve(location);
         }).catch(function (error) {
-          reject({
+          return reject({
             message: 'Both HTML and Geolocation failed to fetch location.',
-            body: JSON.stringify({
+            body: {
               html5: htmlError,
-              geolocation: JSON.stringify(error),
-            }),
+              geolocation: error,
+            },
             'locationError': true
           })
         })
@@ -287,10 +286,9 @@ function getLocation() {
 }
 
 
-function handleGeoLocationApi(holder, htmlLocation) {
+function handleGeoLocationApi(htmlLocation) {
   return new Promise(function (resolve, reject) {
     let body;
-    const allLocations = [];
     try {
       body = getCellularInformation()
     } catch (e) {
@@ -300,6 +298,7 @@ function handleGeoLocationApi(holder, htmlLocation) {
       }
       reject(e.message);
     }
+    
     if (!Object.keys(JSON.parse(body)).length) {
       if (htmlLocation) {
         resolve(htmlLocation);
@@ -309,77 +308,8 @@ function handleGeoLocationApi(holder, htmlLocation) {
     }
 
     geolocationApi(body).then(function (cellLocation) {
-      if (cellLocation.accuracy <= 350) return resolve(cellLocation);
-
-      holder['orignialGeolocationResponse'] = {
-        body: body,
-        result: cellLocation
-      };
-
-
-      const withoutCellTower = handleRequestBody(body);
-      if (!withoutCellTower) {
-        if (cellLocation.accuracy >= 1200) {
-          handleError({
-            message: 'Oringinal CellTower has accuracy more than 1200 and WAP doesnt exist',
-            body: JSON.stringify(holder),
-            locationError: true
-          })
-        }
-        if (!htmlLocation) {
-          resolve(cellLocation)
-          return
-        }
-        if (cellLocation.accuracy < htmlLocation.accuracy) {
-          resolve(cellLocation);
-          return
-        }
-        return resolve(htmlLocation);
-      }
-
-      geolocationApi(withoutCellTower).then(function (withoutCellTowerLocation) {
-        if (withoutCellTowerLocation.accuracy <= 350) return resolve(withoutCellTowerLocation);
-        holder['withoutCellTower'] = {
-          body: withoutCellTower,
-          result: withoutCellTowerLocation
-        };
-        if (withoutCellTowerLocation.accuracy >= 1200) {
-
-          handleError({
-            message: 'html5,originalCellTower,WithoutCellTower',
-            body: JSON.stringify(holder),
-            locationError: true
-
-          })
-        }
-        Object.keys(holder).forEach(function (key) {
-          allLocations.push(holder[key].result)
-        })
-        return resolve(sortedByAccuracy(allLocations))
+      return resolve(cellLocation);
       }).catch(function (error) {
-        if (cellLocation.accuracy >= 1200) {
-          holder['withoutCellTower'] = {
-            body: withoutCellTower
-          }
-          handleError({
-            message: 'Orinigal CellTower has accuracy more than 1200 and api failure when sending cellTowerObject without cellularTowers',
-            body: JSON.stringify(holder),
-            locationError: true
-
-          })
-        }
-
-        if (!htmlLocation) {
-          resolve(cellLocation);
-          return;
-        }
-        if (cellLocation.accuracy < htmlLocation.accuracy) {
-          resolve(cellLocation);
-          return
-        }
-        return resolve(htmlLocation);
-      });
-    }).catch(function (error) {
       if (htmlLocation) {
         resolve(htmlLocation)
         return;
@@ -418,8 +348,7 @@ function html5Geolocation() {
           })
         }, {
           timeout: 5000,
-          maximumAge: 0,
-          enableHighAccuracy: true
+          maximumAge: 0
         })
       })
       prom.push(navProm)
@@ -690,7 +619,6 @@ function sendRequest(location, requestGenerator) {
         cellTowerInfo = getCellularInformation();
       } catch (e) {
         cellTowerInfo = e.message;
-        sendExceptionObject(e, 'CATCH Type 4: AndroidInterface.getCullarData at sendRequest', [])
       }
 
       var body = {
@@ -699,7 +627,7 @@ function sendRequest(location, requestGenerator) {
       };
       handleError({
         message: 'No Locations Found in indexedDB',
-        body: JSON.stringify(body)
+        body: body
       })
       setTimeout(function () {
         dialogEl.remove();
