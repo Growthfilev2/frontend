@@ -5,7 +5,6 @@ function handleError(error) {
   if (!errorInStorage.hasOwnProperty(error.message)) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
-    error.device = JSON.stringify(native.getInfo());
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -247,14 +246,17 @@ function getLocation() {
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        handleGeoLocationApi(htmlLocation).then(function (location) {
-          resolve(location)
+        handleGeoLocationApi(htmlLocation).then(function (cellLocation) {
+          if(htmlLocation.accuracy < cellLocation.accuracy) {
+            return resolve(htmlLocation)
+          }
+          return resolve(cellLocation)
         })
       }).catch(function (htmlError) {
         handleGeoLocationApi().then(function (location) {
-          resolve(location);
+          return resolve(location);
         }).catch(function (error) {
-          reject({
+          return reject({
             message: 'Both HTML and Geolocation failed to fetch location.',
             body: {
               html5: htmlError,
@@ -296,6 +298,7 @@ function handleGeoLocationApi(htmlLocation) {
       }
       reject(e.message);
     }
+    
     if (!Object.keys(JSON.parse(body)).length) {
       if (htmlLocation) {
         resolve(htmlLocation);
