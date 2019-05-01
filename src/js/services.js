@@ -231,7 +231,7 @@ function manageLocation() {
       if (native.getName() === 'Android') {
         updateLocationInRoot(location)
       };
-      console.log(location.provider)
+      console.log(location)
       resolve(location)
     }).catch(function (error) {
       handleError(error);
@@ -242,15 +242,16 @@ function manageLocation() {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-  
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        handleGeoLocationApi(htmlLocation).then(function (cellLocation) {
-          if(htmlLocation.accuracy < cellLocation.accuracy) {
+        handleGeoLocationApi().then(function (cellLocation) {
+          if (htmlLocation.accuracy < cellLocation.accuracy) {
             return resolve(htmlLocation)
           }
           return resolve(cellLocation)
+        }).catch(function (error) {
+          return resolve(htmlLocation)
         })
       }).catch(function (htmlError) {
         handleGeoLocationApi().then(function (location) {
@@ -286,34 +287,24 @@ function getLocation() {
 }
 
 
-function handleGeoLocationApi(htmlLocation) {
+function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
     let body;
     try {
       body = getCellularInformation()
     } catch (e) {
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
+
       reject(e.message);
     }
-    
+
     if (!Object.keys(JSON.parse(body)).length) {
-      if (htmlLocation) {
-        resolve(htmlLocation);
-        return;
-      }
+
       reject("empty object from getCellularInformation");
     }
-
+ 
     geolocationApi(body).then(function (cellLocation) {
       return resolve(cellLocation);
-      }).catch(function (error) {
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
+    }).catch(function (error) {
       reject(error)
     })
   })
@@ -866,7 +857,7 @@ function onErrorMessage(error) {
     'line-number': error.lineno,
     'file': error.filename,
     'col-number': error.colno,
-    'stack':error.stack
+   
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
