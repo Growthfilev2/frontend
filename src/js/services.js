@@ -866,7 +866,7 @@ function onErrorMessage(error) {
     'line-number': error.lineno,
     'file': error.filename,
     'col-number': error.colno,
-    'stack':error.stack
+
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
