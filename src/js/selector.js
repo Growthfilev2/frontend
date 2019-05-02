@@ -398,22 +398,34 @@ function fillSubscriptionInSelector(data, container) {
         tabContentContainer.setAttribute('role','radiogroup')
         tabContentContainer.dataset.office = cursor.value.office
         index == 0 ? tabContentContainer.classList.add('content--active') : '';
-
+        // new mdc.list.MDCList(tabContentContainer).singleSelection = true
         panel.appendChild(tabContentContainer)
         officesObject[cursor.value.office] = true
       };
+     
       tabContentContainer.appendChild(radioList({index:index,labelText:cursor.value.template,value:cursor.value}))
       index++
       cursor.continue();
     }
     tx.oncomplete = function () {
       const tabBar = new mdc.tabBar.MDCTabBar(tabBarInit);
-      console.log(tabBar);
+    
       var contentEls = document.querySelectorAll('.content');
       tabBar.listen('MDCTabBar:activated', function (evt) {
         document.querySelector('.content--active').classList.remove('content--active');
         contentEls[event.detail.index].classList.add('content--active');
       });
+      [].map.call(document.querySelectorAll('.mdc-list'),function(el){
+        const ul = new mdc.list.MDCList(el);
+        ul.singleSelection = true
+        ul.listElements.map(function(listItemEl){
+          listItemEl.onclick = function(){
+            const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value)
+            createTempRecord(value.office,value.template)
+          }
+          return new mdc.ripple.MDCRipple(listItemEl);
+        })
+      })
     }
   }
 }

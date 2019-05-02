@@ -467,7 +467,7 @@ function radioList(attr) {
 
     if (!attr.index) {
         li.setAttribute('tabindex', "0");
-        li.setAttribute('aria-checked', "true")
+        // li.setAttribute('aria-checked', "true")
     }
     const itemGraphic = createElement('span', {
         className: 'mdc-list-item__graphic'
