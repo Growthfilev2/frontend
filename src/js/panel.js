@@ -508,6 +508,7 @@ function createActivityIconDom() {
   chooseSubscription.root_.id = 'create-activity--icon'
 
   chooseSubscription.root_.onclick = function () {
+    if(!isLocationStatusWorking()) return
     selectorUI({
       store: 'subscriptions',
       suggestCheckIn: false

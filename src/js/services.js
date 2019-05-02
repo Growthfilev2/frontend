@@ -5,7 +5,6 @@ function handleError(error) {
   if (!errorInStorage.hasOwnProperty(error.message)) {
     errorInStorage[error.message] = true
     localStorage.setItem('error', JSON.stringify(errorInStorage));
-    error.device = JSON.stringify(native.getInfo());
     requestCreator('instant', JSON.stringify(error))
     return
   }
@@ -169,160 +168,95 @@ function handleRequestBody(request) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      updateLocationInRoot(location)
+      if (native.getName() === 'Android') {
+        updateLocationInRoot(location)
+      };
+      console.log(location)
       resolve(location)
     }).catch(function (error) {
-      reject(error)
+      handleError(error);
+      reject(error);
     })
   })
 }
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-    const holder = {}
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        holder['html5'] = {
-          body: '',
-          result: htmlLocation
-        }
-        handleGeoLocationApi(holder, htmlLocation).then(function (location) {
-          resolve(location)
+        handleGeoLocationApi().then(function (cellLocation) {
+          if (htmlLocation.accuracy < cellLocation.accuracy) {
+            return resolve(htmlLocation)
+          }
+          return resolve(cellLocation)
+        }).catch(function (error) {
+          return resolve(htmlLocation)
         })
       }).catch(function (htmlError) {
-        handleGeoLocationApi(holder).then(function (location) {
-          resolve(location);
+        handleGeoLocationApi().then(function (location) {
+          return resolve(location);
         }).catch(function (error) {
-          reject({
+          return reject({
             message: 'Both HTML and Geolocation failed to fetch location.',
-            body: JSON.stringify({
+            body: {
               html5: htmlError,
-              geolocation: JSON.stringify(error),
-            }),
+              geolocation: error,
+            },
             'locationError': true
           })
         })
       })
       return;
     }
+    try {
+      webkit.messageHandlers.locationService.postMessage('start');
+      window.addEventListener('iosLocation', function _iosLocation(e) {
+        resolve(e.detail)
+        window.removeEventListener('iosLocation', _iosLocation, true);
+      }, true)
+    } catch (e) {
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
+    }
 
-    html5Geolocation().then(function (location) {
-      resolve(location)
-    }).catch(function (error) {
-      reject(error)
-    })
   })
 }
 
 
-function handleGeoLocationApi(holder, htmlLocation) {
+function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
     let body;
-    const allLocations = [];
     try {
       body = getCellularInformation()
-    }catch(e){
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
+    } catch (e) {
+
       reject(e.message);
     }
-    if(!Object.keys(JSON.parse(body)).length) {
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
+
+    if (!Object.keys(JSON.parse(body)).length) {
+
       reject("empty object from getCellularInformation");
     }
-  
+ 
     geolocationApi(body).then(function (cellLocation) {
-      if (cellLocation.accuracy <= 350) return resolve(cellLocation);
-
-      holder['orignialGeolocationResponse'] = {
-        body: body,
-        result: cellLocation
-      };
-
-
-      const withoutCellTower = handleRequestBody(body);
-      if (!withoutCellTower) {
-        if (cellLocation.accuracy >= 1200) {
-          handleError({
-            message: 'Oringinal CellTower has accuracy more than 1200 and WAP doesnt exist',
-            body: JSON.stringify(holder),
-            locationError: true
-          })
-        }
-        if (!htmlLocation) {
-          resolve(cellLocation)
-          return
-        }
-        if (cellLocation.accuracy < htmlLocation.accuracy) {
-          resolve(cellLocation);
-          return
-        }
-        return resolve(htmlLocation);
-      }
-
-      geolocationApi(withoutCellTower).then(function (withoutCellTowerLocation) {
-        if (withoutCellTowerLocation.accuracy <= 350) return resolve(withoutCellTowerLocation);
-        holder['withoutCellTower'] = {
-          body: withoutCellTower,
-          result: withoutCellTowerLocation
-        };
-        if (withoutCellTowerLocation.accuracy >= 1200) {
-
-          handleError({
-            message: 'html5,originalCellTower,WithoutCellTower',
-            body: JSON.stringify(holder),
-            locationError: true
-
-          })
-        }
-
-
-        Object.keys(holder).forEach(function (key) {
-          allLocations.push(holder[key].result)
-        })
-        return resolve(sortedByAccuracy(allLocations))
-      }).catch(function (error) {
-        if (cellLocation.accuracy >= 1200) {
-          holder['withoutCellTower'] = {
-            body: withoutCellTower
-          }
-          handleError({
-            message: 'Orinigal CellTower has accuracy more than 1200 and api failure when sending cellTowerObject without cellularTowers',
-            body: JSON.stringify(holder),
-            locationError: true
-
-          })
-        }
-
-        if (!htmlLocation) {
-          resolve(cellLocation);
-          return;
-        }
-        if (cellLocation.accuracy < htmlLocation.accuracy) {
-          resolve(cellLocation);
-          return
-        }
-        return resolve(htmlLocation);
-      });
+      return resolve(cellLocation);
     }).catch(function (error) {
-      if (htmlLocation) {
-        resolve(htmlLocation)
-        return;
-      }
       reject(error)
     })
   })
 }
 
 function iosLocationError(error) {
-  manageLocation().then(console.log).catch(console.log);
-  handleError(error)
+  html5Geolocation().then(function (location) {
+    updateLocationInRoot(location)
+  }).catch(function (error) {
+    reject(error)
+  })
+  handleError(error);
 }
 
 function html5Geolocation() {
@@ -345,8 +279,7 @@ function html5Geolocation() {
           })
         }, {
           timeout: 5000,
-          maximumAge: 0,
-          enableHighAccuracy: true
+          maximumAge: 0
         })
       })
       prom.push(navProm)
@@ -361,7 +294,6 @@ function html5Geolocation() {
       resolve(bestAccuracy[0]);
       return;
     }).catch(function (error) {
-
       reject({
         message: error.message.message
       })
@@ -473,6 +405,10 @@ function sortedByAccuracy(geoData) {
 }
 
 function isLocationStatusWorking() {
+  const requiredWifi = {
+    'samsung': true,
+    'OnePlus': true
+  }
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
@@ -480,17 +416,18 @@ function isLocationStatusWorking() {
     alertDialog.open();
     return
   }
-
-  if (JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand === 'samsung') {
+  const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
+  if (requiredWifi[brand]) {
     if (!AndroidInterface.isWifiOn()) {
       const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.');
       alertDialog.open();
-      return;
     }
     return true;
   }
   return true
 }
+
+
 
 function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;
@@ -524,14 +461,7 @@ function requestCreator(requestType, requestBody) {
       var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
       const promises = [auth.getIdToken(false)];
       if (isLocationOld) {
-        if (native.getName() === 'Android') {
-          promises.push(manageLocation())
-        } else {
-          window.addEventListener('iosLocation', function _iosLocation(e) {
-            promises.push(e.detail)
-            window.removeEventListener('iosLocation', _iosLocation, true)
-          }, true)
-        }
+        promises.push(manageLocation())
       }
 
       Promise.all(promises).then(function (result) {
@@ -764,7 +694,8 @@ function onErrorMessage(error) {
   const body = {
     'line-number': error.lineno,
     'file': error.filename,
-    'col-number': error.colno
+    'col-number': error.colno,
+   
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,

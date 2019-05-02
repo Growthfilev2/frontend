@@ -18,11 +18,10 @@ let native = function () {
     setIosInfo: function (iosDeviceInfo) {
       const queryString = new URLSearchParams(iosDeviceInfo);
       var deviceInfo = {}
-      queryString.forEach(function(val,key){
-        if(key === 'appVersion') {
+      queryString.forEach(function (val, key) {
+        if (key === 'appVersion') {
           deviceInfo[key] = Number(val)
-        }
-        else {
+        } else {
           deviceInfo[key] = val
         }
       })
@@ -252,21 +251,16 @@ function startApp(start) {
         localStorage.setItem('dbexist', auth.uid);
         resetScroll();
         listView();
+
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
-        })
+        });
 
         runAppChecks()
-        if(native.getName !== 'Android') {
-          webkit.messageHandlers.locationService.postMessage('start');
-        }
-        else {
-          manageLocation().then(console.log).catch(function (error) {
-            handleError(error)
-          })
-        }
+        manageLocation().then(console.log).catch(console.log)
+        
       }
       req.onerror = function () {
         handleError({
@@ -460,9 +454,7 @@ function redirect() {
 
 
 function initLocation() {
-  manageLocation().then(console.log).catch(function (error) {
-    handleError(error)
-  });
+  manageLocation().then(console.log).catch(console.log);
 }
 
 function runAppChecks() {
@@ -502,7 +494,7 @@ function runAppChecks() {
 function getUniqueOfficeCount() {
 
   return new Promise(function (resolve, reject) {
-   
+
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     let offices = []
     req.onsuccess = function () {
@@ -519,7 +511,7 @@ function getUniqueOfficeCount() {
         return resolve(offices);
       }
       tx.onerror = function () {
-       return reject({
+        return reject({
           message: tx.error.message,
           body: JSON.stringify(tx.error)
         })
