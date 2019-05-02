@@ -415,13 +415,15 @@ function fillSubscriptionInSelector(data, container) {
         document.querySelector('.content--active').classList.remove('content--active');
         contentEls[event.detail.index].classList.add('content--active');
       });
+
       [].map.call(document.querySelectorAll('.mdc-list'),function(el){
         const ul = new mdc.list.MDCList(el);
         ul.singleSelection = true
         ul.listElements.map(function(listItemEl){
           listItemEl.onclick = function(){
+            progressBar.foundation_.open();
             const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value)
-            createTempRecord(value.office,value.template)
+            createTempRecord(value.office,value.template,data)
           }
           return new mdc.ripple.MDCRipple(listItemEl);
         })
@@ -478,7 +480,7 @@ function getSelectedList(className) {
 
 function shareReq(data, number) {
   if (!isLocationStatusWorking()) return;
-  document.querySelector('header').appendChild(progressBar())
+  // document.querySelector('header').appendChild(progressBar())
   requestCreator('share', {
     'activityId': data.record.activityId,
     'share': number

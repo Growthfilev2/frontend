@@ -1,4 +1,5 @@
 const appKey = new AppKeys();
+const progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
 let ui;
 let native = function () {
   return {

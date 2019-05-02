@@ -16,10 +16,6 @@ function initDomLoad() {
     document.querySelector('.init-loader').remove()
   };
   
-
-  if (document.querySelector('.mdc-linear-progress')) {
-    document.querySelector('.mdc-linear-progress').remove();
-  }
   document.body.classList.remove('mdc-dialog-scroll-lock')
 
   listPanel()
@@ -582,22 +578,6 @@ function scrollToActivity() {
   }
 }
 
-
-
-function modifyHeader(attr) {
-
-  if (attr.left) {
-
-    const left = document.getElementById(attr.id + 'view-type')
-    left.innerHTML = attr.left
-  }
-  if (attr.right) {
-
-    const right = document.getElementById(attr.id + 'action-data')
-    right.innerHTML = attr.right
-  }
-
-}
 
 function headerBackIcon(store) {
   const backIcon = document.createElement('i')

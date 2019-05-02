@@ -1493,9 +1493,6 @@ input[type="datetime-local"] {
   color: red;
 }
 
-.mdc-linear-progress__bar-inner {
-  background-color: #0399f4;
-}
 
 .subscription-selector .mdc-list-item__primary-text{
   margin-bottom: 0px;
@@ -1503,9 +1500,7 @@ input[type="datetime-local"] {
 
 .create-new-customer-btn {
   margin-right: 15px;
- /* position: absolute;
- right: 2.5rem;
- margin-right: 15px; */
+
 }
 
 .custom-number--container {

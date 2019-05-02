@@ -21,7 +21,7 @@ function loader(nameClass) {
 function successDialog() {
   const checkMark = createElement('div', {
     className: 'success--container',
-    id:'success-animation'
+    id: 'success-animation'
   })
   const check = createElement('div', {
     className: 'success--check'
@@ -36,36 +36,6 @@ function successDialog() {
     resetScroll()
     listView();
   }, 1500);
-}
-
-
-function progressBar() {
-  var div = document.createElement('div');
-  div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update';
-  div.role = 'progressbar';
-  var bufferDots = document.createElement('div');
-  bufferDots.className = 'mdc-linear-progress__buffering-dots';
-  var buffer = document.createElement('div');
-  buffer.className = 'mdc-linear-progress__buffer';
-  var primary = document.createElement('div');
-  primary.className = 'mdc-linear-progress__bar mdc-linear-progress__primary-bar';
-
-  var primaryInner = document.createElement('span');
-  primaryInner.className = 'mdc-linear-progress__bar-inner';
-
-  primary.appendChild(primaryInner);
-  var secondary = document.createElement('div');
-  secondary.className = 'mdc-linear-progress__bar mdc-linear-progress__secondary-bar';
-
-  var secondaryInner = document.createElement('span');
-  secondaryInner.className = 'mdc-linear-progress__bar-inner';
-
-  secondary.appendChild(secondaryInner);
-  div.appendChild(bufferDots);
-  div.appendChild(buffer);
-  div.appendChild(primary);
-  div.appendChild(secondary);
-  return div;
 }
 
 function snacks(message, type) {
@@ -241,7 +211,7 @@ function handleGeoLocationApi() {
 
       reject("empty object from getCellularInformation");
     }
- 
+
     geolocationApi(body).then(function (cellLocation) {
       return resolve(cellLocation);
     }).catch(function (error) {
@@ -588,7 +558,7 @@ function createBlankPayrollDialog(notificationData) {
 
   const payrollDialog = new Dialog(notificationData.title, container).create();
   payrollDialog.open();
-  
+
   const radioListInit = new mdc.list.MDCList(ul)
   radioListInit.singleSelection = true
 
@@ -657,9 +627,7 @@ function apiFail(data) {
   if (document.getElementById('send-activity')) {
     document.getElementById('send-activity').style.display = 'block';
   }
-  if (document.querySelector('header .mdc-linear-progress')) {
-    document.querySelector('header .mdc-linear-progress').remove();
-  }
+
   if (document.querySelector('.loader')) {
     document.querySelector('.loader').remove();
   }
@@ -695,7 +663,7 @@ function onErrorMessage(error) {
     'line-number': error.lineno,
     'file': error.filename,
     'col-number': error.colno,
-   
+
   }
   handleError({
     message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,

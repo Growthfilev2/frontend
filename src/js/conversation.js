@@ -600,13 +600,10 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-          document.getElementById('start-loader').classList.remove('hidden');
 
           manageLocation().then(function (location) {
-            document.getElementById('start-loader').classList.add('hidden')
             updateCreateActivity(bareBonesRecord)
           }).catch(function (error) {
-            document.getElementById('start-loader').classList.add('hidden');
             const locationErrorDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
             locationErrorDialog.open();
             locationErrorDialog.listen('MDCDialog:closed', function (evt) {
@@ -789,9 +786,7 @@ function updateCreateContainer(record, showSendButton) {
 }
 
 function updateCreateActivity(record, showSendButton) {
-  if (document.querySelector('.mdc-linear-progress')) {
-    document.querySelector('.mdc-linear-progress').remove();
-  }
+  progressBar.foundation_.close();
   if (history.state[0] === 'updateCreateActivity') {
     history.replaceState(['updateCreateActivity', record], null, null)
   } else {
