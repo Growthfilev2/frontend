@@ -460,11 +460,11 @@ function initLocation() {
 
 function runAppChecks() {
 
-  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-    if (!e.detail) return;
-    isEmployeeOnLeave().then(function (onLeave) {
-      if (onLeave) return
-      if (history.state[0] !== 'listView') return;
+  // window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+  //   if (!e.detail) return;
+  //   isEmployeeOnLeave().then(function (onLeave) {
+  //     if (onLeave) return
+  //     if (history.state[0] !== 'listView') return;
 
       getUniqueOfficeCount().then(function (offices) {
         if(!offices.length) return;
@@ -488,8 +488,8 @@ function runAppChecks() {
         listView();
       })
 
-    }).catch(handleError)
-  }, true);
+  //   }).catch(handleError)
+  // }, true);
 }
 
 function getUniqueOfficeCount() {

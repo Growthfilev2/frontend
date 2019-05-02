@@ -604,12 +604,12 @@ function createTempRecord(office, template, prefill) {
           manageLocation().then(function (location) {
             updateCreateActivity(bareBonesRecord)
           }).catch(function (error) {
+            progressBar.foundation_.close();
             const locationErrorDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
             locationErrorDialog.open();
             locationErrorDialog.listen('MDCDialog:closed', function (evt) {
               resetScroll()
               listView();
-              handleError(error)
             })
           })
         });
