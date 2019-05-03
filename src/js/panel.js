@@ -518,7 +518,6 @@ function createActivityIconDom() {
 
 function listPanel() {
   if (document.getElementById('activity-list-main')) return
-
   const listViewContainer = document.createElement('div')
   listViewContainer.id = 'activity-list-main'
   const listUl = document.createElement('ul')
@@ -526,10 +525,7 @@ function listPanel() {
   listUl.id = 'activity--list'
   listViewContainer.appendChild(listUl)
   document.getElementById('app-current-panel').innerHTML = listViewContainer.outerHTML
-
 }
-
-
 
 function creatListHeader(headerName) {
  
@@ -557,7 +553,6 @@ function creatListHeader(headerName) {
       sectionStart.innerHTML =''
       sectionStart.appendChild(object)
       sectionStart.appendChild(headerText);
-
     })
   }
 }

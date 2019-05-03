@@ -393,12 +393,13 @@ function requestCreator(requestType, requestBody) {
 
     getRootRecord().then(function (rootRecord) {
       let location = rootRecord.location;
-      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
+      let isLocationOld = true;
+      location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) :'';      
       const promises = [auth.getIdToken(false)];
       if (isLocationOld) {
         promises.push(manageLocation())
-      }
-
+      };
+      
       Promise.all(promises).then(function (result) {
         const token = result[0];
         if (result.length == 2) {
@@ -464,13 +465,10 @@ function sendRequest(location, requestGenerator) {
 function isLastLocationOlderThanThreshold(test, threshold) {
 
   var currentTime = moment(moment().valueOf());
-  var lastLocationTime = test;
-  var duration = moment.duration(currentTime.diff(lastLocationTime));
+  var duration = moment.duration(currentTime.diff(test));
   var difference = duration.asSeconds();
-  if (difference > threshold) {
-    return true;
-  }
-  return false;
+  return difference > threshold
+ 
 }
 
 var receiverCaller = {
