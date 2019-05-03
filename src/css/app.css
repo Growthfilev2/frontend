@@ -1673,11 +1673,9 @@ input[type="datetime-local"] {
   background-color: #eeeeee;
 }
 
-/** snackbar **/
-.mdc-snackbar {
-  padding: 5px 15px 5px 10px;
+.mdc-snackbar__action:not(:disabled) {
+  color: #0399f4;
 }
-
 
 /** list **/
 .mdc-list {

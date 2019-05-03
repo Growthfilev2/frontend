@@ -1,5 +1,7 @@
 const appKey = new AppKeys();
 const progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
+const snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+
 let ui;
 let native = function () {
   return {

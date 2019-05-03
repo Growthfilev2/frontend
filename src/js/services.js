@@ -33,40 +33,11 @@ function successDialog() {
 }
 
 function snacks(message, type) {
-  var snack = document.createElement('div');
-  snack.className = 'mdc-snackbar';
-  snack.setAttribute('aria-live', 'assertive');
-  snack.setAttribute('aria-atomic', 'true');
-  snack.setAttribute('aria-hidden', 'true');
-  snack.style.zIndex = 99999
-  var snackbarText = document.createElement('div');
-  snackbarText.className = 'mdc-snackbar__text mdc-typography--subtitle2';
+  snackBar.labelText = message;
+  snackBar.open();
+  snackBar.timeoutMs = 10000
+  snackBar.actionButtonText = 'okay';
 
-  var snackbarAction = document.createElement('div');
-  snackbarAction.className = 'mdc-snackbar__action-wrapper';
-
-  var button = document.createElement('button');
-  button.className = 'mdc-snackbar__action-button';
-
-  snackbarAction.appendChild(button);
-
-  snack.appendChild(snackbarText);
-  snack.appendChild(snackbarAction);
-  document.getElementById('snackbar-container').innerHTML = snack.outerHTML;
-
-  var data = {
-
-    message: message,
-    actionText: 'OK',
-    timeout: 5000,
-    actionHandler: function actionHandler() {
-
-    }
-  };
-
-  var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));
-
-  snackbar.show(data);
 }
 
 function fetchCurrentTime(serverTime) {
