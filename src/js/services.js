@@ -19,23 +19,17 @@ function loader(nameClass) {
 
 
 function successDialog() {
-  const checkMark = createElement('div', {
-    className: 'success--container',
-    id: 'success-animation'
-  })
-  const check = createElement('div', {
-    className: 'success--check'
-  })
-  checkMark.appendChild(check);
-  document.body.appendChild(checkMark);
-
+  const successMark =  document.getElementById('success-animation');
+  const viewContainer =  document.getElementById('growthfile');
+  successMark.classList.remove('hidden');
+   viewContainer.style.opacity = '0.37';
   setTimeout(function () {
-    document.getElementById('success-animation').remove();
-    resetScroll();
-    localStorage.removeItem('clickedActivity');
-    resetScroll()
-    listView();
+    successMark.classList.add('hidden');
+    viewContainer.style.opacity = '1';
   }, 1500);
+  localStorage.removeItem('clickedActivity');
+  resetScroll()
+  listView();
 }
 
 function snacks(message, type) {

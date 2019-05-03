@@ -1395,7 +1395,7 @@ input[type="datetime-local"] {
 
 .update-create--activity .mdc-list {
   background-color: white;
-  margin-top: 30px;
+  margin-top: 20px;
   padding-top: 0px;
   padding-bottom: 0px;
 }
@@ -2026,4 +2026,9 @@ input[type="datetime-local"] {
 .mdc-text-field--disabled input {
   color: black !important;
 
+}
+
+
+.check-in-desc {
+  padding: 20px 20px 10px 20px;
 }

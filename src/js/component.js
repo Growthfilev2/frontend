@@ -465,9 +465,12 @@ function radioList(attr) {
     li.className = `mdc-list-item`
     li.setAttribute('role', 'radio');
 
-    if (!attr.index) {
+    if (attr.index) {
         li.setAttribute('tabindex', "0");
-        // li.setAttribute('aria-checked', "true")
+    }
+    if(attr.selected) {
+        li.setAttribute('aria-checked', "true")
+
     }
     const itemGraphic = createElement('span', {
         className: 'mdc-list-item__graphic'

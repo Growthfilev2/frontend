@@ -43,7 +43,7 @@ function fetchAddendumForComment(id) {
   if (!id) return;
   const user = firebase.auth().currentUser
   const req = window.indexedDB.open(user.uid)
-  
+
   req.onsuccess = function () {
     const db = req.result
     const transaction = db.transaction(['addendum'], 'readonly');
@@ -79,7 +79,7 @@ function fetchAddendumForComment(id) {
 
 function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) return
-  
+
   const commentPanel = document.createElement('div')
   commentPanel.className = 'activity--chat-card-container panel-card'
 
@@ -130,9 +130,9 @@ function commentPanel(id) {
 
   document.querySelector('.comment-field').oninput = function (evt) {
     toggleCommentButton(evt.target.value && evt.target.value.replace(/\s/g, '').length)
-    
+
   }
-  
+
   document.getElementById('send-chat--input').onclick = function () {
     if (!isLocationStatusWorking()) return;
     let comment = document.querySelector('.comment-field').value;
@@ -238,12 +238,12 @@ function statusChange(db, id) {
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
 
-      if(!isLocationStatusWorking()){
-        record.status === 'CONFIRMED' ?  switchControl.checked = true : switchControl.checked = false
+      if (!isLocationStatusWorking()) {
+        record.status === 'CONFIRMED' ? switchControl.checked = true : switchControl.checked = false
         return
       }
       changeStatusRequest(switchControl, record)
-     
+
     }
   }
 }
@@ -261,12 +261,12 @@ function changeStatusRequest(switchControl, record) {
       status: 'CONFIRMED'
     })
     return;
-  } 
+  }
   requestCreator('statusChange', {
-      activityId: record.activityId,
-      status: 'PENDING'
+    activityId: record.activityId,
+    status: 'PENDING'
   })
-  
+
 }
 
 function createComment(db, addendum, currentUser) {
@@ -288,7 +288,7 @@ function createComment(db, addendum, currentUser) {
 
     getUserRecord(db, addendum.user).then(function (record) {
       if (record.displayName) {
-        user.textContent = record.displayName 
+        user.textContent = record.displayName
       } else {
         user.textContent = record.mobile
       }
@@ -629,22 +629,22 @@ function createTempRecord(office, template, prefill) {
       });
       bareBonesRecord.venue = bareBonesVenueArray;
       if (template === 'tour plan' || template === 'dsr' || template === 'duty roster' || template === 'customer') {
-        
-      
-          manageLocation().then(function (userLocation) {
-            geocodePosition({
-              lat: userLocation.latitude,
-              lng: userLocation.longitude
-            }).then(function (result) {
-  
-              return createBlendedCustomerRecord(bareBonesRecord, result)
-            });
-          }).catch(function (error) {
-            console.log(error)
-  
-            return createBlendedCustomerRecord(bareBonesRecord)
-          })
-     
+
+
+        manageLocation().then(function (userLocation) {
+          geocodePosition({
+            lat: userLocation.latitude,
+            lng: userLocation.longitude
+          }).then(function (result) {
+
+            return createBlendedCustomerRecord(bareBonesRecord, result)
+          });
+        }).catch(function (error) {
+          console.log(error)
+
+          return createBlendedCustomerRecord(bareBonesRecord)
+        })
+
         return;
       }
       updateCreateActivity(bareBonesRecord)
@@ -742,7 +742,8 @@ function updateCreateContainer(record, showSendButton) {
   const LIST_LENGTH = 5
   let i = 0;
   for (i; i < LIST_LENGTH; i++) {
-    const containerList = document.createElement('ul')
+    let containerList = document.createElement('ul')
+
     containerList.className = 'mdc-list custom--list-margin';
 
     const listGroup = document.createElement('div')
@@ -755,10 +756,21 @@ function updateCreateContainer(record, showSendButton) {
         listGroup.id = 'schedule--group'
         break;
       case 'venue':
+        if (record.template === 'check-in') {
+          if(record.canEdit) {
+            containerList = document.createElement('div')
+            containerList.style.marginTop = '30px';
+            containerList.style.paddingTop = '0px';
+            containerList.style.paddingBottom = '0px';
+            containerList.style.backgroundColor = 'white'
+          }
+        } else {
+          containerList.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
+        }
+        break;
       case 'assignees':
         containerList.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
         break;
-
     };
 
     if (TOTAL_LIST_TYPES[i] === 'schedule') {
@@ -910,83 +922,67 @@ function createSimpleLi(key, data) {
 function createVenueSection(record) {
   if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
-  const parentList =  document.getElementById('venue--list')
-  if (record.template === 'check-in') {
+  const parentList = document.getElementById('venue--list')
+  
+  if (record.template !== 'check-in' || !record.create) {
+    record.venue.forEach(function (venue) {
 
-    if (record.hasOwnProperty('create')) {
-      getRootRecord().then(function (rootRecord) {
-        checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-          if (!results.length) return;
-           parentList.className = 'mdc-list'
-           parentList.setAttribute('role','radiogroup')
-
-          const checkInDesc = document.createElement('div')
-          checkInDesc.textContent = record.venue[0].venueDescriptor
-          checkInDesc.style.paddingRight = '11px';
-          
-          const meta = document.createElement('span')
-          uncheck.id = 'uncheck-checkin'
-          uncheck.className = 'mdc-fab add--assignee-icon'
-          const span = document.createElement('span')
-          span.className = 'mdc-fab__icon material-icons'
-          span.textContent = 'clear';
-          uncheck.appendChild(span);
-
-          checkInDesc.appendChild(meta)
-          // parentList.appendChild(checkInDesc)
-
-
-          results.forEach(function (result, idx) {
-            const checkInEls = radioList({
-              value: result,
-              index: idx,
-              labelText: result.location
-            })
-            new mdc.ripple.MDCRipple.attachTo(checkInEls);
-            parentList.appendChild(checkInEls)
-
-          })
-
-          const venueSection = new mdc.list.MDCList(parentList);
-          venueSection.singleSelection = true;
-
-          const uncheckFab = document.getElementById('uncheck-checkin');
-          if (uncheckFab) {
-            uncheckFab.addEventListener('click', function () {
-              // venueSection.foundation_.setSelectedIndex();
-
-              // document.querySelectorAll('.mdc-radio').forEach(function (el) {
-              //   const radio = new mdc.radio.MDCRadio(el)
-              //   radio.checked = false
-              //   record.venue[0].location = ''
-              //   record.venue[0].address = ''
-              //   record.venue[0].geopoint._latitude = ''
-              //   record.venue[0].geopoint._longitude = ''
-              // });
-            })
-          }
-        })
-      })
-    } else {
-      record.venue.forEach(function (venue) {
-        if (venue.location && venue.address) {
-
-          parentList.appendChild(createVenueLi(venue, true, record))
-          const mapDom = document.createElement('div');
-          mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-          parentList.appendChild(mapDom)
-        }
-      });
-    }
+      parentList.appendChild(createVenueLi(venue, true, record))
+      const mapDom = document.createElement('div');
+      mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
+      parentList.appendChild(mapDom)
+    });
     return;
   }
-  record.venue.forEach(function (venue) {
 
-    parentList.appendChild(createVenueLi(venue, true, record))
-    const mapDom = document.createElement('div');
-    mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-    parentList.appendChild(mapDom)
-  });
+  getRootRecord().then(function (rootRecord) {
+    checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+      if (!results.length) return;
+      const ul = createElement('ul', {
+        className: 'mdc-list'
+      })
+      ul.setAttribute('role', 'radiogroup');
+      ul.style.marginTop = '0px';
+      const checkInDesc = document.createElement('div')
+      checkInDesc.textContent = record.venue[0].venueDescriptor
+
+      checkInDesc.className = 'detail--static-text check-in-desc';
+
+      parentList.appendChild(checkInDesc)
+
+      results.forEach(function (result, idx) {
+
+        const checkInEls = radioList({
+          value: result,
+          index: idx,
+          selected: !idx,
+          labelText: result.location
+        })
+        new mdc.ripple.MDCRipple.attachTo(checkInEls);
+        ul.appendChild(checkInEls)
+      })
+
+      const venueSection = new mdc.list.MDCList(ul);
+      venueSection.singleSelection = true;
+      parentList.appendChild(ul);
+      // uncheckFab.addEventListener('click', function () {
+        // venueSection.foundation_.setSelectedIndex();
+
+        // document.querySelectorAll('.mdc-radio').forEach(function (el) {
+        //   const radio = new mdc.radio.MDCRadio(el)
+        //   radio.checked = false
+        //   record.venue[0].location = ''
+        //   record.venue[0].address = ''
+        //   record.venue[0].geopoint._latitude = ''
+        //   record.venue[0].geopoint._longitude = ''
+        // });
+      // })
+    })
+  })
+
+  return;
+
+
 }
 
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
@@ -1407,8 +1403,8 @@ function createAttachmentContainer(data) {
 
       const selectField = selectMenu({
         data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
-        selected:selected,
-        labelText:key
+        selected: selected,
+        labelText: key
       });
       console.log(selectField)
       if (data.canEdit) {
@@ -1467,18 +1463,18 @@ function createAttachmentContainer(data) {
           }
           if (key === 'Customer' && data.hasOwnProperty('create')) {
             if (data.customerRecord) {
-          
-                manageLocation().then(function (location) {
-                  geocodePosition({
-                    lat: location.latitude,
-                    lng: location.longitude
-                  }).then(function (result) {
-                    data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
-                  });
-                }).catch(function (error) {
-                  data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
-                })
-             
+
+              manageLocation().then(function (location) {
+                geocodePosition({
+                  lat: location.latitude,
+                  lng: location.longitude
+                }).then(function (result) {
+                  data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+                });
+              }).catch(function (error) {
+                data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+              })
+
               data.customerRecord.attachment.Name.value = ''
             }
             valueField.root_.parentNode.replaceChild(addNewCustomerButton(data, div).root_, valueField.root_);
@@ -1576,17 +1572,17 @@ function hideCustomerContainer(data, div) {
     document.querySelector('.customer-form').remove();
   }
   if (data.customerRecord) {
-   
-      manageLocation().then(function (location) {
-        geocodePosition({
-          lat: location.latitude,
-          lng: location.longitude
-        }).then(function (result) {
-          data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
-        });
-      }).catch(function (error) {
-        data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
-      })
+
+    manageLocation().then(function (location) {
+      geocodePosition({
+        lat: location.latitude,
+        lng: location.longitude
+      }).then(function (result) {
+        data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+      });
+    }).catch(function (error) {
+      data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+    })
     data.customerRecord.attachment.Name.value = ''
   }
   if (div.querySelector('#customer-selection-btn')) {
@@ -1945,7 +1941,7 @@ function insertInputsIntoActivity(record, send) {
 
 function sendUpdateReq(requiredObject, record) {
 
-  document.querySelector('header').appendChild(progressBar())
+  progressBar.foundation_.open();
   document.querySelector('#send-activity').classList.add('hidden')
 
   if (!record.hasOwnProperty('create')) {

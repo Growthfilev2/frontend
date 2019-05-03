@@ -15,6 +15,7 @@ function initDomLoad() {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   };
+  progressBar.foundation_.close();
   
   document.body.classList.remove('mdc-dialog-scroll-lock')
 
