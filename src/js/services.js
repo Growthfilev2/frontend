@@ -644,12 +644,12 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
   if (!value) return requestCreator('Null', value);
+  if (value.read) {
+    requestCreator('Null', value)
+    return;
+  };
+  
   setTimeout(function () {
-    if (value.read) {
-      requestCreator('Null', value)
-      return;
-    };
-
     if (value.verifyEmail) {
       const notificationData = JSON.parse(value.verifyEmail)
       emailVerify(notificationData)
@@ -668,24 +668,4 @@ function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
-}
-
-function jniException(message, stack) {
-  handleError({
-    message: message,
-    body: stack,
-    androidException: true
-  })
-}
-
-function sendExceptionObject(exception, message, param) {
-  handleError({
-    message: `${message}`,
-    body: JSON.stringify({
-      message: exception.message,
-      name: exception.name,
-      stack: JSON.stringify(exception.stack),
-      paramSent: param
-    })
-  })
 }
