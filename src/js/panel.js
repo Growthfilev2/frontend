@@ -519,17 +519,13 @@ function createActivityIconDom() {
 function listPanel() {
   if (document.getElementById('activity-list-main')) return
 
-  const listCard = document.createElement('div')
-  listCard.className = 'mdc-card panel-card'
-  listCard.id = 'activity-list-main'
+  const listViewContainer = document.createElement('div')
+  listViewContainer.id = 'activity-list-main'
   const listUl = document.createElement('ul')
   listUl.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
   listUl.id = 'activity--list'
-
-  listCard.appendChild(listUl)
-
-
-  document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
+  listViewContainer.appendChild(listUl)
+  document.getElementById('app-current-panel').innerHTML = listViewContainer.outerHTML
 
 }
 
