@@ -85,7 +85,6 @@ function commentPanel(id) {
 
   const chatCont = document.createElement('div')
   chatCont.id = 'chat-container'
-  chatCont.className = 'mdc-card reverser-parent'
 
 
   const userCommentCont = document.createElement('div')
@@ -152,7 +151,7 @@ function commentPanel(id) {
 function toggleCommentButton(show) {
   const input = document.getElementById('send-chat--input');
   const writeComment = document.getElementById('write--comment');
-  const statusCont = document.querySelector('.status--change-cont');
+  const statusCont = document.querySelector('.status--change-cont > span');
 
   if (show) {
     input.classList.remove('hidden')

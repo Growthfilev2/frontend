@@ -166,15 +166,11 @@ function tabBarBase() {
         className: 'mdc-tab-scroller__scroll-content',
 
     });
-
-   
-    // content.appendChild(button);
     area.appendChild(content)
     scroller.appendChild(area)
     parent.appendChild(scroller)
     return parent;
 
-    // return new mdc.tabBar.MDCTabBar(parent);
 }
 
 function addTabs(headerData){
