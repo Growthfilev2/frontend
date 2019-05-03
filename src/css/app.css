@@ -517,7 +517,7 @@ body {
   bottom: 0rem;
   height: 50px;
   font-size: 20px;
-  z-index: 999;
+  z-index: 5;
   font-weight: 600;
 }
 
