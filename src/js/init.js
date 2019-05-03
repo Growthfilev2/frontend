@@ -229,7 +229,6 @@ function startApp(start) {
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
-
         db.onerror = function () {
           handleError({
             message: `${db.error.message} from startApp on upgradeneeded`
