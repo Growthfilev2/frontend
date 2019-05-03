@@ -52,26 +52,26 @@ function fetchAddendumForComment(id) {
     commentPanel(id)
     statusChange(db, id);
     reinitCount(db, id)
-
+    const el = document.getElementById('chat-container')
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return;
-
-      if (!document.getElementById(cursor.value.addendumId)) {
-        createComment(db, cursor.value, user).then(function (comment) {
-          if (document.getElementById('chat-container')) {
-            document.getElementById('chat-container').appendChild(comment)
-          }
-        })
+      if (document.getElementById(cursor.value.addendumId)) {
+        cursor.continue();
+        return;
       }
+
+      createComment(db, cursor.value, user).then(function (comment) {
+        el ?  el.appendChild(comment) : '';
+     
+      })
 
       cursor.continue()
     }
     transaction.oncomplete = function () {
-      if (document.querySelector('.activity--chat-card-container')) {
-        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
-      }
-
+      if(!el) return;
+      console.log(el.scrollHeight)
+        window.scrollTo(0,el.scrollHeight);  
     }
   }
 }
@@ -80,35 +80,31 @@ function fetchAddendumForComment(id) {
 function commentPanel(id) {
   if (document.querySelector('.activity--chat-card-container')) return
 
-  const commentPanel = document.createElement('div')
-  commentPanel.className = 'activity--chat-card-container panel-card'
-
   const chatCont = document.createElement('div')
   chatCont.id = 'chat-container'
 
-
-  const userCommentCont = document.createElement('div')
-  userCommentCont.className = 'user-comment--container'
+  const bottomContainer = createElement('div', {
+    className: 'chat-bottom-action'
+  })
 
   const statusChangeContainer = document.createElement('div')
   statusChangeContainer.className = 'status--change-cont'
+  bottomContainer.appendChild(statusChangeContainer);
 
-  const commentCont = document.createElement('div')
-  commentCont.className = 'comment--container'
+  const commentFieldContainer = createElement('div', {
+    className: 'chat-input-container'
+  })
 
   const field = document.createElement('div')
-  field.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
   field.id = 'write--comment'
-  field.style.width = '100%';
-  field.style.backgroundColor = 'white';
+
   const input = document.createElement('input')
   input.className = 'comment-field mdc-elevation--z4'
   input.type = 'text'
 
   field.appendChild(input)
 
-  commentCont.appendChild(field)
-
+  commentFieldContainer.appendChild(field);
 
   const btn = document.createElement('button')
   btn.classList.add('mdc-fab', 'mdc-fab--mini', 'hidden')
@@ -118,14 +114,9 @@ function commentPanel(id) {
   btnIcon.classList.add('mdc-fac__icon', 'material-icons')
   btnIcon.textContent = 'send'
   btn.appendChild(btnIcon)
-
-  commentCont.appendChild(btn)
-
-  commentPanel.appendChild(chatCont)
-
-  userCommentCont.appendChild(commentCont)
-
-  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
+  commentFieldContainer.appendChild(btn);
+  bottomContainer.appendChild(commentFieldContainer);
+  document.getElementById('app-current-panel').innerHTML = chatCont.outerHTML + bottomContainer.outerHTML
 
   document.querySelector('.comment-field').oninput = function (evt) {
     toggleCommentButton(evt.target.value && evt.target.value.replace(/\s/g, '').length)
@@ -154,7 +145,8 @@ function toggleCommentButton(show) {
   const statusCont = document.querySelector('.status--change-cont > span');
 
   if (show) {
-    input.classList.remove('hidden')
+    input.classList.remove('hidden');
+
     writeComment.style.width = '80%'
     statusCont.style.opacity = '0';
   } else {
@@ -756,7 +748,7 @@ function updateCreateContainer(record, showSendButton) {
         break;
       case 'venue':
         if (record.template === 'check-in') {
-          if(record.canEdit) {
+          if (record.canEdit) {
             containerList = document.createElement('div')
             containerList.style.marginTop = '30px';
             containerList.style.paddingTop = '0px';
@@ -922,7 +914,7 @@ function createVenueSection(record) {
   if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
   const parentList = document.getElementById('venue--list')
-  
+
   if (record.template !== 'check-in' || !record.create) {
     record.venue.forEach(function (venue) {
 
@@ -965,16 +957,16 @@ function createVenueSection(record) {
       venueSection.singleSelection = true;
       parentList.appendChild(ul);
       // uncheckFab.addEventListener('click', function () {
-        // venueSection.foundation_.setSelectedIndex();
+      // venueSection.foundation_.setSelectedIndex();
 
-        // document.querySelectorAll('.mdc-radio').forEach(function (el) {
-        //   const radio = new mdc.radio.MDCRadio(el)
-        //   radio.checked = false
-        //   record.venue[0].location = ''
-        //   record.venue[0].address = ''
-        //   record.venue[0].geopoint._latitude = ''
-        //   record.venue[0].geopoint._longitude = ''
-        // });
+      // document.querySelectorAll('.mdc-radio').forEach(function (el) {
+      //   const radio = new mdc.radio.MDCRadio(el)
+      //   radio.checked = false
+      //   record.venue[0].location = ''
+      //   record.venue[0].address = ''
+      //   record.venue[0].geopoint._latitude = ''
+      //   record.venue[0].geopoint._longitude = ''
+      // });
       // })
     })
   })
