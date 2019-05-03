@@ -11,41 +11,73 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="external/css/firebaseui.css"/>
     
-  <link href="external/css/material.min.css" rel="stylesheet" type="text/css">
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet"
+    type="text/css">
   <link href="css/bundle.css" rel="stylesheet" type="text/css">
 </head>
 
 <body class="mdc-typography">
+ 
+<body class="mdc-typography">
   <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
-       
       </section>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
       </section>
     </div>
-  </header>
-  
-  <div id="growthfile">
-      <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
-        <div class="mdc-layout-grid__inner cell-space">
-          <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
-          </div>
-          <div id="snackbar-container"></div>
-        </div>
-        <div id='dialog-container'></div>
+    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+      <div class="mdc-linear-progress__buffering-dots"></div>
+      <div class="mdc-linear-progress__buffer"></div>
+      <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+        <span class="mdc-linear-progress__bar-inner"></span>
+      </div>
+      <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+        <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
+  </header>
+
   <div class="showbox" id='start-loader'>
-      <svg class="circular" viewBox="25 25 50 50">
-        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"/>
-      </svg>
+    <svg class="circular" viewBox="25 25 50 50">
+      <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+    </svg>
   </div>
+  <div class="success--container hidden" id="success-animation">
+    <div class="success--check"></div>
+  </div>
+
+  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
+    <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
+      <div class="mdc-layout-grid__inner cell-space">
+        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="snackbar-container">
+    <div class="mdc-snackbar">
+      <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label"
+             role="status"
+             aria-live="polite">
+        </div>
+        <div class="mdc-snackbar__actions">
+          <button type="button" class="mdc-button mdc-snackbar__action">Retry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id='dialog-container'>
+  </div>
+</body>
   <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>
   <script src="external/js/firebaseui.js"></script>
   <script src="js/bundle.min.js"></script>
-  <script src='external/js/material.js'></script>
+  <script src='https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js' crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
   <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&libraries=places" async>
   </script>

@@ -1,7 +1,6 @@
 const appKey = new AppKeys();
-const progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
-const snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-
+let progressBar;
+let snackBar;
 let ui;
 let native = function () {
   return {
@@ -109,19 +108,22 @@ function backNav() {
 
 window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
+  snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+
   if (appKey.getMode() === 'production') {
     if (!native.getInfo()) {
       redirect();
       return;
     }
   }
-  // if ('serviceWorker' in navigator) {
-  //   navigator.serviceWorker.register('sw.js').then(function (registeration) {
-  //     console.log('sw registered with scope :', registeration.scope);
-  //   }, function (err) {
-  //     console.log('sw registeration failed :', err);
-  //   });
-  // }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function (registeration) {
+      console.log('sw registered with scope :', registeration.scope);
+    }, function (err) {
+      console.log('sw registeration failed :', err);
+    });
+  }
   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
