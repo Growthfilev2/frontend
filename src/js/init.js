@@ -61,7 +61,7 @@ let native = function () {
   }
 }();
 
-function isNewDay(){
+function isNewDay() {
   var today = localStorage.getItem('today');
   if (!today) {
     localStorage.setItem('today', moment().format('YYYY-MM-DD'));
@@ -145,7 +145,7 @@ window.addEventListener("load", function () {
       'August', 'September', 'October', 'November', 'December'
     ]
   })
-  
+
   if (!window.Worker && !window.indexedDB) {
     //TODO: show view instead of dialog
     return;
@@ -210,7 +210,7 @@ function userSignedOut() {
 
 
 function startApp(start) {
- 
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
@@ -235,18 +235,17 @@ function startApp(start) {
           })
           return;
         }
-        
-        if(!evt.oldVersion) {
-          createObjectStores(db, auth.uid)
-        }
-        else {
 
-          if(evt.oldVersion < 4) {
+        if (!evt.oldVersion) {
+          createObjectStores(db, auth.uid)
+        } else {
+
+          if (evt.oldVersion < 4) {
             const subscriptionStore = req.transaction.objectStore('subscriptions')
-            subscriptionStore.createIndex('status','status');
+            subscriptionStore.createIndex('status', 'status');
           }
         }
-       
+
       }
 
       req.onsuccess = function () {
@@ -264,7 +263,7 @@ function startApp(start) {
 
         runAppChecks()
         manageLocation().then(console.log).catch(console.log)
-        
+
       }
       req.onerror = function () {
         handleError({
@@ -402,7 +401,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('office', 'office')
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
-  subscriptions.createIndex('status','status')
+  subscriptions.createIndex('status', 'status')
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
@@ -464,31 +463,55 @@ function initLocation() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+    console.log(e.detail)
     if (!e.detail) return;
+    if (history.state[0] !== 'listView') return;
+
     isEmployeeOnLeave().then(function (onLeave) {
       if (onLeave) return
-      if (history.state[0] !== 'listView') return;
 
       getUniqueOfficeCount().then(function (offices) {
-        if(!offices.length) return;
+        const prom = [];
+        const data = []
+        let title;
+        if (!offices.length) return;
 
-        const checkInDialog = new Dialog('Check-In Reminder','Do you want to create a Check-In ?').create();
-        checkInDialog.open()
-        checkInDialog.listen('MDCDialog:closed', function (evt) {
-          console.log(evt)
-          if (evt.detail.action !== 'accept') return;
-          if (!isLocationStatusWorking()) return;
+        offices.forEach(function (office) {
+          if (e.detail.newDay & e.detail.locationChanged) {
+            title = ''
+            prom.push(getSubscription(office, 'check-in'))
+            prom.push(getSubscription(office, 'dsr'))
+          } else if (e.detail.newDay) {
+            title = ''
 
-          if (offices.length === 1) {
-            createTempRecord(offices[0], 'check-in');
-            return;
+            prom.push(getSubscription(office, 'check-in'))
+          } else if (e.detail.locationChanged) {
+            title = ''
+            prom.push(getSubscription(office, 'dsr'))
           }
-          selectorUI({
-            store: 'subscriptions'
-          })
+
         })
-        resetScroll();
-        listView();
+        Promise.all(prom).then(function (result) {
+          if (!result.length) return;
+          const actionTempaltes = {}
+
+          const filtered = result.filter(function (set) {
+            return set != undefined;
+          });
+
+          console.log(filtered);
+          filtered.forEach(function (value) {
+            if (!actionTempaltes[value.template]) {
+              data.push(value)
+            }
+            actionTempaltes[value.template] = true;
+          });
+          templateDialog({
+            title: 'Reminder',
+            data: data
+          }, offices.length)
+        }).catch(console.log)
+
       })
 
     }).catch(handleError)

@@ -272,7 +272,10 @@ function updateLocationInRoot(finalLocation) {
       var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
 
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-        "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || isNewDay()
+        "detail": {
+          newDay:isNewDay(),
+          locationChanged:isLocationMoreThanThreshold(distanceBetweenBoth)
+        }
       });
       window.dispatchEvent(suggestCheckIn);
 
@@ -498,7 +501,7 @@ function emailVerify(notification) {
 }
 
 
-function createBlankPayrollDialog(notificationData) {
+function templateDialog(notificationData,hasMultipleOffice) {
   const container = createElement('div', {
     className: 'notification-message',
     textContent: notificationData.body
@@ -523,8 +526,7 @@ function createBlankPayrollDialog(notificationData) {
   payrollDialog.open();
 
   const radioListInit = new mdc.list.MDCList(ul)
-  radioListInit.singleSelection = true
-
+  radioListInit.singleSelection = true;
   payrollDialog.listen('MDCDialog:opened', function (evt) {
     radioListInit.layout();
     radioListInit.listElements.map(function (el) {
@@ -534,11 +536,16 @@ function createBlankPayrollDialog(notificationData) {
   payrollDialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
     if (!isLocationStatusWorking()) return;
-    const value = JSON.parse(document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value)
-    createTempRecord(value.office, value.template, {
-      schedule: value.schedule,
-      attachment: value.attachment
-    });
+    const value = JSON.parse(document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value);
+    if(!hasMultipleOffice) {
+      createTempRecord(value.office, value.template, {
+        schedule: value.schedule,
+        attachment: value.attachment
+      });
+      return;
+    }
+    selectorUI({store:'subscriptions'});
+
   })
 }
 
@@ -656,7 +663,7 @@ function runRead(value) {
 
     if (value.payroll) {
       const notificationData = JSON.parse(value.payroll)
-      createBlankPayrollDialog(notificationData)
+      templateDialog(notificationData)
       return;
     }
   }, 500)
