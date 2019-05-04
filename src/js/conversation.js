@@ -78,6 +78,7 @@ function fetchAddendumForComment(id) {
 
 
 function commentPanel(id) {
+  document.body.style.backgroundColor = 'white';
   if (document.querySelector('.activity--chat-card-container')) return
 
   const chatCont = document.createElement('div')
@@ -913,70 +914,79 @@ function createSimpleLi(key, data) {
 function createVenueSection(record) {
   if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
-  const parentList = document.getElementById('venue--list')
-
-  if (record.template !== 'check-in' || !record.create) {
-    record.venue.forEach(function (venue) {
-
-      parentList.appendChild(createVenueLi(venue, true, record))
+  const parentList = document.getElementById('venue--list');
+  if(record.template === 'check-in' && record.canEdit) {
+    getRootRecord().then(function (rootRecord) {
+      checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+        if (!results.length) return;
+        const ul = createElement('ul', {
+          className: 'mdc-list'
+        })
+        ul.setAttribute('role', 'radiogroup');
+        ul.style.marginTop = '0px';
+        
+        const checkInDesc = document.createElement('div');
+        const span = createElement('span',{textContent:record.venue[0].venueDescriptor})
+        checkInDesc.appendChild(span);
+        const clearLocation = new Fab('clear').getButton();
+        clearLocation.root_.classList.add('add--assignee-icon')
+        clearLocation.root_.style.marginTop = '-5px';
+      
+        checkInDesc.appendChild(clearLocation.root_)
+        checkInDesc.className = 'detail--static-text check-in-desc';
+  
+        parentList.appendChild(checkInDesc)
+  
+        results.forEach(function (result, idx) {
+          console.log(result)
+          const checkInEls = radioList({
+            value: result,
+            index: idx,
+            selected: !idx,
+            labelText: result.location
+          })
+          new mdc.ripple.MDCRipple.attachTo(checkInEls);
+          ul.appendChild(checkInEls)
+        })
+  
+        const venueSection = new mdc.list.MDCList(ul);
+        venueSection.singleSelection = true;
+        venueSection.listen('MDCList:action',function(evt){
+          const el = venueSection.listElements[evt.detail.index];
+          const value = JSON.parse(new mdc.radio.MDCRadio(el).value);
+          record.venue[0].location = value.location
+          record.venue[0].address = value.address
+          record.venue[0].geopoint._latitude = value.latitude
+          record.venue[0].geopoint._longitude = value.longitude
+        })
+        parentList.appendChild(ul);
+        clearLocation.root_.onclick = function(){
+          const el = venueSection.listElements[venueSection.selectedIndex];
+          new mdc.radio.MDCRadio(el).checked = false;
+          record.venue[0].location = ''
+          record.venue[0].address = ''
+          record.venue[0].geopoint._latitude = ''
+          record.venue[0].geopoint._longitude = ''
+        }
+      
+      })
+    })
+    return;
+  }
+  parentList.classList.add('mdc-list--two-line');
+  record.venue.forEach(function (venue) {
+      const li = createVenueLi(venue, true, record)
+      if(!li) return;
+      parentList.appendChild(li)
       const mapDom = document.createElement('div');
       mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
       parentList.appendChild(mapDom)
-    });
-    return;
-  }
-
-  getRootRecord().then(function (rootRecord) {
-    checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-      if (!results.length) return;
-      const ul = createElement('ul', {
-        className: 'mdc-list'
-      })
-      ul.setAttribute('role', 'radiogroup');
-      ul.style.marginTop = '0px';
-      const checkInDesc = document.createElement('div')
-      checkInDesc.textContent = record.venue[0].venueDescriptor
-
-      checkInDesc.className = 'detail--static-text check-in-desc';
-
-      parentList.appendChild(checkInDesc)
-
-      results.forEach(function (result, idx) {
-
-        const checkInEls = radioList({
-          value: result,
-          index: idx,
-          selected: !idx,
-          labelText: result.location
-        })
-        new mdc.ripple.MDCRipple.attachTo(checkInEls);
-        ul.appendChild(checkInEls)
-      })
-
-      const venueSection = new mdc.list.MDCList(ul);
-      venueSection.singleSelection = true;
-      parentList.appendChild(ul);
-      // uncheckFab.addEventListener('click', function () {
-      // venueSection.foundation_.setSelectedIndex();
-
-      // document.querySelectorAll('.mdc-radio').forEach(function (el) {
-      //   const radio = new mdc.radio.MDCRadio(el)
-      //   radio.checked = false
-      //   record.venue[0].location = ''
-      //   record.venue[0].address = ''
-      //   record.venue[0].geopoint._latitude = ''
-      //   record.venue[0].geopoint._longitude = ''
-      // });
-      // })
-    })
-  })
-
-  return;
-
-
-}
+  });
+  };
 
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
+  if(record.template === 'check-in' && !venue.location) return 
+
   let showMap = false
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'

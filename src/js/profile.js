@@ -6,10 +6,10 @@ function profileView(pushState) {
     window.removeEventListener('scroll', handleScroll, false)
   }
 
+  document.body.style.backgroundColor = '#eeeeee';
   const sectionStart = document.getElementById('section-start');
   sectionStart.innerHTML = ''
   sectionStart.appendChild(headerBackIcon())
-  document.getElementById('app-current-panel').innerHTML = '';
 
   var user = firebase.auth().currentUser;
   var dbName = user.uid;
@@ -27,81 +27,29 @@ function profileView(pushState) {
 
           if (!document.getElementById('app-current-panel')) return;
 
-          document.getElementById('app-current-panel').appendChild(baseCard())
-          
+          document.getElementById('app-current-panel').innerHTML = view.outerHTML;
+        
 
-          // if (native.getName() === 'Android') {
-          //   document.getElementById('uploadProfileImage').addEventListener('click', function () {
-          //     try {
-          //       AndroidInterface.openImagePicker();
-          //     }catch(e){
-          //       sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
-          //     }
-          //   })
-          // } else {
-          //   document.getElementById('uploadProfileImage').addEventListener('change', function () {
-          //     readUploadedFile()
-          //   });
-          // }
+          if (native.getName() === 'Android') {
+            document.getElementById('uploadProfileImage').addEventListener('click', function () {
+              try {
+                AndroidInterface.openImagePicker();
+              }catch(e){
+                sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
+              }
+            })
+          } else {
+            document.getElementById('uploadProfileImage').addEventListener('change', function () {
+              readUploadedFile()
+            });
+          }
 
-          // changeDisplayName(user);
-          // changeEmailAddress(user);
+          changeDisplayName(user);
+          changeEmailAddress(user);
         })
       };
     };
   };
-}
-
-function baseCard(){
-  const card = createElement('div',{className:'mdc-card demo-card'})
-  const primaryAction = createElement('div',{className:'mdc-card__primary-action demo-card__primary-action'})
-  const cardMedia = createElement('div',{className:'mdc-card__media mdc-card__media--16-9 demo-card__media'})
-  cardMedia.style.backgroundImage= `url(${firebase.auth().currentUser.photoURL})`
-  
-  const editButton = iconButton({id:'edit-profile',className:'without-icon-edit' ,label:'edit-profile-button',initialState:'edit',finalState:'check'});
-
-  const viewContainer = createElement('div',{className:'demo-card__primary p-10'})
-  const editContainer = createElement('div',{className:'mdc-typography mdc-typography--body2 p-10 hidden',id:'card-body-edit'})
-
-
-  primaryAction.appendChild(cardMedia);
-  primaryAction.appendChild(editButton.root_);
-  viewContainer.appendChild(profileBasicInfo())
-  primaryAction.appendChild(viewContainer)
-  primaryAction.appendChild(editContainer);
-  card.appendChild(primaryAction)
-  return card;
-}
-function profileBasicInfo(){
-  const basicInfoSeperator = createElement('div',{className:'basic-info seperator'})
-  const name = createElement('h1',{className:'mdc-typography--headline5 mb-0 mt-0',id:'view-name',textContent:firebase.auth().currentUser.displayName})
-  const email = createElement('h1',{className:'mdc-typography--headline6 mb-0 mt-0'})
-  const emailIcon =  createElement('i',{className:'material-icons meta-icon',textContent:'email'})
-  const emailValue = createElement('span',{textContent:firebase.auth().currentUser.email})
-  email.appendChild(emailIcon)
-  email.appendChild(emailValue)
-
-  const phone = createElement('h1',{className:'mdc-typography--headline6 mt-0'})
-  const phoneIcon = createElement('i',{className:'material-icons meta-icon',textContent:'phone'})
-  const phoneValue = createElement('span',{className:'mdc-typography--headline6',textContent:firebase.auth().currentUser.phoneNumber})
-  phone.appendChild(phoneIcon)
-  phone.appendChild(phoneValue)
-
-  basicInfoSeperator.appendChild(name)
-  basicInfoSeperator.appendChild(email)
-  basicInfoSeperator.appendChild(phone)
-  return basicInfoSeperator
-}
-
-function createOfficeDetailView(){
-  const container = createElement('div',{className:'office-info seperator'})
-  getEmployeeDetails().then(function(employeeDetails){
-      const details = employeeDetails.attachment
-          Object.keys(details).forEach(function(detailName){
-              container.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:details[detailName].value}))
-          })
-          container.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:firebase.auth().meta.lastSignInTime}))
-  }); 
 }
 
 
@@ -230,23 +178,38 @@ function timeDiff(lastSignInTime) {
   return moment(currentDate).diff(moment(authSignInTime), 'minutes');
 }
 
-function newSignIn(value) {
-
-  const signInDialog = new Dialog('',createElement('div',{id:'refresh-login'})).create();
-  signInDialog.open();
-  signInDialog.listen('MDCDialog:opened',function(evt){
+function newSignIn(value, field) {
+  
+  document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
+  const dialogSelector = document.querySelector('#updateEmailDialog')
+  dialogSelector.querySelector('section').id = 'refresh-login'
+  var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
+  emailDialog.listen('MDCDialog:cancel',function(evt){
+    dialogSelector.remove();
+  })
+  emailDialog.show();
+  try {
     if(!ui) {
       ui  = new firebaseui.auth.AuthUI(firebase.auth())
     }
     ui.start('#refresh-login', firebaseUiConfig(value));
-    signInDialog.container_.querySelector('footer').remove();
-    signInDialog.container_.querySelector('h2').remove();
     setTimeout(function () {
       document.querySelector('.firebaseui-id-phone-number').disabled = true;
       document.querySelector('.firebaseui-label').remove();
       document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
     }, 500)
-  })
+    emailDialog.listen('MDCDialog:cancel', function () {
+      field.value = firebase.auth().currentUser.email;
+      dialogSelector.remove();
+    });
+  } catch (e) {
+    dialogSelector.remove();
+    console.log(e);
+    handleError({
+      message: `${e.message} from newSignIn function during email updation`
+    });
+    snacks('Please try again later');
+  }
 }
 
 function readUploadedFile(image) {
@@ -373,7 +336,7 @@ function emailValidation(emailField) {
   if (timeDiff(auth.metadata.lastSignInTime) <= 2) {
     updateEmail(auth, value);
   } else {
-    newSignIn(value);
+    newSignIn(value, emailField);
   }
 }
 

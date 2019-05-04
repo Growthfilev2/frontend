@@ -251,7 +251,9 @@ function userSelector(data, container) {
           data.record.attachment[data.key].value = JSON.parse(radioButton.value)
           updateCreateActivity(data.record, true)
         }
-        const assigneeLi = createSimpleAssigneeLi(cursor.value, radioButton)
+        const assigneeLi = createSimpleAssigneeLi(cursor.value, radioButton);
+        new mdc.ripple.MDCRipple(assigneeLi);
+
         assigneeLi.dataset.number = cursor.value.mobile
         ul.appendChild(assigneeLi)
       } else {
@@ -265,7 +267,9 @@ function userSelector(data, container) {
             container.querySelector('#selector-submit-send').textContent = 'SELECT';
           }
           const assigneeLi = createSimpleAssigneeLi(cursor.value, checkbox)
+          new mdc.ripple.MDCRipple(assigneeLi);
           assigneeLi.dataset.number = cursor.value.mobile
+         
           ul.appendChild(assigneeLi)
         }
       }

@@ -103,9 +103,9 @@ function handleRequestBody(request) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName() === 'Android') {
+      // if (native.getName() === 'Android') {
         updateLocationInRoot(location)
-      };
+      // };
       console.log(location)
       resolve(location)
     }).catch(function (error) {
