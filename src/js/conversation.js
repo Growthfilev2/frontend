@@ -1117,12 +1117,9 @@ function createScheduleTable(data) {
     const ul = document.createElement('ul')
     ul.className = 'mdc-list mdc-list--dense'
 
-    const divider = document.createElement('li')
-    divider.className = 'mdc-list-divider'
-    divider.setAttribute('role', 'separator')
-
-    const startLi = document.createElement('li')
-    startLi.className = 'mdc-list-item schedule-start-li'
+  
+    const li = document.createElement('li')
+    li.className = 'mdc-list-item'
 
     const sdDiv = document.createElement('div')
     sdDiv.className = 'mdc-text-field start--date' + count
@@ -1135,31 +1132,6 @@ function createScheduleTable(data) {
 
 
     sdDiv.appendChild(startDateInput)
-
-    const stSpan = document.createElement("span")
-    stSpan.className = 'mdc-list-item__meta'
-
-    const stDiv = document.createElement('div')
-    stDiv.className = 'mdc-text-field start--time' + count
-
-    const startTimeInput = document.createElement('input')
-    if (schedule.startTime) {
-      startTimeInput.value = moment(schedule.startTime).format('HH:mm')
-    } else {
-      startTimeInput.value = moment("24", "HH:mm").format('HH:mm')
-    }
-
-    startTimeInput.type = 'time'
-    startTimeInput.className = 'time--input'
-    startTimeInput.disabled = !data.canEdit
-    startTimeInput.className = 'mdc-text-field__input'
-    stDiv.appendChild(startTimeInput)
-
-    stSpan.appendChild(stDiv)
-
-
-    const endLi = document.createElement('li')
-    endLi.className = 'mdc-list-item schedule-end-li'
 
     const edDiv = document.createElement('div')
     edDiv.className = 'mdc-text-field end--date' + count
@@ -1191,38 +1163,11 @@ function createScheduleTable(data) {
         }
       }
     }
-    const etSpan = document.createElement("span")
-    etSpan.className = 'mdc-list-item__meta'
+ 
 
-    const etDiv = document.createElement('div')
-    etDiv.className = 'mdc-text-field end--time' + count
-
-
-    const endTimeInput = document.createElement('input')
-    if (schedule.endTime) {
-      endTimeInput.value = moment(schedule.endTime || new Date()).format('HH:mm')
-    } else {
-      endTimeInput.value = moment("24", "HH:mm").format('HH:mm')
-
-    }
-    endTimeInput.type = 'time'
-    endTimeInput.disabled = !data.canEdit
-    endTimeInput.className = 'mdc-text-field__input'
-
-    etDiv.appendChild(endTimeInput)
-
-    etSpan.appendChild(etDiv)
-
-
-    startLi.appendChild(sdDiv)
-    startLi.appendChild(stSpan)
-
-    endLi.appendChild(edDiv)
-    endLi.appendChild(etSpan)
-
-    ul.appendChild(startLi)
-    ul.appendChild(divider)
-    ul.appendChild(endLi)
+    li.appendChild(sdDiv)
+    li.appendChild(edDiv)   
+    ul.appendChild(li)
 
     document.getElementById('schedule--group').appendChild(scheduleName)
     document.getElementById('schedule--group').appendChild(ul)
@@ -1490,7 +1435,7 @@ function createAttachmentContainer(data) {
       }
 
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
-
+        
         if (results.length && data.canEdit) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
@@ -1836,50 +1781,30 @@ function insertInputsIntoActivity(record, send) {
   }
 
   let sd;
-  let st;
   let ed;
-  let et
+
 
   for (var i = 1; i < record.schedule.length + 1; i++) {
 
-    sd = getInputText('.start--date' + i).value
-    st = getInputText('.start--time' + i).value
-    ed = getInputText('.end--date' + i).value
-    et = getInputText('.end--time' + i).value
-    if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
-      record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
-      record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
+    sd = moment(getInputText('.start--date' + i).value).valueOf()
+    ed = moment(getInputText('.end--date' + i).value).valueOf()
 
-    } else {
-
-
-      if (sd && !st) {
-        snacks('Please Select a Start Time')
-        return;
-      }
-      if (st && !sd) {
-        snacks('Please Select a Start Date')
-        return
-      }
-      if (concatDateWithTime(sd, st) && !ed) {
-        snacks('Please Select a End Date')
-        return;
-      }
-      if (concatDateWithTime(sd, st) && !et) {
+      if (sd && !ed) {
         snacks('Please Select a End Time')
         return;
       }
-
-
-      if (concatDateWithTime(ed, et) < concatDateWithTime(sd, st)) {
-        snacks('The End Date and Time should be greater or equal to the start time')
+      if (ed && !sd) {
+        snacks('Please Select a Start Date')
+        return
+      }
+      if(ed < sd) {
+        snacks('The End Date should be greater or equal to the start Date')
         return;
       }
-      record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
-      record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
+      record.schedule[i - 1].startTime = sd || ''
+      record.schedule[i - 1].endTime = ed || ''
     }
-
-  }
+  
 
   if (send) {
     const reqArray = [];

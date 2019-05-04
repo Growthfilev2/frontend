@@ -465,56 +465,53 @@ function runAppChecks() {
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
     console.log(e.detail)
     if (!e.detail) return;
-    if (history.state[0] !== 'listView') return;
+    if(!e.detail.newDay && !e.detail.locationChanged) return;
 
-    isEmployeeOnLeave().then(function (onLeave) {
-      if (onLeave) return
+    //   isEmployeeOnLeave().then(function (onLeave) {
+    //     if (onLeave) return
 
-      getUniqueOfficeCount().then(function (offices) {
-        const prom = [];
-        const data = []
-        let title;
-        if (!offices.length) return;
+    getUniqueOfficeCount().then(function (offices) {
+      const prom = [];
+      const data = []
+      let title;
+      if (!offices.length) return;
 
-        offices.forEach(function (office) {
-          if (e.detail.newDay & e.detail.locationChanged) {
-            title = ''
-            prom.push(getSubscription(office, 'check-in'))
-            prom.push(getSubscription(office, 'dsr'))
-          } else if (e.detail.newDay) {
-            title = ''
-
-            prom.push(getSubscription(office, 'check-in'))
-          } else if (e.detail.locationChanged) {
-            title = ''
-            prom.push(getSubscription(office, 'dsr'))
-          }
-
-        })
-        Promise.all(prom).then(function (result) {
-          if (!result.length) return;
-          const actionTempaltes = {}
-
-          const filtered = result.filter(function (set) {
-            return set != undefined;
-          });
-
-          console.log(filtered);
-          filtered.forEach(function (value) {
-            if (!actionTempaltes[value.template]) {
-              data.push(value)
-            }
-            actionTempaltes[value.template] = true;
-          });
-          templateDialog({
-            title: 'Reminder',
-            data: data
-          }, offices.length)
-        }).catch(console.log)
+      offices.forEach(function (office) {
+        prom.push(getSubscription(office, 'check-in'))
+        if (e.detail.newDay) {
+          title = ''
+        }
+        if (e.detail.locationChanged) {
+          title = '';
+          prom.push(getSubscription(office, 'dsr'))
+        }
 
       })
+      Promise.all(prom).then(function (result) {
+        if (!result.length) return;
+        const actionTempaltes = {}
 
-    }).catch(handleError)
+        const filtered = result.filter(function (set) {
+          return set != undefined;
+        });
+
+        console.log(filtered);
+        filtered.forEach(function (value) {
+          if (!actionTempaltes[value.template]) {
+            data.push(value)
+          }
+          actionTempaltes[value.template] = true;
+        });
+        if (history.state[0] !== 'listView') return;
+        templateDialog({
+          title: 'Reminder',
+          data: data
+        }, offices.length)
+      }).catch(console.log)
+
+    })
+
+      // }).catch(handleError)
   }, true);
 }
 

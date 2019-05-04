@@ -12,9 +12,7 @@ function resetScroll() {
 }
 
 function initDomLoad() {
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  };
+  document.getElementById('start-loader').classList.remove('hidden')
   progressBar.foundation_.close();
   
   document.body.classList.remove('mdc-dialog-scroll-lock')
@@ -30,9 +28,8 @@ function listView() {
   // TODO simplify
   getCountOfStore('list').then(function (size) {
     if (!size) {
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      };
+      document.getElementById('start-loader').classList.add('hidden')
+      
       appendTextContentInListView('No activities Found');
       return;
     }
@@ -147,9 +144,7 @@ function loadActivitiesFromListStore(currentLocation) {
     }
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      };
+      document.getElementById('start-loader').classList.add('hidden')
       if (!ul) return
       ul.innerHTML = ''
       ul.appendChild(fragment)

@@ -625,16 +625,6 @@ body {
   }
 }
 
-.init-loader {
-  border: 6px solid #3498db;
-
-  border-top: 7px solid #f3f3f3;
-  width: 100px;
-  height: 100px;
-
-  right: 36%;
-  top: 39%;
-}
 
 .status-loader {
   float: right;
@@ -1454,6 +1444,9 @@ input[type="datetime-local"] {
 
 #schedule--group .mdc-list input {
   border: none;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 0px;
 
 }
 
@@ -2066,4 +2059,9 @@ input[type="datetime-local"] {
 
 .check-in-desc {
   padding: 15px 20px 10px 20px;
+}
+
+
+#schedule--group .mdc-text-field:not(.mdc-text-field--disabled) {
+  background-color: white
 }

@@ -19,6 +19,7 @@ function loader(nameClass) {
 
 
 function successDialog() {
+  progressBar.foundation_.close();
   const successMark =  document.getElementById('success-animation');
   const viewContainer =  document.getElementById('growthfile');
   successMark.classList.remove('hidden');
@@ -274,7 +275,7 @@ function updateLocationInRoot(finalLocation) {
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
         "detail": {
           newDay:isNewDay(),
-          locationChanged:isLocationMoreThanThreshold(distanceBetweenBoth)
+          locationChanged:isLocationMoreThanThreshold(distanceBetweenBoth) || true
         }
       });
       window.dispatchEvent(suggestCheckIn);
@@ -536,7 +537,10 @@ function templateDialog(notificationData,hasMultipleOffice) {
   payrollDialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
     if (!isLocationStatusWorking()) return;
-    const value = JSON.parse(document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value);
+    const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
+    if(!rawValue) return;
+
+    const value = JSON.parse(rawValue);
     if(!hasMultipleOffice) {
       createTempRecord(value.office, value.template, {
         schedule: value.schedule,
@@ -612,7 +616,7 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-
+  progressBar.foundation_.close();
   snacks(data.msg.message);
 }
 

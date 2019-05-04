@@ -179,7 +179,7 @@ function timeDiff(lastSignInTime) {
 }
 
 function newSignIn(value, field) {
-  
+    
   document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
   const dialogSelector = document.querySelector('#updateEmailDialog')
   dialogSelector.querySelector('section').id = 'refresh-login'
@@ -248,9 +248,7 @@ function sendBase64ImageToBackblaze(base64) {
 }
 
 function authUpdatedError(error) {
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  }
+  progressBar.foundation_.close();
   snacks(error.message);
 }
 
@@ -259,7 +257,6 @@ function changeDisplayName() {
   const name = new mdc.textField.MDCTextField(nameField)
   const nameChangeButton = document.getElementById('edit--name')
   const currentName = firebase.auth().currentUser.displayName
-
 
   nameField.addEventListener('click', function () {
     document.getElementById('pre-filled-name').placeholder = ''
@@ -286,10 +283,11 @@ function updateName(name) {
     snacks('Please Enter a Name');
     return;
   }
-
+  progressBar.foundation_.open()
   firebase.auth().currentUser.updateProfile({
     displayName: name
   }).then(successDialog).catch(function (error) {
+    progressBar.foundation_.close();
     snacks('Please Try again later');
     handleError({
       message: `${error} at updateProfile in changeDisplayName`
@@ -341,7 +339,7 @@ function emailValidation(emailField) {
 }
 
 function updateEmail(user, email) {
-  document.getElementById('growthfile').appendChild(loader('init-loader'));
+  progressBar.foundation_.open();
   user.updateEmail(email).then(function(){
     emailUpdateSuccess(true)
   }).catch(authUpdatedError);
@@ -363,8 +361,5 @@ function emailVerificationSuccess(showSuccessDialog) {
 
 function emailVerificationError(error) {
   snacks(error.message);
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  };
-  
+  progressBar.foundation_.close(); 
 }
