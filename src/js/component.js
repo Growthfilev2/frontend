@@ -488,7 +488,7 @@ function radioList(attr) {
 function userList(attr, actionable) {
     const li = document.createElement('li')
     li.className = `mdc-list-item`
-  
+    li.dataset.phoneNumber = attr.value.mobile
 
     if (attr.index) {
         li.setAttribute('tabindex', "0");

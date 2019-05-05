@@ -176,14 +176,6 @@ function userSelector(data, container) {
   const parent = document.getElementById('app-current-panel')
   document.getElementById('start-loader').classList.remove('hidden')
 
-  const field = new InputField().withLeadingIcon('search', 'Search Assignee');
-  field.root_.id = 'users-selector-search'
-  field.root_.classList.add('search-field')
-  container.appendChild(field.root_);
-
-
-  initUserSelectorSearch(data, field, container);
-
   const ul = createElement('ul', {
     className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line',
     id: 'user-selector-list'
@@ -289,9 +281,16 @@ function userSelector(data, container) {
           userSubmitButton.root_.textContent = 'SELECT';
         }
       });
-
+      const field = new InputField().withLeadingIcon('search', 'Search Assignee');
+      field.root_.id = 'users-selector-search'
+      field.root_.classList.add('search-field')
+      container.appendChild(field.root_);
+      
+      initUserSelectorSearch(data, field, listINit);
       container.appendChild(ul);
       container.appendChild(userSubmitButton.root_)
+    
+    
       parent.appendChild(container);
       document.getElementById('start-loader').classList.add('hidden')
     }
