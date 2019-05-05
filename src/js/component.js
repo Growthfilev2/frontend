@@ -1,4 +1,4 @@
-function getCellularInformation(){  
+function getCellularInformation() {
     let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
@@ -15,7 +15,7 @@ function getCellularInformation(){
     if (wifiQueryString) {
         wifiAccessPointsArray = parseQuery(wifiQueryString)
     };
-    if(cellTowerQueryString){
+    if (cellTowerQueryString) {
         cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
     }
     const body = {}
@@ -47,9 +47,9 @@ function getCellularInformation(){
     return JSON.stringify(body)
 }
 
-function removeFalseCellIds(cellTowers){
+function removeFalseCellIds(cellTowers) {
     const max_value = 2147483647
-    const filtered = cellTowers.filter(function(tower){
+    const filtered = cellTowers.filter(function (tower) {
         return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
     });
 
@@ -173,7 +173,7 @@ function tabBarBase() {
 
 }
 
-function addTabs(headerData){
+function addTabs(headerData) {
     const button = createElement('button', {
         className: 'mdc-tab'
     })
@@ -333,7 +333,8 @@ function Button(name) {
     }))
     this.base = button;
 }
-Button.prototype.getButton = function () {    console.log(this)
+Button.prototype.getButton = function () {
+    console.log(this)
     return new mdc.ripple.MDCRipple(this.base)
 }
 Button.prototype.disabled = function (value) {
@@ -463,7 +464,7 @@ function radioList(attr) {
     if (attr.index) {
         li.setAttribute('tabindex', "0");
     }
-    if(attr.selected) {
+    if (attr.selected) {
         li.setAttribute('aria-checked', "true")
 
     }
@@ -472,14 +473,71 @@ function radioList(attr) {
     })
     itemGraphic.appendChild(createRadioInput(attr))
 
+    li.appendChild(itemGraphic);
     const label = createElement('label', {
         className: 'mdc-list-item__text',
         textContent: attr.labelText.charAt(0).toUpperCase() + attr.labelText.slice(1)
     })
-    label.setAttribute('for', 'list-radio-item-' + attr.index);
-    li.appendChild(itemGraphic);
+
     li.appendChild(label)
+    label.setAttribute('for', 'list-radio-item-' + attr.index);
+
     return li;
+}
+
+function userList(attr, actionable) {
+    const li = document.createElement('li')
+    li.className = `mdc-list-item`
+  
+
+    if (attr.index) {
+        li.setAttribute('tabindex', "0");
+    }
+    if (attr.selected) {
+        li.setAttribute('aria-checked', "true")
+    }
+
+    const dataObject = createElement('object', {
+        className: 'mdc-list-item__graphic',
+        data: attr.value.photoURL || './img/empty-user.jpg',
+        type: 'image/jpeg'
+    })
+    const photoGraphic = createElement('img', {
+        className: 'empty-user-assignee',
+        src: './img/empty-user.jpg'
+    })
+    dataObject.appendChild(photoGraphic)
+    li.appendChild(dataObject);
+
+    const text = createElement('span', {
+        className: 'mdc-list-item__text'
+    })
+    text.appendChild(createElement('span', {
+        className: 'mdc-list-item__primary-text',
+        textContent: attr.value.displayName || attr.value.mobile
+    }))
+    text.appendChild(createElement('span', {
+        className: 'mdc-list-item__secondary-text',
+        textContent: attr.value.mobile
+    }))
+
+    li.appendChild(text);
+    if(actionable) {
+        const itemGraphic = createElement('span', {
+            className: 'mdc-list-item__meta'
+        })
+        if(attr.singleSelection) {
+            li.setAttribute('role', 'radio');
+            itemGraphic.appendChild(createRadioInput(attr))
+        }
+        else {
+            li.setAttribute('role', 'checkbox');
+            attr.disabled = true
+            itemGraphic.appendChild(createCheckBox(attr))
+        }
+        li.appendChild(itemGraphic);
+    }
+    return li
 }
 
 
@@ -513,10 +571,12 @@ function createRadioInput(attr) {
 }
 
 function createCheckBox(attr) {
-    console.log(attr)
-    const checkbox = createElement('div', {
+     const checkbox = createElement('div', {
         className: 'mdc-checkbox mdc-list-item__meta'
     });
+    if(attr.disabled) {
+        checkbox.classList.add('mdc-checkbox--disabled')
+    }
     const input = createElement('input', {
         className: 'mdc-checkbox__native-control',
         type: 'checkbox',
@@ -539,7 +599,7 @@ function createCheckBox(attr) {
     checkbox.appendChild(input)
     checkbox.appendChild(checkbox_bckg);
 
-    return new mdc.checkbox.MDCCheckbox(checkbox)
+    return checkbox
 }
 
 function chipSet(text, canEdit) {

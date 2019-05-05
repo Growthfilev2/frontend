@@ -62,7 +62,8 @@ function fetchAddendumForComment(id) {
       }
 
       createComment(db, cursor.value, user).then(function (comment) {
-        el ? el.appendChild(comment) : '';
+        
+        el ? el.appendChild(new mdc.ripple.MDCRipple(comment).root_) : '';
 
       })
 
@@ -945,22 +946,22 @@ function createVenueSection(record) {
           record.venue[0].geopoint._latitude = result.latitude
           record.venue[0].geopoint._longitude = result.longitude
           }
-          const checkInEls = radioList({
+          const ripple = new mdc.ripple.MDCRipple(radioList({
             value: result,
             index: idx,
             selected: !idx,
             labelText: result.location
-          })
-          new mdc.ripple.MDCRipple.attachTo(checkInEls);
-          ul.appendChild(checkInEls)
+          }))
+          //  ripple.unbounded = true 
+          ul.appendChild(ripple.root_)
         })
 
         const venueSection = new mdc.list.MDCList(ul);
         venueSection.singleSelection = true;
+        
         venueSection.listen('MDCList:action', function (evt) {
           const el = venueSection.listElements[evt.detail.index];
-          const value = JSON.parse(new mdc.radio.MDCRadio(el.querySelector('.mdc-radio')).value);
-          
+          const value = JSON.parse(el.querySelector('.mdc-radio__native-control').value)          
           record.venue[0].location = value.location
           record.venue[0].address = value.address
           record.venue[0].geopoint._latitude = value.latitude

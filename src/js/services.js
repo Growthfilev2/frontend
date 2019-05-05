@@ -275,7 +275,7 @@ function updateLocationInRoot(finalLocation) {
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
         "detail": {
           newDay:isNewDay(),
-          locationChanged:isLocationMoreThanThreshold(distanceBetweenBoth) || true
+          locationChanged:isLocationMoreThanThreshold(distanceBetweenBoth)
         }
       });
       window.dispatchEvent(suggestCheckIn);

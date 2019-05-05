@@ -174,12 +174,14 @@ function updateVenue(data, value) {
 function userSelector(data, container) {
   // to do user
   const parent = document.getElementById('app-current-panel')
+  document.getElementById('start-loader').classList.remove('hidden')
+
   const field = new InputField().withLeadingIcon('search', 'Search Assignee');
   field.root_.id = 'users-selector-search'
   field.root_.classList.add('search-field')
   container.appendChild(field.root_);
 
-  parent.appendChild(container);
+
   initUserSelectorSearch(data, field, container);
 
   const ul = createElement('ul', {
@@ -187,40 +189,10 @@ function userSelector(data, container) {
     id: 'user-selector-list'
   });
 
-  ul.setAttribute('role', 'group');
   ul.setAttribute('aria-label', 'User List With Check Box');
-  container.appendChild(ul);
+
   const recordAssignees = data.record.assignees
-  const userSubmit = new Button('Add New Number');
-  userSubmit.raised();
-  userSubmit.selectorButton();
-  const userSubmitButton = userSubmit.getButton();
-  userSubmitButton.root_.dataset.type = 'add-number';
-  userSubmitButton.root_.id = 'selector-submit-send'
-  userSubmitButton.root_.onclick = function () {
-    if (userSubmitButton.root_.dataset.type === 'add-number') {
-      addNewNumber(data, container);
-      return;
-    }
-    let filterClassName = '.mdc-radio'
-    if (!data.attachment) {
-      filterClassName = '.mdc-checkbox'
-    }
-    const filtered = getSelectedList(filterClassName)
-    if (!filtered) {
-      container.querySelector('#selector-warning').textContent = 'Please Choose An Option'
-      return;
-    }
-    const numbers = [];
-    filtered.forEach(function (el) {
-      numbers.push(JSON.parse(el.value))
-    })
-    console.log(numbers);
-    insertNumberIntoRecord(data, numbers);
 
-
-  }
-  container.appendChild(userSubmitButton.root_)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -245,35 +217,27 @@ function userSelector(data, container) {
         cursor.continue();
         return;
       }
+      count++
       if (data.attachment) {
-        count++
-        const radioButton = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(cursor.value.mobile)))
-        radioButton.root_.onclick = function () {
-          data.record.attachment[data.key].value = JSON.parse(radioButton.value)
-          updateCreateActivity(data.record, true)
-        }
-        const assigneeLi = createSimpleAssigneeLi(cursor.value, radioButton);
-        new mdc.ripple.MDCRipple(assigneeLi);
+        ul.setAttribute('role', 'radiogroup')
 
-        assigneeLi.dataset.number = cursor.value.mobile
-        ul.appendChild(assigneeLi)
+        ul.appendChild(new mdc.ripple.MDCRipple(userList({
+          value: cursor.value,
+          index: count,
+          singleSelection: true
+        }, true)).root_)
+
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-          count++
-          const checkbox = createCheckBox({
-            value: cursor.value.mobile
-          });
-          checkbox.root_.onclick = function () {
-            container.querySelector('#selector-submit-send').dataset.type = '';
-            container.querySelector('#selector-submit-send').textContent = 'SELECT';
-          }
-          const assigneeLi = createSimpleAssigneeLi(cursor.value, checkbox)
-          new mdc.ripple.MDCRipple(assigneeLi);
-          assigneeLi.dataset.number = cursor.value.mobile
-         
-          ul.appendChild(assigneeLi)
+          ul.setAttribute('role', 'group')
+          ul.appendChild(new mdc.ripple.MDCRipple(userList({
+            value: cursor.value,
+            index: count,
+            singleSelection: false
+          }, true)).root_)
         }
       }
+
       cursor.continue()
     }
 
@@ -281,9 +245,55 @@ function userSelector(data, container) {
       if (!count) {
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
+        return;
       };
 
-      document.getElementById('app-current-panel').appendChild(container);
+      const userSubmit = new Button('Add New Number');
+      userSubmit.raised();
+      userSubmit.selectorButton();
+      const userSubmitButton = userSubmit.getButton();
+      userSubmitButton.root_.dataset.type = 'add-number';
+      userSubmitButton.root_.id = 'selector-submit-send'
+      userSubmitButton.root_.onclick = function () {
+        if (userSubmitButton.root_.dataset.type === 'add-number') {
+          addNewNumber(data, container);
+          return;
+        };
+
+
+        const number = [];
+        listINit.selectedIndex.forEach(function (idx) {
+          number.push(JSON.parse(listINit.listElements[idx].querySelector('.mdc-checkbox__native-control').value).mobile)
+        })
+        insertNumberIntoRecord(data, number)
+
+      }
+
+      const listINit = new mdc.list.MDCList(ul);
+      data.attachment ? listINit.singleSelection = true : '';
+      listINit.listen('MDCList:action', function (evt) {
+
+        if (data.attachment) {
+
+          const value = JSON.parse(listINit.listElements[evt.detail.index].querySelector('.mdc-radio__native-control').value)
+          data.record.attachment[data.key].value = value.mobile
+          updateCreateActivity(data.record, true)
+          return
+        }
+
+        if (!listINit.selectedIndex.length) {
+          userSubmitButton.root_.dataset.type = 'add-number';
+          userSubmitButton.root_.textContent = 'Add new Number';
+        } else {
+          userSubmitButton.root_.dataset.type = '';
+          userSubmitButton.root_.textContent = 'SELECT';
+        }
+      });
+
+      container.appendChild(ul);
+      container.appendChild(userSubmitButton.root_)
+      parent.appendChild(container);
+      document.getElementById('start-loader').classList.add('hidden')
     }
   }
 }
@@ -400,35 +410,39 @@ function fillSubscriptionInSelector(data, container) {
         tabContentContainer = createElement('ul', {
           className: 'content mdc-list'
         })
-        tabContentContainer.setAttribute('role','radiogroup')
+        tabContentContainer.setAttribute('role', 'radiogroup')
         tabContentContainer.dataset.office = cursor.value.office
         index == 0 ? tabContentContainer.classList.add('content--active') : '';
         // new mdc.list.MDCList(tabContentContainer).singleSelection = true
         panel.appendChild(tabContentContainer)
         officesObject[cursor.value.office] = true
       };
-     
-      tabContentContainer.appendChild(radioList({index:index,labelText:cursor.value.template,value:cursor.value}))
+
+      tabContentContainer.appendChild(radioList({
+        index: index,
+        labelText: cursor.value.template,
+        value: cursor.value
+      }))
       index++
       cursor.continue();
     }
     tx.oncomplete = function () {
       const tabBar = new mdc.tabBar.MDCTabBar(tabBarInit);
-    
+
       var contentEls = document.querySelectorAll('.content');
       tabBar.listen('MDCTabBar:activated', function (evt) {
         document.querySelector('.content--active').classList.remove('content--active');
         contentEls[event.detail.index].classList.add('content--active');
       });
 
-      [].map.call(document.querySelectorAll('.mdc-list'),function(el){
+      [].map.call(document.querySelectorAll('.mdc-list'), function (el) {
         const ul = new mdc.list.MDCList(el);
         ul.singleSelection = true
-        ul.listElements.map(function(listItemEl){
-          listItemEl.onclick = function(){
+        ul.listElements.map(function (listItemEl) {
+          listItemEl.onclick = function () {
             progressBar.foundation_.open();
             const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value)
-            createTempRecord(value.office,value.template,data)
+            createTempRecord(value.office, value.template, data)
           }
           return new mdc.ripple.MDCRipple(listItemEl);
         })
@@ -485,7 +499,7 @@ function getSelectedList(className) {
 
 function shareReq(data, number) {
   if (!isLocationStatusWorking()) return;
-  // document.querySelector('header').appendChild(progressBar())
+  progressBar.foundation_.open();
   requestCreator('share', {
     'activityId': data.record.activityId,
     'share': number
