@@ -1,11 +1,10 @@
-function initUserSelectorSearch(data, field) {
+function initUserSelectorSearch(data, field,listInit) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     req.onsuccess = function () {
         const db = req.result;
         let objectStore = ''
         field.input_.addEventListener('input', function (e) {
             let searchString = e.target.value
-            // listInit.root_.classList.add('hidden')
             listInit.listElements.forEach(function (el) {
                 el.classList.add('hidden')
             })

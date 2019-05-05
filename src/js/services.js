@@ -20,10 +20,10 @@ function loader(nameClass) {
 
 function successDialog() {
   progressBar.foundation_.close();
-  const successMark =  document.getElementById('success-animation');
-  const viewContainer =  document.getElementById('growthfile');
+  const successMark = document.getElementById('success-animation');
+  const viewContainer = document.getElementById('growthfile');
   successMark.classList.remove('hidden');
-   viewContainer.style.opacity = '0.37';
+  viewContainer.style.opacity = '0.37';
   setTimeout(function () {
     successMark.classList.add('hidden');
     viewContainer.style.opacity = '1';
@@ -105,7 +105,7 @@ function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       // if (native.getName() === 'Android') {
-        updateLocationInRoot(location)
+      updateLocationInRoot(location)
       // };
       console.log(location)
       resolve(location)
@@ -197,43 +197,21 @@ function iosLocationError(error) {
 
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
-    const prom = [];
-    for (let i = 0; i < 2; i++) {
-
-      let navProm = new Promise(function (resolve, reject) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          return resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            provider: 'HTML5'
-          })
-
-        }, function (error) {
-          reject({
-            message: error
-          })
-        }, {
-          timeout: 5000,
-          maximumAge: 0
-        })
+    navigator.geolocation.getCurrentPosition(function (position) {
+      return resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        provider: 'HTML5'
       })
-      prom.push(navProm)
-    }
 
-
-    Promise.all(prom).then(function (results) {
-
-      let bestAccuracy = results.sort(function (a, b) {
-        return a.accuracy - b.accuracy
-      })
-      resolve(bestAccuracy[0]);
-      return;
-    }).catch(function (error) {
+    }, function (error) {
       reject({
-        message: error.message.message
+        message: error
       })
-      return;
+    }, {
+      timeout: 5000,
+      maximumAge: 0
     })
   })
 }
@@ -274,8 +252,8 @@ function updateLocationInRoot(finalLocation) {
 
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
         "detail": {
-          newDay:isNewDay(),
-          locationChanged:isLocationMoreThanThreshold(distanceBetweenBoth)
+          newDay: isNewDay(),
+          locationChanged: isLocationMoreThanThreshold(distanceBetweenBoth)
         }
       });
       window.dispatchEvent(suggestCheckIn);
@@ -398,12 +376,12 @@ function requestCreator(requestType, requestBody) {
     getRootRecord().then(function (rootRecord) {
       let location = rootRecord.location;
       let isLocationOld = true;
-      location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) :'';      
+      location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
       const promises = [auth.getIdToken(false)];
       if (isLocationOld) {
         promises.push(manageLocation())
       };
-      
+
       Promise.all(promises).then(function (result) {
         const token = result[0];
         if (result.length == 2) {
@@ -472,7 +450,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
   var duration = moment.duration(currentTime.diff(test));
   var difference = duration.asSeconds();
   return difference > threshold
- 
+
 }
 
 var receiverCaller = {
@@ -502,7 +480,7 @@ function emailVerify(notification) {
 }
 
 
-function templateDialog(notificationData,hasMultipleOffice) {
+function templateDialog(notificationData, hasMultipleOffice) {
   const container = createElement('div', {
     className: 'notification-message',
     textContent: notificationData.body
@@ -538,17 +516,19 @@ function templateDialog(notificationData,hasMultipleOffice) {
     if (evt.detail.action !== 'accept') return;
     if (!isLocationStatusWorking()) return;
     const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
-    if(!rawValue) return;
+    if (!rawValue) return;
 
     const value = JSON.parse(rawValue);
-    if(!hasMultipleOffice) {
+    if (!hasMultipleOffice) {
       createTempRecord(value.office, value.template, {
         schedule: value.schedule,
         attachment: value.attachment
       });
       return;
     }
-    selectorUI({store:'subscriptions'});
+    selectorUI({
+      store: 'subscriptions'
+    });
 
   })
 }
@@ -657,7 +637,7 @@ function runRead(value) {
     requestCreator('Null', value)
     return;
   };
-  
+
   setTimeout(function () {
     if (value.verifyEmail) {
       const notificationData = JSON.parse(value.verifyEmail)
