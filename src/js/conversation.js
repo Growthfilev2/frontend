@@ -62,16 +62,16 @@ function fetchAddendumForComment(id) {
       }
 
       createComment(db, cursor.value, user).then(function (comment) {
-        el ?  el.appendChild(comment) : '';
-     
+        el ? el.appendChild(comment) : '';
+
       })
 
       cursor.continue()
     }
     transaction.oncomplete = function () {
-      if(!el) return;
+      if (!el) return;
       console.log(el.scrollHeight)
-        window.scrollTo(0,el.scrollHeight);  
+      window.scrollTo(0, el.scrollHeight);
     }
   }
 }
@@ -915,7 +915,7 @@ function createVenueSection(record) {
   if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
   const parentList = document.getElementById('venue--list');
-  if(record.template === 'check-in' && record.canEdit) {
+  if (record.template === 'check-in' && record.canEdit) {
     getRootRecord().then(function (rootRecord) {
       checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
         if (!results.length) return;
@@ -924,21 +924,28 @@ function createVenueSection(record) {
         })
         ul.setAttribute('role', 'radiogroup');
         ul.style.marginTop = '0px';
-        
+
         const checkInDesc = document.createElement('div');
-        const span = createElement('span',{textContent:record.venue[0].venueDescriptor})
+        const span = createElement('span', {
+          textContent: record.venue[0].venueDescriptor
+        })
         checkInDesc.appendChild(span);
         const clearLocation = new Fab('clear').getButton();
         clearLocation.root_.classList.add('add--assignee-icon')
         clearLocation.root_.style.marginTop = '-5px';
-      
+
         checkInDesc.appendChild(clearLocation.root_)
         checkInDesc.className = 'detail--static-text check-in-desc';
-  
+
         parentList.appendChild(checkInDesc)
-  
+        
         results.forEach(function (result, idx) {
-          console.log(result)
+          if(!idx) {
+          record.venue[0].location = result.location
+          record.venue[0].address = result.address
+          record.venue[0].geopoint._latitude = result.latitude
+          record.venue[0].geopoint._longitude = result.longitude
+          }
           const checkInEls = radioList({
             value: result,
             index: idx,
@@ -948,44 +955,49 @@ function createVenueSection(record) {
           new mdc.ripple.MDCRipple.attachTo(checkInEls);
           ul.appendChild(checkInEls)
         })
-  
+
         const venueSection = new mdc.list.MDCList(ul);
         venueSection.singleSelection = true;
-        venueSection.listen('MDCList:action',function(evt){
+        venueSection.listen('MDCList:action', function (evt) {
           const el = venueSection.listElements[evt.detail.index];
-          const value = JSON.parse(new mdc.radio.MDCRadio(el).value);
+          const value = JSON.parse(new mdc.radio.MDCRadio(el.querySelector('.mdc-radio')).value);
+          
           record.venue[0].location = value.location
           record.venue[0].address = value.address
           record.venue[0].geopoint._latitude = value.latitude
           record.venue[0].geopoint._longitude = value.longitude
         })
         parentList.appendChild(ul);
-        clearLocation.root_.onclick = function(){
+        clearLocation.root_.onclick = function () {
           const el = venueSection.listElements[venueSection.selectedIndex];
-          new mdc.radio.MDCRadio(el).checked = false;
+          new mdc.radio.MDCRadio(el.querySelector('.mdc-radio')).checked = false;
+          
           record.venue[0].location = ''
           record.venue[0].address = ''
           record.venue[0].geopoint._latitude = ''
           record.venue[0].geopoint._longitude = ''
         }
-      
+
       })
     })
     return;
   }
   parentList.classList.add('mdc-list--two-line');
   record.venue.forEach(function (venue) {
-      const li = createVenueLi(venue, true, record)
-      if(!li) return;
-      parentList.appendChild(li)
-      const mapDom = document.createElement('div');
-      mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-      parentList.appendChild(mapDom)
+    const li = createVenueLi(venue, true, record)
+    if (!li) return;
+    parentList.appendChild(li)
+    const mapDom = document.createElement('div');
+    mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
+    parentList.appendChild(mapDom)
   });
-  };
+};
 
+function setCheckinVenue(){
+
+}
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
-  if(record.template === 'check-in' && !venue.location) return 
+  if (record.template === 'check-in' && !venue.location) return
 
   let showMap = false
   const listItem = document.createElement('li')
@@ -1117,7 +1129,7 @@ function createScheduleTable(data) {
     const ul = document.createElement('ul')
     ul.className = 'mdc-list mdc-list--dense'
 
-  
+
     const li = document.createElement('li')
     li.className = 'mdc-list-item'
 
@@ -1163,10 +1175,10 @@ function createScheduleTable(data) {
         }
       }
     }
- 
+
 
     li.appendChild(sdDiv)
-    li.appendChild(edDiv)   
+    li.appendChild(edDiv)
     ul.appendChild(li)
 
     document.getElementById('schedule--group').appendChild(scheduleName)
@@ -1435,7 +1447,7 @@ function createAttachmentContainer(data) {
       }
 
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
-        
+
         if (results.length && data.canEdit) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
@@ -1789,22 +1801,22 @@ function insertInputsIntoActivity(record, send) {
     sd = moment(getInputText('.start--date' + i).value).valueOf()
     ed = moment(getInputText('.end--date' + i).value).valueOf()
 
-      if (sd && !ed) {
-        snacks('Please Select a End Time')
-        return;
-      }
-      if (ed && !sd) {
-        snacks('Please Select a Start Date')
-        return
-      }
-      if(ed < sd) {
-        snacks('The End Date should be greater or equal to the start Date')
-        return;
-      }
-      record.schedule[i - 1].startTime = sd || ''
-      record.schedule[i - 1].endTime = ed || ''
+    if (sd && !ed) {
+      snacks('Please Select a End Time')
+      return;
     }
-  
+    if (ed && !sd) {
+      snacks('Please Select a Start Date')
+      return
+    }
+    if (ed < sd) {
+      snacks('The End Date should be greater or equal to the start Date')
+      return;
+    }
+    record.schedule[i - 1].startTime = sd || ''
+    record.schedule[i - 1].endTime = ed || ''
+  }
+
 
   if (send) {
     const reqArray = [];

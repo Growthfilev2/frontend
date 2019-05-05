@@ -333,8 +333,7 @@ function Button(name) {
     }))
     this.base = button;
 }
-Button.prototype.getButton = function () {
-    console.log(this)
+Button.prototype.getButton = function () {    console.log(this)
     return new mdc.ripple.MDCRipple(this.base)
 }
 Button.prototype.disabled = function (value) {

@@ -166,7 +166,8 @@ function updateVenue(data, value) {
       venue.geopoint._latitude = value.latitude;
       venue.geopoint._longitude = value.longitude;
     }
-  })
+  });
+
   return data
 }
 
