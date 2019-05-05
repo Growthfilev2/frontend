@@ -143,11 +143,10 @@ function commentPanel(id) {
 function toggleCommentButton(show) {
   const input = document.getElementById('send-chat--input');
   const writeComment = document.getElementById('write--comment');
-  const statusCont = document.querySelector('.status--change-cont > span');
+  const statusCont = document.querySelector('.status--change-cont');
 
   if (show) {
     input.classList.remove('hidden');
-
     writeComment.style.width = '80%'
     statusCont.style.opacity = '0';
   } else {

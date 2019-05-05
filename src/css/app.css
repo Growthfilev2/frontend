@@ -128,7 +128,7 @@ body {
 
 .other-user--comment {
   float: left;
-  /* color: white; */
+  color: white;
 }
 
 .user-map--span {
@@ -136,9 +136,6 @@ body {
   float: right;
 }
 
-.other-user--comment .user-map--span {
-  color: #0399f4 !important
-}
 
 
 .input--text-padding {
@@ -2064,4 +2061,10 @@ input[type="datetime-local"] {
 
 #schedule--group .mdc-text-field:not(.mdc-text-field--disabled) {
   background-color: white
+}
+
+.mdc-button.undo-deleted {
+  background-color: #0399f4;
+    font-size: 16px;
+  
 }
