@@ -1550,6 +1550,7 @@ function hideCustomerContainer(data, div) {
 }
 
 function createAssigneeList(record, db) {
+ 
   const parent = document.getElementById('assignees--list')
   const labelAdd = createElement('li', {
     className: 'mdc-list-item label--text add--assignee-loader',
@@ -1581,64 +1582,13 @@ function createAssigneeList(record, db) {
   parent.appendChild(labelAdd)
 
 
-  record.assignees.forEach(function (number) {
+  record.assignees.forEach(function (number,idx) {
     getUserRecord(db, number).then(function (record) {
-      parent.appendChild(createSimpleAssigneeLi(record))
+      parent.appendChild(new mdc.ripple.MDCRipple(userList({index:idx,value:record},false)).root_)
+      // parent.appendChild(createSimpleAssigneeLi(record))
     })
   })
 }
-
-
-
-function createSimpleAssigneeLi(userRecord, metaType) {
-  const assigneeLi = createElement('li', {
-    className: 'mdc-list-item'
-  })
-  if (!userRecord) return assigneeLi
-
-  const dataObject = createElement('object', {
-    className: 'mdc-list-item__graphic',
-    data: userRecord.photoURL || './img/empty-user.jpg',
-    type: 'image/jpeg'
-  })
-  const photoGraphic = createElement('img', {
-    className: 'empty-user-assignee',
-    src: './img/empty-user.jpg'
-  })
-  dataObject.appendChild(photoGraphic)
-
-
-  const assigneeListText = createElement('span', {
-    className: 'mdc-list-item_text'
-  })
-  const name = createElement('span', {
-    className: 'mdc-list-item__primary-text'
-  })
-  const number = createElement('span', {
-    className: 'mdc-list-item__secondary-text'
-  })
-
-  if (!userRecord.displayName) {
-    name.textContent = userRecord.mobile
-  } else {
-    name.textContent = userRecord.displayName
-    number.textContent = userRecord.mobile
-  }
-
-  assigneeListText.appendChild(name)
-  assigneeListText.appendChild(number)
-
-
-  assigneeLi.appendChild(dataObject)
-  assigneeLi.appendChild(assigneeListText)
-  if (metaType) {
-    assigneeLi.setAttribute("role", "checkbox")
-    assigneeLi.appendChild(metaType.root_);
-  }
-  return assigneeLi
-}
-
-
 
 
 function checkRadioInput(inherit, value) {
