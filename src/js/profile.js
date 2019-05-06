@@ -174,42 +174,40 @@ function createProfilePanel(db) {
 function timeDiff(lastSignInTime) {
   var currentDate = moment().format('YYY-MM-DD HH:mm');
   var authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm');
-
   return moment(currentDate).diff(moment(authSignInTime), 'minutes');
 }
 
 function newSignIn(value, field) {
-  
-  document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
-  const dialogSelector = document.querySelector('#updateEmailDialog')
-  dialogSelector.querySelector('section').id = 'refresh-login'
-  var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
-  emailDialog.listen('MDCDialog:cancel',function(evt){
-    dialogSelector.remove();
-  })
-  emailDialog.show();
-  try {
-    if(!ui) {
-      ui  = new firebaseui.auth.AuthUI(firebase.auth())
+  const dialog = new Dialog('',createElement('div',{id:'refresh-login'})).create();
+  dialog.open();
+  dialog.listen('MDCDialog:opened',function(evt){
+    try {
+      if(!ui) {
+        ui  = new firebaseui.auth.AuthUI(firebase.auth())
+      }
+      ui.start('#refresh-login', firebaseUiConfig(value));
+      setTimeout(function () {
+        document.querySelector('.firebaseui-id-phone-number').disabled = true;
+        document.querySelector('.firebaseui-label').remove();
+        document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
+      }, 500)
+   
+    } catch (e) {
+      // dialogSelector.remove();
+      console.log(e);
+      handleError({
+        message: `${e.message} from newSignIn function during email updation`
+      });
+      snacks('Please try again later');
     }
-    ui.start('#refresh-login', firebaseUiConfig(value));
-    setTimeout(function () {
-      document.querySelector('.firebaseui-id-phone-number').disabled = true;
-      document.querySelector('.firebaseui-label').remove();
-      document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
-    }, 500)
-    emailDialog.listen('MDCDialog:cancel', function () {
-      field.value = firebase.auth().currentUser.email;
-      dialogSelector.remove();
-    });
-  } catch (e) {
-    dialogSelector.remove();
-    console.log(e);
-    handleError({
-      message: `${e.message} from newSignIn function during email updation`
-    });
-    snacks('Please try again later');
-  }
+  })
+  // document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
+  // const dialogSelector = document.querySelector('#updateEmailDialog')
+  // dialogSelector.querySelector('section').id = 'refresh-login'
+  // var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
+
+ 
+  
 }
 
 function readUploadedFile(image) {
@@ -248,9 +246,7 @@ function sendBase64ImageToBackblaze(base64) {
 }
 
 function authUpdatedError(error) {
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  }
+  progressBar.foundation_.close();
   snacks(error.message);
 }
 
@@ -259,7 +255,6 @@ function changeDisplayName() {
   const name = new mdc.textField.MDCTextField(nameField)
   const nameChangeButton = document.getElementById('edit--name')
   const currentName = firebase.auth().currentUser.displayName
-
 
   nameField.addEventListener('click', function () {
     document.getElementById('pre-filled-name').placeholder = ''
@@ -286,10 +281,11 @@ function updateName(name) {
     snacks('Please Enter a Name');
     return;
   }
-
+  progressBar.foundation_.open()
   firebase.auth().currentUser.updateProfile({
     displayName: name
   }).then(successDialog).catch(function (error) {
+    progressBar.foundation_.close();
     snacks('Please Try again later');
     handleError({
       message: `${error} at updateProfile in changeDisplayName`
@@ -341,7 +337,7 @@ function emailValidation(emailField) {
 }
 
 function updateEmail(user, email) {
-  document.getElementById('growthfile').appendChild(loader('init-loader'));
+  progressBar.foundation_.open();
   user.updateEmail(email).then(function(){
     emailUpdateSuccess(true)
   }).catch(authUpdatedError);
@@ -357,14 +353,12 @@ function emailUpdateSuccess(showSuccessDialog) {
 function emailVerificationSuccess(showSuccessDialog) {
   if(showSuccessDialog){
     successDialog();
+    document.getElementById('dialog-container').innerHTML = ''
   };
   snacks('Verification link has been send to your email address');
 }
 
 function emailVerificationError(error) {
   snacks(error.message);
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  };
-  
+  progressBar.foundation_.close(); 
 }

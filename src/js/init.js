@@ -1,4 +1,6 @@
 const appKey = new AppKeys();
+let progressBar;
+let snackBar;
 let ui;
 let native = function () {
   return {
@@ -59,33 +61,20 @@ let native = function () {
   }
 }();
 
-let app = function () {
-  return {
-
-    today: function (format) {
-      if (!format) return moment();
-      return moment().format(format);
-    },
-
-    tomorrow: function () {
-      return moment(this.today()).add(1, 'day');
-    },
-    isNewDay: function (auth) {
-      var today = localStorage.getItem('today');
-      if (!today) {
-        localStorage.setItem('today', moment().format('YYYY-MM-DD'));
-        return true;
-      }
-      const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
-      if (isSame) {
-        return false;
-      } else {
-        localStorage.setItem('today', moment().format('YYYY-MM-DD'))
-        return true
-      }
-    }
+function isNewDay(set) {
+  var today = localStorage.getItem('today');
+  if (!today) {
+    set ? localStorage.setItem('today', moment().format('YYYY-MM-DD')) : ''
+    return true;
   }
-}();
+  const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
+  if (isSame) {
+    return false;
+  } else {
+    set ? localStorage.setItem('today', moment().format('YYYY-MM-DD')) : ''
+    return true
+  }
+}
 
 function getDeviceInfomation() {
   return JSON.stringify({
@@ -97,22 +86,45 @@ function getDeviceInfomation() {
     'radioVersion': AndroidInterface.getRadioVersion(),
     'appVersion': Number(AndroidInterface.getAppVersion())
   })
-
 }
+
+window.onpopstate = function (event) {
+
+  if (!event.state) return;
+  if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
+
+  const originalCount = scroll_namespace.count;
+  if (originalCount) {
+    scroll_namespace.size = originalCount
+  }
+  scroll_namespace.count = 0;
+  window[event.state[0]]()
+}
+
+function backNav() {
+  history.back();
+}
+
+
 window.addEventListener("load", function () {
+  firebase.initializeApp(appKey.getKeys())
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
+  snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+
+  if (appKey.getMode() === 'production') {
+    if (!native.getInfo()) {
+      redirect();
+      return;
+    }
+  }
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
-
       console.log('sw registered with scope :', registeration.scope);
     }, function (err) {
       console.log('sw registeration failed :', err);
     });
-
   }
-
-  firebase.initializeApp(appKey.getKeys())
-
-  layoutGrid()
+  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
     calendar: {
@@ -128,35 +140,19 @@ window.addEventListener("load", function () {
       LTS: "h:mm:ss A",
       L: "DD/MM/YY",
     },
-
     months: [
       'January', 'February', 'March', 'April', 'May', 'June', 'July',
       'August', 'September', 'October', 'November', 'December'
     ]
-
   })
 
-  window.onpopstate = function (event) {
-
-    if (!event.state) return;
-    if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
-
-    const originalCount = scroll_namespace.count;
-    if (originalCount) {
-      scroll_namespace.size = originalCount
-    }
-    scroll_namespace.count = 0;
-    window[event.state[0]]()
+  if (!window.Worker && !window.indexedDB) {
+    //TODO: show view instead of dialog
+    return;
   }
-
   startApp(true)
-
 })
 
-
-function backNav() {
-  history.back();
-}
 
 function resetScroll() {
   scroll_namespace.count = 0;
@@ -170,9 +166,6 @@ function firebaseUiConfig(value) {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
         if (value) {
-          if (document.querySelector('#updateEmailDialog')) {
-            document.querySelector('#updateEmailDialog').remove();
-          }
           updateEmail(authResult.user, value);
           return false;
         }
@@ -215,90 +208,50 @@ function userSignedOut() {
   ui.start('#login-container', firebaseUiConfig());
 }
 
-function layoutGrid() {
-  const layout = document.createElement('div')
-  layout.classList.add('mdc-layout-grid', 'mdc-typography', 'app')
-  layout.id = "main-layout-app"
-  const layoutInner = document.createElement('div')
-  layoutInner.className = 'mdc-layout-grid__inner cell-space'
-
-  const currentPanel = document.createElement('div')
-  currentPanel.id = 'app-current-panel'
-  currentPanel.className = 'mdc-layout-grid__cell--span-12'
-
-  const snackbar = document.createElement('div')
-  snackbar.id = 'snackbar-container'
-
-  const dialogContainer = document.createElement('div')
-  dialogContainer.id = 'dialog-container'
-
-  layoutInner.appendChild(currentPanel)
-  layoutInner.appendChild(snackbar)
-  layout.appendChild(layoutInner)
-  layout.appendChild(dialogContainer)
-  document.getElementById('growthfile').innerHTML = layout.outerHTML
-  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-}
 
 function startApp(start) {
-  const title = 'Device Incompatibility'
-  const message = 'Your Device is Incompatible with Growthfile. Please Upgrade your Android Version'
-  if (!window.Worker && !window.indexedDB) {
-    const span = document.createElement('span')
-    span.textContent = message;
-    span.className = 'mdc-typography--body1'
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'device-incompatibility-dialog',
-      headerText: title,
-      content: span
-    }).outerHTML
-    const incompatibilityDialog = new mdc.dialog.MDCDialog(document.getElementById('device-incompatibility-dialog'))
-    incompatibilityDialog.show()
-    return
-  }
+
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      }
-
+      document.getElementById('start-loader').classList.add('hidden')
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
 
-    if (appKey.getMode() === 'production') {
-      if (!native.getInfo()) {
-        redirect();
-        return;
-      }
-    }
-
-    if (!localStorage.getItem('error')) {
+    if (!localStorage.getItem('error') || isNewDay()) {
       localStorage.setItem('error', JSON.stringify({}));
-    }
+    };
 
     if (start) {
-      const req = indexedDB.open(auth.uid, 3);
+      const req = window.indexedDB.open(auth.uid, 4);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
-
         db.onerror = function () {
           handleError({
             message: `${db.error.message} from startApp on upgradeneeded`
           })
           return;
         }
-        createObjectStores(db, auth.uid)
+
+        if (!evt.oldVersion) {
+          createObjectStores(db, auth.uid)
+        } else {
+
+          if (evt.oldVersion < 4) {
+            const subscriptionStore = req.transaction.objectStore('subscriptions')
+            subscriptionStore.createIndex('status', 'status');
+          }
+        }
+
       }
 
       req.onsuccess = function () {
+        db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        let getInstantLocation = false;
-
         resetScroll();
         listView();
 
@@ -309,7 +262,7 @@ function startApp(start) {
         });
 
         runAppChecks()
-        manageLocation().then(console.log).catch(console.log)
+        manageLocation().then(console.log).catch(handleError)
 
       }
       req.onerror = function () {
@@ -448,7 +401,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('office', 'office')
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
-
+  subscriptions.createIndex('status', 'status')
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
@@ -494,6 +447,7 @@ function redirect() {
   firebase.auth().signOut().then(function () {
     window.location = 'https://www.growthfile.com';
   }).catch(function (error) {
+    console.log(error)
     window.location = 'https://www.growthfile.com';
     handleError({
       message: `${error} from redirect`
@@ -502,54 +456,56 @@ function redirect() {
 }
 
 
-function initLocation() {
-  manageLocation().then(console.log).catch(console.log);
-}
-
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
+   
     if (!e.detail) return;
+    if (!e.detail.newDay && !e.detail.locationChanged) return;
 
     isEmployeeOnLeave().then(function (onLeave) {
-
       if (onLeave) return
-      if (history.state[0] !== 'listView') return;
 
       getUniqueOfficeCount().then(function (offices) {
-        const message = document.createElement('h1')
-        message.className = 'mdc-typography--body1 mt-10'
-        message.textContent = 'Do you want to create a Check-In ?'
-        document.getElementById('dialog-container').innerHTML = dialog({
-          id: 'suggest-checkIn-dialog',
-          headerText: 'Check-In Reminder',
-          content: message,
-          showCancel: true,
-          showAccept: true
-        }).outerHTML
-        const checkInDialog = document.querySelector('#suggest-checkIn-dialog');
-        var initCheckInDialog = new mdc.dialog.MDCDialog(checkInDialog);
-        initCheckInDialog.show();
-        initCheckInDialog.listen('MDCDialog:accept', function (evt) {
-          if (!isLocationStatusWorking()) return;
+        console.log(offices);
 
-          if (offices.length === 1) {
-            createTempRecord(offices[0], 'check-in', {
-              suggestCheckIn: true
-            });
-            return;
+        const prom = [];
+        const data = []
+        let title;
+        if (!offices.length) return;
+
+        offices.forEach(function (office) {
+          prom.push(getSubscription(office, 'check-in'))
+          if (e.detail.newDay) {
+            title = ''
           }
-          selectorUI({
-            record: '',
-            store: 'subscriptions',
-            suggestCheckIn: true
-          })
-        });
-        initCheckInDialog.listen('MDCDialog:cancel', function () {
-          checkInDialog.remove();
+          if (e.detail.locationChanged) {
+            title = '';
+            prom.push(getSubscription(office, 'dsr'))
+          }
         })
-        resetScroll();
-        listView();
+        Promise.all(prom).then(function (result) {
+          if (!result.length) return;
+          const actionTempaltes = {}
+
+          const filtered = result.filter(function (set) {
+            return set != undefined;
+          });
+
+          console.log(filtered);
+          filtered.forEach(function (value) {
+            if (!actionTempaltes[value.template]) {
+              data.push(value)
+            }
+            actionTempaltes[value.template] = true;
+          });
+          if (history.state[0] !== 'listView') return;
+          templateDialog({
+            title: 'Reminder',
+            data: data
+          }, true,offices.length > 1 ? true : false)
+        }).catch(console.log)
+
       })
 
     }).catch(handleError)
@@ -557,9 +513,7 @@ function runAppChecks() {
 }
 
 function getUniqueOfficeCount() {
-
   return new Promise(function (resolve, reject) {
-
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     let offices = []
     req.onsuccess = function () {
@@ -569,6 +523,7 @@ function getUniqueOfficeCount() {
       activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
+
         offices.push(cursor.value.office)
         cursor.continue()
       }

@@ -9,7 +9,7 @@ function selectorUI(data) {
   sectionStart.appendChild(headerBackIcon(data.store))
 
   const container = createElement('div', {
-    className: 'selector-container mdc-top-app-bar--fixed-adjust'
+    className: 'selector-container'
   })
 
   const warning = createElement('span', {
@@ -44,7 +44,7 @@ function selectorUI(data) {
       if (value.template === 'dsr' || value.template === 'duty roster' || value.template === 'tour plan') {
         document.querySelector('header').appendChild(progressBar())
       }
-      if(!isLocationStatusWorking()) return;
+      if (!isLocationStatusWorking()) return;
       createTempRecord(value.office, value.template, data);
     }
     return;
@@ -112,6 +112,7 @@ function mapSelector(data, container) {
       className: 'mdc-list mdc-list--avatar-list map-selector-list'
     });
     ul.setAttribute('role', 'radiogroup');
+    let index = 0;
     store.index('byOffice').openCursor(range, 'nextunique').onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return
@@ -133,18 +134,24 @@ function mapSelector(data, container) {
       }
       const radioListMap = radioList({
         value: cursor.value,
-        labelText: cursor.value.location
+        labelText: cursor.value.location,
+        index: index
       })
       radioListMap.dataset.name = cursor.value.location
-      radioListMap.querySelector('.mdc-radio input').onclick = function () {
-
-        const value = JSON.parse(this.value)
-        updateCreateActivity(updateVenue(data, value).record, true)
-      }
+      new mdc.ripple.MDCRipple.attachTo(radioListMap);
       ul.appendChild(radioListMap)
+      index++
       cursor.continue()
     }
     tx.oncomplete = function () {
+      const mapListInit = new mdc.list.MDCList(ul)
+      mapListInit.singleSelection = true;
+      mapListInit.listen('MDCList:action', function (evt) {
+
+        const value = JSON.parse(ul.querySelector('#list-radio-item-' + evt.detail.index).value)
+        updateCreateActivity(updateVenue(data, value).record, true)
+
+      })
       container.appendChild(ul);
       parent.appendChild(container);
     }
@@ -159,60 +166,25 @@ function updateVenue(data, value) {
       venue.geopoint._latitude = value.latitude;
       venue.geopoint._longitude = value.longitude;
     }
-  })
+  });
+
   return data
 }
 
 function userSelector(data, container) {
   // to do user
   const parent = document.getElementById('app-current-panel')
-  const field = new InputField().withLeadingIcon('search', 'Search Assignee');
-  field.root_.id = 'users-selector-search'
-  field.root_.classList.add('search-field')
-  container.appendChild(field.root_);
-
-  parent.appendChild(container);
-  initUserSelectorSearch(data, field, container);
+  document.getElementById('start-loader').classList.remove('hidden')
 
   const ul = createElement('ul', {
     className: 'mdc-list mdc-list--avatar-list  mdc-list--two-line',
     id: 'user-selector-list'
   });
 
-  ul.setAttribute('role', 'group');
   ul.setAttribute('aria-label', 'User List With Check Box');
-  container.appendChild(ul);
+
   const recordAssignees = data.record.assignees
-  const userSubmit = new Button('Add New Number');
-  userSubmit.raised();
-  userSubmit.selectorButton();
-  const userSubmitButton = userSubmit.getButton();
-  userSubmitButton.root_.dataset.type = 'add-number';
-  userSubmitButton.root_.id = 'selector-submit-send'
-  userSubmitButton.root_.onclick = function () {
-    if (userSubmitButton.root_.dataset.type === 'add-number') {
-      addNewNumber(data, container);
-      return;
-    }
-    let filterClassName = '.mdc-radio'
-    if (!data.attachment) {
-      filterClassName = '.mdc-checkbox'
-    }
-    const filtered = getSelectedList(filterClassName)
-    if (!filtered) {
-      container.querySelector('#selector-warning').textContent = 'Please Choose An Option'
-      return;
-    }
-    const numbers = [];
-    filtered.forEach(function (el) {
-      numbers.push(JSON.parse(el.value))
-    })
-    console.log(numbers);
-    insertNumberIntoRecord(data, numbers);
 
-
-  }
-  container.appendChild(userSubmitButton.root_)
   const req = indexedDB.open(firebase.auth().currentUser.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -237,31 +209,27 @@ function userSelector(data, container) {
         cursor.continue();
         return;
       }
+      count++
       if (data.attachment) {
-        count++
-        const radioButton = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(cursor.value.mobile)))
-        radioButton.root_.onclick = function () {
-          data.record.attachment[data.key].value = JSON.parse(radioButton.value)
-          updateCreateActivity(data.record, true)
-        }
-        const assigneeLi = createSimpleAssigneeLi(cursor.value, radioButton)
-        assigneeLi.dataset.number = cursor.value.mobile
-        ul.appendChild(assigneeLi)
+        ul.setAttribute('role', 'radiogroup')
+
+        ul.appendChild(new mdc.ripple.MDCRipple(userList({
+          value: cursor.value,
+          index: count,
+          singleSelection: true
+        }, true)).root_)
+
       } else {
         if (!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-          count++
-          const checkbox = createCheckBox({
-            value: cursor.value.mobile
-          });
-          checkbox.root_.onclick = function () {
-            container.querySelector('#selector-submit-send').dataset.type = '';
-            container.querySelector('#selector-submit-send').textContent = 'SELECT';
-          }
-          const assigneeLi = createSimpleAssigneeLi(cursor.value, checkbox)
-          assigneeLi.dataset.number = cursor.value.mobile
-          ul.appendChild(assigneeLi)
+          ul.setAttribute('role', 'group')
+          ul.appendChild(new mdc.ripple.MDCRipple(userList({
+            value: cursor.value,
+            index: count,
+            singleSelection: false
+          }, true)).root_)
         }
       }
+
       cursor.continue()
     }
 
@@ -269,9 +237,62 @@ function userSelector(data, container) {
       if (!count) {
         ul.appendChild(noSelectorResult('No Contact Found'));
         document.getElementById('users-selector-search').style.display = 'none';
+        return;
       };
 
-      document.getElementById('app-current-panel').appendChild(container);
+      const userSubmit = new Button('Add New Number');
+      userSubmit.raised();
+      userSubmit.selectorButton();
+      const userSubmitButton = userSubmit.getButton();
+      userSubmitButton.root_.dataset.type = 'add-number';
+      userSubmitButton.root_.id = 'selector-submit-send'
+      userSubmitButton.root_.onclick = function () {
+        if (userSubmitButton.root_.dataset.type === 'add-number') {
+          addNewNumber(data, container);
+          return;
+        };
+
+
+        const number = [];
+        listINit.selectedIndex.forEach(function (idx) {
+          number.push(JSON.parse(listINit.listElements[idx].querySelector('.mdc-checkbox__native-control').value).mobile)
+        })
+        insertNumberIntoRecord(data, number)
+
+      }
+
+      const listINit = new mdc.list.MDCList(ul);
+      data.attachment ? listINit.singleSelection = true : '';
+      listINit.listen('MDCList:action', function (evt) {
+
+        if (data.attachment) {
+
+          const value = JSON.parse(listINit.listElements[evt.detail.index].querySelector('.mdc-radio__native-control').value)
+          data.record.attachment[data.key].value = value.mobile
+          updateCreateActivity(data.record, true)
+          return
+        }
+
+        if (!listINit.selectedIndex.length) {
+          userSubmitButton.root_.dataset.type = 'add-number';
+          userSubmitButton.root_.textContent = 'Add new Number';
+        } else {
+          userSubmitButton.root_.dataset.type = '';
+          userSubmitButton.root_.textContent = 'SELECT';
+        }
+      });
+      const field = new InputField().withLeadingIcon('search', 'Search Assignee');
+      field.root_.id = 'users-selector-search'
+      field.root_.classList.add('search-field')
+      container.appendChild(field.root_);
+
+      initUserSelectorSearch(data, field, listINit);
+      container.appendChild(ul);
+      container.appendChild(userSubmitButton.root_)
+
+
+      parent.appendChild(container);
+      document.getElementById('start-loader').classList.add('hidden')
     }
   }
 }
@@ -362,112 +383,135 @@ function insertNumberIntoRecord(data, number) {
 }
 
 function fillSubscriptionInSelector(data, container) {
+  const panel = document.getElementById('app-current-panel')
   const req = indexedDB.open(firebase.auth().currentUser.uid)
+  let index = 0;
   req.onsuccess = function () {
     const db = req.result
     const tx = db.transaction([data.store], 'readonly');
-    const store = tx.objectStore(data.store)
-    const officeIndex = store.index('office');
-    const grp = createElement('div', {
-      className: 'mdc-list-group',
-      id: 'data-list--container'
-    })
+    const store = tx.objectStore(data.store);
+    const statusIndex = store.index('status');
+    const officesObject = {}
+    const tabBarInit = tabBarBase();
+    let tabContentContainer;
+    panel.appendChild(tabBarInit);
 
-    officeIndex.openCursor(null, 'nextunique').onsuccess = function (event) {
-      const cursor = event.target.result
+    statusIndex.openCursor(IDBKeyRange.bound('CONFIRMED', 'PENDING')).onsuccess = function (event) {
+      const cursor = event.target.result;
       if (!cursor) return;
+      if (officesObject[cursor.value.office]) {
+        tabContentContainer = panel.querySelector(`[data-office="${cursor.value.office}"]`)
+      } else {
+        tabBarInit.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({
+          name: cursor.value.office,
+          index: index
+        }))
+        tabContentContainer = createElement('ul', {
+          className: 'content mdc-list'
+        })
+        tabContentContainer.setAttribute('role', 'radiogroup')
+        tabContentContainer.dataset.office = cursor.value.office
 
-      const ul = createElement('ul', {
-        className: 'mdc-list mdc-list--avatar-list subscription-selector'
-      });
-      ul.setAttribute('role', 'radiogroup');
-      ul.dataset.groupName = cursor.value.office
-      const headline3 = createElement('h3', {
-        className: 'mdc-list-group__subheader subheader--group-small',
-        textContent: cursor.value.office
-      })
-      grp.appendChild(headline3)
-      grp.appendChild(ul)
-      container.appendChild(grp)
+        index == 0 ? tabContentContainer.classList.add('content--active') : '';
+        // new mdc.list.MDCList(tabContentContainer).singleSelection = true
+        panel.appendChild(tabContentContainer)
+        officesObject[cursor.value.office] = true
+      };
+      const attr = cursor.value;
+      attr.key = cursor.primaryKey
+
+
+      tabContentContainer.appendChild(radioList({
+        index: index,
+        labelText: attr.template,
+        value: attr
+      }))
+      index++
       cursor.continue();
     }
-
     tx.oncomplete = function () {
-      document.getElementById('app-current-panel').appendChild(container);
-      insertTemplateByOffice(grp)
-    }
-  }
-}
+      const tabBar = new mdc.tabBar.MDCTabBar(tabBarInit);
 
-function insertTemplateByOffice(grp) {
-  const req = indexedDB.open(firebase.auth().currentUser.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['subscriptions'], 'readonly');
-    const subscriptionObjectStore = tx.objectStore('subscriptions').index('office');
-    subscriptionObjectStore.openCursor().onsuccess = function (event) {
-      const cursor = event.target.result
-      if (!cursor) return
+      var contentEls = document.querySelectorAll('.content');
+      tabBar.listen('MDCTabBar:activated', function (evt) {
+        document.querySelector('.content--active').classList.remove('content--active');
+        contentEls[event.detail.index].classList.add('content--active');
+      });
 
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue()
-        return
-      }
-
-      if (grp.querySelector(`[data-group-name="${cursor.value.office}"] [data-name="${cursor.value.template}"]`)) {
-        cursor.continue();
-        return;
-      }
-      const templateList = radioList({
-        value: cursor.value,
-        labelText: cursor.value.template,
+      [].map.call(document.querySelectorAll('.mdc-list'), function (el) {
+        const ul = new mdc.list.MDCList(el);
+        ul.singleSelection = true
+        ul.listElements.map(function (listItemEl) {
+          listItemEl.onclick = function () {
+            progressBar.foundation_.open();
+            const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value)
+            setCountForTemplate(value.key).then(console.log).catch(handleError);
+            createTempRecord(value.office, value.template, data)
+          }
+          return new mdc.ripple.MDCRipple(listItemEl);
+        })
       })
-      templateList.dataset.name = cursor.value.template;
-
-      grp.querySelector(`[data-group-name="${cursor.value.office}"]`).appendChild(templateList)
-      cursor.continue()
     }
   }
 }
 
+function setCountForTemplate(key) {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['subscriptions'], 'readwrite');
+      const store = tx.objectStore('subscriptions');
+      store.openCursor(key).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        const record = cursor.value;
+        if (record.count) {
+          record.count = record.count + 1
+        } else {
+          record.count = 1
+        }
+        cursor.update(record);
+      }
+      tx.oncomplete = function () {
+        return resolve('success');
+      }
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message,
+          body: ''
+        })
+      }
+    }
+
+    req.onerror = function () {
+      reject({message:req.error.message,body:''})
+    }
+  })
+}
 
 function fillChildrenInSelector(data, container) {
   const ul = createElement('ul', {
     className: 'mdc-list'
   });
-  data.results.forEach(function (value) {
+  data.results.forEach(function (value, idx) {
+    const radioListEl = radioList({
+      labelText: value.attachment.Name.value || value.attachment.Number.value,
+      value: value.attachment.Name.value || value.attachment.Number.value,
+      index: idx
+    });
 
-  
-      if (value.attachment.Name) {
-
-        const radioListEl = radioList({
-          labelText: value.attachment.Name.value,
-          value: value.attachment.Name.value
-        });
-        radioListEl.dataset.value = value.attachment.Name.value
-
-        if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
-        radioListEl.querySelector('.mdc-radio input').onclick = function () {
-          data.record.attachment[data.key].value = JSON.parse(this.value);
-
-          updateCreateActivity(data.record, true);
-          return;
-        }
-        ul.appendChild(radioListEl)
-          
-        }
-      }
-      if (value.attachment.Number) {
-
-        const radioListEl = radioList({
-          labelText: value.attachment.Number.value,
-          value: value.attachment.Number.value
-        })
-        radioListEl.dataset.value = value.attachment.Number.value
-        if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
-          ul.appendChild(radioListEl)
-        }
-      }
+    radioListEl.dataset.value = value.attachment.Name.value || value.attachment.Number.value
+    if (!ul.querySelector(`[data-value="${radioListEl.dataset.value}"]`)) {
+      ul.appendChild(radioListEl)
+      new mdc.ripple.MDCRipple.attachTo(radioListEl);
+    }
+  })
+  const listInit = new mdc.list.MDCList(ul)
+  listInit.singleSelection = true
+  listInit.listen('MDCList:action', function (evt) {
+    data.record.attachment[data.key].value = JSON.parse(ul.querySelector('#list-radio-item-' + evt.detail.index).value);
+    updateCreateActivity(data.record, true);
   })
   container.appendChild(ul)
   document.getElementById('app-current-panel').appendChild(container);
@@ -493,7 +537,7 @@ function getSelectedList(className) {
 
 function shareReq(data, number) {
   if (!isLocationStatusWorking()) return;
-  document.querySelector('header').appendChild(progressBar())
+  progressBar.foundation_.open();
   requestCreator('share', {
     'activityId': data.record.activityId,
     'share': number
