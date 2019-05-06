@@ -1630,7 +1630,7 @@ function setFilePath(str, key, show) {
   dataObject.id = 'attachment-picture';
   dataObject.dataset.photoKey = key;
   dataObject.className = 'profile-container--main mdc-image-list__image';
-
+ 
   const img = document.createElement('img')
   img.src = './img/placeholder.png';
   img.className = 'profile-container--main mdc-image-list__image'
@@ -1645,9 +1645,14 @@ function setFilePath(str, key, show) {
   dataObject.appendChild(img);
 
   dataObject.onclick = function () {
-    // dataObject.style.width = '100%';    
+
+
     const imageDialog = new Dialog('Photo', dataObject).create();
     imageDialog.open();
+    imageDialog.listen('MDCDialog:closed',function(evt){
+      container.appendChild(dataObject)
+
+    })
   }
 
   container.appendChild(dataObject)
