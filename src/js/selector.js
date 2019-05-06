@@ -419,17 +419,24 @@ function fillSubscriptionInSelector(data, container) {
       };
       const attr = cursor.value;
       attr.key = cursor.primaryKey
-
-
-      tabContentContainer.appendChild(radioList({
-        index: index,
-        labelText: attr.template,
-        value: attr
-      }))
-      index++
+      if(!tabContentContainer.querySelector(`[data-template="${attr.template}"]`)) {
+        const li = radioList({
+          index: index,
+          labelText: attr.template,
+          value: attr
+        })
+        li.dataset.template = attr.template;
+        tabContentContainer.appendChild(radioList({
+          index: index,
+          labelText: attr.template,
+          value: attr
+        }))
+        index++
+      }
       cursor.continue();
     }
     tx.oncomplete = function () {
+    
       const tabBar = new mdc.tabBar.MDCTabBar(tabBarInit);
 
       var contentEls = document.querySelectorAll('.content');
