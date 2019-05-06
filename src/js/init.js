@@ -220,9 +220,9 @@ function startApp(start) {
       return
     }
 
-    if (!localStorage.getItem('error')) {
+    if (!localStorage.getItem('error') || isNewDay()) {
       localStorage.setItem('error', JSON.stringify({}));
-    }
+    };
 
     if (start) {
       const req = window.indexedDB.open(auth.uid, 4);
@@ -262,7 +262,7 @@ function startApp(start) {
         });
 
         runAppChecks()
-        manageLocation().then(console.log).catch(console.log)
+        manageLocation().then(console.log).catch(handleError)
 
       }
       req.onerror = function () {
@@ -455,10 +455,6 @@ function redirect() {
   });
 }
 
-
-function initLocation() {
-  manageLocation().then(console.log).catch(console.log);
-}
 
 function runAppChecks() {
 

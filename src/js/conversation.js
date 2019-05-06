@@ -127,6 +127,7 @@ function commentPanel(id) {
 
   document.getElementById('send-chat--input').onclick = function () {
     if (!isLocationStatusWorking()) return;
+    progressBar.foundation_.open();
     let comment = document.querySelector('.comment-field').value;
     const reqBody = {
       'activityId': id,
@@ -595,15 +596,7 @@ function createTempRecord(office, template, prefill) {
 
           manageLocation().then(function (location) {
             updateCreateActivity(bareBonesRecord)
-          }).catch(function (error) {
-            progressBar.foundation_.close();
-            const locationErrorDialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
-            locationErrorDialog.open();
-            locationErrorDialog.listen('MDCDialog:closed', function (evt) {
-              resetScroll()
-              listView();
-            })
-          })
+          }).catch(locationErrorDialog)
         });
         return
       }
@@ -632,8 +625,7 @@ function createTempRecord(office, template, prefill) {
             return createBlendedCustomerRecord(bareBonesRecord, result)
           });
         }).catch(function (error) {
-          console.log(error)
-
+          handleError(error)
           return createBlendedCustomerRecord(bareBonesRecord)
         })
 

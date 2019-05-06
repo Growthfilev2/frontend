@@ -2,12 +2,13 @@ let apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
-  if (!errorInStorage.hasOwnProperty(error.message)) {
-    errorInStorage[error.message] = true
-    localStorage.setItem('error', JSON.stringify(errorInStorage));
-    requestCreator('instant', JSON.stringify(error))
-    return
-  }
+  if (errorInStorage[error.message]) return;
+
+  errorInStorage[error.message] = true
+  localStorage.setItem('error', JSON.stringify(errorInStorage));
+  requestCreator('instant', JSON.stringify(error))
+  
+
 }
 
 function loader(nameClass) {
@@ -109,15 +110,15 @@ function manageLocation() {
       // };
       console.log(location)
       resolve(location)
-    }).catch(function (error) {
-      handleError(error);
+    }).catch(function (error) {  
       reject(error);
     })
   })
 }
 
 function getLocation() {
-  return new Promise(function (resolve, reject) {
+  return new 
+  Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
@@ -134,7 +135,7 @@ function getLocation() {
           return resolve(location);
         }).catch(function (error) {
           return reject({
-            message: 'Both HTML and Geolocation failed to fetch location.',
+            message: 'Both HTML and Geolocation failed to fetch location',
             body: {
               html5: htmlError,
               geolocation: error,
@@ -207,16 +208,14 @@ function html5Geolocation() {
 
     }, function (error) {
       reject({
-        message: error
+        message: error.message
       })
     }, {
-      timeout: 5000,
+      timeout: 1,
       maximumAge: 0
     })
   })
 }
-
-
 
 function updateLocationInRoot(finalLocation) {
   var previousLocation = {
@@ -364,88 +363,65 @@ function requestCreator(requestType, requestBody) {
     }
   };
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
-    auth.getIdToken(false).then(function (token) {
+  auth.getIdToken(false).then(function (token) {
+    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
       requestGenerator.body = requestBody;
       requestGenerator.meta.user.token = token;
 
       apiHandler.postMessage(requestGenerator);
-    }).catch(console.log);
-  } else {
 
-    getRootRecord().then(function (rootRecord) {
-      let location = rootRecord.location;
-      let isLocationOld = true;
-      location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
-      const promises = [auth.getIdToken(false)];
-      if (isLocationOld) {
-        promises.push(manageLocation())
-      };
-
-      Promise.all(promises).then(function (result) {
-        const token = result[0];
-        if (result.length == 2) {
-          location = result[1];
-          console.log(location)
-        }
-
-        var geopoints = {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'accuracy': location.accuracy,
-          'provider': location.provider
-        };
-
-        if (requestType === 'create') {
-          requestBody.forEach(function (body) {
-            body.timestamp = fetchCurrentTime(rootRecord.serverTime);
-            body.geopoint = geopoints
-          })
-        } else {
-          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-          requestBody['geopoint'] = geopoints;
-        }
-        requestGenerator.body = requestBody;
-
+    } else {
+      getRootRecord().then(function (rootRecord) {
+        let location = rootRecord.location;
+        let isLocationOld = true;
+        location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
         requestGenerator.meta.user.token = token;
+        if (isLocationOld) {
+          manageLocation().then(function (location) {
+            createRequestBody(requestType, requestBody, requestGenerator, location)
+          }).catch(locationErrorDialog)
+        } else {
+          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.location)
+        }
+      });
+    }
+  }).catch(console.log)
 
-        sendRequest(location, requestGenerator);
-      }).catch(function (error) {
-        handleError(error);
-      })
-    });
-  };
 
   // handle the response from apiHandler when operation is completed
   apiHandler.onmessage = messageReceiver;
   apiHandler.onerror = onErrorMessage;
 }
 
-
-function sendRequest(location, requestGenerator) {
-  if (location.latitude && location.longitude && location.accuracy) {
-    apiHandler.postMessage(requestGenerator);
-  } else {
-    const locationErrorDialog = new Dialog('Location Error', 'There was a Problem in detecting your location. Please Try again later').create();
-    locationErrorDialog.open();
-    locationErrorDialog.listen('MDCDialog:closed', function (evt) {
-      getRootRecord().then(function (record) {
-        handleError({
-          message: 'No Locations Found in indexedDB',
-          body: JSON.stringify({
-            storedLocation: record.location,
-            cellTower: getCellularInformation()
-          })
-        })
-        resetScroll()
-        listView();
-      })
+function createRequestBody(requestType, requestBody, requestGenerator, location) {
+  if (requestType === 'create') {
+    requestBody.forEach(function (body) {
+      body.timestamp = fetchCurrentTime(rootRecord.serverTime);
+      body.geopoint = geopoints
     })
+  } else {
+    requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+    requestBody['geopoint'] = geopoints;
   }
+  requestGenerator.body = requestBody;
+  apiHandler.postMessage(requestGenerator);
+}
+
+
+
+function locationErrorDialog(error) {
+  progressBar.foundation_.close();
+  const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
+  dialog.open();
+  dialog.listen('MDCDialog:closed', function (evt) {
+    resetScroll()
+    listView();
+    handleError(error);
+  })
 }
 
 function isLastLocationOlderThanThreshold(test, threshold) {
-
+  if (!test) return true;
   var currentTime = moment(moment().valueOf());
   var duration = moment.duration(currentTime.diff(test));
   var difference = duration.asSeconds();
