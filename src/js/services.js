@@ -123,9 +123,9 @@ function getLocation() {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
         handleGeoLocationApi().then(function (cellLocation) {
-          if (htmlLocation.accuracy < cellLocation.accuracy) {
-            return resolve(htmlLocation)
-          }
+          // if (htmlLocation.accuracy < cellLocation.accuracy) {
+          //   return resolve(htmlLocation)
+          // }
           return resolve(cellLocation)
         }).catch(function (error) {
           return resolve(htmlLocation)
@@ -211,7 +211,7 @@ function html5Geolocation() {
         message: error.message
       })
     }, {
-      timeout: 1,
+      timeout: 5000,
       maximumAge: 0
     })
   })
@@ -328,14 +328,14 @@ function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
-    const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.');
+    const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.').create()
     alertDialog.open();
     return
   }
   const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
   if (requiredWifi[brand]) {
     if (!AndroidInterface.isWifiOn()) {
-      const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.');
+      const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
       alertDialog.open();
     }
     return true;
@@ -378,30 +378,30 @@ function requestCreator(requestType, requestBody) {
         requestGenerator.meta.user.token = token;
         if (isLocationOld) {
           manageLocation().then(function (location) {
-            createRequestBody(requestType, requestBody, requestGenerator, location)
+            createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,location)
           }).catch(locationErrorDialog)
         } else {
-          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.location)
+          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,rootRecord.location)
         }
       });
     }
   }).catch(console.log)
-
 
   // handle the response from apiHandler when operation is completed
   apiHandler.onmessage = messageReceiver;
   apiHandler.onerror = onErrorMessage;
 }
 
-function createRequestBody(requestType, requestBody, requestGenerator, location) {
+function createRequestBody(requestType, requestBody, requestGenerator,serverTime, location) {
+
   if (requestType === 'create') {
     requestBody.forEach(function (body) {
-      body.timestamp = fetchCurrentTime(rootRecord.serverTime);
-      body.geopoint = geopoints
+      body.timestamp = fetchCurrentTime(serverTime);
+      body.geopoint = location
     })
   } else {
-    requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-    requestBody['geopoint'] = geopoints;
+    requestBody['timestamp'] = fetchCurrentTime(serverTime);
+    requestBody['geopoint'] = location;
   }
   requestGenerator.body = requestBody;
   apiHandler.postMessage(requestGenerator);
@@ -447,7 +447,7 @@ function messageReceiver(response) {
 function emailVerify(notification) {
   if (firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
-  const emailVerifyDialog = new Dialog(notification.title, notification.body);
+  const emailVerifyDialog = new Dialog(notification.title, notification.body).create();
   emailVerifyDialog.open();
   emailVerifyDialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;

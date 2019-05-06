@@ -109,7 +109,7 @@ Dialog.prototype.create = function () {
         className: 'mdc-dialog__surface'
     })
     const h2 = createElement('h2', {
-        className: 'mdc-dialog__title',
+        className: `mdc-dialog__title ${this.title ? '':'hidden'}`,
         textContent: this.title
     })
     const contentContainer = createElement('div', {
