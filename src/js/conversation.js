@@ -1876,8 +1876,9 @@ function getSubscription(office, template) {
       const range = IDBKeyRange.only([office, template])
       let record;
       officeTemplateCombo.get(range).onsuccess = function (event) {
-        record = event.target.result
-
+        if(record.status !== 'CANCELLED')  {
+          record = event.target.result;
+        }
       }
       tx.oncomplete = function () {
 
