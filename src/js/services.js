@@ -123,9 +123,9 @@ function getLocation() {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
         handleGeoLocationApi().then(function (cellLocation) {
-          // if (htmlLocation.accuracy < cellLocation.accuracy) {
-          //   return resolve(htmlLocation)
-          // }
+          if (htmlLocation.accuracy < cellLocation.accuracy) {
+            return resolve(htmlLocation)
+          }
           return resolve(cellLocation)
         }).catch(function (error) {
           return resolve(htmlLocation)
