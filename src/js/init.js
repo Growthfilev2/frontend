@@ -111,12 +111,7 @@ window.addEventListener("load", function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
-  if (appKey.getMode() === 'production') {
-    if (!native.getInfo()) {
-      redirect();
-      return;
-    }
-  }
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
       console.log('sw registered with scope :', registeration.scope);
@@ -219,7 +214,12 @@ function startApp(start) {
       userSignedOut()
       return
     }
-
+    if (appKey.getMode() === 'production') {
+      if (!native.getInfo()) {
+        redirect();
+        return;
+      }
+    }
     if (!localStorage.getItem('error') || isNewDay()) {
       localStorage.setItem('error', JSON.stringify({}));
     };
