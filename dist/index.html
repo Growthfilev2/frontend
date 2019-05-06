@@ -1,0 +1,94 @@
+<!-- Only when no cache is present and can't reach url-->
+<html>
+
+<head>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        @-webkit-keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @-moz-keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            opacity: 0;
+            /* make things invisible upon start */
+            -webkit-animation: fadeIn ease-in 1;
+            /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
+            -moz-animation: fadeIn ease-in 1;
+            animation: fadeIn ease-in 1;
+
+            -webkit-animation-fill-mode: forwards;
+            /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
+            -moz-animation-fill-mode: forwards;
+            animation-fill-mode: forwards;
+
+            -webkit-animation-duration: 1s;
+            -moz-animation-duration: 1s;
+            animation-duration: 1s;
+        }
+
+        .fade-in.two {
+            -webkit-animation-delay: 0.6s;
+            -moz-animation-delay: 0.6s;
+            animation-delay: 0.6s;
+        }
+
+        .reload-btn {
+            width: 50%;
+            padding: 10px;
+            border: 0px;
+            border-radius: 5px;
+            color: white;
+            background-color: #0399f4;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .box {
+            position: absolute;
+            top: 30%;
+        }
+
+        h1 {
+            text-transform: uppercase;
+            color: #0399f4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="box fade-in two">
+            <h1>You are Using Old Version Of Growthfile</h1>
+            <p>Please Update Your App</p>
+        </div>
+    </div>
+</body>
+
+
+</html>
