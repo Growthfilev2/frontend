@@ -1727,17 +1727,18 @@ input[type="datetime-local"] {
   display: none;
   background-color: #0399f4 !important;
   border-radius: 12px;
-  padding: 0px 5px 0px 5px;
+  padding: 2px 2px 2px 2px;
   text-align: center;
   color: #fff;
-  /* font-size: 12px; */
   font-weight: 500;
-  /* height: 19px; */
-  /* line-height: 20px; */
   min-width: 14px;
   vertical-align: top;
   margin-right: 0;
   vertical-align: top;
+ 
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 #app-main-header {
