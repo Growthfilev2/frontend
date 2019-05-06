@@ -77,7 +77,7 @@ function http(request) {
       if (xhr.readyState === 4) {
 
         if (!xhr.status) return;
-      
+
         if (xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
@@ -100,31 +100,31 @@ function http(request) {
 
 function fetchServerTime(body, meta) {
   return new Promise(function (resolve) {
-  currentDevice = body.device;
-  const parsedDeviceInfo = JSON.parse(currentDevice);
-  let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
-  const req = indexedDB.open(meta.user.uid);
-      
-  req.onsuccess = function(){
-    const db = req.result;
-    const tx = db.transaction(['root'],'readwrite');
-    const rootStore = tx.objectStore('root');
-    
-    rootStore.get(meta.user.uid).onsuccess = function(event){
-      const record = event.target.result;
-      if(!record) return;
-      if(!record.hasOwnProperty('officesRemoved')) return;
-      if(record.officesRemoved) {
-          record.officesRemoved.forEach(function(office){
-            
+    currentDevice = body.device;
+    const parsedDeviceInfo = JSON.parse(currentDevice);
+    let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
+    const req = indexedDB.open(meta.user.uid);
+
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['root'], 'readwrite');
+      const rootStore = tx.objectStore('root');
+
+      rootStore.get(meta.user.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return;
+        if (!record.hasOwnProperty('officesRemoved')) return;
+        if (record.officesRemoved) {
+          record.officesRemoved.forEach(function (office) {
+
             url = url + `&removeFromOffice=${office.replace(' ','%20')}`
           });
           delete record.officesRemoved;
           rootStore.put(record);
+        }
       }
-    }
-    
-    tx.oncomplete = function(){ 
+
+      tx.oncomplete = function () {
 
         const httpReq = {
           method: 'GET',
@@ -132,21 +132,21 @@ function fetchServerTime(body, meta) {
           body: null,
           token: meta.user.token
         }
-    
+
         http(httpReq).then(function (response) {
-       
+
           if (response.updateClient) {
             requestHandlerResponse('update-app', 200)
             return
           }
-    
+
           if (response.revokeSession) {
             requestHandlerResponse('revoke-session', 200);
             return
           };
-          if(response.hasOwnProperty('removeFromOffice')){
-            if(Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              removeFromOffice(response.removeFromOffice,meta.user)
+          if (response.hasOwnProperty('removeFromOffice')) {
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+              removeFromOffice(response.removeFromOffice, meta.user)
             }
           }
 
@@ -154,16 +154,16 @@ function fetchServerTime(body, meta) {
             ts: response.timestamp,
             meta: meta,
           })
-          
+
         }).catch(sendApiFailToMainThread)
       }
-    
+
     }
   })
 }
 
 function instant(error, meta) {
-  
+
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}services/logs`,
@@ -226,19 +226,19 @@ function comment(body, meta) {
 }
 
 function statusChange(body, meta) {
-  
+
   return new Promise(function (resolve, reject) {
-      const req = {
-        method: 'PATCH',
-        url: `${meta.apiUrl}activities/change-status`,
-        body: JSON.stringify(body),
-        token: meta.user.token
-      }
-      http(req).then(function (success) {
-        instantUpdateDB(body, 'status', meta.user).then(function () {
-          resolve(true)
-        }).catch(console.log)
-      }).catch(sendApiFailToMainThread)
+    const req = {
+      method: 'PATCH',
+      url: `${meta.apiUrl}activities/change-status`,
+      body: JSON.stringify(body),
+      token: meta.user.token
+    }
+    http(req).then(function (success) {
+      instantUpdateDB(body, 'status', meta.user).then(function () {
+        resolve(true)
+      }).catch(console.log)
+    }).catch(sendApiFailToMainThread)
   })
 }
 
@@ -253,7 +253,7 @@ function share(body, meta) {
     }
     http(req)
       .then(function (success) {
-          resolve(true)
+        resolve(true)
       })
       .catch(sendApiFailToMainThread)
   })
@@ -292,7 +292,7 @@ function update(body, meta) {
 function create(createReq, meta) {
   console.log(createReq)
   const promiseArray = [];
-  createReq.forEach(function(requestBody){
+  createReq.forEach(function (requestBody) {
     const req = {
       method: 'POST',
       url: `${meta.apiUrl}activities/create`,
@@ -302,8 +302,8 @@ function create(createReq, meta) {
     promiseArray.push(http(req))
   })
   return new Promise(function (resolve, reject) {
-    if(!promiseArray.length) return;
-    Promise.all(promiseArray).then(function(){
+    if (!promiseArray.length) return;
+    Promise.all(promiseArray).then(function () {
       resolve(true)
     }).catch(sendApiFailToMainThread)
   })
@@ -381,7 +381,7 @@ function removeFromListAndChildren(response) {
       response.ids.forEach(function (id) {
         const deleteReqList = listStore.delete(id);
         const deleteReqChildren = childrenStore.delete(id);
-        
+
       })
       tx.oncomplete = function () {
         resolve(response)
@@ -459,7 +459,7 @@ function removeFromSubscriptions(response) {
         rootStore.put(record)
       }
       rootTx.oncomplete = function () {
-        requestHandlerResponse('removed-from-office',200,response.offices);
+        requestHandlerResponse('removed-from-office', 200, response.offices);
       }
 
       rootTx.onerror = function () {
@@ -752,8 +752,8 @@ function deleteByIndex(store, activitiesToRemove) {
 
 
 function updateSubscription(templates, param) {
-  return new Promise(function(resolve,reject){
-
+  return new Promise(function (resolve, reject) {
+    const countArray = [];
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -763,42 +763,54 @@ function updateSubscription(templates, param) {
       templates.forEach(function (subscription) {
         deletIndex.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
           const cursor = event.target.result;
+
           if (cursor) {
+            if (cursor.value.count) {
+              countArray.push(cursor.value);
+            }
             const deleteReq = cursor.delete();
             deleteReq.onsuccess = function () {
-             console.log('deleted')
+              console.log('deleted')
             }
-          } 
+          }
         }
       })
 
       deletTx.oncomplete = function () {
-         const addReq = indexedDB.open(param.user.uid)
-         addReq.onsuccess = function(){
-           const addDb = addReq.result;
-           const addTx = addDb.transaction(['subscriptions'],'readwrite');
-           const addStore = addTx.objectStore('subscriptions')
-         
-           templates.forEach(function(subscription){
+        const addReq = indexedDB.open(param.user.uid)
+        addReq.onsuccess = function () {
+          const addDb = addReq.result;
+          const addTx = addDb.transaction(['subscriptions'], 'readwrite');
+          const addStore = addTx.objectStore('subscriptions')
 
-             addStore.put(subscription)
-             console.log('added')
-           })
-           addTx.oncomplete = function(){
-             resolve(true)
-           }
-           addTx.onerror = function(){
-             reject(addTx.error.message)
-           }
-         }
+          templates.forEach(function (subscription) {
+            if (countArray.length) {
+              countArray.forEach(function (value) {
+                if (value.office === subscription.office && value.template === subscription.template) {
+                  subscription.count = value.count
+                }
+              })
+            }
+            addStore.put(subscription)
+            console.log('added')
+          })
+          addTx.oncomplete = function () {
+            resolve(true)
+          }
+          addTx.onerror = function () {
+            reject(addTx.error.message)
+          }
+        }
       }
-      deletTx.onerror = function(){
-        reject({message:tx.error.message})
+      deletTx.onerror = function () {
+        reject({
+          message: tx.error.message
+        })
       }
     }
   })
 }
-  
+
 
 function createListStore(activity, counter, param) {
   return new Promise(function (resolve, reject) {
@@ -807,7 +819,7 @@ function createListStore(activity, counter, param) {
     req.onsuccess = function () {
       const db = req.result;
 
-      const userTx = db.transaction(['users'],'readwrite');
+      const userTx = db.transaction(['users'], 'readwrite');
 
       const usersStore = userTx.objectStore('users');
 
@@ -820,25 +832,25 @@ function createListStore(activity, counter, param) {
         'status': activity.status
       }
 
-      if(typeof activity.creator === "string") {
+      if (typeof activity.creator === "string") {
         requiredData.creator = {
-          number:activity.creator,
-          photo:''
+          number: activity.creator,
+          photo: ''
         }
       }
-      if(typeof activity.creator === 'object'){
-        
+      if (typeof activity.creator === 'object') {
+
         requiredData.creator = {
           number: activity.creator.phoneNumber,
           photo: activity.creator.photoURL,
         }
       }
 
-      activity.assignees.forEach(function(assigneeData){
+      activity.assignees.forEach(function (assigneeData) {
         const record = {
-          mobile:assigneeData.phoneNumber,
-          displayName:assigneeData.displayName,
-          photoURL:assigneeData.photoURL
+          mobile: assigneeData.phoneNumber,
+          displayName: assigneeData.displayName,
+          photoURL: assigneeData.photoURL
         }
         usersStore.put(record)
       })
@@ -900,12 +912,12 @@ function successResponse(read, param) {
 
     for (let index = read.activities.length; index--;) {
       let activity = read.activities[index];
-    
-      activity.canEdit ? activity.editable ==1 : activity.editable == 0;
+
+      activity.canEdit ? activity.editable == 1 : activity.editable == 0;
       activityObjectStore.put(activity)
       updateMap(activity, param);
       updateCalendar(activity, param);
-    
+
       putAttachment(activity, param);
 
       if (activity.hidden === 0) {
@@ -926,7 +938,7 @@ function successResponse(read, param) {
       }
     }
 
-
+ 
     updateRoot(param, read).then(function () {
       updateSubscription(read.templates, param).then(function () {
         requestHandlerResponse('initFirstLoad', 200, {
@@ -966,7 +978,7 @@ function updateRoot(param, read) {
 }
 
 function updateIDB(meta) {
-  
+
   const req = indexedDB.open(meta.user.uid)
   req.onsuccess = function () {
     const db = req.result
@@ -987,11 +999,11 @@ function updateIDB(meta) {
         data: null,
         token: meta.user.token
       }
-      
+
       http(req)
         .then(function (response) {
-          if (!response) return;       
-          successResponse(response,meta)
+          if (!response) return;
+          successResponse(response, meta)
         }).catch(sendApiFailToMainThread)
     }
   }

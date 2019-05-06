@@ -2,12 +2,10 @@ let apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
-  if (!errorInStorage.hasOwnProperty(error.message)) {
-    errorInStorage[error.message] = true
-    localStorage.setItem('error', JSON.stringify(errorInStorage));
-    requestCreator('instant', JSON.stringify(error))
-    return
-  }
+  if (errorInStorage.hasOwnProperty(error.message)) return;
+  errorInStorage[error.message] = true
+  localStorage.setItem('error', JSON.stringify(errorInStorage));
+  requestCreator('instant', JSON.stringify(error))
 }
 
 function loader(nameClass) {
@@ -16,153 +14,29 @@ function loader(nameClass) {
   return div;
 }
 
-function dialog(attr) {
-  const aside = document.createElement('aside')
 
-  aside.id = attr.id
-  aside.className = 'mdc-dialog dialog-custom-backdrop'
-  aside.role = 'alertdialog'
-
-  const dialogSurface = document.createElement('div')
-  dialogSurface.className = 'mdc-dialog__surface'
-  if (attr.headerText) {
-    const header = document.createElement('header');
-    header.className = 'mdc-dialog__header'
-    const headerText = document.createElement('h2')
-    headerText.className = 'mdc-dialog__header__title'
-    headerText.textContent = attr.headerText
-    header.appendChild(headerText)
-    dialogSurface.appendChild(header);
-  }
-
-  const section = document.createElement('section')
-  section.className = 'mdc-dialog__content'
-  if (attr.content) {
-    section.appendChild(attr.content)
-  }
-  dialogSurface.appendChild(section)
-
-
-  var footer = document.createElement('footer');
-  footer.className = 'mdc-dialog__footer';
-  if (attr.showCancel) {
-
-    var cancel = document.createElement('button');
-    cancel.type = 'button';
-    cancel.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--cancel';
-    cancel.textContent = 'cancel';
-    cancel.style.backgroundColor = '#3498db';
-    footer.appendChild(cancel)
-  }
-  if (attr.showAccept) {
-    var accept = document.createElement('button');
-    accept.type = 'button';
-    accept.className = 'mdc-button mdc-dialog__footer__button mdc-dialog__footer__button--accept';
-    accept.textContent = 'Okay';
-    accept.style.backgroundColor = '#3498db';
-    footer.appendChild(accept)
-  }
-
-  dialogSurface.appendChild(footer)
-  aside.appendChild(dialogSurface)
-  return aside;
-}
 
 function successDialog() {
-
-  var content = document.createElement('div');
-  content.className = 'success--container';
-
-  var icon = document.createElement('div');
-  icon.className = 'success--check';
-
-  content.appendChild(icon);
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'success-dialog',
-    headerText: '',
-    showCancel: false,
-    showAccept: false,
-    content: content
-  }).outerHTML
-  const dialogEl = document.querySelector('#success-dialog')
-  var successDialog = new mdc.dialog.MDCDialog(dialogEl);
-  successDialog.show();
-
+  progressBar.foundation_.close();
+  const successMark = document.getElementById('success-animation');
+  const viewContainer = document.getElementById('growthfile');
+  successMark.classList.remove('hidden');
+  viewContainer.style.opacity = '0.37';
   setTimeout(function () {
-    dialogEl.remove();
-    document.body.classList.remove('mdc-dialog-scroll-lock');
-  }, 1000);
-  resetScroll();
+    successMark.classList.add('hidden');
+    viewContainer.style.opacity = '1';
+  }, 1500);
   localStorage.removeItem('clickedActivity');
   resetScroll()
   listView();
 }
 
-
-function progressBar() {
-  var div = document.createElement('div');
-  div.className = 'mdc-linear-progress mdc-linear-progress--indeterminate progress--update';
-  div.role = 'progressbar';
-  var bufferDots = document.createElement('div');
-  bufferDots.className = 'mdc-linear-progress__buffering-dots';
-  var buffer = document.createElement('div');
-  buffer.className = 'mdc-linear-progress__buffer';
-  var primary = document.createElement('div');
-  primary.className = 'mdc-linear-progress__bar mdc-linear-progress__primary-bar';
-
-  var primaryInner = document.createElement('span');
-  primaryInner.className = 'mdc-linear-progress__bar-inner';
-
-  primary.appendChild(primaryInner);
-  var secondary = document.createElement('div');
-  secondary.className = 'mdc-linear-progress__bar mdc-linear-progress__secondary-bar';
-
-  var secondaryInner = document.createElement('span');
-  secondaryInner.className = 'mdc-linear-progress__bar-inner';
-
-  secondary.appendChild(secondaryInner);
-  div.appendChild(bufferDots);
-  div.appendChild(buffer);
-  div.appendChild(primary);
-  div.appendChild(secondary);
-  return div;
-}
-
 function snacks(message, type) {
-  var snack = document.createElement('div');
-  snack.className = 'mdc-snackbar';
-  snack.setAttribute('aria-live', 'assertive');
-  snack.setAttribute('aria-atomic', 'true');
-  snack.setAttribute('aria-hidden', 'true');
-  snack.style.zIndex = 99999
-  var snackbarText = document.createElement('div');
-  snackbarText.className = 'mdc-snackbar__text mdc-typography--subtitle2';
+  snackBar.labelText = message;
+  snackBar.open();
+  snackBar.timeoutMs = 10000
+  snackBar.actionButtonText = 'okay';
 
-  var snackbarAction = document.createElement('div');
-  snackbarAction.className = 'mdc-snackbar__action-wrapper';
-
-  var button = document.createElement('button');
-  button.className = 'mdc-snackbar__action-button';
-
-  snackbarAction.appendChild(button);
-
-  snack.appendChild(snackbarText);
-  snack.appendChild(snackbarAction);
-  document.getElementById('snackbar-container').innerHTML = snack.outerHTML;
-
-  var data = {
-
-    message: message,
-    actionText: 'OK',
-    timeout: 5000,
-    actionHandler: function actionHandler() {
-
-    }
-  };
-
-  var snackbar = mdc.snackbar.MDCSnackbar.attachTo(document.querySelector('.mdc-snackbar'));
-
-  snackbar.show(data);
 }
 
 function fetchCurrentTime(serverTime) {
@@ -183,23 +57,21 @@ function geolocationApi(body) {
         if (xhr.status >= 400) {
           return reject({
             message: xhr.response,
-            body: body,
+            body: JSON.parse(body),
           });
         }
         const response = JSON.parse(xhr.response);
         if (!response) {
           return reject({
             message: 'Response From geolocation Api ' + response,
-            body: body
+            body: JSON.parse(body)
           })
         }
         resolve({
           latitude: response.location.lat,
           longitude: response.location.lng,
           accuracy: response.accuracy,
-          provider: {
-            body: body
-          }
+          provider: body
         });
       }
     };
@@ -213,28 +85,16 @@ function geolocationApi(body) {
   });
 }
 
-function handleRequestBody(request) {
-  const body = JSON.parse(request);
-  if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
-    if (body.cellTowers) {
-      delete body.cellTowers;
-    }
-    return JSON.stringify(body);
-  } else {
-    return null;
-  }
-}
+
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       if (native.getName() === 'Android') {
-        updateLocationInRoot(location)
+       updateLocationInRoot(location)
       };
-      console.log(location)
       resolve(location)
-    }).catch(function (error) {
-      handleError(error);
+    }).catch(function (error) {  
       reject(error);
     })
   })
@@ -258,7 +118,7 @@ function getLocation() {
           return resolve(location);
         }).catch(function (error) {
           return reject({
-            message: 'Both HTML and Geolocation failed to fetch location.',
+            message: 'Both HTML and Geolocation failed to fetch location',
             body: {
               html5: htmlError,
               geolocation: error,
@@ -301,7 +161,7 @@ function handleGeoLocationApi() {
 
       reject("empty object from getCellularInformation");
     }
- 
+
     geolocationApi(body).then(function (cellLocation) {
       return resolve(cellLocation);
     }).catch(function (error) {
@@ -321,48 +181,24 @@ function iosLocationError(error) {
 
 function html5Geolocation() {
   return new Promise(function (resolve, reject) {
-    const prom = [];
-    for (let i = 0; i < 2; i++) {
-
-      let navProm = new Promise(function (resolve, reject) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-          return resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            provider: 'HTML5'
-          })
-
-        }, function (error) {
-          reject({
-            message: error
-          })
-        }, {
-          timeout: 5000,
-          maximumAge: 0
-        })
+    navigator.geolocation.getCurrentPosition(function (position) {
+      return resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        provider: 'HTML5'
       })
-      prom.push(navProm)
-    }
 
-
-    Promise.all(prom).then(function (results) {
-
-      let bestAccuracy = results.sort(function (a, b) {
-        return a.accuracy - b.accuracy
-      })
-      resolve(bestAccuracy[0]);
-      return;
-    }).catch(function (error) {
+    }, function (error) {
       reject({
-        message: error.message.message
+        message: error.message
       })
-      return;
+    }, {
+      timeout: 5000,
+      maximumAge: 0
     })
   })
 }
-
-
 
 function updateLocationInRoot(finalLocation) {
   var previousLocation = {
@@ -397,7 +233,10 @@ function updateLocationInRoot(finalLocation) {
       var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
 
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-        "detail": isLocationMoreThanThreshold(distanceBetweenBoth) || app.isNewDay()
+        "detail": {
+          newDay: isNewDay(true),
+          locationChanged: isLocationMoreThanThreshold(distanceBetweenBoth)
+        }
       });
       window.dispatchEvent(suggestCheckIn);
 
@@ -464,28 +303,6 @@ function sortedByAccuracy(geoData) {
   return result[0];
 }
 
-
-
-
-function createAndroidDialog(title, body) {
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = body;
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'alert-dialog',
-    showCancel: false,
-    showAccept: true,
-    content: span,
-    headerText: title
-  }).outerHTML
-  const dialogEl = document.querySelector('#alert-dialog');
-  var appDialog = new mdc.dialog.MDCDialog(dialogEl);
-  appDialog.listen('MDCDialog:accept', function () {
-    dialogEl.remove();
-  });
-  appDialog.show();
-}
-
 function isLocationStatusWorking() {
   const requiredWifi = {
     'samsung': true,
@@ -494,13 +311,15 @@ function isLocationStatusWorking() {
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
-    createAndroidDialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.')
+    const alertDialog = new Dialog('LOCATION PERMISSION', 'Please Allow Growthfile location access.').create()
+    alertDialog.open();
     return
   }
   const brand = JSON.parse(localStorage.getItem('deviceInfo')).deviceBrand
-  if(requiredWifi[brand]) {
-    if(!AndroidInterface.isWifiOn()) {
-      createAndroidDialog('Improve Location Accuracy', `${brand} devices requires Wi-fi to be turned on to get precise location. Please Turn On Your Wi-fi.`)
+  if (requiredWifi[brand]) {
+    if (!AndroidInterface.isWifiOn()) {
+      const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
+      alertDialog.open();
       return;
     }
     return true;
@@ -528,118 +347,70 @@ function requestCreator(requestType, requestBody) {
     }
   };
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
-    auth.getIdToken(false).then(function (token) {
+  auth.getIdToken(false).then(function (token) {
+    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
       requestGenerator.body = requestBody;
       requestGenerator.meta.user.token = token;
 
       apiHandler.postMessage(requestGenerator);
-    }).catch(console.log);
-  } else {
 
-    getRootRecord().then(function (rootRecord) {
-      let location = rootRecord.location;
-      var isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5);
-      const promises = [auth.getIdToken(false)];
-      if (isLocationOld) {
-        promises.push(manageLocation())
-      }
-
-      Promise.all(promises).then(function (result) {
-        const token = result[0];
-        if (result.length == 2) {
-          location = result[1];
-          console.log(location)
-        }
-
-        var geopoints = {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'accuracy': location.accuracy,
-          'provider': location.provider
-        };
-
-        if (requestType === 'create') {
-          requestBody.forEach(function (body) {
-            body.timestamp = fetchCurrentTime(rootRecord.serverTime);
-            body.geopoint = geopoints
-          })
-        } else {
-          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-          requestBody['geopoint'] = geopoints;
-        }
-        requestGenerator.body = requestBody;
-
+    } else {
+      getRootRecord().then(function (rootRecord) {
+        let location = rootRecord.location;
+        let isLocationOld = true;
+        location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
         requestGenerator.meta.user.token = token;
-
-        sendRequest(location, requestGenerator);
-      }).catch(function (error) {
-        handleError(error);
-      })
-    });
-  };
+        if (isLocationOld) {
+          manageLocation().then(function (location) {
+            createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,location)
+          }).catch(locationErrorDialog)
+        } else {
+          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,rootRecord.location)
+        }
+      });
+    }
+  }).catch(console.log)
 
   // handle the response from apiHandler when operation is completed
   apiHandler.onmessage = messageReceiver;
   apiHandler.onerror = onErrorMessage;
 }
 
+function createRequestBody(requestType, requestBody, requestGenerator,serverTime, location) {
 
-function sendRequest(location, requestGenerator) {
-
-  if (location.latitude && location.longitude && location.accuracy) {
-
-    apiHandler.postMessage(requestGenerator);
+  if (requestType === 'create') {
+    requestBody.forEach(function (body) {
+      body.timestamp = fetchCurrentTime(serverTime);
+      body.geopoint = location
+    })
   } else {
-
-    const span = document.createElement('span')
-    span.className = 'mdc-typography--body1'
-    span.textContent = 'There was a Problem in detecting your location. Please Try again later'
-
-    document.getElementById('dialog-container').innerHTML = dialog({
-      id: 'location-fetch-dialog',
-      content: span
-    }).outerHTML
-    const dialogEl = document.getElementById('location-fetch-dialog')
-    const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
-    fetchingLocationDialog.show();
-
-    getRootRecord().then(function (record) {
-      var cellTowerInfo = void 0;
-      try {
-        cellTowerInfo = getCellularInformation();
-      } catch (e) {
-        cellTowerInfo = e.message;
-      }
-
-      var body = {
-        storedLocation: record.location,
-        cellTower: cellTowerInfo
-      };
-      handleError({
-        message: 'No Locations Found in indexedDB',
-        body: body
-      })
-      setTimeout(function () {
-        dialogEl.remove();
-        resetScroll()
-
-        listView();
-      }, 5000)
-    });
+    requestBody['timestamp'] = fetchCurrentTime(serverTime);
+    requestBody['geopoint'] = location;
   }
+  requestGenerator.body = requestBody;
+  apiHandler.postMessage(requestGenerator);
+}
+
+
+
+function locationErrorDialog(error) {
+  progressBar.foundation_.close();
+  const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
+  dialog.open();
+  dialog.listen('MDCDialog:closed', function (evt) {
+    resetScroll()
+    listView();
+    handleError(error);
+  })
 }
 
 function isLastLocationOlderThanThreshold(test, threshold) {
-
+  if (!test) return true;
   var currentTime = moment(moment().valueOf());
-  var lastLocationTime = test;
-  var duration = moment.duration(currentTime.diff(lastLocationTime));
+  var duration = moment.duration(currentTime.diff(test));
   var difference = duration.asSeconds();
-  if (difference > threshold) {
-    return true;
-  }
-  return false;
+  return difference > threshold
+
 }
 
 var receiverCaller = {
@@ -652,7 +423,6 @@ var receiverCaller = {
 };
 
 function messageReceiver(response) {
-
   receiverCaller[response.data.type](response.data);
 }
 
@@ -660,96 +430,71 @@ function messageReceiver(response) {
 function emailVerify(notification) {
   if (firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
   if (firebase.auth().currentUser.email) return emailUpdateSuccess();
-
-  const span = document.createElement('h1')
-  span.className = 'mdc-typography--body1'
-  span.textContent = notification.body
-
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'email-update-dialog',
-    showCancel: true,
-    showAccept: true,
-    headerText: notification.title,
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('email-update-dialog')
-  const emailDialog = new mdc.dialog.MDCDialog(dialogEl);
-  emailDialog.listen('MDCDialog:accept', function () {
-    dialogEl.remove()
+  const emailVerifyDialog = new Dialog(notification.title, notification.body).create();
+  emailVerifyDialog.open();
+  emailVerifyDialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
     profileView(true);
   })
-  emailDialog.listen('MDCDialog:cancel', function () {
-    dialogEl.remove()
-  })
-  emailDialog.show()
 }
 
-
-function createBlankPayrollDialog(notificationData) {
-
-  const div = document.createElement('div')
-  div.style.marginTop = '10px';
-
-  div.className = 'notification-message'
-  div.textContent = notificationData.body
-
-  const ul = document.createElement('ul');
-  ul.className = 'mdc-list'
-  ul.id = 'payroll-notification-list'
-  ul.setAttribute('role', 'radiogroup');
-  div.appendChild(ul)
-  notificationData.data.forEach(function (data) {
-    let selected = false
-    if (data.template === 'leave') {
-      selected = true
-    }
-    ul.appendChild(radioList({
-      labelText: data.template,
-      id: convertKeyToId(data.template),
-      value: data.template,
-      selected: selected
-    }))
-  })
-
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'blank-payroll-dialog',
-    showAccept: true,
-    showCancel: true,
-    headerText: notificationData.title,
-    content: div
-  }).outerHTML
-  const dialogEl = document.getElementById('blank-payroll-dialog');
-  const payrollDialog = new mdc.dialog.MDCDialog(dialogEl);
-  const radioListInit = new mdc.list.MDCList(document.querySelector('#payroll-notification-list.mdc-list'))
-  radioListInit.singleSelection = true
-  const leaveRadio = [].map.call(document.querySelectorAll('#payroll-notification-list .mdc-radio'), function (el) {
-    return new mdc.radio.MDCRadio(el);
+function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
+  const container = createElement('div', {
+    className: 'notification-message',
+    textContent: notificationData.body
   });
 
-  payrollDialog.listen('MDCDialog:accept', function (evt) {
-    leaveRadio.forEach(function (el) {
-      if (el.checked) {
-        notificationData.data.forEach(function (data) {
-          const value = JSON.parse(el.value)
-          if (data.template === value) {
-            if (!isLocationStatusWorking()) return;
-            createTempRecord(data.office, value, {
-              schedule: data.schedule,
-              attachment: data.attachment
-            });
-            return;
-          }
-        })
-        return;
-      }
-    })
-    dialogEl.remove();
+  const ul = createElement('ul', {
+    className: 'mdc-list',
+    id: 'payroll-notification-list'
   })
-  payrollDialog.listen('MDCDialog:cancel', function (evt) {
-    dialogEl.remove()
-  })
-  payrollDialog.show()
+  ul.setAttribute('role', 'radiogroup')
 
+  notificationData.data.forEach(function (data, idx) {
+    ul.appendChild(radioList({
+      labelText: data.template,
+      index: idx,
+      value: data,
+    }))
+  })
+  container.appendChild(ul);
+
+  const payrollDialog = new Dialog(notificationData.title, container).create();
+  payrollDialog.open();
+
+  const radioListInit = new mdc.list.MDCList(ul)
+  radioListInit.singleSelection = true;
+  payrollDialog.listen('MDCDialog:opened', function (evt) {
+    radioListInit.layout();
+    radioListInit.listElements.map(function (el) {
+      return new mdc.ripple.MDCRipple.attachTo(el)
+    })
+  })
+  payrollDialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
+    if (!isLocationStatusWorking()) return;
+    const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
+    if (!rawValue) return;
+
+    const value = JSON.parse(rawValue);
+    let prefill = {
+      schedule:'',
+      attachment:''
+    }
+    if(!isSuggestion) {
+      prefill.schedule = value.schedule
+      prefill.attachment = value.attachment
+      
+    }
+    if (!hasMultipleOffice) {
+      createTempRecord(value.office, value.template, prefill);
+      return;
+    }
+    selectorUI({
+      store: 'subscriptions'
+    });
+
+  })
 }
 
 function initFirstLoad(response) {
@@ -770,22 +515,17 @@ function initFirstLoad(response) {
 
 function updateApp() {
   if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
-  var message = 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.'
-  var title = 'New Update Avaialble'
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = message
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'app-update-dialog',
-    showCancel: false,
-    showAccept: true,
-    headerText: title,
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('app-update-dialog')
-  const updateDialog = new mdc.dialog.MDCDialog(dialogEl)
-  updateDialog.show()
-  updateDialog.listen('MDCDialog:accept', function () {
+  const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
+
+  updateAppDialog.open();
+  updateAppDialog.scrimClickAction = ''
+  updateAppDialog.listen('MDCDialog:opened', function () {
+    const cancelButton = updateAppDialog.buttons_[0];
+    cancelButton.setAttribute('disabled', 'true');
+
+  })
+  updateAppDialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
     AndroidInterface.openGooglePlayStore('com.growthfile.growthfileNew')
   })
 }
@@ -805,9 +545,7 @@ function apiFail(data) {
   if (document.getElementById('send-activity')) {
     document.getElementById('send-activity').style.display = 'block';
   }
-  if (document.querySelector('header .mdc-linear-progress')) {
-    document.querySelector('header .mdc-linear-progress').remove();
-  }
+
   if (document.querySelector('.loader')) {
     document.querySelector('.loader').remove();
   }
@@ -822,34 +560,20 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-
+  progressBar.foundation_.close();
   snacks(data.msg.message);
 }
 
 function officeRemovalSuccess(data) {
-  const span = document.createElement('span')
-  span.className = 'mdc-typography--body1'
-  span.textContent = 'You have been removed from ' + data.msg.join(' & ');
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'office-removal-dialog',
-    showAccept: true,
-    showCancel: false,
-    headerText: 'Reminder',
-    content: span
-  }).outerHTML
-  const dialogEl = document.getElementById('office-removal-dialog')
-  const officeRemovedDialog = new mdc.dialog.MDCDialog(dialogEl);
-  officeRemovedDialog.listen('MDCDialog:accept', function () {
-    dialogEl.remove();
+  const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
+  officeRemoveDialog.open();
+  officeRemoveDialog.listen('MDCDialog:closed', function () {
     document.getElementById('app-current-panel').innerHTML = '';
     resetScroll()
     listView();
-  })
-  officeRemovedDialog.show()
+  });
   return
 }
-
-
 
 function onErrorMessage(error) {
 
@@ -872,12 +596,12 @@ function getInputText(selector) {
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
   if (!value) return requestCreator('Null', value);
-  setTimeout(function () {
-    if (value.read) {
-      requestCreator('Null', value)
-      return;
-    };
+  if (value.read) {
+    requestCreator('Null', value)
+    return;
+  };
 
+  setTimeout(function () {
     if (value.verifyEmail) {
       const notificationData = JSON.parse(value.verifyEmail)
       emailVerify(notificationData)
@@ -886,7 +610,7 @@ function runRead(value) {
 
     if (value.payroll) {
       const notificationData = JSON.parse(value.payroll)
-      createBlankPayrollDialog(notificationData)
+      templateDialog(notificationData)
       return;
     }
   }, 500)
@@ -896,24 +620,4 @@ function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
-}
-
-function jniException(message, stack) {
-  handleError({
-    message: message,
-    body: stack,
-    androidException: true
-  })
-}
-
-function sendExceptionObject(exception, message, param) {
-  handleError({
-    message: `${message}`,
-    body: JSON.stringify({
-      message: exception.message,
-      name: exception.name,
-      stack: JSON.stringify(exception.stack),
-      paramSent: param
-    })
-  })
 }

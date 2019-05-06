@@ -1,20 +1,21 @@
-function initUserSelectorSearch(data,field,container) {
+function initUserSelectorSearch(data, field,listInit) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function(){
+    req.onsuccess = function () {
         const db = req.result;
         let objectStore = ''
-        let frag = document.createDocumentFragment()
         field.input_.addEventListener('input', function (e) {
             let searchString = e.target.value
-            
+            listInit.listElements.forEach(function (el) {
+                el.classList.add('hidden')
+            })
             if (isNumber(searchString)) {
                 objectStore = db.transaction('users').objectStore('users')
-                searchUsersDB(formatNumber(searchString), objectStore, frag, data,container)
+                searchUsersDB(formatNumber(searchString), objectStore, data)
                 return
             }
             frag = document.createDocumentFragment()
             objectStore = db.transaction('users').objectStore('users').index('displayName')
-            searchUsersDB(formatName(searchString), objectStore, frag, data,container)
+            searchUsersDB(formatName(searchString), objectStore, data)
         })
     }
 }
@@ -54,58 +55,33 @@ function checkNumber(number) {
     return expression.test(number)
 }
 
-function searchUsersDB(searchTerm, objectStore, frag, data,container) {
+function searchUsersDB(searchTerm, objectStore, data) {
     console.log(searchTerm)
     const bound = IDBKeyRange.bound(searchTerm, searchTerm + '\uffff')
-    const ul = document.getElementById('user-selector-list')
+
     const assignees = data.record.assignees
     const alreadyPresent = {}
-    assignees.forEach(function(assignee){
-        if(typeof assignee === 'string'){
+    assignees.forEach(function (assignee) {
+        if (typeof assignee === 'string') {
             alreadyPresent[assignee] = true
-        }
-        else {
+        } else {
             alreadyPresent[assignee.phoneNumber] = true
         }
     })
     alreadyPresent[firebase.auth().currentUser.phoneNumber] = true
+   
     objectStore.openCursor(bound).onsuccess = function (event) {
         const cursor = event.target.result
-        if (!cursor) {
-
-            ul.innerHTML = ''
-            if (frag.children.length ==0) {
-                const notify = document.createElement('div')
-                notify.className = 'data-not-found'
-                const textSpan = document.createElement('p')
-                textSpan.textContent = 'No Contact Found'
-                textSpan.className = 'mdc-typography--headline5'                
-                notify.appendChild(textSpan)
-                if(!document.querySelector('.data-not-found')) {
-                    ul.appendChild(notify)
-                }
-                return
+        if (!cursor) return
+        const el = document.querySelector(`[data-phone-number="${cursor.value.mobile}"]`)
+        if (el) {
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden')
+            } else {
+                el.classList.add('hidden')
             }
-
-            ul.appendChild(frag)
-
-            return
-        }
-        
-        if(data.attachment) {
-            const radioButton = new mdc.radio.MDCRadio(createRadioInput({value:cursor.value.mobile}))
-            frag.appendChild(createSimpleAssigneeLi(cursor.value, radioButton))
-        }
-        else {
-            if(!alreadyPresent.hasOwnProperty(cursor.value.mobile)) {
-                const checkbox = createCheckBox({value:cursor.value.mobile});
-                checkbox.root_.onclick = function(){
-                  container.querySelector('#selector-submit-send').dataset.type = '';
-                  container.querySelector('#selector-submit-send').textContent = 'SELECT';
-                }
-                frag.appendChild(createSimpleAssigneeLi(cursor.value,checkbox))
-            }
-        }
+        }      
+       
         cursor.continue()
 
     }
