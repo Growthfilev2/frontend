@@ -2,13 +2,10 @@ let apiHandler = new Worker('js/apiHandler.js');
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
-  if (errorInStorage[error.message]) return;
-
+  if (errorInStorage.hasOwnProperty(error.message)) return;
   errorInStorage[error.message] = true
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
-  
-
 }
 
 function loader(nameClass) {
@@ -60,23 +57,21 @@ function geolocationApi(body) {
         if (xhr.status >= 400) {
           return reject({
             message: xhr.response,
-            body: body,
+            body: JSON.parse(body),
           });
         }
         const response = JSON.parse(xhr.response);
         if (!response) {
           return reject({
             message: 'Response From geolocation Api ' + response,
-            body: body
+            body: JSON.parse(body)
           })
         }
         resolve({
           latitude: response.location.lat,
           longitude: response.location.lng,
           accuracy: response.accuracy,
-          provider: {
-            body: body
-          }
+          provider: body
         });
       }
     };
@@ -90,17 +85,7 @@ function geolocationApi(body) {
   });
 }
 
-function handleRequestBody(request) {
-  const body = JSON.parse(request);
-  if (body.wifiAccessPoints && body.wifiAccessPoints.length) {
-    if (body.cellTowers) {
-      delete body.cellTowers;
-    }
-    return JSON.stringify(body);
-  } else {
-    return null;
-  }
-}
+
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
@@ -108,7 +93,7 @@ function manageLocation() {
       if (native.getName() === 'Android') {
        updateLocationInRoot(location)
       };
-      console.log(location)
+    
       resolve(location)
     }).catch(function (error) {  
       reject(error);
@@ -117,8 +102,7 @@ function manageLocation() {
 }
 
 function getLocation() {
-  return new 
-  Promise(function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
       html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);

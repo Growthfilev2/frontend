@@ -459,7 +459,7 @@ function redirect() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-    console.log(e.detail)
+   
     if (!e.detail) return;
     if (!e.detail.newDay && !e.detail.locationChanged) return;
 
@@ -514,9 +514,7 @@ function runAppChecks() {
 }
 
 function getUniqueOfficeCount() {
-
   return new Promise(function (resolve, reject) {
-
     const req = indexedDB.open(firebase.auth().currentUser.uid)
     let offices = []
     req.onsuccess = function () {
