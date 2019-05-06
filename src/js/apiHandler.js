@@ -754,7 +754,7 @@ function deleteByIndex(store, activitiesToRemove) {
 
 function updateSubscription(templates, param) {
   return new Promise(function(resolve,reject){
-
+ 
     const req = indexedDB.open(param.user.uid);
     req.onsuccess = function () {
       const db = req.result;
@@ -764,7 +764,9 @@ function updateSubscription(templates, param) {
       templates.forEach(function (subscription) {
         deletIndex.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
           const cursor = event.target.result;
+          
           if (cursor) {
+      
             const deleteReq = cursor.delete();
             deleteReq.onsuccess = function () {
              console.log('deleted')
@@ -781,7 +783,7 @@ function updateSubscription(templates, param) {
            const addStore = addTx.objectStore('subscriptions')
          
            templates.forEach(function(subscription){
-
+         
              addStore.put(subscription)
              console.log('added')
            })

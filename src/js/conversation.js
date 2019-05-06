@@ -62,7 +62,7 @@ function fetchAddendumForComment(id) {
       }
 
       createComment(db, cursor.value, user).then(function (comment) {
-        
+
         el ? el.appendChild(new mdc.ripple.MDCRipple(comment).root_) : '';
 
       })
@@ -783,6 +783,7 @@ function updateCreateContainer(record, showSendButton) {
 
 function updateCreateActivity(record, showSendButton) {
   progressBar.foundation_.close();
+
   if (history.state[0] === 'updateCreateActivity') {
     history.replaceState(['updateCreateActivity', record], null, null)
   } else {
@@ -930,13 +931,13 @@ function createVenueSection(record) {
         checkInDesc.className = 'detail--static-text check-in-desc';
 
         parentList.appendChild(checkInDesc)
-        
+
         results.forEach(function (result, idx) {
-          if(!idx) {
-          record.venue[0].location = result.location
-          record.venue[0].address = result.address
-          record.venue[0].geopoint._latitude = result.latitude
-          record.venue[0].geopoint._longitude = result.longitude
+          if (!idx) {
+            record.venue[0].location = result.location
+            record.venue[0].address = result.address
+            record.venue[0].geopoint._latitude = result.latitude
+            record.venue[0].geopoint._longitude = result.longitude
           }
           const ripple = new mdc.ripple.MDCRipple(radioList({
             value: result,
@@ -950,10 +951,10 @@ function createVenueSection(record) {
 
         const venueSection = new mdc.list.MDCList(ul);
         venueSection.singleSelection = true;
-        
+
         venueSection.listen('MDCList:action', function (evt) {
           const el = venueSection.listElements[evt.detail.index];
-          const value = JSON.parse(el.querySelector('.mdc-radio__native-control').value)          
+          const value = JSON.parse(el.querySelector('.mdc-radio__native-control').value)
           record.venue[0].location = value.location
           record.venue[0].address = value.address
           record.venue[0].geopoint._latitude = value.latitude
@@ -963,7 +964,7 @@ function createVenueSection(record) {
         clearLocation.root_.onclick = function () {
           const el = venueSection.listElements[venueSection.selectedIndex];
           new mdc.radio.MDCRadio(el.querySelector('.mdc-radio')).checked = false;
-          
+
           record.venue[0].location = ''
           record.venue[0].address = ''
           record.venue[0].geopoint._latitude = ''
@@ -985,9 +986,10 @@ function createVenueSection(record) {
   });
 };
 
-function setCheckinVenue(){
+function setCheckinVenue() {
 
 }
+
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
   if (record.template === 'check-in' && !venue.location) return
 
@@ -1542,7 +1544,7 @@ function hideCustomerContainer(data, div) {
 }
 
 function createAssigneeList(record, db) {
- 
+
   const parent = document.getElementById('assignees--list')
   const labelAdd = createElement('li', {
     className: 'mdc-list-item label--text add--assignee-loader',
@@ -1574,9 +1576,12 @@ function createAssigneeList(record, db) {
   parent.appendChild(labelAdd)
 
 
-  record.assignees.forEach(function (number,idx) {
+  record.assignees.forEach(function (number, idx) {
     getUserRecord(db, number).then(function (record) {
-      parent.appendChild(new mdc.ripple.MDCRipple(userList({index:idx,value:record},false)).root_)
+      parent.appendChild(new mdc.ripple.MDCRipple(userList({
+        index: idx,
+        value: record
+      }, false)).root_)
       // parent.appendChild(createSimpleAssigneeLi(record))
     })
   })
@@ -1872,9 +1877,12 @@ function getSubscription(office, template) {
       let record;
       officeTemplateCombo.get(range).onsuccess = function (event) {
         record = event.target.result
+
       }
       tx.oncomplete = function () {
-        resolve(record)
+
+        return resolve(record)
+
       }
     }
   })

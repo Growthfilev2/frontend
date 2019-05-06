@@ -285,12 +285,12 @@ function userSelector(data, container) {
       field.root_.id = 'users-selector-search'
       field.root_.classList.add('search-field')
       container.appendChild(field.root_);
-      
+
       initUserSelectorSearch(data, field, listINit);
       container.appendChild(ul);
       container.appendChild(userSubmitButton.root_)
-    
-    
+
+
       parent.appendChild(container);
       document.getElementById('start-loader').classList.add('hidden')
     }
@@ -411,16 +411,20 @@ function fillSubscriptionInSelector(data, container) {
         })
         tabContentContainer.setAttribute('role', 'radiogroup')
         tabContentContainer.dataset.office = cursor.value.office
+
         index == 0 ? tabContentContainer.classList.add('content--active') : '';
         // new mdc.list.MDCList(tabContentContainer).singleSelection = true
         panel.appendChild(tabContentContainer)
         officesObject[cursor.value.office] = true
       };
+      const attr = cursor.value;
+      attr.key = cursor.primaryKey
+
 
       tabContentContainer.appendChild(radioList({
         index: index,
-        labelText: cursor.value.template,
-        value: cursor.value
+        labelText: attr.template,
+        value: attr
       }))
       index++
       cursor.continue();
@@ -441,6 +445,7 @@ function fillSubscriptionInSelector(data, container) {
           listItemEl.onclick = function () {
             progressBar.foundation_.open();
             const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value)
+            setCountForTemplate(value.key).then(console.log).catch(handleError);
             createTempRecord(value.office, value.template, data)
           }
           return new mdc.ripple.MDCRipple(listItemEl);
@@ -450,6 +455,40 @@ function fillSubscriptionInSelector(data, container) {
   }
 }
 
+function setCountForTemplate(key) {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['subscriptions'], 'readwrite');
+      const store = tx.objectStore('subscriptions');
+      store.openCursor(key).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        const record = cursor.value;
+        if (record.count) {
+          record.count = record.count + 1
+        } else {
+          record.count = 1
+        }
+        cursor.update(record);
+      }
+      tx.oncomplete = function () {
+        return resolve('success');
+      }
+      tx.onerror = function () {
+        reject({
+          message: tx.error.message,
+          body: ''
+        })
+      }
+    }
+
+    req.onerror = function () {
+      reject({message:req.error.message,body:''})
+    }
+  })
+}
 
 function fillChildrenInSelector(data, container) {
   const ul = createElement('ul', {
