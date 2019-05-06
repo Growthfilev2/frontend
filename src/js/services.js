@@ -105,9 +105,9 @@ function handleRequestBody(request) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      // if (native.getName() === 'Android') {
-      updateLocationInRoot(location)
-      // };
+      if (native.getName() === 'Android') {
+       updateLocationInRoot(location)
+      };
       console.log(location)
       resolve(location)
     }).catch(function (error) {  
@@ -337,6 +337,7 @@ function isLocationStatusWorking() {
     if (!AndroidInterface.isWifiOn()) {
       const alertDialog = new Dialog('TURN ON YOUR WIFI', 'Growthfile requires wi-fi access for improving your location accuracy.').create();
       alertDialog.open();
+      return;
     }
     return true;
   }

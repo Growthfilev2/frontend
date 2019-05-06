@@ -463,8 +463,8 @@ function runAppChecks() {
     if (!e.detail) return;
     if(!e.detail.newDay && !e.detail.locationChanged) return;
 
-    //   isEmployeeOnLeave().then(function (onLeave) {
-    //     if (onLeave) return
+      isEmployeeOnLeave().then(function (onLeave) {
+        if (onLeave) return
 
     getUniqueOfficeCount().then(function (offices) {
       const prom = [];
@@ -507,7 +507,7 @@ function runAppChecks() {
 
     })
 
-      // }).catch(handleError)
+      }).catch(handleError)
   }, true);
 }
 
