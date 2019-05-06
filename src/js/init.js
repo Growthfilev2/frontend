@@ -279,26 +279,35 @@ function startApp(start) {
       localStorage.setItem('error', JSON.stringify({}));
     }
 
+   
     if (start) {
-      const req = indexedDB.open(auth.uid, 3);
+      const req = window.indexedDB.open(auth.uid, 4);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
-
         db.onerror = function () {
           handleError({
             message: `${db.error.message} from startApp on upgradeneeded`
           })
           return;
         }
-        createObjectStores(db, auth.uid)
+
+        if (!evt.oldVersion) {
+          createObjectStores(db, auth.uid)
+        } else {
+
+          if (evt.oldVersion < 4) {
+            const subscriptionStore = req.transaction.objectStore('subscriptions')
+            subscriptionStore.createIndex('status', 'status');
+          }
+        }
+
       }
 
       req.onsuccess = function () {
+        db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        let getInstantLocation = false;
-
         resetScroll();
         listView();
 
@@ -310,7 +319,6 @@ function startApp(start) {
 
         runAppChecks()
         manageLocation().then(console.log).catch(handleError)
-
 
       }
       req.onerror = function () {
