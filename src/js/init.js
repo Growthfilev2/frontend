@@ -309,7 +309,8 @@ function startApp(start) {
         });
 
         runAppChecks()
-        manageLocation().then(console.log).catch(console.log)
+        manageLocation().then(console.log).catch(handleError)
+
 
       }
       req.onerror = function () {
