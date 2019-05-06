@@ -61,17 +61,17 @@ let native = function () {
   }
 }();
 
-function isNewDay() {
+function isNewDay(set) {
   var today = localStorage.getItem('today');
   if (!today) {
-    localStorage.setItem('today', moment().format('YYYY-MM-DD'));
+    set ? localStorage.setItem('today', moment().format('YYYY-MM-DD')) : ''
     return true;
   }
   const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
   if (isSame) {
     return false;
   } else {
-    localStorage.setItem('today', moment().format('YYYY-MM-DD'))
+    set ? localStorage.setItem('today', moment().format('YYYY-MM-DD')) : ''
     return true
   }
 }
@@ -461,53 +461,55 @@ function runAppChecks() {
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
     console.log(e.detail)
     if (!e.detail) return;
-    if(!e.detail.newDay && !e.detail.locationChanged) return;
+    if (!e.detail.newDay && !e.detail.locationChanged) return;
 
-      isEmployeeOnLeave().then(function (onLeave) {
-        if (onLeave) return
+    isEmployeeOnLeave().then(function (onLeave) {
+      if (onLeave) return
 
-    getUniqueOfficeCount().then(function (offices) {
-      const prom = [];
-      const data = []
-      let title;
-      if (!offices.length) return;
+      getUniqueOfficeCount().then(function (offices) {
+        console.log(offices);
 
-      offices.forEach(function (office) {
-        prom.push(getSubscription(office, 'check-in'))
-        if (e.detail.newDay) {
-          title = ''
-        }
-        if (e.detail.locationChanged) {
-          title = '';
-          prom.push(getSubscription(office, 'dsr'))
-        }
+        const prom = [];
+        const data = []
+        let title;
+        if (!offices.length) return;
+
+        offices.forEach(function (office) {
+          prom.push(getSubscription(office, 'check-in'))
+          if (e.detail.newDay) {
+            title = ''
+          }
+          if (e.detail.locationChanged) {
+            title = '';
+            prom.push(getSubscription(office, 'dsr'))
+          }
+
+        })
+        Promise.all(prom).then(function (result) {
+          if (!result.length) return;
+          const actionTempaltes = {}
+
+          const filtered = result.filter(function (set) {
+            return set != undefined;
+          });
+
+          console.log(filtered);
+          filtered.forEach(function (value) {
+            if (!actionTempaltes[value.template]) {
+              data.push(value)
+            }
+            actionTempaltes[value.template] = true;
+          });
+          if (history.state[0] !== 'listView') return;
+          templateDialog({
+            title: 'Reminder',
+            data: data
+          }, offices.length > 1 ? true : false)
+        }).catch(console.log)
 
       })
-      Promise.all(prom).then(function (result) {
-        if (!result.length) return;
-        const actionTempaltes = {}
 
-        const filtered = result.filter(function (set) {
-          return set != undefined;
-        });
-
-        console.log(filtered);
-        filtered.forEach(function (value) {
-          if (!actionTempaltes[value.template]) {
-            data.push(value)
-          }
-          actionTempaltes[value.template] = true;
-        });
-        if (history.state[0] !== 'listView') return;
-        templateDialog({
-          title: 'Reminder',
-          data: data
-        }, offices.length)
-      }).catch(console.log)
-
-    })
-
-      }).catch(handleError)
+    }).catch(handleError)
   }, true);
 }
 
@@ -524,6 +526,7 @@ function getUniqueOfficeCount() {
       activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
+
         offices.push(cursor.value.office)
         cursor.continue()
       }

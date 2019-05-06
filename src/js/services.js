@@ -251,7 +251,7 @@ function updateLocationInRoot(finalLocation) {
 
       var suggestCheckIn = new CustomEvent("suggestCheckIn", {
         "detail": {
-          newDay: isNewDay(),
+          newDay: isNewDay(true),
           locationChanged: isLocationMoreThanThreshold(distanceBetweenBoth)
         }
       });
