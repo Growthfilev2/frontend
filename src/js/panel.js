@@ -12,14 +12,9 @@ function resetScroll() {
 }
 
 function initDomLoad() {
-  if (document.querySelector('.init-loader')) {
-    document.querySelector('.init-loader').remove()
-  };
+  document.getElementById('start-loader').classList.remove('hidden')
+  progressBar.foundation_.close();
   
-
-  if (document.querySelector('.mdc-linear-progress')) {
-    document.querySelector('.mdc-linear-progress').remove();
-  }
   document.body.classList.remove('mdc-dialog-scroll-lock')
 
   listPanel()
@@ -30,12 +25,11 @@ function initDomLoad() {
 function listView() {
   history.pushState(['listView'], null, null)
   initDomLoad();
-
-  getSizeOfListStore().then(function (size) {
+  // TODO simplify
+  getCountOfStore('list').then(function (size) {
     if (!size) {
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      };
+      document.getElementById('start-loader').classList.add('hidden')
+      
       appendTextContentInListView('No activities Found');
       return;
     }
@@ -62,13 +56,13 @@ function appendTextContentInListView(textContent) {
 }
 
 
-function getSizeOfListStore() {
+function getCountOfStore(storeName) {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['list'])
-      const store = tx.objectStore('list');
+      const tx = db.transaction([storeName])
+      const store = tx.objectStore(storeName);
       var countReq = store.count();
       countReq.onsuccess = function () {
         resolve(countReq.result)
@@ -150,9 +144,7 @@ function loadActivitiesFromListStore(currentLocation) {
     }
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      };
+      document.getElementById('start-loader').classList.add('hidden')
       if (!ul) return
       ul.innerHTML = ''
       ul.appendChild(fragment)
@@ -207,10 +199,9 @@ function startCursor(currentLocation) {
 
     transaction.oncomplete = function () {
       const ul = document.getElementById('activity--list')
-      if (document.getElementById('start-loader')) {
-        document.getElementById('start-loader').remove();
-      }
-
+      document.getElementById('start-loader').classList.add('hidden')
+      
+      
       if (!ul) return
       ul.appendChild(fragment)
       scroll_namespace.count = scroll_namespace.count + scroll_namespace.size;
@@ -253,7 +244,6 @@ function getActivityDataForList(activity, value, currentLocation) {
       if (currentLocation) {
         venueSpan = generateLatestVenue(venues, currentLocation);
       }
-
       if (venueSpan && !dateSpan) {
         secondLineVenue.textContent = venueSpan;
         secondLineVenue.style.maxWidth = '70%';
@@ -265,7 +255,7 @@ function getActivityDataForList(activity, value, currentLocation) {
       }
       secondLineParent.appendChild(secondLineVenue)
       secondLineParent.appendChild(secondLineSchedule)
-      resolve(activityListUI(value, secondLineParent))
+      resolve(new mdc.ripple.MDCRipple.attachTo(activityListUI(value, secondLineParent)).root_)
     }
   })
 }
@@ -494,38 +484,12 @@ function getRootRecord() {
 }
 
 function createActivityIcon() {
-  if (document.getElementById('create-activity--icon')) return;
-  getCountOfTemplates().then(function (count) {
+  getCountOfStore('subscriptions').then(function (count) {
     if (!count) return;
     createActivityIconDom()
   }).catch(handleError);
 }
 
-function getCountOfTemplates() {
-
-  return new Promise(function (resolve, reject) {
-
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['subscriptions'], 'readonly');
-      const subscriptionObjectStore = tx.objectStore('subscriptions');
-      const countReq = subscriptionObjectStore.count();
-      countReq.onsuccess = function () {
-        return resolve(countReq.result)
-      }
-      countReq.onerror = function () {
-        return reject(countReq.error)
-      }
-
-    }
-    req.onerror = function () {
-      reject({
-        message: `${req.error.message} from getCountOfTemplates`
-      });
-    }
-  })
-}
 
 
 function createActivityIconDom() {
@@ -541,38 +505,30 @@ function createActivityIconDom() {
       store: 'subscriptions',
       suggestCheckIn: false
     })
-  }
-
+  } 
+  if (document.getElementById('create-activity--icon')) return;
   document.getElementById('activity-list-main').appendChild(chooseSubscription.root_);
 }
 
 
 function listPanel() {
   if (document.getElementById('activity-list-main')) return
-
-  const listCard = document.createElement('div')
-  listCard.className = 'mdc-card panel-card mdc-top-app-bar--fixed-adjust'
-  listCard.id = 'activity-list-main'
+  const listViewContainer = document.createElement('div')
+  listViewContainer.id = 'activity-list-main'
   const listUl = document.createElement('ul')
   listUl.className = 'mdc-list mdc-list--two-line mdc-list--avatar-list'
   listUl.id = 'activity--list'
-
-  listCard.appendChild(listUl)
-
-
-  document.getElementById('app-current-panel').innerHTML = listCard.outerHTML
-
+  listViewContainer.appendChild(listUl)
+  document.getElementById('app-current-panel').innerHTML = listViewContainer.outerHTML
 }
 
-
-
 function creatListHeader(headerName) {
+ 
   const req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     const db = req.result;
-    const sectionStart = document.getElementById('section-start');
-    sectionStart.innerHTML = ''
     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
+      const sectionStart = document.getElementById('section-start');
 
       const object = document.createElement('object');
       object.className = 'list-photo-header';
@@ -589,10 +545,9 @@ function creatListHeader(headerName) {
       const headerText = document.createElement('span');
       headerText.textContent = headerName;
       headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
-
+      sectionStart.innerHTML =''
       sectionStart.appendChild(object)
       sectionStart.appendChild(headerText);
-
     })
   }
 }
@@ -610,22 +565,6 @@ function scrollToActivity() {
   }
 }
 
-
-
-function modifyHeader(attr) {
-
-  if (attr.left) {
-
-    const left = document.getElementById(attr.id + 'view-type')
-    left.innerHTML = attr.left
-  }
-  if (attr.right) {
-
-    const right = document.getElementById(attr.id + 'action-data')
-    right.innerHTML = attr.right
-  }
-
-}
 
 function headerBackIcon(store) {
   const backIcon = document.createElement('i')

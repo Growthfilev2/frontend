@@ -37,7 +37,6 @@ function checkIfRecordExists(store, id) {
       });
     }
   })
-
 }
 
 function fetchAddendumForComment(id) {
@@ -53,65 +52,61 @@ function fetchAddendumForComment(id) {
     commentPanel(id)
     statusChange(db, id);
     reinitCount(db, id)
-
+    const el = document.getElementById('chat-container')
     addendumIndex.openCursor(id).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return;
-
-      if (!document.getElementById(cursor.value.addendumId)) {
-        createComment(db, cursor.value, user).then(function (comment) {
-          if (document.getElementById('chat-container')) {
-            document.getElementById('chat-container').appendChild(comment)
-          }
-        })
+      if (document.getElementById(cursor.value.addendumId)) {
+        cursor.continue();
+        return;
       }
+
+      createComment(db, cursor.value, user).then(function (comment) {
+
+        el ? el.appendChild(new mdc.ripple.MDCRipple(comment).root_) : '';
+
+      })
 
       cursor.continue()
     }
     transaction.oncomplete = function () {
-      if (document.querySelector('.activity--chat-card-container')) {
-        document.querySelector('.activity--chat-card-container').scrollTop = document.querySelector('.activity--chat-card-container').scrollHeight
-      }
-
+      if (!el) return;
+      console.log(el.scrollHeight)
+      window.scrollTo(0, el.scrollHeight);
     }
   }
 }
 
 
 function commentPanel(id) {
-  if (document.querySelector('.activity--chat-card-container')) {
-    return
-  }
-
-  const commentPanel = document.createElement('div')
-  commentPanel.className = 'activity--chat-card-container  mdc-top-app-bar--fixed-adjust panel-card'
+  document.body.style.backgroundColor = 'white';
+  if (document.querySelector('.activity--chat-card-container')) return
 
   const chatCont = document.createElement('div')
   chatCont.id = 'chat-container'
-  chatCont.className = 'mdc-card reverser-parent'
 
-
-  const userCommentCont = document.createElement('div')
-  userCommentCont.className = 'user-comment--container'
+  const bottomContainer = createElement('div', {
+    className: 'chat-bottom-action'
+  })
 
   const statusChangeContainer = document.createElement('div')
   statusChangeContainer.className = 'status--change-cont'
+  bottomContainer.appendChild(statusChangeContainer);
 
-  const commentCont = document.createElement('div')
-  commentCont.className = 'comment--container'
+  const commentFieldContainer = createElement('div', {
+    className: 'chat-input-container'
+  })
 
   const field = document.createElement('div')
-  field.className = 'input--text-padding mdc-text-field mdc-text-field--dense'
   field.id = 'write--comment'
-  field.style.width = '100%';
+
   const input = document.createElement('input')
-  input.className = 'mdc-text-field__input comment-field mdc-elevation--z4'
+  input.className = 'comment-field mdc-elevation--z4'
   input.type = 'text'
 
   field.appendChild(input)
 
-  commentCont.appendChild(field)
-
+  commentFieldContainer.appendChild(field);
 
   const btn = document.createElement('button')
   btn.classList.add('mdc-fab', 'mdc-fab--mini', 'hidden')
@@ -121,26 +116,18 @@ function commentPanel(id) {
   btnIcon.classList.add('mdc-fac__icon', 'material-icons')
   btnIcon.textContent = 'send'
   btn.appendChild(btnIcon)
-
-  commentCont.appendChild(btn)
-
-  commentPanel.appendChild(chatCont)
-
-  userCommentCont.appendChild(commentCont)
-
-  document.getElementById('app-current-panel').innerHTML = commentPanel.outerHTML + statusChangeContainer.outerHTML + userCommentCont.outerHTML
+  commentFieldContainer.appendChild(btn);
+  bottomContainer.appendChild(commentFieldContainer);
+  document.getElementById('app-current-panel').innerHTML = chatCont.outerHTML + bottomContainer.outerHTML
 
   document.querySelector('.comment-field').oninput = function (evt) {
-    if (!evt.target.value || !evt.target.value.replace(/\s/g, '').length) {
-      toggleCommentButton(false)
+    toggleCommentButton(evt.target.value && evt.target.value.replace(/\s/g, '').length)
 
-    } else {
-      toggleCommentButton(true)
-    }
   }
 
   document.getElementById('send-chat--input').onclick = function () {
     if (!isLocationStatusWorking()) return;
+    progressBar.foundation_.open();
     let comment = document.querySelector('.comment-field').value;
     const reqBody = {
       'activityId': id,
@@ -161,7 +148,7 @@ function toggleCommentButton(show) {
   const statusCont = document.querySelector('.status--change-cont');
 
   if (show) {
-    input.classList.remove('hidden')
+    input.classList.remove('hidden');
     writeComment.style.width = '80%'
     statusCont.style.opacity = '0';
   } else {
@@ -243,24 +230,18 @@ function statusChange(db, id) {
       switchControl.checked = true
     }
     document.querySelector('.mdc-checkbox').onclick = function () {
-      console.log(isLocationStatusWorking())
-      if (isLocationStatusWorking()) {
-        changeStatusRequest(switchControl, record)
-      } else {
-        resetStatusConfirmation(switchControl, record);
+
+      if (!isLocationStatusWorking()) {
+        record.status === 'CONFIRMED' ? switchControl.checked = true : switchControl.checked = false
+        return
       }
+      changeStatusRequest(switchControl, record)
+
     }
   }
 }
 
-function resetStatusConfirmation(switchControl, record) {
 
-  if (record.status === 'CONFIRMED') {
-    switchControl.checked = true
-  } else {
-    switchControl.checked = false
-  }
-}
 
 function changeStatusRequest(switchControl, record) {
   document.querySelector('.form-field-status').classList.add('hidden');
@@ -272,12 +253,13 @@ function changeStatusRequest(switchControl, record) {
       activityId: record.activityId,
       status: 'CONFIRMED'
     })
-  } else {
-    requestCreator('statusChange', {
-      activityId: record.activityId,
-      status: 'PENDING'
-    })
+    return;
   }
+  requestCreator('statusChange', {
+    activityId: record.activityId,
+    status: 'PENDING'
+  })
+
 }
 
 function createComment(db, addendum, currentUser) {
@@ -387,14 +369,13 @@ function hasMapsApiLoaded() {
       return true
     }
     return false
-  }
-  catch(e){
+  } catch (e) {
     return false;
   }
 }
 
 
-function MapsCustomControl(customControlDiv, map, lat, lng) {
+function MapsCustomControl(customControlDiv, lat, lng) {
   var controlUI = document.createElement('div');
 
   controlUI.style.backgroundColor = '#fff';
@@ -612,41 +593,10 @@ function createTempRecord(office, template, prefill) {
           bareBonesRecord.venue = [bareBonesVenue];
           const isLocationOld = isLastLocationOlderThanThreshold(record.location.lastLocationTime, 5);
           if (record.location && !isLocationOld) return updateCreateActivity(bareBonesRecord);
-          let message;
-          if (native.getName() === 'Android') {
-            message = 'Make Sure you have set Location Mode to High Accuracy'
-          } else {
-            message = 'Please wait.'
-          }
-          const span = document.createElement('span')
-          span.className = 'mdc-typography--body1'
-          span.textContent = message
-          document.getElementById('dialog-container').innerHTML = dialog({
-            id: 'location-fetch-dialog',
-            content: span,
-            headerText: 'Fetching Location'
-          }).outerHTML
-          const dialogEl = document.getElementById('location-fetch-dialog')
-          const fetchingLocationDialog = new mdc.dialog.MDCDialog(dialogEl)
-          fetchingLocationDialog.show();
-          manageLocation().then(function (location) {
-            dialogEl.remove();
-            updateCreateActivity(bareBonesRecord)
-          }).catch(function (error) {
 
-            let errorMessage = 'There was a problem in detecting your location'
-            if (native.getName() === 'Android') {
-              errorMessage = errorMessage + '. Make sure you have set Location Mode to high accuracy'
-            }
-            dialogEl.querySelector('.mdc-dialog__header__title').textContent = 'Failed To Get Current Location';
-            dialogEl.querySelector('section span').textContent = errorMessage;
-            setTimeout(function () {
-              dialogEl.remove();
-            }, 3000)
-            resetScroll()
-            listView();
-          
-          })
+          manageLocation().then(function (location) {
+            updateCreateActivity(bareBonesRecord)
+          }).catch(locationErrorDialog)
         });
         return
       }
@@ -664,22 +614,21 @@ function createTempRecord(office, template, prefill) {
       });
       bareBonesRecord.venue = bareBonesVenueArray;
       if (template === 'tour plan' || template === 'dsr' || template === 'duty roster' || template === 'customer') {
-        
-      
-          manageLocation().then(function (userLocation) {
-            geocodePosition({
-              lat: userLocation.latitude,
-              lng: userLocation.longitude
-            }).then(function (result) {
-  
-              return createBlendedCustomerRecord(bareBonesRecord, result)
-            });
-          }).catch(function (error) {
-            console.log(error)
-  
-            return createBlendedCustomerRecord(bareBonesRecord)
-          })
-     
+
+
+        manageLocation().then(function (userLocation) {
+          geocodePosition({
+            lat: userLocation.latitude,
+            lng: userLocation.longitude
+          }).then(function (result) {
+
+            return createBlendedCustomerRecord(bareBonesRecord, result)
+          });
+        }).catch(function (error) {
+          handleError(error)
+          return createBlendedCustomerRecord(bareBonesRecord)
+        })
+
         return;
       }
       updateCreateActivity(bareBonesRecord)
@@ -770,14 +719,15 @@ function updateCreateContainer(record, showSendButton) {
   sectionStart.appendChild(activityName)
 
   const container = document.createElement('div')
-  container.className = 'mdc-top-app-bar--fixed-adjust update-create--activity'
+  container.className = 'update-create--activity'
 
   const TOTAL_LIST_TYPES = ['office', 'venue', 'schedule', 'attachment', 'assignees']
 
   const LIST_LENGTH = 5
   let i = 0;
   for (i; i < LIST_LENGTH; i++) {
-    const containerList = document.createElement('ul')
+    let containerList = document.createElement('ul')
+
     containerList.className = 'mdc-list custom--list-margin';
 
     const listGroup = document.createElement('div')
@@ -790,10 +740,21 @@ function updateCreateContainer(record, showSendButton) {
         listGroup.id = 'schedule--group'
         break;
       case 'venue':
+        if (record.template === 'check-in') {
+          if (record.canEdit) {
+            containerList = document.createElement('div')
+            containerList.style.marginTop = '30px';
+            containerList.style.paddingTop = '0px';
+            containerList.style.paddingBottom = '0px';
+            containerList.style.backgroundColor = 'white'
+          }
+        } else {
+          containerList.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
+        }
+        break;
       case 'assignees':
         containerList.classList.add('mdc-list--two-line', 'mdc-list--avatar-list')
         break;
-
     };
 
     if (TOTAL_LIST_TYPES[i] === 'schedule') {
@@ -821,9 +782,8 @@ function updateCreateContainer(record, showSendButton) {
 }
 
 function updateCreateActivity(record, showSendButton) {
-  if (document.querySelector('.mdc-linear-progress')) {
-    document.querySelector('.mdc-linear-progress').remove();
-  }
+  progressBar.foundation_.close();
+
   if (history.state[0] === 'updateCreateActivity') {
     history.replaceState(['updateCreateActivity', record], null, null)
   } else {
@@ -880,36 +840,6 @@ function updateCreateActivity(record, showSendButton) {
 }
 
 
-function createCheckInVenue(venue, defaultSelected) {
-
-  const radio = document.createElement('div')
-  radio.className = 'mdc-radio checkin'
-  radio.value = JSON.stringify(venue)
-
-  const input = document.createElement('input')
-  input.className = 'mdc-radio__native-control'
-  input.type = 'radio'
-  input.setAttribute('name', 'radios');
-
-  if (defaultSelected) {
-    input.setAttribute('checked', 'true')
-  }
-  const background = document.createElement('div')
-  background.className = 'mdc-radio__background'
-  const outer = document.createElement('div')
-  outer.className = 'mdc-radio__outer-circle'
-  const inner = document.createElement('div')
-  inner.className = 'mdc-radio__inner-circle'
-
-  background.appendChild(outer)
-  background.appendChild(inner)
-  radio.appendChild(input)
-  radio.appendChild(background)
-  let showMap = false;
-
-  return radio
-
-}
 
 function createSimpleLi(key, data) {
 
@@ -958,15 +888,15 @@ function createSimpleLi(key, data) {
     undo.className = 'mdc-button mdc-ripple-upgraded mdc-list-item__meta undo-deleted'
     undo.textContent = 'Undo'
     undo.onclick = function () {
-      if(!isLocationStatusWorking()) return;
-        document.querySelector('.undo-deleted').style.display = 'none'
-        listItem.appendChild(loader('undo-delete-loader'));
-        requestCreator('statusChange', {
-          activityId: data.id,
-          status: 'PENDING'
-        })
+      if (!isLocationStatusWorking()) return;
+      document.querySelector('.undo-deleted').style.display = 'none'
+      listItem.appendChild(loader('undo-delete-loader'));
+      requestCreator('statusChange', {
+        activityId: data.id,
+        status: 'PENDING'
+      })
 
-      
+
     }
     listItem.appendChild(undo)
   }
@@ -977,107 +907,92 @@ function createSimpleLi(key, data) {
 function createVenueSection(record) {
   if (record.template === 'customer') return;
   if (record.venue.length === 0) return;
-
-  const venueSection = document.getElementById('venue--list');
-
-  if (record.template === 'check-in') {
-    if (record.hasOwnProperty('create')) {
-      getRootRecord().then(function (rootRecord) {
-        checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
-          if (!results.length) return;
-
-          const checkInDesc = document.createElement('li')
-          checkInDesc.className = 'mdc-list-item label--text'
-          checkInDesc.textContent = record.venue[0].venueDescriptor
-          checkInDesc.style.height = '50px'
-          checkInDesc.style.paddingRight = '11px';
-
-          const meta = document.createElement('span')
-          meta.className = 'mdc-list-item__meta'
-          const uncheck = document.createElement('label')
-          uncheck.id = 'uncheck-checkin'
-          uncheck.className = 'mdc-fab add--assignee-icon'
-          const span = document.createElement('span')
-          span.className = 'mdc-fab__icon material-icons'
-          span.textContent = 'clear';
-          uncheck.appendChild(span);
-          meta.appendChild(uncheck)
-          checkInDesc.appendChild(meta)
-          venueSection.appendChild(checkInDesc)
-
-
-          results.forEach(function (result, idx) {
-
-            const form = document.createElement('div');
-            form.className = 'mdc-form-field check-in-form'
-            const label = document.createElement('label')
-            label.setAttribute('for', 'check-in-radio');
-            label.textContent = result.location
-            form.appendChild(label);
-
-            const radio = new mdc.radio.MDCRadio(createRadioInput(JSON.stringify(result)));
-            if (!idx) {
-              const value = result;
-              radio.checked = true
-              record.venue[0].location = value.location;
-              record.venue[0].address = value.address;
-              record.venue[0].geopoint._latitude = value.latitude;
-              record.venue[0].geopoint._longitude = value.longitude;
-            }
-
-            radio.root_.querySelector('input').onclick = function () {
-              const value = JSON.parse(this.value)
-              record.venue[0].location = value.location;
-              record.venue[0].address = value.address;
-              record.venue[0].geopoint._latitude = value.latitude;
-              record.venue[0].geopoint._longitude = value.longitude;
-            }
-            form.appendChild(radio.root_)
-            // form.appendChild(createCheckInVenue(result, defaultSelected))
-            venueSection.appendChild(form);
-            const mapDom = document.createElement('div');
-            mapDom.id = 'map-detail-check-in-create' + convertKeyToId(result.venueDescriptor)
-            venueSection.appendChild(mapDom);
-          })
-
-          const uncheckFab = document.getElementById('uncheck-checkin');
-          if (uncheckFab) {
-            uncheckFab.addEventListener('click', function () {
-              document.querySelectorAll('.mdc-radio').forEach(function (el) {
-                const radio = new mdc.radio.MDCRadio(el)
-                radio.checked = false
-                record.venue[0].location = ''
-                record.venue[0].address = ''
-                record.venue[0].geopoint._latitude = ''
-                record.venue[0].geopoint._longitude = ''
-              });
-            })
-          }
+  const parentList = document.getElementById('venue--list');
+  if (record.template === 'check-in' && record.canEdit) {
+    getRootRecord().then(function (rootRecord) {
+      checkMapStoreForNearByLocation(record.office, rootRecord.location).then(function (results) {
+        if (!results.length) return;
+        const ul = createElement('ul', {
+          className: 'mdc-list'
         })
-      })
-    } else {
-      record.venue.forEach(function (venue) {
-        if (venue.location && venue.address) {
+        ul.setAttribute('role', 'radiogroup');
+        ul.style.marginTop = '0px';
 
-          venueSection.appendChild(createVenueLi(venue, true, record))
-          const mapDom = document.createElement('div');
-          mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-          venueSection.appendChild(mapDom)
+        const checkInDesc = document.createElement('div');
+        const span = createElement('span', {
+          textContent: record.venue[0].venueDescriptor
+        })
+        checkInDesc.appendChild(span);
+        const clearLocation = new Fab('clear').getButton();
+        clearLocation.root_.classList.add('add--assignee-icon')
+        clearLocation.root_.style.marginTop = '-5px';
+
+        checkInDesc.appendChild(clearLocation.root_)
+        checkInDesc.className = 'detail--static-text check-in-desc';
+
+        parentList.appendChild(checkInDesc)
+
+        results.forEach(function (result, idx) {
+          if (!idx) {
+            record.venue[0].location = result.location
+            record.venue[0].address = result.address
+            record.venue[0].geopoint._latitude = result.latitude
+            record.venue[0].geopoint._longitude = result.longitude
+          }
+          const ripple = new mdc.ripple.MDCRipple(radioList({
+            value: result,
+            index: idx,
+            selected: !idx,
+            labelText: result.location
+          }))
+          //  ripple.unbounded = true 
+          ul.appendChild(ripple.root_)
+        })
+
+        const venueSection = new mdc.list.MDCList(ul);
+        venueSection.singleSelection = true;
+
+        venueSection.listen('MDCList:action', function (evt) {
+          const el = venueSection.listElements[evt.detail.index];
+          const value = JSON.parse(el.querySelector('.mdc-radio__native-control').value)
+          record.venue[0].location = value.location
+          record.venue[0].address = value.address
+          record.venue[0].geopoint._latitude = value.latitude
+          record.venue[0].geopoint._longitude = value.longitude
+        })
+        parentList.appendChild(ul);
+        clearLocation.root_.onclick = function () {
+          const el = venueSection.listElements[venueSection.selectedIndex];
+          new mdc.radio.MDCRadio(el.querySelector('.mdc-radio')).checked = false;
+
+          record.venue[0].location = ''
+          record.venue[0].address = ''
+          record.venue[0].geopoint._latitude = ''
+          record.venue[0].geopoint._longitude = ''
         }
-      });
-    }
+
+      })
+    })
     return;
   }
+  parentList.classList.add('mdc-list--two-line');
   record.venue.forEach(function (venue) {
-
-    venueSection.appendChild(createVenueLi(venue, true, record))
+    const li = createVenueLi(venue, true, record)
+    if (!li) return;
+    parentList.appendChild(li)
     const mapDom = document.createElement('div');
     mapDom.className = 'map-detail ' + convertKeyToId(venue.venueDescriptor)
-    venueSection.appendChild(mapDom)
+    parentList.appendChild(mapDom)
   });
+};
+
+function setCheckinVenue() {
+
 }
 
 function createVenueLi(venue, showVenueDesc, record, showMetaInput) {
+  if (record.template === 'check-in' && !venue.location) return
+
   let showMap = false
   const listItem = document.createElement('li')
   listItem.className = 'mdc-list-item mdc-ripple-upgraded'
@@ -1208,12 +1123,9 @@ function createScheduleTable(data) {
     const ul = document.createElement('ul')
     ul.className = 'mdc-list mdc-list--dense'
 
-    const divider = document.createElement('li')
-    divider.className = 'mdc-list-divider'
-    divider.setAttribute('role', 'separator')
 
-    const startLi = document.createElement('li')
-    startLi.className = 'mdc-list-item schedule-start-li'
+    const li = document.createElement('li')
+    li.className = 'mdc-list-item'
 
     const sdDiv = document.createElement('div')
     sdDiv.className = 'mdc-text-field start--date' + count
@@ -1226,31 +1138,6 @@ function createScheduleTable(data) {
 
 
     sdDiv.appendChild(startDateInput)
-
-    const stSpan = document.createElement("span")
-    stSpan.className = 'mdc-list-item__meta'
-
-    const stDiv = document.createElement('div')
-    stDiv.className = 'mdc-text-field start--time' + count
-
-    const startTimeInput = document.createElement('input')
-    if (schedule.startTime) {
-      startTimeInput.value = moment(schedule.startTime).format('HH:mm')
-    } else {
-      startTimeInput.value = moment("24", "HH:mm").format('HH:mm')
-    }
-
-    startTimeInput.type = 'time'
-    startTimeInput.className = 'time--input'
-    startTimeInput.disabled = !data.canEdit
-    startTimeInput.className = 'mdc-text-field__input'
-    stDiv.appendChild(startTimeInput)
-
-    stSpan.appendChild(stDiv)
-
-
-    const endLi = document.createElement('li')
-    endLi.className = 'mdc-list-item schedule-end-li'
 
     const edDiv = document.createElement('div')
     edDiv.className = 'mdc-text-field end--date' + count
@@ -1282,38 +1169,11 @@ function createScheduleTable(data) {
         }
       }
     }
-    const etSpan = document.createElement("span")
-    etSpan.className = 'mdc-list-item__meta'
-
-    const etDiv = document.createElement('div')
-    etDiv.className = 'mdc-text-field end--time' + count
 
 
-    const endTimeInput = document.createElement('input')
-    if (schedule.endTime) {
-      endTimeInput.value = moment(schedule.endTime || new Date()).format('HH:mm')
-    } else {
-      endTimeInput.value = moment("24", "HH:mm").format('HH:mm')
-
-    }
-    endTimeInput.type = 'time'
-    endTimeInput.disabled = !data.canEdit
-    endTimeInput.className = 'mdc-text-field__input'
-
-    etDiv.appendChild(endTimeInput)
-
-    etSpan.appendChild(etDiv)
-
-
-    startLi.appendChild(sdDiv)
-    startLi.appendChild(stSpan)
-
-    endLi.appendChild(edDiv)
-    endLi.appendChild(etSpan)
-
-    ul.appendChild(startLi)
-    ul.appendChild(divider)
-    ul.appendChild(endLi)
+    li.appendChild(sdDiv)
+    li.appendChild(edDiv)
+    ul.appendChild(li)
 
     document.getElementById('schedule--group').appendChild(scheduleName)
     document.getElementById('schedule--group').appendChild(ul)
@@ -1322,7 +1182,7 @@ function createScheduleTable(data) {
 
 
 function createAttachmentContainer(data) {
- 
+
   const ordering = ['Name', 'Number', 'Template', 'email', 'phoneNumber', 'HHMM', 'weekday', 'number', 'base64', 'string']
 
   ordering.forEach(function (order) {
@@ -1396,13 +1256,13 @@ function createAttachmentContainer(data) {
     if (data.attachment[key].type === 'number') {
       div.appendChild(label)
       console.log(data)
- 
+
       if (key === 'Number Of Days') {
         const startDate = document.querySelector('#schedule--group .start--date1 input')
         const endDate = document.querySelector('#schedule--group .end--date1 input')
         data.attachment[key].value = (moment(endDate.value).diff(startDate.value, 'days')) + 1
         console.log(moment(endDate.value).diff(startDate.value, 'days') + 1);
-       
+
       }
       const numberInput = new InputField();
       const numberInit = numberInput.withoutLabel();
@@ -1448,7 +1308,7 @@ function createAttachmentContainer(data) {
             document.querySelector('#send-activity').classList.remove('hidden')
           }
         })
-        dataVal.root_.classList.add('data--value-list', 'label--text')
+        dataVal.root_.classList.add('label--text')
         dataVal.root_.dataset.primary = ''
         div.appendChild(dataVal.root_)
       }
@@ -1490,13 +1350,13 @@ function createAttachmentContainer(data) {
     }
 
     if (data.attachment[key].type === 'weekday') {
-      div.appendChild(label)
+      // div.appendChild(label)
       const selected = data.attachment[key].value;
 
       const selectField = selectMenu({
-        id: convertKeyToId(key),
         data: ['sunday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'monday'],
-        selected: selected
+        selected: selected,
+        labelText: key
       });
       console.log(selectField)
       if (data.canEdit) {
@@ -1505,7 +1365,6 @@ function createAttachmentContainer(data) {
           if (!document.getElementById('send-activity').dataset.progress) {
             document.getElementById('send-activity').classList.remove('hidden')
           }
-
           data.attachment[key].value = e.target.value
         });
       } else {
@@ -1556,18 +1415,18 @@ function createAttachmentContainer(data) {
           }
           if (key === 'Customer' && data.hasOwnProperty('create')) {
             if (data.customerRecord) {
-          
-                manageLocation().then(function (location) {
-                  geocodePosition({
-                    lat: location.latitude,
-                    lng: location.longitude
-                  }).then(function (result) {
-                    data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
-                  });
-                }).catch(function (error) {
-                  data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
-                })
-             
+
+              manageLocation().then(function (location) {
+                geocodePosition({
+                  lat: location.latitude,
+                  lng: location.longitude
+                }).then(function (result) {
+                  data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+                });
+              }).catch(function (error) {
+                data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+              })
+
               data.customerRecord.attachment.Name.value = ''
             }
             valueField.root_.parentNode.replaceChild(addNewCustomerButton(data, div).root_, valueField.root_);
@@ -1582,7 +1441,7 @@ function createAttachmentContainer(data) {
       }
 
       hasAnyValueInChildren(data.office, data.attachment[key].type).then(function (results) {
-      
+
         if (results.length && data.canEdit) {
           const chooseExisting = new Fab('add');
           const chooseExistingEl = chooseExisting.getButton();
@@ -1665,17 +1524,17 @@ function hideCustomerContainer(data, div) {
     document.querySelector('.customer-form').remove();
   }
   if (data.customerRecord) {
-   
-      manageLocation().then(function (location) {
-        geocodePosition({
-          lat: location.latitude,
-          lng: location.longitude
-        }).then(function (result) {
-          data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
-        });
-      }).catch(function (error) {
-        data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
-      })
+
+    manageLocation().then(function (location) {
+      geocodePosition({
+        lat: location.latitude,
+        lng: location.longitude
+      }).then(function (result) {
+        data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor, result)];
+      });
+    }).catch(function (error) {
+      data.customerRecord.venue = [createVenueObjectWithGeoCode(data.customerRecord.venue[0].venueDescriptor)];
+    })
     data.customerRecord.attachment.Name.value = ''
   }
   if (div.querySelector('#customer-selection-btn')) {
@@ -1685,6 +1544,7 @@ function hideCustomerContainer(data, div) {
 }
 
 function createAssigneeList(record, db) {
+
   const parent = document.getElementById('assignees--list')
   const labelAdd = createElement('li', {
     className: 'mdc-list-item label--text add--assignee-loader',
@@ -1716,64 +1576,16 @@ function createAssigneeList(record, db) {
   parent.appendChild(labelAdd)
 
 
-  record.assignees.forEach(function (number) {
+  record.assignees.forEach(function (number, idx) {
     getUserRecord(db, number).then(function (record) {
-      parent.appendChild(createSimpleAssigneeLi(record))
+      parent.appendChild(new mdc.ripple.MDCRipple(userList({
+        index: idx,
+        value: record
+      }, false)).root_)
+      // parent.appendChild(createSimpleAssigneeLi(record))
     })
   })
 }
-
-
-
-function createSimpleAssigneeLi(userRecord, metaType) {
-  const assigneeLi = createElement('li', {
-    className: 'mdc-list-item'
-  })
-  if (!userRecord) return assigneeLi
-
-  const dataObject = createElement('object', {
-    className: 'mdc-list-item__graphic',
-    data: userRecord.photoURL || './img/empty-user.jpg',
-    type: 'image/jpeg'
-  })
-  const photoGraphic = createElement('img', {
-    className: 'empty-user-assignee',
-    src: './img/empty-user.jpg'
-  })
-  dataObject.appendChild(photoGraphic)
-
-
-  const assigneeListText = createElement('span', {
-    className: 'mdc-list-item_text'
-  })
-  const name = createElement('span', {
-    className: 'mdc-list-item__primary-text'
-  })
-  const number = createElement('span', {
-    className: 'mdc-list-item__secondary-text'
-  })
-
-  if (!userRecord.displayName) {
-    name.textContent = userRecord.mobile
-  } else {
-    name.textContent = userRecord.displayName
-    number.textContent = userRecord.mobile
-  }
-
-  assigneeListText.appendChild(name)
-  assigneeListText.appendChild(number)
-
-
-  assigneeLi.appendChild(dataObject)
-  assigneeLi.appendChild(assigneeListText)
-  if (metaType) {
-    assigneeLi.setAttribute("role", "checkbox")
-    assigneeLi.appendChild(metaType.root_);
-  }
-  return assigneeLi
-}
-
-
 
 
 function checkRadioInput(inherit, value) {
@@ -1832,8 +1644,11 @@ function setFilePath(str, key, show) {
   dataObject.appendChild(img);
 
   dataObject.onclick = function () {
-    openImage(this.data)
+    // dataObject.style.width = '100%';    
+    const imageDialog = new Dialog('Photo', dataObject).create();
+    imageDialog.open();
   }
+
   container.appendChild(dataObject)
   li.appendChild(container)
 
@@ -1863,30 +1678,6 @@ function readCameraFile() {
   }
 }
 
-function openImage(imageSrc) {
-
-  if (!imageSrc) return;
-  const largeImage = document.createElement('img')
-  largeImage.src = imageSrc;
-  largeImage.style.width = '100%';
-
-  document.getElementById('dialog-container').innerHTML = dialog({
-    id: 'viewImage--dialog-component',
-    headerText: 'Photo',
-    content: largeImage,
-    showCancel: true,
-    showAccept: true
-  }).outerHTML
-  const dialogEl = document.querySelector('#viewImage--dialog-component')
-  const imageDialog = new mdc.dialog.MDCDialog.attachTo(dialogEl);
-  imageDialog.listen('MDCDialog:accept', function (evt) {
-    dialogEl.remove()
-  })
-  imageDialog.listen('MDCDialog:cancel', function (evt) {
-    dialogEl.remove()
-  })
-  imageDialog.show()
-}
 
 function createActivityCancellation(record) {
   if (!record.canEdit) return
@@ -1919,25 +1710,10 @@ function createActivityCancellation(record) {
     if (!record.canEdit) return;
 
     document.querySelector('.delete-activity').addEventListener('click', function (evt) {
-      const span = document.createElement('span')
-      span.className = 'mdc-typography--body1'
-      span.textContent = 'Are you sure you want to delete this activity ? '
-      document.getElementById('dialog-container').innerHTML = dialog({
-        id: 'cancel-alert',
-        headerText: `${record.activityName} will be deleted`,
-        showCancel: true,
-        showAccept: true,
-        content: span
-      }).outerHTML
-      const dialogEl = document.querySelector('#cancel-alert')
-      var cancelDialog = new mdc.dialog.MDCDialog(dialogEl);
-
-      cancelDialog.lastFocusedTarget = evt.target;
-      cancelDialog.show();
-      cancelDialog.listen('MDCDialog:cancel', function () {
-        dialogEl.remove()
-      })
-      cancelDialog.listen('MDCDialog:accept', function () {
+      const deleteActivityDialog = new Dialog(`${record.activityName} will be deleted`, 'Are you sure you want to delete this activity ? ').create();
+      deleteActivityDialog.open();
+      deleteActivityDialog.listen('MDCDialog:closed', function (evt) {
+        if (evt.detail.action !== 'accept') return;
         if (!isLocationStatusWorking()) return;
         document.querySelector('.delete-activity').style.display = 'none';
         document.querySelector('.status--cancel-cont li').appendChild(loader('cancel-loader'))
@@ -1945,7 +1721,6 @@ function createActivityCancellation(record) {
           activityId: record.activityId,
           status: 'CANCELLED',
         })
-        dialogEl.remove()
       })
     })
   }
@@ -1965,50 +1740,30 @@ function insertInputsIntoActivity(record, send) {
   }
 
   let sd;
-  let st;
   let ed;
-  let et
+
 
   for (var i = 1; i < record.schedule.length + 1; i++) {
 
-    sd = getInputText('.start--date' + i).value
-    st = getInputText('.start--time' + i).value
-    ed = getInputText('.end--date' + i).value
-    et = getInputText('.end--time' + i).value
-    if (!concatDateWithTime(sd, st) && !concatDateWithTime(ed, et)) {
-      record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
-      record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
+    sd = moment(getInputText('.start--date' + i).value).valueOf()
+    ed = moment(getInputText('.end--date' + i).value).valueOf()
 
-    } else {
-
-
-      if (sd && !st) {
-        snacks('Please Select a Start Time')
-        return;
-      }
-      if (st && !sd) {
-        snacks('Please Select a Start Date')
-        return
-      }
-      if (concatDateWithTime(sd, st) && !ed) {
-        snacks('Please Select a End Date')
-        return;
-      }
-      if (concatDateWithTime(sd, st) && !et) {
-        snacks('Please Select a End Time')
-        return;
-      }
-
-
-      if (concatDateWithTime(ed, et) < concatDateWithTime(sd, st)) {
-        snacks('The End Date and Time should be greater or equal to the start time')
-        return;
-      }
-      record.schedule[i - 1].startTime = concatDateWithTime(sd, st) || ''
-      record.schedule[i - 1].endTime = concatDateWithTime(ed, et) || ''
+    if (sd && !ed) {
+      snacks('Please Select a End Time')
+      return;
     }
-
+    if (ed && !sd) {
+      snacks('Please Select a Start Date')
+      return
+    }
+    if (ed < sd) {
+      snacks('The End Date should be greater or equal to the start Date')
+      return;
+    }
+    record.schedule[i - 1].startTime = sd || ''
+    record.schedule[i - 1].endTime = ed || ''
   }
+
 
   if (send) {
     const reqArray = [];
@@ -2071,7 +1826,7 @@ function insertInputsIntoActivity(record, send) {
 
 function sendUpdateReq(requiredObject, record) {
 
-  document.querySelector('header').appendChild(progressBar())
+  progressBar.foundation_.open();
   document.querySelector('#send-activity').classList.add('hidden')
 
   if (!record.hasOwnProperty('create')) {
@@ -2122,9 +1877,12 @@ function getSubscription(office, template) {
       let record;
       officeTemplateCombo.get(range).onsuccess = function (event) {
         record = event.target.result
+
       }
       tx.oncomplete = function () {
-        resolve(record)
+
+        return resolve(record)
+
       }
     }
   })
@@ -2167,121 +1925,120 @@ function addNewCustomer(customerRecord, data) {
   }
 
 
-nameField.input_.oninput = function (e) {
-  customerRecord.attachment.Name.value = e.target.value
-  if (data && data.customerRecord) {
-    data.attachment.Customer.value = e.target.value
+  nameField.input_.oninput = function (e) {
+    customerRecord.attachment.Name.value = e.target.value
+    if (data && data.customerRecord) {
+      data.attachment.Customer.value = e.target.value
+    }
   }
-}
-const addressField = address.withoutLabel();
-addressField['input_'].placeholder = 'Customer Address'
-addressField.input_.id = 'customer-address'
-addressField.value = customerRecord.venue[0].address
-if (data && customerRecord) {
-  if (!data.canEdit) {
+  const addressField = address.withoutLabel();
+  addressField['input_'].placeholder = 'Customer Address'
+  addressField.input_.id = 'customer-address'
+  addressField.value = customerRecord.venue[0].address
+  if (data && customerRecord) {
+    if (!data.canEdit) {
+      addressField.root_.classList.add('mdc-text-field--disabled')
+      addressField.input_.setAttribute('disabled', 'true')
+    }
+  } else if (!customerRecord.canEdit) {
+
     addressField.root_.classList.add('mdc-text-field--disabled')
     addressField.input_.setAttribute('disabled', 'true')
   }
-} else if (!customerRecord.canEdit) {
 
-  addressField.root_.classList.add('mdc-text-field--disabled')
-  addressField.input_.setAttribute('disabled', 'true')
-}
-
-let moveMarker = false;
-if (data && customerRecord) {
-  moveMarker = true
-}
-else {
+  let moveMarker = false;
+  if (data && customerRecord) {
+    moveMarker = true
+  } else {
     moveMarker = customerRecord.canEdit
 
-}   
-
-
-container.appendChild(nameField['root_'])
-container.appendChild(addressField['root_'])
-
-const mapDom = createElement('div', {
-  id: 'customer-address-map'
-})
-const customerMap = new AppendMap(mapDom);
-customerMap.setZoom(18);
-let marker;
-if (customerRecord.venue[0].location) {
-  customerMap.setLocation({
-    lat: customerRecord.venue[0].geopoint._latitude,
-    lng: customerRecord.venue[0].geopoint._longitude
-  });
-  container.style.minHeight = '400px'
-  if (moveMarker) {
-    marker = customerMap.getMarker({
-      draggable: true
-    });
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition()).then(function (result) {
-        addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
-        if (document.querySelector('#send-activity')) {
-          document.querySelector('#send-activity').classList.remove('hidden')
-        }
-      })
-    });
-  } else {
-    marker = customerMap.getMarker();
-  }
-}
-
-var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
-  componentRestrictions: {
-    country: "in"
-  }
-});
-
-autocomplete.addListener('place_changed', function () {
-
-  let place = autocomplete.getPlace();
-  if (document.querySelector('#send-activity')) {
-    document.querySelector('#send-activity').classList.remove('hidden')
   }
 
-  customerMap.setLocation({
-    lat: place.geometry.location.lat(),
-    lng: place.geometry.location.lng()
-  });
 
+  container.appendChild(nameField['root_'])
+  container.appendChild(addressField['root_'])
 
-  customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
-  container.style.minHeight = '400px'
-
-  if (moveMarker) {
-
-    marker = customerMap.getMarker({
-      draggable: true
+  const mapDom = createElement('div', {
+    id: 'customer-address-map'
+  })
+  const customerMap = new AppendMap(mapDom);
+  customerMap.setZoom(18);
+  let marker;
+  if (customerRecord.venue[0].location) {
+    customerMap.setLocation({
+      lat: customerRecord.venue[0].geopoint._latitude,
+      lng: customerRecord.venue[0].geopoint._longitude
     });
-
-    google.maps.event.addListener(marker, 'dragend', function () {
-      geocodePosition(marker.getPosition()).then(function (result) {
-        addressField.value = result.formatted_address;
-        customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
-        if (document.querySelector('#send-activity')) {
-          document.querySelector('#send-activity').classList.remove('hidden')
-        }
-      }).catch(function (error) {
-        handleError({
-          message: 'geocode Error in autocomplete listener for' + data.template,
-          body: JSON.stringify(error)
+    container.style.minHeight = '400px'
+    if (moveMarker) {
+      marker = customerMap.getMarker({
+        draggable: true
+      });
+      google.maps.event.addListener(marker, 'dragend', function () {
+        geocodePosition(marker.getPosition()).then(function (result) {
+          addressField.value = result.formatted_address;
+          customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+          if (document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }
         })
-        locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
-      })
-    });
-  } else {
-    marker = customerMap.getMarker();
-
+      });
+    } else {
+      marker = customerMap.getMarker();
+    }
   }
-});
-container.appendChild(mapDom);
-container.appendChild(locationErrorText);
-return container;
+
+  var autocomplete = new google.maps.places.Autocomplete(addressField['input_'], {
+    componentRestrictions: {
+      country: "in"
+    }
+  });
+
+  autocomplete.addListener('place_changed', function () {
+
+    let place = autocomplete.getPlace();
+    if (document.querySelector('#send-activity')) {
+      document.querySelector('#send-activity').classList.remove('hidden')
+    }
+
+    customerMap.setLocation({
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng()
+    });
+
+
+    customerRecord.venue[0] = createVenueObjectWithAutoComplete(customerRecord.venue[0].venueDescriptor, place)
+    container.style.minHeight = '400px'
+
+    if (moveMarker) {
+
+      marker = customerMap.getMarker({
+        draggable: true
+      });
+
+      google.maps.event.addListener(marker, 'dragend', function () {
+        geocodePosition(marker.getPosition()).then(function (result) {
+          addressField.value = result.formatted_address;
+          customerRecord.venue[0] = createVenueObjectWithGeoCode(customerRecord.venue[0].venueDescriptor, result);
+          if (document.querySelector('#send-activity')) {
+            document.querySelector('#send-activity').classList.remove('hidden')
+          }
+        }).catch(function (error) {
+          handleError({
+            message: 'geocode Error in autocomplete listener for' + data.template,
+            body: JSON.stringify(error)
+          })
+          locationErrorText.textContent = 'Failed to detect your current Location. Search For A new Location or choose existing'
+        })
+      });
+    } else {
+      marker = customerMap.getMarker();
+
+    }
+  });
+  container.appendChild(mapDom);
+  container.appendChild(locationErrorText);
+  return container;
 }
 
 

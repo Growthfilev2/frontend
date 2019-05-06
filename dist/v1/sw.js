@@ -6,7 +6,7 @@ const cacheToAdd = [
     '/v1/external/js/firebase-app.js',
     '/v1/external/js/firebase-auth.js',
     '/v1/external/js/firebaseui.js',
-    '/v1/external/js/material.js',
+    '/v1/external/js/material.min.js',
     '/v1/external/css/material.min.css',
     '/v1/external/css/firebaseui.css',
     '/v1/css/bundle.css',
@@ -58,6 +58,7 @@ self.addEventListener('fetch', function (event) {
             caches.open(CACHE_NAME).then(function (cache) {
                 console.log(event.request)
                 return cache.match(event.request).then(function (response) {
+                    
                     return response || fetch(event.request)
                 })
 
