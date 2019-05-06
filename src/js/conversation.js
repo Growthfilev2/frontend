@@ -549,6 +549,7 @@ function createTempRecord(office, template, prefill) {
 
       let bareBonesScheduleArray;
       if (prefill.schedule) {
+        
         bareBonesScheduleArray = prefill.schedule
       } else {
         bareBonesScheduleArray = []
@@ -1155,7 +1156,7 @@ function createScheduleTable(data) {
           const value = moment(endDateInput.value).diff(moment(startDateInput.value), 'days') + 1
           if (value >= 0) {
 
-            field.querySelector('input').value = value
+            field.querySelector('textarea').value = value
           }
         }
       }
@@ -1164,7 +1165,7 @@ function createScheduleTable(data) {
         if (field) {
           const value = moment(endDateInput.value).diff(moment(startDateInput.value), 'days') + 1
           if (value >= 0) {
-            field.querySelector('input').value = value
+            field.querySelector('textarea').value = value
           }
         }
       }
@@ -1876,7 +1877,8 @@ function getSubscription(office, template) {
       const range = IDBKeyRange.only([office, template])
       let record;
       officeTemplateCombo.get(range).onsuccess = function (event) {
-        if(record.status !== 'CANCELLED')  {
+        if(!event.target.result) return;
+        if(event.target.result.status !== 'CANCELLED')  {
           record = event.target.result;
         }
       }

@@ -424,7 +424,6 @@ var receiverCaller = {
 };
 
 function messageReceiver(response) {
-
   receiverCaller[response.data.type](response.data);
 }
 
@@ -440,8 +439,7 @@ function emailVerify(notification) {
   })
 }
 
-
-function templateDialog(notificationData, hasMultipleOffice) {
+function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
   const container = createElement('div', {
     className: 'notification-message',
     textContent: notificationData.body
@@ -480,11 +478,17 @@ function templateDialog(notificationData, hasMultipleOffice) {
     if (!rawValue) return;
 
     const value = JSON.parse(rawValue);
+    let prefill = {
+      schedule:'',
+      attachment:''
+    }
+    if(!isSuggestion) {
+      prefill.schedule = value.schedule
+      prefill.attachment = value.attachment
+      
+    }
     if (!hasMultipleOffice) {
-      createTempRecord(value.office, value.template, {
-        schedule: value.schedule,
-        attachment: value.attachment
-      });
+      createTempRecord(value.office, value.template, prefill);
       return;
     }
     selectorUI({

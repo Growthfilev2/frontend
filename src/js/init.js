@@ -483,7 +483,6 @@ function runAppChecks() {
             title = '';
             prom.push(getSubscription(office, 'dsr'))
           }
-
         })
         Promise.all(prom).then(function (result) {
           if (!result.length) return;
@@ -504,7 +503,7 @@ function runAppChecks() {
           templateDialog({
             title: 'Reminder',
             data: data
-          }, offices.length > 1 ? true : false)
+          }, true,offices.length > 1 ? true : false)
         }).catch(console.log)
 
       })
