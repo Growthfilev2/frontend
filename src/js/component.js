@@ -71,9 +71,10 @@ function parseQuery(queryString) {
 function queryPatramsToObject(url) {
     let result = {};
     url.forEach(function (value, key) {
-        if (key === 'macAddress') {
+        if (key === 'macAddress' || key === 'ssid') {
             result[key] = value
-        } else {
+        }
+        else {
             result[key] = Number(value)
         }
     })

@@ -426,11 +426,7 @@ function fillSubscriptionInSelector(data, container) {
           value: attr
         })
         li.dataset.template = attr.template;
-        tabContentContainer.appendChild(radioList({
-          index: index,
-          labelText: attr.template,
-          value: attr
-        }))
+        tabContentContainer.appendChild(li)
         index++
       }
       cursor.continue();
