@@ -10,121 +10,103 @@ function profileView(pushState) {
   const sectionStart = document.getElementById('section-start');
   sectionStart.innerHTML = ''
   sectionStart.appendChild(headerBackIcon())
-
-  var user = firebase.auth().currentUser;
-  var dbName = user.uid;
-  var req = indexedDB.open(dbName);
+  var req = indexedDB.open(firebase.auth().currentUser.uid);
   req.onsuccess = function () {
     var db = req.result;
-    var rootTx = db.transaction(['root'], 'readwrite');
-    var rootObjectStore = rootTx.objectStore('root');
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      var record = event.target.result;
-      rootObjectStore.put(record);
-      rootTx.oncomplete = function () {
+    getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
 
-        createProfilePanel(db).then(function (view) {
-
-          if (!document.getElementById('app-current-panel')) return;
-
-          document.getElementById('app-current-panel').innerHTML = view.outerHTML;
-        
-
-          if (native.getName() === 'Android') {
-            document.getElementById('uploadProfileImage').addEventListener('click', function () {
-              try {
-                AndroidInterface.openImagePicker();
-              }catch(e){
-                sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
-              }
-            })
-          } else {
-            document.getElementById('uploadProfileImage').addEventListener('change', function () {
-              readUploadedFile()
-            });
+      if (!document.getElementById('app-current-panel')) return;
+      document.getElementById('app-current-panel').innerHTML = createProfilePanel(userRecord).outerHTML;
+      if (native.getName() === 'Android') {
+        document.getElementById('uploadProfileImage').addEventListener('click', function () {
+          try {
+            AndroidInterface.openImagePicker();
+          } catch (e) {
+            sendExceptionObject(e, 'CATCH Type 10:AndroidInterface.openImagePicker at profileview', []);
           }
-
-          changeDisplayName(user);
-          changeEmailAddress(user);
         })
-      };
-    };
-  };
+      } else {
+        document.getElementById('uploadProfileImage').addEventListener('change', function () {
+          readUploadedFile()
+        });
+      }
+
+      changeDisplayName();
+      changeEmailAddress();
+    });
+  }
+
 }
 
 
+function createProfilePanel(userRecord) {
 
-function createProfilePanel(db) {
-  return new Promise(function (resolve) {
-    
-  getUserRecord(db,firebase.auth().currentUser.phoneNumber).then(function(userRecord){
-    
-      var profileView = document.createElement('div');
-      profileView.id = 'profile-view--container';
-      profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
+  var profileView = document.createElement('div');
+  profileView.id = 'profile-view--container';
+  profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
 
-      var uploadBtn = document.createElement('button');
-      uploadBtn.className = 'mdc-fab';
-      if (native.getName() === 'Android') {
-        uploadBtn.id = 'uploadProfileImage'
-      }
+  var uploadBtn = document.createElement('button');
+  uploadBtn.className = 'mdc-fab';
+  if (native.getName() === 'Android') {
+    uploadBtn.id = 'uploadProfileImage'
+  }
 
-      var label = document.createElement('label');
-      label.setAttribute('for', 'uploadProfileImage');
-      var btnText = document.createElement('span');
-      btnText.className = 'mdc-fab__icon material-icons';
-      btnText.textContent = 'add_a_photo';
+  var label = document.createElement('label');
+  label.setAttribute('for', 'uploadProfileImage');
+  var btnText = document.createElement('span');
+  btnText.className = 'mdc-fab__icon material-icons';
+  btnText.textContent = 'add_a_photo';
 
-      label.appendChild(btnText);
-      uploadBtn.appendChild(label);
-      let fileInput;
-      if (native.getName() !== 'Android') {
-        fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.style.display = 'none';
-        fileInput.id = 'uploadProfileImage';
-        fileInput.accept = 'image/jpeg;';
-      }
+  label.appendChild(btnText);
+  uploadBtn.appendChild(label);
+  let fileInput;
+  if (native.getName() !== 'Android') {
+    fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.style.display = 'none';
+    fileInput.id = 'uploadProfileImage';
+    fileInput.accept = 'image/jpeg;';
+  }
 
-      var profileImgCont = document.createElement('div');
-      profileImgCont.id = 'profile--image-container';
-      profileImgCont.className = 'profile-container--main';
+  var profileImgCont = document.createElement('div');
+  profileImgCont.id = 'profile--image-container';
+  profileImgCont.className = 'profile-container--main';
 
-      const dataObject = document.createElement('object');
-      dataObject.type = 'image/jpeg';
-      dataObject.data = userRecord.photoURL || './img/empty-user-big.jpg';
-      dataObject.id = 'user-profile--image';
+  const dataObject = document.createElement('object');
+  dataObject.type = 'image/jpeg';
+  dataObject.data = userRecord.photoURL || './img/empty-user-big.jpg';
+  dataObject.id = 'user-profile--image';
 
-      var profileImg = document.createElement('img');
-      profileImg.src = './img/empty-user-big.jpg';
-      profileImg.className = 'empty-user-profile'
-      dataObject.appendChild(profileImg);
+  var profileImg = document.createElement('img');
+  profileImg.src = './img/empty-user-big.jpg';
+  profileImg.className = 'empty-user-profile'
+  dataObject.appendChild(profileImg);
 
-      var overlay = document.createElement('div');
-      overlay.className = 'insert-overlay';
+  var overlay = document.createElement('div');
+  overlay.className = 'insert-overlay';
 
-      profileImgCont.appendChild(dataObject);
-      profileImgCont.appendChild(overlay);
-      profileImgCont.appendChild(uploadBtn);
-      if (native.getName() !== 'Android') {
-        label.appendChild(fileInput);
-      }
+  profileImgCont.appendChild(dataObject);
+  profileImgCont.appendChild(overlay);
+  profileImgCont.appendChild(uploadBtn);
+  if (native.getName() !== 'Android') {
+    label.appendChild(fileInput);
+  }
 
-      var nameChangeCont = document.createElement('div');
-      nameChangeCont.id = 'name--change-container';
-      nameChangeCont.className = 'profile-psuedo-card';
+  var nameChangeCont = document.createElement('div');
+  nameChangeCont.id = 'name--change-container';
+  nameChangeCont.className = 'profile-psuedo-card';
 
-      var toggleBtnName = document.createElement('button');
-      toggleBtnName.className = 'mdc-icon-button material-icons hidden';
-      toggleBtnName.id = 'edit--name';
+  var toggleBtnName = document.createElement('button');
+  toggleBtnName.className = 'mdc-icon-button material-icons hidden';
+  toggleBtnName.id = 'edit--name';
 
-      toggleBtnName.setAttribute('aria-hidden', 'true');
-      toggleBtnName.setAttribute('aria-pressed', 'false');
-      toggleBtnName.textContent = 'check';
-      const currentName = firebase.auth().currentUser.displayName;
+  toggleBtnName.setAttribute('aria-hidden', 'true');
+  toggleBtnName.setAttribute('aria-pressed', 'false');
+  toggleBtnName.textContent = 'check';
+  const currentName = firebase.auth().currentUser.displayName;
 
 
-      nameChangeCont.innerHTML = `<div class="mdc-text-field" id='name-change-field'>
+  nameChangeCont.innerHTML = `<div class="mdc-text-field" id='name-change-field'>
         <input autocomplete="off" type="text"  placeholder="${currentName ? '' : 'Enter Your Name'}"  id="pre-filled-name" class="mdc-text-field__input" value="${currentName ? currentName : ''}">
         <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-name">
          Your Name
@@ -133,21 +115,21 @@ function createProfilePanel(db) {
       </div>
       `
 
-      nameChangeCont.appendChild(toggleBtnName);
+  nameChangeCont.appendChild(toggleBtnName);
 
-      var emailCont = document.createElement('div');
-      emailCont.id = 'email--change-container';
-      emailCont.className = 'profile-psuedo-card';
+  var emailCont = document.createElement('div');
+  emailCont.id = 'email--change-container';
+  emailCont.className = 'profile-psuedo-card';
 
-      var toggleBtnEmail = document.createElement('button');
-      toggleBtnEmail.className = 'mdc-icon-button material-icons hidden';
-      toggleBtnEmail.id = 'edit--email';
-      toggleBtnEmail.setAttribute('aria-hidden', 'true');
-      toggleBtnEmail.setAttribute('aria-pressed', 'false');
-      toggleBtnEmail.textContent = 'check';
-      const currentEmail = firebase.auth().currentUser.email;
+  var toggleBtnEmail = document.createElement('button');
+  toggleBtnEmail.className = 'mdc-icon-button material-icons hidden';
+  toggleBtnEmail.id = 'edit--email';
+  toggleBtnEmail.setAttribute('aria-hidden', 'true');
+  toggleBtnEmail.setAttribute('aria-pressed', 'false');
+  toggleBtnEmail.textContent = 'check';
+  const currentEmail = firebase.auth().currentUser.email;
 
-      emailCont.innerHTML = `<div class="mdc-text-field" id='email-change-field'>
+  emailCont.innerHTML = `<div class="mdc-text-field" id='email-change-field'>
         <input  autocomplete="off" type="text" id="pre-filled-email" class="mdc-text-field__input" value="${currentEmail ? currentEmail : ''}" placeholder="${currentEmail ? '' : 'Enter your Email'}">
         <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-email">
          Your Email
@@ -157,18 +139,15 @@ function createProfilePanel(db) {
       `
 
 
-      emailCont.appendChild(toggleBtnEmail);
+  emailCont.appendChild(toggleBtnEmail);
 
 
-      profileView.appendChild(profileImgCont);
-      profileView.appendChild(nameChangeCont);
-      profileView.appendChild(emailCont);
+  profileView.appendChild(profileImgCont);
+  profileView.appendChild(nameChangeCont);
+  profileView.appendChild(emailCont);
+  return profileView
 
 
-
-      resolve(profileView)
-    });
-  })
 }
 
 function timeDiff(lastSignInTime) {
@@ -178,12 +157,14 @@ function timeDiff(lastSignInTime) {
 }
 
 function newSignIn(value, field) {
-  const dialog = new Dialog('',createElement('div',{id:'refresh-login'})).create();
+  const dialog = new Dialog('', createElement('div', {
+    id: 'refresh-login'
+  })).create();
   dialog.open();
-  dialog.listen('MDCDialog:opened',function(evt){
+  dialog.listen('MDCDialog:opened', function (evt) {
     try {
-      if(!ui) {
-        ui  = new firebaseui.auth.AuthUI(firebase.auth())
+      if (!ui) {
+        ui = new firebaseui.auth.AuthUI(firebase.auth())
       }
       ui.start('#refresh-login', firebaseUiConfig(value));
       setTimeout(function () {
@@ -191,7 +172,7 @@ function newSignIn(value, field) {
         document.querySelector('.firebaseui-label').remove();
         document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
       }, 500)
-   
+
     } catch (e) {
       // dialogSelector.remove();
       console.log(e);
@@ -206,8 +187,8 @@ function newSignIn(value, field) {
   // dialogSelector.querySelector('section').id = 'refresh-login'
   // var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
 
- 
-  
+
+
 }
 
 function readUploadedFile(image) {
@@ -338,20 +319,20 @@ function emailValidation(emailField) {
 
 function updateEmail(user, email) {
   progressBar.foundation_.open();
-  user.updateEmail(email).then(function(){
+  user.updateEmail(email).then(function () {
     emailUpdateSuccess(true)
   }).catch(authUpdatedError);
 }
 
 function emailUpdateSuccess(showSuccessDialog) {
   var user = firebase.auth().currentUser;
-  user.sendEmailVerification().then(function(){
+  user.sendEmailVerification().then(function () {
     emailVerificationSuccess(showSuccessDialog)
   }).catch(emailVerificationError);
 }
 
 function emailVerificationSuccess(showSuccessDialog) {
-  if(showSuccessDialog){
+  if (showSuccessDialog) {
     successDialog();
     document.getElementById('dialog-container').innerHTML = ''
   };
@@ -360,5 +341,5 @@ function emailVerificationSuccess(showSuccessDialog) {
 
 function emailVerificationError(error) {
   snacks(error.message);
-  progressBar.foundation_.close(); 
+  progressBar.foundation_.close();
 }

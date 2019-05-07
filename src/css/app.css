@@ -2067,3 +2067,6 @@ input[type="datetime-local"] {
     font-size: 16px;
   
 }
+.banner {
+  text-align: center;
+}
