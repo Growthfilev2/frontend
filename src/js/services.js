@@ -142,7 +142,6 @@ function getLocation() {
         reject(error)
       })
     }
-
   })
 }
 
@@ -151,23 +150,60 @@ function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
     let body;
     try {
-      body = getCellularInformation()
+      body = getCellularInformation();
+     
     } catch (e) {
-
       reject(e.message);
     }
 
-    if (!Object.keys(JSON.parse(body)).length) {
+    if (!Object.keys(body).length) {
 
       reject("empty object from getCellularInformation");
     }
 
-    geolocationApi(body).then(function (cellLocation) {
+    geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
+      if(cellLocation.accuracy > 350) {
+        logWifi(body);
+      }
       return resolve(cellLocation);
     }).catch(function (error) {
       reject(error)
     })
   })
+}
+function logWifi(ogBody){
+  const req = {message:'Wi-fi Change Log ' +new Date(),body:{
+    main : ogBody
+  }}
+  for (let i = 1; i <= 3; i++) {
+    
+    (function(index){
+    
+      setTimeout(function(){
+        if(index ==3) {
+          handleError(req)
+          return;
+        }
+        let result
+        let name;
+        if(index == 1) {
+          name = 'first wifi at '+moment().format('hh:mm:ss')
+        
+        }
+        if(index ==2){
+          name = 'second wifi at '+moment().format('hh:mm:ss')
+         
+        };
+       
+        try {
+         result = getCellularInformation();
+        }catch(e){
+         result = e.message
+        }
+        req.body[name] = result;
+      },i * 2000)
+    })(i)
+  }
 }
 
 function iosLocationError(error) {

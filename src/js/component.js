@@ -45,7 +45,7 @@ function getCellularInformation() {
         body.considerIp = true
     }
   
-    return JSON.stringify(body)
+    return body
 }
 
 function removeFalseCellIds(cellTowers) {
@@ -71,7 +71,7 @@ function parseQuery(queryString) {
 function queryPatramsToObject(url) {
     let result = {};
     url.forEach(function (value, key) {
-        if (key === 'macAddress' || key === 'ssid') {
+        if (key === 'macAddress') {
             result[key] = value
         }
         else {
