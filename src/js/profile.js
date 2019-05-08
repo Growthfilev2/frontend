@@ -87,21 +87,15 @@ function baseCard() {
   const base = tabBarBase()
   getEmployeeDetails().then(function (employeeDetails) {
     console.log(employeeDetails);
-    const officeContainer = createElement('div', {
-      className: 'office-info seperator'
-    });
-    const supervisor = createElement('div',{id:'supervisor-section'})
-    supervisor.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Supervisor'}))
-    const supervisorChipSet = createElement('div', {
-      className: 'mdc-chip-set'
-    });
-    const team = createElement('div',{className:'team-section'});
+    let officeContainer = createElement('div',{className:'office-info seperator'});
+
+   const team = createElement('div',{className:'team-section'});
     team.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Team'}))
     const teamChipSet = createElement('div', {
       className: 'mdc-chip-set'
     });
     // const teamPeople = createElement('div',{className:'my-team'})
-    
+  
     const myNumber = firebase.auth().currentUser.phoneNumber
     employeeDetails.forEach(function (employee, idx) {
 
@@ -110,7 +104,14 @@ function baseCard() {
           name: employee.office,
           index: idx
         }));
-        officeContainer.appendChild(officeInfo(employee, idx));
+        const officeDetail = officeInfo(employee, idx)
+        const supervisorChipSet = createElement('div', {
+          className: 'mdc-chip-set'
+        });
+        const supervisor = createElement('div',{id:'supervisor-section'})
+        supervisor.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Supervisor'}))
+      
+        
         
         if(employee.attachment['First Supervisor'].value) {
           supervisorChipSet.appendChild(chipSet({text:employee.attachment['First Supervisor'].value}))
@@ -118,19 +119,24 @@ function baseCard() {
         if(employee.attachment['Second Supervisor'].value) {
           supervisorChipSet.appendChild(chipSet({text:employee.attachment['Second Supervisor'].value}))
         };
+        supervisor.appendChild(supervisorChipSet);
+        officeDetail.appendChild(supervisor);
+        officeContainer.appendChild(officeDetail);
 
       } 
       else {
+
         if(employee.attachment['First Supervisor'].value === myNumber || employee.attachment['Second Supervisor'].value === myNumber) {
+          teamChipSet.dataset.office = employee.office;
           teamChipSet.appendChild(chipSet({text:employee.attachment.Name.value || employee['Employee Contact'].value}))
         }
-        // officeContainer.appendChild(supervisorSection(employee))
       }
     })
-    supervisor.appendChild(supervisorChipSet)
-    team.appendChild(teamChipSet)
-    officeContainer.appendChild(supervisor)
-    officeContainer.appendChild(team)
+    // team.appendChild(teamChipSet)
+    // officeDetail.appendChild(team)
+   
+    // officeContainer.appendChild(team)
+  
     viewContainer.appendChild(base);
     viewContainer.appendChild(officeContainer);
     const tabBarInit = new mdc.tabBar.MDCTabBar(base);
