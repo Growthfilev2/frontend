@@ -67,11 +67,34 @@ function baseCard(){
   primaryAction.appendChild(cardMedia);
   primaryAction.appendChild(editButton.root_);
   viewContainer.appendChild(profileBasicInfo())
+  getUniqueOfficeCount().then(function(offices){
+    console.log(offices)
+    if(!offices.length) return;
+    const base = tabBarBase()
+    offices.forEach(function(office,idx){
+      base.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({name:office,index:idx}))
+    })
+    viewContainer.appendChild(base);
+    
+    const tabBarInit = new mdc.tabBar.MDCTabBar(base);
+
+    // var contentEls = document.querySelectorAll('.content');
+    // tabBar.listen('MDCTabBar:activated', function (evt) {
+    //   document.querySelector('.content--active').classList.remove('content--active');
+    //   contentEls[event.detail.index].classList.add('content--active');
+    // });
+  })
+  // viewContainer.appendChild()
   primaryAction.appendChild(viewContainer)
   primaryAction.appendChild(editContainer);
   card.appendChild(primaryAction)
   return card;
 }
+
+function officeInfo(){
+  
+}
+
 function profileBasicInfo(){
   const basicInfoSeperator = createElement('div',{className:'basic-info seperator'})
   const name = createElement('h1',{className:'mdc-typography--headline5 mb-0 mt-0',id:'view-name',textContent:firebase.auth().currentUser.displayName})
