@@ -28,7 +28,7 @@ function profileView(pushState) {
 
   //         if (!document.getElementById('app-current-panel')) return;
 
-          
+
 
   //         // if (native.getName() === 'Android') {
   //         //   document.getElementById('uploadProfileImage').addEventListener('click', function () {
@@ -52,88 +52,215 @@ function profileView(pushState) {
   // };
 }
 
-function baseCard(){
-  const card = createElement('div',{className:'mdc-card demo-card'})
-  const primaryAction = createElement('div',{className:'mdc-card__primary-action demo-card__primary-action'})
-  const cardMedia = createElement('div',{className:'mdc-card__media mdc-card__media--16-9 demo-card__media'})
-  cardMedia.style.backgroundImage= `url(${firebase.auth().currentUser.photoURL})`
-  
-  const editButton = iconButton({id:'edit-profile',className:'without-icon-edit' ,label:'edit-profile-button',initialState:'edit',finalState:'check'});
+function baseCard() {
+  const card = createElement('div', {
+    className: 'mdc-card demo-card'
+  })
+  const primaryAction = createElement('div', {
+    className: 'mdc-card__primary-action demo-card__primary-action'
+  })
+  const cardMedia = createElement('div', {
+    className: 'mdc-card__media mdc-card__media--16-9 demo-card__media'
+  })
+  cardMedia.style.backgroundImage = `url(${firebase.auth().currentUser.photoURL})`
 
-  const viewContainer = createElement('div',{className:'demo-card__primary p-10'})
-  const editContainer = createElement('div',{className:'mdc-typography mdc-typography--body2 p-10 hidden',id:'card-body-edit'})
+  const editButton = iconButton({
+    id: 'edit-profile',
+    className: 'without-icon-edit',
+    label: 'edit-profile-button',
+    initialState: 'edit',
+    finalState: 'check'
+  });
+
+  const viewContainer = createElement('div', {
+    className: 'demo-card__primary p-10'
+  })
+  const editContainer = createElement('div', {
+    className: 'mdc-typography mdc-typography--body2 p-10 hidden',
+    id: 'card-body-edit'
+  })
 
 
   primaryAction.appendChild(cardMedia);
   primaryAction.appendChild(editButton.root_);
-  viewContainer.appendChild(profileBasicInfo())
-  getUniqueOfficeCount().then(function(offices){
-    console.log(offices)
-    if(!offices.length) return;
-    const base = tabBarBase()
-    offices.forEach(function(office,idx){
-      base.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({name:office,index:idx}))
-    })
-    viewContainer.appendChild(base);
+  viewContainer.appendChild(profileBasicInfo());
+  const base = tabBarBase()
+  getEmployeeDetails().then(function (employeeDetails) {
+    console.log(employeeDetails);
+    const officeContainer = createElement('div', {
+      className: 'office-info seperator'
+    });
+    const supervisor = createElement('div',{id:'supervisor-section'})
+    supervisor.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Supervisor'}))
+    const supervisorChipSet = createElement('div', {
+      className: 'mdc-chip-set'
+    });
+    const team = createElement('div',{className:'team-section'});
+    team.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Team'}))
+    const teamChipSet = createElement('div', {
+      className: 'mdc-chip-set'
+    });
+    // const teamPeople = createElement('div',{className:'my-team'})
     
+    const myNumber = firebase.auth().currentUser.phoneNumber
+    employeeDetails.forEach(function (employee, idx) {
+
+      if (employee.attachment['Employee Contact'].value === myNumber) {
+        base.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({
+          name: employee.office,
+          index: idx
+        }));
+        officeContainer.appendChild(officeInfo(employee, idx));
+        
+        if(employee.attachment['First Supervisor'].value) {
+          supervisorChipSet.appendChild(chipSet({text:employee.attachment['First Supervisor'].value}))
+        }
+        if(employee.attachment['Second Supervisor'].value) {
+          supervisorChipSet.appendChild(chipSet({text:employee.attachment['Second Supervisor'].value}))
+        };
+
+      } 
+      else {
+        if(employee.attachment['First Supervisor'].value === myNumber || employee.attachment['Second Supervisor'].value === myNumber) {
+          teamChipSet.appendChild(chipSet({text:employee.attachment.Name.value || employee['Employee Contact'].value}))
+        }
+        // officeContainer.appendChild(supervisorSection(employee))
+      }
+    })
+    supervisor.appendChild(supervisorChipSet)
+    team.appendChild(teamChipSet)
+    officeContainer.appendChild(supervisor)
+    officeContainer.appendChild(team)
+    viewContainer.appendChild(base);
+    viewContainer.appendChild(officeContainer);
     const tabBarInit = new mdc.tabBar.MDCTabBar(base);
 
-    // var contentEls = document.querySelectorAll('.content');
-    // tabBar.listen('MDCTabBar:activated', function (evt) {
-    //   document.querySelector('.content--active').classList.remove('content--active');
-    //   contentEls[event.detail.index].classList.add('content--active');
-    // });
+
+    tabBarInit.listen('MDCTabBar:activated', function (evt) {
+      var contentEls = viewContainer.querySelectorAll('.content');
+      viewContainer.querySelector('.content--active').classList.remove('content--active');
+      contentEls[event.detail.index].classList.add('content--active');
+    });
   })
-  // viewContainer.appendChild()
+
+
   primaryAction.appendChild(viewContainer)
   primaryAction.appendChild(editContainer);
   card.appendChild(primaryAction)
   return card;
 }
 
-function officeInfo(){
-  
+function officeInfo(employee, index) {
+  let classString = 'content'
+  if (!index) {
+    classString = classString + ' content--active'
+  }
+  const officeCont = createElement('div', {
+    className: classString
+  })
+
+  const nonRequired = {
+    'Employee Contact': true,
+    'Name': true,
+
+  }
+
+  Object.keys(employee.attachment).forEach(function (detail) {
+    const info = employee.attachment[detail].value;
+    const type = employee.attachment[detail].type
+    if (!nonRequired[detail] && info) {
+      if (type === 'HH:MM') {
+        text = `${detail } : ${moment(info,'HH:mm').format('HH:mm A')}`
+      } else {
+        text = `${detail } : ${info}`
+      }
+      officeCont.appendChild(createElement('h1', {
+        className: 'mdc-typography--subtitle1 mt-0',
+        textContent: text
+      }))
+     
+    }
+  })
+  return officeCont
+};
+
+function supervisorSection(employee){
+  // const 
 }
 
-function profileBasicInfo(){
-  const basicInfoSeperator = createElement('div',{className:'basic-info seperator'})
-  const name = createElement('h1',{className:'mdc-typography--headline5 mb-0 mt-0',id:'view-name',textContent:firebase.auth().currentUser.displayName})
-  const email = createElement('h1',{className:'mdc-typography--headline6 mb-0 mt-0'})
-  const emailIcon =  createElement('i',{className:'material-icons meta-icon',textContent:'email'})
-  const emailValue = createElement('span',{textContent:firebase.auth().currentUser.email})
+function profileBasicInfo() {
+  const basicInfoSeperator = createElement('div', {
+    className: 'basic-info seperator'
+  })
+  const name = createElement('h1', {
+    className: 'mdc-typography--headline5 mb-0 mt-0',
+    id: 'view-name',
+    textContent: firebase.auth().currentUser.displayName
+  })
+  const email = createElement('h1', {
+    className: 'mdc-typography--headline6 mb-0 mt-0'
+  })
+  const emailIcon = createElement('i', {
+    className: 'material-icons meta-icon',
+    textContent: 'email'
+  })
+  const emailValue = createElement('span', {
+    textContent: firebase.auth().currentUser.email
+  })
   email.appendChild(emailIcon)
   email.appendChild(emailValue)
 
-  const phone = createElement('h1',{className:'mdc-typography--headline6 mt-0'})
-  const phoneIcon = createElement('i',{className:'material-icons meta-icon',textContent:'phone'})
-  const phoneValue = createElement('span',{className:'mdc-typography--headline6',textContent:'+91 ' + firebase.auth().currentUser.phoneNumber.slice(3)})
+  const phone = createElement('h1', {
+    className: 'mdc-typography--headline6 mt-0'
+  })
+  const phoneIcon = createElement('i', {
+    className: 'material-icons meta-icon',
+    textContent: 'phone'
+  })
+  const phoneValue = createElement('span', {
+    className: 'mdc-typography--headline6',
+    textContent: '+91 ' + firebase.auth().currentUser.phoneNumber.slice(3)
+  })
+  const joined = createElement('h1', {
+    className: 'mdc-typography--subtitle1 mt-0',
+    textContent: `Joined  Growthfile : ${moment(firebase.auth().currentUser.metadata).format("Do MMM YYYY")}`
+  })
   phone.appendChild(phoneIcon)
   phone.appendChild(phoneValue)
 
   basicInfoSeperator.appendChild(name)
   basicInfoSeperator.appendChild(email)
   basicInfoSeperator.appendChild(phone)
+  basicInfoSeperator.appendChild(joined)
   return basicInfoSeperator
 }
 
-function createOfficeDetailView(){
-  const container = createElement('div',{className:'office-info seperator'})
-  getEmployeeDetails().then(function(employeeDetails){
-      const details = employeeDetails.attachment
-          Object.keys(details).forEach(function(detailName){
-              container.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:details[detailName].value}))
-          })
-          container.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:firebase.auth().meta.lastSignInTime}))
-  }); 
+function createOfficeDetailView() {
+  const container = createElement('div', {
+    className: 'office-info seperator'
+  })
+  getEmployeeDetails().then(function (employeeDetails) {
+    const details = employeeDetails.attachment
+    Object.keys(details).forEach(function (detailName) {
+      container.appendChild(createElement('h1', {
+        className: 'mdc-typography--subtitle1 mt-0',
+        textContent: details[detailName].value
+      }))
+    })
+    container.appendChild(createElement('h1', {
+      className: 'mdc-typography--subtitle1 mt-0',
+      textContent: firebase.auth().meta.lastSignInTime
+    }))
+  });
 }
 
 
 
 function createProfilePanel(db) {
   return new Promise(function (resolve) {
-    
-  getUserRecord(db,firebase.auth().currentUser.phoneNumber).then(function(userRecord){
-    
+
+    getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
+
       var profileView = document.createElement('div');
       profileView.id = 'profile-view--container';
       profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
@@ -255,11 +382,13 @@ function timeDiff(lastSignInTime) {
 
 function newSignIn(value) {
 
-  const signInDialog = new Dialog('',createElement('div',{id:'refresh-login'})).create();
+  const signInDialog = new Dialog('', createElement('div', {
+    id: 'refresh-login'
+  })).create();
   signInDialog.open();
-  signInDialog.listen('MDCDialog:opened',function(evt){
-    if(!ui) {
-      ui  = new firebaseui.auth.AuthUI(firebase.auth())
+  signInDialog.listen('MDCDialog:opened', function (evt) {
+    if (!ui) {
+      ui = new firebaseui.auth.AuthUI(firebase.auth())
     }
     ui.start('#refresh-login', firebaseUiConfig(value));
     signInDialog.container_.querySelector('footer').remove();
@@ -402,20 +531,20 @@ function emailValidation(emailField) {
 
 function updateEmail(user, email) {
   document.getElementById('growthfile').appendChild(loader('init-loader'));
-  user.updateEmail(email).then(function(){
+  user.updateEmail(email).then(function () {
     emailUpdateSuccess(true)
   }).catch(authUpdatedError);
 }
 
 function emailUpdateSuccess(showSuccessDialog) {
   var user = firebase.auth().currentUser;
-  user.sendEmailVerification().then(function(){
+  user.sendEmailVerification().then(function () {
     emailVerificationSuccess(showSuccessDialog)
   }).catch(emailVerificationError);
 }
 
 function emailVerificationSuccess(showSuccessDialog) {
-  if(showSuccessDialog){
+  if (showSuccessDialog) {
     successDialog();
   };
   snacks('Verification link has been send to your email address');
@@ -426,5 +555,5 @@ function emailVerificationError(error) {
   if (document.querySelector('.init-loader')) {
     document.querySelector('.init-loader').remove()
   };
-  
+
 }

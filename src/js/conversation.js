@@ -549,7 +549,7 @@ function createTempRecord(office, template, prefill) {
 
       let bareBonesScheduleArray;
       if (prefill.schedule) {
-        
+
         bareBonesScheduleArray = prefill.schedule
       } else {
         bareBonesScheduleArray = []
@@ -1301,7 +1301,13 @@ function createAttachmentContainer(data) {
       div.classList.add('selector--margin', 'mdc-form-field')
       if (data.attachment[key].value) {
         div.style.padding = '5px 15px 5px 15px'
-        const dataVal = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        const chipCont = createElement('div', {
+          className: 'mdc-chip-set'
+        });
+        chipCont.appendChild(chipSet({
+          text: data.attachment[key].value
+        }, data.canEdit))
+        const dataVal = new mdc.chips.MDCChip(chipCont);
         dataVal.listen('MDCChip:removal', function (e) {
           data.attachment[key].value = ''
           if (document.querySelector('#send-activity')) {
@@ -1405,8 +1411,13 @@ function createAttachmentContainer(data) {
       const valueField = document.createElement('span')
 
       if (data.attachment[key].value) {
-
-        const valueField = new mdc.chips.MDCChip(chipSet(data.attachment[key].value, data.canEdit));
+        const chipCont = createElement('div', {
+          className: 'mdc-chip-set'
+        });
+        chipCont.appendChild(chipSet({
+          text: data.attachment[key].value
+        }, data.canEdit))
+        const valueField = new mdc.chips.MDCChip(chipCont);
         div.appendChild(valueField.root_)
         valueField.listen('MDCChip:removal', function (e) {
           data.attachment[key].value = ''
@@ -1629,7 +1640,7 @@ function setFilePath(str, key, show) {
   dataObject.id = 'attachment-picture';
   dataObject.dataset.photoKey = key;
   dataObject.className = 'profile-container--main mdc-image-list__image';
- 
+
   const img = document.createElement('img')
   img.src = './img/placeholder.png';
   img.className = 'profile-container--main mdc-image-list__image'
@@ -1648,7 +1659,7 @@ function setFilePath(str, key, show) {
 
     const imageDialog = new Dialog('Photo', dataObject).create();
     imageDialog.open();
-    imageDialog.listen('MDCDialog:closed',function(evt){
+    imageDialog.listen('MDCDialog:closed', function (evt) {
       container.appendChild(dataObject)
 
     })
@@ -1881,8 +1892,8 @@ function getSubscription(office, template) {
       const range = IDBKeyRange.only([office, template])
       let record;
       officeTemplateCombo.get(range).onsuccess = function (event) {
-        if(!event.target.result) return;
-        if(event.target.result.status !== 'CANCELLED')  {
+        if (!event.target.result) return;
+        if (event.target.result.status !== 'CANCELLED') {
           record = event.target.result;
         }
       }

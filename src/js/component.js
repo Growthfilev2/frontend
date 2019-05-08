@@ -85,9 +85,12 @@ function queryPatramsToObject(url) {
 
 function createElement(tagName, attrs) {
     const el = document.createElement(tagName)
-    Object.keys(attrs).forEach(function (attr) {
-        el[attr] = attrs[attr]
-    })
+    if(attrs){
+
+        Object.keys(attrs).forEach(function (attr) {
+            el[attr] = attrs[attr]
+        })
+    }
     return el;
 }
 
@@ -604,19 +607,16 @@ function createCheckBox(attr) {
     return checkbox
 }
 
-function chipSet(text, canEdit) {
-    const div = createElement('div', {
-        className: 'mdc-chip-set'
-    });
-
+function chipSet(attr, canEdit) {
     const chip = createElement('div', {
         className: 'mdc-chip mdc-chip--selected'
     })
 
     const textEl = createElement("div", {
         className: 'mdc-chip__text chip-text',
-        textContent: text
-    })
+        textContent: attr.text
+    });
+
     chip.appendChild(textEl)
     if (canEdit) {
         const icon = createElement('i', {
@@ -627,6 +627,6 @@ function chipSet(text, canEdit) {
         icon.setAttribute('role', 'button')
         chip.appendChild(icon)
     }
-    div.appendChild(chip)
-    return div;
+    
+    return chip;
 }

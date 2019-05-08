@@ -250,7 +250,7 @@ function startApp(start) {
 
    
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 4);
+      const req = window.indexedDB.open(auth.uid, 5);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -264,10 +264,14 @@ function startApp(start) {
         if (!evt.oldVersion) {
           createObjectStores(db, auth.uid)
         } else {
-
           if (evt.oldVersion < 4) {
+            
             const subscriptionStore = req.transaction.objectStore('subscriptions')
             subscriptionStore.createIndex('status', 'status');
+          }
+          if(evt.oldVersion < 5) {
+            const childrenStore = req.transaction.objectStore('children')
+            childrenStore.createIndex('officeTemplate',['office','template'])
           }
         }
 
@@ -300,7 +304,7 @@ function startApp(start) {
 }
 
 
-function getEmployeeDetails() {
+function getEmployeeDetails(self,office) {
   return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid)
@@ -308,22 +312,35 @@ function getEmployeeDetails() {
       const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
-      let details;
-      const range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+      let index;
+      let range;
+      const results = [];
+      if(office) {
+        index = store.index('officeTemplate')
+        range = IDBKeyRange.only([office,'employee'])
+      } 
+      else 
+      {
+        index = store.index('templateStatus')
+        range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+      }
 
-      store.index('templateStatus').openCursor(range).onsuccess = function (event) {
+      index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if (cursor.value.attachment['Employee Contact'].value !== auth.phoneNumber) {
-          cursor.continue();
-          return;
+        if(self) {
+          if (cursor.value.attachment['Employee Contact'].value === auth.phoneNumber) {
+            results.push(cursor.value)
+          }
         }
-
-        details = cursor.value
+        else {
+          results.push(cursor.value)
+        }
+      
         cursor.continue();
       }
       tx.oncomplete = function () {
-        resolve(details);
+        resolve(results);
       }
       tx.onerror = function () {
         reject({
@@ -342,7 +359,7 @@ function getEmployeeDetails() {
 function isEmployeeOnLeave() {
   return new Promise(function (resolve, reject) {
 
-    getEmployeeDetails().then(function (empDetails) {
+    getEmployeeDetails(true).then(function (empDetails) {
 
       if (!empDetails) {
         return resolve(false);
@@ -456,7 +473,7 @@ function createObjectStores(db, uid) {
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
   children.createIndex('templateStatus', ['template', 'status']);
-
+  children.createIndex('officeTemplate',['office','template'])
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
