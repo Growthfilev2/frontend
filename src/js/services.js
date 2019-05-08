@@ -172,7 +172,7 @@ function handleGeoLocationApi() {
   })
 }
 function logWifi(ogBody){
-  const req = {message:'Wi-fi Change Log ' +new Date(),body:{
+  const req = {message:'Wi-fi Change Log',body:{
     main : ogBody
   }}
   for (let i = 1; i <= 3; i++) {
