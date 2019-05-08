@@ -10,46 +10,46 @@ function profileView(pushState) {
   sectionStart.innerHTML = ''
   sectionStart.appendChild(headerBackIcon())
   document.getElementById('app-current-panel').innerHTML = '';
+  document.getElementById('app-current-panel').appendChild(baseCard())
 
-  var user = firebase.auth().currentUser;
-  var dbName = user.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var rootTx = db.transaction(['root'], 'readwrite');
-    var rootObjectStore = rootTx.objectStore('root');
-    rootObjectStore.get(dbName).onsuccess = function (event) {
-      var record = event.target.result;
-      rootObjectStore.put(record);
-      rootTx.oncomplete = function () {
+  // var user = firebase.auth().currentUser;
+  // var dbName = user.uid;
+  // var req = indexedDB.open(dbName);
+  // req.onsuccess = function () {
+  //   var db = req.result;
+  //   var rootTx = db.transaction(['root'], 'readwrite');
+  //   var rootObjectStore = rootTx.objectStore('root');
+  //   rootObjectStore.get(dbName).onsuccess = function (event) {
+  //     var record = event.target.result;
+  //     rootObjectStore.put(record);
+  //     rootTx.oncomplete = function () {
 
-        createProfilePanel(db).then(function (view) {
+  //       createProfilePanel(db).then(function (view) {
 
-          if (!document.getElementById('app-current-panel')) return;
+  //         if (!document.getElementById('app-current-panel')) return;
 
-          document.getElementById('app-current-panel').appendChild(baseCard())
           
 
-          // if (native.getName() === 'Android') {
-          //   document.getElementById('uploadProfileImage').addEventListener('click', function () {
-          //     try {
-          //       AndroidInterface.openImagePicker();
-          //     }catch(e){
-          //       sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
-          //     }
-          //   })
-          // } else {
-          //   document.getElementById('uploadProfileImage').addEventListener('change', function () {
-          //     readUploadedFile()
-          //   });
-          // }
+  //         // if (native.getName() === 'Android') {
+  //         //   document.getElementById('uploadProfileImage').addEventListener('click', function () {
+  //         //     try {
+  //         //       AndroidInterface.openImagePicker();
+  //         //     }catch(e){
+  //         //       sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
+  //         //     }
+  //         //   })
+  //         // } else {
+  //         //   document.getElementById('uploadProfileImage').addEventListener('change', function () {
+  //         //     readUploadedFile()
+  //         //   });
+  //         // }
 
-          // changeDisplayName(user);
-          // changeEmailAddress(user);
-        })
-      };
-    };
-  };
+  //         // changeDisplayName(user);
+  //         // changeEmailAddress(user);
+  //       })
+  //     };
+  //   };
+  // };
 }
 
 function baseCard(){
@@ -83,7 +83,7 @@ function profileBasicInfo(){
 
   const phone = createElement('h1',{className:'mdc-typography--headline6 mt-0'})
   const phoneIcon = createElement('i',{className:'material-icons meta-icon',textContent:'phone'})
-  const phoneValue = createElement('span',{className:'mdc-typography--headline6',textContent:firebase.auth().currentUser.phoneNumber})
+  const phoneValue = createElement('span',{className:'mdc-typography--headline6',textContent:'+91 ' + firebase.auth().currentUser.phoneNumber.slice(3)})
   phone.appendChild(phoneIcon)
   phone.appendChild(phoneValue)
 
