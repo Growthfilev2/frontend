@@ -1,4 +1,5 @@
 function profileView(pushState) {
+  document.getElementById('start-loader').classList.add('hidden')
   if (pushState) {
     history.pushState(['profileView'], null, null);
   }
@@ -84,70 +85,49 @@ function baseCard() {
   primaryAction.appendChild(cardMedia);
   primaryAction.appendChild(editButton.root_);
   viewContainer.appendChild(profileBasicInfo());
+
+  const myNumber = firebase.auth().currentUser.phoneNumber
+  const employee = []
+  const self = []
+  const team = [];
   const base = tabBarBase()
-  getEmployeeDetails().then(function (employeeDetails) {
-    console.log(employeeDetails);
-    let officeContainer = createElement('div',{className:'office-info seperator'});
-
-   const team = createElement('div',{className:'team-section'});
-    team.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Team'}))
-    const teamChipSet = createElement('div', {
-      className: 'mdc-chip-set'
-    });
-    // const teamPeople = createElement('div',{className:'my-team'})
-  
-    const myNumber = firebase.auth().currentUser.phoneNumber
-    employeeDetails.forEach(function (employee, idx) {
-
-      if (employee.attachment['Employee Contact'].value === myNumber) {
-        base.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({
-          name: employee.office,
-          index: idx
-        }));
-        const officeDetail = officeInfo(employee, idx)
-        const supervisorChipSet = createElement('div', {
-          className: 'mdc-chip-set'
-        });
-        const supervisor = createElement('div',{id:'supervisor-section'})
-        supervisor.appendChild(createElement('h1',{className:'mdc-typography--subtitle1 mt-0',textContent:'Supervisor'}))
-      
-        
-        
-        if(employee.attachment['First Supervisor'].value) {
-          supervisorChipSet.appendChild(chipSet({text:employee.attachment['First Supervisor'].value}))
-        }
-        if(employee.attachment['Second Supervisor'].value) {
-          supervisorChipSet.appendChild(chipSet({text:employee.attachment['Second Supervisor'].value}))
-        };
-        supervisor.appendChild(supervisorChipSet);
-        officeDetail.appendChild(supervisor);
-        officeContainer.appendChild(officeDetail);
-
-      } 
+  const officeDetailSection = createElement('div',{className:'office-info seperator'})
+  getEmployeeDetails().then(function(result){
+    result.forEach(function(value){
+      if(value.attachment['Employee Contact'].value === myNumber) {
+        self.push(value)
+      }
       else {
-
-        if(employee.attachment['First Supervisor'].value === myNumber || employee.attachment['Second Supervisor'].value === myNumber) {
-          teamChipSet.dataset.office = employee.office;
-          teamChipSet.appendChild(chipSet({text:employee.attachment.Name.value || employee['Employee Contact'].value}))
-        }
+        team.push(value)
       }
     })
-    // team.appendChild(teamChipSet)
-    // officeDetail.appendChild(team)
-   
-    // officeContainer.appendChild(team)
-  
-    viewContainer.appendChild(base);
-    viewContainer.appendChild(officeContainer);
+    console.log(self);
+    console.log(team);
+    self.forEach(function(selfDetail,idx){
+      base.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({
+        name: selfDetail.office,
+        index: idx
+      }))
+      let classValue = 'content'
+      if(!idx) {
+        classValue = classValue + ' content--active'
+      } 
+      officeDetailSection.appendChild(createElement('div',{className:classValue}))
+    })
     const tabBarInit = new mdc.tabBar.MDCTabBar(base);
-
 
     tabBarInit.listen('MDCTabBar:activated', function (evt) {
       var contentEls = viewContainer.querySelectorAll('.content');
       viewContainer.querySelector('.content--active').classList.remove('content--active');
       contentEls[event.detail.index].classList.add('content--active');
     });
+    viewContainer.appendChild(base)
+    viewContainer.appendChild(officeDetailSection)
   })
+
+  
+
+
 
 
   primaryAction.appendChild(viewContainer)
@@ -184,13 +164,13 @@ function officeInfo(employee, index) {
         className: 'mdc-typography--subtitle1 mt-0',
         textContent: text
       }))
-     
+
     }
   })
   return officeCont
 };
 
-function supervisorSection(employee){
+function supervisorSection(employee) {
   // const 
 }
 

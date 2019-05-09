@@ -282,8 +282,8 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         resetScroll();
-        listView();
-
+        // listView();
+        profileView();
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -304,7 +304,7 @@ function startApp(start) {
 }
 
 
-function getEmployeeDetails(self,office) {
+function getEmployeeDetails(office) {
   return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid)
@@ -328,14 +328,11 @@ function getEmployeeDetails(self,office) {
       index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if(self) {
-          if (cursor.value.attachment['Employee Contact'].value === auth.phoneNumber) {
-            results.push(cursor.value)
-          }
-        }
-        else {
-          results.push(cursor.value)
-        }
+      
+      
+   
+        results.push(cursor.value)
+        
       
         cursor.continue();
       }
