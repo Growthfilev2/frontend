@@ -21,10 +21,9 @@ body {
     background-color: var(--mdc-theme-primary);
     border-radius: 50%;
     position: fixed;
-    bottom: 6.5rem;
+    top: 11.5rem;
     right: 1rem;
-    /* width: 60px; */
-    /* height: 60px; */
+    float: right;
     color: white;
 }
 #edit-profile.without-tabs-des {

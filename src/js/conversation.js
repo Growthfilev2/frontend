@@ -343,6 +343,7 @@ function createComment(db, addendum, currentUser) {
 }
 
 function getUserRecord(db, data) {
+  
   return new Promise(function (resolve, reject) {
     const usersObjectStore = db.transaction('users').objectStore('users');
     let number;

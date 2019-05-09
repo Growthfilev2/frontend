@@ -611,12 +611,22 @@ function chipSet(attr, canEdit) {
     const chip = createElement('div', {
         className: 'mdc-chip mdc-chip--selected'
     })
-
+    
     const textEl = createElement("div", {
         className: 'mdc-chip__text chip-text',
         textContent: attr.text
     });
-
+    if(attr.img) {
+        const object = document.createElement('object');
+        object.className = 'mdc-chip__icon mdc-chip__icon--leading';
+        object.type = 'image/jpeg';
+        object.data = attr.img;
+        const icon = document.createElement('img');
+        icon.src = './img/empty-user.jpg';
+        icon.className = ''
+        object.appendChild(icon);
+        chip.appendChild(object)
+    }
     chip.appendChild(textEl)
     if (canEdit) {
         const icon = createElement('i', {

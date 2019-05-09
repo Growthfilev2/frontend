@@ -303,6 +303,31 @@ function startApp(start) {
   })
 }
 
+function queryChildren(template) {
+  return new Promise(function(resolve,reject){
+    const auth = firebase.auth().currentUser
+    const req = indexedDB.open(auth.uid);
+    const result = [];
+    req.onsuccess = function(){
+      const db =req.result;
+      const tx = db.transaction(['children']);
+      const store = tx.objectStore('children');
+      const index = store.index('template') 
+      index.openCursor(template).onsuccess = function(event){
+        const cursor = event.target.result;
+        if(!cursor) return;
+        result.push(cursor.value)
+        cursor.continue();
+      }
+      tx.oncomplete = function(){
+        return resolve(result)
+      }
+      tx.onerror = function(){
+        return reject({message:tx.error.message,body:''})
+      }
+    }
+  })
+}
 
 function getEmployeeDetails(office) {
   return new Promise(function (resolve, reject) {
