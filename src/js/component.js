@@ -189,12 +189,12 @@ function addTabs(headerData) {
     indicator.appendChild(createElement('span', {
         className: 'mdc-tab-indicator__content mdc-tab-indicator__content--underline'
     }))
-    if (!headerData.index) {
-        button.setAttribute("aria-selected", "true")
-        button.setAttribute("tabindex", "0")
-        button.classList.add('mdc-tab--active')
-        indicator.classList.add('mdc-tab-indicator--active')
-    }
+    // if (!headerData.index) {
+    //     button.setAttribute("aria-selected", "true")
+    //     button.setAttribute("tabindex", "0")
+    //     button.classList.add('mdc-tab--active')
+    //     indicator.classList.add('mdc-tab-indicator--active')
+    // }
     const buttonContent = createElement('div', {
         className: 'mdc-tab__content'
     })

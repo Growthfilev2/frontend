@@ -283,7 +283,7 @@ function startApp(start) {
         localStorage.setItem('dbexist', auth.uid);
         resetScroll();
         // listView();
-        profileView();
+        profileView(true);
         requestCreator('now', {
           device: native.getInfo(),
           from: '',

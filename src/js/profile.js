@@ -19,124 +19,74 @@ function profileView(pushState) {
   const base = tabBarBase()
   const officeDetailSection = createElement('div', {
     className: 'office-info seperator'
-  })
-  getEmployeeDetails().then(function (result) {
-    result.forEach(function (value) {
-      if (value.attachment['Employee Contact'].value === myNumber) {
-        self.push(value)
-      } else {
-        team.push(value)
-      }
-    });
+  });
 
-    self.forEach(function (selfDetail, idx) {
+  getUniqueOfficeCount().then(function(offices){
+    offices.forEach(function(office){
       base.querySelector('.mdc-tab-scroller__scroll-content').appendChild(addTabs({
-        name: selfDetail.office,
-        index: idx
-      }))
-      console.log(selfDetail)
-
-      const officeSection = officeInfo(selfDetail);
-      officeSection.dataset.office = selfDetail.office
-      if (!idx) {
-        officeSection.classList.add('content--active');
-      }
-      officeDetailSection.appendChild(officeSection)
-      officeSection.appendChild(addSupervisor(selfDetail,team));
-      officeSection.appendChild(createElement('div',{className:'meta-hidden-details leave-details'}))
-      
-    });
-  
-
+        name: office
+      }));     
+      officeDetailSection.appendChild(createElement('div',{className:'content'}))
+    })
+    
+    viewContainer.appendChild(base)
     const tabBarInit = new mdc.tabBar.MDCTabBar(base);
 
-    tabBarInit.listen('MDCTabBar:activated', function (evt) {
-      var contentEls = viewContainer.querySelectorAll('.content');
-      viewContainer.querySelector('.content--active').classList.remove('content--active');
-      contentEls[event.detail.index].classList.add('content--active');
-    });
-    viewContainer.appendChild(base);
-    viewContainer.appendChild(officeDetailSection);
-     
-    queryChildren('recipient').then(function (reports) {
-      
-      if (!reports.length)  return;
-        let string = 'Reports : ';
-        reports.forEach(function (report) {
-          console.log(report);
-          string += report.attachment.Name.value + ','
-          const el = document.querySelector(`[data-office="${report.office}"] .my-reports`)
-          if (el) {
-            el.textContent = string;
-          }
-        })
-       
-      
-    })
-    queryChildren('leave-type').then(function(leaveTypes){
-      if(!leaveTypes.length) return
-      const h1 = createElement('h1',{className:'mdc-typography--headline6 mb-0 leave-heading',textContent:'Remaining Leaves'})
-      leaveTypes.forEach(function(type){
-        console.log(type)
-         el = document.querySelector(`[data-office="${type.office}"] .leave-details`)
-        if(el){
-          if(!el.querySelector('.leave-heading')) {
-            el.appendChild(h1)
-          }
-          el.appendChild(createElement('h1',{className:'mdc-typography--headline6 mt-0 mb-0',textContent:`${type.attachment.Name.value} : ${type.attachment['Annual Limit'].value}`}))
-        }
-      })
-   
-    });
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function(){
-      const db = req.result;
-      [...document.querySelectorAll('.mdc-chip-set .mdc-chip')].forEach(function(el){
+    setTimeout(function(){
+      tabBarInit.activateTab(0);
+      officeDetailSection.children[0].classList.add('content--active'); 
+    },0)
 
-        getUserRecord(db,el.dataset.number).then(function(userRecord){
-          el.querySelector('object').data = userRecord.photoURL || './img/empty-user.jpg'
-        })  
-      })
+
+    var contentEls = officeDetailSection.querySelectorAll('.content');   
+    tabBarInit.listen('MDCTabBar:activated', function (evt) {
+      console.log(evt);
+
+      getEmployeeDetails(offices[evt.detail.index]).then(function(results){
+        console.log(results);
+        
+        officeDetailSection.querySelector('.content--active').classList.remove('content--active');
+        contentEls[evt.detail.index].classList.add('content--active');
+        // results.forEach(function(result){
+        //   if(result.attachment['Employee Contact'].value === firebase.auth().currentUser.phoneNumber) {
+        //     // console.log(contentEls[evt.detail.index])
+        //     contentEls[evt.detail.index].appendChild(createEmployeeBaseDetails(result));
+        //   }
+          
+        // })
+      });
+    });
+    viewContainer.appendChild(officeDetailSection);
+  })
+}
+
+function officeSeciton(office){
+  const cont = createElement('div',{className:''});
+
+}
+
+function createEmployeeBaseDetails(employee){
+  const officeCont = createElement('div', {
+    className: ''
+  })
+  const nonRequired = {
+    'Employee Contact': true,
+    'Name': true,
+
+    'First Supervisor':true
+  }
+
+  Object.keys(employee.attachment).forEach(function (detail) {
+    const info = employee.attachment[detail].value;
+    if (!nonRequired[detail] && info) {
+      officeCont.appendChild(createElement('h1', {
+        className: 'mdc-typography--subtitle1 mt-0',
+        textContent: `${detail } : ${info}`
+      }))
 
     }
   })
-
-
-
-
-  //   var rootTx = db.transaction(['root'], 'readwrite');
-  //   var rootObjectStore = rootTx.objectStore('root');
-  //   rootObjectStore.get(dbName).onsuccess = function (event) {
-  //     var record = event.target.result;
-  //     rootObjectStore.put(record);
-  //     rootTx.oncomplete = function () {
-
-  //       createProfilePanel(db).then(function (view) {
-
-  //         if (!document.getElementById('app-current-panel')) return;
-
-
-
-  //         // if (native.getName() === 'Android') {
-  //         //   document.getElementById('uploadProfileImage').addEventListener('click', function () {
-  //         //     try {
-  //         //       AndroidInterface.openImagePicker();
-  //         //     }catch(e){
-  //         //       sendExceptionObject(e,'CATCH Type 10:AndroidInterface.openImagePicker at profileview',[]);
-  //         //     }
-  //         //   })
-  //         // } else {
-  //         //   document.getElementById('uploadProfileImage').addEventListener('change', function () {
-  //         //     readUploadedFile()
-  //         //   });
-  //         // }
-
-  //         // changeDisplayName(user);
-  //         // changeEmailAddress(user);
-  //       })
-  //     };
-  //   };
-  // };
+  return officeCont;
 }
 
 function baseCard() {
