@@ -2,6 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 let snackBar;
 let ui;
+let topBar;
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -110,7 +111,13 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-
+  topBar =   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  topBar.listen('MDCTopAppBar:nav',function(e){
+    console.log(e);
+    
+  })
+  console.log(topBar);
+  
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
@@ -119,7 +126,6 @@ window.addEventListener("load", function () {
       console.log('sw registeration failed :', err);
     });
   }
-  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
     calendar: {

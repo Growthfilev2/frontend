@@ -90,9 +90,9 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName() === 'Android') {
+      // if (native.getName() === 'Android') {
        updateLocationInRoot(location)
-      };
+      // };
       resolve(location)
     }).catch(function (error) {  
       reject(error);
