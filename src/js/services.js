@@ -90,9 +90,9 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      // if (native.getName() === 'Android') {
+      if (native.getName() === 'Android') {
        updateLocationInRoot(location)
-      // };
+      };
       resolve(location)
     }).catch(function (error) {  
       reject(error);
@@ -107,11 +107,11 @@ function getLocation() {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
         handleGeoLocationApi().then(function (cellLocation) {
           if (htmlLocation.accuracy < cellLocation.accuracy) {
-            return resolve(htmlLocation)
+            return resolve(htmlLocation);
           }
           return resolve(cellLocation)
         }).catch(function (error) {
-          return resolve(htmlLocation)
+          return resolve(htmlLocation);
         })
       }).catch(function (htmlError) {
         handleGeoLocationApi().then(function (location) {
