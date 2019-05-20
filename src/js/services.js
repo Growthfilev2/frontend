@@ -17,18 +17,22 @@ function loader(nameClass) {
 
 
 function successDialog() {
-  progressBar.foundation_.close();
-  const successMark = document.getElementById('success-animation');
-  const viewContainer = document.getElementById('growthfile');
-  successMark.classList.remove('hidden');
-  viewContainer.style.opacity = '0.37';
-  setTimeout(function () {
-    successMark.classList.add('hidden');
-    viewContainer.style.opacity = '1';
-  }, 1500);
-  localStorage.removeItem('clickedActivity');
-  resetScroll()
-  listView();
+
+  if (history.state[0] !== 'mapView') {
+    progressBar.foundation_.close();
+    const successMark = document.getElementById('success-animation');
+    const viewContainer = document.getElementById('growthfile');
+    successMark.classList.remove('hidden');
+    viewContainer.style.opacity = '0.37';
+    setTimeout(function () {
+      successMark.classList.add('hidden');
+      viewContainer.style.opacity = '1';
+    }, 1500);
+    mapView();
+    return;
+  }
+  snackBar.labelText = 'Check-In Created'
+  snackBar.open();
 }
 
 function snacks(message, type) {
@@ -91,10 +95,10 @@ function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       if (native.getName() === 'Android') {
-       updateLocationInRoot(location)
+        updateLocationInRoot(location)
       };
       resolve(location)
-    }).catch(function (error) {  
+    }).catch(function (error) {
       reject(error);
     })
   })
@@ -151,7 +155,7 @@ function handleGeoLocationApi() {
     let body;
     try {
       body = getCellularInformation();
-     
+
     } catch (e) {
       reject(e.message);
     }
@@ -162,44 +166,48 @@ function handleGeoLocationApi() {
     }
 
     geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
-  
+
       return resolve(cellLocation);
     }).catch(function (error) {
       reject(error)
     })
   })
 }
-function logWifi(ogBody){
-  const req = {message:'Wi-fi Change Log',body:{
-    main : ogBody
-  }}
+
+function logWifi(ogBody) {
+  const req = {
+    message: 'Wi-fi Change Log',
+    body: {
+      main: ogBody
+    }
+  }
   for (let i = 1; i <= 3; i++) {
-    
-    (function(index){
-    
-      setTimeout(function(){
-        if(index ==3) {
+
+    (function (index) {
+
+      setTimeout(function () {
+        if (index == 3) {
           handleError(req)
           return;
         }
         let result
         let name;
-        if(index == 1) {
-          name = 'first wifi at '+moment().format('hh:mm:ss')
-        
+        if (index == 1) {
+          name = 'first wifi at ' + moment().format('hh:mm:ss')
+
         }
-        if(index ==2){
-          name = 'second wifi at '+moment().format('hh:mm:ss')
-         
+        if (index == 2) {
+          name = 'second wifi at ' + moment().format('hh:mm:ss')
+
         };
-       
+
         try {
-         result = getCellularInformation();
-        }catch(e){
-         result = e.message
+          result = getCellularInformation();
+        } catch (e) {
+          result = e.message
         }
         req.body[name] = result;
-      },i * 2000)
+      }, i * 2000)
     })(i)
   }
 }
@@ -228,8 +236,7 @@ function html5Geolocation() {
         message: error.message
       })
     }, {
-      timeout: 5000,
-      maximumAge: 0
+      maximumAge: 40000
     })
   })
 }
@@ -396,10 +403,10 @@ function requestCreator(requestType, requestBody) {
         requestGenerator.meta.user.token = token;
         if (isLocationOld) {
           manageLocation().then(function (location) {
-            createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,location)
+            createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, location)
           }).catch(locationErrorDialog)
         } else {
-          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,rootRecord.location)
+          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, rootRecord.location)
         }
       });
     }
@@ -410,7 +417,7 @@ function requestCreator(requestType, requestBody) {
   apiHandler.onerror = onErrorMessage;
 }
 
-function createRequestBody(requestType, requestBody, requestGenerator,serverTime, location) {
+function createRequestBody(requestType, requestBody, requestGenerator, serverTime, location) {
 
   if (requestType === 'create') {
     requestBody.forEach(function (body) {
@@ -428,7 +435,7 @@ function createRequestBody(requestType, requestBody, requestGenerator,serverTime
 
 
 function locationErrorDialog(error) {
-  progressBar.foundation_.close();
+  // progressBar.foundation_.close();
   const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
@@ -472,7 +479,7 @@ function emailVerify(notification) {
   })
 }
 
-function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
+function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
   const container = createElement('div', {
     className: 'notification-message',
     textContent: notificationData.body
@@ -505,8 +512,8 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
     })
   })
   payrollDialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept')  return;
-    
+    if (evt.detail.action !== 'accept') return;
+
 
     if (!isLocationStatusWorking()) return;
     const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
@@ -514,13 +521,13 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
 
     const value = JSON.parse(rawValue);
     let prefill = {
-      schedule:'',
-      attachment:''
+      schedule: '',
+      attachment: ''
     }
-    if(!isSuggestion) {
+    if (!isSuggestion) {
       prefill.schedule = value.schedule
       prefill.attachment = value.attachment
-      
+
     }
     if (!hasMultipleOffice) {
       ga('send', {
@@ -539,19 +546,19 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  if (history.state[0] !== 'listView') return;
-  if (response.msg.hasOwnProperty('activity')) {
-    if (response.msg.activity.length) {
-      getRootRecord().then(function (record) {
-        updateEl(response.msg.activity, record);
-      })
-    }
-  }
-  if (response.msg.hasOwnProperty('template')) {
-    createActivityIcon()
-  }
+  // if (history.state[0] !== 'listView') return;
+  // if (response.msg.hasOwnProperty('activity')) {
+  //   if (response.msg.activity.length) {
+  //     getRootRecord().then(function (record) {
+  //       updateEl(response.msg.activity, record);
+  //     })
+  //   }
+  // }
+  // if (response.msg.hasOwnProperty('template')) {
+  //   createActivityIcon()
+  // }
 
-  return;
+  // return;
 }
 
 function updateApp() {
@@ -601,7 +608,7 @@ function apiFail(data) {
       document.querySelector('.form-field-status').classList.remove('hidden');
     }
   }
-  progressBar.foundation_.close();
+  // progressBar.foundation_.close();
   snacks(data.msg.message);
 }
 
@@ -661,4 +668,73 @@ function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
+}
+
+function getRootRecord() {
+  return new Promise(function (resolve, reject) {
+    let record;
+    const dbName = firebase.auth().currentUser.uid;
+    const req = indexedDB.open(dbName)
+    req.onsuccess = function () {
+      const db = req.result;
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(dbName).onsuccess = function (event) {
+        const data = event.target.result;
+        record = data;
+      }
+
+      rootTx.oncomplete = function () {
+        resolve(record)
+      }
+      rootTx.onerror = function () {
+        reject({
+          message: `${rootTx.error.message} from getRootRecord`
+        })
+      }
+    }
+    req.onerror = function () {
+      reject({
+        message: `${req.error} from getRootRecord`
+      })
+    }
+  })
+}
+
+
+function headerBackIcon(store) {
+  const backIcon = document.createElement('i')
+  backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
+  backIcon.textContent = 'arrow_back'
+  backIcon.onclick = function () {
+    if (!store) return backNav();
+    // if (store === 'subscriptions') {
+    //   resetScroll()
+    //   listView()
+    // } else {
+    //   updateCreateActivity(history.state[1], true);
+    // }
+  }
+  return backIcon;
+}
+
+function getUserRecord(db, data) {
+  return new Promise(function (resolve, reject) {
+    const usersObjectStore = db.transaction('users').objectStore('users');
+    let number;
+    if (typeof data === 'string') {
+      number = data
+    } else {
+      number = data.phoneNumber;
+    }
+    usersObjectStore.get(number).onsuccess = function (event) {
+      const record = event.target.result
+      if (!record) return resolve({
+        displayName: '',
+        mobile: number,
+        photoURL: ''
+      })
+      return resolve(record)
+    }
+  })
 }

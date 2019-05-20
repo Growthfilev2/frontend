@@ -342,26 +342,6 @@ function createComment(db, addendum, currentUser) {
   })
 }
 
-function getUserRecord(db, data) {
-  return new Promise(function (resolve, reject) {
-    const usersObjectStore = db.transaction('users').objectStore('users');
-    let number;
-    if (typeof data === 'string') {
-      number = data
-    } else {
-      number = data.phoneNumber;
-    }
-    usersObjectStore.get(number).onsuccess = function (event) {
-      const record = event.target.result
-      if (!record) return resolve({
-        displayName: '',
-        mobile: number,
-        photoURL: ''
-      })
-      return resolve(record)
-    }
-  })
-}
 
 function hasMapsApiLoaded() {
   try {
@@ -375,35 +355,6 @@ function hasMapsApiLoaded() {
 }
 
 
-function MapsCustomControl(customControlDiv, lat, lng) {
-  var controlUI = document.createElement('div');
-
-  controlUI.style.backgroundColor = '#fff';
-  controlUI.style.border = '2px solid #fff';
-  controlUI.style.borderRadius = '3px';
-  controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-  controlUI.style.cursor = 'pointer';
-  controlUI.style.marginBottom = '22px';
-  controlUI.style.textAlign = 'center';
-  controlUI.style.padding = '0px 5px 0px 5px';
-
-  customControlDiv.appendChild(controlUI);
-
-  // Set CSS for the control interior.
-  var controlText = document.createElement('a');
-  controlText.href = `https://www.google.com/maps?q=${lat},${lng}`
-  controlText.className = 'material-icons'
-  controlText.style.color = 'rgb(25,25,25)';
-  controlText.style.fontSize = '16px';
-  controlText.style.lineHeight = '38px';
-  controlText.style.paddingLeft = '5px';
-  controlText.style.paddingRight = '5px';
-  controlText.style.textDecoration = 'none'
-
-  controlText.innerHTML = 'open_in_new';
-  controlUI.appendChild(controlText);
-
-}
 
 function createHeaderContent(db, id) {
   const sectionStart = document.getElementById('section-start');

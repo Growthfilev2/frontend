@@ -1,10 +1,13 @@
 function profileView(pushState) {
-  if (pushState) {
+  drawer.open = false;
+  // if (pushState) {
     history.pushState(['profileView'], null, null);
-  }
-  if (window.addEventListener) {
-    window.removeEventListener('scroll', handleScroll, false)
-  }
+  // }
+  topAppBar.root_.classList.remove('transparent');
+  
+  // if (window.addEventListener) {
+  //   window.removeEventListener('scroll', handleScroll, false)
+  // }
 
   document.body.style.backgroundColor = '#eeeeee';
   const sectionStart = document.getElementById('section-start');

@@ -2,6 +2,8 @@ const appKey = new AppKeys();
 let progressBar;
 let snackBar;
 let ui;
+let drawer;
+let topAppBar;
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -110,8 +112,9 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-
-
+ 
+  drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
+  
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').then(function (registeration) {
       console.log('sw registered with scope :', registeration.scope);
@@ -119,7 +122,7 @@ window.addEventListener("load", function () {
       console.log('sw registeration failed :', err);
     });
   }
-  new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  // new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
     calendar: {
@@ -141,8 +144,8 @@ window.addEventListener("load", function () {
     ]
   })
 
-  if (!window.Worker && !window.indexedDB)  {
-    const incompatibleDialog = new Dialog('App Incompatiblity','Growthfile is incompatible with this device').create();
+  if (!window.Worker && !window.indexedDB) {
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
@@ -224,7 +227,7 @@ function startApp(start) {
       localStorage.setItem('error', JSON.stringify({}));
     };
 
-   
+
     if (start) {
       const req = window.indexedDB.open(auth.uid, 4);
       let db;
@@ -252,17 +255,17 @@ function startApp(start) {
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        ga('set','userId',JSON.parse(native.getInfo()).id)
+        ga('set', 'userId', JSON.parse(native.getInfo()).id)
 
-        resetScroll();
-        listView();
+        // resetScroll();
+        mapView();
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
         });
-        runAppChecks()
-        manageLocation().then(console.log).catch(handleError)
+        // runAppChecks()
+        // manageLocation().then(console.log).catch(handleError)
 
       }
       req.onerror = function () {
@@ -456,60 +459,144 @@ function redirect() {
 }
 
 
-function runAppChecks() {
+function runAppChecks(location) {
 
-  window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-   
-    if (!e.detail) return;
-    if (!e.detail.newDay && !e.detail.locationChanged) return;
+  // window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
 
-    isEmployeeOnLeave().then(function (onLeave) {
-      if (onLeave) return
+  // if (!e.detail) return;
+  // if (!e.detail.newDay && !e.detail.locationChanged) return;
 
-      getUniqueOfficeCount().then(function (offices) {
-        console.log(offices);
+  // isEmployeeOnLeave().then(function (onLeave) {
+  // if (onLeave) return
 
-        const prom = [];
-        const data = []
-        let title;
-        if (!offices.length) return;
+  getUniqueOfficeCount().then(function (offices) {
+    console.log(offices);
 
-        offices.forEach(function (office) {
-          prom.push(getSubscription(office, 'check-in'))
-          if (e.detail.newDay) {
-            title = ''
-          }
-          if (e.detail.locationChanged) {
-            title = '';
-            prom.push(getSubscription(office, 'dsr'))
-          }
-        })
-        Promise.all(prom).then(function (result) {
-          if (!result.length) return;
-          const actionTempaltes = {}
+    const prom = [];
+    const data = []
+    let title;
+    if (!offices.length) return;
 
-          const filtered = result.filter(function (set) {
-            return set != undefined;
-          });
+    offices.forEach(function (office) {
+      prom.push(getSubscription(office, 'check-in'))
+      // if (e.detail.newDay) {
+      //   title = ''
+      // }
+      // if (e.detail.locationChanged) {
+      //   title = '';
+      //   prom.push(getSubscription(office, 'dsr'))
+      // }
+    })
+    Promise.all(prom).then(function (result) {
+      if (!result.length) return;
+      const filtered = result.filter(function (set) {
+        return set != undefined;
+      });
+      // if(offices.length ==1) {
+      //   const sub = filtered.filter(function(value){
+      //     return value.office = offices[0]
+      //   });
+      //   checkInDialog(sub,location)
+      //   return;
+      // }
 
-          console.log(filtered);
-          filtered.forEach(function (value) {
-            if (!actionTempaltes[value.template]) {
-              data.push(value)
-            }
-            actionTempaltes[value.template] = true;
-          });
-          if (history.state[0] !== 'listView') return;
-          templateDialog({
-            title: 'Reminder',
-            data: data
-          }, true,offices.length > 1 ? true : false)
-        }).catch(console.log)
+      checkInDialog(filtered, location, offices)
+      console.log(filtered);
+      // filtered.forEach(function (value) {
 
+      // if (!actionTempaltes[value.template]) {
+      //   data.push(value)
+      // }
+      // actionTempaltes[value.template] = true;
+      // });
+      // if (history.state[0] !== 'listView') return;
+
+      // templateDialog({
+      //   title: 'Reminder',
+      //   data: data
+      // }, true,offices.length > 1 ? true : false)
+    }).catch(console.log)
+
+  })
+
+  // }).catch(handleError)
+  // }, true);
+}
+
+function checkInDialog(filtered, location, offices) {
+  let dialog
+  let radioListInit;
+  if (offices.length == 1) {
+
+    dialog = new Dialog('Check-In Reminder', 'Do You want to create a Check-in ?').create();
+
+  } else {
+
+    const ul = createElement('ul', {
+      className: 'mdc-list',
+    })
+    ul.setAttribute('role', 'radiogroup')
+    filtered.forEach(function (data, idx) {
+      ul.appendChild(radioList({
+        labelText: data.office,
+        index: idx,
+        value: data,
+      }))
+    })
+    radioListInit = new mdc.list.MDCList(ul)
+    radioListInit.singleSelection = true;
+
+    dialog = new Dialog('Check-In Reminder', ul).create();
+    dialog.listen('MDCDialog:opened', function (evt) {
+      radioListInit.layout();
+      radioListInit.listElements.map(function (el) {
+        return new mdc.ripple.MDCRipple.attachTo(el)
       })
+    })
+  }
 
-    }).catch(handleError)
-  }, true);
+
+  dialog.listen('MDCDialog:closed', function (evt) {
+    let value;
+
+    // dialog.root_.classList.add('mdc-dialog--open')
+    if (evt.detail.action !== 'accept') return;
+    if (offices.length == 1) {
+      value = filtered[0]
+    } else {
+
+      const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
+      if (!rawValue) return;
+      value = JSON.parse(rawValue)
+    }
+    checkMapStoreForNearByLocation(value.office, location).then(function (result) {
+      const venue = {
+        geopoint: {
+          latitude: '',
+          longitude: ''
+        },
+        address: '',
+        location: '',
+        venueDescriptor: value.venue[0]
+      }
+      if (!result.length) {
+        value.venue = [venue]
+        value.share = [];
+        requestCreator('create', [value]);
+        return;
+      }
+      venue.location = result[0].location;
+      venue.address = result[0].address;
+      venue.geopoint.latitude = result[0].latitude;
+      venue.geopoint.longitude = result[0].longitude;
+      value.venue = [venue]
+      value.share = [];
+      console.log(value)
+      requestCreator('create', [value]);
+    })
+  })
+  dialog.open();
+
 }
 
 function getUniqueOfficeCount() {
@@ -541,6 +628,58 @@ function getUniqueOfficeCount() {
       return reject({
         message: req.error.message
       })
+    }
+  })
+}
+
+function checkMapStoreForNearByLocation(office, currentLocation) {
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid)
+    req.onsuccess = function () {
+      const results = [];
+      const db = req.result;
+      const tx = db.transaction(['map'])
+      const store = tx.objectStore('map')
+      const index = store.index('byOffice')
+      const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
+      index.openCursor(range).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+
+        if (!cursor.value.location) {
+          cursor.continue();
+          return;
+        }
+        if (!cursor.value.latitude || !cursor.value.longitude) {
+          cursor.continue();
+          return;
+        }
+
+        const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+
+        if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+
+          results.push(cursor.value);
+        }
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        const filter = {};
+        results.forEach(function (value) {
+          filter[value.location] = value;
+        })
+        const array = [];
+        Object.keys(filter).forEach(function (locationName) {
+          array.push(filter[locationName])
+        })
+        const nearest = array.sort(function (a, b) {
+          return a.accuracy - b.accuracy
+        })
+        resolve(nearest)
+      }
+      tx.onerror = function () {
+        reject(tx.error)
+      }
     }
   })
 }

@@ -1,3 +1,32 @@
+.demo-menu {
+  color: black !important;
+}
+.mdc-drawer.mdc-drawer--modal {
+  width: 85%;
+}
+.mdc-drawer__header {
+
+  padding: 20px;
+
+}
+.mdc-drawer__header img {
+  width:80px;
+  height: 80px;
+  border-radius: 50%;
+  float: left;
+    margin-right: 20px;
+}
+.drawer-settings {
+  position: absolute;
+  bottom: 0;
+  width: 100%
+}
+#drawer-title {
+  margin-top: 10px;
+}
+.transparent {
+  background-color:transparent !important;
+}
 body {
   margin: 0;
   background-color: white;
@@ -67,6 +96,26 @@ body {
   grid-gap: 0
 }
 
+#app-current-panel {
+ height: 100vh;
+}
+.custom-center-map {
+  background-color: rgb(255, 255, 255);
+  border: 2px solid rgb(255, 255, 255);
+  border-radius: 3px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 6px;
+  cursor: pointer;
+  margin-bottom: 22px;
+  text-align: center;
+  top: 100;
+  border-radius: 50%;
+  margin:10px;
+}
+.custom-center-map  div{
+  font-size: 28px;
+  padding: 10px;
+  border-radius: 20px;
+}
 
 .activity--chat-card-container .activity-title {
   font-size: 16px;

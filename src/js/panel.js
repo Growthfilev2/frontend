@@ -452,37 +452,6 @@ function appendActivityListToDom(activityDom) {
   }
 }
 
-function getRootRecord() {
-  return new Promise(function (resolve, reject) {
-    let record;
-    const dbName = firebase.auth().currentUser.uid;
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result;
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootStore = rootTx.objectStore('root')
-      rootStore.get(dbName).onsuccess = function (event) {
-        const data = event.target.result;
-        record = data;
-      }
-
-      rootTx.oncomplete = function () {
-        resolve(record)
-      }
-      rootTx.onerror = function () {
-        reject({
-          message: `${rootTx.error.message} from getRootRecord`
-        })
-      }
-    }
-    req.onerror = function () {
-      reject({
-        message: `${req.error} from getRootRecord`
-      })
-    }
-  })
-}
-
 function createActivityIcon() {
   getCountOfStore('subscriptions').then(function (count) {
     if (!count) return;
@@ -571,19 +540,3 @@ function scrollToActivity() {
   }
 }
 
-
-function headerBackIcon(store) {
-  const backIcon = document.createElement('i')
-  backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
-  backIcon.textContent = 'arrow_back'
-  backIcon.onclick = function () {
-    if (!store) return backNav();
-    if (store === 'subscriptions') {
-      resetScroll()
-      listView()
-    } else {
-      updateCreateActivity(history.state[1], true);
-    }
-  }
-  return backIcon;
-}
