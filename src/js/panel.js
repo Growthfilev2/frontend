@@ -500,7 +500,6 @@ function createActivityIconDom() {
   chooseSubscription.root_.id = 'create-activity--icon'
 
   chooseSubscription.root_.onclick = function () {
-    ga('set', 'dimension1', 'SubscriptionSelector');
     ga('send', {
       hitType: 'event',
       eventCategory: 'SubscriptionSelector',

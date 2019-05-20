@@ -246,17 +246,15 @@ function startApp(start) {
             subscriptionStore.createIndex('status', 'status');
           }
         }
-
       }
-
+      
       req.onsuccess = function () {
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
+        ga('set', 'userId', JSON.parse(native.getInfo()).id); // Set the user ID using signed-in user_id.
         resetScroll();
         listView();
-        ga('set', 'userId', 'asdasdasd'); // Set the user ID using signed-in user_id.
-
         requestCreator('now', {
           device: native.getInfo(),
           from: '',

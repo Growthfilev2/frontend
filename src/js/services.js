@@ -505,17 +505,8 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
     })
   })
   payrollDialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept')  {
-      if(isSuggestion) {
-        ga('send', {
-          hitType: 'event',
-          eventCategory: 'suggestion',
-          eventAction: 'click',
-          eventLabel: 'Check-in Suggestion cancelled'
-        });
-      }
-      return;
-    };
+    if (evt.detail.action !== 'accept')  return;
+    
 
     if (!isLocationStatusWorking()) return;
     const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
@@ -536,7 +527,7 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
         hitType: 'event',
         eventCategory: 'suggestion',
         eventAction: 'click',
-        eventLabel: 'Check-in suggestion selected'
+        eventLabel: value.template + ' suggestion selected'
       });
       createTempRecord(value.office, value.template, prefill);
       return;
