@@ -107,11 +107,11 @@ function getLocation() {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
         handleGeoLocationApi().then(function (cellLocation) {
           if (htmlLocation.accuracy < cellLocation.accuracy) {
-            return resolve(htmlLocation)
+            return resolve(htmlLocation);
           }
           return resolve(cellLocation)
         }).catch(function (error) {
-          return resolve(htmlLocation)
+          return resolve(htmlLocation);
         })
       }).catch(function (htmlError) {
         handleGeoLocationApi().then(function (location) {
@@ -162,9 +162,7 @@ function handleGeoLocationApi() {
     }
 
     geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
-      if(cellLocation.accuracy > 350) {
-        logWifi(body);
-      }
+  
       return resolve(cellLocation);
     }).catch(function (error) {
       reject(error)
@@ -507,7 +505,9 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
     })
   })
   payrollDialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept') return;
+    if (evt.detail.action !== 'accept')  return;
+    
+
     if (!isLocationStatusWorking()) return;
     const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
     if (!rawValue) return;
@@ -523,13 +523,18 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
       
     }
     if (!hasMultipleOffice) {
+      ga('send', {
+        hitType: 'event',
+        eventCategory: 'suggestion',
+        eventAction: 'click',
+        eventLabel: value.template + ' suggestion selected'
+      });
       createTempRecord(value.office, value.template, prefill);
       return;
     }
     selectorUI({
       store: 'subscriptions'
     });
-
   })
 }
 

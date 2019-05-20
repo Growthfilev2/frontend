@@ -447,7 +447,13 @@ function fillSubscriptionInSelector(data, container) {
         ul.listElements.map(function (listItemEl) {
           listItemEl.onclick = function () {
             progressBar.foundation_.open();
-            const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value)
+            const value = JSON.parse(this.querySelector('.mdc-radio__native-control').value);
+            ga('send', {
+              hitType: 'event',
+              eventCategory: 'SubscriptionSelector',
+              eventAction: 'click',
+              eventLabel: `${value.template} choosen`
+            });
             setCountForTemplate(value.key).then(console.log).catch(handleError);
             createTempRecord(value.office, value.template, data)
           }

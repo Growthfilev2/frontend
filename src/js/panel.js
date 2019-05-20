@@ -500,6 +500,12 @@ function createActivityIconDom() {
   chooseSubscription.root_.id = 'create-activity--icon'
 
   chooseSubscription.root_.onclick = function () {
+    ga('send', {
+      hitType: 'event',
+      eventCategory: 'SubscriptionSelector',
+      eventAction: 'click',
+      eventLabel: 'Choose Subscription'
+    });
     if(!isLocationStatusWorking()) return
     selectorUI({
       store: 'subscriptions',
