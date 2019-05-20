@@ -90,9 +90,9 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName() === 'Android') {
+      // if (native.getName() === 'Android') {
        updateLocationInRoot(location)
-      };
+      // };
       resolve(location)
     }).catch(function (error) {  
       reject(error);
@@ -522,13 +522,13 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
       prefill.attachment = value.attachment
       
     }
+    ga('send', {
+      hitType: 'event',
+      eventCategory: 'suggestion',
+      eventAction: 'click',
+      eventLabel: value.template + ' suggestion selected'
+    });
     if (!hasMultipleOffice) {
-      ga('send', {
-        hitType: 'event',
-        eventCategory: 'suggestion',
-        eventAction: 'click',
-        eventLabel: value.template + ' suggestion selected'
-      });
       createTempRecord(value.office, value.template, prefill);
       return;
     }
