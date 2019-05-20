@@ -247,12 +247,13 @@ function startApp(start) {
           }
         }
       }
-      
+
       req.onsuccess = function () {
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        ga('set', 'userId', JSON.parse(native.getInfo()).id); // Set the user ID using signed-in user_id.
+        ga('set','userId',JSON.parse(native.getInfo()).id)
+
         resetScroll();
         listView();
         requestCreator('now', {
@@ -260,7 +261,6 @@ function startApp(start) {
           from: '',
           registerToken: native.getFCMToken()
         });
-
         runAppChecks()
         manageLocation().then(console.log).catch(handleError)
 

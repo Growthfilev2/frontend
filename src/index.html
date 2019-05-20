@@ -39,7 +39,10 @@
       (ga.q = ga.q || []).push(arguments)
     };
     ga.l = +new Date;
-    ga('create', 'UA-140450053-1', 'auto');
+    ga('create', 'UA-140450053-1', 'auto','employeeAppTracker',{
+      userId: '12345',
+      cookieDomain: 'auto',
+    });
     ga('send', 'pageview');
   </script>
   <script async src='https://www.google-analytics.com/analytics.js'></script>
