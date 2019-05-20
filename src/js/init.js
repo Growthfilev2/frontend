@@ -220,6 +220,7 @@ function startApp(start) {
         return;
       }
     }
+    
     if (!localStorage.getItem('error') || isNewDay()) {
       localStorage.setItem('error', JSON.stringify({}));
     };
