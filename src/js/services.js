@@ -90,9 +90,9 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName() === 'Android') {
+      // if (native.getName() === 'Android') {
        updateLocationInRoot(location)
-      };
+      // };
       resolve(location)
     }).catch(function (error) {  
       reject(error);
@@ -162,9 +162,7 @@ function handleGeoLocationApi() {
     }
 
     geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
-      if(cellLocation.accuracy > 350) {
-        logWifi(body);
-      }
+  
       return resolve(cellLocation);
     }).catch(function (error) {
       reject(error)
@@ -507,7 +505,18 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
     })
   })
   payrollDialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept') return;
+    if (evt.detail.action !== 'accept')  {
+      if(isSuggestion) {
+        ga('send', {
+          hitType: 'event',
+          eventCategory: 'suggestion',
+          eventAction: 'click',
+          eventLabel: 'Check-in Suggestion cancelled'
+        });
+      }
+      return;
+    };
+
     if (!isLocationStatusWorking()) return;
     const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
     if (!rawValue) return;
@@ -523,13 +532,18 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
       
     }
     if (!hasMultipleOffice) {
+      ga('send', {
+        hitType: 'event',
+        eventCategory: 'suggestion',
+        eventAction: 'click',
+        eventLabel: 'Check-in suggestion selected'
+      });
       createTempRecord(value.office, value.template, prefill);
       return;
     }
     selectorUI({
       store: 'subscriptions'
     });
-
   })
 }
 

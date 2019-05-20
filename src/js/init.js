@@ -255,6 +255,7 @@ function startApp(start) {
         localStorage.setItem('dbexist', auth.uid);
         resetScroll();
         listView();
+        ga('set', 'userId', 'asdasdasd'); // Set the user ID using signed-in user_id.
 
         requestCreator('now', {
           device: native.getInfo(),
