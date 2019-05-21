@@ -6,6 +6,7 @@ function mapView() {
     topAppBar.root_.classList.add('transparent');
     document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
     let loadedMarkers = [];
+
     manageLocation().then(function (location) {
         document.getElementById('start-loader').classList.add('hidden');
         const latLng = {
@@ -14,7 +15,7 @@ function mapView() {
         }
         const map = new google.maps.Map(document.getElementById('app-current-panel'), {
             center: latLng,
-            zoom:20,
+            zoom: 20,
             disableDefaultUI: true,
             gestureHandling: 'greedy'
         })
@@ -33,7 +34,7 @@ function mapView() {
             fillOpacity: 0.35,
             map: map,
             center: latLng,
-            radius: location.accuracy
+            radius: location.accuracy 
         });
 
 
@@ -60,12 +61,13 @@ function mapView() {
             runAppChecks(location);
         })
         google.maps.event.addListener(map, 'idle', function () {
-            if (document.querySelector('#recenter-action span')) {
-                document.querySelector('#recenter-action span').style.color = 'black';
+            if (document.querySelector('#recenter-action i')) {
+                document.querySelector('#recenter-action i').style.color = 'black';
             }
-
+            var v1 = performance.now()
             loadNearByLocations(getMapBounds(map), map).then(function (markers) {
-                // console.log(markers)
+                var v2 = performance.now();
+                console.log(v2-v1);
             })
         });
     }).catch(function (error) {
@@ -87,11 +89,15 @@ function CenterControl(controlDiv, map, latLng) {
     console.log(recenter)
     controlDiv.appendChild(recenter.root_);
     recenter.root_.addEventListener('click', function () {
-        recenter.root_.querySelector('span').style.color = '#0399f4'
-        map.setZoom(20);
-        map.panTo(latLng);
+        recenter.root_.querySelector('i').style.color = '#0399f4'
+        focusMarker(map,latLng,20)
     });
 
+}
+
+function focusMarker(map,latLng,zoom){
+    map.setZoom(zoom);
+    map.panTo(latLng);
 }
 
 function getMapBounds(map) {
@@ -133,7 +139,8 @@ function loadNearByLocations(range, map) {
                         lat: cursor.value.latitude,
                         lng: cursor.value.longitude
                     },
-                    id: cursor.value.activityId
+                    id: cursor.value.activityId,
+                    title: cursor.value.location
                 });
                 console.log(cursor.value.latitude, cursor.value.longitude)
                 if ((map.getBounds().contains(marker.getPosition()))) {
@@ -144,22 +151,21 @@ function loadNearByLocations(range, map) {
                             if (lastOpen) {
                                 lastOpen.close();
                             }
+
                             infowindow.setContent(content);
                             infowindow.open(map, marker);
                             lastOpen = infowindow;
 
                         };
                     })(marker, content, infowindow));
-
                     marker.setMap(map);
                     result.push(marker)
                 }
-
                 cursor.continue();
 
             }
             tx.oncomplete = function () {
-             
+
                 return resolve(result)
             }
         }

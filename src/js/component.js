@@ -377,11 +377,11 @@ function Fab(name) {
     var button = createElement('button', {
         className: 'mdc-fab'
     })
-    this.span = createElement('span', {
+    this.i = createElement('i', {
         className: 'mdc-fab__icon material-icons',
         textContent: this.fabName
     })
-    button.appendChild(this.span)
+    button.appendChild(this.i)
     this.base = button;
 }
 Fab.prototype = Object.create(new Button())
