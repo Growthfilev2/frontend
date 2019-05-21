@@ -94,9 +94,9 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName() === 'Android') {
+      // if (native.getName() === 'Android') {
         updateLocationInRoot(location)
-      };
+      // };
       resolve(location)
     }).catch(function (error) {
       reject(error);
@@ -236,7 +236,9 @@ function html5Geolocation() {
         message: error.message
       })
     }, {
-      maximumAge: 40000
+
+      maximumAge: 5000,
+      timeout:5000
     })
   })
 }
@@ -736,5 +738,30 @@ function getUserRecord(db, data) {
       })
       return resolve(record)
     }
+  })
+}
+function getSubscription(office, template) {
+  return new Promise(function (resolve) {
+      const dbName = firebase.auth().currentUser.uid
+      const req = indexedDB.open(dbName)
+      req.onsuccess = function () {
+          const db = req.result
+          const tx = db.transaction(['subscriptions']);
+          const subscription = tx.objectStore('subscriptions')
+          const officeTemplateCombo = subscription.index('officeTemplate')
+          const range = IDBKeyRange.only([office, template])
+          let record;
+          officeTemplateCombo.get(range).onsuccess = function (event) {
+              if (!event.target.result) return;
+              if (event.target.result.status !== 'CANCELLED') {
+                  record = event.target.result;
+              }
+          }
+          tx.oncomplete = function () {
+
+              return resolve(record)
+
+          }
+      }
   })
 }

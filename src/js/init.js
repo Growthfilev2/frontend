@@ -112,15 +112,15 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
- 
+
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
-  
+
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(function (registeration) {
-      console.log('sw registered with scope :', registeration.scope);
-    }, function (err) {
-      console.log('sw registeration failed :', err);
-    });
+    // navigator.serviceWorker.register('sw.js').then(function (registeration) {
+    //   console.log('sw registered with scope :', registeration.scope);
+    // }, function (err) {
+    //   console.log('sw registeration failed :', err);
+    // });
   }
   // new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
@@ -229,7 +229,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 4);
+      const req = window.indexedDB.open(auth.uid, 5);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -247,6 +247,10 @@ function startApp(start) {
           if (evt.oldVersion < 4) {
             const subscriptionStore = req.transaction.objectStore('subscriptions')
             subscriptionStore.createIndex('status', 'status');
+          }
+          if(evt.oldVersion < 5) {
+            const mapStore = req.transaction.objectStore('map');
+            mapStore.createIndex('bounds',['latitude','longitude'])
           }
         }
       }
@@ -426,6 +430,7 @@ function createObjectStores(db, uid) {
   map.createIndex('longitude', 'longitude')
   map.createIndex('nearby', ['status', 'hidden'])
   map.createIndex('byOffice', ['office', 'location'])
+  map.createIndex('bounds',['latitude','longitude'])
 
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'
@@ -531,7 +536,8 @@ function checkInDialog(filtered, location, offices) {
     dialog = new Dialog('Check-In Reminder', 'Do You want to create a Check-in ?').create();
 
   } else {
-
+    const div = document.createElement('div')
+    
     const ul = createElement('ul', {
       className: 'mdc-list',
     })
@@ -545,7 +551,8 @@ function checkInDialog(filtered, location, offices) {
     })
     radioListInit = new mdc.list.MDCList(ul)
     radioListInit.singleSelection = true;
-
+    // div.appendChild(h1)
+    // div.appendChild(ul)
     dialog = new Dialog('Check-In Reminder', ul).create();
     dialog.listen('MDCDialog:opened', function (evt) {
       radioListInit.layout();
@@ -554,6 +561,8 @@ function checkInDialog(filtered, location, offices) {
       })
     })
   }
+
+
 
 
   dialog.listen('MDCDialog:closed', function (evt) {

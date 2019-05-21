@@ -27,6 +27,9 @@
 .transparent {
   background-color:transparent !important;
 }
+#dialog-container .mdc-dialog__surface {
+  min-width: 90vw;
+}
 body {
   margin: 0;
   background-color: white;
@@ -99,7 +102,7 @@ body {
 #app-current-panel {
  height: 100vh;
 }
-.custom-center-map {
+#recenter-action.custom-center-map {
   background-color: rgb(255, 255, 255);
   border: 2px solid rgb(255, 255, 255);
   border-radius: 3px;
@@ -110,7 +113,13 @@ body {
   top: 100;
   border-radius: 50%;
   margin:10px;
+  background-color: white !important;
 }
+#recenter-action.custom-center-map span {
+  font-size: 32px;
+  color: black;
+}
+
 .custom-center-map  div{
   font-size: 28px;
   padding: 10px;

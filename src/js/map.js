@@ -4,7 +4,7 @@ function mapView() {
     topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
     topAppBar.setScrollTarget(document.getElementById('main-content'));
     topAppBar.root_.classList.add('transparent');
-
+    document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
 
     manageLocation().then(function (location) {
         document.getElementById('start-loader').classList.add('hidden');
@@ -36,13 +36,15 @@ function mapView() {
             radius: location.accuracy
         });
 
-        var centerControlDiv = document.createElement('div');
-        var centerControl = new CenterControl(centerControlDiv, map, latLng);
-        centerControlDiv.index = 1;
-        console.log(map)
-        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
+ 
         google.maps.event.addListenerOnce(map, 'idle', function () {
-            console.log("Asd")
+            console.log('idle_once');
+            var centerControlDiv = document.createElement('div');
+            var centerControl = new CenterControl(centerControlDiv, map, latLng);
+            centerControlDiv.index = 1;
+            // console.log(map)
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
+
             topAppBar.listen('MDCTopAppBar:nav', () => {
                 drawer.open = !drawer.open;
 
@@ -55,10 +57,21 @@ function mapView() {
                     profileView();
                 }
             });
-            // do something only the first time the map is loaded
             runAppChecks(location);
-
+        })
+        google.maps.event.addListener(map, 'idle', function () {
+            if(document.querySelector('#recenter-action span')) {
+                document.querySelector('#recenter-action span').style.color = 'black';
+            }
+            // console.log(map.getBounds())
+            console.log("idle")
+            loadNearByLocations(getMapBounds(map), map)
         });
+    }).catch(function (error) {
+        console.log(error);
+        document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+        document.getElementById('start-loader').classList.add('hidden');
+        document.getElementById('app-current-panel').innerHTML = '<div><p>Failed To Detect You Location</p><button class="mdc-button" onclick=mapView()>Try Again</button></div>'
     })
 
 }
@@ -66,46 +79,59 @@ function mapView() {
 function CenterControl(controlDiv, map, latLng) {
 
     // Set CSS for the control border.
-    var controlUI = document.createElement('div');
-    controlUI.className = 'custom-center-map'
-    controlDiv.appendChild(controlUI);
 
-    // Set CSS for the control interior.
-    var controlText = document.createElement('div');
-    controlText.style.color = 'rgb(25,25,25)';
-    controlText.className = 'material-icons'
-    controlText.innerHTML = 'my_location';
-    controlUI.appendChild(controlText);
-
-    // Setup the click event listeners: simply set the map to Chicago.
-    controlUI.addEventListener('click', function () {
+    const recenter = new Fab('my_location').getButton();
+    recenter.root_.id = 'recenter-action'
+    recenter.root_.classList.add('custom-center-map');
+    console.log(recenter)
+    controlDiv.appendChild(recenter.root_);
+    recenter.root_.addEventListener('click', function () {
+        recenter.root_.querySelector('span').style.color = '#0399f4'
         map.setZoom(18);
         map.panTo(latLng);
     });
 
 }
 
-function getSubscription(office, template) {
-    return new Promise(function (resolve) {
-        const dbName = firebase.auth().currentUser.uid
-        const req = indexedDB.open(dbName)
+function getMapBounds(map) {
+    const northEast = map.getBounds().getNorthEast()
+    const southWest = map.getBounds().getSouthWest()
+    return {
+        ne: [northEast.lat(), northEast.lng()],
+        sw: [southWest.lat(), southWest.lng()]
+    }
+}
+
+function loadNearByLocations(range, map) {
+    return new Promise(function (resolve, reject) {
+
+        const req = indexedDB.open(firebase.auth().currentUser.uid);
         req.onsuccess = function () {
-            const db = req.result
-            const tx = db.transaction(['subscriptions']);
-            const subscription = tx.objectStore('subscriptions')
-            const officeTemplateCombo = subscription.index('officeTemplate')
-            const range = IDBKeyRange.only([office, template])
-            let record;
-            officeTemplateCombo.get(range).onsuccess = function (event) {
-                if (!event.target.result) return;
-                if (event.target.result.status !== 'CANCELLED') {
-                    record = event.target.result;
+            const db = req.result;
+            const tx = db.transaction(['map'])
+            const store = tx.objectStore('map');
+            const index = store.index('bounds');
+            const idbRange = IDBKeyRange.bound(range.sw, range.ne);
+
+            index.openCursor(idbRange).onsuccess = function (event) {
+                const cursor = event.target.result;
+                if (!cursor) return;
+                if (!cursor.value.location || !cursor.value.latitude || !cursor.value.longitude) {
+                    cursor.continue();
+                    return;
                 }
+                console.log(cursor.value.location)
+                var marker = new google.maps.Marker({
+                    position: {
+                        lat: cursor.value.latitude,
+                        lng: cursor.value.longitude
+                    },
+                });
+                marker.setMap(map);
+                cursor.continue();
             }
             tx.oncomplete = function () {
-
-                return resolve(record)
-
+                return resolve()
             }
         }
     })

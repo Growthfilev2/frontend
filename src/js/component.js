@@ -134,8 +134,9 @@ Dialog.prototype.create = function () {
     const okButton = createElement('button', {
         className: 'mdc-button mdc-dialog__button',
         type: 'button',
-        textContent: 'okay'
-    })
+        textContent: 'Create'
+    });
+
     okButton.setAttribute('data-mdc-dialog-action', 'accept')
     footer.appendChild(cancelButton)
     footer.appendChild(okButton);
