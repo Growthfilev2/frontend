@@ -5,7 +5,7 @@ function mapView() {
     topAppBar.setScrollTarget(document.getElementById('main-content'));
     topAppBar.root_.classList.add('transparent');
     document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
-
+    let loadedMarkers = [];
     manageLocation().then(function (location) {
         document.getElementById('start-loader').classList.add('hidden');
         const latLng = {
@@ -14,7 +14,7 @@ function mapView() {
         }
         const map = new google.maps.Map(document.getElementById('app-current-panel'), {
             center: latLng,
-            zoom: 18,
+            zoom:20,
             disableDefaultUI: true,
             gestureHandling: 'greedy'
         })
@@ -36,7 +36,7 @@ function mapView() {
             radius: location.accuracy
         });
 
- 
+
         google.maps.event.addListenerOnce(map, 'idle', function () {
             console.log('idle_once');
             var centerControlDiv = document.createElement('div');
@@ -60,12 +60,13 @@ function mapView() {
             runAppChecks(location);
         })
         google.maps.event.addListener(map, 'idle', function () {
-            if(document.querySelector('#recenter-action span')) {
+            if (document.querySelector('#recenter-action span')) {
                 document.querySelector('#recenter-action span').style.color = 'black';
             }
-            // console.log(map.getBounds())
-            console.log("idle")
-            loadNearByLocations(getMapBounds(map), map)
+
+            loadNearByLocations(getMapBounds(map), map).then(function (markers) {
+                // console.log(markers)
+            })
         });
     }).catch(function (error) {
         console.log(error);
@@ -87,7 +88,7 @@ function CenterControl(controlDiv, map, latLng) {
     controlDiv.appendChild(recenter.root_);
     recenter.root_.addEventListener('click', function () {
         recenter.root_.querySelector('span').style.color = '#0399f4'
-        map.setZoom(18);
+        map.setZoom(20);
         map.panTo(latLng);
     });
 
@@ -104,8 +105,14 @@ function getMapBounds(map) {
 
 function loadNearByLocations(range, map) {
     return new Promise(function (resolve, reject) {
+        var infowindow = new google.maps.InfoWindow({
 
+            disableAutoPan: true
+        });
+        const result = []
         const req = indexedDB.open(firebase.auth().currentUser.uid);
+        let lastOpen;
+        console.log(range)
         req.onsuccess = function () {
             const db = req.result;
             const tx = db.transaction(['map'])
@@ -120,18 +127,40 @@ function loadNearByLocations(range, map) {
                     cursor.continue();
                     return;
                 }
-                console.log(cursor.value.location)
+
                 var marker = new google.maps.Marker({
                     position: {
                         lat: cursor.value.latitude,
                         lng: cursor.value.longitude
                     },
+                    id: cursor.value.activityId
                 });
-                marker.setMap(map);
+                console.log(cursor.value.latitude, cursor.value.longitude)
+                if ((map.getBounds().contains(marker.getPosition()))) {
+
+                    const content = `<span>${cursor.value.location}</span>`
+                    google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+                        return function () {
+                            if (lastOpen) {
+                                lastOpen.close();
+                            }
+                            infowindow.setContent(content);
+                            infowindow.open(map, marker);
+                            lastOpen = infowindow;
+
+                        };
+                    })(marker, content, infowindow));
+
+                    marker.setMap(map);
+                    result.push(marker)
+                }
+
                 cursor.continue();
+
             }
             tx.oncomplete = function () {
-                return resolve()
+             
+                return resolve(result)
             }
         }
     })
