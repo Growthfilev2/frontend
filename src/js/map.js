@@ -1,9 +1,10 @@
+
 var gray = [  {
     "featureType": "administrative",
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#d6e2e6"
+        "color": "#D6E2E6"
       }
     ]
   },
@@ -12,7 +13,7 @@ var gray = [  {
     "elementType": "geometry.stroke",
     "stylers": [
       {
-        "color": "#cfd4d5"
+        "color": "#CFD4D5"
       }
     ]
   },
@@ -21,16 +22,7 @@ var gray = [  {
     "elementType": "labels.text.fill",
     "stylers": [
       {
-        "color": "#7492a8"
-      }
-    ]
-  },
-  {
-    "featureType": "administrative.neighborhood",
-    "elementType": "labels.text.fill",
-    "stylers": [
-      {
-        "lightness": 25
+        "color": "#7492A8"
       }
     ]
   },
@@ -39,7 +31,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#dde2e3"
+        "color": "#DDE2E3"
       }
     ]
   },
@@ -48,7 +40,7 @@ var gray = [  {
     "elementType": "geometry.stroke",
     "stylers": [
       {
-        "color": "#cfd4d5"
+        "color": "#CFD4D5"
       }
     ]
   },
@@ -66,7 +58,7 @@ var gray = [  {
     "elementType": "labels.text.fill",
     "stylers": [
       {
-        "color": "#7492a8"
+        "color": "#7492A8"
       }
     ]
   },
@@ -83,7 +75,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#dde2e3"
+        "color": "#DDE2E3"
       }
     ]
   },
@@ -101,7 +93,7 @@ var gray = [  {
     "elementType": "labels.text.fill",
     "stylers": [
       {
-        "color": "#588ca4"
+        "color": "#588CA4"
       }
     ]
   },
@@ -119,7 +111,7 @@ var gray = [  {
     "elementType": "geometry.stroke",
     "stylers": [
       {
-        "color": "#bae6a1"
+        "color": "#BAE6A1"
       }
     ]
   },
@@ -128,7 +120,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#c6e8b3"
+        "color": "#C6E8B3"
       }
     ]
   },
@@ -137,7 +129,7 @@ var gray = [  {
     "elementType": "geometry.stroke",
     "stylers": [
       {
-        "color": "#bae6a1"
+        "color": "#BAE6A1"
       }
     ]
   },
@@ -161,7 +153,7 @@ var gray = [  {
     "elementType": "labels.text.fill",
     "stylers": [
       {
-        "color": "#41626b"
+        "color": "#41626B"
       }
     ]
   },
@@ -170,7 +162,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#ffffff"
+        "color": "#FFFFFF"
       }
     ]
   },
@@ -179,7 +171,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#c1d1d6"
+        "color": "#C1D1D6"
       }
     ]
   },
@@ -188,7 +180,7 @@ var gray = [  {
     "elementType": "geometry.stroke",
     "stylers": [
       {
-        "color": "#a6b5bb"
+        "color": "#A6B5BB"
       }
     ]
   },
@@ -206,7 +198,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#9fb6bd"
+        "color": "#9FB6BD"
       }
     ]
   },
@@ -215,7 +207,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#ffffff"
+        "color": "#FFFFFF"
       }
     ]
   },
@@ -233,7 +225,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#cfd4d5"
+        "color": "#CFD4D5"
       }
     ]
   },
@@ -242,7 +234,7 @@ var gray = [  {
     "elementType": "labels.text.fill",
     "stylers": [
       {
-        "color": "#cfd4d5"
+        "color": "#CFD4D5"
       }
     ]
   },
@@ -251,8 +243,9 @@ var gray = [  {
     "elementType": "labels.text.fill",
     "stylers": [
       {
-        "color": "#cfd4d5"
-      }
+        "color": "#90CAF9"
+      },
+     
     ]
   },
   {
@@ -272,7 +265,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#a6cbe3"
+        "color": "#A6CBE3"
       }
     ]
   }
