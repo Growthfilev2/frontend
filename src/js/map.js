@@ -110,7 +110,7 @@ var gray = [  {
     "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#a9de83"
+        "color": "#B9F6CA"
       }
     ]
   },
