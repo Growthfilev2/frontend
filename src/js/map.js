@@ -420,10 +420,7 @@ function loadNearByLocations(range, map) {
                     cursor.continue();
                     return;
                 };
-                if(cursor.value.status === 'CANCELLED' || cursor.value.status === 'CONFIRMED') {
-                  cursor.continue();
-                  return;
-                }
+               
 
                 var marker = new google.maps.Marker({
                     position: {
