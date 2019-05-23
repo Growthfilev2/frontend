@@ -237,8 +237,8 @@ function html5Geolocation() {
       })
     }, {
 
-      maximumAge: 5000,
-      timeout:5000
+      maximumAge: 0,
+      timeout:8000
     })
   })
 }

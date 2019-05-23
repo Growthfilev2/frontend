@@ -85,10 +85,39 @@ function queryPatramsToObject(url) {
 
 function createElement(tagName, attrs) {
     const el = document.createElement(tagName)
-    Object.keys(attrs).forEach(function (attr) {
-        el[attr] = attrs[attr]
-    })
+    if(attrs){
+
+        Object.keys(attrs).forEach(function (attr) {
+            el[attr] = attrs[attr]
+        })
+    }
     return el;
+}
+
+function createHeader(startContent,endContent,id){
+    const header = createElement('header',{className:'mdc-top-app-bar',id:id});
+    const div = createElement('div',{className:'mdc-top-app-bar__row'})
+    const start = createElement('section',{className:'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'})
+  
+     startContent.forEach(function(label){
+        const a = createElement('a',{className:'material-icons mdc-top-app-bar__navigation-icon',textContent:label})
+        start.appendChild(a)
+    })
+    div.appendChild(start)
+
+    if(endContent.length) {
+        const end = createElement('section',{className:'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'})
+        end.setAttribute('role','toolbar')
+        endContent.forEach(function(label){
+            const a = createElement('a',{className:'material-icons mdc-top-app-bar__action-item',textContent:label})
+            end.appendChild(a)
+        })
+        div.appendChild(end);
+    }
+
+  
+    header.appendChild(div)
+    return new mdc.topAppBar.MDCTopAppBar(header);
 }
 
 function Dialog(title, content) {
@@ -96,7 +125,8 @@ function Dialog(title, content) {
     this.content = content;
 
 }
-Dialog.prototype.create = function () {
+
+Dialog.prototype.create = function (type) {
     const parent = createElement('div', {
         className: 'mdc-dialog',
         role: 'alertDialog'
@@ -117,32 +147,37 @@ Dialog.prototype.create = function () {
     const contentContainer = createElement('div', {
         className: 'mdc-dialog__content'
     });
+
     if (this.content instanceof HTMLElement) {
         contentContainer.appendChild(this.content)
     } else {
         contentContainer.textContent = this.content
     }
-    const footer = createElement('footer', {
-        className: 'mdc-dialog__actions'
-    })
-    const cancelButton = createElement('button', {
-        className: 'mdc-button mdc-dialog__button',
-        type: 'button',
-        textContent: 'cancel'
-    })
-    cancelButton.setAttribute('data-mdc-dialog-action', 'close')
-    const okButton = createElement('button', {
-        className: 'mdc-button mdc-dialog__button',
-        type: 'button',
-        textContent: 'Create'
-    });
-
-    okButton.setAttribute('data-mdc-dialog-action', 'accept')
-    footer.appendChild(cancelButton)
-    footer.appendChild(okButton);
+  
     surface.appendChild(h2)
-    surface.appendChild(contentContainer)
-    surface.appendChild(footer)
+    surface.appendChild(contentContainer);
+    if(type !== 'simple') {
+        const footer = createElement('footer', {
+            className: 'mdc-dialog__actions'
+        })
+        const cancelButton = createElement('button', {
+            className: 'mdc-button mdc-dialog__button',
+            type: 'button',
+            textContent: 'cancel'
+        })
+        cancelButton.setAttribute('data-mdc-dialog-action', 'close')
+        const okButton = createElement('button', {
+            className: 'mdc-button mdc-dialog__button',
+            type: 'button',
+            textContent: 'Create'
+        });
+    
+        okButton.setAttribute('data-mdc-dialog-action', 'accept')
+        footer.appendChild(cancelButton)
+        footer.appendChild(okButton);
+        surface.appendChild(footer)
+    }
+
     container.appendChild(surface)
     parent.appendChild(container);
     parent.appendChild(createElement('div', {

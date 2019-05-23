@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+        <meta name="viewport"
+        content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- <link rel="stylesheet" type="text/css" media="all" href="css/reset.css" /> reset css -->
+<!-- <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script> -->
+<style>
+    body{ background-color: ivory; }
+    canvas{border:1px solid red;}
+</style>
+<body>
+        <button id="rotate">Rotate with resize</button>
+        <p id=info></p>
+        <canvas id="canvas" width=400 height=400></canvas>
+</body>
+<script>
+var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var imgWidth = 200;
+var imgHeight = 300;
+var size = {
+    width: imgWidth,
+    height: imgHeight
+};
+var rotation = 0;
+var deg2Rad = Math.PI / 180;
+var count1 = 0;
+var count2 = 0;
+
+var img = new Image();
+img.onload = function () {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    imgWidth = canvas.width;
+    imgHeight =  canvas.height;
+    size = {
+        width: imgWidth,
+        height: imgHeight
+    };
+    // canvas.width = window.innerWidth;
+    // canvas.height = window.innerHeight;
+    // ctx.drawImage(img,0,0,canvas.width,canvas.height)
+    var info = document.getElementById("info");
+    // info.innerHTML = "canvas size: " + (count1++) + ": " + cx + " / " + cy;
+    ctx.drawImage(img,0,0,canvas.width, canvas.height);
+
+    // draw();
+}
+img.src = "https://images.unsplash.com/photo-1469827160215-9d29e96e72f4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80";
+// img.width = window.innerWidth;
+// img.height = window.innerHeight;
+function draw() {
+    
+    canvas.width = size.width;
+    canvas.height = size.height;
+  
+    // calculate the centerpoint of the canvas
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+    var info = document.getElementById("info");
+    info.innerHTML = "canvas size: " + (count1++) + ": " + cx + " / " + cy;
+
+    // draw the rect in the center of the newly sized canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgba(216,216,150,1.0)";
+    ctx.translate(cx, cy);
+    ctx.rotate(rotation * deg2Rad);
+   
+    ctx.drawImage(img,-imgWidth, -imgHeight);
+
+}
+
+document.getElementById("rotate").addEventListener("click", resizeClicked, false);
+
+function resizeClicked(e) {
+    rotation += 90;
+    // newSize(imgWidth, imgHeight, rotation);
+    draw();
+}
+
+function newSize(w, h, a) {
+    var rads = a * Math.PI / 180;
+    var c = Math.abs(Math.cos(rads));
+    var s = Math.abs(Math.sin(rads));
+    size.width = h * s + w * c;
+    size.height = h * c + w * s;
+}
+
+
+</script>

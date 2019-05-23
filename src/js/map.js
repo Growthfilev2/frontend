@@ -214,6 +214,7 @@ var gray = [{
     }]
   }
 ]
+var map;
 
 function mapView() {
   history.pushState(['mapView'], null, null);
@@ -230,7 +231,7 @@ function mapView() {
       lat: location.latitude,
       lng: location.longitude
     }
-    const map = new google.maps.Map(document.getElementById('app-current-panel'), {
+    map = new google.maps.Map(document.getElementById('app-current-panel'), {
       center: latLng,
       zoom: 18,
       disableDefaultUI: true,
@@ -284,7 +285,7 @@ function mapView() {
           profileView();
         }
       });
-      runAppChecks(location);
+      // runAppChecks(location);
     })
     google.maps.event.addListener(map, 'idle', function () {
       if (document.querySelector('#recenter-action i')) {
@@ -317,7 +318,7 @@ function CenterControl(controlDiv, map, latLng) {
 
   const recenter = new Fab('my_location').getButton();
   recenter.root_.id = 'recenter-action'
-  recenter.root_.classList.add('custom-control','right','mdc-theme--background','mdc-theme--on-primary');
+  recenter.root_.classList.add('custom-control', 'right', 'mdc-theme--background', 'mdc-theme--on-primary');
   console.log(recenter)
   controlDiv.appendChild(recenter.root_);
   recenter.root_.addEventListener('click', function () {
@@ -326,15 +327,42 @@ function CenterControl(controlDiv, map, latLng) {
   });
 
 }
-function TakeSnap(el){
+
+function TakeSnap(el) {
   const snap = new Fab('photo_camera').getButton();
   snap.root_.id = 'take-snap';
-  snap.root_.classList.add('custom-control','right','mdc-theme--on-secondary')
+  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--on-secondary')
   el.appendChild(snap.root_);
-  snap.root_.addEventListener('click',function(){
+  snap.root_.addEventListener('click', function () {
     console.log('clicked')
+    AndroidInterface.startCamera(); 
+    // setFilePath();
   })
 }
+
+function setFilePath(base64,orientation) {
+  // localStorage.setItem('b6',base64);
+
+
+  // const image = createElement('img',{src:`data:image/jpg;base64,${base64}`,width:'auto',height:'100%'})
+  
+  const container = createElement('div');
+  container.style.backgroundImage = `url(data:image/jpg;base64,${base64})`;
+
+  const header = createHeader(['keyboard_backspace'], []);
+  header.foundation_.adapter_.addClass('transparent');
+  
+
+  container.appendChild(header.root_)
+  // container.appendChild(image);
+
+  const dialog = new Dialog('', container).create('simple');
+  document.querySelector('.mdc-dialog__content').style.padding = '0px';
+  document.querySelector('.mdc-dialog__content').style.overflow = 'hidden'
+  dialog.open();
+
+}
+
 
 function focusMarker(map, latLng, zoom) {
   map.setZoom(zoom);
