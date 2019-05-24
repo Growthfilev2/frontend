@@ -285,20 +285,23 @@ function mapView() {
           profileView();
         }
       });
-      runAppChecks(location);
+      
+      isEmployeeOnLeave().then(function (onLeave) {
+        if (onLeave) return
+        createCheckInData().then(function(result){
+          checkInDialog(result,location)
+        }).catch(console.log) 
+      })
     })
+
     google.maps.event.addListener(map, 'idle', function () {
       if (document.querySelector('#recenter-action i')) {
         document.querySelector('#recenter-action i').style.color = 'black';
       }
-      // var v1 = performance.now()
-      // loadNearByLocations(getMapBounds(map), map).then(function (markers) {
-      //   // markers.forEach(function(marker){
-
-      //   // })
-      //   var v2 = performance.now();
-      //   console.log(v2 - v1);
-      // })
+     
+      loadNearByLocations(getMapBounds(map), map).then(function (markers) {
+          
+      })
     });
 
   }).catch(function (error) {
@@ -340,33 +343,97 @@ function TakeSnap(el) {
   })
 }
 
-function setFilePath(base64,orientation) {
-  // localStorage.setItem('b6',base64);
-
-
-  // const image = createElement('img',{src:`data:image/jpg;base64,${base64}`,width:'auto',height:'100%'})
-  
-  const container = createElement('div');
-  container.style.backgroundImage = `url(data:image/jpg;base64,${base64})`;
-  container.className = 'snap-bckg'
-  const header = createHeader(['keyboard_backspace'], []);
-  header.foundation_.adapter_.addClass('transparent');
-  
-
-  container.appendChild(header.root_)
+function setFilePath(base64) {
   // container.appendChild(image);
+  const url = `data:image/jpg;base64,${base64}`
+  const form = createElement('div', {
+    className: 'form-meta'
+  });
+  form.classList.add('snap-form');
+  const textarea = textAreaField({
+    rows: "1",
+    cols: "100",
+    label: 'Comment'
+  })
 
-  const dialog = new Dialog('', container).create('simple');
-  document.querySelector('.mdc-dialog__content').style.padding = '0px';
-  document.querySelector('.mdc-dialog__content').style.overflow = 'hidden'
+  textarea.input_.classList.add('mdc-theme--primary', 'snap-text');
+  
+  const submit = new Fab('send').getButton();
+  submit.root_.classList.add('app-fab--absolute');
+  submit.root_.style.zIndex = '9'
+  submit.root_.setAttribute('autofocus', 'true');
+ 
+  form.appendChild(textarea.root_);
+  form.appendChild(submit.root_);
+
+
+
+  const dialog = new Dialog('', form).create('simple');
+
+  dialog.listen('MDCDialog:opened', function (evt) {
+    const content = dialog.content_
+
+    const header = createHeader(['keyboard_backspace'], [],'snap-header');
+    header.foundation_.adapter_.addClass('transparent');
+    header.listen('MDCTopAppBar:nav', () => {
+      dialog.close();
+    });
+    content.appendChild(header.root_);
+
+    textarea.input_.addEventListener('keyup', function () {
+      this.style.paddingTop = '25px';
+      this.style.height = '5px'
+      this.style.height = (this.scrollHeight)+"px";
+      if(this.scrollHeight <= 300) {
+        submit.root_.style.bottom = (this.scrollHeight -20)+"px";
+      } 
+    });
+    submit.root_.addEventListener('click',function(){
+      const textValue = textarea.value;
+      const image = url
+        createCheckInData().then(function(result){
+          console.log(result)
+          manageLocation().then(function(location){
+            result.data[0].attachment.Comment.value = textValue;
+            result.data[0].attachment.Photo.value = image
+            checkInDialog(result,location)
+            dialog.close();
+          })
+        }).catch(console.log) 
+    })
+
+    const image = new Image();
+    image.onload = function () {
+    
+      const orientation = getOrientation(image);
+      content.style.backgroundImage = `url(${url})`
+      content.style.padding = '0px'
+      content.style.overflow = 'hidden'
+      content.classList.add('snap-bckg');
+
+      if (orientation == 'potrait') {
+        content.style.backgroundSize = 'cover'
+      }
+      if (orientation == 'landscape' || orientation == 'sqaure') {
+        content.style.backgroundSize = 'contain'
+      }
+
+    }
+    image.src = url
+
+  })
+
+  dialog.container_.style.minWidth = '100%';
+  dialog.root_.querySelector('.mdc-dialog__surface').style.minWidth = '100%';
+  dialog.root_.querySelector('.mdc-dialog__surface').style.minHeight = '100vh';
   dialog.open();
-  document.querySelector('.mdc-dialog__container').style.minWidth = '100%';
-  document.querySelector('.mdc-dialog__container').style.minHeight = '100%';
-  document.querySelector('.mdc-dialog__surface').style.minWidth = '100%';
-  document.querySelector('.mdc-dialog__surface').style.minHeight = '100vh';
-  console.log(dialog)
 }
 
+function getOrientation(image) {
+  if (image.width > image.height) return 'landscape'
+  if (image.height > image.width) return 'potrait'
+  if (image.width == image.height) return 'square'
+}
 
 function focusMarker(map, latLng, zoom) {
   map.setZoom(zoom);

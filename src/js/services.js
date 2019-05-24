@@ -238,7 +238,8 @@ function html5Geolocation() {
     }, {
 
       maximumAge: 0,
-      timeout:8000
+      timeout:10000,
+      enableHighAccuracy: false
     })
   })
 }
@@ -372,7 +373,7 @@ function isLocationStatusWorking() {
 
 
 
-function requestCreator(requestType, requestBody) {
+function requestCreator(requestType, requestBody,location) {
   var auth = firebase.auth().currentUser;
   if (!auth) return;
   var requestGenerator = {
@@ -404,9 +405,9 @@ function requestCreator(requestType, requestBody) {
         location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
         requestGenerator.meta.user.token = token;
         if (isLocationOld) {
-          manageLocation().then(function (location) {
+          // manageLocation().then(function (location) {
             createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, location)
-          }).catch(locationErrorDialog)
+          // }).catch(locationErrorDialog)
         } else {
           createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, rootRecord.location)
         }

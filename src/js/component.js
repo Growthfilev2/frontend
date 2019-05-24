@@ -44,7 +44,7 @@ function getCellularInformation() {
     } else {
         body.considerIp = true
     }
-  
+
     return body
 }
 
@@ -73,8 +73,7 @@ function queryPatramsToObject(url) {
     url.forEach(function (value, key) {
         if (key === 'macAddress') {
             result[key] = value
-        }
-        else {
+        } else {
             result[key] = Number(value)
         }
     })
@@ -85,7 +84,7 @@ function queryPatramsToObject(url) {
 
 function createElement(tagName, attrs) {
     const el = document.createElement(tagName)
-    if(attrs){
+    if (attrs) {
 
         Object.keys(attrs).forEach(function (attr) {
             el[attr] = attrs[attr]
@@ -94,31 +93,47 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function createHeader(startContent,endContent,id){
-    const header = createElement('header',{className:'mdc-top-app-bar',id:id});
-    const div = createElement('div',{className:'mdc-top-app-bar__row'})
-    const start = createElement('section',{className:'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'})
-  
-     startContent.forEach(function(label){
-        const a = createElement('a',{className:'material-icons mdc-top-app-bar__navigation-icon',textContent:label})
+function createHeader(startContent, endContent, id) {
+    const header = createElement('header', {
+        className: 'mdc-top-app-bar',
+        id: id
+    });
+    const div = createElement('div', {
+        className: 'mdc-top-app-bar__row'
+    })
+    const start = createElement('section', {
+        className: 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
+    })
+
+    startContent.forEach(function (label) {
+        const a = createElement('a', {
+            className: 'material-icons mdc-top-app-bar__navigation-icon',
+            textContent: label
+        })
         start.appendChild(a)
     })
     div.appendChild(start)
 
-    if(endContent.length) {
-        const end = createElement('section',{className:'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'})
-        end.setAttribute('role','toolbar')
-        endContent.forEach(function(label){
-            const a = createElement('a',{className:'material-icons mdc-top-app-bar__action-item',textContent:label})
+    if (endContent.length) {
+        const end = createElement('section', {
+            className: 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
+        })
+        end.setAttribute('role', 'toolbar')
+        endContent.forEach(function (label) {
+            const a = createElement('a', {
+                className: 'material-icons mdc-top-app-bar__action-item',
+                textContent: label
+            })
             end.appendChild(a)
         })
         div.appendChild(end);
     }
 
-  
+
     header.appendChild(div)
     return new mdc.topAppBar.MDCTopAppBar(header);
 }
+
 
 function Dialog(title, content) {
     this.title = title;
@@ -153,10 +168,10 @@ Dialog.prototype.create = function (type) {
     } else {
         contentContainer.textContent = this.content
     }
-  
+
     surface.appendChild(h2)
     surface.appendChild(contentContainer);
-    if(type !== 'simple') {
+    if (type !== 'simple') {
         const footer = createElement('footer', {
             className: 'mdc-dialog__actions'
         })
@@ -171,7 +186,7 @@ Dialog.prototype.create = function (type) {
             type: 'button',
             textContent: 'Create'
         });
-    
+
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
         footer.appendChild(cancelButton)
         footer.appendChild(okButton);
@@ -301,15 +316,46 @@ InputField.prototype.withLeadingIcon = function (iconName, labelName) {
 }
 
 function textAreaField(attrs) {
-    const textArea = createElement('textarea', {
-        className: 'text-area-basic mdc-text-field__input',
-        rows: attrs.rows
+    const field = createElement('div', {
+        className: 'mdc-text-field  mdc-text-field--no-label mdc-text-field--textarea'
     })
-    textArea.value = attrs.value
-    if (!attrs.readonly) {
-        textArea.setAttribute('readonly', 'true');
+    const textarea = createElement('textarea', {
+        className: 'mdc-text-field__input',
+       
+    })
+    if(attrs.rows) {
+        textarea.rows = attrs.rows
     }
-    return textArea
+    if(attrs.cols){
+        textarea.cols = attrs.cols
+    }
+    const outline = createElement('div', {
+        className: 'mdc-notched-outline'
+    })
+    const leading = createElement('div', {
+        className: 'mdc-notched-outline__leading'
+    })
+
+    const trailing = createElement('div', {
+        className: 'mdc-notched-outline__trailing'
+    })
+    outline.appendChild(leading);
+
+    const notch = createElement('div', {
+        className: 'mdc-notched-outline__notch'
+    })
+    const label = createElement('label', {
+        className: 'mdc-floating-label',
+        textContent: attrs.label
+    })
+    notch.appendChild(label)
+    outline.appendChild(notch)
+
+    outline.appendChild(trailing);
+    
+    field.appendChild(textarea);
+    // field.appendChild(outline);
+    return new mdc.textField.MDCTextField(field);
 }
 
 function selectMenu(attr) {
@@ -372,7 +418,7 @@ function Button(name) {
     this.base = button;
 }
 Button.prototype.getButton = function () {
-  
+
     return new mdc.ripple.MDCRipple(this.base)
 }
 Button.prototype.disabled = function (value) {
@@ -560,15 +606,14 @@ function userList(attr, actionable) {
     }))
 
     li.appendChild(text);
-    if(actionable) {
+    if (actionable) {
         const itemGraphic = createElement('span', {
             className: 'mdc-list-item__meta'
         })
-        if(attr.singleSelection) {
+        if (attr.singleSelection) {
             li.setAttribute('role', 'radio');
             itemGraphic.appendChild(createRadioInput(attr))
-        }
-        else {
+        } else {
             li.setAttribute('role', 'checkbox');
             attr.disabled = true
             itemGraphic.appendChild(createCheckBox(attr))
@@ -609,10 +654,10 @@ function createRadioInput(attr) {
 }
 
 function createCheckBox(attr) {
-     const checkbox = createElement('div', {
+    const checkbox = createElement('div', {
         className: 'mdc-checkbox mdc-list-item__meta'
     });
-    if(attr.disabled) {
+    if (attr.disabled) {
         checkbox.classList.add('mdc-checkbox--disabled')
     }
     const input = createElement('input', {
