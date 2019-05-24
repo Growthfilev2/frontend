@@ -112,7 +112,13 @@ body {
 
 }
 
-
+.snap-bckg {
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  width: 100vw;
+  height: 100vh;
+}
 
 .activity--chat-card-container .activity-title {
   font-size: 16px;
