@@ -215,7 +215,7 @@ var gray = [{
   }
 ]
 var map;
-
+var globMark;
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('section-start').innerHTML = ' <a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon">menu</a>'
@@ -264,6 +264,7 @@ function mapView() {
       var centerControl = new CenterControl(centerControlDiv, map, latLng)
       centerControlDiv.index = 1;
 
+
       var snapControlDiv = document.createElement('div');
       var snapControl = new TakeSnap(snapControlDiv);
       snapControlDiv.index = 2;
@@ -271,7 +272,7 @@ function mapView() {
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
 
-
+   
       // console.log(map)
       topAppBar.listen('MDCTopAppBar:nav', () => {
         drawer.open = !drawer.open;
@@ -298,10 +299,25 @@ function mapView() {
       if (document.querySelector('#recenter-action i')) {
         document.querySelector('#recenter-action i').style.color = 'black';
       }
-     
-      loadNearByLocations(getMapBounds(map), map).then(function (markers) {
-          
-      })
+      Promise.all([loadNearByLocations(getMapBounds(map), map),getUniqueOfficeCount()]).then(function(result){
+        const markers = result[0]
+        const offices = result[1]
+        const officesLength = offices.length
+        const venueLength = markers.length
+        if(!venueLength) {
+          if(officesLength > 1) return chooseOffice()
+          return setDefaultOffice();
+
+        }
+        if(venueLength == 1){
+            return setDefaultOffice();setDefaultVenue();
+        }
+        if(venueLength > 1){
+          return chooseVenue();
+          if(officesLength > 1) 
+        }
+
+      })      
     });
 
   }).catch(function (error) {
@@ -310,11 +326,7 @@ function mapView() {
     document.getElementById('start-loader').classList.add('hidden');
     document.getElementById('app-current-panel').innerHTML = '<div><p>Failed To Detect You Location</p><button class="mdc-button" onclick=mapView()>Try Again</button></div>'
   })
-
 }
-
-
-
 function CenterControl(controlDiv, map, latLng) {
 
   // Set CSS for the control border.
@@ -342,6 +354,60 @@ function TakeSnap(el) {
     // setFilePath();
   })
 }
+
+
+
+function ChooseOffice2(el){
+  const frag = document.createDocumentFragment();
+
+  const div = createElement('div',{className:'mdc-select',id:'select-2'});
+  div.style.marginTop = '56px';
+  div.style.width = '10rem';
+  div.style.backgroundColor = 'white';
+  const input = createElement('input',{className:'',type:'hidden',name:'enhanced-select'})
+  div.appendChild(input);
+
+  
+  const icon = createElement('i',{className:'mdc-select__dropdown-icon'});
+  div.appendChild(icon)
+  const text= createElement('div',{className:'mdc-select__selected-text'})
+  div.appendChild(text);
+
+  const select = createElement('div',{className:'mdc-select__menu mdc-menu mdc-menu-surface demo-width-class'})
+  select.style.width = '10rem';
+  const ul = createElement('ul',{className:'mdc-list'})
+  let li;
+  li = createElement('li',{className:'mdc-list-item mdc-list-item--selected'})
+  li.dataset.value = ''
+  li.dataset.ariaSelected = 'true';
+  ul.appendChild(li)
+
+  getUniqueOfficeCount().then(function(offices){
+    offices.forEach(function(office,idx){
+      li = createElement('li',{className:'mdc-list-item',textContent:office})
+      li.dataset.value = office;
+      frag.appendChild(li)
+    })
+    select.appendChild(frag);
+    const label = createElement('label',{className:'mdc-floating-label',textContent:'Choose Office'})
+    const ripple = createElement('div',{className:'mdc-line-ripple'})
+    div.appendChild(select);
+    div.appendChild(label)
+    div.appendChild(ripple);
+    el.appendChild(div);
+  
+    const selectInit = new mdc.select.MDCSelect(div);
+    selectInit.listen('MDCSelect:change', () => {
+      alert(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
+    });
+    console.log(selectInit)
+
+   
+  
+  })
+ 
+}
+
 
 function setFilePath(base64) {
   // container.appendChild(image);
@@ -390,7 +456,8 @@ function setFilePath(base64) {
     });
     submit.root_.addEventListener('click',function(){
       const textValue = textarea.value;
-      const image = url
+      const image = url;
+
         createCheckInData().then(function(result){
           console.log(result)
           manageLocation().then(function(location){
@@ -494,12 +561,11 @@ function loadNearByLocations(range, map) {
             anchor: new google.maps.Point(17, 34),
             scaledSize: new google.maps.Size(25, 25)
           },
-          id: cursor.value.activityId
-
+          id: cursor.value.activityId,
+          value:cursor.value.location
         });
-        console.log(cursor.value.latitude, cursor.value.longitude)
+        // console.log(cursor.value.latitude, cursor.value.longitude)
         if ((map.getBounds().contains(marker.getPosition()))) {
-
           const content = `<span>${cursor.value.location}</span>`
           google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
             return function () {

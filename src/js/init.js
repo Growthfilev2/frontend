@@ -589,7 +589,7 @@ function getUniqueOfficeCount() {
         if (!cursor) return;
 
         offices.push(cursor.value.office)
-        // cursor.continue()
+        cursor.continue()
       }
       tx.oncomplete = function () {
         return resolve(offices);
