@@ -757,6 +757,7 @@ function getSubscription(office, template) {
                   record = event.target.result;
               }
           }
+          
           tx.oncomplete = function () {
 
               return resolve(record)

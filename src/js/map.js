@@ -307,104 +307,168 @@ function mapView() {
         let selectVenue;
         const markers = result[0];
         const offices = result[1];
-        const markerLength =  markers.length
-        const officesLength = offices.length ;
-
+        const markerLength = markers.length
+        const officesLength = offices.length;
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
-
         el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
         el.classList.remove('hidden');
-        document.getElementById('submit-check-in').addEventListener('click',function(){
-          getSubscription(office, 'check-in').then(function(){
-            
-          })
 
-          console.log(selectOffice)
-          console.log(selectVenue);
-        })
         if (!markerLength) {
 
           if (officesLength > 1) {
             contentBody.innerHTML = mdcSelect(offices, 'Select Office');
             selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
-
+         
+            document.getElementById('submit-check-in').addEventListener('click', function () {
+              const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
+              cardProg.open()
+              if (!selectOffice.value) return;
+              getSubscription(selectOffice.value, 'check-in').then(function (tempBody) {
+                const withVenue = setVenueForCheckIn([], tempBody)
+                requestCreator('create', withVenue);
+                setTimeout(function(){
+                  cardProg.close();
+                },500)
+                console.log(withVenue)
+              })
+            });
             return;
           }
-          body.office = offices[0];
 
+          body.office = offices[0];
           const officeLi = `
             <ul class='mdc-list'>
             <li class="mdc-list-item mdc-ripple-upgraded" aria-selected="true" tabindex="0">
             <span class="mdc-list-item__graphic material-icons mdc-theme--on-primary" aria-hidden="true">business</span>
-              ${offices[0]}
-             </li>
+            ${offices[0]}
+            </li>
             </ul>`
           contentBody.innerHTML = officeLi;
-          
-          return;
+          document.getElementById('submit-check-in').addEventListener('click', function () {
+            const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
+            cardProg.open()
+            getSubscription(offices[0], 'check-in').then(function (tempBody) {
+              const withVenue = setVenueForCheckIn([], tempBody)
+              requestCreator('create', withVenue);
+              console.log(withVenue)
+              setTimeout(function(){
+                cardProg.close();
+              },500)
+            })
+          });
         }
 
 
         if (markerLength == 1) {
+          let selectedVenue = markers[0]
           const venueLi = `
           <ul class='mdc-list' id='default-venue'>
            <li class="mdc-list-item  mdc-theme--on-primary" aria-selected="true" tabindex="0" id='unselect-venue'>
            <span class="mdc-list-item__graphic material-icons mdc-theme--on-primary" aria-hidden="true">location_on</span>
-            ${markers[0]}
+            ${markers[0].location}
            <span class="mdc-list-item__meta material-icons" aria-hidden="true" id='clear-venue'>clear</span>
            </li>
           </ul>
+      
           `
           contentBody.innerHTML = venueLi;
           const listInit = new mdc.list.MDCList(document.getElementById('default-venue'))
           new mdc.ripple.MDCRipple(listInit.listElements[0]);
-          console.log(listInit);
+
           document.getElementById('clear-venue').addEventListener('click', function () {
             listInit.listElements[0].classList.add('hidden');
+            selectedVenue = "";
             contentBody.style.minHeight = '56px';
             if (officesLength > 1) {
-              contentBody.innerHTML = mdcSelect(offices, 'Select Office');
+              contentBody.innerHTML = mdcSelect(offices, 'Select Office')
               selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
             }
             contentBody.style.minHeight = '';
-          })
-          return;
+
+          });
+          document.getElementById('submit-check-in').addEventListener('click', function () {
+            
+            let selectedOffice;
+            if (selectOffice) {
+              selectedOffice = selectOffice.value
+            } else if (selectedVenue) {
+              selectedOffice = selectedVenue.office
+            }
+            if (!selectedOffice) return;
+            
+            getSubscription(selectedOffice, 'check-in').then(function (tempBody) {
+              const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
+              cardProg.open()
+              const withVenue = setVenueForCheckIn([selectedVenue ? [markers[0]] : []], tempBody)
+              setTimeout(function(){
+                cardProg.close();
+              },500)
+              console.log(withVenue)
+            })
+          });
         }
 
         if (markerLength > 1) {
           console.log(markers)
-          contentBody.innerHTML = mdcSelect(markers, 'Where Are You ? ');
-          selectVenue = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+
+          contentBody.innerHTML = mdcSelect(markers, 'Where Are You ?', 'venue', 'venue-select');
+          selectVenue = new mdc.select.MDCSelect(document.querySelector('#venue-select'));
           selectVenue.listen('MDCSelect:change', (evt) => {
+            if(!evt.detail.value) return;
             console.log(evt)
             const venueLi = `
             <ul class='mdc-list' id='default-venue'>
              <li class="mdc-list-item  mdc-theme--on-primary" aria-selected="true" tabindex="0" id='unselect-venue'>
              <span class="mdc-list-item__graphic material-icons mdc-theme--on-primary" aria-hidden="true">location_on</span>
-              ${evt.detail.value}
+              ${JSON.parse(evt.detail.value).location}
              <span class="mdc-list-item__meta material-icons" aria-hidden="true" id='clear-venue'>clear</span>
              </li>
-            </ul>`
+            </ul>
+          
+            `
             contentBody.innerHTML = venueLi;
 
             const listInit = new mdc.list.MDCList(document.getElementById('default-venue'))
             new mdc.ripple.MDCRipple(listInit.listElements[0]);
             console.log(listInit);
+            selectVenue.value = ""
             document.getElementById('clear-venue').addEventListener('click', function () {
               listInit.listElements[0].classList.add('hidden');
+
               contentBody.style.minHeight = '56px';
               if (officesLength > 1) {
-                contentBody.innerHTML = mdcSelect(offices, 'Select Office');
-                 selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+                contentBody.innerHTML = mdcSelect(offices, 'Select Office', '', 'office-select')
+                selectOffice = new mdc.select.MDCSelect(document.querySelector('#office-select'));
               }
               contentBody.style.minHeight = '';
             })
           });
-          return;
+          document.getElementById('submit-check-in').addEventListener('click', function () {
+            if (!selectVenue.value) return;
+            const selectedVenue = JSON.parse(selectVenue.value)
+            if (!selectedVenue) return;
+            let selectedOffice;
+            if (selectOffice) {
+              selectedOffice = selectOffice.value
+            } else {
+              selectedOffice = selectedVenue.office
+            }
+            if (!selectedOffice) return;
+            const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
+
+            getSubscription(selectedOffice, 'check-in').then(function (tempBody) {
+              cardProg.open()
+              const withVenue = setVenueForCheckIn([markers[0]], tempBody)
+              console.log(withVenue)
+              setTimeout(function(){
+                cardProg.close()
+              },300)
+            })
+          });
         }
 
-       
+
       })
     });
 
@@ -448,18 +512,18 @@ function TakeSnap(el) {
 }
 
 
-function mdcSelect(data, label) {
+function mdcSelect(data, label, isVenue, id) {
   const template = `
-<div class="mdc-select mdc-select-custom">
+<div class="mdc-select mdc-select-custom" id=${id}>
 <input type="hidden" name="enhanced-select"}>
 <i class="mdc-select__dropdown-icon"></i>
 <div class="mdc-select__selected-text"></div>
 <div class="mdc-select__menu mdc-menu mdc-menu-surface mdc-select-custom">
   <ul class="mdc-list">
 
-    ${data.map(function(name){
-      return `<li class="mdc-list-item" data-value="${name}">
-        ${name}
+    ${data.map(function(value){
+      return `<li class="mdc-list-item" data-value='${isVenue ? JSON.stringify(value) : value}'>
+        ${isVenue ? value.location : value}
     </li>`
     }).join("")}
   </ul>
@@ -615,8 +679,8 @@ function loadNearByLocations(range, map) {
         };
         if (lastCursor) {
           if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude) {
-           cursor.continue();
-           return;
+            cursor.continue();
+            return;
           }
         }
 
@@ -651,14 +715,14 @@ function loadNearByLocations(range, map) {
             };
           })(marker, content, infowindow));
           marker.setMap(map);
-          result.push(cursor.value.location)
+          result.push(cursor.value)
         }
 
         lastCursor = {
           lat: cursor.value.latitude,
           lng: cursor.value.longitude
         };
-       
+
         cursor.continue();
       }
       tx.oncomplete = function () {
