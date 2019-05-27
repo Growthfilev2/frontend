@@ -47,6 +47,66 @@ body {
   color: #0399f4;
 }
 
+.selection-box-auto {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  min-height: 150px;
+}
+.selection-box-auto button {
+  width: 100%;
+  border-radius: 0px;
+  height: 52px;
+}
+.selection-box-auto button span {
+  font-size: 24px;
+}
+.selection-box-auto .content-body {
+  padding-top:10px;
+  padding-bottom:10px;
+
+}
+.selection-box-auto ul li {
+  padding-right: 0px;
+  padding-left: 0px;
+}
+#select-venue li {
+  background-color: lightgray;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+#select-venue  .mdc-list-item__meta {
+  border-left: 1px solid gray;
+  font-size: 28px;
+  padding-left: 5px;
+}
+
+.mdc-select-custom {
+  width:100%;
+}
+
+.mdc-select__menu ul li {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-top: 0;
+  line-height: normal;
+  display: block;
+  margin-bottom: 0px;
+}
+
+.card__primary {
+  padding: 1rem;
+  text-align: center;
+  font-weight: 400;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.38)
+}
+.card__secondary {
+  padding: 0px 16px 16px 16px;
+}
+.margin-auto {
+  margin:  0 auto;
+}
 .content {
   display: none;
 }
@@ -434,7 +494,7 @@ body {
 }
 
 #map {
-  height: 300px;
+  height: 80%;
 }
 
 .calendar-activity--list-item {
@@ -1534,9 +1594,6 @@ input[type="datetime-local"] {
   margin-top: 2%;
 }
 
-.mdc-select {
-  width: 100%;
-}
 
 #viewImage--dialog-component .mdc-dialog__surface {
   height: auto;
@@ -1726,18 +1783,18 @@ input[type="datetime-local"] {
   --mdc-theme-text-secondary-on-dark:#006bc1 !important;
 }
 
-
+/* 
 .mdc-ripple-surface--accent {
   color: var(--mdc-theme-secondary);
-}
+} */
 
-.mdc-list-item--selected {
+/* .mdc-list-item--selected {
   color: #0399f4 !important;
-}
+} */
 
-.mdc-line-ripple {
+/* .mdc-line-ripple {
   background-color: #44a3eb !important;
-}
+} */
 
 @media (max-width: 480px) {
   #login-container .firebaseui-container {
@@ -2126,8 +2183,6 @@ input[type="datetime-local"] {
   color: black !important;
 
 }
-
-
 .check-in-desc {
   padding: 15px 20px 10px 20px;
 }

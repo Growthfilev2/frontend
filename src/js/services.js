@@ -14,8 +14,6 @@ function loader(nameClass) {
   return div;
 }
 
-
-
 function successDialog() {
 
   if (history.state[0] !== 'mapView') {
@@ -95,7 +93,7 @@ function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       // if (native.getName() === 'Android') {
-        updateLocationInRoot(location)
+          updateLocationInRoot(location)
       // };
       resolve(location)
     }).catch(function (error) {
@@ -140,11 +138,12 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      html5Geolocation().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
-      })
+      resolve({latitude:28.549173600000003,longitude:77.25055569999999,accuracy:24})
+      // html5Geolocation().then(function (location) {
+      //   resolve(location)
+      // }).catch(function (error) {
+      //   reject(error)
+      // })
     }
   })
 }

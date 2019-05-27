@@ -216,6 +216,7 @@ var gray = [{
 ]
 var map;
 var globMark;
+
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('section-start').innerHTML = ' <a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon">menu</a>'
@@ -231,7 +232,7 @@ function mapView() {
       lat: location.latitude,
       lng: location.longitude
     }
-    map = new google.maps.Map(document.getElementById('app-current-panel'), {
+    map = new google.maps.Map(document.getElementById('map'), {
       center: latLng,
       zoom: 18,
       disableDefaultUI: true,
@@ -272,7 +273,7 @@ function mapView() {
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
 
-   
+
       // console.log(map)
       topAppBar.listen('MDCTopAppBar:nav', () => {
         drawer.open = !drawer.open;
@@ -286,47 +287,133 @@ function mapView() {
           profileView();
         }
       });
-      
-      isEmployeeOnLeave().then(function (onLeave) {
-        if (onLeave) return
-        createCheckInData().then(function(result){
-          checkInDialog(result,location)
-        }).catch(console.log) 
-      })
+
+      // isEmployeeOnLeave().then(function (onLeave) {
+      //   if (onLeave) return
+      //   createCheckInData().then(function (result) {
+      //     checkInDialog(result, location)
+      //   }).catch(console.log)
+      // })
     })
 
     google.maps.event.addListener(map, 'idle', function () {
       if (document.querySelector('#recenter-action i')) {
         document.querySelector('#recenter-action i').style.color = 'black';
-      }
-      Promise.all([loadNearByLocations(getMapBounds(map), map),getUniqueOfficeCount()]).then(function(result){
-        const markers = result[0]
-        const offices = result[1]
-        const officesLength = offices.length
-        const venueLength = markers.length
-        if(!venueLength) {
-          if(officesLength > 1) return chooseOffice()
-          return setDefaultOffice();
+      };
 
-        }
-        if(venueLength == 1){
-            return setDefaultOffice();setDefaultVenue();
-        }
-        if(venueLength > 1){
-          return chooseVenue();
-          if(officesLength > 1) 
+      Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
+        const body = {};
+        let selectOffice;
+        let selectVenue;
+        const markers = result[0];
+        const offices = result[1];
+        const markerLength =  markers.length
+        const officesLength = offices.length ;
+
+        const el = document.getElementById('selection-box');
+        const contentBody = el.querySelector('.content-body');
+
+        el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
+        el.classList.remove('hidden');
+        if (!markerLength) {
+
+          if (officesLength > 1) {
+            contentBody.innerHTML = mdcSelect(offices, 'Select Office');
+            selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+
+            return;
+          }
+          body.office = offices[0];
+
+          const officeLi = `
+            <ul class='mdc-list'>
+            <li class="mdc-list-item mdc-ripple-upgraded" aria-selected="true" tabindex="0">
+            <span class="mdc-list-item__graphic material-icons mdc-theme--on-primary" aria-hidden="true">business</span>
+              ${offices[0]}
+             </li>
+            </ul>`
+          contentBody.innerHTML = officeLi;
+         
+          return;
         }
 
-      })      
+
+        if (markerLength == 1) {
+          const venueLi = `
+          <ul class='mdc-list' id='default-venue'>
+           <li class="mdc-list-item  mdc-theme--on-primary" aria-selected="true" tabindex="0" id='unselect-venue'>
+           <span class="mdc-list-item__graphic material-icons mdc-theme--on-primary" aria-hidden="true">location_on</span>
+            ${markers[0]}
+           <span class="mdc-list-item__meta material-icons" aria-hidden="true" id='clear-venue'>clear</span>
+           </li>
+          </ul>
+          `
+          contentBody.innerHTML = venueLi;
+          const listInit = new mdc.list.MDCList(document.getElementById('default-venue'))
+          new mdc.ripple.MDCRipple(listInit.listElements[0]);
+          console.log(listInit);
+          document.getElementById('clear-venue').addEventListener('click', function () {
+            listInit.listElements[0].classList.add('hidden');
+            contentBody.style.minHeight = '56px';
+            if (officesLength > 1) {
+              contentBody.innerHTML = mdcSelect(offices, 'Select Office');
+              selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+            }
+            contentBody.style.minHeight = '';
+          })
+
+
+          return;
+        }
+        if (markerLength > 1) {
+          console.log(markers)
+          contentBody.innerHTML = mdcSelect(markers, 'Where Are You ? ');
+          selectVenue = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+          selectVenue.listen('MDCSelect:change', (evt) => {
+            console.log(evt)
+            const venueLi = `
+            <ul class='mdc-list' id='default-venue'>
+             <li class="mdc-list-item  mdc-theme--on-primary" aria-selected="true" tabindex="0" id='unselect-venue'>
+             <span class="mdc-list-item__graphic material-icons mdc-theme--on-primary" aria-hidden="true">location_on</span>
+              ${evt.detail.value}
+             <span class="mdc-list-item__meta material-icons" aria-hidden="true" id='clear-venue'>clear</span>
+             </li>
+            </ul>`
+            contentBody.innerHTML = venueLi;
+
+            const listInit = new mdc.list.MDCList(document.getElementById('default-venue'))
+            new mdc.ripple.MDCRipple(listInit.listElements[0]);
+            console.log(listInit);
+            document.getElementById('clear-venue').addEventListener('click', function () {
+              listInit.listElements[0].classList.add('hidden');
+              contentBody.style.minHeight = '56px';
+              if (officesLength > 1) {
+                contentBody.innerHTML = mdcSelect(offices, 'Select Office');
+                 selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+              }
+              contentBody.style.minHeight = '';
+            })
+          });
+          return;
+        }
+
+        document.getElementById('submit-check-in').addEventListener('click',function(){
+          console.log(selectOffice)
+          console.log(selectVenue);
+          // getSubscription(office, 'check-in')
+        })
+      })
     });
 
   }).catch(function (error) {
     console.log(error);
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
     document.getElementById('start-loader').classList.add('hidden');
-    document.getElementById('app-current-panel').innerHTML = '<div><p>Failed To Detect You Location</p><button class="mdc-button" onclick=mapView()>Try Again</button></div>'
+    document.getElementById('map').innerHTML = '<div><p>Failed To Detect You Location</p><button class="mdc-button" onclick=mapView()>Try Again</button></div>'
   })
 }
+
+
 function CenterControl(controlDiv, map, latLng) {
 
   // Set CSS for the control border.
@@ -349,63 +436,37 @@ function TakeSnap(el) {
   snap.root_.classList.add('custom-control', 'right', 'mdc-theme--on-secondary')
   el.appendChild(snap.root_);
   snap.root_.addEventListener('click', function () {
+
     console.log('clicked')
-    AndroidInterface.startCamera(); 
+    AndroidInterface.startCamera();
+
     // setFilePath();
   })
 }
 
 
+function mdcSelect(data, label) {
+  const template = `
+<div class="mdc-select mdc-select-custom">
+<input type="hidden" name="enhanced-select"}>
+<i class="mdc-select__dropdown-icon"></i>
+<div class="mdc-select__selected-text"></div>
+<div class="mdc-select__menu mdc-menu mdc-menu-surface mdc-select-custom">
+  <ul class="mdc-list">
 
-function ChooseOffice2(el){
-  const frag = document.createDocumentFragment();
+    ${data.map(function(name){
+      return `<li class="mdc-list-item" data-value="${name}">
+        ${name}
+    </li>`
+    }).join("")}
+  </ul>
+</div>
+<span class="mdc-floating-label">${label}</span>
+<div class="mdc-line-ripple"></div>
+</div>`
+  return template;
 
-  const div = createElement('div',{className:'mdc-select',id:'select-2'});
-  div.style.marginTop = '56px';
-  div.style.width = '10rem';
-  div.style.backgroundColor = 'white';
-  const input = createElement('input',{className:'',type:'hidden',name:'enhanced-select'})
-  div.appendChild(input);
 
-  
-  const icon = createElement('i',{className:'mdc-select__dropdown-icon'});
-  div.appendChild(icon)
-  const text= createElement('div',{className:'mdc-select__selected-text'})
-  div.appendChild(text);
-
-  const select = createElement('div',{className:'mdc-select__menu mdc-menu mdc-menu-surface demo-width-class'})
-  select.style.width = '10rem';
-  const ul = createElement('ul',{className:'mdc-list'})
-  let li;
-  li = createElement('li',{className:'mdc-list-item mdc-list-item--selected'})
-  li.dataset.value = ''
-  li.dataset.ariaSelected = 'true';
-  ul.appendChild(li)
-
-  getUniqueOfficeCount().then(function(offices){
-    offices.forEach(function(office,idx){
-      li = createElement('li',{className:'mdc-list-item',textContent:office})
-      li.dataset.value = office;
-      frag.appendChild(li)
-    })
-    select.appendChild(frag);
-    const label = createElement('label',{className:'mdc-floating-label',textContent:'Choose Office'})
-    const ripple = createElement('div',{className:'mdc-line-ripple'})
-    div.appendChild(select);
-    div.appendChild(label)
-    div.appendChild(ripple);
-    el.appendChild(div);
-  
-    const selectInit = new mdc.select.MDCSelect(div);
-    selectInit.listen('MDCSelect:change', () => {
-      alert(`Selected option at index ${select.selectedIndex} with value "${select.value}"`);
-    });
-    console.log(selectInit)
-
-   
-  
-  })
- 
 }
 
 
@@ -423,12 +484,12 @@ function setFilePath(base64) {
   })
 
   textarea.input_.classList.add('mdc-theme--primary', 'snap-text');
-  
+
   const submit = new Fab('send').getButton();
   submit.root_.classList.add('app-fab--absolute');
   submit.root_.style.zIndex = '9'
   submit.root_.setAttribute('autofocus', 'true');
- 
+
   form.appendChild(textarea.root_);
   form.appendChild(submit.root_);
 
@@ -439,7 +500,7 @@ function setFilePath(base64) {
   dialog.listen('MDCDialog:opened', function (evt) {
     const content = dialog.content_
 
-    const header = createHeader(['keyboard_backspace'], [],'snap-header');
+    const header = createHeader(['keyboard_backspace'], [], 'snap-header');
     header.foundation_.adapter_.addClass('transparent');
     header.listen('MDCTopAppBar:nav', () => {
       dialog.close();
@@ -449,29 +510,29 @@ function setFilePath(base64) {
     textarea.input_.addEventListener('keyup', function () {
       this.style.paddingTop = '25px';
       this.style.height = '5px'
-      this.style.height = (this.scrollHeight)+"px";
-      if(this.scrollHeight <= 300) {
-        submit.root_.style.bottom = (this.scrollHeight -20)+"px";
-      } 
+      this.style.height = (this.scrollHeight) + "px";
+      if (this.scrollHeight <= 300) {
+        submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
+      }
     });
-    submit.root_.addEventListener('click',function(){
+    submit.root_.addEventListener('click', function () {
       const textValue = textarea.value;
       const image = url;
 
-        createCheckInData().then(function(result){
-          console.log(result)
-          manageLocation().then(function(location){
-            result.data[0].attachment.Comment.value = textValue;
-            result.data[0].attachment.Photo.value = image
-            checkInDialog(result,location)
-            dialog.close();
-          })
-        }).catch(console.log) 
+      createCheckInData().then(function (result) {
+        console.log(result)
+        manageLocation().then(function (location) {
+          result.data[0].attachment.Comment.value = textValue;
+          result.data[0].attachment.Photo.value = image
+          checkInDialog(result, location)
+          dialog.close();
+        })
+      }).catch(console.log)
     })
 
     const image = new Image();
     image.onload = function () {
-    
+
       const orientation = getOrientation(image);
       content.style.backgroundImage = `url(${url})`
       content.style.padding = '0px'
@@ -532,6 +593,7 @@ function loadNearByLocations(range, map) {
     const result = []
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     let lastOpen;
+    let lastCursor;
     console.log(range)
     req.onsuccess = function () {
       const db = req.result;
@@ -543,11 +605,17 @@ function loadNearByLocations(range, map) {
       index.openCursor(idbRange).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
+
         if (!cursor.value.location || !cursor.value.latitude || !cursor.value.longitude) {
           cursor.continue();
           return;
         };
-
+        if (lastCursor) {
+          if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude) {
+           cursor.continue();
+           return;
+          }
+        }
 
         var marker = new google.maps.Marker({
           position: {
@@ -562,7 +630,7 @@ function loadNearByLocations(range, map) {
             scaledSize: new google.maps.Size(25, 25)
           },
           id: cursor.value.activityId,
-          value:cursor.value.location
+          value: JSON.stringify(cursor.value)
         });
         // console.log(cursor.value.latitude, cursor.value.longitude)
         if ((map.getBounds().contains(marker.getPosition()))) {
@@ -580,10 +648,15 @@ function loadNearByLocations(range, map) {
             };
           })(marker, content, infowindow));
           marker.setMap(map);
-          result.push(marker)
+          result.push(cursor.value.location)
         }
-        cursor.continue();
 
+        lastCursor = {
+          lat: cursor.value.latitude,
+          lng: cursor.value.longitude
+        };
+       
+        cursor.continue();
       }
       tx.oncomplete = function () {
 

@@ -4,6 +4,7 @@ let snackBar;
 let ui;
 let drawer;
 let topAppBar;
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -260,7 +261,8 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
-
+        console.log(document.cookie);
+        
         // resetScroll();
         mapView();
         requestCreator('now', {
