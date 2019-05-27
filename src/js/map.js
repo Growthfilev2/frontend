@@ -315,6 +315,14 @@ function mapView() {
 
         el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
         el.classList.remove('hidden');
+        document.getElementById('submit-check-in').addEventListener('click',function(){
+          getSubscription(office, 'check-in').then(function(){
+            
+          })
+
+          console.log(selectOffice)
+          console.log(selectVenue);
+        })
         if (!markerLength) {
 
           if (officesLength > 1) {
@@ -333,7 +341,7 @@ function mapView() {
              </li>
             </ul>`
           contentBody.innerHTML = officeLi;
-         
+          
           return;
         }
 
@@ -361,10 +369,9 @@ function mapView() {
             }
             contentBody.style.minHeight = '';
           })
-
-
           return;
         }
+
         if (markerLength > 1) {
           console.log(markers)
           contentBody.innerHTML = mdcSelect(markers, 'Where Are You ? ');
@@ -397,11 +404,7 @@ function mapView() {
           return;
         }
 
-        document.getElementById('submit-check-in').addEventListener('click',function(){
-          console.log(selectOffice)
-          console.log(selectVenue);
-          // getSubscription(office, 'check-in')
-        })
+       
       })
     });
 

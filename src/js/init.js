@@ -584,8 +584,8 @@ function getUniqueOfficeCount() {
     let offices = []
     req.onsuccess = function () {
       const db = req.result
-      const tx = db.transaction(['activity']);
-      const activityStore = tx.objectStore('activity').index('office');
+      const tx = db.transaction(['children']);
+      const activityStore = tx.objectStore('children').index('office');
       activityStore.openCursor(null, 'nextunique').onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
