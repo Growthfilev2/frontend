@@ -1,3 +1,9 @@
+html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
+  height: 100%;
+}
+
+
+
 .demo-menu {
   color: black !important;
 }
@@ -48,10 +54,10 @@ body {
 }
 
 .selection-box-auto {
-  position: absolute;
+  /* position: absolute;
   bottom: 0;
-  width: 100%;
-  min-height: 150px;
+  width: 100%; */
+  /* min-height: 30%; */
 }
 .selection-box-auto button {
   width: 100%;
@@ -64,7 +70,9 @@ body {
 .selection-box-auto .content-body {
   padding-top:10px;
   padding-bottom:10px;
-
+}
+.selection-box-auto .content-body .mdc-select {
+  width: 100%;
 }
 .selection-box-auto ul li {
   padding-right: 0px;
@@ -159,9 +167,9 @@ body {
   grid-gap: 0
 }
 
-#app-current-panel {
- height: 100vh;
-}
+ /* #app-current-panel {
+ height: 100vh; 
+} */
 
 .custom-control i {
   font-size: 32px;
@@ -494,7 +502,7 @@ body {
 }
 
 #map {
-  height: 80%;
+  height: 68%;
 }
 
 .calendar-activity--list-item {

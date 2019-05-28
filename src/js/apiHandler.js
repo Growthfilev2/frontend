@@ -540,59 +540,64 @@ function instantUpdateDB(data, type, user) {
 
 
 function updateMap(activity, param) {
+  return new Promise(function(resolve,reject){
 
-  const req = indexedDB.open(param.user.uid);
-  req.onsuccess = function () {
-    const db = req.result;
-    const mapTx = db.transaction(['map'], 'readwrite')
-    const mapObjectStore = mapTx.objectStore('map')
-    const mapActivityIdIndex = mapObjectStore.index('activityId')
-    mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (cursor) {
-        let deleteRecordReq = cursor.delete()
-        cursor.continue()
-        deleteRecordReq.onerror = function () {
-          instant({
-            message: deleteRecordReq.error.message
-          })
+    const req = indexedDB.open(param.user.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const mapTx = db.transaction(['map'], 'readwrite')
+      const mapObjectStore = mapTx.objectStore('map')
+      const mapActivityIdIndex = mapObjectStore.index('activityId')
+      mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+        const cursor = event.target.result
+        if (cursor) {
+          let deleteRecordReq = cursor.delete()
+          cursor.continue()
+          deleteRecordReq.onerror = function () {
+            instant({
+              message: deleteRecordReq.error.message
+            })
+          }
         }
       }
-    }
-
-
-    mapTx.oncomplete = function () {
-      const mapTxAdd = db.transaction(['map'], 'readwrite')
-      const mapObjectStore = mapTxAdd.objectStore('map')
-      if (activity.template !== 'check-in') {
-
-        activity.venue.forEach(function (newVenue) {
-          mapObjectStore.add({
-            activityId: activity.activityId,
-            latitude: newVenue.geopoint['_latitude'],
-            longitude: newVenue.geopoint['_longitude'],
-            location: newVenue.location,
-            template: activity.template,
-            address: newVenue.address,
-            venueDescriptor: newVenue.venueDescriptor,
-            status: activity.status,
-            office: activity.office,
-            hidden: activity.hidden
+      
+      
+      mapTx.oncomplete = function () {
+        const mapTxAdd = db.transaction(['map'], 'readwrite')
+        const mapObjectStore = mapTxAdd.objectStore('map')
+        if (activity.template !== 'check-in') {
+          
+          activity.venue.forEach(function (newVenue) {
+            mapObjectStore.add({
+              activityId: activity.activityId,
+              latitude: newVenue.geopoint['_latitude'],
+              longitude: newVenue.geopoint['_longitude'],
+              location: newVenue.location,
+              template: activity.template,
+              address: newVenue.address,
+              venueDescriptor: newVenue.venueDescriptor,
+              status: activity.status,
+              office: activity.office,
+              hidden: activity.hidden
+            })
           })
-        })
+          console.log("done")
+          debugger;
+          resolve('done')
+        }
+        mapTxAdd.onerror = function () {
+          instant(JSON.stringify({
+            message: `${mapTxAdd.error.message}`
+          }), param.user)
+        }
       }
-      mapTxAdd.onerror = function () {
+      mapTx.onerror = function () {
         instant(JSON.stringify({
-          message: `${mapTxAdd.error.message}`
+          message: `${mapTx.error.message}`
         }), param.user)
       }
     }
-    mapTx.onerror = function () {
-      instant(JSON.stringify({
-        message: `${mapTx.error.message}`
-      }), param.user)
-    }
-  }
+  })
 }
 
 function updateCalendar(activity, param) {
@@ -914,10 +919,10 @@ function successResponse(read, param) {
       let activity = read.activities[index];
 
       activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-      activityObjectStore.put(activity)
+      activityObjectStore.put(activity);
+
       updateMap(activity, param);
       updateCalendar(activity, param);
-
       putAttachment(activity, param);
 
       if (activity.hidden === 0) {
@@ -936,6 +941,7 @@ function successResponse(read, param) {
           }
         })
       }
+
     }
 
  

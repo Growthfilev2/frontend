@@ -197,14 +197,12 @@ function firebaseUiConfig(value) {
 
 
 function userSignedOut() {
-  const login = document.createElement('div')
-  login.id = 'login-container'
-  document.body.appendChild(login)
+ 
   if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
   }
 
-  ui.start('#login-container', firebaseUiConfig());
+  ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
 
