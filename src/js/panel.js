@@ -370,16 +370,16 @@ function activityListUI(data, secondLine) {
     conversation(this.dataset.id, true);
   }
   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-  const dataObject = document.createElement('object');
+  // const dataObject = document.createElement('object');
 
-  dataObject.data = data.creator.photo || './img/empty-user.jpg';
-  dataObject.type = 'image/jpeg';
-  dataObject.className = 'mdc-list-item__graphic material-icons'
+  // dataObject.data = data.creator.photo || './img/empty-user.jpg';
+  // dataObject.type = 'image/jpeg';
+  // dataObject.className = 'mdc-list-item__graphic material-icons'
 
-  var creator = document.createElement("img");
-  creator.src = './img/empty-user.jpg';
-  creator.className = 'empty-user-list'
-  dataObject.appendChild(creator);
+  // var creator = document.createElement("img");
+  // creator.src = './img/empty-user.jpg';
+  // creator.className = 'empty-user-list'
+  // dataObject.appendChild(creator);
 
   const leftTextContainer = document.createElement('span')
   leftTextContainer.classList.add('mdc-list-item__text')
@@ -403,7 +403,7 @@ function activityListUI(data, secondLine) {
   metaTextContainer.appendChild(timeCustomText);
   metaTextContainer.appendChild(generateIconByCondition(data, li));
 
-  li.appendChild(dataObject);
+  // li.appendChild(dataObject);
   li.appendChild(leftTextContainer);
   li.appendChild(metaTextContainer);
   return li
