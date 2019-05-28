@@ -539,60 +539,48 @@ function instantUpdateDB(data, type, user) {
 }
 
 
-function updateMap(activity, param) {
+function updateMap(activity, tx) {
 
-  const req = indexedDB.open(param.user.uid);
-  req.onsuccess = function () {
-    const db = req.result;
-    const mapTx = db.transaction(['map'], 'readwrite')
-    const mapObjectStore = mapTx.objectStore('map')
-    const mapActivityIdIndex = mapObjectStore.index('activityId')
-    mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
-      const cursor = event.target.result
-      if (cursor) {
-        let deleteRecordReq = cursor.delete()
-        cursor.continue()
-        deleteRecordReq.onerror = function () {
-          instant({
-            message: deleteRecordReq.error.message
-          })
-        }
-      }
-    }
-
-
-    mapTx.oncomplete = function () {
-      const mapTxAdd = db.transaction(['map'], 'readwrite')
-      const mapObjectStore = mapTxAdd.objectStore('map')
-      if (activity.template !== 'check-in') {
-
-        activity.venue.forEach(function (newVenue) {
-          mapObjectStore.add({
-            activityId: activity.activityId,
-            latitude: newVenue.geopoint['_latitude'],
-            longitude: newVenue.geopoint['_longitude'],
-            location: newVenue.location,
-            template: activity.template,
-            address: newVenue.address,
-            venueDescriptor: newVenue.venueDescriptor,
-            status: activity.status,
-            office: activity.office,
-            hidden: activity.hidden
-          })
+  if (activity.template === 'check-in') return;
+  const mapObjectStore = tx.objectStore('map')
+  const mapActivityIdIndex = mapObjectStore.index('activityId')
+  mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+    const cursor = event.target.result
+    if (!cursor) {
+      console.log("start adding");
+      activity.venue.forEach(function (newVenue) {
+        console.log("adding " + activity.activityId, "location " + newVenue.location)
+        mapObjectStore.add({
+          activityId: activity.activityId,
+          latitude: newVenue.geopoint['_latitude'],
+          longitude: newVenue.geopoint['_longitude'],
+          location: newVenue.location,
+          template: activity.template,
+          address: newVenue.address,
+          venueDescriptor: newVenue.venueDescriptor,
+          status: activity.status,
+          office: activity.office,
+          hidden: activity.hidden
         })
-      }
-      mapTxAdd.onerror = function () {
-        instant(JSON.stringify({
-          message: `${mapTxAdd.error.message}`
-        }), param.user)
-      }
+      })
+      console.log("finished adding to map")
+
+      return;
     }
-    mapTx.onerror = function () {
-      instant(JSON.stringify({
-        message: `${mapTx.error.message}`
-      }), param.user)
+
+    let deleteRecordReq = cursor.delete()
+    deleteRecordReq.onsuccess = function () {
+      console.log("deleted " + cursor.value.activityId)
+      cursor.continue()
+    }
+    deleteRecordReq.onerror = function () {
+      instant({
+        message: deleteRecordReq.error.message
+      })
     }
   }
+
+  
 }
 
 function updateCalendar(activity, param) {
@@ -909,13 +897,15 @@ function successResponse(read, param) {
 
     removeActivityFromDB(db, removeActivitiesForUser, param)
     removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-
+    const mapTx = db.transaction(['map'], 'readwrite');
+    
     for (let index = read.activities.length; index--;) {
       let activity = read.activities[index];
 
       activity.canEdit ? activity.editable == 1 : activity.editable == 0;
       activityObjectStore.put(activity)
-      updateMap(activity, param);
+      updateMap(activity, mapTx);
+
       updateCalendar(activity, param);
 
       putAttachment(activity, param);
@@ -937,8 +927,11 @@ function successResponse(read, param) {
         })
       }
     }
+    mapTx.oncomplete = function () {
+      console.log("map completed");
 
- 
+    }
+
     updateRoot(param, read).then(function () {
       updateSubscription(read.templates, param).then(function () {
         requestHandlerResponse('initFirstLoad', 200, {

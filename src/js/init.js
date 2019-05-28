@@ -414,7 +414,7 @@ function createObjectStores(db, uid) {
     calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
-    autoIncrement: true
+    autoIncrement: true,
   })
 
   map.createIndex('activityId', 'activityId')
