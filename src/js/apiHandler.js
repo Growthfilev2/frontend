@@ -663,6 +663,9 @@ function putAttachment(activity, param) {
       office: activity.office,
       attachment: activity.attachment,
     }
+    if(activity.template === 'employee') {
+      commonSet.employee = activity.attachment['Employee Contact'].value
+    }
     store.put(commonSet)
 
     tx.onerror = function () {

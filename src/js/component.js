@@ -178,41 +178,41 @@ function tabBarBase() {
 
 }
 
-function addTabs(headerData) {
-    const button = createElement('button', {
-        className: 'mdc-tab'
-    })
-    button.setAttribute('role', 'tab');
-    const indicator = createElement('span', {
-        className: 'mdc-tab-indicator'
-    })
-    indicator.appendChild(createElement('span', {
-        className: 'mdc-tab-indicator__content mdc-tab-indicator__content--underline'
-    }))
-    // if (!headerData.index) {
-    //     button.setAttribute("aria-selected", "true")
-    //     button.setAttribute("tabindex", "0")
-    //     button.classList.add('mdc-tab--active')
-    //     indicator.classList.add('mdc-tab-indicator--active')
-    // }
-    const buttonContent = createElement('div', {
-        className: 'mdc-tab__content'
-    })
-    const label = createElement('span', {
-        className: 'mdc-tab__text-label',
-        textContent: headerData.name
-    })
-    buttonContent.appendChild(label)
+// function addTabs(headerData) {
+//     const button = createElement('button', {
+//         className: 'mdc-tab'
+//     })
+//     button.setAttribute('role', 'tab');
+//     const indicator = createElement('span', {
+//         className: 'mdc-tab-indicator'
+//     })
+//     indicator.appendChild(createElement('span', {
+//         className: 'mdc-tab-indicator__content mdc-tab-indicator__content--underline'
+//     }))
+//     // if (!headerData.index) {
+//     //     button.setAttribute("aria-selected", "true")
+//     //     button.setAttribute("tabindex", "0")
+//     //     button.classList.add('mdc-tab--active')
+//     //     indicator.classList.add('mdc-tab-indicator--active')
+//     // }
+//     const buttonContent = createElement('div', {
+//         className: 'mdc-tab__content'
+//     })
+//     const label = createElement('span', {
+//         className: 'mdc-tab__text-label',
+//         textContent: headerData.name
+//     })
+//     buttonContent.appendChild(label)
 
-    const ripple = createElement('span', {
-        className: 'mdc-tab__ripple'
-    })
+//     const ripple = createElement('span', {
+//         className: 'mdc-tab__ripple'
+//     })
 
-    button.appendChild(buttonContent)
-    button.appendChild(indicator)
-    button.appendChild(ripple);
-    return button;
-}
+//     button.appendChild(buttonContent)
+//     button.appendChild(indicator)
+//     button.appendChild(ripple);
+//     return button;
+// }
 
 function InputField() {}
 InputField.prototype.base = function () {

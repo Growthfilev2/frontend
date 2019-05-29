@@ -339,7 +339,6 @@ function getEmployeeDetails(office) {
       const store = tx.objectStore('children');
       let index;
       let range;
-      const results = [];
       if(office) {
         index = store.index('officeTemplate')
         range = IDBKeyRange.only([office,'employee'])
@@ -349,32 +348,24 @@ function getEmployeeDetails(office) {
         index = store.index('templateStatus')
         range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
       }
+      const getEmployee = index.getAll(range);
 
-      index.openCursor(range).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-      
-      
-   
-        results.push(cursor.value)
-        
-      
-        cursor.continue();
+      getEmployee.onsuccess = function(event){
+        return resolve(event.target.result)
       }
-      tx.oncomplete = function () {
-        resolve(results);
+      getEmployee.onerror = function(){
+        return reject({message:getEmployee.error})
       }
-      tx.onerror = function () {
-        reject({
-          message: `${tx.error.message} from getEmployeeDetails`
-        })
-      }
+
+      // index.openCursor(range).onsuccess = function (event) {
+      //   const cursor = event.target.result;
+      //   if (!cursor) return;
+      //   results.push(cursor.value)
+      //   cursor.continue();
+      // }
+     
     }
-    req.onerror = function () {
-      reject({
-        message: `${req.error.message} from getEmployeeDetails`
-      })
-    }
+  
   })
 }
 
@@ -495,7 +486,9 @@ function createObjectStores(db, uid) {
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
   children.createIndex('templateStatus', ['template', 'status']);
-  children.createIndex('officeTemplate',['office','template'])
+  children.createIndex('officeTemplate',['office','template']);
+  children.createIndex('userDetails','employee');
+
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
@@ -576,6 +569,7 @@ function runAppChecks() {
   }, true);
 }
 
+
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -583,11 +577,10 @@ function getUniqueOfficeCount() {
     req.onsuccess = function () {
       const db = req.result
       const tx = db.transaction(['children']);
-      const childrenStore = tx.objectStore('children').index('templateStatus');
-      childrenStore.openCursor(IDBKeyRange.bound(['office','CONFIRMED'],['office','PENDING'])).onsuccess = function (event) {
+      const childrenStore = tx.objectStore('children').index('userDetails');
+      childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
-
         offices.push(cursor.value.office)
         cursor.continue()
       }
