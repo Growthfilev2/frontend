@@ -254,7 +254,7 @@ function startApp(start) {
           
             const childrenStore = tx.objectStore('children')
             childrenStore.createIndex('officeTemplate', ['office', 'template']);
-        
+            childrenStore.createIndex('userDetails', 'employee');
 
             childrenStore.index('template').openCursor('employee').onsuccess = function(event){
                 const cursor = event.target.result;
@@ -263,7 +263,7 @@ function startApp(start) {
                   return;
                 }
                 cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-                cursor.put(cursor.value)
+                cursor.update(cursor.value)
                 cursor.continue();
             };
         
