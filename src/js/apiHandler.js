@@ -604,14 +604,7 @@ function updateCalendar(activity, tx) {
           end: schedule.endTime,
           status: activity.status,
           office: activity.office
-           }
-        
-      
-         if(activity.template === 'leave'){
-            if (moment().isBetween(startTime, endTime, null, '[]') && activity.status !== 'CANCELLED') {
-                record.onleave = 1
-          } 
-        }
+          }
         calendarObjectStore.add(record)
       });
       return;

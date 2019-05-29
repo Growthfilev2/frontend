@@ -237,6 +237,7 @@ function mapView() {
       zoom: 18,
       disableDefaultUI: true,
       styles: gray,
+      draggable: !("ontouchend" in document)
       // mapTypeId: google.maps.MapTypeId.ROADMAP
 
     })
@@ -268,7 +269,7 @@ function mapView() {
 
       var snapControlDiv = document.createElement('div');
       var snapControl = new TakeSnap(snapControlDiv);
-      snapControlDiv.index = 2;
+      snapControlDiv.index = 1;
 
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
@@ -288,6 +289,13 @@ function mapView() {
         }
       });
 
+
+      
+
+
+
+
+
       // isEmployeeOnLeave().then(function (onLeave) {
       //   if (onLeave) return
       //   createCheckInData().then(function (result) {
@@ -298,7 +306,7 @@ function mapView() {
 
     google.maps.event.addListener(map, 'idle', function () {
       if (document.querySelector('#recenter-action i')) {
-        document.querySelector('#recenter-action i').style.color = 'black';
+        // document.querySelector('#recenter-action i').style.color = 'black';
       };
 
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
@@ -422,14 +430,14 @@ function CenterControl(controlDiv, map, latLng) {
 
   // Set CSS for the control border.
 
-  const recenter = new Fab('my_location').getButton();
+  const recenter = new Fab('chat').getButton();
   recenter.root_.id = 'recenter-action'
-  recenter.root_.classList.add('custom-control', 'right', 'mdc-theme--background', 'mdc-theme--on-primary');
+  recenter.root_.classList.add('custom-control', 'right');
   console.log(recenter)
   controlDiv.appendChild(recenter.root_);
   recenter.root_.addEventListener('click', function () {
-    recenter.root_.querySelector('i').style.color = '#0399f4'
-    focusMarker(map, latLng, 18);
+    // recenter.root_.querySelector('i').style.color = '#0399f4'
+    // focusMarker(map, latLng, 18);
   });
 
 }

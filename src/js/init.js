@@ -254,8 +254,7 @@ function startApp(start) {
           
             const childrenStore = tx.objectStore('children')
             childrenStore.createIndex('officeTemplate', ['office', 'template']);
-            const calendarStore = tx.objectStore('calendar')
-            calendarStore.createIndex('leave');
+        
 
             childrenStore.index('template').openCursor('employee').onsuccess = function(event){
                 const cursor = event.target.result;
@@ -267,18 +266,7 @@ function startApp(start) {
                 cursor.put(cursor.value)
                 cursor.continue();
             };
-            calendarStore.openCursor().onsuccess = function(event){
-              const cursor = event.target.result;
-              if(!cursor) {
-                console.log('finished modifing calendar')
-                return;
-              }
-              
-              if (moment(moment().format('DD-MM-YYYY')).isBetween(moment(cursor.value.startTime), moment(cursor.value.endTime), null, '[]')) {
-                record.onleave = 1
-              } 
-              cursor.continue()
-            }
+        
             tx.oncomplete = function(){
 
               console.log("finsihed backlog")
