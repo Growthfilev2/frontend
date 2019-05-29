@@ -226,41 +226,41 @@ function tabBarBase() {
 
 }
 
-function addTabs(headerData) {
-    const button = createElement('button', {
-        className: 'mdc-tab'
-    })
-    button.setAttribute('role', 'tab');
-    const indicator = createElement('span', {
-        className: 'mdc-tab-indicator'
-    })
-    indicator.appendChild(createElement('span', {
-        className: 'mdc-tab-indicator__content mdc-tab-indicator__content--underline'
-    }))
-    if (!headerData.index) {
-        button.setAttribute("aria-selected", "true")
-        button.setAttribute("tabindex", "0")
-        button.classList.add('mdc-tab--active')
-        indicator.classList.add('mdc-tab-indicator--active')
-    }
-    const buttonContent = createElement('div', {
-        className: 'mdc-tab__content'
-    })
-    const label = createElement('span', {
-        className: 'mdc-tab__text-label',
-        textContent: headerData.name
-    })
-    buttonContent.appendChild(label)
+// function addTabs(headerData) {
+//     const button = createElement('button', {
+//         className: 'mdc-tab'
+//     })
+//     button.setAttribute('role', 'tab');
+//     const indicator = createElement('span', {
+//         className: 'mdc-tab-indicator'
+//     })
+//     indicator.appendChild(createElement('span', {
+//         className: 'mdc-tab-indicator__content mdc-tab-indicator__content--underline'
+//     }))
+//     // if (!headerData.index) {
+//     //     button.setAttribute("aria-selected", "true")
+//     //     button.setAttribute("tabindex", "0")
+//     //     button.classList.add('mdc-tab--active')
+//     //     indicator.classList.add('mdc-tab-indicator--active')
+//     // }
+//     const buttonContent = createElement('div', {
+//         className: 'mdc-tab__content'
+//     })
+//     const label = createElement('span', {
+//         className: 'mdc-tab__text-label',
+//         textContent: headerData.name
+//     })
+//     buttonContent.appendChild(label)
 
-    const ripple = createElement('span', {
-        className: 'mdc-tab__ripple'
-    })
+//     const ripple = createElement('span', {
+//         className: 'mdc-tab__ripple'
+//     })
 
-    button.appendChild(buttonContent)
-    button.appendChild(indicator)
-    button.appendChild(ripple);
-    return button;
-}
+//     button.appendChild(buttonContent)
+//     button.appendChild(indicator)
+//     button.appendChild(ripple);
+//     return button;
+// }
 
 function InputField() {}
 InputField.prototype.base = function () {
@@ -685,19 +685,26 @@ function createCheckBox(attr) {
     return checkbox
 }
 
-function chipSet(text, canEdit) {
-    const div = createElement('div', {
-        className: 'mdc-chip-set'
-    });
-
+function chipSet(attr, canEdit) {
     const chip = createElement('div', {
         className: 'mdc-chip mdc-chip--selected'
     })
-
+    
     const textEl = createElement("div", {
         className: 'mdc-chip__text chip-text',
-        textContent: text
-    })
+        textContent: attr.text
+    });
+    if(attr.img) {
+        const object = document.createElement('object');
+        object.className = 'mdc-chip__icon mdc-chip__icon--leading';
+        object.type = 'image/jpeg';
+        object.data = attr.img;
+        const icon = document.createElement('img');
+        icon.src = './img/empty-user.jpg';
+        icon.className = ''
+        object.appendChild(icon);
+        chip.appendChild(object)
+    }
     chip.appendChild(textEl)
     if (canEdit) {
         const icon = createElement('i', {
@@ -708,6 +715,6 @@ function chipSet(text, canEdit) {
         icon.setAttribute('role', 'button')
         chip.appendChild(icon)
     }
-    div.appendChild(chip)
-    return div;
+    
+    return chip;
 }

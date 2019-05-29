@@ -592,7 +592,9 @@ function updateCalendar(activity, tx) {
     const cursor = event.target.result
     if (!cursor) {
       activity.schedule.forEach(function (schedule) {
-        calendarObjectStore.add({
+        const startTime = schedule.startTime;
+        const endTime = schedule.endTime;
+        const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
           timestamp: activity.timestamp,
@@ -602,9 +604,16 @@ function updateCalendar(activity, tx) {
           end: schedule.endTime,
           status: activity.status,
           office: activity.office
-        })
-        console.log("add calendar")
-      })
+           }
+        
+      
+         if(activity.template === 'leave'){
+            if (moment().isBetween(startTime, endTime, null, '[]') && activity.status !== 'CANCELLED') {
+                record.onleave = 1
+          } 
+        }
+        calendarObjectStore.add(record)
+      });
       return;
     }
 
@@ -627,15 +636,20 @@ function updateCalendar(activity, tx) {
 
 function putAttachment(activity, tx) {
 
-  const store = tx.objectStore('children')
-
-  store.put({
+  const store = tx.objectStore('children');
+  const commonSet = {
     activityId: activity.activityId,
     status: activity.status,
     template: activity.template,
     office: activity.office,
     attachment: activity.attachment,
-  })
+  }
+
+  if(activity.template === 'employee') {
+    commonSet.employee = activity.attachment['Employee Contact'].value
+  }
+
+  store.put(commonSet)
 
 }
 

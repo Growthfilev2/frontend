@@ -242,14 +242,16 @@ function startApp(start) {
         if (!evt.oldVersion) {
           createObjectStores(db, auth.uid)
         } else {
-
           if (evt.oldVersion < 4) {
+
             const subscriptionStore = req.transaction.objectStore('subscriptions')
             subscriptionStore.createIndex('status', 'status');
           }
           if (evt.oldVersion < 5) {
             const mapStore = req.transaction.objectStore('map');
             mapStore.createIndex('bounds', ['latitude', 'longitude'])
+            const childrenStore = req.transaction.objectStore('children')
+            childrenStore.createIndex('officeTemplate', ['office', 'template'])
           }
         }
       }
@@ -281,8 +283,36 @@ function startApp(start) {
   })
 }
 
+function queryChildren(template) {
+  return new Promise(function (resolve, reject) {
+    const auth = firebase.auth().currentUser
+    const req = indexedDB.open(auth.uid);
+    const result = [];
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['children']);
+      const store = tx.objectStore('children');
+      const index = store.index('template')
+      index.openCursor(template).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        result.push(cursor.value)
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        return resolve(result)
+      }
+      tx.onerror = function () {
+        return reject({
+          message: tx.error.message,
+          body: ''
+        })
+      }
+    }
+  })
+}
 
-function getEmployeeDetails() {
+function getEmployeeDetails(self, office) {
   return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid)
@@ -290,83 +320,91 @@ function getEmployeeDetails() {
       const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
-      let details;
-      const range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
+      let index;
+      let range;
 
-      store.index('templateStatus').openCursor(range).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.attachment['Employee Contact'].value !== auth.phoneNumber) {
-          cursor.continue();
-          return;
-        }
-
-        details = cursor.value
-        cursor.continue();
+      if (office) {
+        index = store.index('officeTemplate')
+        range = IDBKeyRange.only([office, 'employee'])
+      } else {
+        index = store.index('templateStatus')
+        range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
       }
+
+
+      const getEmployee = index.getAll(range);
+
+      getEmployee.onsuccess = function (event) {
+        return resolve(event.target.result)
+      }
+      getEmployee.onerror = function () {
+        return reject({
+          message: getEmployee.error
+        })
+      }
+
+      // index.openCursor(range).onsuccess = function (event) {
+      //   const cursor = event.target.result;
+      //   if (!cursor) return;
+      //   results.push(cursor.value)
+      //   cursor.continue();
+      // }
+
+    }
+
+  })
+}
+
+function isEmployeeOnLeave() {
+  TODO // without getting office names
+  return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      const result = []
+      const db = req.result;
+      const tx = db.transaction(['calendar']);
+      const store = tx.objectStore('calendar');
+      const index = store.index('leave');
+      
+
+      getUniqueOfficeCount().then(function(offices) {
+          offices.forEach(function(office){
+            result[office] = false;
+          })
+
+          index.openCursor(1).onsuccess = function (event) {
+            const cursor = event.target.result;
+            if (!cursor) return;
+            
+            if (moment().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+              result[cursor.value.office]  = true
+              cursor.continue()
+              return;
+            };
+
+            cursor.value.leave = 0
+            const updateReq = cursor.update(cursor.value)
+            updateReq.onsuccess = function(){
+              result[cursor.value.office]  = false
+            }
+            cursor.continue()
+          }
+      })
+
       tx.oncomplete = function () {
-        resolve(details);
+        resolve(result)
       }
       tx.onerror = function () {
         reject({
-          message: `${tx.error.message} from getEmployeeDetails`
+          message: `${tx.error.message} from isEmployeeOnLeave`
         })
       }
     }
     req.onerror = function () {
       reject({
-        message: `${req.error.message} from getEmployeeDetails`
-      })
+        message: `${req.error.message} from isEmployeeOnLeave`
+      });
     }
-  })
-}
-
-function isEmployeeOnLeave() {
-  return new Promise(function (resolve, reject) {
-
-    getEmployeeDetails().then(function (empDetails) {
-
-      if (!empDetails) {
-        return resolve(false);
-      }
-
-      empDetails.onLeave = false
-      const req = indexedDB.open(firebase.auth().currentUser.uid);
-      req.onsuccess = function () {
-        const db = req.result;
-        const tx = db.transaction(['calendar']);
-        const store = tx.objectStore('calendar');
-        const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
-        let onLeave = false;
-        store.index('onLeave').openCursor(range).onsuccess = function (event) {
-
-          const cursor = event.target.result;
-          if (!cursor) return;
-
-          if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-            onLeave = true
-            return;
-          }
-          cursor.continue()
-        }
-        tx.oncomplete = function () {
-          resolve(onLeave)
-        }
-        tx.onerror = function () {
-          reject({
-            message: `${tx.error.message} from isEmployeeOnLeave`
-          })
-        }
-      }
-      req.onerror = function () {
-        reject({
-          message: `${req.error.message} from isEmployeeOnLeave`
-        });
-      }
-
-    }).catch(function (error) {
-      reject(error)
-    })
   })
 }
 
@@ -439,6 +477,8 @@ function createObjectStores(db, uid) {
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
   children.createIndex('templateStatus', ['template', 'status']);
+  children.createIndex('officeTemplate', ['office', 'template']);
+  children.createIndex('userDetails', 'employee');
 
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
@@ -576,6 +616,7 @@ function setVenueForCheckIn(venueData, value) {
   return [value]
 }
 
+
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid)
@@ -583,11 +624,10 @@ function getUniqueOfficeCount() {
     req.onsuccess = function () {
       const db = req.result
       const tx = db.transaction(['children']);
-      const activityStore = tx.objectStore('children').index('template');
-      activityStore.openCursor('office').onsuccess = function (event) {
+      const childrenStore = tx.objectStore('children').index('userDetails');
+      childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
-
         offices.push(cursor.value.office)
         cursor.continue()
       }
