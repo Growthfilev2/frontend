@@ -539,18 +539,10 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  if (history.state[0] !== 'listView') return;
-  if (response.msg.hasOwnProperty('activity')) {
-    if (response.msg.activity.length) {
-      getRootRecord().then(function (record) {
-        updateEl(response.msg.activity, record);
-      })
-    }
-  }
-  if (response.msg.hasOwnProperty('template')) {
-    createActivityIcon()
-  }
-
+  if (history.state[0] !== 'mapView') return;
+    // getRootRecord().then(function (record) {
+    //   updateEl(response.msg.activity, record);
+    // })
   return;
 }
 
