@@ -128,8 +128,9 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 }).join("")}
 
 <h1 class="mdc-typography--subtitle1 mt-0">
-    Joined : 5th September, 2018
+    Joined : ${moment(firebase.auth().currentUser.metadata).format("Do MMM YYYY")}
 </h1>
+
 <div id='reports'>
 
 </div>
@@ -189,6 +190,9 @@ ${user.attachment['Second Supervisor'].value ?  `<div class="mdc-chip">
 
 </div>
 
+<h1>
+${}
+</h1>
 
 </div>
 
