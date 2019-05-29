@@ -106,19 +106,21 @@
 
 
     <div id='main-content'>
-        <div id='login-container'></div>
+      <div id='login-container'></div>
 
       <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
-      
-        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
-          <div id='map'></div>
 
-          <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
-            <div class="card__primary">
-              <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-header'></h2>
-        
-            </div>
-            <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id='check-in-prog'>
+        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
+          <div id='map-view'>
+            <div id='map'></div>
+            <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
+              <div class="card__primary">
+                <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-header'></h2>
+
+              </div>
+              <div role="progressbar"
+                class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+                id='check-in-prog'>
                 <div class="mdc-linear-progress__buffering-dots"></div>
                 <div class="mdc-linear-progress__buffer"></div>
                 <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
@@ -128,20 +130,23 @@
                   <span class="mdc-linear-progress__bar-inner"></span>
                 </div>
               </div>
-            <div class="card__secondary mdc-typography mdc-typography--body2">
-               <!-- 'mdc-card__primary-action card__primary-action' -->
-              <div class="content-body">
+              <div class="card__secondary mdc-typography mdc-typography--body2">
+                <!-- 'mdc-card__primary-action card__primary-action' -->
+                <div class="content-body">
 
+                </div>
+                <div id='submit-cont'>
+                  <button class="demo-button mdc-button mdc-theme--secondary-bg" id='submit-check-in'><span
+                      class="mdc-button__label">SUBMIT</span></button>
+                </div>
               </div>
-              <div id='submit-cont'>
-                  <button class="demo-button mdc-button mdc-theme--secondary-bg" id='submit-check-in'><span class="mdc-button__label">SUBMIT</span></button>
-              </div>
-            </div>
-         
-            <!-- <div class="mdc-card__actions">
+
+              <!-- <div class="mdc-card__actions">
             </div> -->
+            </div>
           </div>
-
+          <div id='profile-view'></div>
+          <div id='snap-view'></div>
         </div>
 
         <div id="snackbar-container">

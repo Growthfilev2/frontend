@@ -2,8 +2,8 @@ function profileView(pushState) {
     document.getElementById('start-loader').classList.add('hidden')
     if (pushState) {
         history.pushState(['profileView'], null, null);
-}
-drawer.open = false
+    }
+    drawer.open = false
     // if (window.addEventListener) {
     //     window.removeEventListener('scroll', handleScroll, false)
     // }
@@ -49,8 +49,10 @@ drawer.open = false
                           </div>
                       </div>
                   </div>
-              </div>`
-    document.getElementById('app-current-panel').innerHTML = template;
+              </div>
+              <div id='user-detail'></div>
+              `
+    document.getElementById('profile-view').innerHTML = template;
     getUniqueOfficeCount().then(function (offices) {
         console.log(offices)
         document.getElementById('tab-scroller').innerHTML = addTabs(offices);
@@ -60,11 +62,35 @@ drawer.open = false
             tabInit.activateTab(0);
         }, 0)
         tabInit.listen('MDCTabBar:activated', function (evt) {
-            getEmployeeDetails(offices[evt.detail.index]).then(function (employees) {
-                
-                console.log(employees)
-            })
+            getEmployeeDetails([firebase.auth().currentUser.phoneNumber, offices[evt.detail.index]], 'employeeOffice').then(function (employee) {
+                document.getElementById('user-detail').innerHTML = fillUserDetails(employee[0])                
+                Promise.all([getEmployeeDetails([offices[evt.detail.index], 'recipient'], 'officeTemplate'),getEmployeeDetails([offices[evt.detail.index], 'leave-type'], 'officeTemplate')]).then(function(results){
+                    const reports = results[0];
+                    const leaves = results[1];
+                    console.log(results)
+                    if(reports.length) {
 
+                        document.getElementById('reports').innerHTML = ` <h1 class="mdc-typography--subtitle1 mt-0">
+                        Reports :
+                        ${reports.map(function(report){
+                            return `<span>${report.attachment.Name.value}</span>  <span class="dot"></span>`
+                        }).join("")}
+                        </h1>`
+                    }
+
+                    if(leaves.length) {
+                        document.getElementById('leaves').innerHTML =`<h1 class="mdc-typography--headline6 mb-0">
+                        Remaining Leaves
+                        ${leaves.map(function(leave){
+                           return `<h1 class="mdc-typography--headline6 mt-0 mb-0">${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}</h1>`
+                        }).join("")}
+                    </h1>`
+                    }
+
+//                    
+                })
+
+            })
         })
     })
 }
@@ -86,47 +112,45 @@ function addTabs(data) {
 
 }
 
-function fillUserDetails(employees) {
-    `<div class="office-info seperator">
+function fillUserDetails(user) {
+    const notAllowedFields = {
+        'First Supervisor': true,
+        'Second Supervisor': true,
+        'Employee Contact': true,
+        'Name': true
+    }
+    const template = `<div class="office-info seperator">
+${Object.keys(user.attachment).map(function(attachmentNames){
+    return `${notAllowedFields[attachmentNames] ? '': `${user.attachment[attachmentNames].value ? `<h1 class="mdc-typography--subtitle1 mt-0">
+    ${attachmentNames} : ${user.attachment[attachmentNames].value}
+</h1>`:''}`}` 
 
-<h1 class="mdc-typography--subtitle1 mt-0">
-    Designation : Sales
-</h1>
-<h1 class="mdc-typography--subtitle1 mt-0">
-    Department : Product
-</h1>
+}).join("")}
 
-<h1 class="mdc-typography--subtitle1 mt-0">
-    Branch office : Co-Workin
-</h1>
 <h1 class="mdc-typography--subtitle1 mt-0">
     Joined : 5th September, 2018
 </h1>
-<h1 class="mdc-typography--subtitle1"><span>Daily Start Time :</span> 9:30 AM</h1>
-<h1 class="mdc-typography--subtitle1"><span>Daily End Time :</span> 18:30 PM</h1>
-<h1 class="mdc-typography--subtitle1 mt-0">
-    Reports :
-    <span>Footprints</span>
-    <span class="dot"></span>
-    <span>SignUp</span>
-</h1>
+<div id='reports'>
+
+</div>
 </div>
 <div class="hierchy pt-10">
-<span class="mdc-typography--headline6 mt-0 mb-0">Supervisiors</span>
+${user.attachment['First Supervisor'].value || user.attachment['Second Supervisor'].value ? `<span class="mdc-typography--headline6 mt-0 mb-0">Supervisiors</span>
 <div class="mdc-chip-set supervisor">
 
-    <div class="mdc-chip">
-        <img class="mdc-chip__icon mdc-chip__icon--leading" src="sample.jpeg">
-        <div class="mdc-chip__text">John Doe</div>
+${user.attachment['First Supervisor'].value ?  `<div class="mdc-chip">
+   <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">supervisor_account</i>
+   <div class="mdc-chip__text">${user.attachment['First Supervisor'].value}</div>
+</div>`:''}
 
-    </div>
-    <div class="mdc-chip">
-        <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">supervisor_account</i>
-        <div class="mdc-chip__text">+91900000000</div>
+${user.attachment['Second Supervisor'].value ?  `<div class="mdc-chip">
+<i class="material-icons mdc-chip__icon mdc-chip__icon--leading">supervisor_account</i>
+<div class="mdc-chip__text">${user.attachment['Second Supervisor'].value}</div>
+</div>`:''}
+   
+</div>`:''}
 
-    </div>
-</div>
-
+<div id='my-team'>
 <span class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
     <div class="mdc-chip-set supervisor">
             
@@ -157,19 +181,28 @@ function fillUserDetails(employees) {
         </div>
 
 </div>
+</div>
+
+
 <div class="meta-hidden-details" style="border-top: 1px solid rgba(0, 0, 0, 0.2)">
+<div id='leaves'>
 
-<h1 class="mdc-typography--headline6 mb-0">
-    Remaining Leaves
-    <h1 class="mdc-typography--headline6 mt-0 mb-0">Casual : 5</h1>
-    <h1 class="mdc-typography--headline6 mt-0 mb-0"> Medical : 10</h1>
-</h1>
 </div>
+
 
 </div>
 
 </div>
-<div class="mdc-typography mdc-typography--body2 p-10 hidden" id='card-body-edit'>
+
+</div>
+`
+    return template
+}
+
+
+
+
+{/* <div class="mdc-typography mdc-typography--body2 p-10 hidden" id='card-body-edit'>
 <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
 
 <i class="material-icons mdc-text-field__icon">account_circle</i>
@@ -202,5 +235,4 @@ This will be displayed on your public profile
 </div>
 
 </div>
-</div>`
-}
+</div> */}

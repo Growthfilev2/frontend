@@ -254,7 +254,8 @@ function startApp(start) {
           
             const childrenStore = tx.objectStore('children')
             childrenStore.createIndex('officeTemplate', ['office', 'template']);
-            childrenStore.createIndex('userDetails', 'employee');
+            childrenStore.createIndex('employees', 'employee');
+            childrenStore.createIndex('employeeOffice',['employee','office'])
 
             childrenStore.index('template').openCursor('employee').onsuccess = function(event){
                 const cursor = event.target.result;
@@ -333,7 +334,7 @@ function queryChildren(template) {
   })
 }
 
-function getEmployeeDetails(self, office) {
+function getEmployeeDetails(range,indexName) {
   return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid)
@@ -341,17 +342,8 @@ function getEmployeeDetails(self, office) {
       const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
-      let index;
-      let range;
-
-      if (office) {
-        index = store.index('officeTemplate')
-        range = IDBKeyRange.only([office, 'employee'])
-      } else {
-        index = store.index('templateStatus')
-        range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
-      }
-
+      const index = store.index(indexName)
+   
 
       const getEmployee = index.getAll(range);
 
@@ -499,8 +491,8 @@ function createObjectStores(db, uid) {
   children.createIndex('office', 'office');
   children.createIndex('templateStatus', ['template', 'status']);
   children.createIndex('officeTemplate', ['office', 'template']);
-  children.createIndex('userDetails', 'employee');
-
+  children.createIndex('employees', 'employee');
+  children.createIndex('employeeOffice',['employee','office'])
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
@@ -645,7 +637,7 @@ function getUniqueOfficeCount() {
     req.onsuccess = function () {
       const db = req.result
       const tx = db.transaction(['children']);
-      const childrenStore = tx.objectStore('children').index('userDetails');
+      const childrenStore = tx.objectStore('children').index('employees');
       childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;

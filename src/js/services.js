@@ -548,7 +548,7 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  if (history.state[0] !== 'mapView') return;
+  // if (history.state[0] !== 'mapView') return;
     // getRootRecord().then(function (record) {
     //   updateEl(response.msg.activity, record);
     // })

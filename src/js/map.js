@@ -285,7 +285,7 @@ function mapView() {
         document.getElementById('drawer-icon').src = firebase.auth().currentUser.photoURL;
         document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
         document.getElementById('drawer-icon').onclick = function () {
-          profileView();
+          profileView(true);
         }
       });
 
