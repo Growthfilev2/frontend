@@ -247,15 +247,48 @@ function startApp(start) {
             subscriptionStore.createIndex('status', 'status');
           }
           if (evt.oldVersion < 5) {
-            const mapStore = req.transaction.objectStore('map');
-            mapStore.createIndex('bounds', ['latitude', 'longitude'])
-            const childrenStore = req.transaction.objectStore('children')
-            childrenStore.createIndex('officeTemplate', ['office', 'template'])
+            var tx = req.transaction;
+
+            const mapStore = tx.objectStore('map');
+            mapStore.createIndex('bounds', ['latitude', 'longitude']);
+          
+            const childrenStore = tx.objectStore('children')
+            childrenStore.createIndex('officeTemplate', ['office', 'template']);
+            const calendarStore = tx.objectStore('calendar')
+            calendarStore.createIndex('leave');
+
+            childrenStore.index('template').openCursor('employee').onsuccess = function(event){
+                const cursor = event.target.result;
+                if(!cursor) {
+                  console.log("finished modiying children")
+                  return;
+                }
+                cursor.value.employee = cursor.value.attachment['Employee Contact'].value
+                cursor.put(cursor.value)
+                cursor.continue();
+            };
+            calendarStore.openCursor().onsuccess = function(event){
+              const cursor = event.target.result;
+              if(!cursor) {
+                console.log('finished modifing calendar')
+                return;
+              }
+              
+              if (moment(moment().format('DD-MM-YYYY')).isBetween(moment(cursor.value.startTime), moment(cursor.value.endTime), null, '[]')) {
+                record.onleave = 1
+              } 
+              cursor.continue()
+            }
+            tx.oncomplete = function(){
+
+              console.log("finsihed backlog")
+            }
           }
         }
       }
 
       req.onsuccess = function () {
+        console.log("run app")
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);

@@ -643,12 +643,14 @@ function putAttachment(activity, tx) {
     template: activity.template,
     office: activity.office,
     attachment: activity.attachment,
-  }
+  };
+  
+  
 
   if(activity.template === 'employee') {
     commonSet.employee = activity.attachment['Employee Contact'].value
   }
-
+  
   store.put(commonSet)
 
 }
