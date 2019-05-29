@@ -1,205 +1,205 @@
-// const scroll_namespace = {
-//   count: 0,
-//   size: 20,
-//   skip: false,
+// // const scroll_namespace = {
+// //   count: 0,
+// //   size: 20,
+// //   skip: false,
 
-// }
+// // }
 
-// function resetScroll() {
-//   scroll_namespace.count = 0;
-//   scroll_namespace.size = 20;
-//   scroll_namespace.skip = true
-// }
+// // function resetScroll() {
+// //   scroll_namespace.count = 0;
+// //   scroll_namespace.size = 20;
+// //   scroll_namespace.skip = true
+// // }
 
-// function initDomLoad() {
-//   document.getElementById('start-loader').classList.remove('hidden')
-//   progressBar.foundation_.close();
+// // function initDomLoad() {
+// //   document.getElementById('start-loader').classList.remove('hidden')
+// //   progressBar.foundation_.close();
   
-//   document.body.classList.remove('mdc-dialog-scroll-lock')
+// //   document.body.classList.remove('mdc-dialog-scroll-lock')
 
-//   listPanel()
-//   creatListHeader('Activities');
-//   createActivityIcon();
-// }
+// //   listPanel()
+// //   creatListHeader('Activities');
+// //   createActivityIcon();
+// // }
 
-// function listView() {
-//   history.pushState(['listView'], null, null)
-//   initDomLoad();
-//   // TODO simplify
-//   getCountOfStore('list').then(function (size) {
-//     if (!size) {
-//       document.getElementById('start-loader').classList.add('hidden')
+// // function listView() {
+// //   history.pushState(['listView'], null, null)
+// //   initDomLoad();
+// //   // TODO simplify
+// //   getCountOfStore('list').then(function (size) {
+// //     if (!size) {
+// //       document.getElementById('start-loader').classList.add('hidden')
       
-//       appendTextContentInListView('No activities Found');
-//       return;
-//     }
-//     if (size > 20) {
-//       window.addEventListener('scroll', handleScroll, false)
-//     }
+// //       appendTextContentInListView('No activities Found');
+// //       return;
+// //     }
+// //     if (size > 20) {
+// //       window.addEventListener('scroll', handleScroll, false)
+// //     }
 
-//     getRootRecord().then(function (record) {
-//       if (size && size <= 20) {
-//         loadActivitiesFromListStore(record.location)
-//         return;
-//       }
-//       startCursor(record.location);
-//     });
-//   })
-// }
+// //     getRootRecord().then(function (record) {
+// //       if (size && size <= 20) {
+// //         loadActivitiesFromListStore(record.location)
+// //         return;
+// //       }
+// //       startCursor(record.location);
+// //     });
+// //   })
+// // }
 
-// function appendTextContentInListView(textContent) {
-//   const p = document.createElement('p')
-//   p.textContent = textContent;
-//   p.className = 'no-activity'
-//   document.getElementById('activity-list-main').appendChild(p)
-//   document.getElementById('activity-list-main').style.boxShadow = 'none';
-// }
+// // function appendTextContentInListView(textContent) {
+// //   const p = document.createElement('p')
+// //   p.textContent = textContent;
+// //   p.className = 'no-activity'
+// //   document.getElementById('activity-list-main').appendChild(p)
+// //   document.getElementById('activity-list-main').style.boxShadow = 'none';
+// // }
 
 
-// function getCountOfStore(storeName) {
-//   return new Promise(function (resolve, reject) {
-//     const req = indexedDB.open(firebase.auth().currentUser.uid);
-//     req.onsuccess = function () {
-//       const db = req.result;
-//       const tx = db.transaction([storeName])
-//       const store = tx.objectStore(storeName);
-//       var countReq = store.count();
-//       countReq.onsuccess = function () {
-//         resolve(countReq.result)
-//       }
-//       countReq.onerror = function () {
-//         reject(countReq.error)
-//       }
-//     }
-//     req.onerror = function () {
-//       reject(req.error);
-//     }
-//   })
-// }
+// // function getCountOfStore(storeName) {
+// //   return new Promise(function (resolve, reject) {
+// //     const req = indexedDB.open(firebase.auth().currentUser.uid);
+// //     req.onsuccess = function () {
+// //       const db = req.result;
+// //       const tx = db.transaction([storeName])
+// //       const store = tx.objectStore(storeName);
+// //       var countReq = store.count();
+// //       countReq.onsuccess = function () {
+// //         resolve(countReq.result)
+// //       }
+// //       countReq.onerror = function () {
+// //         reject(countReq.error)
+// //       }
+// //     }
+// //     req.onerror = function () {
+// //       reject(req.error);
+// //     }
+// //   })
+// // }
 
-// function updateEl(activities, rootRecord) {
+// // function updateEl(activities, rootRecord) {
 
-//   const req = indexedDB.open(firebase.auth().currentUser.uid)
-//   req.onsuccess = function () {
-//     const db = req.result;
-//     const tx = db.transaction(['list', 'activity'])
-//     const activityStore = tx.objectStore('activity')
-//     const listStore = tx.objectStore('list');
-//     const ul = document.getElementById('activity--list');
-//     activities.forEach(function (activity) {
-//       if (document.querySelector('.no-activity')) {
-//         document.querySelector('.no-activity').remove()
-//       }
+// //   const req = indexedDB.open(firebase.auth().currentUser.uid)
+// //   req.onsuccess = function () {
+// //     const db = req.result;
+// //     const tx = db.transaction(['list', 'activity'])
+// //     const activityStore = tx.objectStore('activity')
+// //     const listStore = tx.objectStore('list');
+// //     const ul = document.getElementById('activity--list');
+// //     activities.forEach(function (activity) {
+// //       if (document.querySelector('.no-activity')) {
+// //         document.querySelector('.no-activity').remove()
+// //       }
 
-//       listStore.get(activity.activityId).onsuccess = function (event) {
-//         const record = event.target.result;
-//         const existingEl = document.querySelector(`[data-id="${activity.activityId}"]`)
-//         if (existingEl) {
-//           existingEl.remove();
-//         }
-//         if (!record) return;
+// //       listStore.get(activity.activityId).onsuccess = function (event) {
+// //         const record = event.target.result;
+// //         const existingEl = document.querySelector(`[data-id="${activity.activityId}"]`)
+// //         if (existingEl) {
+// //           existingEl.remove();
+// //         }
+// //         if (!record) return;
 
-//         if (!rootRecord.location) {
-//           getActivityDataForList(activityStore, record).then(function (li) {
-//             if (!ul) return
-//             ul.insertBefore(li, ul.childNodes[0])
-//           })
-//         } else {
-//           getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
-//             if (!ul) return
-//             ul.insertBefore(li, ul.childNodes[0])
-//           })
-//         }
-//       }
-//     })
-//   }
-// }
+// //         if (!rootRecord.location) {
+// //           getActivityDataForList(activityStore, record).then(function (li) {
+// //             if (!ul) return
+// //             ul.insertBefore(li, ul.childNodes[0])
+// //           })
+// //         } else {
+// //           getActivityDataForList(activityStore, record, rootRecord.location).then(function (li) {
+// //             if (!ul) return
+// //             ul.insertBefore(li, ul.childNodes[0])
+// //           })
+// //         }
+// //       }
+// //     })
+// //   }
+// // }
 
-// function handleScroll(ev) {
-//   getRootRecord().then(function (record) {
-//     if (window.innerHeight + window.scrollY === document.body.scrollHeight) {
-//       const ul = document.getElementById('activity--list')
-//       if (!ul) return
-//       startCursor(record.location);
-//     }
-//   })
-// };
+// // function handleScroll(ev) {
+// //   getRootRecord().then(function (record) {
+// //     if (window.innerHeight + window.scrollY === document.body.scrollHeight) {
+// //       const ul = document.getElementById('activity--list')
+// //       if (!ul) return
+// //       startCursor(record.location);
+// //     }
+// //   })
+// // };
 
-// function loadActivitiesFromListStore(currentLocation) {
-//   const req = indexedDB.open(firebase.auth().currentUser.uid)
-//   req.onsuccess = function () {
-//     const db = req.result;
-//     const transaction = db.transaction(['list', 'activity', 'root'])
-//     const activity = transaction.objectStore('activity');
-//     const store = transaction.objectStore('list')
-//     const index = store.index('timestamp');
-//     let fragment = document.createDocumentFragment();
-//     index.openCursor(null, 'prev').onsuccess = function (event) {
-//       const cursor = event.target.result;
-//       if (!cursor) return;
-//       getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
-//         fragment.appendChild(dom)
-//       })
-//       cursor.continue();
-//     }
-//     transaction.oncomplete = function () {
-//       const ul = document.getElementById('activity--list')
-//       document.getElementById('start-loader').classList.add('hidden')
-//       if (!ul) return
-//       ul.innerHTML = ''
-//       ul.appendChild(fragment)
-//       scrollToActivity()
-//     }
-//   }
-// }
+// // function loadActivitiesFromListStore(currentLocation) {
+// //   const req = indexedDB.open(firebase.auth().currentUser.uid)
+// //   req.onsuccess = function () {
+// //     const db = req.result;
+// //     const transaction = db.transaction(['list', 'activity', 'root'])
+// //     const activity = transaction.objectStore('activity');
+// //     const store = transaction.objectStore('list')
+// //     const index = store.index('timestamp');
+// //     let fragment = document.createDocumentFragment();
+// //     index.openCursor(null, 'prev').onsuccess = function (event) {
+// //       const cursor = event.target.result;
+// //       if (!cursor) return;
+// //       getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+// //         fragment.appendChild(dom)
+// //       })
+// //       cursor.continue();
+// //     }
+// //     transaction.oncomplete = function () {
+// //       const ul = document.getElementById('activity--list')
+// //       document.getElementById('start-loader').classList.add('hidden')
+// //       if (!ul) return
+// //       ul.innerHTML = ''
+// //       ul.appendChild(fragment)
+// //       scrollToActivity()
+// //     }
+// //   }
+// // }
 
-// function startCursor(currentLocation) {
-//   const req = indexedDB.open(firebase.auth().currentUser.uid)
-//   req.onsuccess = function () {
-//     const db = req.result;
-//     const transaction = db.transaction(['list', 'activity', 'root'])
-//     const activity = transaction.objectStore('activity');
-//     const store = transaction.objectStore('list')
-//     const index = store.index('timestamp');
-//     let iterator = 0;
-//     const advanceCount = scroll_namespace.count;
-//     let fragment = document.createDocumentFragment();
-//     index.openCursor(null, 'prev').onsuccess = function (event) {
+// // function startCursor(currentLocation) {
+// //   const req = indexedDB.open(firebase.auth().currentUser.uid)
+// //   req.onsuccess = function () {
+// //     const db = req.result;
+// //     const transaction = db.transaction(['list', 'activity', 'root'])
+// //     const activity = transaction.objectStore('activity');
+// //     const store = transaction.objectStore('list')
+// //     const index = store.index('timestamp');
+// //     let iterator = 0;
+// //     const advanceCount = scroll_namespace.count;
+// //     let fragment = document.createDocumentFragment();
+// //     index.openCursor(null, 'prev').onsuccess = function (event) {
 
-//       const cursor = event.target.result;
-//       if (!cursor) return;
+// //       const cursor = event.target.result;
+// //       if (!cursor) return;
 
-//       if (advanceCount) {
-//         if (!scroll_namespace.skip) {
-//           scroll_namespace.skip = true
-//           cursor.advance(advanceCount)
-//         } else {
+// //       if (advanceCount) {
+// //         if (!scroll_namespace.skip) {
+// //           scroll_namespace.skip = true
+// //           cursor.advance(advanceCount)
+// //         } else {
 
-//           getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
-//             fragment.appendChild(dom)
-//             iterator++
-//           })
+// //           getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+// //             fragment.appendChild(dom)
+// //             iterator++
+// //           })
 
-//           runCursor(cursor, iterator)
-//         }
-//       } else {
+// //           runCursor(cursor, iterator)
+// //         }
+// //       } else {
 
-//         getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
-//           fragment.appendChild(dom)
-//           iterator++
-//         })
+// //         getActivityDataForList(activity, cursor.value, currentLocation).then(function (dom) {
+// //           fragment.appendChild(dom)
+// //           iterator++
+// //         })
 
-//         runCursor(cursor, iterator)
-//       }
-//     }
+// //         runCursor(cursor, iterator)
+// //       }
+// //     }
 
-//     /** Transaction has ended. Increment the namespace_count 
-//      * If an activity was clicked and not changed then scroll to that activity
-//      */
+// //     /** Transaction has ended. Increment the namespace_count 
+// //      * If an activity was clicked and not changed then scroll to that activity
+// //      */
 
-//     transaction.oncomplete = function () {
-//       const ul = document.getElementById('activity--list')
-//       document.getElementById('start-loader').classList.add('hidden')
+// //     transaction.oncomplete = function () {
+// //       const ul = document.getElementById('activity--list')
+// //       document.getElementById('start-loader').classList.add('hidden')
       
       
 //       if (!ul) return
@@ -370,16 +370,16 @@
 //     conversation(this.dataset.id, true);
 //   }
 //   li.classList.add('mdc-list-item', 'activity--list-item', 'mdc-elevation--z1');
-//   const dataObject = document.createElement('object');
+//   // const dataObject = document.createElement('object');
 
-//   dataObject.data = data.creator.photo || './img/empty-user.jpg';
-//   dataObject.type = 'image/jpeg';
-//   dataObject.className = 'mdc-list-item__graphic material-icons'
+//   // dataObject.data = data.creator.photo || './img/empty-user.jpg';
+//   // dataObject.type = 'image/jpeg';
+//   // dataObject.className = 'mdc-list-item__graphic material-icons'
 
-//   var creator = document.createElement("img");
-//   creator.src = './img/empty-user.jpg';
-//   creator.className = 'empty-user-list'
-//   dataObject.appendChild(creator);
+//   // var creator = document.createElement("img");
+//   // creator.src = './img/empty-user.jpg';
+//   // creator.className = 'empty-user-list'
+//   // dataObject.appendChild(creator);
 
 //   const leftTextContainer = document.createElement('span')
 //   leftTextContainer.classList.add('mdc-list-item__text')
@@ -403,7 +403,7 @@
 //   metaTextContainer.appendChild(timeCustomText);
 //   metaTextContainer.appendChild(generateIconByCondition(data, li));
 
-//   li.appendChild(dataObject);
+//   // li.appendChild(dataObject);
 //   li.appendChild(leftTextContainer);
 //   li.appendChild(metaTextContainer);
 //   return li
@@ -450,6 +450,37 @@
 //   if (parent) {
 //     parent.appendChild(activityDom);
 //   }
+// }
+
+// function getRootRecord() {
+//   return new Promise(function (resolve, reject) {
+//     let record;
+//     const dbName = firebase.auth().currentUser.uid;
+//     const req = indexedDB.open(dbName)
+//     req.onsuccess = function () {
+//       const db = req.result;
+//       const rootTx = db.transaction(['root'], 'readwrite')
+//       const rootStore = rootTx.objectStore('root')
+//       rootStore.get(dbName).onsuccess = function (event) {
+//         const data = event.target.result;
+//         record = data;
+//       }
+
+//       rootTx.oncomplete = function () {
+//         resolve(record)
+//       }
+//       rootTx.onerror = function () {
+//         reject({
+//           message: `${rootTx.error.message} from getRootRecord`
+//         })
+//       }
+//     }
+//     req.onerror = function () {
+//       reject({
+//         message: `${req.error} from getRootRecord`
+//       })
+//     }
+//   })
 // }
 
 // function createActivityIcon() {
@@ -499,44 +530,44 @@
 
 // function creatListHeader(headerName) {
  
-//   const req = indexedDB.open(firebase.auth().currentUser.uid);
-//   req.onsuccess = function () {
-//     const db = req.result;
-//     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
-//       const sectionStart = document.getElementById('section-start');
+// //   const req = indexedDB.open(firebase.auth().currentUser.uid);
+// //   req.onsuccess = function () {
+// //     const db = req.result;
+// //     getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
+// //       const sectionStart = document.getElementById('section-start');
 
-//       const object = document.createElement('object');
-//       object.className = 'list-photo-header';
-//       object.type = 'image/jpeg';
-//       object.data = userRecord.photoURL || './img/empty-user.jpg';
-//       object.onclick = function () {
-//         profileView(true)
-//       }
-//       const icon = document.createElement('img');
-//       icon.src = './img/empty-user.jpg';
-//       icon.className = 'list-photo-header'
-//       object.appendChild(icon);
+// //       const object = document.createElement('object');
+// //       object.className = 'list-photo-header';
+// //       object.type = 'image/jpeg';
+// //       object.data = userRecord.photoURL || './img/empty-user.jpg';
+// //       object.onclick = function () {
+// //         profileView(true)
+// //       }
+// //       const icon = document.createElement('img');
+// //       icon.src = './img/empty-user.jpg';
+// //       icon.className = 'list-photo-header'
+// //       object.appendChild(icon);
 
-//       const headerText = document.createElement('span');
-//       headerText.textContent = headerName;
-//       headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
-//       sectionStart.innerHTML =''
-//       sectionStart.appendChild(object)
-//       sectionStart.appendChild(headerText);
-//     })
-//   }
-// }
+// //       const headerText = document.createElement('span');
+// //       headerText.textContent = headerName;
+// //       headerText.className = 'mdc-top-app-bar__title mdc-typography--headline5'
+// //       sectionStart.innerHTML =''
+// //       sectionStart.appendChild(object)
+// //       sectionStart.appendChild(headerText);
+// //     })
+// //   }
+// // }
 
-// function scrollToActivity() {
-//   const clickedActivity = localStorage.getItem('clickedActivity')
-//   if (document.querySelector(`[data-id="${clickedActivity}"]`)) {
-//     document.querySelector(`[data-id="${clickedActivity}"]`).scrollIntoView({
-//       behavior: "instant",
-//       block: "center",
-//       "inline": "center"
-//     })
-//     localStorage.removeItem('clickedActivity')
-//     return
-//   }
-// }
+// // function scrollToActivity() {
+// //   const clickedActivity = localStorage.getItem('clickedActivity')
+// //   if (document.querySelector(`[data-id="${clickedActivity}"]`)) {
+// //     document.querySelector(`[data-id="${clickedActivity}"]`).scrollIntoView({
+// //       behavior: "instant",
+// //       block: "center",
+// //       "inline": "center"
+// //     })
+// //     localStorage.removeItem('clickedActivity')
+// //     return
+// //   }
+// // }
 

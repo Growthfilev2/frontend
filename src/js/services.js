@@ -531,13 +531,13 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
       prefill.attachment = value.attachment
 
     }
+    ga('send', {
+      hitType: 'event',
+      eventCategory: 'suggestion',
+      eventAction: 'click',
+      eventLabel: value.template + ' suggestion selected'
+    });
     if (!hasMultipleOffice) {
-      ga('send', {
-        hitType: 'event',
-        eventCategory: 'suggestion',
-        eventAction: 'click',
-        eventLabel: value.template + ' suggestion selected'
-      });
       createTempRecord(value.office, value.template, prefill);
       return;
     }
@@ -548,19 +548,11 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  // if (history.state[0] !== 'listView') return;
-  // if (response.msg.hasOwnProperty('activity')) {
-  //   if (response.msg.activity.length) {
-  //     getRootRecord().then(function (record) {
-  //       updateEl(response.msg.activity, record);
-  //     })
-  //   }
-  // }
-  // if (response.msg.hasOwnProperty('template')) {
-  //   createActivityIcon()
-  // }
-
-  // return;
+  if (history.state[0] !== 'mapView') return;
+    // getRootRecord().then(function (record) {
+    //   updateEl(response.msg.activity, record);
+    // })
+  return;
 }
 
 function updateApp() {
