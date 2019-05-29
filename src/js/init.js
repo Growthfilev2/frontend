@@ -284,7 +284,8 @@ function startApp(start) {
         console.log(document.cookie);
         
         // resetScroll();
-        mapView();
+        // mapView();
+        profileView()
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -648,6 +649,7 @@ function getUniqueOfficeCount() {
       childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
+        
         offices.push(cursor.value.office)
         cursor.continue()
       }

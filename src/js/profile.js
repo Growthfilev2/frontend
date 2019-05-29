@@ -2,10 +2,11 @@ function profileView(pushState) {
     document.getElementById('start-loader').classList.add('hidden')
     if (pushState) {
         history.pushState(['profileView'], null, null);
-    }
-    if (window.addEventListener) {
-        window.removeEventListener('scroll', handleScroll, false)
-    }
+}
+drawer.open = false
+    // if (window.addEventListener) {
+    //     window.removeEventListener('scroll', handleScroll, false)
+    // }
 
     const sectionStart = document.getElementById('section-start');
     sectionStart.innerHTML = ''
@@ -51,6 +52,7 @@ function profileView(pushState) {
               </div>`
     document.getElementById('app-current-panel').innerHTML = template;
     getUniqueOfficeCount().then(function (offices) {
+        console.log(offices)
         document.getElementById('tab-scroller').innerHTML = addTabs(offices);
         const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
         //minor hack
