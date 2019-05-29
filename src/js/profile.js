@@ -51,6 +51,7 @@ function profileView(pushState) {
                   </div>
               </div>
               <div id='user-detail'></div>
+              
               `
     document.getElementById('profile-view').innerHTML = template;
     getUniqueOfficeCount().then(function (offices) {
@@ -190,8 +191,8 @@ ${user.attachment['Second Supervisor'].value ?  `<div class="mdc-chip">
 
 </div>
 
-<h1>
-${}
+<h1 class='mdc-typography--subtitle1 mt-0 last-sign-in'>
+${moment(firebase.auth().currentUser.metadata.lastSignInTime)}
 </h1>
 
 </div>
