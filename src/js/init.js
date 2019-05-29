@@ -384,6 +384,7 @@ function getEmployeeDetails(self, office) {
 }
 
 function isEmployeeOnLeave() {
+  TODO // without getting office names
   return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     req.onsuccess = function () {
@@ -393,24 +394,33 @@ function isEmployeeOnLeave() {
       const store = tx.objectStore('calendar');
       const index = store.index('leave');
       
-      index.openCursor(1).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (moment().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
 
-          cursor.continue()
-          return;
-        }
+      getUniqueOfficeCount().then(function(offices) {
+          offices.forEach(function(office){
+            result[office] = false;
+          })
 
-        cursor.value.leave = 0
-        const updateReq = cursor.update(cursor.value)
-        updateReq.onsuccess = function(){
-            result.push(cursor.value)
-        }
-        cursor.continue()
-      }
+          index.openCursor(1).onsuccess = function (event) {
+            const cursor = event.target.result;
+            if (!cursor) return;
+            
+            if (moment().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
+              result[cursor.value.office]  = true
+              cursor.continue()
+              return;
+            };
+
+            cursor.value.leave = 0
+            const updateReq = cursor.update(cursor.value)
+            updateReq.onsuccess = function(){
+              result[cursor.value.office]  = false
+            }
+            cursor.continue()
+          }
+      })
+
       tx.oncomplete = function () {
-        resolve(onLeave)
+        resolve(result)
       }
       tx.onerror = function () {
         reject({
@@ -528,12 +538,10 @@ function runAppChecks() {
     if (!e.detail) return;
     if (!e.detail.newDay && !e.detail.locationChanged) return;
 
-    isEmployeeOnLeave().then(function (onLeave) {
-      if (onLeave) return
-
+    isEmployeeOnLeave().then(function (result) {
+    
       getUniqueOfficeCount().then(function (offices) {
         console.log(offices);
-
         const prom = [];
         const data = []
         let title;
