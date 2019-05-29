@@ -145,29 +145,37 @@ window.addEventListener("load", function () {
   startApp(true)
 })
 
-function appIncompatible(){
+function appIncompatible() {
   document.getElementById('start-loader').classList.add('hidden')
-  const banner = createElement('div',{className:'banner'})
-  const message = createElement('div',{className:'message'});
-  const h2 = createElement('h2',{textContent:'Device Support',className:'mdc-typography--headline3'})
+  const banner = createElement('div', {
+    className: 'banner'
+  })
+  const message = createElement('div', {
+    className: 'message'
+  });
+  const h2 = createElement('h2', {
+    textContent: 'Device Support',
+    className: 'mdc-typography--headline3'
+  })
   message.appendChild(h2)
-  
+
   const device = native.getInfo();
   let bodyMessage;
-  if(!device) {
+  if (!device) {
     bodyMessage = 'This Device is not Supported'
-  }
-  else {
+  } else {
     const os = JSON.parse(device).baseOs
-    if(os === 'android') {
+    if (os === 'android') {
       bodyMessage = 'Growthfile requires Android version 5.1 to run.'
     }
-    if(os === 'Ios') {
+    if (os === 'Ios') {
       bodyMessage = 'Growthfile requires iOS version equal or greater than 12 to run.'
     }
   }
 
-  const p = createElement('p',{textContent:bodyMessage})
+  const p = createElement('p', {
+    textContent: bodyMessage
+  })
   message.appendChild(p)
   banner.appendChild(message);
   return banner;
@@ -248,7 +256,7 @@ function startApp(start) {
       localStorage.setItem('error', JSON.stringify({}));
     };
 
-   
+
     if (start) {
       const req = window.indexedDB.open(auth.uid, 5);
       let db;
@@ -265,13 +273,13 @@ function startApp(start) {
           createObjectStores(db, auth.uid)
         } else {
           if (evt.oldVersion < 4) {
-            
+
             const subscriptionStore = req.transaction.objectStore('subscriptions')
             subscriptionStore.createIndex('status', 'status');
           }
-          if(evt.oldVersion < 5) {
+          if (evt.oldVersion < 5) {
             const childrenStore = req.transaction.objectStore('children')
-            childrenStore.createIndex('officeTemplate',['office','template'])
+            childrenStore.createIndex('officeTemplate', ['office', 'template'])
           }
         }
 
@@ -304,32 +312,35 @@ function startApp(start) {
 }
 
 function queryChildren(template) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid);
     const result = [];
-    req.onsuccess = function(){
-      const db =req.result;
+    req.onsuccess = function () {
+      const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
-      const index = store.index('template') 
-      index.openCursor(template).onsuccess = function(event){
+      const index = store.index('template')
+      index.openCursor(template).onsuccess = function (event) {
         const cursor = event.target.result;
-        if(!cursor) return;
+        if (!cursor) return;
         result.push(cursor.value)
         cursor.continue();
       }
-      tx.oncomplete = function(){
+      tx.oncomplete = function () {
         return resolve(result)
       }
-      tx.onerror = function(){
-        return reject({message:tx.error.message,body:''})
+      tx.onerror = function () {
+        return reject({
+          message: tx.error.message,
+          body: ''
+        })
       }
     }
   })
 }
 
-function getEmployeeDetails(office) {
+function getEmployeeDetails(self, office) {
   return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid)
@@ -339,22 +350,25 @@ function getEmployeeDetails(office) {
       const store = tx.objectStore('children');
       let index;
       let range;
-      if(office) {
+
+      if (office) {
         index = store.index('officeTemplate')
-        range = IDBKeyRange.only([office,'employee'])
-      } 
-      else 
-      {
+        range = IDBKeyRange.only([office, 'employee'])
+      } else {
         index = store.index('templateStatus')
         range = IDBKeyRange.bound(['employee', 'CONFIRMED'], ['employee', 'PENDING']);
       }
+
+
       const getEmployee = index.getAll(range);
 
-      getEmployee.onsuccess = function(event){
+      getEmployee.onsuccess = function (event) {
         return resolve(event.target.result)
       }
-      getEmployee.onerror = function(){
-        return reject({message:getEmployee.error})
+      getEmployee.onerror = function () {
+        return reject({
+          message: getEmployee.error
+        })
       }
 
       // index.openCursor(range).onsuccess = function (event) {
@@ -363,58 +377,52 @@ function getEmployeeDetails(office) {
       //   results.push(cursor.value)
       //   cursor.continue();
       // }
-     
+
     }
-  
+
   })
 }
 
 function isEmployeeOnLeave() {
   return new Promise(function (resolve, reject) {
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      const result = []
+      const db = req.result;
+      const tx = db.transaction(['calendar']);
+      const store = tx.objectStore('calendar');
+      const index = store.index('leave');
+      
+      index.openCursor(1).onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (moment().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
 
-    getEmployeeDetails(true).then(function (empDetails) {
-
-      if (!empDetails) {
-        return resolve(false);
-      }
-
-      empDetails.onLeave = false
-      const req = indexedDB.open(firebase.auth().currentUser.uid);
-      req.onsuccess = function () {
-        const db = req.result;
-        const tx = db.transaction(['calendar']);
-        const store = tx.objectStore('calendar');
-        const range = IDBKeyRange.bound(['leave', 'CONFIRMED', empDetails.office], ['leave', 'PENDING', empDetails.office]);
-        let onLeave = false;
-        store.index('onLeave').openCursor(range).onsuccess = function (event) {
-
-          const cursor = event.target.result;
-          if (!cursor) return;
-
-          if (moment(moment().format('YYYY-MM-DD')).isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-            onLeave = true
-            return;
-          }
           cursor.continue()
+          return;
         }
-        tx.oncomplete = function () {
-          resolve(onLeave)
-        }
-        tx.onerror = function () {
-          reject({
-            message: `${tx.error.message} from isEmployeeOnLeave`
-          })
-        }
-      }
-      req.onerror = function () {
-        reject({
-          message: `${req.error.message} from isEmployeeOnLeave`
-        });
-      }
 
-    }).catch(function (error) {
-      reject(error)
-    })
+        cursor.value.leave = 0
+        const updateReq = cursor.update(cursor.value)
+        updateReq.onsuccess = function(){
+            result.push(cursor.value)
+        }
+        cursor.continue()
+      }
+      tx.oncomplete = function () {
+        resolve(onLeave)
+      }
+      tx.onerror = function () {
+        reject({
+          message: `${tx.error.message} from isEmployeeOnLeave`
+        })
+      }
+    }
+    req.onerror = function () {
+      reject({
+        message: `${req.error.message} from isEmployeeOnLeave`
+      });
+    }
   })
 }
 
@@ -486,8 +494,8 @@ function createObjectStores(db, uid) {
   children.createIndex('template', 'template');
   children.createIndex('office', 'office');
   children.createIndex('templateStatus', ['template', 'status']);
-  children.createIndex('officeTemplate',['office','template']);
-  children.createIndex('userDetails','employee');
+  children.createIndex('officeTemplate', ['office', 'template']);
+  children.createIndex('userDetails', 'employee');
 
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
@@ -516,7 +524,7 @@ function redirect() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-   
+
     if (!e.detail) return;
     if (!e.detail.newDay && !e.detail.locationChanged) return;
 
@@ -560,7 +568,7 @@ function runAppChecks() {
           templateDialog({
             title: 'Reminder',
             data: data
-          }, true,offices.length > 1 ? true : false)
+          }, true, offices.length > 1 ? true : false)
         }).catch(console.log)
 
       })

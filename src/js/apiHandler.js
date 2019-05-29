@@ -620,22 +620,28 @@ function updateCalendar(activity, param) {
     calendarTx.oncomplete = function () {
       const calendarTxAdd = db.transaction(['calendar'], 'readwrite')
       const calendarObjectStore = calendarTxAdd.objectStore('calendar')
-
+      
       activity.schedule.forEach(function (schedule) {
-        const startTime = moment(schedule.startTime).toDate()
-        const endTime = moment(schedule.endTime).toDate()
-
-        calendarObjectStore.add({
+        const startTime = schedule.startTime;
+        const endTime = schedule.endTime;
+        const record = {
           activityId: activity.activityId,
           scheduleName: schedule.name,
           timestamp: activity.timestamp,
           template: activity.template,
           hidden: activity.hidden,
-          start: moment(startTime).format('YYYY-MM-DD'),
-          end: moment(endTime).format('YYYY-MM-DD'),
+          start: startTime,
+          end: endTime,
           status: activity.status,
-          office: activity.office
-        })
+          office: activity.office,
+   
+        }
+        if(activity.template === 'leave'){
+            if (moment().isBetween(startTime, endTime, null, '[]') && activity.status !== 'CANCELLED') {
+                record.onleave = 1
+          } 
+        }
+        calendarObjectStore.add(record)
       })
       calendarTx.onerror = function () {
         instant(JSON.stringify({
