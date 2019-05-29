@@ -1776,7 +1776,6 @@ input[type="datetime-local"] {
   height: 50px;
 }
 
-<<<<<<< HEAD
 :root {
   --mdc-theme-primary: #FFFFFF !important;
   --mdc-theme-secondary: #0399f4 !important;
@@ -1791,15 +1790,6 @@ input[type="datetime-local"] {
   --mdc-theme-text-secondary-on-light:#67c9ff !important;
   --mdc-theme-text-secondary-on-dark:#006bc1 !important;
 }
-=======
- :root {
-  --mdc-theme-primary: #0399f4 !important;
-  --mdc-theme-secondary: #0399f4 !important;
-  --mdc-theme-background:rgb(204, 199, 199) !important;
-  --mdc-theme-on-primary: white !important;
-  --mdc-theme-on-secondary: #ffffff !important;
-} 
->>>>>>> profile-template
 
 /* 
 .mdc-ripple-surface--accent {

@@ -243,7 +243,6 @@ function startApp(start) {
           createObjectStores(db, auth.uid)
         } else {
           if (evt.oldVersion < 4) {
-
             const subscriptionStore = req.transaction.objectStore('subscriptions')
             subscriptionStore.createIndex('status', 'status');
           }
