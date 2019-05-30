@@ -559,7 +559,16 @@ function setFilePath(base64) {
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
     if(!currentOffice) {
-
+      createCheckInData().then(function (result) {
+        console.log(result)
+        manageLocation().then(function (location) {
+          result.data.forEach(function(i){
+            i.attachment.Comment.value = textValue;
+            i.attachment.Photo.value = image
+          })
+          checkInDialog(result, location)
+        })
+      }).catch(console.log)
       return;
     }
     getSubscription(currentOffice, 'check-in').then(function(sub){

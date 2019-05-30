@@ -172,8 +172,8 @@ function createViewProfile() {
         if (leaves.length) {
           document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
                           Remaining Leaves
-                          ${leaves.map(function(leave){
-                             return `<h1 class="mdc-typography--headline6 mt-0 mb-0">${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}</h1>`
+                          ${leaves.map(function(leave,idx){
+                             return `<h1 class="mdc-typography--headline6 mt-0 ${leaves.length - idx == 1 ? '' :'mb-0'}">${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}</h1>`
                           }).join("")}
                       </h1>`
         }
@@ -309,11 +309,11 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 
 </div>
 </div>
-<div class="hierchy pt-10">
+<div class="hierchy pt-10 seperator">
 <div id='supervisors'>
 </div>
 
-<div id='my-team'>
+<div id='my-team' style='padding-bottom:10px'>
 </div>
 </div>
 

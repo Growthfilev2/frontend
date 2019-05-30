@@ -402,12 +402,12 @@ function requestCreator(requestType, requestBody,location) {
       getRootRecord().then(function (rootRecord) {
         let location = rootRecord.location;
         let isLocationOld = true;
-        location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
+        location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 10) : '';
         requestGenerator.meta.user.token = token;
         if (isLocationOld) {
-          // manageLocation().then(function (location) {
+          manageLocation().then(function (location) {
             createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, location)
-          // }).catch(locationErrorDialog)
+          }).catch(locationErrorDialog)
         } else {
           createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, rootRecord.location)
         }
@@ -549,10 +549,7 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  // if (history.state[0] !== 'mapView') return;
-    // getRootRecord().then(function (record) {
-    //   updateEl(response.msg.activity, record);
-    // })
+
   return;
 }
 

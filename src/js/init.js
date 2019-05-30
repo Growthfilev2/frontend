@@ -610,7 +610,7 @@ function checkInDialog(result, location) {
   radioListInit = new mdc.list.MDCList(ul)
   radioListInit.singleSelection = true;
 
-  dialog = new Dialog('Select Office', ul).create();
+  dialog = new Dialog('Choose Office', ul).create();
   dialog.listen('MDCDialog:opened', function (evt) {
     radioListInit.layout();
     radioListInit.listElements.map(function (el) {
