@@ -92,16 +92,14 @@ function getDeviceInfomation() {
 }
 
 window.onpopstate = function (event) {
-
-  if (!event.state) return;
-  if (event.state[0] !== 'listView') return window[event.state[0]](event.state[1], false)
-
-  const originalCount = scroll_namespace.count;
-  if (originalCount) {
-    scroll_namespace.size = originalCount
+  console.log(event)
+  if(!event.state) return;
+  const state = event.state[0];
+  const views = {
+    mapView:mapView,
+    profileView:profileView
   }
-  scroll_namespace.count = 0;
-  window[event.state[0]]()
+  views[state];
 }
 
 function backNav() {
@@ -126,12 +124,12 @@ window.addEventListener("load", function () {
       document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
       document.getElementById('drawer-icon').onclick = function () {
         topAppBar.navIcon_.classList.add('mdc-theme--secondary')
-
-        profileView(true);
+        profileView();
       }
       return;
     }
-    topAppBar.navIcon_.classList.add('mdc-theme--secondary')
+    topAppBar.navIcon_.classList.add('mdc-theme--secondary');
+
     return history.back();
   });
 

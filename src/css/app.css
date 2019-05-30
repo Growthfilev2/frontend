@@ -16,6 +16,12 @@ html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
 }
 
 
+/** override **/
+.mdc-text-field .mdc-text-field__input {
+  caret-color: var(--mdc-theme-on-secondary);
+  
+}
+
 
 .mdc-drawer.mdc-drawer--modal {
   width: 85%;
@@ -208,10 +214,25 @@ body {
 
 }
 .snap-form .snap-text {
+  font-size: 20px;
 
   max-height: 300px;
 }
 
+
+
+.app-fab--absolute {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+}
+
+@media(min-width: 1024px) {
+   .app-fab--absolute {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+}
 
 /*tabs  */
 

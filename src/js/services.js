@@ -34,9 +34,10 @@ function successDialog() {
 }
 
 function snacks(message, type) {
+  if(history.state[0] !== 'mapView') return;
   snackBar.labelText = message;
   snackBar.open();
-  snackBar.timeoutMs = 10000
+  snackBar.timeoutMs = 3000
   snackBar.actionButtonText = 'okay';
 
 }

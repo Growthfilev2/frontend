@@ -275,13 +275,13 @@ function mapView() {
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(chatControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
 
-      createCheckInData().then(function(subs){
-          subs.data.forEach(function(value){
-            requestCreator('create',setVenueForCheckIn([],value))
-          })
+      createCheckInData().then(function (subs) {
+        subs.data.forEach(function (value) {
+          requestCreator('create', setVenueForCheckIn([], value))
+        })
       })
       // console.log(map)
-  
+
     })
 
     google.maps.event.addListener(map, 'idle', function () {
@@ -290,7 +290,7 @@ function mapView() {
       };
 
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
-     
+
         let selectOffice;
         let selectVenue;
         const markers = result[0];
@@ -305,6 +305,7 @@ function mapView() {
         if (!markerLength) {
 
           if (officesLength > 1) {
+            
             contentBody.innerHTML = mdcSelectOffice(offices, 'Select Office');
             selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
 
@@ -353,8 +354,8 @@ function mapView() {
           console.log(evt.detail.value)
           if (!evt.detail.value) {
             if (officesLength > 1) {
-            el.scrollTop = el.scrollHeight
-            document.getElementById('choose-office-container').classList.remove('hidden')
+              el.scrollTop = el.scrollHeight
+              document.getElementById('choose-office-container').classList.remove('hidden')
 
               selectOffice = new mdc.select.MDCSelect(document.getElementById('select-office'));
             }
@@ -405,7 +406,7 @@ function mapView() {
   })
 }
 
-function mapDom(){
+function mapDom() {
   return `
   <div id='map-view'>
     <div id='map'></div>
@@ -449,7 +450,7 @@ function ChatControl(chatDiv, map, latLng) {
 
   const chat = new Fab('chat').getButton();
   chat.root_.id = 'recenter-action'
-  chat.root_.classList.add('custom-control', 'right','mdc-theme--primary-bg','mdc-theme--secondary');
+  chat.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary');
   console.log(chat)
   chatDiv.appendChild(chat.root_);
   chat.root_.addEventListener('click', function () {
@@ -460,15 +461,16 @@ function ChatControl(chatDiv, map, latLng) {
 }
 
 function TakeSnap(el) {
+  
   const snap = new Fab('photo_camera').getButton();
   snap.root_.id = 'take-snap';
-  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg','mdc-theme--secondary')
+  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary')
   el.appendChild(snap.root_);
   snap.root_.addEventListener('click', function () {
 
     console.log('clicked')
     // AndroidInterface.startCamera();
-
+    history.pushState(['snapView'],null,null)
     setFilePath();
   })
 }
@@ -495,7 +497,7 @@ function mdcSelectOffice(data, label, id) {
 
 function mdcSelectVenue(venues, label, id) {
   let float;
- 
+
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
@@ -513,91 +515,72 @@ function mdcSelectVenue(venues, label, id) {
 }
 
 function setFilePath(base64) {
+  topAppBar.navIcon_.textContent = 'arrow_back'
+  topAppBar.navIcon_.classList.add('mdc-theme--secondary')
+
   // container.appendChild(image);
   // const url = `data:image/jpg;base64,${base64}`
   const url = './img/test.jpeg'
-  const form = createElement('div', {
-    className: 'form-meta'
-  });
-  form.classList.add('snap-form');
-  const textarea = textAreaField({
-    rows: "1",
-    cols: "100",
-    label: 'Comment'
-  })
+  document.getElementById('app-current-panel').innerHTML = `
+  
+<div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
+<div class="form-meta snap-form">
+  <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
+      <textarea
+      class="mdc-text-field__input  snap-text mdc-theme--secondary" rows="1" cols="100" autofocus="true"></textarea></div>
+      <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg mdc-theme--secondary mdc-ripple-upgraded"
+    style="z-index: 9;"><i class="mdc-fab__icon material-icons">send</i>
+    </button>
+</div>
+</div>
 
-  textarea.input_.classList.add('mdc-theme--primary', 'snap-text');
-
-  const submit = new Fab('send').getButton();
-  submit.root_.classList.add('app-fab--absolute');
-  submit.root_.style.zIndex = '9'
-  submit.root_.setAttribute('autofocus', 'true');
-
-  form.appendChild(textarea.root_);
-  form.appendChild(submit.root_);
+  `
+  const content = document.getElementById('snap')
+  const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
+  const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))
 
 
-
-  const dialog = new Dialog('', form).create('simple');
-
-  dialog.listen('MDCDialog:opened', function (evt) {
-    const content = dialog.content_
-
-    const header = createHeader(['keyboard_backspace'], [], 'snap-header');
-    header.foundation_.adapter_.addClass('transparent');
-    header.listen('MDCTopAppBar:nav', () => {
-      dialog.close();
-    });
-    content.appendChild(header.root_);
-
-    textarea.input_.addEventListener('keyup', function () {
-      this.style.paddingTop = '25px';
-      this.style.height = '5px'
-      this.style.height = (this.scrollHeight) + "px";
-      if (this.scrollHeight <= 300) {
-        submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
-      }
-    });
-    submit.root_.addEventListener('click', function () {
-      const textValue = textarea.value;
-      const image = url;
-
-      createCheckInData().then(function (result) {
-        console.log(result)
-        manageLocation().then(function (location) {
-          result.data[0].attachment.Comment.value = textValue;
-          result.data[0].attachment.Photo.value = image
-          checkInDialog(result, location)
-          dialog.close();
-        })
-      }).catch(console.log)
-    })
-
-    const image = new Image();
-    image.onload = function () {
-
-      const orientation = getOrientation(image);
-      content.style.backgroundImage = `url(${url})`
-      content.style.padding = '0px'
-      content.style.overflow = 'hidden'
-      content.classList.add('snap-bckg');
-
-      if (orientation == 'potrait') {
-        content.style.backgroundSize = 'cover'
-      }
-      if (orientation == 'landscape' || orientation == 'sqaure') {
-        content.style.backgroundSize = 'contain'
-      }
-
+  textarea.input_.addEventListener('keyup', function () {
+    this.style.paddingTop = '25px';
+    this.style.height = '5px'
+    this.style.height = (this.scrollHeight) + "px";
+    if (this.scrollHeight <= 300) {
+      submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
     }
-    image.src = url
+  });
+  submit.root_.addEventListener('click', function () {
+    const textValue = textarea.value;
+    const image = url;
 
+    createCheckInData().then(function (result) {
+      console.log(result)
+      manageLocation().then(function (location) {
+        result.data[0].attachment.Comment.value = textValue;
+        result.data[0].attachment.Photo.value = image
+        checkInDialog(result, location)
+      })
+    }).catch(console.log)
   })
 
-  dialog.container_.style.minWidth = '100%';
-  dialog.root_.querySelector('.mdc-dialog__surface').style.minWidth = '100%';
-  dialog.root_.querySelector('.mdc-dialog__surface').style.minHeight = '100vh';
-  dialog.open();
+  const image = new Image();
+  image.onload = function () {
+
+    const orientation = getOrientation(image);
+    content.style.backgroundImage = `url(${url})`
+    content.style.padding = '0px'
+    content.style.overflow = 'hidden'
+    content.classList.add('snap-bckg');
+
+    if (orientation == 'potrait') {
+      content.style.backgroundSize = 'cover'
+    }
+    if (orientation == 'landscape' || orientation == 'sqaure') {
+      content.style.backgroundSize = 'contain'
+    }
+
+  }
+  image.src = url
+
 }
 
 function getOrientation(image) {

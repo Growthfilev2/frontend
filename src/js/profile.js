@@ -1,9 +1,7 @@
-function profileView(pushState) {
+function profileView() {
   document.getElementById('start-loader').classList.add('hidden')
-  if (pushState) {
     history.pushState(['profileView'], null, null);
-  }
-  drawer.open = false;
+    drawer.open = false;
 
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
