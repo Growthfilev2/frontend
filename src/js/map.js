@@ -467,9 +467,9 @@ function TakeSnap(el) {
   snap.root_.addEventListener('click', function () {
 
     console.log('clicked')
-    AndroidInterface.startCamera();
+    // AndroidInterface.startCamera();
 
-    // setFilePath();
+    setFilePath();
   })
 }
 
@@ -514,7 +514,8 @@ function mdcSelectVenue(venues, label, id) {
 
 function setFilePath(base64) {
   // container.appendChild(image);
-  const url = `data:image/jpg;base64,${base64}`
+  // const url = `data:image/jpg;base64,${base64}`
+  const url = './img/test.jpeg'
   const form = createElement('div', {
     className: 'form-meta'
   });
