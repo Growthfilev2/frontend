@@ -3,12 +3,12 @@ function profileView(pushState) {
   if (pushState) {
     history.pushState(['profileView'], null, null);
   }
-  drawer.open = false
+  drawer.open = false;
+
+  const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
+  const auth = firebase.auth().currentUser
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
-  // const sectionStart = document.getElementById('section-start');
-  // sectionStart.innerHTML = ''
-  // sectionStart.appendChild(headerBackIcon())
   console.log(topAppBar)
   topAppBar.root_.classList.remove('transparent');
   topAppBar.navIcon_.textContent = 'arrow_back'
@@ -30,7 +30,7 @@ function profileView(pushState) {
 <div id='user-details'></div>  
 <div class="mdc-card__actions">
 <div class="mdc-card__action-buttons">
-    <span class="mdc-typography--headline6 last-logged-in-time">${firebase.auth().currentUser.metadata.lastSignInTime}</span>
+    <span class="mdc-typography--headline6 last-logged-in-time">${lastSignInTime}</span>
 </div>
 </div>
 `
@@ -41,8 +41,8 @@ function profileView(pushState) {
   createViewProfile()
 
   const editInit = new mdc.iconButton.MDCIconButtonToggle(document.getElementById('edit-profile'))
-  let nameInit;
-  let editInit;
+  let newName;
+  let newEmail;
 
   editInit.listen('MDCIconButtonToggle:change', function (evt) {
     if (evt.detail.isOn) {
@@ -52,18 +52,25 @@ function profileView(pushState) {
       const currentEmail = firebase.auth().currentUser.email;
 
       document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
-      nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
-      emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
+      newName = new mdc.textField.MDCTextField(document.getElementById('name')).value;
+      newEmail = new mdc.textField.MDCTextField(document.getElementById('email')).value;
       return;
     }
-
-    if (nameInit.value !== currentName) {
-      firebase.auth().currentUser.updateProfile({
-        displayName: nameInit.value
+ 
+    if (newName !== currentName) {
+      auth.updateProfile({
+        displayName: newName
       })
     }
-    if (nameInit.value !== currentEmail) {
-      
+
+    if (isEmailValid(newEmail,currentEmail)) {
+     
+
+      if (timeDiff(lastSignInTime) <= 2) {
+        updateEmail(auth, newEmail);
+      } else {
+        newSignIn(newEmail, emailField);
+      }
     }
 
     document.querySelector('.mdc-card .mdc-card__actions').classList.remove('action-bottom')
@@ -281,7 +288,7 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 }).join("")}
 
 <h1 class="mdc-typography--subtitle1 mt-0">
-    Joined : ${moment(firebase.auth().currentUser.metadata).format("Do MMM YYYY")}
+    Joined : ${moment(firebase.auth().currentUser.metadata.creationTime).format("Do MMM YYYY")}
 </h1>
 
 <div id='reports'>
@@ -310,14 +317,35 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
   return template
 }
 
-
-
-
-{
-
-}
 function timeDiff(lastSignInTime) {
   var currentDate = moment().format('YYY-MM-DD HH:mm');
   var authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm');
   return moment(currentDate).diff(moment(authSignInTime), 'minutes');
+}
+
+
+function isEmailValid(newEmail,currentEmail) {
+  return !newEmail || newEmail === currentEmail
+  
+}
+
+function updateEmail(user, email) {
+  progressBar.foundation_.open();
+  user.updateEmail(email).then(function(){
+    emailUpdateSuccess(user)
+  }).catch(authUpdatedError);
+}
+
+function emailUpdateSuccess(user) {
+  
+  user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
+}
+
+function emailVerificationSuccess(showSuccessDialog) {
+  snacks('Verification link has been send to your email address');
+}
+
+function emailVerificationError(error) {
+  snacks(error.message);
+  progressBar.foundation_.close(); 
 }
