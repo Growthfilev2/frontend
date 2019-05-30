@@ -221,12 +221,11 @@ function mapView() {
   history.pushState(['mapView'], null, null);
   topAppBar.navIcon_.textContent = 'menu';
   topAppBar.navIcon_.classList.remove('mdc-theme--secondary')
-  // topAppBar.navIcon_.classList.add('')
   topAppBar.root_.classList.add('transparent');
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
-  let loadedMarkers = [];
+
 
   manageLocation().then(function (location) {
     document.getElementById('start-loader').classList.add('hidden');
@@ -276,7 +275,11 @@ function mapView() {
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(chatControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
 
-
+      createCheckInData().then(function(subs){
+          subs.data.forEach(function(value){
+            requestCreator('create',setVenueForCheckIn([],value))
+          })
+      })
       // console.log(map)
   
     })
