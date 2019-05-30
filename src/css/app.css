@@ -1,14 +1,13 @@
-html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel,#map-view {
+html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
   height: 100%;
 }
 :root {
   --mdc-theme-primary: #0399f4 ;
-  --mdc-theme-secondary: #0399f4 ;
+  --mdc-theme-secondary: #FFFFFF ;
   --mdc-theme-background: #FFFFFF ;
-
   --mdc-theme-on-primary:#000000 ;
   --mdc-theme-on-secondary :#ffffff ;
-
+  
   --mdc-theme-text-primary-on-light:#FFFFFF ;
   --mdc-theme-text-primary-on-dark:#cccccc ;
 
@@ -17,9 +16,7 @@ html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel,#map-v
 }
 
 
-.demo-menu {
-  color: black !important;
-}
+
 .mdc-drawer.mdc-drawer--modal {
   width: 85%;
 }
@@ -214,3 +211,11 @@ body {
 
   max-height: 300px;
 }
+
+
+/*tabs  */
+
+/* .mdc-tab-indicator__content.mdc-tab-indicator__content--underline {
+  border-color: var(--mdc-theme-secondary);
+} */
+

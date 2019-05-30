@@ -219,11 +219,28 @@ var globMark;
 
 function mapView() {
   history.pushState(['mapView'], null, null);
-  document.getElementById('section-start').innerHTML = ' <a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon">menu</a>'
-  topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  topAppBar.setScrollTarget(document.getElementById('main-content'));
+  document.getElementById('section-start').innerHTML = '<a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon">menu</a>'
   topAppBar.root_.classList.add('transparent');
-  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
+  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
+  document.getElementById('map-view').style.height = '100%';
+
+  topAppBar.listen('MDCTopAppBar:nav', () => {
+    const state = history.state[0]
+    if(state === 'mapView') {
+      drawer.open = !drawer.open;
+      [].map.call(document.querySelectorAll('.mdc-drawer .mdc-list-item'), function (el) {
+        new mdc.ripple.MDCRipple(el)
+      })
+      document.getElementById('drawer-icon').src = firebase.auth().currentUser.photoURL;
+      document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
+      document.getElementById('drawer-icon').onclick = function () {
+        profileView(true);
+      }
+      return;
+    }
+    if(state === 'profileView') return history.back();
+  });
+
   let loadedMarkers = [];
 
   manageLocation().then(function (location) {
@@ -276,32 +293,7 @@ function mapView() {
 
 
       // console.log(map)
-      topAppBar.listen('MDCTopAppBar:nav', () => {
-        drawer.open = !drawer.open;
-
-        [].map.call(document.querySelectorAll('.mdc-drawer .mdc-list-item'), function (el) {
-          new mdc.ripple.MDCRipple(el)
-        })
-        document.getElementById('drawer-icon').src = firebase.auth().currentUser.photoURL;
-        document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
-        document.getElementById('drawer-icon').onclick = function () {
-          profileView(true);
-        }
-      });
-
-
-      
-
-
-
-
-
-      // isEmployeeOnLeave().then(function (onLeave) {
-      //   if (onLeave) return
-      //   createCheckInData().then(function (result) {
-      //     checkInDialog(result, location)
-      //   }).catch(console.log)
-      // })
+  
     })
 
     google.maps.event.addListener(map, 'idle', function () {

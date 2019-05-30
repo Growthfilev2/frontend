@@ -712,9 +712,9 @@ function headerBackIcon(store) {
   return backIcon;
 }
 
-function getUserRecord(db, data) {
+function getUserRecord(data,tx) {
   return new Promise(function (resolve, reject) {
-    const usersObjectStore = db.transaction('users').objectStore('users');
+    const usersObjectStore = tx.objectStore('users');
     let number;
     if (typeof data === 'string') {
       number = data

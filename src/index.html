@@ -48,11 +48,11 @@
 </head>
 
 <body class="mdc-typography">
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed transparent'>
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
         <!-- <i class="material-icons" style="color:black">menu</i> -->
-        <a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon">menu</a>
+        <a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary">menu</a>
 
       </section>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
@@ -79,52 +79,52 @@
     <div class="success--check"></div>
   </div>
 
-  <div id="growthfile" class="">
-    <aside class="mdc-drawer mdc-drawer--modal">
-      <div class="mdc-drawer__header mdc-elevation--z1">
-        <img src="" id='drawer-icon' src='./img/empty-user.jpg'>
-        <h3 class="mdc-drawer__title" id='drawer-title'></h3>
-      </div>
-      <div class="mdc-drawer__content">
-        <nav class="mdc-list">
-          <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
-            <span class="mdc-list-item__text">Inbox</span>
-          </a>
-          <a class="mdc-list-item" href="#">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
-            <span class="mdc-list-item__text">Outgoing</span>
-          </a>
-          <a class="mdc-list-item" href="#">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
-            <span class="mdc-list-item__text">Drafts</span>
+  <aside class="mdc-drawer mdc-drawer--modal">
+    <div class="mdc-drawer__header mdc-elevation--z1">
+      <img src="" id='drawer-icon' src='./img/empty-user.jpg'>
+      <h3 class="mdc-drawer__title" id='drawer-title'></h3>
+    </div>
+    <div class="mdc-drawer__content">
+      <nav class="mdc-list">
+        <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
+          <span class="mdc-list-item__text">Inbox</span>
+        </a>
+        <a class="mdc-list-item" href="#">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
+          <span class="mdc-list-item__text">Outgoing</span>
+        </a>
+        <a class="mdc-list-item" href="#">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
+          <span class="mdc-list-item__text">Drafts</span>
 
-          </a>
-          <a class="mdc-list-item" href="#">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">Sample</i>
-            <span class="mdc-list-item__text">Drafts</span>
+        </a>
+        <a class="mdc-list-item" href="#">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">Sample</i>
+          <span class="mdc-list-item__text">Drafts</span>
 
-          </a>
-          <a class="mdc-list-item" href="#">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">Sample</i>
-            <span class="mdc-list-item__text">Drafts</span>
+        </a>
+        <a class="mdc-list-item" href="#">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">Sample</i>
+          <span class="mdc-list-item__text">Drafts</span>
 
-          </a>
+        </a>
 
-        </nav>
-        <nav class="mdc-list drawer-settings">
-          <hr class="mdc-list-divider">
-          <a class="mdc-list-item" href="#" aria-current="false" tabindex="-1">
-            <span class="mdc-list-item__text">Growthfile</span>
-          </a>
-          <a class="mdc-list-item" href="#" aria-current="false" tabindex="-1">
-            <span class="mdc-list-item__text">Sample Data</span>
-          </a>
-        </nav>
-      </div>
-    </aside>
+      </nav>
+      <nav class="mdc-list drawer-settings">
+        <hr class="mdc-list-divider">
+        <a class="mdc-list-item" href="#" aria-current="false" tabindex="-1">
+          <span class="mdc-list-item__text">Growthfile</span>
+        </a>
+        <a class="mdc-list-item" href="#" aria-current="false" tabindex="-1">
+          <span class="mdc-list-item__text">Sample Data</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
 
-    <div class="mdc-drawer-scrim"></div>
+  <div class="mdc-drawer-scrim"></div>
+  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
 
 
     <div id='main-content'>
@@ -170,23 +170,24 @@
           <div id='profile-view'></div>
           <div id='snap-view'></div>
         </div>
-        <div id="snackbar-container">
-          <div class="mdc-snackbar">
-            <div class="mdc-snackbar__surface">
-              <div class="mdc-snackbar__label" role="status" aria-live="polite">
-              </div>
-              <div class="mdc-snackbar__actions">
-                <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
-              </div>
-            </div>
-          </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div id="snackbar-container">
+    <div class="mdc-snackbar">
+      <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label" role="status" aria-live="polite">
         </div>
-        <div id='dialog-container'></div>
+        <div class="mdc-snackbar__actions">
+          <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
+        </div>
       </div>
     </div>
   </div>
-
-
+  <div id='dialog-container'></div>
 </body>
 
 </html>

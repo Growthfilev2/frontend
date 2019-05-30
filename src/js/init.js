@@ -113,6 +113,8 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
+  topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  topAppBar.setScrollTarget(document.getElementById('main-content'));
 
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
 
@@ -254,8 +256,11 @@ function startApp(start) {
           
             const childrenStore = tx.objectStore('children')
             childrenStore.createIndex('officeTemplate', ['office', 'template']);
+
             childrenStore.createIndex('employees', 'employee');
             childrenStore.createIndex('employeeOffice',['employee','office'])
+            childrenStore.createIndex('employeeOffice','team')
+            childrenStore.createIndex('employeeOffice',['team','office'])
 
             childrenStore.index('template').openCursor('employee').onsuccess = function(event){
                 const cursor = event.target.result;
@@ -264,6 +269,9 @@ function startApp(start) {
                   return;
                 }
                 cursor.value.employee = cursor.value.attachment['Employee Contact'].value
+                if(activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
+                  cursor.value.team = 1
+                }
                 cursor.update(cursor.value)
                 cursor.continue();
             };
@@ -286,12 +294,12 @@ function startApp(start) {
         
         // resetScroll();
         // mapView();
-        profileView()
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
         });
+        profileView()
         // runAppChecks()
         // manageLocation().then(console.log).catch(handleError)
 
@@ -342,13 +350,19 @@ function getEmployeeDetails(range,indexName) {
       const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
+ 
+
       const index = store.index(indexName)
    
 
       const getEmployee = index.getAll(range);
 
       getEmployee.onsuccess = function (event) {
-        return resolve(event.target.result)
+        const result = event.target.result;
+     
+        console.log(result);
+
+        return resolve(result)
       }
       getEmployee.onerror = function () {
         return reject({
@@ -493,6 +507,8 @@ function createObjectStores(db, uid) {
   children.createIndex('officeTemplate', ['office', 'template']);
   children.createIndex('employees', 'employee');
   children.createIndex('employeeOffice',['employee','office'])
+  children.createIndex('team','team')
+  children.createIndex('teamOffice',['team','office'])
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });

@@ -627,7 +627,7 @@ function updateCalendar(activity, tx) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment(activity, tx) {
+function putAttachment(activity, tx,param) {
 
   const store = tx.objectStore('children');
   const commonSet = {
@@ -638,12 +638,15 @@ function putAttachment(activity, tx) {
     attachment: activity.attachment,
   };
   
-  
+  const myNumber = param.user.phoneNumber
 
   if(activity.template === 'employee') {
     commonSet.employee = activity.attachment['Employee Contact'].value
+    if(activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
+      commonSet.team = 1
+    }
   }
-  
+
   store.put(commonSet)
 
 }
@@ -782,9 +785,10 @@ function successResponse(read, param) {
   const removeActivitiesForOthers = []
   request.onsuccess = function () {
     const db = request.result
-    const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum','root'], 'readwrite');
+    const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum','root','users'], 'readwrite');
     const addendumObjectStore = updateTx.objectStore('addendum')
     const activityObjectStore = updateTx.objectStore('activity');
+    const userStore = updateTx.objectStore('users')
     let counter = {};
 
     read.addendum.forEach(function (addendum) {
@@ -812,12 +816,20 @@ function successResponse(read, param) {
     read.activities.slice().reverse().forEach(function (activity) {
       activity.canEdit ? activity.editable == 1 : activity.editable == 0;
       activityObjectStore.put(activity);
+ 
       updateMap(activity, updateTx);
       updateCalendar(activity, updateTx);
-      putAttachment(activity, updateTx);
+      putAttachment(activity, updateTx,param);
       if (activity.hidden === 0) {
         createListStore(activity, counter, updateTx)
-      }
+      };
+      activity.assignees.forEach(function(user){
+        userStore.put({
+          displayName: user.displayName,
+          mobile: user.phoneNumber,
+          photoURL: user.photoURL
+        })
+      })
     })
 
     read.templates.forEach(function (subscription) {

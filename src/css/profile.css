@@ -8,9 +8,32 @@
 body {
     margin: 0;
 }
-
-.demo-card {
+#profile-card  {
     min-height: 100vh;
+}
+#profile-card .demo-card__primary {
+    padding: 16px;
+
+
+}
+
+.action-bottom{
+    position: fixed;
+    bottom:0;
+    width:100%;
+}
+#base-details {
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 10px;
+}
+#user-details {
+    padding-right: 10px;
+    padding-left: 10px;
+   
+}
+.mdc-card__primary-action::before, .mdc-card__primary-action::after {
+    background-color: var(--mdc-theme-background)
 }
 
 .p-10 {
@@ -18,13 +41,11 @@ body {
 }
 
 #edit-profile {
-    background-color: var(--mdc-theme-primary);
-    border-radius: 50%;
-    position: fixed;
-    top: 11.5rem;
+ 
+    border-radius: 50%;  
     right: 1rem;
+    top: 1rem;
     float: right;
-    color: white;
 }
 #edit-profile.without-tabs-des {
     bottom: 54.5rem;
@@ -40,7 +61,6 @@ body {
 
 .meta-icon{
     vertical-align: middle;
-    color: var(--mdc-theme-background);
     padding-right: 10px;
 }
 
@@ -153,9 +173,6 @@ body {
     border-bottom-color: #e0e0e0;
   }
   
-  .mdc-chip-set.supervisor {
-      margin-left: -10px;
-  }
 
   .content {
     display: none;
