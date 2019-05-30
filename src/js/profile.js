@@ -316,3 +316,8 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 {
 
 }
+function timeDiff(lastSignInTime) {
+  var currentDate = moment().format('YYY-MM-DD HH:mm');
+  var authSignInTime = moment(lastSignInTime).format('YYY-MM-DD HH:mm');
+  return moment(currentDate).diff(moment(authSignInTime), 'minutes');
+}
