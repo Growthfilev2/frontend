@@ -115,6 +115,25 @@ window.addEventListener("load", function () {
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
   topAppBar.setScrollTarget(document.getElementById('main-content'));
+  topAppBar.listen('MDCTopAppBar:nav', () => {
+    const state = history.state[0]
+    if(state === 'mapView') {
+      drawer.open = !drawer.open;
+      [].map.call(document.querySelectorAll('.mdc-drawer .mdc-list-item'), function (el) {
+        new mdc.ripple.MDCRipple(el)
+      })
+      document.getElementById('drawer-icon').src = firebase.auth().currentUser.photoURL;
+      document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
+      document.getElementById('drawer-icon').onclick = function () {
+        topAppBar.navIcon_.classList.add('mdc-theme--secondary')
+
+        profileView(true);
+      }
+      return;
+    }
+    topAppBar.navIcon_.classList.add('mdc-theme--secondary')
+    return history.back();
+  });
 
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
 
@@ -293,13 +312,12 @@ function startApp(start) {
         console.log(document.cookie);
         
         // resetScroll();
-        // mapView();
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
         });
-        profileView()
+        mapView();
         // runAppChecks()
         // manageLocation().then(console.log).catch(handleError)
 

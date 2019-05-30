@@ -219,28 +219,13 @@ var globMark;
 
 function mapView() {
   history.pushState(['mapView'], null, null);
-  document.getElementById('section-start').innerHTML = '<a href="#" class="demo-menu material-icons mdc-top-app-bar__navigation-icon">menu</a>'
+  topAppBar.navIcon_.textContent = 'menu';
+  topAppBar.navIcon_.classList.remove('mdc-theme--secondary')
+  // topAppBar.navIcon_.classList.add('')
   topAppBar.root_.classList.add('transparent');
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
+  document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
-
-  topAppBar.listen('MDCTopAppBar:nav', () => {
-    const state = history.state[0]
-    if(state === 'mapView') {
-      drawer.open = !drawer.open;
-      [].map.call(document.querySelectorAll('.mdc-drawer .mdc-list-item'), function (el) {
-        new mdc.ripple.MDCRipple(el)
-      })
-      document.getElementById('drawer-icon').src = firebase.auth().currentUser.photoURL;
-      document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
-      document.getElementById('drawer-icon').onclick = function () {
-        profileView(true);
-      }
-      return;
-    }
-    if(state === 'profileView') return history.back();
-  });
-
   let loadedMarkers = [];
 
   manageLocation().then(function (location) {
@@ -279,16 +264,16 @@ function mapView() {
 
     google.maps.event.addListenerOnce(map, 'idle', function () {
       console.log('idle_once');
-      var centerControlDiv = document.createElement('div');
-      var centerControl = new CenterControl(centerControlDiv, map, latLng)
-      centerControlDiv.index = 1;
+      var chatControlDiv = document.createElement('div');
+      var chatControl = new ChatControl(chatControlDiv, map, latLng)
+      chatControlDiv.index = 1;
 
 
       var snapControlDiv = document.createElement('div');
       var snapControl = new TakeSnap(snapControlDiv);
       snapControlDiv.index = 1;
 
-      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(centerControlDiv);
+      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(chatControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
 
 
@@ -417,17 +402,54 @@ function mapView() {
   })
 }
 
+function mapDom(){
+  return `
+  <div id='map-view'>
+    <div id='map'></div>
+    <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
+      <div class="card__primary">
+        <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-header'></h2>
 
-function CenterControl(controlDiv, map, latLng) {
+      </div>
+      <div role="progressbar"
+        class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+        id='check-in-prog'>
+        <div class="mdc-linear-progress__buffering-dots"></div>
+        <div class="mdc-linear-progress__buffer"></div>
+        <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+          <span class="mdc-linear-progress__bar-inner"></span>
+        </div>
+        <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+          <span class="mdc-linear-progress__bar-inner"></span>
+        </div>
+      </div>
+      <div class="card__secondary mdc-typography mdc-typography--body2">
+        <!-- 'mdc-card__primary-action card__primary-action' -->
+        <div class="content-body">
+
+        </div>
+        <div id='submit-cont'>
+          <button class="demo-button mdc-button mdc-theme--primary-bg mdc-theme--secondary" id='submit-check-in'><span
+              class="mdc-button__label">SUBMIT</span></button>
+        </div>
+      </div>
+
+      <!-- <div class="mdc-card__actions">
+        </div> -->
+    </div>
+  </div>`
+}
+
+function ChatControl(chatDiv, map, latLng) {
 
   // Set CSS for the control border.
 
-  const recenter = new Fab('chat').getButton();
-  recenter.root_.id = 'recenter-action'
-  recenter.root_.classList.add('custom-control', 'right');
-  console.log(recenter)
-  controlDiv.appendChild(recenter.root_);
-  recenter.root_.addEventListener('click', function () {
+  const chat = new Fab('chat').getButton();
+  chat.root_.id = 'recenter-action'
+  chat.root_.classList.add('custom-control', 'right','mdc-theme--primary-bg','mdc-theme--secondary');
+  console.log(chat)
+  chatDiv.appendChild(chat.root_);
+  chat.root_.addEventListener('click', function () {
     // recenter.root_.querySelector('i').style.color = '#0399f4'
     // focusMarker(map, latLng, 18);
   });
@@ -437,7 +459,7 @@ function CenterControl(controlDiv, map, latLng) {
 function TakeSnap(el) {
   const snap = new Fab('photo_camera').getButton();
   snap.root_.id = 'take-snap';
-  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--on-secondary')
+  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg','mdc-theme--secondary')
   el.appendChild(snap.root_);
   snap.root_.addEventListener('click', function () {
 

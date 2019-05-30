@@ -35,52 +35,69 @@ function profileView(pushState) {
 </div>
 `
 
-  document.getElementById('profile-view').innerHTML = root;
-  document.getElementById('base-details').innerHTML = createBaseDetails();
-  document.getElementById('user-details').innerHTML = createUserDetails();
-  createViewProfile()
+  document.getElementById('app-current-panel').innerHTML = root;
+  setDetails()
 
   const editInit = new mdc.iconButton.MDCIconButtonToggle(document.getElementById('edit-profile'))
   let newName;
   let newEmail;
+  const currentName = auth.displayName;
+  const currentEmail = auth.email;
 
   editInit.listen('MDCIconButtonToggle:change', function (evt) {
     if (evt.detail.isOn) {
       document.getElementById('base-details').innerHTML = ''
       document.querySelector('.mdc-card .mdc-card__actions').classList.add('action-bottom')
-      const currentName = firebase.auth().currentUser.displayName;
-      const currentEmail = firebase.auth().currentUser.email;
 
       document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
-      newName = new mdc.textField.MDCTextField(document.getElementById('name')).value;
-      newEmail = new mdc.textField.MDCTextField(document.getElementById('email')).value;
+      nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
+      emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
       return;
     }
- 
-    if (newName !== currentName) {
+    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('action-bottom')
+    newName = nameInit.value;
+    newEmail = emailInit.value;
+    progressBar.foundation_.open();
+    if (newName !== currentName && isEmailValid(newEmail, currentEmail)) {
       auth.updateProfile({
         displayName: newName
+      }).then(function(){
+        if (timeDiff(lastSignInTime) <= 2) {
+          updateEmail(auth, newEmail);
+        } else {
+          newSignIn(newEmail);
+        }
       })
+      return
     }
 
-    if (isEmailValid(newEmail,currentEmail)) {
-     
+    if (newName !== currentName && !isEmailValid(newEmail, currentEmail)) {
+      auth.updateProfile({
+        displayName: newName
+      }).then(setDetails)
+      return;
 
+    }
+    if (newName === currentName && isEmailValid(newEmail, currentEmail)) {
       if (timeDiff(lastSignInTime) <= 2) {
         updateEmail(auth, newEmail);
       } else {
-        newSignIn(newEmail, emailField);
+        newSignIn(newEmail);
       }
+      return;
     }
-
-    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('action-bottom')
-    document.getElementById('base-details').innerHTML = createBaseDetails()
-    document.getElementById('user-details').innerHTML = createUserDetails();
-    createViewProfile()
-
+    setDetails()
   })
 
   console.log(editInit)
+
+}
+
+function setDetails() {
+  progressBar.foundation_.close();
+  document.getElementById('base-details').innerHTML = createBaseDetails()
+  document.getElementById('user-details').innerHTML = createUserDetails();
+  createViewProfile()
 
 }
 
@@ -220,7 +237,7 @@ function createEditProfile(name, email) {
   <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
 
       <i class="material-icons mdc-text-field__icon">account_circle</i>
-      <input class="mdc-text-field__input" value=${name}>
+      <input class="mdc-text-field__input" value="${name}">
       <div class="mdc-line-ripple"></div>
       <label class="mdc-floating-label ${name ? 'mdc-floating-label--float-above' :''}">Name</label>
   </div>
@@ -233,7 +250,7 @@ function createEditProfile(name, email) {
 
   <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
       <i class="material-icons mdc-text-field__icon">email</i>
-      <input class="mdc-text-field__input" value=${email}>
+      <input class="mdc-text-field__input" value="${email}">
       <div class="mdc-line-ripple"></div>
       <label class="mdc-floating-label ${email ? 'mdc-floating-label--float-above' :''} ">Email</label>
   </div>
@@ -324,28 +341,63 @@ function timeDiff(lastSignInTime) {
 }
 
 
-function isEmailValid(newEmail,currentEmail) {
-  return !newEmail || newEmail === currentEmail
-  
+function isEmailValid(newEmail, currentEmail) {
+  if (!newEmail) {
+    return false;
+  }
+  return !(newEmail === currentEmail)
+
 }
 
 function updateEmail(user, email) {
   progressBar.foundation_.open();
-  user.updateEmail(email).then(function(){
+  user.updateEmail(email).then(function () {
     emailUpdateSuccess(user)
-  }).catch(authUpdatedError);
+  }).catch(console.log);
 }
 
 function emailUpdateSuccess(user) {
-  
+
   user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
 }
 
-function emailVerificationSuccess(showSuccessDialog) {
+function emailVerificationSuccess() {
+  document.getElementById('dialog-container').innerHTML = ''
+  setDetails();
   snacks('Verification link has been send to your email address');
 }
 
 function emailVerificationError(error) {
   snacks(error.message);
-  progressBar.foundation_.close(); 
+  progressBar.foundation_.close();
+}
+
+function newSignIn(value) {
+  const dialog = new Dialog('', createElement('div', {
+    id: 'refresh-login'
+  })).create();
+  dialog.open();
+  dialog.listen('MDCDialog:opened', function (evt) {
+    try {
+      if (!ui) {
+        ui = new firebaseui.auth.AuthUI(firebase.auth())
+      }
+      ui.start('#refresh-login', firebaseUiConfig(value));
+      setTimeout(function () {
+        document.querySelector('.firebaseui-id-phone-number').disabled = true;
+        document.querySelector('.firebaseui-label').remove();
+        document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
+      }, 500)
+
+    } catch (e) {
+      // dialogSelector.remove();
+      console.log(e);
+      handleError({
+        message: `${e.message} from newSignIn function during email updation`
+      });
+      snacks('Please try again later');
+    }
+  })
+
+
 }
