@@ -5,7 +5,7 @@ function profileView(pushState) {
   }
   drawer.open = false
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
-  
+
   // const sectionStart = document.getElementById('section-start');
   // sectionStart.innerHTML = ''
   // sectionStart.appendChild(headerBackIcon())
@@ -34,44 +34,50 @@ function profileView(pushState) {
 </div>
 </div>
 `
-  
+
   document.getElementById('profile-view').innerHTML = root;
   document.getElementById('base-details').innerHTML = createBaseDetails();
   document.getElementById('user-details').innerHTML = createUserDetails();
   createViewProfile()
 
   const editInit = new mdc.iconButton.MDCIconButtonToggle(document.getElementById('edit-profile'))
-  editInit.listen('MDCIconButtonToggle:change' , function(evt){
-    if(evt.detail.isOn) {
+  let nameInit;
+  let editInit;
+
+  editInit.listen('MDCIconButtonToggle:change', function (evt) {
+    if (evt.detail.isOn) {
       document.getElementById('base-details').innerHTML = ''
       document.querySelector('.mdc-card .mdc-card__actions').classList.add('action-bottom')
       const currentName = firebase.auth().currentUser.displayName;
       const currentEmail = firebase.auth().currentUser.email;
 
-      document.querySelector('#user-details').innerHTML = createEditProfile(currentName,currentEmail);
-      const nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
-      const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
-      if(nameInit.value !== currentName) {
-        
-      }
-      if(nameInit.value !== currentEmail) {
-
-      }
+      document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
+      nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
+      emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
+      return;
     }
-    else {
-      document.querySelector('.mdc-card .mdc-card__actions').classList.remove('action-bottom')
 
-      document.getElementById('base-details').innerHTML = createBaseDetails()
-      document.getElementById('user-details').innerHTML = createUserDetails();
-      createViewProfile()
+    if (nameInit.value !== currentName) {
+      firebase.auth().currentUser.updateProfile({
+        displayName: nameInit.value
+      })
     }
+    if (nameInit.value !== currentEmail) {
+      
+    }
+
+    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('action-bottom')
+    document.getElementById('base-details').innerHTML = createBaseDetails()
+    document.getElementById('user-details').innerHTML = createUserDetails();
+    createViewProfile()
+
   })
 
   console.log(editInit)
 
 }
 
-function createBaseDetails(){
+function createBaseDetails() {
   return `   <div class="basic-info seperator">
 
   <h1 class="mdc-typography--headline5 mb-0 mt-0" id='view-name'>
@@ -88,7 +94,7 @@ function createBaseDetails(){
 </div>`
 }
 
-function createUserDetails(){
+function createUserDetails() {
   return `
   <div class="mdc-tab-bar" role="tablist">
   <div class="mdc-tab-scroller">
@@ -104,7 +110,7 @@ function createUserDetails(){
 `
 }
 
-function createViewProfile(){
+function createViewProfile() {
 
   getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (myCreds) {
     let officeDom = '';
@@ -163,7 +169,7 @@ function createViewProfile(){
               const record = event.target.result;
               if (!record) return;
               supers += addUserChips(record)
-              
+
             }
           })
 
@@ -201,8 +207,8 @@ function createViewProfile(){
   })
 }
 
-function createEditProfile(name,email){
-  
+function createEditProfile(name, email) {
+
   return ` <div class="mdc-typography mdc-typography--body2 p-10" id='card-body-edit'>
   <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
 
@@ -308,5 +314,5 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 
 
 {
- 
+
 }
