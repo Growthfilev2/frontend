@@ -216,9 +216,12 @@ var gray = [{
 ]
 var map;
 var globMark;
-
+let currentOffice;
 function mapView() {
   history.pushState(['mapView'], null, null);
+  history.pushState(['mapView'], null, null);
+  history.pushState(['mapView'], null, null);
+
   topAppBar.navIcon_.textContent = 'menu';
   topAppBar.navIcon_.classList.remove('mdc-theme--secondary')
   topAppBar.root_.classList.add('transparent');
@@ -297,18 +300,22 @@ function mapView() {
         const offices = result[1];
         const markerLength = markers.length;
         const officesLength = offices.length;
+        if(officesLength == 1) {
+          currentOffice = offices[0];
+        }
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
         el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
         el.classList.remove('hidden');
-
         if (!markerLength) {
-
           if (officesLength > 1) {
-            
+          
             contentBody.innerHTML = mdcSelectOffice(offices, 'Select Office');
             selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
+            selectOffice.listen('MDCSelect:change',function(evt){
+              currentOffice = evt.detail.value;
 
+            })
             document.getElementById('submit-check-in').addEventListener('click', function () {
               const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
               cardProg.open()
@@ -324,7 +331,6 @@ function mapView() {
             });
             return;
           }
-
 
           document.getElementById('submit-check-in').addEventListener('click', function () {
             const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
@@ -350,14 +356,17 @@ function mapView() {
 
         contentBody.innerHTML = html
         selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
+        currentOffice = JSON.parse(selectVenue.value).office
         selectVenue.listen('MDCSelect:change', (evt) => {
           console.log(evt.detail.value)
           if (!evt.detail.value) {
             if (officesLength > 1) {
               el.scrollTop = el.scrollHeight
               document.getElementById('choose-office-container').classList.remove('hidden')
-
               selectOffice = new mdc.select.MDCSelect(document.getElementById('select-office'));
+              selectOffice.listen('MDCSelect:change',function(evt){
+                currentOffice = evt.detail.value;
+              })
             }
           } else {
 
@@ -469,9 +478,9 @@ function TakeSnap(el) {
   snap.root_.addEventListener('click', function () {
 
     console.log('clicked')
-    // AndroidInterface.startCamera();
     history.pushState(['snapView'],null,null)
-    setFilePath();
+    AndroidInterface.startCamera();
+    // setFilePath();
   })
 }
 
@@ -519,8 +528,7 @@ function setFilePath(base64) {
   topAppBar.navIcon_.classList.add('mdc-theme--secondary')
 
   // container.appendChild(image);
-  // const url = `data:image/jpg;base64,${base64}`
-  const url = './img/test.jpeg'
+  const url = `data:image/jpg;base64,${base64}`
   document.getElementById('app-current-panel').innerHTML = `
   
 <div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
@@ -550,16 +558,15 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    const image = url;
+    if(!currentOffice) {
 
-    createCheckInData().then(function (result) {
-      console.log(result)
-      manageLocation().then(function (location) {
-        result.data[0].attachment.Comment.value = textValue;
-        result.data[0].attachment.Photo.value = image
-        checkInDialog(result, location)
-      })
-    }).catch(console.log)
+      return;
+    }
+    getSubscription(currentOffice, 'check-in').then(function(sub){
+      sub.attachment.Photo.value = url
+      sub.attachment.Comment.value = textValue;
+      requestCreator('create',setVenueForCheckIn([],sub))
+    })
   })
 
   const image = new Image();

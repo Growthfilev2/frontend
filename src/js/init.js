@@ -92,15 +92,12 @@ function getDeviceInfomation() {
 }
 
 window.onpopstate = function (event) {
-  console.log(event)
+
   if(!event.state) return;
-  const state = event.state[0];
-  const views = {
-    mapView:mapView,
-    profileView:profileView
-  }
-  views[state];
+
+  window[event.state[0]]();
 }
+
 
 function backNav() {
   history.back();
@@ -131,6 +128,7 @@ window.addEventListener("load", function () {
     topAppBar.navIcon_.classList.add('mdc-theme--secondary');
 
     return history.back();
+
   });
 
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
@@ -247,7 +245,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 5);
+      const req = window.indexedDB.open(auth.uid, 6);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -271,13 +269,16 @@ function startApp(start) {
             const mapStore = tx.objectStore('map');
             mapStore.createIndex('bounds', ['latitude', 'longitude']);
           
+          }
+          if(evt.oldVersion < 6) {
+            var tx = req.transaction;
             const childrenStore = tx.objectStore('children')
             childrenStore.createIndex('officeTemplate', ['office', 'template']);
-
+           
             childrenStore.createIndex('employees', 'employee');
             childrenStore.createIndex('employeeOffice',['employee','office'])
-            childrenStore.createIndex('employeeOffice','team')
-            childrenStore.createIndex('employeeOffice',['team','office'])
+            childrenStore.createIndex('team','team')
+            childrenStore.createIndex('teamOffice',['team','office'])
 
             childrenStore.index('template').openCursor('employee').onsuccess = function(event){
                 const cursor = event.target.result;
@@ -609,7 +610,7 @@ function checkInDialog(result, location) {
   radioListInit = new mdc.list.MDCList(ul)
   radioListInit.singleSelection = true;
 
-  dialog = new Dialog('Check-In Reminder', ul).create();
+  dialog = new Dialog('Select Office', ul).create();
   dialog.listen('MDCDialog:opened', function (evt) {
     radioListInit.layout();
     radioListInit.listElements.map(function (el) {

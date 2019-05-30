@@ -1,8 +1,7 @@
 function profileView() {
+  history.pushState(['profileView'], null, null);
   document.getElementById('start-loader').classList.add('hidden')
-    history.pushState(['profileView'], null, null);
-    drawer.open = false;
-
+  drawer.open = false;
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
@@ -45,14 +44,14 @@ function profileView() {
   editInit.listen('MDCIconButtonToggle:change', function (evt) {
     if (evt.detail.isOn) {
       document.getElementById('base-details').innerHTML = ''
-      document.querySelector('.mdc-card .mdc-card__actions').classList.add('action-bottom')
+      document.querySelector('.mdc-card .mdc-card__actions').classList.add('hidden')
 
       document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
       nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
       emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
       return;
     }
-    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('action-bottom')
+    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')
     newName = nameInit.value;
     newEmail = emailInit.value;
     progressBar.foundation_.open();
