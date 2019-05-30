@@ -279,6 +279,7 @@ function startApp(start) {
             childrenStore.createIndex('employeeOffice',['employee','office'])
             childrenStore.createIndex('team','team')
             childrenStore.createIndex('teamOffice',['team','office'])
+            const myNumber = firebase.auth().currentUser.phoneNumber;
 
             childrenStore.index('template').openCursor('employee').onsuccess = function(event){
                 const cursor = event.target.result;
@@ -287,7 +288,7 @@ function startApp(start) {
                   return;
                 }
                 cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-                if(activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
+                if(cursor.value.attachment['First Supervisor'].value === myNumber ||  cursor.value.attachment['Second Supervisor'].value === myNumber) {
                   cursor.value.team = 1
                 }
                 cursor.update(cursor.value)
@@ -462,7 +463,8 @@ function createObjectStores(db, uid) {
   activity.createIndex('timestamp', 'timestamp')
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
-
+  activity.createIndex('template','template');
+  
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
   })
