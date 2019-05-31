@@ -1,14 +1,11 @@
 function profileView() {
   history.pushState(['profileView'], null, null);
   document.getElementById('start-loader').classList.add('hidden')
-  drawer.open = false;
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
-  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
-
-  console.log(topAppBar)
-  topAppBar.root_.classList.remove('transparent');
-  topAppBar.navIcon_.textContent = 'arrow_back'
+  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary'>arrow_back</a>`
+  const header = getHeader(backIcon,'');
+  
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -58,7 +55,7 @@ function profileView() {
     if (newName !== currentName && isEmailValid(newEmail, currentEmail)) {
       auth.updateProfile({
         displayName: newName
-      }).then(function(){
+      }).then(function () {
         if (timeDiff(lastSignInTime) <= 2) {
           updateEmail(auth, newEmail);
         } else {
@@ -89,6 +86,7 @@ function profileView() {
   console.log(editInit)
 
 }
+
 
 function setDetails() {
   progressBar.foundation_.close();

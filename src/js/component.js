@@ -273,3 +273,14 @@ Fab.prototype.extended = function (labelName) {
     this.base.appendChild(label);
     return this.getButton();
 }
+
+
+function getHeader(sectionStart,sectionEnd){
+    document.getElementById('section-start').innerHTML = sectionStart;
+    document.getElementById('section-end').innerHTML = sectionEnd;
+    topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+    topAppBar.setScrollTarget(document.getElementById('main-content'));
+    topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
+    return topAppBar;
+    
+}

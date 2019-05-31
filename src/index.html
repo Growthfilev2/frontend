@@ -24,7 +24,10 @@
     type="text/css">
 
   <link href="css/app.css" rel="stylesheet" type="text/css">
+  <link href="css/map.css" rel="stylesheet" type="text/css">
+  <link href="css/snap.css" rel="stylesheet" type="text/css">
   <link href="css/profile.css" rel="stylesheet" type="text/css">
+
   <script src="js/config.js" defer></script>
   <script src="js/component.js" defer></script>
   <script src="js/init.js" defer crossorigin="anonymous"></script>
@@ -48,10 +51,10 @@
 </head>
 
 <body class="mdc-typography">
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed'>
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
-        <a  class="demo-menu material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary">menu</a>
+        
       </section>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
       </section>
@@ -67,7 +70,6 @@
       </div>
     </div>
   </header>
-
   <div class="showbox" id='start-loader'>
     <svg class="circular" viewBox="25 25 50 50">
       <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
@@ -77,53 +79,7 @@
     <div class="success--check"></div>
   </div>
 
-  <aside class="mdc-drawer mdc-drawer--modal">
-    <div class="mdc-drawer__header mdc-elevation--z1">
-      <img src="" id='drawer-icon' src='./img/empty-user.jpg'>
-      <h3 class="mdc-drawer__title" id='drawer-title'></h3>
-    </div>
-    <div class="mdc-drawer__content">
-      <nav class="mdc-list">
-        <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
-          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
-          <span class="mdc-list-item__text">Inbox</span>
-        </a>
-        <a class="mdc-list-item" href="#">
-          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
-          <span class="mdc-list-item__text">Outgoing</span>
-        </a>
-        <a class="mdc-list-item" href="#">
-          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
-          <span class="mdc-list-item__text">Drafts</span>
-
-        </a>
-        <a class="mdc-list-item" href="#">
-          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">Sample</i>
-          <span class="mdc-list-item__text">Drafts</span>
-
-        </a>
-        <a class="mdc-list-item" href="#">
-          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">Sample</i>
-          <span class="mdc-list-item__text">Drafts</span>
-
-        </a>
-
-      </nav>
-      <nav class="mdc-list drawer-settings">
-        <hr class="mdc-list-divider">
-        <a class="mdc-list-item" href="#" aria-current="false" tabindex="-1">
-          <span class="mdc-list-item__text">Growthfile</span>
-        </a>
-        <a class="mdc-list-item" href="#" aria-current="false" tabindex="-1">
-          <span class="mdc-list-item__text">Sample Data</span>
-        </a>
-      </nav>
-    </div>
-  </aside>
-
-  <div class="mdc-drawer-scrim"></div>
-  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
-
+  <div id="growthfile" class="mdc-top-app-bar--dense-fixed-adjust">
 
     <div id='main-content'>
       <div id='login-container'></div>
@@ -154,8 +110,3 @@
 </body>
 
 </html>
-
-
-
-
-

@@ -2,8 +2,6 @@ const appKey = new AppKeys();
 let progressBar;
 let snackBar;
 let ui;
-let drawer;
-let topAppBar;
 var gray = [{
   "featureType": "administrative",
   "elementType": "geometry.fill",
@@ -309,8 +307,7 @@ function getDeviceInfomation() {
 
 window.onpopstate = function (event) {
 
-  if(!event.state) return;
-
+ if(!event.state) return;
   window[event.state[0]]();
 }
 
@@ -321,30 +318,8 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  topAppBar.setScrollTarget(document.getElementById('main-content'));
-  topAppBar.listen('MDCTopAppBar:nav', () => {
-    const state = history.state[0]
-    if(state === 'mapView') {
-      drawer.open = !drawer.open;
-      [].map.call(document.querySelectorAll('.mdc-drawer .mdc-list-item'), function (el) {
-        new mdc.ripple.MDCRipple(el)
-      })
-      document.getElementById('drawer-icon').src = firebase.auth().currentUser.photoURL;
-      document.getElementById('drawer-title').textContent = firebase.auth().currentUser.displayName || irebase.auth().currentUser.phoneNumber
-      document.getElementById('drawer-icon').onclick = function () {
-        topAppBar.navIcon_.classList.add('mdc-theme--secondary')
-        profileView();
-      }
-      return;
-    }
-    topAppBar.navIcon_.classList.add('mdc-theme--secondary');
 
-    return history.back();
 
-  });
-
-  drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
 
   if ('serviceWorker' in navigator) {
     // navigator.serviceWorker.register('sw.js').then(function (registeration) {
@@ -353,7 +328,6 @@ window.addEventListener("load", function () {
     //   console.log('sw registeration failed :', err);
     // });
   }
-  // new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
 
   moment.updateLocale('en', {
     calendar: {

@@ -1,20 +1,33 @@
-
 var map;
 var globMark;
 
+function handleNav(evt) {
+  const state = history.state[0]
+
+  if (state === 'profileView') {
+    return history.back();
+  }
+  return profileView();
+}
+
+
 function mapView() {
   history.pushState(['mapView'], null, null);
+  const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
+  const chatIcon = `<a class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat">chat</a>`
+  const header = getHeader(headerImage, chatIcon);
 
-  topAppBar.navIcon_.textContent = 'menu';
-  topAppBar.navIcon_.classList.remove('mdc-theme--secondary')
-  topAppBar.root_.classList.add('transparent');
+  header.navIcon_.src = firebase.auth().currentUser.photoURL;
+
+  header.listen('MDCTopAppBar:nav', handleNav);
+
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
 
   manageLocation().then(function (location) {
 
-  document.getElementById('start-loader').classList.add('hidden');
+    document.getElementById('start-loader').classList.add('hidden');
     const latLng = {
       lat: location.latitude,
       lng: location.longitude
@@ -49,20 +62,16 @@ function mapView() {
 
     google.maps.event.addListenerOnce(map, 'idle', function () {
       console.log('idle_once');
-      var chatControlDiv = document.createElement('div');
-      var chatControl = new ChatControl(chatControlDiv, map, latLng)
-      chatControlDiv.index = 1;
 
       var snapControlDiv = document.createElement('div');
       var snapControl = new TakeSnap(snapControlDiv);
       snapControlDiv.index = 1;
 
-      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(chatControlDiv);
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
-      
-      getRootRecord().then(function(record){
-        console.log(calculateDistanceBetweenTwoPoints(record.location,location))
-        if(isNewDay() || isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(record.location,location))) {
+
+      getRootRecord().then(function (record) {
+        console.log(calculateDistanceBetweenTwoPoints(record.location, location))
+        if (isNewDay() || isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(record.location, location))) {
           createCheckInData().then(function (subs) {
             subs.data.forEach(function (value) {
               requestCreator('create', setVenueForCheckIn([], value))
@@ -74,7 +83,7 @@ function mapView() {
     })
 
     google.maps.event.addListener(map, 'idle', function () {
-      
+
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
 
         let selectOffice;
@@ -83,17 +92,17 @@ function mapView() {
         const offices = result[1];
         const markerLength = markers.length;
         const officesLength = offices.length;
-        
+
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
         el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
         el.classList.remove('hidden');
         if (!markerLength) {
           if (officesLength > 1) {
-          
+
             contentBody.innerHTML = mdcSelectOffice(offices, 'Select Office');
             selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
-            
+
             document.getElementById('submit-check-in').addEventListener('click', function () {
               const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
               cardProg.open()
@@ -111,7 +120,7 @@ function mapView() {
           }
 
           document.getElementById('submit-check-in').addEventListener('click', function () {
-            
+
             const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
             cardProg.open();
 
@@ -191,6 +200,10 @@ function mapView() {
   })
 }
 
+function createImageNav() {
+
+}
+
 function mapDom() {
   return `
   <div id='map-view'>
@@ -235,12 +248,11 @@ function ChatControl(chatDiv) {
   chat.root_.id = 'recenter-action'
   chat.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary');
   chatDiv.appendChild(chat.root_);
-  chat.root_.addEventListener('click', function () {
-  });
+  chat.root_.addEventListener('click', function () {});
 }
 
 function TakeSnap(el) {
-  
+
   const snap = new Fab('photo_camera').getButton();
   snap.root_.id = 'take-snap';
   snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary')
@@ -248,7 +260,7 @@ function TakeSnap(el) {
   snap.root_.addEventListener('click', function () {
 
     console.log('clicked')
-    history.pushState(['snapView'],null,null)
+    history.pushState(['snapView'], null, null)
     AndroidInterface.startCamera();
     // setFilePath();
   })
@@ -327,11 +339,11 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    getUniqueOfficeCount().then(function(offices){
-      getSubscription(offices[0], 'check-in').then(function(sub){
+    getUniqueOfficeCount().then(function (offices) {
+      getSubscription(offices[0], 'check-in').then(function (sub) {
         sub.attachment.Photo.value = url
         sub.attachment.Comment.value = textValue;
-        requestCreator('create',setVenueForCheckIn([],sub))
+        requestCreator('create', setVenueForCheckIn([], sub))
       })
     })
   })
@@ -464,4 +476,3 @@ function loadNearByLocations(range, map) {
     }
   })
 }
-
