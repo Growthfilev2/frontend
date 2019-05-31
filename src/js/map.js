@@ -4,24 +4,23 @@ var globMark;
 function handleNav(evt) {
   const state = history.state[0]
 
-  if (state === 'profileView') {
+  if (state === 'profileView' || state === 'snapView' || state === 'chatView') {
     return history.back();
   }
   return profileView();
 }
 
-
 function mapView() {
   history.pushState(['mapView'], null, null);
+  progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
-  const chatIcon = `<a class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat">chat</a>`
+  const chatIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat" onclick="chatView()">chat</a>`
   const header = getHeader(headerImage, chatIcon);
 
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
 
   header.listen('MDCTopAppBar:nav', handleNav);
 
-  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
 
@@ -69,23 +68,11 @@ function mapView() {
 
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
 
-      getRootRecord().then(function (record) {
-        console.log(calculateDistanceBetweenTwoPoints(record.location, location))
-        if (isNewDay() || isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(record.location, location))) {
-          createCheckInData().then(function (subs) {
-            subs.data.forEach(function (value) {
-              requestCreator('create', setVenueForCheckIn([], value))
-            })
-          })
-        }
-      });
+    });
 
-    })
 
     google.maps.event.addListener(map, 'idle', function () {
-
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
-
         let selectOffice;
         let selectVenue;
         const markers = result[0];
@@ -230,7 +217,7 @@ function mapDom() {
         <div class="content-body">
 
         </div>
-        <div id='submit-cont'>
+        <div id='submit-cont' class='hidden'>
           <button class="demo-button mdc-button mdc-theme--primary-bg mdc-theme--secondary" id='submit-check-in'><span
               class="mdc-button__label">SUBMIT</span></button>
         </div>
@@ -282,34 +269,13 @@ function mdcSelectOffice(data, label, id) {
   <div class="mdc-line-ripple"></div>
 </div>`
   return template;
-
-
-}
-
-function mdcSelectVenue(venues, label, id) {
-  let float;
-  const template = `<div class="mdc-select" id=${id}>
-  <i class="mdc-select__dropdown-icon"></i>
-  <select class="mdc-select__native-control">
-  <option value=''></option>
-  ${venues.map(function(value){
-    return ` <option value='${JSON.stringify(value)}' selected='${venues.length ==1 ? 'true' :'false'}'>
-    ${value.location}
-    </option>`
-}).join("")}
-  </select>
-  <label class='mdc-floating-label mdc-floating-label--float-above'>${label}</label>
-  <div class="mdc-line-ripple"></div>
-</div>`
-  return template;
 }
 
 function setFilePath(base64) {
-  topAppBar.navIcon_.textContent = 'arrow_back'
-  topAppBar.navIcon_.classList.add('mdc-theme--secondary')
-
-  // container.appendChild(image);
+  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary'>arrow_back</a>`
+  const header = getHeader(backIcon, '');
   const url = `data:image/jpg;base64,${base64}`
+
   document.getElementById('app-current-panel').innerHTML = `
   
 <div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
@@ -322,7 +288,6 @@ function setFilePath(base64) {
     </button>
 </div>
 </div>
-
   `
   const content = document.getElementById('snap')
   const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
@@ -343,7 +308,9 @@ function setFilePath(base64) {
       getSubscription(offices[0], 'check-in').then(function (sub) {
         sub.attachment.Photo.value = url
         sub.attachment.Comment.value = textValue;
+        progressBar.open();
         requestCreator('create', setVenueForCheckIn([], sub))
+        history.back();
       })
     })
   })
@@ -367,6 +334,26 @@ function setFilePath(base64) {
   image.src = url;
 
 }
+
+function mdcSelectVenue(venues, label, id) {
+  let float;
+  const template = `<div class="mdc-select" id=${id}>
+  <i class="mdc-select__dropdown-icon"></i>
+  <select class="mdc-select__native-control">
+  <option value=''></option>
+  ${venues.map(function(value){
+    return ` <option value='${JSON.stringify(value)}' selected='${venues.length ==1 ? 'true' :'false'}'>
+    ${value.location}
+    </option>`
+}).join("")}
+  </select>
+  <label class='mdc-floating-label mdc-floating-label--float-above'>${label}</label>
+  <div class="mdc-line-ripple"></div>
+</div>`
+  return template;
+}
+
+
 
 function getOrientation(image) {
   if (image.width > image.height) return 'landscape'

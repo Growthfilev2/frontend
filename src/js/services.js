@@ -37,18 +37,15 @@ function snacks(message, type) {
   if(history.state[0] !== 'mapView') return;
   snackBar.labelText = message;
   snackBar.open();
-  snackBar.timeoutMs = 3000
+  snackBar.timeoutMs = 4000
   snackBar.actionButtonText = 'okay';
-
 }
 
 function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
-
 function geolocationApi(body) {
-
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + appKey.getMapKey(), true);
