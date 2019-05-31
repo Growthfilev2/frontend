@@ -250,3 +250,26 @@ function iconButton(attr) {
     }))
     return new mdc.iconButton.MDCIconButtonToggle(this.base)
 }
+
+function Fab(name) {
+    this.fabName = name
+    var button = createElement('button', {
+        className: 'mdc-fab'
+    })
+    this.span = createElement('span', {
+        className: 'mdc-fab__icon material-icons',
+        textContent: this.fabName
+    })
+    button.appendChild(this.span)
+    this.base = button;
+}
+Fab.prototype = Object.create(new Button())
+Fab.prototype.extended = function (labelName) {
+    this.base.classList.add('mdc-fab--extended')
+    const label = createElement('label', {
+        className: 'mdc-fab__label',
+        textContent: labelName
+    })
+    this.base.appendChild(label);
+    return this.getButton();
+}
