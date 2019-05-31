@@ -269,7 +269,6 @@ function mapView() {
       var chatControl = new ChatControl(chatControlDiv, map, latLng)
       chatControlDiv.index = 1;
 
-
       var snapControlDiv = document.createElement('div');
       var snapControl = new TakeSnap(snapControlDiv);
       snapControlDiv.index = 1;
@@ -282,14 +281,10 @@ function mapView() {
           requestCreator('create', setVenueForCheckIn([], value))
         })
       })
-      // console.log(map)
-
     })
 
     google.maps.event.addListener(map, 'idle', function () {
-      if (document.querySelector('#recenter-action i')) {
-        // document.querySelector('#recenter-action i').style.color = 'black';
-      };
+      
 
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
 
