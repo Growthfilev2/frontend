@@ -99,9 +99,6 @@ window.onpopstate = function (event) {
 }
 
 
-function backNav() {
-  history.back();
-}
 
 
 window.addEventListener("load", function () {
@@ -169,12 +166,6 @@ window.addEventListener("load", function () {
   }
   startApp(true)
 })
-
-function resetScroll() {
-  scroll_namespace.count = 0;
-  scroll_namespace.size = 20;
-  scroll_namespace.skip = false;
-}
 
 function firebaseUiConfig(value) {
 
@@ -318,9 +309,7 @@ function startApp(start) {
           registerToken: native.getFCMToken()
         });
         mapView();
-        // runAppChecks()
-        // manageLocation().then(console.log).catch(handleError)
-
+        
       }
       req.onerror = function () {
         handleError({
@@ -331,34 +320,6 @@ function startApp(start) {
   })
 }
 
-function queryChildren(template) {
-  return new Promise(function (resolve, reject) {
-    const auth = firebase.auth().currentUser
-    const req = indexedDB.open(auth.uid);
-    const result = [];
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['children']);
-      const store = tx.objectStore('children');
-      const index = store.index('template')
-      index.openCursor(template).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        result.push(cursor.value)
-        cursor.continue();
-      }
-      tx.oncomplete = function () {
-        return resolve(result)
-      }
-      tx.onerror = function () {
-        return reject({
-          message: tx.error.message,
-          body: ''
-        })
-      }
-    }
-  })
-}
 
 function getEmployeeDetails(range,indexName) {
   return new Promise(function (resolve, reject) {
@@ -399,60 +360,6 @@ function getEmployeeDetails(range,indexName) {
 
   })
 }
-
-function isEmployeeOnLeave() {
-  TODO // without getting office names
-  return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const result = []
-      const db = req.result;
-      const tx = db.transaction(['calendar']);
-      const store = tx.objectStore('calendar');
-      const index = store.index('leave');
-      
-
-      getUniqueOfficeCount().then(function(offices) {
-          offices.forEach(function(office){
-            result[office] = false;
-          })
-
-          index.openCursor(1).onsuccess = function (event) {
-            const cursor = event.target.result;
-            if (!cursor) return;
-            
-            if (moment().isBetween(cursor.value.start, cursor.value.end, null, '[]')) {
-              result[cursor.value.office]  = true
-              cursor.continue()
-              return;
-            };
-
-            cursor.value.leave = 0
-            const updateReq = cursor.update(cursor.value)
-            updateReq.onsuccess = function(){
-              result[cursor.value.office]  = false
-            }
-            cursor.continue()
-          }
-      })
-
-      tx.oncomplete = function () {
-        resolve(result)
-      }
-      tx.onerror = function () {
-        reject({
-          message: `${tx.error.message} from isEmployeeOnLeave`
-        })
-      }
-    }
-    req.onerror = function () {
-      reject({
-        message: `${req.error.message} from isEmployeeOnLeave`
-      });
-    }
-  })
-}
-
 
 function createObjectStores(db, uid) {
 
@@ -585,58 +492,6 @@ function createCheckInData() {
 
 
 
-function checkInDialog(result, location) {
-  let dialog
-  let radioListInit;
-  const offices = result.offices;
-  const filtered = result.data;
-
-  if (offices.length == 1) {
-    checkMapStoreForNearByLocation(offices[0], location).then(function (nearBy) {
-      requestCreator('create', setVenueForCheckIn(nearBy, filtered[0]));
-    });
-    return;
-  }
-
-  const ul = createElement('ul', {
-    className: 'mdc-list',
-  })
-  ul.setAttribute('role', 'radiogroup')
-  filtered.forEach(function (data, idx) {
-    ul.appendChild(radioList({
-      labelText: data.office,
-      index: idx,
-      value: data,
-    }))
-  })
-  radioListInit = new mdc.list.MDCList(ul)
-  radioListInit.singleSelection = true;
-
-  dialog = new Dialog('Choose Office', ul).create();
-  dialog.listen('MDCDialog:opened', function (evt) {
-    radioListInit.layout();
-    radioListInit.listElements.map(function (el) {
-      return new mdc.ripple.MDCRipple.attachTo(el)
-    })
-  })
-
-  dialog.listen('MDCDialog:closed', function (evt) {
-
-
-    if (evt.detail.action !== 'accept') return;
-
-    const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
-    if (!rawValue) return;
-    const value = JSON.parse(rawValue)
-
-    checkMapStoreForNearByLocation(value.office, location).then(function (result) {
-
-      requestCreator('create', setVenueForCheckIn(result, value));
-    })
-  })
-  dialog.open();
-
-}
 
 function setVenueForCheckIn(venueData, value) {
   const venue = {

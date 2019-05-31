@@ -214,12 +214,11 @@ var gray = [{
     }]
   }
 ]
+
 var map;
 var globMark;
-let currentOffice;
+
 function mapView() {
-  history.pushState(['mapView'], null, null);
-  history.pushState(['mapView'], null, null);
   history.pushState(['mapView'], null, null);
 
   topAppBar.navIcon_.textContent = 'menu';
@@ -229,9 +228,9 @@ function mapView() {
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
 
-
   manageLocation().then(function (location) {
-    document.getElementById('start-loader').classList.add('hidden');
+
+  document.getElementById('start-loader').classList.add('hidden');
     const latLng = {
       lat: location.latitude,
       lng: location.longitude
@@ -300,9 +299,7 @@ function mapView() {
         const offices = result[1];
         const markerLength = markers.length;
         const officesLength = offices.length;
-        if(officesLength == 1) {
-          currentOffice = offices[0];
-        }
+        
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
         el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
@@ -312,10 +309,7 @@ function mapView() {
           
             contentBody.innerHTML = mdcSelectOffice(offices, 'Select Office');
             selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
-            selectOffice.listen('MDCSelect:change',function(evt){
-              currentOffice = evt.detail.value;
-
-            })
+            
             document.getElementById('submit-check-in').addEventListener('click', function () {
               const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
               cardProg.open()
@@ -333,8 +327,10 @@ function mapView() {
           }
 
           document.getElementById('submit-check-in').addEventListener('click', function () {
+            
             const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
-            cardProg.open()
+            cardProg.open();
+
             getSubscription(offices[0], 'check-in').then(function (tempBody) {
               const withVenue = setVenueForCheckIn([], tempBody)
               requestCreator('create', withVenue);
@@ -356,7 +352,6 @@ function mapView() {
 
         contentBody.innerHTML = html
         selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
-        currentOffice = JSON.parse(selectVenue.value).office
         selectVenue.listen('MDCSelect:change', (evt) => {
           console.log(evt.detail.value)
           if (!evt.detail.value) {
@@ -364,9 +359,6 @@ function mapView() {
               el.scrollTop = el.scrollHeight
               document.getElementById('choose-office-container').classList.remove('hidden')
               selectOffice = new mdc.select.MDCSelect(document.getElementById('select-office'));
-              selectOffice.listen('MDCSelect:change',function(evt){
-                currentOffice = evt.detail.value;
-              })
             }
           } else {
 
@@ -453,20 +445,14 @@ function mapDom() {
   </div>`
 }
 
-function ChatControl(chatDiv, map, latLng) {
-
-  // Set CSS for the control border.
+function ChatControl(chatDiv) {
 
   const chat = new Fab('chat').getButton();
   chat.root_.id = 'recenter-action'
   chat.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary');
-  console.log(chat)
   chatDiv.appendChild(chat.root_);
   chat.root_.addEventListener('click', function () {
-    // recenter.root_.querySelector('i').style.color = '#0399f4'
-    // focusMarker(map, latLng, 18);
   });
-
 }
 
 function TakeSnap(el) {
@@ -506,7 +492,6 @@ function mdcSelectOffice(data, label, id) {
 
 function mdcSelectVenue(venues, label, id) {
   let float;
-
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
@@ -558,23 +543,12 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    if(!currentOffice) {
-      createCheckInData().then(function (result) {
-        console.log(result)
-        manageLocation().then(function (location) {
-          result.data.forEach(function(i){
-            i.attachment.Comment.value = textValue;
-            i.attachment.Photo.value = image
-          })
-          checkInDialog(result, location)
-        })
-      }).catch(console.log)
-      return;
-    }
-    getSubscription(currentOffice, 'check-in').then(function(sub){
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      requestCreator('create',setVenueForCheckIn([],sub))
+    getUniqueOfficeCount().then(function(offices){
+      getSubscription(offices[0], 'check-in').then(function(sub){
+        sub.attachment.Photo.value = url
+        sub.attachment.Comment.value = textValue;
+        requestCreator('create',setVenueForCheckIn([],sub))
+      })
     })
   })
 
@@ -593,9 +567,8 @@ function setFilePath(base64) {
     if (orientation == 'landscape' || orientation == 'sqaure') {
       content.style.backgroundSize = 'contain'
     }
-
   }
-  image.src = url
+  image.src = url;
 
 }
 
