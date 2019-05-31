@@ -274,18 +274,23 @@ function mapView() {
       snapControlDiv.index = 1;
 
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(chatControlDiv);
-      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv)
+      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
+      
+      getRootRecord().then(function(record){
+        
+        if(isNewDay() || isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(record.location,location))) {
+          createCheckInData().then(function (subs) {
+            subs.data.forEach(function (value) {
+              requestCreator('create', setVenueForCheckIn([], value))
+            })
+          })
+        }
+      });
 
-      createCheckInData().then(function (subs) {
-        subs.data.forEach(function (value) {
-          requestCreator('create', setVenueForCheckIn([], value))
-        })
-      })
     })
 
     google.maps.event.addListener(map, 'idle', function () {
       
-
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
 
         let selectOffice;
@@ -675,3 +680,4 @@ function loadNearByLocations(range, map) {
     }
   })
 }
+

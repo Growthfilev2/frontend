@@ -334,18 +334,6 @@ function isLocationMoreThanThreshold(distance) {
   return false;
 }
 
-function isLocationLessThanThreshold(distance) {
-  var THRESHOLD = 1; //km
-  if (distance <= THRESHOLD) return true;
-  return false;
-}
-
-function sortedByAccuracy(geoData) {
-  var result = geoData.sort(function (a, b) {
-    return a.accuracy - b.accuracy;
-  });
-  return result[0];
-}
 
 function isLocationStatusWorking() {
   const requiredWifi = {
@@ -454,7 +442,6 @@ function isLastLocationOlderThanThreshold(test, threshold) {
   var duration = moment.duration(currentTime.diff(test));
   var difference = duration.asSeconds();
   return difference > threshold
-
 }
 
 var receiverCaller = {
