@@ -41,10 +41,16 @@ function mapView() {
       west: offsetBounds.west()
     })
     console.log(latLng)
-
+    const o = {
+      north: offsetBounds.north(),
+      south: offsetBounds.south(),
+      east: offsetBounds.east(),
+      west: offsetBounds.west()
+    },
     map = new google.maps.Map(document.getElementById('map'), {
       center: latLng,
       zoom: 18,
+      // maxZoom:18,
       disableDefaultUI: true,
       styles: gray,
       restriction: {
@@ -54,6 +60,7 @@ function mapView() {
           east: offsetBounds.east(),
           west: offsetBounds.west()
         },
+        strictBounds: true,
         // strictBounds: false,
       },
       // mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -85,7 +92,7 @@ function mapView() {
       snapControlDiv.index = 1;
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
 
-      Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
+      Promise.all([loadNearByLocations(o, map, location), getUniqueOfficeCount()]).then(function (result) {
         let selectOffice;
         let selectVenue;
         const markers = result[0];
@@ -417,7 +424,7 @@ function getMapBounds(map) {
   }
 }
 
-function loadNearByLocations(range, map) {
+function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
     var markerImage = new google.maps.MarkerImage(
       './img/marker.png',
@@ -434,15 +441,14 @@ function loadNearByLocations(range, map) {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     let lastOpen;
     let lastCursor;
-    console.log(range)
-    const bounds = new google.maps.LatLngBounds();
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['map'])
       const store = tx.objectStore('map');
       const index = store.index('bounds');
-      const idbRange = IDBKeyRange.bound(range.sw, range.ne);
-
+      console.log(o)
+      const idbRange = IDBKeyRange.bound([o.south,o.west],[o.north,o.east]);
+      const bounds = map.getBounds()
       index.openCursor(idbRange).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -458,7 +464,6 @@ function loadNearByLocations(range, map) {
           }
         }
 
-        // console.log(cursor.value.latitude, cursor.value.longitude)
         var marker = new google.maps.Marker({
           position: {
             lat: cursor.value.latitude,
@@ -475,24 +480,33 @@ function loadNearByLocations(range, map) {
           id: cursor.value.activityId,
           value: JSON.stringify(cursor.value)
         });
-        marker.setMap(map);
+        if (calculateDistanceBetweenTwoPoints(location,{latitude:cursor.value.latitude,longitude:cursor.value.longitude}) < 0.5) {
+          marker.setMap(map);
+          const content = `<span>${cursor.value.activityId}</span>`
+          google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+            return function () {
+              if (lastOpen) {
+                lastOpen.close();
+              }
 
-        const content = `<span>${cursor.value.location}</span>`
+              infowindow.setContent(content);
+              infowindow.open(map, marker);
+              lastOpen = infowindow;
 
-        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-          return function () {
-            if (lastOpen) {
-              lastOpen.close();
-            }
-
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
-            lastOpen = infowindow;
-
-          };
-        })(marker, content, infowindow));
-        result.push(cursor.value)
-
+            };
+          })(marker, content, infowindow));
+          result.push(cursor.value)
+          bounds.extend(marker.getPosition())
+        } else {
+          console.log(calculateDistanceBetweenTwoPoints({
+            latitude: location.latitude,
+            longitude: location.longitude
+          }, {
+            latitude: cursor.value.latitude,
+            longitude: cursor.value.longitude
+          }))
+          console.log(cursor.value)
+        }
         lastCursor = {
           lat: cursor.value.latitude,
           lng: cursor.value.longitude
@@ -501,6 +515,7 @@ function loadNearByLocations(range, map) {
       }
       tx.oncomplete = function () {
         console.log(result)
+        map.fitBounds(bounds);
         return resolve(result)
       }
     }
