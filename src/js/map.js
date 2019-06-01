@@ -27,16 +27,35 @@ function mapView() {
   manageLocation().then(function (location) {
 
     document.getElementById('start-loader').classList.add('hidden');
+
     const latLng = {
       lat: location.latitude,
       lng: location.longitude
     }
+    console.log(latLng)
+    const offsetBounds = new GetOffsetBounds(location, 0.5);
+    console.log({
+      north: offsetBounds.north(),
+      south: offsetBounds.south(),
+      east: offsetBounds.east(),
+      west: offsetBounds.west()
+    })
+    console.log(latLng)
+
     map = new google.maps.Map(document.getElementById('map'), {
       center: latLng,
       zoom: 18,
       disableDefaultUI: true,
       styles: gray,
-      draggable: !("ontouchend" in document)
+      restriction: {
+        latLngBounds: {
+          north: offsetBounds.north(),
+          south: offsetBounds.south(),
+          east: offsetBounds.east(),
+          west: offsetBounds.west()
+        },
+        // strictBounds: false,
+      },
       // mapTypeId: google.maps.MapTypeId.ROADMAP
 
     })
@@ -61,17 +80,11 @@ function mapView() {
 
     google.maps.event.addListenerOnce(map, 'idle', function () {
       console.log('idle_once');
-
       var snapControlDiv = document.createElement('div');
       var snapControl = new TakeSnap(snapControlDiv);
       snapControlDiv.index = 1;
-
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
 
-    });
-
-
-    google.maps.event.addListener(map, 'idle', function () {
       Promise.all([loadNearByLocations(getMapBounds(map), map), getUniqueOfficeCount()]).then(function (result) {
         let selectOffice;
         let selectVenue;
@@ -177,6 +190,12 @@ function mapView() {
 
 
       })
+
+    });
+
+
+    google.maps.event.addListener(map, 'idle', function () {
+
     });
 
   }).catch(function (error) {
@@ -187,9 +206,10 @@ function mapView() {
   })
 }
 
-function createImageNav() {
 
-}
+
+
+
 
 function mapDom() {
   return `
@@ -366,9 +386,31 @@ function focusMarker(map, latLng, zoom) {
   map.panTo(latLng);
 }
 
+function GetOffsetBounds(latlng, offset) {
+  const radius = 6378
+  const d = (180 / Math.PI);
+  this.latLng = latlng
+  this.ratio = (offset / radius) * d;
+  this.radioLon = (this.ratio) / Math.cos(this.latLng.latitude * Math.PI / 180)
+
+}
+GetOffsetBounds.prototype.north = function () {
+  return this.latLng.latitude + this.ratio
+}
+GetOffsetBounds.prototype.south = function () {
+  return this.latLng.latitude - this.ratio
+}
+GetOffsetBounds.prototype.east = function () {
+  return this.latLng.longitude + this.radioLon
+}
+GetOffsetBounds.prototype.west = function () {
+  return this.latLng.longitude - this.radioLon
+}
+
 function getMapBounds(map) {
   const northEast = map.getBounds().getNorthEast()
   const southWest = map.getBounds().getSouthWest()
+
   return {
     ne: [northEast.lat(), northEast.lng()],
     sw: [southWest.lat(), southWest.lng()]
@@ -393,6 +435,7 @@ function loadNearByLocations(range, map) {
     let lastOpen;
     let lastCursor;
     console.log(range)
+    const bounds = new google.maps.LatLngBounds();
     req.onsuccess = function () {
       const db = req.result;
       const tx = db.transaction(['map'])
@@ -415,11 +458,13 @@ function loadNearByLocations(range, map) {
           }
         }
 
+        // console.log(cursor.value.latitude, cursor.value.longitude)
         var marker = new google.maps.Marker({
           position: {
             lat: cursor.value.latitude,
             lng: cursor.value.longitude
           },
+
           icon: {
             url: './img/marker.png',
             size: new google.maps.Size(71, 71),
@@ -430,34 +475,32 @@ function loadNearByLocations(range, map) {
           id: cursor.value.activityId,
           value: JSON.stringify(cursor.value)
         });
-        // console.log(cursor.value.latitude, cursor.value.longitude)
-        if ((map.getBounds().contains(marker.getPosition()))) {
-          const content = `<span>${cursor.value.location}</span>`
-          google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-            return function () {
-              if (lastOpen) {
-                lastOpen.close();
-              }
+        marker.setMap(map);
 
-              infowindow.setContent(content);
-              infowindow.open(map, marker);
-              lastOpen = infowindow;
+        const content = `<span>${cursor.value.location}</span>`
 
-            };
-          })(marker, content, infowindow));
-          marker.setMap(map);
-          result.push(cursor.value)
-        }
+        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+          return function () {
+            if (lastOpen) {
+              lastOpen.close();
+            }
+
+            infowindow.setContent(content);
+            infowindow.open(map, marker);
+            lastOpen = infowindow;
+
+          };
+        })(marker, content, infowindow));
+        result.push(cursor.value)
 
         lastCursor = {
           lat: cursor.value.latitude,
           lng: cursor.value.longitude
         };
-
         cursor.continue();
       }
       tx.oncomplete = function () {
-
+        console.log(result)
         return resolve(result)
       }
     }

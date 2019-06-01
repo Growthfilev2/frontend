@@ -312,17 +312,15 @@ function toRad(value) {
 
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   var R = 6371; // km
-
   var dLat = toRad(newLocation.latitude - oldLocation.latitude);
   var dLon = toRad(newLocation.longitude - oldLocation.longitude);
   var lat1 = toRad(newLocation.latitude);
   var lat2 = toRad(oldLocation.latitude);
-
   var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var distance = R * c;
   return distance;
+
 }
 
 function isLocationMoreThanThreshold(distance) {
