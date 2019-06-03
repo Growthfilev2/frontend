@@ -3,16 +3,16 @@ function profileView() {
   document.getElementById('start-loader').classList.add('hidden')
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
-  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary'>arrow_back</a>`
+  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon'>arrow_back</a>`
   const header = getHeader(backIcon,'');
   
-  const root = `<div class="mdc-card demo-card" id='profile-card'>
+  const root = `<div class="mdc-card demo-card mdc-top-app-bar--dense-fixed-adjust" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
   <div class="mdc-card__media mdc-card__media--16-9 demo-card__media"
   style="background-image: url(${firebase.auth().currentUser.photoURL || './img/empty-user-big.jpg'});">
   <button id="edit-profile"
-  class="mdc-icon-button mdc-theme--primary-bg mdc-theme--secondary"
+  class="mdc-icon-button mdc-theme--primary-bg mdc-theme--on-primary"
   aria-label="Add to favorites"
   aria-hidden="true"
   aria-pressed="false">
@@ -262,7 +262,7 @@ function addTabs(name) {
 
   return ` <button class="mdc-tab" role="tab">
         <span class="mdc-tab__content">
-            <span class="mdc-tab__text-label mdc-theme--on-primary">${name}</span>
+            <span class="mdc-tab__text-label">${name}</span>
         </span>
         <span class="mdc-tab-indicator">
             <span

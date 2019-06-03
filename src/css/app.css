@@ -5,7 +5,7 @@ html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
   --mdc-theme-primary: #0399f4 ;
   --mdc-theme-secondary: #0399f4 ;
   --mdc-theme-background: #FFFFFF ;
-  --mdc-theme-on-primary:#000000 ;
+  --mdc-theme-on-primary:#ffffff ;
   --mdc-theme-on-secondary :#ffffff ;
   
   --mdc-theme-text-primary-on-light:#FFFFFF ;

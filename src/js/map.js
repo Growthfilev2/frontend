@@ -3,7 +3,6 @@ var globMark;
 
 function handleNav(evt) {
   const state = history.state[0]
-
   if (state === 'profileView' || state === 'snapView' || state === 'chatView') {
     return history.back();
   }
@@ -42,30 +41,30 @@ function mapView() {
     })
     console.log(latLng)
     const o = {
-        north: offsetBounds.north(),
-        south: offsetBounds.south(),
-        east: offsetBounds.east(),
-        west: offsetBounds.west()
-      },
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: latLng,
-        zoom: 18,
-        // maxZoom:18,
-        disableDefaultUI: true,
-        styles: gray,
-        restriction: {
-          latLngBounds: {
-            north: offsetBounds.north(),
-            south: offsetBounds.south(),
-            east: offsetBounds.east(),
-            west: offsetBounds.west()
-          },
-          strictBounds: true,
-          // strictBounds: false,
+      north: offsetBounds.north(),
+      south: offsetBounds.south(),
+      east: offsetBounds.east(),
+      west: offsetBounds.west()
+    };
+    if (!document.getElementById('map')) return;
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: latLng,
+      zoom: 18,
+      // maxZoom:18,
+      disableDefaultUI: true,
+      styles: gray,
+      restriction: {
+        latLngBounds: {
+          north: offsetBounds.north(),
+          south: offsetBounds.south(),
+          east: offsetBounds.east(),
+          west: offsetBounds.west()
         },
-        // mapTypeId: google.maps.MapTypeId.ROADMAP
-
-      })
+        strictBounds: true,
+        // strictBounds: false,
+      },
+      // mapTypeId: google.maps.MapTypeId.ROADMAP
+    })
 
     var marker = new google.maps.Marker({
       position: latLng,
@@ -87,84 +86,89 @@ function mapView() {
 
     google.maps.event.addListenerOnce(map, 'idle', function () {
       console.log('idle_once');
-     
       loadNearByLocations(o, map, location).then(function (markers) {
-          
+
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
         const cardHeaderText = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
         el.querySelector('#card-header').textContent = cardHeaderText
         el.classList.remove('hidden');
-  
+
         contentBody.innerHTML = `<div>
         ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
         <div id='office-cont' class='pt-10'></div>
+        <div id='subs-cont' class='pt-10'></div>
+        <div id='submit-cont' class='pt-10'></div>
         </div>`
         selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
-       
-        console.log(selectVenue.selectedIndex)
+
         selectVenue.listen('MDCSelect:change', (evt) => {
           console.log(evt.detail.value)
-          if (!evt.detail.value) {
-            document.getElementById('office-cont').innerHTML = ''
-            return;
-          };
+          if (!evt.detail.value) return;
           const value = JSON.parse(evt.detail.value)
-          if(value === 1) {
-            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+          if (value === 1 || value === 0) {
+            const newSubs = []
 
             getUniqueOfficeCount().then(function (offices) {
               if (!offices.length) return;
-            
-              if (offices.length == 1) {
-                addSnapControl(map,offices[0])
-                getSubscription(offices[0], 'check-in').then(function (checkInSub) {
+
+              document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
+              const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
+              selectOfficeInit.listen('MDCSelect:change', function (evt) {
+                getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
                   if (!checkInSub) return;
-                  requestCreator('create', setVenueForCheckIn([], checkInSub))
-                })
-                return
+                  requestCreator('create', setVenueForCheckIn([], checkInSub));
+                  checkForVenueSubs().then(function (venueSubs) {
+                    if (!venueSubs.length) return;
+                    document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(newSubs, 'Choose','select-subs')}`
+                    const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+                    subsSelect.selectedIndex = 0
+                    subsSelect.listen('MDCSelect:change',function(evt){
+                      document.getElementById('submit-cont').innerHTML = `<button class='mdc-button'>Create ${evt.detail.value}</button>`
+                    })
+                  });
+                });
+              });
+              if (offices.length == 1) {
+                selectOfficeInit.selectedIndex = 0
               }
               if (offices.length > 1) {
-                document.getElementById('office-cont').innerHTML = `${mdcSelectOffice(offices,'Choose Office','choose-office')}`
-                const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
-                selectOfficeInit.listen('MDCSelect:change', function (evt) {
-                  if (!evt.detail.value) return;
-                  addSnapControl(map,evt.detail.value)
-                  getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-                    if (!checkInSub) return;
-                    requestCreator('create', setVenueForCheckIn([], checkInSub))
-                  })
-                })
+                selectOfficeInit.selectedIndex = -1
               }
             })
-
-
             return;
           }
-          map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
 
-          addSnapControl(map)
-        
-    
           document.getElementById('office-cont').innerHTML = ''
+          document.getElementById('subs-cont').innerHTML = ''
+          document.getElementById('submit-cont').innerHTML = ''
+
           getSubscription(value.office, 'check-in').then(function (result) {
             requestCreator('create', setVenueForCheckIn([value], result));
-
+            getAvailbleSubs(value).then(function (subs) {
+              if (!subs.length) return;
+              document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs')}`
+              const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+              subsSelect.selectedIndex = -1
+              subsSelect.listen('MDCSelect:change', function (evt) {
+                document.getElementById('submit-cont').innerHTML = `<button class='mdc-button'>Create ${evt.detail.value}</button>`
+              })
+            })
           })
         });
 
-        if(!markers.length) {
+        if (!markers.length) {
+          selectVenue.selectedIndex = 0
+        }
+        if (markers.length == 1) {
           selectVenue.selectedIndex = 1
         }
-        if(markers.length == 1) {
-          selectVenue.selectedIndex = 2
+        if (markers.length > 1) {
+          selectVenue.selectedIndex = -1
         }
       })
     });
 
-    // google.maps.event.addListener(map, 'idle', function () {
-
-    // });
 
   }).catch(function (error) {
     console.log(error);
@@ -174,10 +178,13 @@ function mapView() {
   })
 }
 
-function addSnapControl(map,office){
+
+
+function addSnapControl(map, office) {
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
 
   var snapControlDiv = document.createElement('div');
-  var snapControl = new TakeSnap(snapControlDiv,office);
+  var snapControl = new TakeSnap(snapControlDiv, office);
   snapControlDiv.index = 1;
 
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
@@ -185,15 +192,27 @@ function addSnapControl(map,office){
 }
 
 function getAvailbleSubs(venue) {
-  return new Promise(function(){
+  return new Promise(function (resolve, reject) {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function(){
+    req.onsuccess = function () {
       const db = req.result;
-      const tx = db.transaction(['children'])  ;
-      const store = tx.objectStore('children');
-      const index = store.index('office')
-      index.openCursor(venue.office).onsuccess = function(event){
+      const tx = db.transaction(['subscriptions']);
+      const store = tx.objectStore('subscriptions');
+      const index = store.index('office');
+      const result = [];
+      index.openCursor(venue.office).onsuccess = function (event) {
         const cursor = event.target.result;
+        if (!cursor) return;
+        Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
+          if (cursor.value.attachment[attachmentName].type === venue.template) {
+            result.push(cursor.value.template)
+          }
+
+        })
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        resolve(result)
       }
     }
   })
@@ -225,7 +244,7 @@ function newLocationSelectionForm(options) {
 
 function mapDom() {
   return `
-  <div id='map-view'>
+  <div id='map-view' class='mdc-top-app-bar--dense-fixed-adjust'>
     <div id='map'></div>
     <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
       <div class="card__primary">
@@ -325,7 +344,7 @@ function ChatControl(chatDiv) {
   chat.root_.addEventListener('click', function () {});
 }
 
-function TakeSnap(el) {
+function TakeSnap(el, office) {
 
   const snap = new Fab('photo_camera').getButton();
   snap.root_.id = 'take-snap';
@@ -334,45 +353,26 @@ function TakeSnap(el) {
   snap.root_.addEventListener('click', function () {
 
     console.log('clicked')
-    history.pushState(['snapView'], null, null)
+    localStorage.setItem('snap_office', office)
     AndroidInterface.startCamera();
     // setFilePath();
-  })
-}
+  });
 
-
-function mdcSelectOffice(data, label, id) {
-  const template = `<div class="mdc-select" id=${id}>
-  <i class="mdc-select__dropdown-icon"></i>
-  <select class="mdc-select__native-control">
-  <option value="">
-
-  </option>
-  ${data.map(function(value){
-    return ` <option value='${value}'>
-    ${value}
-    </option>`
-}).join("")}
-  </select>
-  <label class='mdc-floating-label'>${label}</label>
-  <div class="mdc-line-ripple"></div>
-</div>`
-  return template;
 }
 
 function setFilePath(base64) {
-  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary'>arrow_back</a>`
+  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--on-primary'>arrow_back</a>`
   const header = getHeader(backIcon, '');
+  history.pushState(['snapView'], null, null)
   const url = `data:image/jpg;base64,${base64}`
-
   document.getElementById('app-current-panel').innerHTML = `
   
 <div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
 <div class="form-meta snap-form">
   <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
       <textarea
-      class="mdc-text-field__input  snap-text mdc-theme--secondary" rows="1" cols="100" autofocus="true"></textarea></div>
-      <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg mdc-theme--secondary mdc-ripple-upgraded"
+      class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100" autofocus="true"></textarea></div>
+      <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"
     style="z-index: 9;"><i class="mdc-fab__icon material-icons">send</i>
     </button>
 </div>
@@ -393,14 +393,13 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    getUniqueOfficeCount().then(function (offices) {
-      getSubscription(offices[0], 'check-in').then(function (sub) {
-        sub.attachment.Photo.value = url
-        sub.attachment.Comment.value = textValue;
-        progressBar.open();
-        requestCreator('create', setVenueForCheckIn([], sub))
-        history.back();
-      })
+
+    getSubscription(localStorage.getItem('snap_office'), 'check-in').then(function (sub) {
+      sub.attachment.Photo.value = url
+      sub.attachment.Comment.value = textValue;
+      progressBar.open();
+      requestCreator('create', setVenueForCheckIn([], sub))
+      history.back();
     })
   })
 
@@ -424,12 +423,30 @@ function setFilePath(base64) {
 
 }
 
+function mdcDefaultSelect(data, label, id) {
+  const template = `<div class="mdc-select" id=${id}>
+  <i class="mdc-select__dropdown-icon"></i>
+  <select class="mdc-select__native-control">
+ 
+  ${data.map(function(value){
+    return ` <option value='${value}'>
+    ${value}
+    </option>`
+}).join("")}
+  </select>
+  <label class='mdc-floating-label'>${label}</label>
+  <div class="mdc-line-ripple"></div>
+</div>`
+  return template;
+}
+
+
 function mdcSelectVenue(venues, label, id) {
   let float;
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
-  <option value=''></option>
+
   <option value=${JSON.stringify('1')}>New Venue</option>
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
@@ -496,10 +513,7 @@ function loadNearByLocations(o, map, location) {
       null, //anchor
       new google.maps.Size(30, 30) //scale
     );
-    var infowindow = new google.maps.InfoWindow({
-
-      disableAutoPan: true
-    });
+    var infowindow = new google.maps.InfoWindow();
     const result = []
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     let lastOpen;
@@ -509,7 +523,6 @@ function loadNearByLocations(o, map, location) {
       const tx = db.transaction(['map'])
       const store = tx.objectStore('map');
       const index = store.index('bounds');
-      console.log(o)
       const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
       const bounds = map.getBounds()
       index.openCursor(idbRange).onsuccess = function (event) {
@@ -580,7 +593,6 @@ function loadNearByLocations(o, map, location) {
         cursor.continue();
       }
       tx.oncomplete = function () {
-        console.log(result)
         map.fitBounds(bounds);
         return resolve(result)
       }
