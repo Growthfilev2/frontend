@@ -87,15 +87,9 @@ function mapView() {
 
     google.maps.event.addListenerOnce(map, 'idle', function () {
       console.log('idle_once');
-      var snapControlDiv = document.createElement('div');
-      var snapControl = new TakeSnap(snapControlDiv);
-      snapControlDiv.index = 1;
-      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
-
-
+     
       loadNearByLocations(o, map, location).then(function (markers) {
-        
-  
+          
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
         const cardHeaderText = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
@@ -117,10 +111,13 @@ function mapView() {
           };
           const value = JSON.parse(evt.detail.value)
           if(value === 1) {
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+
             getUniqueOfficeCount().then(function (offices) {
               if (!offices.length) return;
-
+            
               if (offices.length == 1) {
+                addSnapControl(map,offices[0])
                 getSubscription(offices[0], 'check-in').then(function (checkInSub) {
                   if (!checkInSub) return;
                   requestCreator('create', setVenueForCheckIn([], checkInSub))
@@ -132,6 +129,7 @@ function mapView() {
                 const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
                 selectOfficeInit.listen('MDCSelect:change', function (evt) {
                   if (!evt.detail.value) return;
+                  addSnapControl(map,evt.detail.value)
                   getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
                     if (!checkInSub) return;
                     requestCreator('create', setVenueForCheckIn([], checkInSub))
@@ -139,10 +137,14 @@ function mapView() {
                 })
               }
             })
+
+
             return;
           }
-          document.getElementById('office-cont').innerHTML = ''
+          addSnapControl(map)
         
+    
+          document.getElementById('office-cont').innerHTML = ''
           getSubscription(value.office, 'check-in').then(function (result) {
             requestCreator('create', setVenueForCheckIn([value], result));
 
@@ -158,10 +160,9 @@ function mapView() {
       })
     });
 
+    // google.maps.event.addListener(map, 'idle', function () {
 
-    google.maps.event.addListener(map, 'idle', function () {
-
-    });
+    // });
 
   }).catch(function (error) {
     console.log(error);
@@ -171,6 +172,16 @@ function mapView() {
   })
 }
 
+function addSnapControl(map,office){
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+
+  var snapControlDiv = document.createElement('div');
+  var snapControl = new TakeSnap(snapControlDiv,office);
+  snapControlDiv.index = 1;
+
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
+
+}
 
 function getAvailbleSubs(venue) {
   return new Promise(function(){
@@ -317,7 +328,7 @@ function TakeSnap(el) {
 
   const snap = new Fab('photo_camera').getButton();
   snap.root_.id = 'take-snap';
-  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary')
+  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg')
   el.appendChild(snap.root_);
   snap.root_.addEventListener('click', function () {
 
