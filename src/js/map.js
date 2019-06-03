@@ -141,6 +141,8 @@ function mapView() {
 
             return;
           }
+          map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+
           addSnapControl(map)
         
     
@@ -173,7 +175,6 @@ function mapView() {
 }
 
 function addSnapControl(map,office){
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
 
   var snapControlDiv = document.createElement('div');
   var snapControl = new TakeSnap(snapControlDiv,office);
