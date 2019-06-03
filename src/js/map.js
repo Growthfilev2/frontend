@@ -42,30 +42,30 @@ function mapView() {
     })
     console.log(latLng)
     const o = {
-      north: offsetBounds.north(),
-      south: offsetBounds.south(),
-      east: offsetBounds.east(),
-      west: offsetBounds.west()
-    },
-    map = new google.maps.Map(document.getElementById('map'), {
-      center: latLng,
-      zoom: 18,
-      // maxZoom:18,
-      disableDefaultUI: true,
-      styles: gray,
-      restriction: {
-        latLngBounds: {
-          north: offsetBounds.north(),
-          south: offsetBounds.south(),
-          east: offsetBounds.east(),
-          west: offsetBounds.west()
-        },
-        strictBounds: true,
-        // strictBounds: false,
+        north: offsetBounds.north(),
+        south: offsetBounds.south(),
+        east: offsetBounds.east(),
+        west: offsetBounds.west()
       },
-      // mapTypeId: google.maps.MapTypeId.ROADMAP
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: latLng,
+        zoom: 18,
+        // maxZoom:18,
+        disableDefaultUI: true,
+        styles: gray,
+        restriction: {
+          latLngBounds: {
+            north: offsetBounds.north(),
+            south: offsetBounds.south(),
+            east: offsetBounds.east(),
+            west: offsetBounds.west()
+          },
+          strictBounds: true,
+          // strictBounds: false,
+        },
+        // mapTypeId: google.maps.MapTypeId.ROADMAP
 
-    })
+      })
 
     var marker = new google.maps.Marker({
       position: latLng,
@@ -92,112 +92,70 @@ function mapView() {
       snapControlDiv.index = 1;
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
 
-      Promise.all([loadNearByLocations(o, map, location), getUniqueOfficeCount()]).then(function (result) {
-        let selectOffice;
-        let selectVenue;
-        const markers = result[0];
-        const offices = result[1];
-        const markerLength = markers.length;
-        const officesLength = offices.length;
 
+      loadNearByLocations(o, map, location).then(function (markers) {
+        
+  
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
-        el.querySelector('#card-header').textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
+        const cardHeaderText = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
+        el.querySelector('#card-header').textContent = cardHeaderText
         el.classList.remove('hidden');
-        if (!markerLength) {
-          if (officesLength > 1) {
-
-            contentBody.innerHTML = mdcSelectOffice(offices, 'Select Office');
-            selectOffice = new mdc.select.MDCSelect(el.querySelector('.mdc-select'));
-
-            document.getElementById('submit-check-in').addEventListener('click', function () {
-              const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
-              cardProg.open()
-              if (!selectOffice.value) return;
-              getSubscription(selectOffice.value, 'check-in').then(function (tempBody) {
-                const withVenue = setVenueForCheckIn([], tempBody)
-                requestCreator('create', withVenue);
-                setTimeout(function () {
-                  cardProg.close();
-                }, 500)
-                console.log(withVenue)
-              })
-            });
-            return;
-          }
-
-          document.getElementById('submit-check-in').addEventListener('click', function () {
-
-            const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
-            cardProg.open();
-
-            getSubscription(offices[0], 'check-in').then(function (tempBody) {
-              const withVenue = setVenueForCheckIn([], tempBody)
-              requestCreator('create', withVenue);
-              console.log(withVenue)
-              setTimeout(function () {
-                cardProg.close();
-              }, 500)
-            })
-          });
-          return;
-        }
-
-        const html = `<div>
-          ${mdcSelectVenue(markers, 'Choose Venue','select-venue')}
-          <div class='mt-10 hidden' id='choose-office-container'>
-             ${mdcSelectOffice(offices, 'Select Office','select-office')}
-          </div>
-          </div>`
-
-        contentBody.innerHTML = html
+  
+        contentBody.innerHTML = `<div>
+        ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
+        <div id='office-cont' class='pt-10'></div>
+        </div>`
         selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
+       
+        console.log(selectVenue.selectedIndex)
         selectVenue.listen('MDCSelect:change', (evt) => {
           console.log(evt.detail.value)
           if (!evt.detail.value) {
-            if (officesLength > 1) {
-              el.scrollTop = el.scrollHeight
-              document.getElementById('choose-office-container').classList.remove('hidden')
-              selectOffice = new mdc.select.MDCSelect(document.getElementById('select-office'));
-            }
-          } else {
+            document.getElementById('office-cont').innerHTML = ''
+            return;
+          };
+          const value = JSON.parse(evt.detail.value)
+          if(value === 1) {
+            getUniqueOfficeCount().then(function (offices) {
+              if (!offices.length) return;
 
-            document.getElementById('choose-office-container').classList.add('hidden')
+              if (offices.length == 1) {
+                getSubscription(offices[0], 'check-in').then(function (checkInSub) {
+                  if (!checkInSub) return;
+                  requestCreator('create', setVenueForCheckIn([], checkInSub))
+                })
+                return
+              }
+              if (offices.length > 1) {
+                document.getElementById('office-cont').innerHTML = `${mdcSelectOffice(offices,'Choose Office','choose-office')}`
+                const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
+                selectOfficeInit.listen('MDCSelect:change', function (evt) {
+                  if (!evt.detail.value) return;
+                  getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
+                    if (!checkInSub) return;
+                    requestCreator('create', setVenueForCheckIn([], checkInSub))
+                  })
+                })
+              }
+            })
+            return;
           }
-        });
-        document.getElementById('submit-check-in').addEventListener('click', function () {
+          document.getElementById('office-cont').innerHTML = ''
+        
+          getSubscription(value.office, 'check-in').then(function (result) {
+            requestCreator('create', setVenueForCheckIn([value], result));
 
-          let selectedOffice;
-          let selectedVenue = selectVenue.value ? JSON.parse(selectVenue.value) : '';
-          if (officesLength == 1) {
-            selectedOffice = offices[0]
-          } else {
-            if (selectedVenue) {
-              selectedOffice = selectedVenue.office;
-            } else {
-              selectedOffice = selectOffice.value;
-            }
-          }
-
-          if (!selectedOffice) return;
-
-          getSubscription(selectedOffice, 'check-in').then(function (tempBody) {
-            const cardProg = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#check-in-prog'))
-            cardProg.open()
-            const withVenue = setVenueForCheckIn(selectedVenue ? [selectedVenue] : [], tempBody)
-            requestCreator('create', withVenue);
-            setTimeout(function () {
-              cardProg.close();
-            }, 500)
-            console.log(withVenue)
           })
         });
 
-
-
-
+        if(!markers.length) {
+          selectVenue.selectedIndex = 1
+        }
+        if(markers.length == 1) {
+          selectVenue.selectedIndex = 2
+        }
       })
-
     });
 
 
@@ -214,9 +172,44 @@ function mapView() {
 }
 
 
+function getAvailbleSubs(venue) {
+  return new Promise(function(){
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function(){
+      const db = req.result;
+      const tx = db.transaction(['children'])  ;
+      const store = tx.objectStore('children');
+      const index = store.index('office')
+      index.openCursor(venue.office).onsuccess = function(event){
+        const cursor = event.target.result;
+      }
+    }
+  })
+}
 
-
-
+function newLocationSelectionForm(options) {
+  return `<ul class="mdc-list" role="radiogroup" id='new-location-selection'>
+  ${options.map(function(option){
+    return `<li class="mdc-list-item" role="radio" aria-checked="false">
+    <span class="mdc-list-item__graphic">
+      <div class="mdc-radio">
+        <input class="mdc-radio__native-control"
+              type="radio"
+              id=${option.id}
+              name=${option.name}
+              value=${option.value}>
+        <div class="mdc-radio__background">
+          <div class="mdc-radio__outer-circle"></div>
+          <div class="mdc-radio__inner-circle"></div>
+        </div>
+      </div>
+    </span>
+    <label class="mdc-list-item__text" for=${option.id}>${option.label}</label>
+  </li>`
+  }).join("")}
+  </ul>
+`
+}
 
 function mapDom() {
   return `
@@ -256,6 +249,61 @@ function mapDom() {
   </div>`
 }
 
+function getAdddress(location) {
+  return new Promise(function (resolve, reject) {
+
+    const latLng = {
+      lat: location.latitude,
+      lng: location.longitude
+    }
+    const geocoder = new google.maps.Geocoder;
+    geocoder.geocode({
+      'location': latLng
+    }, function (results, status) {
+
+      if (status !== 'OK') return reject({
+        message: 'Geocoder failed due to: ' + status
+      })
+      if (!results[0]) return reject({
+        message: 'No Results Found'
+      })
+      return resolve(results[0].formatted_address)
+    })
+  })
+}
+
+function checkForVenueSubs() {
+  return new Promise(function (resolve, reject) {
+
+
+    const req = indexedDB.open(firebase.auth().currentUser.uid);
+    req.onsuccess = function () {
+      const db = req.result;
+      const tx = db.transaction(['subscriptions']);
+      const store = tx.objectStore('subscriptions');
+      const result = []
+      store.openCursor().onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return
+        if (cursor.value.template === 'check-in') {
+          cursor.continue();
+          return;
+        }
+        if (!cursor.value.venue[0]) {
+          cursor.continue();
+          return;
+        }
+        result.push(cursor.value)
+        cursor.continue();
+      }
+      tx.oncomplete = function () {
+        resolve(result)
+      }
+
+    }
+  })
+}
+
 function ChatControl(chatDiv) {
 
   const chat = new Fab('chat').getButton();
@@ -285,7 +333,9 @@ function mdcSelectOffice(data, label, id) {
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
- 
+  <option value="">
+
+  </option>
   ${data.map(function(value){
     return ` <option value='${value}'>
     ${value}
@@ -368,13 +418,14 @@ function mdcSelectVenue(venues, label, id) {
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
   <option value=''></option>
+  <option value=${JSON.stringify('1')}>New Venue</option>
   ${venues.map(function(value){
-    return ` <option value='${JSON.stringify(value)}' selected='${venues.length ==1 ? 'true' :'false'}'>
+    return ` <option value='${JSON.stringify(value)}'>
     ${value.location}
     </option>`
 }).join("")}
   </select>
-  <label class='mdc-floating-label mdc-floating-label--float-above'>${label}</label>
+  <label class='mdc-floating-label'>${label}</label>
   <div class="mdc-line-ripple"></div>
 </div>`
   return template;
@@ -447,7 +498,7 @@ function loadNearByLocations(o, map, location) {
       const store = tx.objectStore('map');
       const index = store.index('bounds');
       console.log(o)
-      const idbRange = IDBKeyRange.bound([o.south,o.west],[o.north,o.east]);
+      const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
       const bounds = map.getBounds()
       index.openCursor(idbRange).onsuccess = function (event) {
         const cursor = event.target.result;
@@ -480,7 +531,10 @@ function loadNearByLocations(o, map, location) {
           id: cursor.value.activityId,
           value: JSON.stringify(cursor.value)
         });
-        if (calculateDistanceBetweenTwoPoints(location,{latitude:cursor.value.latitude,longitude:cursor.value.longitude}) < 0.5) {
+        if (calculateDistanceBetweenTwoPoints(location, {
+            latitude: cursor.value.latitude,
+            longitude: cursor.value.longitude
+          }) < 0.5) {
           marker.setMap(map);
           const content = `<span>${cursor.value.activityId}</span>`
           google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {

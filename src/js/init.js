@@ -426,7 +426,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 6);
+      const req = window.indexedDB.open(auth.uid, 7);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -481,6 +481,7 @@ function startApp(start) {
               console.log("finsihed backlog")
             }
           }
+        
         }
       }
 
@@ -589,7 +590,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('office', 'office')
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
-  subscriptions.createIndex('status', 'status')
+  subscriptions.createIndex('status', 'status');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })

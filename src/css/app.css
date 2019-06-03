@@ -3,7 +3,7 @@ html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
 }
 :root {
   --mdc-theme-primary: #0399f4 ;
-  --mdc-theme-secondary: #FFFFFF ;
+  --mdc-theme-secondary: #0399f4 ;
   --mdc-theme-background: #FFFFFF ;
   --mdc-theme-on-primary:#000000 ;
   --mdc-theme-on-secondary :#ffffff ;
@@ -78,6 +78,9 @@ body {
 /** override **/
 .mdc-text-field .mdc-text-field__input {
   caret-color: var(--mdc-theme-on-secondary);
+}
+:not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::before, :not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::after {
+  background-color: #cccccc
 }
 
 .header-photo {
