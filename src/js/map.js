@@ -90,8 +90,8 @@ function mapView() {
 
         const el = document.getElementById('selection-box');
         const contentBody = el.querySelector('.content-body');
-        const cardHeaderText = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
-        el.querySelector('#card-header').textContent = cardHeaderText
+        const header = document.getElementById('card-header')
+        header.textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
         el.classList.remove('hidden');
 
         contentBody.innerHTML = `<div>
@@ -107,8 +107,9 @@ function mapView() {
           if (!evt.detail.value) return;
           const value = JSON.parse(evt.detail.value)
           if (value === 1 || value === 0) {
+            
             const newSubs = []
-
+           
             getUniqueOfficeCount().then(function (offices) {
               if (!offices.length) return;
 
@@ -117,14 +118,20 @@ function mapView() {
               selectOfficeInit.listen('MDCSelect:change', function (evt) {
                 getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
                   if (!checkInSub) return;
-                  requestCreator('create', setVenueForCheckIn([], checkInSub));
-                  checkForVenueSubs().then(function (venueSubs) {
+                  // requestCreator('create', setVenueForCheckIn([], checkInSub));
+                  checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
                     if (!venueSubs.length) return;
-                    document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(newSubs, 'Choose','select-subs')}`
+                    header.textContent = 'What Do You Want to do ?'
+
+                    document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(venueSubs, 'Choose','select-subs',`<option value='NONE'>
+                    None
+                    </option>`)}`
                     const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
                     subsSelect.selectedIndex = 0
-                    subsSelect.listen('MDCSelect:change',function(evt){
-                      document.getElementById('submit-cont').innerHTML = `<button class='mdc-button'>Create ${evt.detail.value}</button>`
+                    subsSelect.listen('MDCSelect:change',function(subEvent){
+                
+                      createForm(evt.detail.value,subEvent.detail.value)
+                      
                     })
                   });
                 });
@@ -134,6 +141,7 @@ function mapView() {
               }
               if (offices.length > 1) {
                 selectOfficeInit.selectedIndex = -1
+                header.textContent = 'Choose Office'
               }
             })
             return;
@@ -144,14 +152,18 @@ function mapView() {
           document.getElementById('submit-cont').innerHTML = ''
 
           getSubscription(value.office, 'check-in').then(function (result) {
-            requestCreator('create', setVenueForCheckIn([value], result));
+            // requestCreator('create', setVenueForCheckIn([value], result));
             getAvailbleSubs(value).then(function (subs) {
               if (!subs.length) return;
-              document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs')}`
+              header.textContent = 'What Do You Want to do ?'
+
+              document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
+              None
+              </option>`)}`
               const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
               subsSelect.selectedIndex = -1
               subsSelect.listen('MDCSelect:change', function (evt) {
-                document.getElementById('submit-cont').innerHTML = `<button class='mdc-button'>Create ${evt.detail.value}</button>`
+                createForm(value.office,evt.detail.value,value)
               })
             })
           })
@@ -159,12 +171,15 @@ function mapView() {
 
         if (!markers.length) {
           selectVenue.selectedIndex = 0
+        
         }
         if (markers.length == 1) {
           selectVenue.selectedIndex = 1
         }
         if (markers.length > 1) {
           selectVenue.selectedIndex = -1
+          header.textContent = 'Where Are You ?'
+
         }
       })
     });
@@ -178,7 +193,12 @@ function mapView() {
   })
 }
 
+function createForm(office,template,venue) {
+  const submitCont = document.getElementById('submit-cont')
+  if(template === 'NONE')  return submitCont.innerHTML = ''
+  submitCont.innerHTML = `<button class='mdc-button'>Create ${template}</button>`
 
+}
 
 function addSnapControl(map, office) {
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
@@ -207,7 +227,6 @@ function getAvailbleSubs(venue) {
           if (cursor.value.attachment[attachmentName].type === venue.template) {
             result.push(cursor.value.template)
           }
-
         })
         cursor.continue();
       }
@@ -268,9 +287,7 @@ function mapDom() {
         <div class="content-body">
 
         </div>
-        <div id='submit-cont' class='hidden'>
-          <button class="demo-button mdc-button mdc-theme--primary-bg mdc-theme--secondary" id='submit-check-in'><span
-              class="mdc-button__label">SUBMIT</span></button>
+        <div id='submit-cont'>
         </div>
       </div>
 
@@ -303,7 +320,7 @@ function getAdddress(location) {
   })
 }
 
-function checkForVenueSubs() {
+function checkForVenueSubs(office) {
   return new Promise(function (resolve, reject) {
 
 
@@ -312,11 +329,16 @@ function checkForVenueSubs() {
       const db = req.result;
       const tx = db.transaction(['subscriptions']);
       const store = tx.objectStore('subscriptions');
+      const index = store.index('office')
       const result = []
-      store.openCursor().onsuccess = function (event) {
+      index.openCursor(office).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return
         if (cursor.value.template === 'check-in') {
+          cursor.continue();
+          return;
+        }
+        if(cursor.value.status === 'CANCELLED') {
           cursor.continue();
           return;
         }
@@ -324,7 +346,7 @@ function checkForVenueSubs() {
           cursor.continue();
           return;
         }
-        result.push(cursor.value)
+        result.push(cursor.value.template)
         cursor.continue();
       }
       tx.oncomplete = function () {
@@ -423,16 +445,17 @@ function setFilePath(base64) {
 
 }
 
-function mdcDefaultSelect(data, label, id) {
+function mdcDefaultSelect(data, label, id,option) {
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
- 
   ${data.map(function(value){
     return ` <option value='${value}'>
     ${value}
     </option>`
 }).join("")}
+${option}
+
   </select>
   <label class='mdc-floating-label'>${label}</label>
   <div class="mdc-line-ripple"></div>
