@@ -4,7 +4,7 @@ html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
 :root {
   --mdc-theme-primary: #0399f4 ;
   --mdc-theme-secondary: #0399f4 ;
-  --mdc-theme-background: #FFFFFF ;
+  --mdc-theme-background: #cccccc ;
   --mdc-theme-on-primary:#ffffff ;
   --mdc-theme-on-secondary :#ffffff ;
   
@@ -61,8 +61,17 @@ body {
 .pt-10 {
   padding-top: 10px;
 }
+.pl-20 {
+  padding-left: 20px;
+}
+.pr-20{
+  padding-right: 20px;
+}
 .hidden {
   display: none !important;
+}
+.resize-veritcal {
+  resize: vertical;
 }
 
 /** Dialog **/
@@ -87,3 +96,4 @@ body {
   border-radius: 50%;
   padding: 6px;
 }
+

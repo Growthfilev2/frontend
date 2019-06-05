@@ -80,3 +80,14 @@
 .card-header {
     position: relative;
 }
+
+/** card-form **/
+#form-container {
+    padding-top: 70px;
+}
+#form-container .mdc-text-field {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background-color: rgba(224, 224, 224, 0.32);
+    width: 100%;
+}

@@ -16,21 +16,21 @@ function loader(nameClass) {
 
 function successDialog() {
 
-  if (history.state[0] !== 'mapView') {
-    progressBar.foundation_.close();
+  // if (history.state[0] !== 'mapView') {
+  //   progressBar.foundation_.close();
     const successMark = document.getElementById('success-animation');
     const viewContainer = document.getElementById('growthfile');
     successMark.classList.remove('hidden');
     viewContainer.style.opacity = '0.37';
-    setTimeout(function () {
-      successMark.classList.add('hidden');
-      viewContainer.style.opacity = '1';
-    }, 1500);
-    mapView();
+    // setTimeout(function () {
+      // successMark.classList.add('hidden');
+      // viewContainer.style.opacity = '1';
+    // }, 1500);
+    // mapView();
     return;
-  }
-  snackBar.labelText = 'Check-In Created'
-  snackBar.open();
+  // }
+  // snackBar.labelText = 'Check-In Created'
+  // snackBar.open();
 }
 
 function snacks(message, type) {

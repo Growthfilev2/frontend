@@ -166,7 +166,7 @@ Dialog.prototype.create = function (type) {
     if (this.content instanceof HTMLElement) {
         contentContainer.appendChild(this.content)
     } else {
-        contentContainer.textContent = this.content
+        contentContainer.innerHTML = this.content
     }
 
     surface.appendChild(h2)
@@ -275,11 +275,11 @@ Fab.prototype.extended = function (labelName) {
 }
 
 
-function getHeader(sectionStart,sectionEnd){
-    document.getElementById('section-start').innerHTML = sectionStart;
-    document.getElementById('section-end').innerHTML = sectionEnd;
-    topAppBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-    topAppBar.setScrollTarget(document.getElementById('main-content'));
+function getHeader(parentSelector,sectionStart,sectionEnd){
+    const el = document.getElementById(parentSelector);
+    el.querySelector('#section-start').innerHTML = sectionStart;
+    el.querySelector('#section-end').innerHTML = sectionEnd;
+    topAppBar = new mdc.topAppBar.MDCTopAppBar(el)
     topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
     return topAppBar;
     

@@ -3,220 +3,220 @@ let progressBar;
 let snackBar;
 let ui;
 var gray = [{
-  "featureType": "administrative",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#D6E2E6"
-  }]
-},
-{
-  "featureType": "administrative",
-  "elementType": "geometry.stroke",
-  "stylers": [{
-    "color": "#CFD4D5"
-  }]
-},
-{
-  "featureType": "administrative",
-  "elementType": "labels.text.fill",
-  "stylers": [{
-    "color": "#7492A8"
-  }]
-},
-{
-  "featureType": "landscape.man_made",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#DDE2E3"
-  }]
-},
-{
-  "featureType": "landscape.man_made",
-  "elementType": "geometry.stroke",
-  "stylers": [{
-    "color": "#CFD4D5"
-  }]
-},
-{
-  "featureType": "landscape.natural",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#dde2e3"
-  }]
-},
-{
-  "featureType": "landscape.natural",
-  "elementType": "labels.text.fill",
-  "stylers": [{
-    "color": "#7492A8"
-  }]
-},
-{
-  "featureType": "landscape.natural.terrain",
-  "stylers": [{
-    "visibility": "off"
-  }]
-},
-{
-  "featureType": "poi",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#DDE2E3"
-  }]
-},
-{
-  "featureType": "poi",
-  "elementType": "labels.icon",
-  "stylers": [{
-    "saturation": -100
-  }]
-},
-{
-  "featureType": "poi",
-  "elementType": "labels.text.fill",
-  "stylers": [{
-    "color": "#588CA4"
-  }]
-},
-{
-  "featureType": "poi.park",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#B9F6CA"
-  }]
-},
-{
-  "featureType": "poi.park",
-  "elementType": "geometry.stroke",
-  "stylers": [{
-    "color": "#BAE6A1"
-  }]
-},
-{
-  "featureType": "poi.sports_complex",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#C6E8B3"
-  }]
-},
-{
-  "featureType": "poi.sports_complex",
-  "elementType": "geometry.stroke",
-  "stylers": [{
-    "color": "#BAE6A1"
-  }]
-},
-{
-  "featureType": "road",
-  "elementType": "labels.icon",
-  "stylers": [{
-      "saturation": -45
-    },
-    {
-      "lightness": 10
-    },
-    {
-      "visibility": "on"
-    }
-  ]
-},
-{
-  "featureType": "road",
-  "elementType": "labels.text.fill",
-  "stylers": [{
-    "color": "#41626B"
-  }]
-},
-{
-  "featureType": "road.arterial",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#FFFFFF"
-  }]
-},
-{
-  "featureType": "road.highway",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#C1D1D6"
-  }]
-},
-{
-  "featureType": "road.highway",
-  "elementType": "geometry.stroke",
-  "stylers": [{
-    "color": "#A6B5BB"
-  }]
-},
-{
-  "featureType": "road.highway",
-  "elementType": "labels.icon",
-  "stylers": [{
-    "visibility": "on"
-  }]
-},
-{
-  "featureType": "road.highway.controlled_access",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#9FB6BD"
-  }]
-},
-{
-  "featureType": "road.local",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#FFFFFF"
-  }]
-},
-{
-  "featureType": "transit",
-  "elementType": "labels.icon",
-  "stylers": [{
-    "saturation": -70
-  }]
-},
-{
-  "featureType": "transit.line",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#CFD4D5"
-  }]
-},
-{
-  "featureType": "transit.line",
-  "elementType": "labels.text.fill",
-  "stylers": [{
-    "color": "#CFD4D5"
-  }]
-},
-{
-  "featureType": "transit.station",
-  "elementType": "labels.text.fill",
-  "stylers": [{
-      "color": "#90CAF9"
-    },
-
-  ]
-},
-{
-  "featureType": "transit.station.airport",
-  "elementType": "geometry.fill",
-  "stylers": [{
+    "featureType": "administrative",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#D6E2E6"
+    }]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry.stroke",
+    "stylers": [{
+      "color": "#CFD4D5"
+    }]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "labels.text.fill",
+    "stylers": [{
+      "color": "#7492A8"
+    }]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#DDE2E3"
+    }]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "elementType": "geometry.stroke",
+    "stylers": [{
+      "color": "#CFD4D5"
+    }]
+  },
+  {
+    "featureType": "landscape.natural",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#dde2e3"
+    }]
+  },
+  {
+    "featureType": "landscape.natural",
+    "elementType": "labels.text.fill",
+    "stylers": [{
+      "color": "#7492A8"
+    }]
+  },
+  {
+    "featureType": "landscape.natural.terrain",
+    "stylers": [{
+      "visibility": "off"
+    }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#DDE2E3"
+    }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.icon",
+    "stylers": [{
       "saturation": -100
-    },
-    {
-      "lightness": -5
-    }
-  ]
-},
-{
-  "featureType": "water",
-  "elementType": "geometry.fill",
-  "stylers": [{
-    "color": "#A6CBE3"
-  }]
-}
+    }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [{
+      "color": "#588CA4"
+    }]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#B9F6CA"
+    }]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry.stroke",
+    "stylers": [{
+      "color": "#BAE6A1"
+    }]
+  },
+  {
+    "featureType": "poi.sports_complex",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#C6E8B3"
+    }]
+  },
+  {
+    "featureType": "poi.sports_complex",
+    "elementType": "geometry.stroke",
+    "stylers": [{
+      "color": "#BAE6A1"
+    }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.icon",
+    "stylers": [{
+        "saturation": -45
+      },
+      {
+        "lightness": 10
+      },
+      {
+        "visibility": "on"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [{
+      "color": "#41626B"
+    }]
+  },
+  {
+    "featureType": "road.arterial",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#FFFFFF"
+    }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#C1D1D6"
+    }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [{
+      "color": "#A6B5BB"
+    }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.icon",
+    "stylers": [{
+      "visibility": "on"
+    }]
+  },
+  {
+    "featureType": "road.highway.controlled_access",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#9FB6BD"
+    }]
+  },
+  {
+    "featureType": "road.local",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#FFFFFF"
+    }]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "labels.icon",
+    "stylers": [{
+      "saturation": -70
+    }]
+  },
+  {
+    "featureType": "transit.line",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#CFD4D5"
+    }]
+  },
+  {
+    "featureType": "transit.line",
+    "elementType": "labels.text.fill",
+    "stylers": [{
+      "color": "#CFD4D5"
+    }]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "labels.text.fill",
+    "stylers": [{
+        "color": "#90CAF9"
+      },
+
+    ]
+  },
+  {
+    "featureType": "transit.station.airport",
+    "elementType": "geometry.fill",
+    "stylers": [{
+        "saturation": -100
+      },
+      {
+        "lightness": -5
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry.fill",
+    "stylers": [{
+      "color": "#A6CBE3"
+    }]
+  }
 ]
 
 let native = function () {
@@ -307,7 +307,7 @@ function getDeviceInfomation() {
 
 window.onpopstate = function (event) {
 
- if(!event.state) return;
+  if (!event.state) return;
   window[event.state[0]]();
 }
 
@@ -395,7 +395,7 @@ function firebaseUiConfig(value) {
 
 
 function userSignedOut() {
- 
+
   if (!ui) {
     ui = new firebaseui.auth.AuthUI(firebase.auth())
   }
@@ -426,7 +426,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 7);
+      const req = window.indexedDB.open(auth.uid, 8);
       let db;
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -449,42 +449,47 @@ function startApp(start) {
 
             const mapStore = tx.objectStore('map');
             mapStore.createIndex('bounds', ['latitude', 'longitude']);
-          
+
           }
-          if(evt.oldVersion < 6) {
+          if (evt.oldVersion < 6) {
             var tx = req.transaction;
             const childrenStore = tx.objectStore('children')
             childrenStore.createIndex('officeTemplate', ['office', 'template']);
-           
+
             childrenStore.createIndex('employees', 'employee');
-            childrenStore.createIndex('employeeOffice',['employee','office'])
-            childrenStore.createIndex('team','team')
-            childrenStore.createIndex('teamOffice',['team','office'])
+            childrenStore.createIndex('employeeOffice', ['employee', 'office'])
+            childrenStore.createIndex('team', 'team')
+            childrenStore.createIndex('teamOffice', ['team', 'office'])
             const myNumber = firebase.auth().currentUser.phoneNumber;
 
-            childrenStore.index('template').openCursor('employee').onsuccess = function(event){
-                const cursor = event.target.result;
-                if(!cursor) {
-                  console.log("finished modiying children")
-                  return;
-                }
-                cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-                if(cursor.value.attachment['First Supervisor'].value === myNumber ||  cursor.value.attachment['Second Supervisor'].value === myNumber) {
-                  cursor.value.team = 1
-                }
-                cursor.update(cursor.value)
-                cursor.continue();
+            childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
+              const cursor = event.target.result;
+              if (!cursor) {
+                console.log("finished modiying children")
+                return;
+              }
+              cursor.value.employee = cursor.value.attachment['Employee Contact'].value
+              if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
+                cursor.value.team = 1
+              }
+              cursor.update(cursor.value)
+              cursor.continue();
             };
-        
-            tx.oncomplete = function(){
+
+            tx.oncomplete = function () {
 
               console.log("finsihed backlog")
             }
           }
-        
+          if (evt.oldVersion < 7) {
+            var tx = req.transaction;
+            const mapStore = tx.objectStore('map')
+            mapStore.createIndex('office', 'office');
+            mapStore.createIndex('status', 'status');
+            mapStore.createIndex('selection', ['office', 'status','location'])
+          }
         }
       }
-
       req.onsuccess = function () {
         console.log("run app")
         db = req.result;
@@ -492,7 +497,7 @@ function startApp(start) {
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
         console.log(document.cookie);
-        
+
         // resetScroll();
         requestCreator('now', {
           device: native.getInfo(),
@@ -500,7 +505,7 @@ function startApp(start) {
           registerToken: native.getFCMToken()
         });
         mapView();
-        
+
       }
       req.onerror = function () {
         handleError({
@@ -512,7 +517,7 @@ function startApp(start) {
 }
 
 
-function getEmployeeDetails(range,indexName) {
+function getEmployeeDetails(range, indexName) {
   return new Promise(function (resolve, reject) {
     const auth = firebase.auth().currentUser
     const req = indexedDB.open(auth.uid)
@@ -520,16 +525,16 @@ function getEmployeeDetails(range,indexName) {
       const db = req.result;
       const tx = db.transaction(['children']);
       const store = tx.objectStore('children');
- 
+
 
       const index = store.index(indexName)
-   
+
 
       const getEmployee = index.getAll(range);
 
       getEmployee.onsuccess = function (event) {
         const result = event.target.result;
-     
+
         console.log(result);
 
         return resolve(result)
@@ -561,8 +566,8 @@ function createObjectStores(db, uid) {
   activity.createIndex('timestamp', 'timestamp')
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
-  activity.createIndex('template','template');
-  
+  activity.createIndex('template', 'template');
+
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
   })
@@ -613,7 +618,10 @@ function createObjectStores(db, uid) {
   map.createIndex('nearby', ['status', 'hidden'])
   map.createIndex('byOffice', ['office', 'location'])
   map.createIndex('bounds', ['latitude', 'longitude'])
-
+  map.createIndex('office', 'office');
+  map.createIndex('status', 'status');
+  map.createIndex('selection', ['office', 'status','location']);
+  
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'
   })
@@ -623,9 +631,9 @@ function createObjectStores(db, uid) {
   children.createIndex('templateStatus', ['template', 'status']);
   children.createIndex('officeTemplate', ['office', 'template']);
   children.createIndex('employees', 'employee');
-  children.createIndex('employeeOffice',['employee','office'])
-  children.createIndex('team','team')
-  children.createIndex('teamOffice',['team','office'])
+  children.createIndex('employeeOffice', ['employee', 'office'])
+  children.createIndex('team', 'team')
+  children.createIndex('teamOffice', ['team', 'office'])
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
@@ -651,7 +659,6 @@ function redirect() {
 
 function createCheckInData() {
   return new Promise(function (resolve, reject) {
-
     getUniqueOfficeCount().then(function (offices) {
       console.log(offices);
       const prom = [];
@@ -722,7 +729,7 @@ function getUniqueOfficeCount() {
       childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
         const cursor = event.target.result
         if (!cursor) return;
-        
+
         offices.push(cursor.value.office)
         cursor.continue()
       }

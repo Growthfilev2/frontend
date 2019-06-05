@@ -4,8 +4,9 @@ function profileView() {
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon'>arrow_back</a>`
-  const header = getHeader(backIcon,'');
-  
+  const header = getHeader('app-header',backIcon,'');
+  header.setScrollTarget(document.getElementById('main-content'));
+
   const root = `<div class="mdc-card demo-card mdc-top-app-bar--dense-fixed-adjust" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
