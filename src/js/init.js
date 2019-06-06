@@ -457,7 +457,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 8);
+      const req = window.indexedDB.open(auth.uid, 9);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -518,6 +518,14 @@ function startApp(start) {
             mapStore.createIndex('office', 'office');
             mapStore.createIndex('status', 'status');
             mapStore.createIndex('selection', ['office', 'status', 'location']);
+          }
+          if (evt.oldVersion < 8) {
+            var tx = req.transaction;
+            const listStore = tx.objectStore('list')
+            const calendar = tx.objectStore('calendar')
+
+            listStore.createIndex('office', 'office');
+            calendar.createIndex('office','office')
           }
         }
       }
@@ -600,6 +608,7 @@ function createObjectStores(db, uid) {
   })
   list.createIndex('timestamp', 'timestamp');
   list.createIndex('status', 'status');
+  list.createIndex('office', 'office');
 
   const users = db.createObjectStore('users', {
     keyPath: 'mobile'
@@ -631,6 +640,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('timestamp', 'timestamp')
   calendar.createIndex('start', 'start')
   calendar.createIndex('end', 'end')
+  calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
     calendar.createIndex('onLeave', ['template', 'status', 'office']);
 

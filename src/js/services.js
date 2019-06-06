@@ -602,9 +602,9 @@ function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
   officeRemoveDialog.open();
   officeRemoveDialog.listen('MDCDialog:closed', function () {
-    document.getElementById('app-current-panel').innerHTML = '';
-    resetScroll()
-    listView();
+    // document.getElementById('app-current-panel').innerHTML = '';
+    // resetScroll()
+    // listView();
   });
   return
 }
