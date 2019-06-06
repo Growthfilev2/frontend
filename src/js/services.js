@@ -522,18 +522,6 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
   })
 }
 
-function initFirstLoad(response) {
-
-  const auth = firebase.auth().currentUser;
-
-  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (!result.length) return mapView();
-    if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-    return mapView();
-  })
-  return
-}
-
 function updateApp() {
   if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
@@ -561,37 +549,11 @@ function revokeSession() {
   });
 }
 
-
-function apiFail(data) {
-  if (document.getElementById('send-activity')) {
-    document.getElementById('send-activity').style.display = 'block';
-  }
-
-  if (document.querySelector('.loader')) {
-    document.querySelector('.loader').remove();
-  }
-  if (document.querySelector('.delete-activity')) {
-    document.querySelector('.delete-activity').style.display = 'block';
-  }
-  if (document.querySelector('.undo-delete-loader')) {
-    document.querySelector('.undo-delete-loader').style.display = 'block';
-  }
-  if (document.querySelector('.form-field-status')) {
-    if (document.querySelector('.form-field-status').classList.contains('hidden')) {
-      document.querySelector('.form-field-status').classList.remove('hidden');
-    }
-  }
-  // progressBar.foundation_.close();
-  snacks(data.msg.message);
-}
-
 function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
   officeRemoveDialog.open();
   officeRemoveDialog.listen('MDCDialog:closed', function () {
-    // document.getElementById('app-current-panel').innerHTML = '';
-    // resetScroll()
-    // listView();
+
   });
   return
 }
