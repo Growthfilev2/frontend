@@ -846,11 +846,8 @@ function successResponse(read, param) {
 
     })
     updateRoot(read,updateTx,param.user.uid);
-
     updateTx.oncomplete = function () {
-      if(read.fromTime) {
-        requestHandlerResponse('initFirstLoad', 200)
-      }
+      requestHandlerResponse('initFirstLoad', 200,'',read.from)
       console.log("all completed");
     }
 

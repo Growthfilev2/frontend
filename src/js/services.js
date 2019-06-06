@@ -544,7 +544,17 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  userDetails();
+  const param = response.params;
+  const auth = firebase.auth().currentUser;
+  if(!param) {
+    getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+      if(!result.length) return mapView();
+      if (!auth.email || !auth.emailVerified) return userDetails(result,auth);
+      return mapView();
+    })
+    return
+  };
+  mapView();
   return;
 }
 

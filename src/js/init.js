@@ -2,6 +2,10 @@ const appKey = new AppKeys();
 let progressBar;
 let snackBar;
 let ui;
+let send;
+let change;
+let next;
+let emailInit;
 var gray = [{
     "featureType": "administrative",
     "elementType": "geometry.fill",
@@ -357,15 +361,38 @@ window.addEventListener("load", function () {
   startApp(true)
 })
 
-function firebaseUiConfig(value) {
+function firebaseUiConfig(value, redirect) {
 
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        document.getElementById('dialog-container').innerHTML = ''
+
+        if (redirect) {
+          emailFlow(firebase.auth().currentUser, value).then(function () {
+            snacks('Verification Link has Been Send To you Email Address');
+            emailInit.foundation_.setDisabled(true);
+            change.root_.classList.remove('hidden');
+            next.root_.classList.remove('hidden');
+            new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress')).close();
+        }).catch(function (error) {
+            new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress')).close();
+            if (error.code === 'auth/too-many-requests') {
+                mapView();
+                snacks('You Can Also Update Your Email Address From Your Profile')
+                return;
+            }
+            send.root_.classList.remove('hidden');
+            snacks(error.message)
+
+        })
+          return false
+        }
         if (value) {
           updateEmail(authResult.user, value);
           return false;
         }
+
       },
       signInFailure: function (error) {
 
@@ -409,11 +436,12 @@ function startApp(start) {
   firebase.auth().onAuthStateChanged(function (auth) {
 
     if (!auth) {
-      document.getElementById('start-loader').classList.add('hidden')
+      // document.getElementById('start-loader').classList.add('hidden')
       document.getElementById("main-layout-app").style.display = 'none'
       userSignedOut()
       return
     }
+
     if (appKey.getMode() === 'production') {
       if (!native.getInfo()) {
         redirect();
@@ -486,29 +514,34 @@ function startApp(start) {
             const mapStore = tx.objectStore('map')
             mapStore.createIndex('office', 'office');
             mapStore.createIndex('status', 'status');
-            mapStore.createIndex('selection', ['office', 'status','location'])
+            mapStore.createIndex('selection', ['office', 'status', 'location']);
           }
         }
       }
       req.onsuccess = function () {
+        const startLoad = document.querySelector('#start-load')
+        startLoad.classList.remove('hidden');
         console.log("run app")
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
-       
+
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
         });
-        if(!showUserDetails(auth)) {
-          document.body.classList.add('user-detail-bckg')
-          document.getElementById('app-current-panel').innerHTML = userDom();
-          document.getElementById('start-loader').classList.remove('hidden')
-          return;
-        };
-        mapView();
+        const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
+        let index = 0;
+        var interval = setInterval(function () {
+          if (index == texts.length - 1) {
+            clearInterval(interval)
+          }
+          startLoad.querySelector('p').textContent = texts[index]
+          index++;
+        }, index + 1 * 1000)
+
       }
       req.onerror = function () {
         handleError({
@@ -623,8 +656,8 @@ function createObjectStores(db, uid) {
   map.createIndex('bounds', ['latitude', 'longitude'])
   map.createIndex('office', 'office');
   map.createIndex('status', 'status');
-  map.createIndex('selection', ['office', 'status','location']);
-  
+  map.createIndex('selection', ['office', 'status', 'location']);
+
   const children = db.createObjectStore('children', {
     keyPath: 'activityId'
   })

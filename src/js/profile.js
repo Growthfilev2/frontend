@@ -1,6 +1,6 @@
 function profileView() {
   history.pushState(['profileView'], null, null);
-  document.getElementById('start-loader').classList.add('hidden')
+  document.getElementById('start-load').classList.add('hidden')
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon'>arrow_back</a>`
@@ -244,16 +244,20 @@ function createEditProfile(name, email) {
       </div>
   </div>
 
-  <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
-      <i class="material-icons mdc-text-field__icon">email</i>
-      <input class="mdc-text-field__input" value="${email}">
-      <div class="mdc-line-ripple"></div>
-      <label class="mdc-floating-label ${email ? 'mdc-floating-label--float-above' :''} ">Email</label>
-  </div>
-  <div class="mdc-text-field-helper-line">
-      <div id="username-helper-text" class="mdc-text-field-helper-text" aria-hidden="true">
-          This will be displayed on your public profile
-      </div>
+  ${emailField(email,'This Will Be Used For Sending Reports')}
+</div>`
+}
+
+function emailField (email,label,setFocus){
+  return `<div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
+  <i class="material-icons mdc-text-field__icon">email</i>
+  <input class="mdc-text-field__input" type='email' value="${email}" autofocus=${setFocus ? 'true':'false'}>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label ${email ? 'mdc-floating-label--float-above' :''} ">Email</label>
+</div>
+<div class="mdc-text-field-helper-line">
+  <div id="username-helper-text" class="mdc-text-field-helper-text" aria-hidden="true">
+      ${label}
   </div>
 </div>`
 }
@@ -346,43 +350,55 @@ function isEmailValid(newEmail, currentEmail) {
 }
 
 function updateEmail(user, email) {
-  progressBar.foundation_.open();
   user.updateEmail(email).then(function () {
     emailUpdateSuccess(user)
   }).catch(console.log);
 }
 
-function emailUpdateSuccess(user) {
-
-  user.sendEmailVerification().then(emailVerificationSuccess).catch(emailVerificationError);
+function emailUpdateSuccess(user,) {
+  user.sendEmailVerification().then(function(){
+    emailVerificationSuccess()
+  }).catch(emailVerificationError);
+  
 }
 
 function emailVerificationSuccess() {
   document.getElementById('dialog-container').innerHTML = ''
-  setDetails();
   snacks('Verification link has been send to your email address');
+
+  setDetails();
 }
 
 function emailVerificationError(error) {
   snacks(error.message);
-  progressBar.foundation_.close();
+  try {
+    progressBar.foundation_.close();
+  }catch(e){
+    console.log(e)
+  }
 }
 
-function newSignIn(value) {
+function newSignIn(value,redirect) {
   const dialog = new Dialog('', createElement('div', {
     id: 'refresh-login'
   })).create();
   dialog.open();
+  dialog.root_.querySelector('.mdc-dialog__content').style.padding = '0px';
+  console.log(dialog)
+  
   dialog.listen('MDCDialog:opened', function (evt) {
+    dialog.buttons_.forEach(function(el){
+      el.classList.add('hidden')
+    })
     try {
       if (!ui) {
         ui = new firebaseui.auth.AuthUI(firebase.auth())
       }
-      ui.start('#refresh-login', firebaseUiConfig(value));
+      ui.start('#refresh-login', firebaseUiConfig(value,redirect));
       setTimeout(function () {
         document.querySelector('.firebaseui-id-phone-number').disabled = true;
         document.querySelector('.firebaseui-label').remove();
-        document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
+        document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number';
       }, 500)
 
     } catch (e) {
@@ -391,6 +407,10 @@ function newSignIn(value) {
       handleError({
         message: `${e.message} from newSignIn function during email updation`
       });
+      if(redirect) {
+        mapView();
+        return
+      }
       snacks('Please try again later');
     }
   })

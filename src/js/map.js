@@ -15,6 +15,7 @@ function handleNav(evt) {
 
 function mapView() {
   history.pushState(['mapView'], null, null);
+  document.getElementById('start-load').classList.add('hidden');
   
   progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
@@ -25,13 +26,14 @@ function mapView() {
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
 
   header.listen('MDCTopAppBar:nav', handleNav);
-
+  
   document.getElementById('app-current-panel').innerHTML = mapDom();
+  document.getElementById('app-current-panel').classList.add('user-detail-bckg')
   document.getElementById('map-view').style.height = '100%';
 
   manageLocation().then(function (location) {
 
-    document.getElementById('start-loader').classList.add('hidden');
+    document.getElementById('start-load').classList.add('hidden');
 
     const latLng = {
       lat: location.latitude,
@@ -97,8 +99,14 @@ function mapView() {
   }).catch(function (error) {
     console.log(error);
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    document.getElementById('start-loader').classList.add('hidden');
-    document.getElementById('map').innerHTML = '<div><p>Failed To Detect You Location</p><button class="mdc-button" onclick=mapView()>Try Again</button></div>'
+    document.getElementById('start-load').classList.add('hidden')
+
+    document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>'
+    const btn = new mdc.ripple.MDCRipple(document.getElementById('try-again'))
+    btn.root_.onclick = function(){
+      document.getElementById('start-load').classList.remove('hidden')
+      mapView();
+    }
   })
 }
 
