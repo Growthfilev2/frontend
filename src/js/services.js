@@ -380,7 +380,7 @@ function requestCreator(requestType, requestBody, location) {
   };
 
   auth.getIdToken(false).then(function (token) {
-    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
+    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
       requestGenerator.body = requestBody;
       requestGenerator.meta.user.token = token;
 
@@ -394,31 +394,34 @@ function requestCreator(requestType, requestBody, location) {
         requestGenerator.meta.user.token = token;
         if (isLocationOld) {
           manageLocation().then(function (location) {
-            createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, location)
+            createRequestBody(requestBody, requestGenerator, rootRecord.serverTime, location)
           }).catch(locationErrorDialog)
         } else {
-          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime, rootRecord.location)
+          createRequestBody(requestBody, requestGenerator, rootRecord.serverTime, rootRecord.location)
         }
       });
     }
   }).catch(console.log)
 
   // handle the response from apiHandler when operation is completed
-  apiHandler.onmessage = messageReceiver;
-  apiHandler.onerror = onErrorMessage;
+  // apiHandler.onmessage = messageReceiver;
+  return new Promise(function(resolve,reject){
+
+    apiHandler.onmessage = function(event){
+      console.log(event)
+      if(!event.data.success) return reject(event.data)
+      return resolve(event.data)  
+    }
+    apiHandler.onerror = function(event){
+      console.log(event)
+      return reject(event.data)
+    };
+  })
 }
 
-function createRequestBody(requestType, requestBody, requestGenerator, serverTime, location) {
-
-  if (requestType === 'create') {
-    requestBody.forEach(function (body) {
-      body.timestamp = fetchCurrentTime(serverTime);
-      body.geopoint = location
-    })
-  } else {
-    requestBody['timestamp'] = fetchCurrentTime(serverTime);
-    requestBody['geopoint'] = location;
-  }
+function createRequestBody(requestBody, requestGenerator, serverTime, location) {
+  requestBody['timestamp'] = fetchCurrentTime(serverTime);
+  requestBody['geopoint'] = location;
   requestGenerator.body = requestBody;
   apiHandler.postMessage(requestGenerator);
 }
@@ -703,23 +706,23 @@ function getUserRecord(data, tx) {
 
 function getSubscription(office, template) {
   return new Promise(function (resolve) {
-      const tx = db.transaction(['subscriptions']);
-      const subscription = tx.objectStore('subscriptions')
-      const officeTemplateCombo = subscription.index('officeTemplate')
-      const range = IDBKeyRange.only([office, template])
-      let record;
-      officeTemplateCombo.get(range).onsuccess = function (event) {
-        if (!event.target.result) return;
-        if (event.target.result.status !== 'CANCELLED') {
-          record = event.target.result;
-        }
+    const tx = db.transaction(['subscriptions']);
+    const subscription = tx.objectStore('subscriptions')
+    const officeTemplateCombo = subscription.index('officeTemplate')
+    const range = IDBKeyRange.only([office, template])
+    let record;
+    officeTemplateCombo.get(range).onsuccess = function (event) {
+      if (!event.target.result) return;
+      if (event.target.result.status !== 'CANCELLED') {
+        record = event.target.result;
       }
+    }
 
-      tx.oncomplete = function () {
+    tx.oncomplete = function () {
 
-        return resolve(record)
+      return resolve(record)
 
-      }
-    
+    }
+
   })
 }

@@ -525,7 +525,7 @@ function startApp(start) {
             const calendar = tx.objectStore('calendar')
 
             listStore.createIndex('office', 'office');
-            calendar.createIndex('office','office')
+            calendar.createIndex('office', 'office')
           }
         }
       }
@@ -543,7 +543,24 @@ function startApp(start) {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
-        });
+        }).then(function (response) {
+          if (response.updateClient) {
+            updateApp()
+            return
+          }
+
+          if (response.revokeSession) {
+            revokeSession();
+            return
+          };
+          if (response.hasOwnProperty('removeFromOffice')) {
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+              requestCreator('removeFromOffice',response.removeFromOffice)
+            }
+            return;
+          }
+
+        }).catch(console.log)
 
         getRootRecord().then(function (rootRecord) {
           if (rootRecord.fromTime) return mapView();
@@ -709,20 +726,20 @@ function setVenueForCheckIn(venueData, value) {
     location: '',
     venueDescriptor: value.venue[0]
   }
-  if (!venueData.length) {
+  if (!venueData) {
     value.venue = [venue]
     value.share = [];
-    return [value];
+    return value;
 
   }
-  venue.location = venueData[0].location;
-  venue.address = venueData[0].address;
-  venue.geopoint.latitude = venueData[0].latitude;
-  venue.geopoint.longitude = venueData[0].longitude;
+  venue.location = venueData.location;
+  venue.address = venueData.address;
+  venue.geopoint.latitude = venueData.latitude;
+  venue.geopoint.longitude = venueData.longitude;
   value.venue = [venue]
   value.share = [];
   console.log(value)
-  return [value]
+  return value
 }
 
 

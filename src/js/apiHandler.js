@@ -17,6 +17,7 @@ const requestFunctionCaller = {
   share: share,
   update: update,
   create: create,
+  backblaze: backblaze,
 }
 
 function requestHandlerResponse(type, code, message, params) {
@@ -34,14 +35,36 @@ function sendApiFailToMainThread(error) {
 }
 
 self.onmessage = function (event) {
+  
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
     const db = req.result
 
     if (event.data.type === 'now') {
-      
-      fetchServerTime(event.data.body, event.data.meta,db).then(putServerTime).then(updateIDB).catch(console.log);
+
+      fetchServerTime(event.data.body, event.data.meta, db).then(function (response) {
+        const rootTx = db.transaction(['root'], 'readwrite')
+        const rootObjectStore = rootTx.objectStore('root')
+        rootObjectStore.get(event.data.meta.user.uid).onsuccess = function (event) {
+          const record = event.target.result
+          record.serverTime = response.timestamp - Date.now()
+          rootObjectStore.put(record)
+        }
+        rootTx.oncomplete = function () {
+          self.postMessage({
+            response:response,
+            success:true
+          })
+        }
+          
+        })
+    
       return
+    }
+    
+    if(event.data.type === 'removeFromOffice'){
+      removeFromOffice(event.data.body, event.data.meta, db)
+      return;
     }
 
     if (event.data.type === 'instant') {
@@ -50,28 +73,34 @@ self.onmessage = function (event) {
     }
 
     if (event.data.type === 'Null') {
-      updateIDB({meta:event.data.meta,db:db});
+      updateIDB({
+        meta: event.data.meta,
+        db: db
+      }).then(function (res) {
+        self.postMessage({
+          response:response,
+          success:true
+        })
+      }).catch(function (error) {
+        self.postMessage({
+          response:error,
+          success:false
+        })
+      })
       return;
     }
 
-    if (event.data.type === 'backblaze') {
-      getUrlFromPhoto(event.data.body, event.data.meta)
-      return;
-    }
-
-    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (backToList) {
-      if (backToList) {
-        // if(event.data.body[0].template ==='check-in') {
-
-        //   return;
-        // }
-        if (event.data.type === 'create' && event.data.body[0].template === 'customer') {
-          requestHandlerResponse('notification', 200, 'status changed successfully', true);
-        } else {
-          requestHandlerResponse('notification', 200, 'status changed successfully', false);
-        }
-      }
+    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (res) {
+      self.postMessage({
+        response:res,
+        success:true
+      })
+      console.log(res)
     }).catch(function (error) {
+      self.postMessage({
+        response:error,
+        success:false
+      })
       console.log(error)
     })
   }
@@ -117,65 +146,51 @@ function http(request) {
   })
 }
 
-function fetchServerTime(body, meta,db) {
+function fetchServerTime(body, meta, db) {
   return new Promise(function (resolve) {
     currentDevice = body.device;
     const parsedDeviceInfo = JSON.parse(currentDevice);
     let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
-      const tx = db.transaction(['root'], 'readwrite');
-      const rootStore = tx.objectStore('root');
+    const tx = db.transaction(['root'], 'readwrite');
+    const rootStore = tx.objectStore('root');
 
-      rootStore.get(meta.user.uid).onsuccess = function (event) {
-        const record = event.target.result;
-        if (!record) return;
-        if (!record.hasOwnProperty('officesRemoved')) return;
-        if (record.officesRemoved) {
-          record.officesRemoved.forEach(function (office) {
+    rootStore.get(meta.user.uid).onsuccess = function (event) {
+      const record = event.target.result;
+      if (!record) return;
+      if (!record.hasOwnProperty('officesRemoved')) return;
+      if (record.officesRemoved) {
+        record.officesRemoved.forEach(function (office) {
 
-            url = url + `&removeFromOffice=${office.replace(' ','%20')}`
-          });
-          delete record.officesRemoved;
-          rootStore.put(record);
-        }
+          url = url + `&removeFromOffice=${office.replace(' ','%20')}`
+        });
+        delete record.officesRemoved;
+        rootStore.put(record);
+      }
+    }
+
+    tx.oncomplete = function () {
+
+      const httpReq = {
+        method: 'GET',
+        url: url,
+        body: null,
+        token: meta.user.token
       }
 
-      tx.oncomplete = function () {
+      http(httpReq).then(function (response) {
 
-        const httpReq = {
-          method: 'GET',
-          url: url,
-          body: null,
-          token: meta.user.token
-        }
+        return resolve(response);
 
-        http(httpReq).then(function (response) {
+        resolve({
+          ts: response.timestamp,
+          meta: meta,
+          db: db
+        })
 
-          if (response.updateClient) {
-            requestHandlerResponse('update-app', 200)
-            return
-          }
-
-          if (response.revokeSession) {
-            requestHandlerResponse('revoke-session', 200);
-            return
-          };
-          if (response.hasOwnProperty('removeFromOffice')) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              removeFromOffice(response.removeFromOffice, meta.user)
-            }
-            return;
-          }
-
-          resolve({
-            ts: response.timestamp,
-            meta: meta,
-            db:db
-          })
-
-        }).catch(sendApiFailToMainThread)
-      }
-
-    
+      }).catch(function (error) {
+        reject(error)
+      })
+    }
   })
 }
 
@@ -203,16 +218,19 @@ function instant(error, meta) {
 function putServerTime(data) {
   console.log(data)
   return new Promise(function (resolve, reject) {
-      const rootTx = data.db.transaction(['root'], 'readwrite')
-      const rootObjectStore = rootTx.objectStore('root')
-      rootObjectStore.get(data.meta.user.uid).onsuccess = function (event) {
-        const record = event.target.result
-        record.serverTime = data.ts - Date.now()
-        rootObjectStore.put(record)
-      }
-      rootTx.oncomplete = function () {
-        resolve({meta:data.meta,db:data.db})
-      }
+    const rootTx = data.db.transaction(['root'], 'readwrite')
+    const rootObjectStore = rootTx.objectStore('root')
+    rootObjectStore.get(data.meta.user.uid).onsuccess = function (event) {
+      const record = event.target.result
+      record.serverTime = data.ts - Date.now()
+      rootObjectStore.put(record)
+    }
+    rootTx.oncomplete = function () {
+      resolve({
+        meta: data.meta,
+        db: data.db
+      })
+    }
   })
 }
 
@@ -220,18 +238,20 @@ function putServerTime(data) {
 
 function comment(body, meta) {
   console.log(body)
-  return new Promise(function (resolve, reject) {
-    const req = {
-      method: 'POST',
-      url: `${meta.apiUrl}activities/comment`,
-      body: JSON.stringify(body),
-      token: meta.user.token
-    }
-    http(req).then(function () {
+  // return new Promise(function (resolve, reject) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}activities/comment`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+  return http(req)
 
-      resolve(true)
-    }).catch(sendApiFailToMainThread)
-  })
+  // http(req).then(function () {
+
+  //   resolve(true)
+  // }).catch(sendApiFailToMainThread)
+  // })
 }
 
 function statusChange(body, meta) {
@@ -244,77 +264,83 @@ function statusChange(body, meta) {
       token: meta.user.token
     }
     http(req).then(function (success) {
-      instantUpdateDB(body, 'status', meta.user).then(function () {
-        resolve(true)
-      }).catch(console.log)
+      resolve(true)
+
+      // instantUpdateDB(body, 'status', meta.user).then(function () {
+      // }).catch(console.log)
     }).catch(sendApiFailToMainThread)
   })
 }
 
 
 function share(body, meta) {
-  return new Promise(function (resolve, reject) {
-    const req = {
-      method: 'PATCH',
-      url: `${meta.apiUrl}activities/share`,
-      body: JSON.stringify(body),
-      token: meta.user.token
-    }
-    http(req)
-      .then(function (success) {
-        resolve(true)
-      })
-      .catch(sendApiFailToMainThread)
-  })
+
+  // return new Promise(function (resolve, reject) {
+  const req = {
+    method: 'PATCH',
+    url: `${meta.apiUrl}activities/share`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+  return http(req)
+
+  http(req)
+    .then(function (success) {
+      resolve(true)
+    })
+    .catch(sendApiFailToMainThread)
+  // })
 }
 
 
 
 
 function update(body, meta) {
-  return new Promise(function (resolve, reject) {
-    const req = {
-      method: 'PATCH',
-      url: `${meta.apiUrl}activities/update`,
-      body: JSON.stringify(body),
-      token: meta.user.token
-    }
+  // return new Promise(function (resolve, reject) {
+  const req = {
+    method: 'PATCH',
+    url: `${meta.apiUrl}activities/update`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
 
-    http(req)
-      .then(function (success) {
+  return http(req)
+  // .then(function (success) {
 
-        instantUpdateDB(body, 'update', meta.user).then(function () {
-          resolve(true)
-        })
-      })
-      .catch(sendApiFailToMainThread)
-  })
+  //   resolve(true)
+
+  // instantUpdateDB(body, 'update', meta.user).then(function () {
+  // })
+  // })
+  // .catch(sendApiFailToMainThread)
+  // })
 }
 
-function create(createReq, meta) {
-  console.log(createReq)
-  const promiseArray = [];
-  createReq.forEach(function (requestBody) {
-    const req = {
-      method: 'POST',
-      url: `${meta.apiUrl}activities/create`,
-      body: JSON.stringify(requestBody),
-      token: meta.user.token
-    }
-    promiseArray.push(http(req))
-  })
-  return new Promise(function (resolve, reject) {
-    if (!promiseArray.length) return;
-    Promise.all(promiseArray).then(function () {
-      resolve(true)
-    }).catch(sendApiFailToMainThread)
-  })
+function create(requestBody, meta) {
+  // console.log(createReq)
+  // const promiseArray = [];
+  // createReq.forEach(function (requestBody) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}activities/create`,
+    body: JSON.stringify(requestBody),
+    token: meta.user.token
+  }
+  return http(req)
+  //   promiseArray.push(http(req))
+  // })
+  // return new Promise(function (resolve, reject) {
+  //   if (!promiseArray.length) return;
+  //   Promise.all(promiseArray).then(function () {
+  //     resolve(true)
+  //   }).catch(sendApiFailToMainThread)
+  // })
 }
 
-function removeFromOffice(offices, meta,db) {
+function removeFromOffice(offices, meta, db) {
   const deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
-  deleteTx.oncomplete = function(){
-    
+  deleteTx.oncomplete = function () {
+
     const rootTx = db.transaction(['root'], 'readwrite')
     const rootStore = rootTx.objectStore('root')
     rootStore.get(meta.user.uid).onsuccess = function (event) {
@@ -323,15 +349,24 @@ function removeFromOffice(offices, meta,db) {
       record.officesRemoved = offices
       rootStore.put(record)
     }
-    rootTx.oncomplete = function(){
-      requestHandlerResponse('removed-from-office', 200, offices);
+    rootTx.oncomplete = function () {
       console.log("run read after removal")
-      updateIDB({meta:meta,db:db}) 
+      self.postMessage({
+        response:'Office Removed',
+        success:true
+      })
+    
+    }
+    rootTx.onerror = function(error){
+      self.postMessage({
+        response:error,
+        success:false
+      })
     }
 
   };
-  
-  deleteTx.onerror = function(){
+
+  deleteTx.onerror = function () {
     console.log(tx.error)
   }
 
@@ -344,25 +379,25 @@ function removeFromOffice(offices, meta,db) {
 
 
 function removeActivity(offices, tx) {
-      const activityIndex = tx.objectStore('activity').index('office');
-      const listIndex = tx.objectStore('list').index('office')
-      const childrenIndex = tx.objectStore('children').index('office')
-      const mapindex = tx.objectStore('map').index('office')
-      const calendarIndex = tx.objectStore('calendar').index('office')
-      const subscriptionIndex = tx.objectStore('subscriptions').index('office');
+  const activityIndex = tx.objectStore('activity').index('office');
+  const listIndex = tx.objectStore('list').index('office')
+  const childrenIndex = tx.objectStore('children').index('office')
+  const mapindex = tx.objectStore('map').index('office')
+  const calendarIndex = tx.objectStore('calendar').index('office')
+  const subscriptionIndex = tx.objectStore('subscriptions').index('office');
 
-      offices.forEach(function (office) {
-        removeByIndex(activityIndex,office)
-        removeByIndex(listIndex,office)
-        removeByIndex(childrenIndex,office)
-        removeByIndex(mapindex,office)
-        removeByIndex(calendarIndex,office)
-        removeByIndex(subscriptionIndex,office)
-      })
+  offices.forEach(function (office) {
+    removeByIndex(activityIndex, office)
+    removeByIndex(listIndex, office)
+    removeByIndex(childrenIndex, office)
+    removeByIndex(mapindex, office)
+    removeByIndex(calendarIndex, office)
+    removeByIndex(subscriptionIndex, office)
+  })
 
 }
 
-function removeByIndex(index,range){
+function removeByIndex(index, range) {
   index.openCursor(range).onsuccess = function (event) {
     const cursor = event.target.result;
     if (!cursor) return;
@@ -373,7 +408,7 @@ function removeByIndex(index,range){
   }
 }
 
-function getUrlFromPhoto(body, meta) {
+function backblaze(body, meta) {
 
   const req = {
     method: 'POST',
@@ -382,9 +417,7 @@ function getUrlFromPhoto(body, meta) {
     token: meta.user.token
   }
 
-  http(req).then(function (url) {
-    requestHandlerResponse('notification', 200);
-  }).catch(sendApiFailToMainThread)
+  return http(req)
 }
 
 function instantUpdateDB(data, type, user) {
@@ -676,69 +709,72 @@ function createListStore(activity, counter, tx) {
 
 }
 
-function successResponse(read, param,db) {
+function successResponse(read, param, db, resolve, reject) {
   const removeActivitiesForUser = []
   const removeActivitiesForOthers = []
-    const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
-    const addendumObjectStore = updateTx.objectStore('addendum')
-    const activityObjectStore = updateTx.objectStore('activity');
-    const userStore = updateTx.objectStore('users')
-    let counter = {};
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
+  const addendumObjectStore = updateTx.objectStore('addendum')
+  const activityObjectStore = updateTx.objectStore('activity');
+  const userStore = updateTx.objectStore('users')
+  let counter = {};
 
-    read.addendum.forEach(function (addendum) {
-      if (addendum.unassign) {
+  read.addendum.forEach(function (addendum) {
+    if (addendum.unassign) {
 
-        if (addendum.user == param.user.phoneNumber) {
-          removeActivitiesForUser.push(addendum.activityId)
-        } else {
-          removeActivitiesForOthers.push({
-            id: addendum.activityId,
-            user: addendum.user
-          })
-        }
-      }
-
-      if (addendum.isComment) {
-        let key = addendum.activityId
-        counter[key] = (counter[key] || 0) + 1
-      }
-      addendumObjectStore.add(addendum)
-    })
-
-    removeActivityFromDB(db, removeActivitiesForUser, param)
-    removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-    read.activities.slice().reverse().forEach(function (activity) {
-      activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-      activityObjectStore.put(activity);
-
-      updateMap(activity, updateTx);
-      updateCalendar(activity, updateTx);
-      putAttachment(activity, updateTx, param);
-      if (activity.hidden === 0) {
-        createListStore(activity, counter, updateTx)
-      };
-      activity.assignees.forEach(function (user) {
-        userStore.put({
-          displayName: user.displayName,
-          mobile: user.phoneNumber,
-          photoURL: user.photoURL
+      if (addendum.user == param.user.phoneNumber) {
+        removeActivitiesForUser.push(addendum.activityId)
+      } else {
+        removeActivitiesForOthers.push({
+          id: addendum.activityId,
+          user: addendum.user
         })
-      })
-    })
-
-    read.templates.forEach(function (subscription) {
-      updateSubscription(subscription, updateTx)
-
-    })
-    updateRoot(read, updateTx, param.user.uid);
-    updateTx.oncomplete = function () {
-      if (!read.from) {
-        requestHandlerResponse('initFirstLoad', 200, )
       }
-      console.log("all completed");
-      // db.close();
     }
 
+    if (addendum.isComment) {
+      let key = addendum.activityId
+      counter[key] = (counter[key] || 0) + 1
+    }
+    addendumObjectStore.add(addendum)
+  })
+
+  removeActivityFromDB(db, removeActivitiesForUser, param)
+  removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
+  read.activities.slice().reverse().forEach(function (activity) {
+    activity.canEdit ? activity.editable == 1 : activity.editable == 0;
+    activityObjectStore.put(activity);
+
+    updateMap(activity, updateTx);
+    updateCalendar(activity, updateTx);
+    putAttachment(activity, updateTx, param);
+    if (activity.hidden === 0) {
+      createListStore(activity, counter, updateTx)
+    };
+    activity.assignees.forEach(function (user) {
+      userStore.put({
+        displayName: user.displayName,
+        mobile: user.phoneNumber,
+        photoURL: user.photoURL
+      })
+    })
+  })
+
+  read.templates.forEach(function (subscription) {
+    updateSubscription(subscription, updateTx)
+
+  })
+  updateRoot(read, updateTx, param.user.uid);
+  updateTx.oncomplete = function () {
+    console.log("all completed");
+    return resolve(true)
+    // if (!read.from) {
+    //   requestHandlerResponse('initFirstLoad', 200, )
+    // }
+    // db.close();
+  }
+  updateTx.onerror = function () {
+    return reject(updateTx.error)
+  }
 }
 
 function updateRoot(read, tx, uid) {
@@ -752,6 +788,7 @@ function updateRoot(read, tx, uid) {
 }
 
 function updateIDB(config) {
+  return new Promise(function (resolve, reject) {
 
     const tx = config.db.transaction(['root']);
     const rootObjectStore = tx.objectStore('root');
@@ -773,8 +810,12 @@ function updateIDB(config) {
 
       http(req)
         .then(function (response) {
-          if (!response) return;
-          successResponse(response, config.meta,config.db)
-        }).catch(sendApiFailToMainThread)
+
+          return successResponse(response, config.meta, config.db, resolve, reject);
+
+        }).catch(function (error) {
+          return reject(error)
+        })
     }
+  })
 }

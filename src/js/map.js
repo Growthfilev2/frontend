@@ -331,7 +331,7 @@ function loadCardData(o, map, location) {
       document.getElementById('submit-cont').innerHTML = ''
 
       getSubscription(value.office, 'check-in').then(function (result) {
-        // requestCreator('create', setVenueForCheckIn([value], result));
+        // requestCreator('create', setVenueForCheckIn(value, result));
         getAvailbleSubs(value).then(function (subs) {
           if (!subs.length) return;
           header.textContent = 'What Do You Want to do ?'
