@@ -78,7 +78,7 @@ self.onmessage = function (event) {
         db: db
       }).then(function (res) {
         self.postMessage({
-          response:response,
+          response:res,
           success:true
         })
       }).catch(function (error) {

@@ -218,12 +218,11 @@ function createForm(office, template, venue, location) {
           duplicate.share = []
           console.log(duplicate);
 
-          requestCreator('create', [duplicate]);
+          requestCreator('create', duplicate).then(function(){
+            successDialog();
+            toggleCardHeight(false, 'card-form');
 
-          // loadCardData(o,map,location)
-
-
-
+          });
         });
       }
       if (template === 'dsr' || template === 'tour plan' || template === 'duty roster') {
@@ -246,16 +245,15 @@ function createForm(office, template, venue, location) {
           duplicate.share = []
           console.log(duplicate);
 
-          requestCreator('create', [duplicate]);
-
-          // loadCardData(o,map,location);
-
-
+          requestCreator('create', duplicate).then(function(){
+            successDialog();
+            // toggleCardHeight(false, 'card-form');
+            mapView();
+          });
         });
 
       }
       [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
-
         // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
         new mdc.textField.MDCTextField(el);
       });
@@ -297,7 +295,7 @@ function loadCardData(o, map, location) {
           selectOfficeInit.listen('MDCSelect:change', function (evt) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) return;
-              requestCreator('create', setVenueForCheckIn([], checkInSub));
+              requestCreator('create', setVenueForCheckIn('', checkInSub));
 
               checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
                 if (!venueSubs.length) return;
@@ -331,19 +329,22 @@ function loadCardData(o, map, location) {
       document.getElementById('submit-cont').innerHTML = ''
 
       getSubscription(value.office, 'check-in').then(function (result) {
-        // requestCreator('create', setVenueForCheckIn(value, result));
-        getAvailbleSubs(value).then(function (subs) {
-          if (!subs.length) return;
-          header.textContent = 'What Do You Want to do ?'
-
-          document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
-          None
-          </option>`)}`
-          const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-          subsSelect.listen('MDCSelect:change', function (evt) {
-            createForm(value.office, evt.detail.value, value, location)
+        requestCreator('create', setVenueForCheckIn(value, result)).then(function(){
+          snacks('Check-in created')
+          console.log("done")
+          getAvailbleSubs(value).then(function (subs) {
+            if (!subs.length) return;
+            header.textContent = 'What Do You Want to do ?'
+  
+            document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
+            None
+            </option>`)}`
+            const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+            subsSelect.listen('MDCSelect:change', function (evt) {
+              createForm(value.office, evt.detail.value, value, location)
+            })
+            subsSelect.selectedIndex = subs.length + 1
           })
-          subsSelect.selectedIndex = subs.length + 1
         })
       })
     });
@@ -879,7 +880,7 @@ function setFilePath(base64) {
       sub.attachment.Photo.value = url
       sub.attachment.Comment.value = textValue;
       progressBar.open();
-      requestCreator('create', setVenueForCheckIn([], sub))
+      requestCreator('create', setVenueForCheckIn('', sub))
       history.back();
     })
   })

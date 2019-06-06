@@ -16,8 +16,6 @@ function loader(nameClass) {
 
 function successDialog(data) {
   console.log(data)
-  if (history.state[0] !== 'mapView') {
-    //   progressBar.foundation_.close();
     const successMark = document.getElementById('success-animation');
     const viewContainer = document.getElementById('growthfile');
     successMark.classList.remove('hidden');
@@ -27,23 +25,9 @@ function successDialog(data) {
       viewContainer.style.opacity = '1';
     }, 1500);
 
-    toggleCardHeight(false, 'card-form');
-    if (data.params) {
-      mapView();
-    } else {
-      try {
-        document.querySelector('#selection-box .card__primary').innerHTML = ''
-        document.querySelector('#selection-box .content-body').innerHTML = 'Next ? '
-      } catch (e) {
-        mapView();
-        console.log(e)
-      }
-    }
-    return;
+  
   }
-  snackBar.labelText = 'Check-In Created'
-  snackBar.open();
-}
+  
 
 function snacks(message, type) {
   if (history.state[0] !== 'mapView') return;
@@ -632,25 +616,27 @@ function getInputText(selector) {
 
 function runRead(value) {
   if (!localStorage.getItem('dbexist')) return
-  if (!value) return requestCreator('Null', value);
-  if (value.read) {
-    requestCreator('Null', value)
-    return;
-  };
+  if (!value || value.read) {
+    requestCreator('Null', value).then(function(res){
+      console.log(res)
+    }).catch(console.log)
 
-  setTimeout(function () {
-    if (value.verifyEmail) {
-      const notificationData = JSON.parse(value.verifyEmail)
-      emailVerify(notificationData)
-      return;
-    };
+  }
 
-    if (value.payroll) {
-      const notificationData = JSON.parse(value.payroll)
-      templateDialog(notificationData)
-      return;
-    }
-  }, 500)
+
+  // setTimeout(function () {
+  //   if (value.verifyEmail) {
+  //     const notificationData = JSON.parse(value.verifyEmail)
+  //     emailVerify(notificationData)
+  //     return;
+  //   };
+
+  //   if (value.payroll) {
+  //     const notificationData = JSON.parse(value.payroll)
+  //     templateDialog(notificationData)
+  //     return;
+  //   }
+  // }, 500)
 }
 
 function removeChildNodes(parent) {

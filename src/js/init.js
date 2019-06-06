@@ -538,6 +538,17 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
+        
+        const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
+        
+        let index = 0;
+        var interval = setInterval(function () {
+          if (index == texts.length - 1) {
+            clearInterval(interval)
+          }
+          startLoad.querySelector('p').textContent = texts[index]
+          index++;
+        }, index + 1 * 1000);
 
         requestCreator('now', {
           device: native.getInfo(),
@@ -555,27 +566,26 @@ function startApp(start) {
           };
           if (response.hasOwnProperty('removeFromOffice')) {
             if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              requestCreator('removeFromOffice',response.removeFromOffice)
-            }
+              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
+              })
+            };
             return;
-          }
+          };
 
+
+          getRootRecord().then(function (rootRecord) {
+            requestCreator('Null').then(function (response) {
+              if (rootRecord.fromTime) return mapView();
+              const auth = firebase.auth().currentUser;
+              getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+                if (!result.length) return mapView();
+                if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+                return mapView();
+              })
+              return
+            }).catch(console.log)
+          })
         }).catch(console.log)
-
-        getRootRecord().then(function (rootRecord) {
-          if (rootRecord.fromTime) return mapView();
-
-          const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
-          let index = 0;
-          var interval = setInterval(function () {
-            if (index == texts.length - 1) {
-              clearInterval(interval)
-            }
-            startLoad.querySelector('p').textContent = texts[index]
-            index++;
-          }, index + 1 * 1000)
-        })
-
       }
       req.onerror = function () {
         handleError({
