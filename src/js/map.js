@@ -1,6 +1,7 @@
 var map;
 var globMark;
 let o;
+
 function handleNav(evt) {
   const state = history.state[0]
   if (state === 'profileView' || state === 'snapView' || state === 'chatView') {
@@ -16,7 +17,7 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-  
+
   progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
   const chatIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat" onclick="chatView()">chat</a>`
@@ -26,7 +27,7 @@ function mapView() {
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
 
   header.listen('MDCTopAppBar:nav', handleNav);
-  
+
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('app-current-panel').classList.add('user-detail-bckg')
   document.getElementById('map-view').style.height = '100%';
@@ -40,10 +41,10 @@ function mapView() {
       lng: location.longitude
     }
     console.log(latLng)
-    const  offsetBounds = new GetOffsetBounds(location, 0.5);
-  
+    const offsetBounds = new GetOffsetBounds(location, 0.5);
 
-     o = {
+
+    o = {
       north: offsetBounds.north(),
       south: offsetBounds.south(),
       east: offsetBounds.east(),
@@ -91,8 +92,8 @@ function mapView() {
       console.log('idle_once');
       // createForm('Puja Capital', 'customer','',location)
       // return
-      loadCardData(o,map,location)
-     
+      loadCardData(o, map, location)
+
     });
 
 
@@ -103,7 +104,7 @@ function mapView() {
 
     document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>'
     const btn = new mdc.ripple.MDCRipple(document.getElementById('try-again'))
-    btn.root_.onclick = function(){
+    btn.root_.onclick = function () {
       document.getElementById('start-load').classList.remove('hidden')
       mapView();
     }
@@ -134,8 +135,8 @@ function createForm(office, template, venue, location) {
 
       if (template === 'customer') {
         const random = Math.floor(Math.random() * Math.floor(100000))
-        document.getElementById('form-container').innerHTML = customer(subscription,random);
-      
+        document.getElementById('form-container').innerHTML = customer(subscription, random);
+
         const select = new mdc.select.MDCSelect(document.querySelector('#form-container > div.mdc-select'));
         const type = new mdc.list.MDCList(document.getElementById('template-type'))
         type.singleSelection = true;
@@ -198,72 +199,72 @@ function createForm(office, template, venue, location) {
             listInit.layout();
             listInit.singleSelection = true;
           });
-  
+
         })
         const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
         document.getElementById('send-form').addEventListener('click', function () {
-     
-              duplicate.venue = [{
-                geopoint: {
-                  latitude: location.latitude,
-                  longitude: location.longitude
-                },
-                location: 'Dummy Location '+random,
-                address: 'Dummy Location '+random,
-                venueDescriptor: duplicate.venue[0]
-              }]
-             
-              duplicate.attachment.Name.value ='Dummy Name '+random;
-              duplicate.share = []
-              console.log(duplicate);
-             
-              requestCreator('create', [duplicate]);
-            
-              // loadCardData(o,map,location)
-              
 
-  
-          });
+          duplicate.venue = [{
+            geopoint: {
+              latitude: location.latitude,
+              longitude: location.longitude
+            },
+            location: 'Dummy Location ' + random,
+            address: 'Dummy Location ' + random,
+            venueDescriptor: duplicate.venue[0]
+          }]
+
+          duplicate.attachment.Name.value = 'Dummy Name ' + random;
+          duplicate.share = []
+          console.log(duplicate);
+
+          requestCreator('create', [duplicate]);
+
+          // loadCardData(o,map,location)
+
+
+
+        });
       }
-      if(template  ==='dsr' || template ==='tour plan' || template === 'duty roster') {
+      if (template === 'dsr' || template === 'tour plan' || template === 'duty roster') {
         document.getElementById('form-container').innerHTML = common(subscription);
         document.getElementById('send-form').addEventListener('click', function () {
 
-            if(duplicate.attachment.Name) {
-              duplicate.attachment.Name.value = 'sample name' +Math.floor(Math.random() * Math.floor(100));
-            }
-            
-            const scheules = []
-            duplicate.schedule.forEach(function(value){
-             scheules.push({
-               name:value,
-               startTime:Date.now(),
-               endTime:Date.now()
-             })
+          if (duplicate.attachment.Name) {
+            duplicate.attachment.Name.value = 'sample name' + Math.floor(Math.random() * Math.floor(100));
+          }
+
+          const scheules = []
+          duplicate.schedule.forEach(function (value) {
+            scheules.push({
+              name: value,
+              startTime: Date.now(),
+              endTime: Date.now()
             })
-            duplicate.schedule = scheules;
-            duplicate.share = []
-            console.log(duplicate);
-         
-            requestCreator('create', [duplicate]);
-          
-            // loadCardData(o,map,location);
-            
-          
+          })
+          duplicate.schedule = scheules;
+          duplicate.share = []
+          console.log(duplicate);
+
+          requestCreator('create', [duplicate]);
+
+          // loadCardData(o,map,location);
+
+
         });
 
       }
       [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
 
-          // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
-          new mdc.textField.MDCTextField(el);
-        });
+        // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
+        new mdc.textField.MDCTextField(el);
+      });
     })
   })
   // })
 }
 
-function loadCardData(o,map,location){
+function loadCardData(o, map, location) {
   loadNearByLocations(o, map, location).then(function (markers) {
 
     const el = document.getElementById('selection-box');
@@ -308,7 +309,7 @@ function loadCardData(o,map,location){
                 const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
                 subsSelect.listen('MDCSelect:change', function (subEvent) {
                   createForm(evt.detail.value, subEvent.detail.value, '', location)
-                  
+
                 })
                 subsSelect.selectedIndex = 0
               });
@@ -342,7 +343,7 @@ function loadCardData(o,map,location){
           subsSelect.listen('MDCSelect:change', function (evt) {
             createForm(value.office, evt.detail.value, value, location)
           })
-          subsSelect.selectedIndex = subs.length +1
+          subsSelect.selectedIndex = subs.length + 1
         })
       })
     });
@@ -355,15 +356,15 @@ function loadCardData(o,map,location){
       selectVenue.selectedIndex = 1
     }
     if (markers.length > 1) {
-        selectVenue.selectedIndex = -1
-      
+      selectVenue.selectedIndex = -1
+
       header.textContent = 'Where Are You ?'
 
     }
   })
 }
 
-function common(subscription){
+function common(subscription) {
   return `
   <div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
   <i class="material-icons mdc-text-field__icon">location_on</i>
@@ -459,8 +460,8 @@ function common(subscription){
   `
 }
 
-function customer(subscription,random) {
-  
+function customer(subscription, random) {
+
   return `<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='venue' data-value='${subscription.venue[0]}'>
   <i class="material-icons mdc-text-field__icon">location_on</i>
   <input class="mdc-text-field__input" value='Dummy Location ${random}'>
@@ -651,27 +652,24 @@ function addSnapControl(map, office) {
 
 function getAvailbleSubs(venue) {
   return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['subscriptions']);
-      const store = tx.objectStore('subscriptions');
-      const index = store.index('office');
-      const result = [];
-      index.openCursor(venue.office).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
-          if (cursor.value.attachment[attachmentName].type === venue.template) {
-            result.push(cursor.value.template)
-          }
-        })
-        cursor.continue();
-      }
-      tx.oncomplete = function () {
-        resolve(result)
-      }
+    const tx = db.transaction(['subscriptions']);
+    const store = tx.objectStore('subscriptions');
+    const index = store.index('office');
+    const result = [];
+    index.openCursor(venue.office).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
+        if (cursor.value.attachment[attachmentName].type === venue.template) {
+          result.push(cursor.value.template)
+        }
+      })
+      cursor.continue();
     }
+    tx.oncomplete = function () {
+      resolve(result)
+    }
+
   })
 }
 
@@ -788,38 +786,33 @@ function getAdddress(location) {
 
 function checkForVenueSubs(office) {
   return new Promise(function (resolve, reject) {
-
-
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['subscriptions']);
-      const store = tx.objectStore('subscriptions');
-      const index = store.index('office')
-      const result = []
-      index.openCursor(office).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return
-        if (cursor.value.template === 'check-in') {
-          cursor.continue();
-          return;
-        }
-        if (cursor.value.status === 'CANCELLED') {
-          cursor.continue();
-          return;
-        }
-        if (!cursor.value.venue[0]) {
-          cursor.continue();
-          return;
-        }
-        result.push(cursor.value.template)
+    const tx = db.transaction(['subscriptions']);
+    const store = tx.objectStore('subscriptions');
+    const index = store.index('office')
+    const result = []
+    index.openCursor(office).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return
+      if (cursor.value.template === 'check-in') {
         cursor.continue();
+        return;
       }
-      tx.oncomplete = function () {
-        resolve(result)
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
       }
-
+      if (!cursor.value.venue[0]) {
+        cursor.continue();
+        return;
+      }
+      result.push(cursor.value.template)
+      cursor.continue();
     }
+    tx.oncomplete = function () {
+      resolve(result)
+    }
+
+
   })
 }
 
@@ -1008,85 +1001,82 @@ function loadNearByLocations(o, map, location) {
     const req = indexedDB.open(firebase.auth().currentUser.uid);
     let lastOpen;
     let lastCursor;
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['map'])
-      const store = tx.objectStore('map');
-      const index = store.index('bounds');
-      const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
-      const bounds = map.getBounds()
-      index.openCursor(idbRange).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
+    const tx = db.transaction(['map'])
+    const store = tx.objectStore('map');
+    const index = store.index('bounds');
+    const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
+    const bounds = map.getBounds()
+    index.openCursor(idbRange).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
 
-        if (!cursor.value.location || !cursor.value.latitude || !cursor.value.longitude) {
+      if (!cursor.value.location || !cursor.value.latitude || !cursor.value.longitude) {
+        cursor.continue();
+        return;
+      };
+      if (lastCursor) {
+        if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude && lastCursor.location === cursor.value.location) {
           cursor.continue();
           return;
-        };
-        if (lastCursor) {
-          if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude && lastCursor.location === cursor.value.location) {
-            cursor.continue();
-            return;
-          }
         }
+      }
 
-        var marker = new google.maps.Marker({
-          position: {
-            lat: cursor.value.latitude,
-            lng: cursor.value.longitude
-          },
-
-          icon: {
-            url: './img/m.png',
-            size: new google.maps.Size(71, 71),
-            origin: new google.maps.Point(0, 0),
-            anchor: new google.maps.Point(17, 34),
-            scaledSize: new google.maps.Size(25, 25)
-          },
-          id: cursor.value.activityId,
-          value: JSON.stringify(cursor.value)
-        });
-        if (calculateDistanceBetweenTwoPoints(location, {
-            latitude: cursor.value.latitude,
-            longitude: cursor.value.longitude
-          }) < 0.5) {
-          marker.setMap(map);
-          const content = `<span>${cursor.value.activityId}</span>`
-          google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-            return function () {
-              if (lastOpen) {
-                lastOpen.close();
-              }
-
-              infowindow.setContent(content);
-              infowindow.open(map, marker);
-              lastOpen = infowindow;
-
-            };
-          })(marker, content, infowindow));
-          result.push(cursor.value)
-          bounds.extend(marker.getPosition())
-        } else {
-          console.log(calculateDistanceBetweenTwoPoints({
-            latitude: location.latitude,
-            longitude: location.longitude
-          }, {
-            latitude: cursor.value.latitude,
-            longitude: cursor.value.longitude
-          }))
-          console.log(cursor.value)
-        }
-        lastCursor = {
+      var marker = new google.maps.Marker({
+        position: {
           lat: cursor.value.latitude,
-          lng: cursor.value.longitude,
-          location:cursor.value.location
-        };
-        cursor.continue();
+          lng: cursor.value.longitude
+        },
+
+        icon: {
+          url: './img/m.png',
+          size: new google.maps.Size(71, 71),
+          origin: new google.maps.Point(0, 0),
+          anchor: new google.maps.Point(17, 34),
+          scaledSize: new google.maps.Size(25, 25)
+        },
+        id: cursor.value.activityId,
+        value: JSON.stringify(cursor.value)
+      });
+      if (calculateDistanceBetweenTwoPoints(location, {
+          latitude: cursor.value.latitude,
+          longitude: cursor.value.longitude
+        }) < 0.5) {
+        marker.setMap(map);
+        const content = `<span>${cursor.value.activityId}</span>`
+        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+          return function () {
+            if (lastOpen) {
+              lastOpen.close();
+            }
+
+            infowindow.setContent(content);
+            infowindow.open(map, marker);
+            lastOpen = infowindow;
+
+          };
+        })(marker, content, infowindow));
+        result.push(cursor.value)
+        bounds.extend(marker.getPosition())
+      } else {
+        console.log(calculateDistanceBetweenTwoPoints({
+          latitude: location.latitude,
+          longitude: location.longitude
+        }, {
+          latitude: cursor.value.latitude,
+          longitude: cursor.value.longitude
+        }))
+        console.log(cursor.value)
       }
-      tx.oncomplete = function () {
-        map.fitBounds(bounds);
-        return resolve(result)
-      }
+      lastCursor = {
+        lat: cursor.value.latitude,
+        lng: cursor.value.longitude,
+        location: cursor.value.location
+      };
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      map.fitBounds(bounds);
+      return resolve(result)
     }
   })
 }

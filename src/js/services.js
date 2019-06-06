@@ -17,7 +17,7 @@ function loader(nameClass) {
 function successDialog(data) {
   console.log(data)
   if (history.state[0] !== 'mapView') {
-  //   progressBar.foundation_.close();
+    //   progressBar.foundation_.close();
     const successMark = document.getElementById('success-animation');
     const viewContainer = document.getElementById('growthfile');
     successMark.classList.remove('hidden');
@@ -28,14 +28,13 @@ function successDialog(data) {
     }, 1500);
 
     toggleCardHeight(false, 'card-form');
-    if(data.params) {
+    if (data.params) {
       mapView();
-    }
-    else {
+    } else {
       try {
         document.querySelector('#selection-box .card__primary').innerHTML = ''
         document.querySelector('#selection-box .content-body').innerHTML = 'Next ? '
-      }catch(e){
+      } catch (e) {
         mapView();
         console.log(e)
       }
@@ -47,7 +46,7 @@ function successDialog(data) {
 }
 
 function snacks(message, type) {
-  if(history.state[0] !== 'mapView') return;
+  if (history.state[0] !== 'mapView') return;
   snackBar.labelText = message;
   snackBar.open();
   snackBar.timeoutMs = 4000
@@ -104,7 +103,7 @@ function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
       // if (native.getName() === 'Android') {
-          updateLocationInRoot(location)
+      updateLocationInRoot(location)
       // };
       resolve(location)
     }).catch(function (error) {
@@ -149,12 +148,16 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      resolve({latitude:28.549173600000003,longitude:77.25055569999999,accuracy:24})
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
+      // resolve({
+      //   latitude: 28.549173600000003,
+      //   longitude: 77.25055569999999,
+      //   accuracy: 24
       // })
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
     }
   })
 }
@@ -248,7 +251,7 @@ function html5Geolocation() {
     }, {
 
       maximumAge: 0,
-      timeout:10000,
+      timeout: 10000,
       enableHighAccuracy: false
     })
   })
@@ -262,61 +265,50 @@ function updateLocationInRoot(finalLocation) {
     provider: '',
     lastLocationTime: ''
   };
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var tx = db.transaction(['root'], 'readwrite');
-    var rootStore = tx.objectStore('root');
-    rootStore.get(dbName).onsuccess = function (event) {
-      var record = event.target.result;
-      if (record.location) {
-        previousLocation = record.location
-      };
-      record.location = finalLocation;
-      record.location.lastLocationTime = Date.now();
-      rootStore.put(record);
+  var tx = db.transaction(['root'], 'readwrite');
+  var rootStore = tx.objectStore('root');
+  rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+    var record = event.target.result;
+    if (record.location) {
+      previousLocation = record.location
     };
+    record.location = finalLocation;
+    record.location.lastLocationTime = Date.now();
+    rootStore.put(record);
+  };
 
-    tx.oncomplete = function () {
-      if (!previousLocation.latitude) return;
-      if (!previousLocation.longitude) return;
-      if (!finalLocation.latitude) return;
-      if (!finalLocation.longitude) return;
+  tx.oncomplete = function () {
+    if (!previousLocation.latitude) return;
+    if (!previousLocation.longitude) return;
+    if (!finalLocation.latitude) return;
+    if (!finalLocation.longitude) return;
 
-      var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
+    var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
 
-      var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-        "detail": {
-          newDay: isNewDay(true),
-          locationChanged: isLocationMoreThanThreshold(distanceBetweenBoth)
-        }
-      });
-      window.dispatchEvent(suggestCheckIn);
-
-      if (native.getName() === 'Ios') {
-        var iosLocation = new CustomEvent('iosLocation', {
-          "detail": finalLocation
-        });
-        window.dispatchEvent(iosLocation)
+    var suggestCheckIn = new CustomEvent("suggestCheckIn", {
+      "detail": {
+        newDay: isNewDay(true),
+        locationChanged: isLocationMoreThanThreshold(distanceBetweenBoth)
       }
+    });
+    window.dispatchEvent(suggestCheckIn);
 
-    };
-    tx.onerror = function () {
-      handleError({
-        message: `${tx.error.message} from updateLocationInRoot`,
-        body: tx.error.name
-      })
+    if (native.getName() === 'Ios') {
+      var iosLocation = new CustomEvent('iosLocation', {
+        "detail": finalLocation
+      });
+      window.dispatchEvent(iosLocation)
     }
 
-    req.onerror = function () {
-      handleError({
-        message: `${req.error.message} from updateLocationInRoot`,
-        body: req.error.name
-      });
-      window.dispatchEvent(suggestCheckIn);
-    };
+  };
+  tx.onerror = function () {
+    handleError({
+      message: `${tx.error.message} from updateLocationInRoot`,
+      body: tx.error.name
+    })
   }
+
+
 }
 
 function toRad(value) {
@@ -369,7 +361,7 @@ function isLocationStatusWorking() {
 
 
 
-function requestCreator(requestType, requestBody,location) {
+function requestCreator(requestType, requestBody, location) {
   var auth = firebase.auth().currentUser;
   if (!auth) return;
   var requestGenerator = {
@@ -544,18 +536,15 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-  const param = response.params;
+
   const auth = firebase.auth().currentUser;
-  if(!param) {
-    getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-      if(!result.length) return mapView();
-      if (!auth.email || !auth.emailVerified) return userDetails(result,auth);
-      return mapView();
-    })
-    return
-  };
-  mapView();
-  return;
+
+  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+    if (!result.length) return mapView();
+    if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+    return mapView();
+  })
+  return
 }
 
 function updateApp() {
@@ -670,52 +659,28 @@ function removeChildNodes(parent) {
 function getRootRecord() {
   return new Promise(function (resolve, reject) {
     let record;
-    const dbName = firebase.auth().currentUser.uid;
-    const req = indexedDB.open(dbName)
-    req.onsuccess = function () {
-      const db = req.result;
-      const rootTx = db.transaction(['root'], 'readwrite')
-      const rootStore = rootTx.objectStore('root')
-      rootStore.get(dbName).onsuccess = function (event) {
-        const data = event.target.result;
-        record = data;
-      }
-
-      rootTx.oncomplete = function () {
-        resolve(record)
-      }
-      rootTx.onerror = function () {
-        reject({
-          message: `${rootTx.error.message} from getRootRecord`
-        })
-      }
+    const rootTx = db.transaction(['root'], 'readwrite')
+    const rootStore = rootTx.objectStore('root')
+    rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      const data = event.target.result;
+      record = data;
     }
-    req.onerror = function () {
+
+    rootTx.oncomplete = function () {
+      resolve(record)
+    }
+    rootTx.onerror = function () {
       reject({
-        message: `${req.error} from getRootRecord`
+        message: `${rootTx.error.message} from getRootRecord`
       })
     }
   })
 }
 
 
-function headerBackIcon(store) {
-  const backIcon = document.createElement('i')
-  backIcon.className = 'material-icons mdc-top-app-bar__navigation-icon'
-  backIcon.textContent = 'arrow_back'
-  backIcon.onclick = function () {
-    if (!store) return backNav();
-    // if (store === 'subscriptions') {
-    //   resetScroll()
-    //   listView()
-    // } else {
-    //   updateCreateActivity(history.state[1], true);
-    // }
-  }
-  return backIcon;
-}
 
-function getUserRecord(data,tx) {
+
+function getUserRecord(data, tx) {
   return new Promise(function (resolve, reject) {
     const usersObjectStore = tx.objectStore('users');
     let number;
@@ -735,29 +700,26 @@ function getUserRecord(data,tx) {
     }
   })
 }
+
 function getSubscription(office, template) {
   return new Promise(function (resolve) {
-      const dbName = firebase.auth().currentUser.uid
-      const req = indexedDB.open(dbName)
-      req.onsuccess = function () {
-          const db = req.result
-          const tx = db.transaction(['subscriptions']);
-          const subscription = tx.objectStore('subscriptions')
-          const officeTemplateCombo = subscription.index('officeTemplate')
-          const range = IDBKeyRange.only([office, template])
-          let record;
-          officeTemplateCombo.get(range).onsuccess = function (event) {
-              if (!event.target.result) return;
-              if (event.target.result.status !== 'CANCELLED') {
-                  record = event.target.result;
-              }
-          }
-          
-          tx.oncomplete = function () {
-
-              return resolve(record)
-
-          }
+      const tx = db.transaction(['subscriptions']);
+      const subscription = tx.objectStore('subscriptions')
+      const officeTemplateCombo = subscription.index('officeTemplate')
+      const range = IDBKeyRange.only([office, template])
+      let record;
+      officeTemplateCombo.get(range).onsuccess = function (event) {
+        if (!event.target.result) return;
+        if (event.target.result.status !== 'CANCELLED') {
+          record = event.target.result;
+        }
       }
+
+      tx.oncomplete = function () {
+
+        return resolve(record)
+
+      }
+    
   })
 }

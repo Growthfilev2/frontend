@@ -2,6 +2,7 @@ importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.mi
 
 let deviceInfo;
 let currentDevice;
+
 // get Device time
 function getTime() {
   return Date.now()
@@ -33,42 +34,49 @@ function sendApiFailToMainThread(error) {
 }
 
 self.onmessage = function (event) {
-  if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(console.log);
-    return
-  }
-
-  if (event.data.type === 'instant') {
-    instant(event.data.body, event.data.meta)
-    return
-  }
-
-  if (event.data.type === 'Null') {
-    updateIDB(event.data.meta);
-    return;
-  }
-
-  if (event.data.type === 'backblaze') {
-    getUrlFromPhoto(event.data.body, event.data.meta)
-    return;
-  }
-
-  requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (backToList) {
-    if (backToList) {
-      // if(event.data.body[0].template ==='check-in') {
-
-      //   return;
-      // }
-      if(event.data.type ==='create' && event.data.body[0].template ==='customer') {
-        requestHandlerResponse('notification', 200, 'status changed successfully',true);
-      }
-      else {
-        requestHandlerResponse('notification', 200, 'status changed successfully',false);
-      }
+  const req = indexedDB.open(event.data.meta.user.uid);
+  req.onsuccess = function () {
+    const db = req.result
+    if (event.data.type === 'now') {
+      fetchServerTime(event.data.body, event.data.meta,db).then(putServerTime).then(updateIDB).catch(console.log);
+      return
     }
-  }).catch(function (error) {
-    console.log(error)
-  })
+
+    if (event.data.type === 'instant') {
+      instant(event.data.body, event.data.meta)
+      return
+    }
+
+    if (event.data.type === 'Null') {
+      updateIDB({meta:event.data.meta,db:db});
+      return;
+    }
+
+    if (event.data.type === 'backblaze') {
+      getUrlFromPhoto(event.data.body, event.data.meta)
+      return;
+    }
+
+    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (backToList) {
+      if (backToList) {
+        // if(event.data.body[0].template ==='check-in') {
+
+        //   return;
+        // }
+        if (event.data.type === 'create' && event.data.body[0].template === 'customer') {
+          requestHandlerResponse('notification', 200, 'status changed successfully', true);
+        } else {
+          requestHandlerResponse('notification', 200, 'status changed successfully', false);
+        }
+      }
+    }).catch(function (error) {
+      console.log(error)
+    })
+  }
+  req.onerror = function () {
+
+  }
+
 }
 
 // Performs XMLHTTPRequest for the API's.
@@ -107,15 +115,11 @@ function http(request) {
   })
 }
 
-function fetchServerTime(body, meta) {
+function fetchServerTime(body, meta,db) {
   return new Promise(function (resolve) {
     currentDevice = body.device;
     const parsedDeviceInfo = JSON.parse(currentDevice);
     let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
-    const req = indexedDB.open(meta.user.uid);
-
-    req.onsuccess = function () {
-      const db = req.result;
       const tx = db.transaction(['root'], 'readwrite');
       const rootStore = tx.objectStore('root');
 
@@ -162,12 +166,13 @@ function fetchServerTime(body, meta) {
           resolve({
             ts: response.timestamp,
             meta: meta,
+            db:db
           })
 
         }).catch(sendApiFailToMainThread)
       }
 
-    }
+    
   })
 }
 
@@ -195,14 +200,7 @@ function instant(error, meta) {
 function putServerTime(data) {
   console.log(data)
   return new Promise(function (resolve, reject) {
-    const request = indexedDB.open(data.meta.user.uid);
-    request.onerror = function () {
-      reject(request.error.message)
-    }
-
-    request.onsuccess = function () {
-      const db = request.result
-      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootTx = data.db.transaction(['root'], 'readwrite')
       const rootObjectStore = rootTx.objectStore('root')
       rootObjectStore.get(data.meta.user.uid).onsuccess = function (event) {
         const record = event.target.result
@@ -210,9 +208,8 @@ function putServerTime(data) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
-        resolve(data.meta)
+        resolve({meta:data.meta,db:data.db})
       }
-    }
   })
 }
 
@@ -273,13 +270,6 @@ function share(body, meta) {
 
 function update(body, meta) {
   return new Promise(function (resolve, reject) {
-    // if(body.template === 'tour plan') {
-    //   if(body.customerRecord) {
-    //     if(!body.customerRecord.attachment.Name.value) {
-    //       delete body.customerRecord;
-    //     }
-    //   }
-    // }
     const req = {
       method: 'PATCH',
       url: `${meta.apiUrl}activities/update`,
@@ -613,7 +603,7 @@ function updateCalendar(activity, tx) {
           end: schedule.endTime,
           status: activity.status,
           office: activity.office
-          }
+        }
         calendarObjectStore.add(record)
       });
       return;
@@ -636,7 +626,7 @@ function updateCalendar(activity, tx) {
 // create attachment record with status,template and office values from activity
 // present inside activity object store.
 
-function putAttachment(activity, tx,param) {
+function putAttachment(activity, tx, param) {
 
   const store = tx.objectStore('children');
   const commonSet = {
@@ -646,12 +636,12 @@ function putAttachment(activity, tx,param) {
     office: activity.office,
     attachment: activity.attachment,
   };
-  
+
   const myNumber = param.user.phoneNumber
 
-  if(activity.template === 'employee') {
+  if (activity.template === 'employee') {
     commonSet.employee = activity.attachment['Employee Contact'].value
-    if(activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
+    if (activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
       commonSet.team = 1
     }
   }
@@ -788,13 +778,10 @@ function createListStore(activity, counter, tx) {
 
 }
 
-function successResponse(read, param) {
-  const request = indexedDB.open(param.user.uid)
+function successResponse(read, param,db) {
   const removeActivitiesForUser = []
   const removeActivitiesForOthers = []
-  request.onsuccess = function () {
-    const db = request.result
-    const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum','root','users'], 'readwrite');
+    const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
     const addendumObjectStore = updateTx.objectStore('addendum')
     const activityObjectStore = updateTx.objectStore('activity');
     const userStore = updateTx.objectStore('users')
@@ -825,14 +812,14 @@ function successResponse(read, param) {
     read.activities.slice().reverse().forEach(function (activity) {
       activity.canEdit ? activity.editable == 1 : activity.editable == 0;
       activityObjectStore.put(activity);
- 
+
       updateMap(activity, updateTx);
       updateCalendar(activity, updateTx);
-      putAttachment(activity, updateTx,param);
+      putAttachment(activity, updateTx, param);
       if (activity.hidden === 0) {
         createListStore(activity, counter, updateTx)
       };
-      activity.assignees.forEach(function(user){
+      activity.assignees.forEach(function (user) {
         userStore.put({
           displayName: user.displayName,
           mobile: user.phoneNumber,
@@ -845,13 +832,14 @@ function successResponse(read, param) {
       updateSubscription(subscription, updateTx)
 
     })
-    updateRoot(read,updateTx,param.user.uid);
+    updateRoot(read, updateTx, param.user.uid);
     updateTx.oncomplete = function () {
-      requestHandlerResponse('initFirstLoad', 200,'',read.from)
+      if (!read.from) {
+        requestHandlerResponse('initFirstLoad', 200, )
+      }
       console.log("all completed");
     }
 
-  }
 }
 
 function updateRoot(read, tx, uid) {
@@ -864,17 +852,14 @@ function updateRoot(read, tx, uid) {
   }
 }
 
-function updateIDB(meta) {
+function updateIDB(config) {
 
-  const req = indexedDB.open(meta.user.uid)
-  req.onsuccess = function () {
-    const db = req.result
-    const tx = db.transaction(['root']);
+    const tx = config.db.transaction(['root']);
     const rootObjectStore = tx.objectStore('root');
     let record;
     let time;
 
-    rootObjectStore.get(meta.user.uid).onsuccess = function (event) {
+    rootObjectStore.get(config.meta.user.uid).onsuccess = function (event) {
       record = event.target.result;
       time = record.fromTime
     }
@@ -882,16 +867,15 @@ function updateIDB(meta) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${meta.apiUrl}read?from=${time}`,
+        url: `${config.meta.apiUrl}read?from=${time}`,
         data: null,
-        token: meta.user.token
+        token: config.meta.user.token
       }
 
       http(req)
         .then(function (response) {
           if (!response) return;
-          successResponse(response, meta)
+          successResponse(response, config.meta,config.db)
         }).catch(sendApiFailToMainThread)
     }
-  }
 }

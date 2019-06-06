@@ -176,9 +176,6 @@ function createViewProfile() {
                           }).join("")}
                       </h1>`
         }
-        const req = indexedDB.open(firebase.auth().currentUser.uid);
-        req.onsuccess = function () {
-          const db = req.result;
           const tx = db.transaction(['users']);
           const store = tx.objectStore('users');
           let team = '';
@@ -221,7 +218,7 @@ function createViewProfile() {
                   </div>`
             }
           }
-        }
+        
       })
     })
   })

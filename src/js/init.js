@@ -6,7 +6,10 @@ let send;
 let change;
 let next;
 let emailInit;
+let db;
+
 var gray = [{
+
     "featureType": "administrative",
     "elementType": "geometry.fill",
     "stylers": [{
@@ -375,17 +378,17 @@ function firebaseUiConfig(value, redirect) {
             change.root_.classList.remove('hidden');
             next.root_.classList.remove('hidden');
             new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress')).close();
-        }).catch(function (error) {
+          }).catch(function (error) {
             new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress')).close();
             if (error.code === 'auth/too-many-requests') {
-                mapView();
-                snacks('You Can Also Update Your Email Address From Your Profile')
-                return;
+              mapView();
+              snacks('You Can Also Update Your Email Address From Your Profile')
+              return;
             }
             send.root_.classList.remove('hidden');
             snacks(error.message)
 
-        })
+          })
           return false
         }
         if (value) {
@@ -455,7 +458,7 @@ function startApp(start) {
 
     if (start) {
       const req = window.indexedDB.open(auth.uid, 8);
-      let db;
+
       req.onupgradeneeded = function (evt) {
         db = req.result;
         db.onerror = function () {
@@ -519,10 +522,11 @@ function startApp(start) {
         }
       }
       req.onsuccess = function () {
+        db = req.result;
+
         const startLoad = document.querySelector('#start-load')
         startLoad.classList.remove('hidden');
         console.log("run app")
-        db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
@@ -532,15 +536,20 @@ function startApp(start) {
           from: '',
           registerToken: native.getFCMToken()
         });
-        const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
-        let index = 0;
-        var interval = setInterval(function () {
-          if (index == texts.length - 1) {
-            clearInterval(interval)
-          }
-          startLoad.querySelector('p').textContent = texts[index]
-          index++;
-        }, index + 1 * 1000)
+
+        getRootRecord().then(function (rootRecord) {
+          if (rootRecord.fromTime) return mapView();
+
+          const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
+          let index = 0;
+          var interval = setInterval(function () {
+            if (index == texts.length - 1) {
+              clearInterval(interval)
+            }
+            startLoad.querySelector('p').textContent = texts[index]
+            index++;
+          }, index + 1 * 1000)
+        })
 
       }
       req.onerror = function () {
@@ -555,41 +564,23 @@ function startApp(start) {
 
 function getEmployeeDetails(range, indexName) {
   return new Promise(function (resolve, reject) {
-    const auth = firebase.auth().currentUser
-    const req = indexedDB.open(auth.uid)
-    req.onsuccess = function () {
-      const db = req.result;
-      const tx = db.transaction(['children']);
-      const store = tx.objectStore('children');
+    const tx = db.transaction(['children']);
+    const store = tx.objectStore('children');
+    const index = store.index(indexName)
+    const getEmployee = index.getAll(range);
 
+    getEmployee.onsuccess = function (event) {
+      const result = event.target.result;
 
-      const index = store.index(indexName)
+      console.log(result);
 
-
-      const getEmployee = index.getAll(range);
-
-      getEmployee.onsuccess = function (event) {
-        const result = event.target.result;
-
-        console.log(result);
-
-        return resolve(result)
-      }
-      getEmployee.onerror = function () {
-        return reject({
-          message: getEmployee.error
-        })
-      }
-
-      // index.openCursor(range).onsuccess = function (event) {
-      //   const cursor = event.target.result;
-      //   if (!cursor) return;
-      //   results.push(cursor.value)
-      //   cursor.continue();
-      // }
-
+      return resolve(result)
     }
-
+    getEmployee.onerror = function () {
+      return reject({
+        message: getEmployee.error
+      })
+    }
   })
 }
 
@@ -693,36 +684,7 @@ function redirect() {
   });
 }
 
-function createCheckInData() {
-  return new Promise(function (resolve, reject) {
-    getUniqueOfficeCount().then(function (offices) {
-      console.log(offices);
-      const prom = [];
 
-      if (!offices.length) return;
-
-      offices.forEach(function (office) {
-        prom.push(getSubscription(office, 'check-in'))
-
-      })
-      Promise.all(prom).then(function (result) {
-        if (!result.length) return;
-        const filtered = result.filter(function (set) {
-          return set != undefined;
-        });
-
-        return resolve({
-          data: filtered,
-          offices: offices
-        })
-
-
-      }).catch(function (error) {
-        reject(error)
-      })
-    });
-  })
-}
 
 
 
@@ -756,32 +718,23 @@ function setVenueForCheckIn(venueData, value) {
 
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
     let offices = []
-    req.onsuccess = function () {
-      const db = req.result
-      const tx = db.transaction(['children']);
-      const childrenStore = tx.objectStore('children').index('employees');
-      childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return;
+    const tx = db.transaction(['children']);
+    const childrenStore = tx.objectStore('children').index('employees');
+    childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
+      const cursor = event.target.result
+      if (!cursor) return;
 
-        offices.push(cursor.value.office)
-        cursor.continue()
-      }
-      tx.oncomplete = function () {
-        return resolve(offices);
-      }
-      tx.onerror = function () {
-        return reject({
-          message: tx.error.message,
-          body: JSON.stringify(tx.error)
-        })
-      }
+      offices.push(cursor.value.office)
+      cursor.continue()
     }
-    req.onerror = function () {
+    tx.oncomplete = function () {
+      return resolve(offices);
+    }
+    tx.onerror = function () {
       return reject({
-        message: req.error.message
+        message: tx.error.message,
+        body: JSON.stringify(tx.error)
       })
     }
   })
@@ -789,52 +742,50 @@ function getUniqueOfficeCount() {
 
 function checkMapStoreForNearByLocation(office, currentLocation) {
   return new Promise(function (resolve, reject) {
-    const req = indexedDB.open(firebase.auth().currentUser.uid)
-    req.onsuccess = function () {
-      const results = [];
-      const db = req.result;
-      const tx = db.transaction(['map'])
-      const store = tx.objectStore('map')
-      const index = store.index('byOffice')
-      const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
-      index.openCursor(range).onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
 
-        if (!cursor.value.location) {
-          cursor.continue();
-          return;
-        }
-        if (!cursor.value.latitude || !cursor.value.longitude) {
-          cursor.continue();
-          return;
-        }
+    const results = [];
+    const tx = db.transaction(['map'])
+    const store = tx.objectStore('map')
+    const index = store.index('byOffice')
+    const range = IDBKeyRange.bound([office, ''], [office, '\uffff']);
+    index.openCursor(range).onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
 
-        const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-
-        if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-
-          results.push(cursor.value);
-        }
+      if (!cursor.value.location) {
         cursor.continue();
+        return;
       }
-      tx.oncomplete = function () {
-        const filter = {};
-        results.forEach(function (value) {
-          filter[value.location] = value;
-        })
-        const array = [];
-        Object.keys(filter).forEach(function (locationName) {
-          array.push(filter[locationName])
-        })
-        const nearest = array.sort(function (a, b) {
-          return a.accuracy - b.accuracy
-        })
-        resolve(nearest)
+      if (!cursor.value.latitude || !cursor.value.longitude) {
+        cursor.continue();
+        return;
       }
-      tx.onerror = function () {
-        reject(tx.error)
+
+      const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
+
+      if (isLocationLessThanThreshold(distanceBetweenBoth)) {
+
+        results.push(cursor.value);
       }
+      cursor.continue();
     }
+    tx.oncomplete = function () {
+      const filter = {};
+      results.forEach(function (value) {
+        filter[value.location] = value;
+      })
+      const array = [];
+      Object.keys(filter).forEach(function (locationName) {
+        array.push(filter[locationName])
+      })
+      const nearest = array.sort(function (a, b) {
+        return a.accuracy - b.accuracy
+      })
+      resolve(nearest)
+    }
+    tx.onerror = function () {
+      reject(tx.error)
+    }
+
   })
 }
