@@ -15,10 +15,12 @@ function handleNav(evt) {
 
 function mapView() {
   history.pushState(['mapView'], null, null);
+  
   progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
   const chatIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat" onclick="chatView()">chat</a>`
   const header = getHeader('app-header', headerImage, chatIcon);
+  header.root_.classList.remove('hidden')
   header.setScrollTarget(document.getElementById('main-content'));
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
 

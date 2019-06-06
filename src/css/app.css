@@ -73,7 +73,10 @@ body {
 .resize-veritcal {
   resize: vertical;
 }
+.user-detail-bckg {
+  background: linear-gradient(180deg, #89273E 0, #89273E);
 
+}
 /** Dialog **/
 
 .mdc-dialog footer .mdc-button:nth-child(1):not([disabled]) {
@@ -96,8 +99,6 @@ body {
   border-radius: 50%;
   padding: 6px;
 }
-
-
 
 
 .success--container {
@@ -143,4 +144,13 @@ body {
   100% {
     width: 150px;
   }
+}
+
+/** user card **/
+#user-fill {
+  height: 350px;
+  width: 350px;
+}
+#user-fill .user-card {
+  padding: 16px;
 }

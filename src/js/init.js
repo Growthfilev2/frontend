@@ -496,16 +496,19 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
-        console.log(document.cookie);
-
-        // resetScroll();
+       
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
           registerToken: native.getFCMToken()
         });
+        if(!showUserDetails(auth)) {
+          document.body.classList.add('user-detail-bckg')
+          document.getElementById('app-current-panel').innerHTML = userDom();
+          document.getElementById('start-loader').classList.remove('hidden')
+          return;
+        };
         mapView();
-
       }
       req.onerror = function () {
         handleError({

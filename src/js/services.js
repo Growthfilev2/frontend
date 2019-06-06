@@ -544,7 +544,7 @@ function templateDialog(notificationData, isSuggestion, hasMultipleOffice) {
 }
 
 function initFirstLoad(response) {
-
+  userDetails();
   return;
 }
 
