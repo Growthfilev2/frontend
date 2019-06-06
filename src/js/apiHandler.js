@@ -838,6 +838,7 @@ function successResponse(read, param,db) {
         requestHandlerResponse('initFirstLoad', 200, )
       }
       console.log("all completed");
+      db.close();
     }
 
 }
