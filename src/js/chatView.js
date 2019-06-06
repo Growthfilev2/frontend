@@ -1,7 +1,7 @@
 function chatView(){
     history.pushState(['chatView'],null,null)
     const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary'>arrow_back</a>`
-    const header = getHeader(backIcon,'');
+    const header = getHeader('app-header',backIcon,'');
     document.getElementById('app-current-panel').innerHTML = getTemplate();
     const ulInit = new mdc.list.MDCList(document.getElementById('chats'))
     console.log(ulInit)

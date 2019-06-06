@@ -55,7 +55,16 @@ self.onmessage = function (event) {
 
   requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (backToList) {
     if (backToList) {
-      requestHandlerResponse('notification', 200, 'status changed successfully');
+      // if(event.data.body[0].template ==='check-in') {
+
+      //   return;
+      // }
+      if(event.data.type ==='create' && event.data.body[0].template ==='customer') {
+        requestHandlerResponse('notification', 200, 'status changed successfully',true);
+      }
+      else {
+        requestHandlerResponse('notification', 200, 'status changed successfully',false);
+      }
     }
   }).catch(function (error) {
     console.log(error)

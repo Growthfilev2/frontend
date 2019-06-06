@@ -1,6 +1,6 @@
 var map;
 var globMark;
-
+let o;
 function handleNav(evt) {
   const state = history.state[0]
   if (state === 'profileView' || state === 'snapView' || state === 'chatView') {
@@ -36,15 +36,10 @@ function mapView() {
       lng: location.longitude
     }
     console.log(latLng)
-    const offsetBounds = new GetOffsetBounds(location, 0.5);
-    console.log({
-      north: offsetBounds.north(),
-      south: offsetBounds.south(),
-      east: offsetBounds.east(),
-      west: offsetBounds.west()
-    })
-    console.log(latLng)
-    const o = {
+    const  offsetBounds = new GetOffsetBounds(location, 0.5);
+  
+
+     o = {
       north: offsetBounds.north(),
       south: offsetBounds.south(),
       east: offsetBounds.east(),
@@ -77,10 +72,10 @@ function mapView() {
     marker.setMap(map);
 
     var radiusCircle = new google.maps.Circle({
-      strokeColor: '#0399f4',
+      strokeColor: '#89273E',
       strokeOpacity: 0.8,
       strokeWeight: 2,
-      fillColor: '#0399f4',
+      fillColor: '#89273E',
       fillOpacity: 0.35,
       map: map,
       center: latLng,
@@ -90,103 +85,10 @@ function mapView() {
 
     google.maps.event.addListenerOnce(map, 'idle', function () {
       console.log('idle_once');
-      createForm('Puja Capital', 'customer','',location)
-      return
-      loadNearByLocations(o, map, location).then(function (markers) {
-
-        const el = document.getElementById('selection-box');
-        const contentBody = el.querySelector('.content-body');
-        const header = document.getElementById('card-primary')
-        header.textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
-        el.classList.remove('hidden');
-
-        contentBody.innerHTML = `<div>
-        ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
-        <div id='office-cont' class='pt-10'></div>
-        <div id='subs-cont' class='pt-10'></div>
-        <div id='submit-cont' class='pt-10'></div>
-        </div>`
-        selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
-
-        selectVenue.listen('MDCSelect:change', (evt) => {
-          console.log(evt.detail.value)
-          if (!evt.detail.value) return;
-          const value = JSON.parse(evt.detail.value)
-          if (value === 1 || value === 0) {
-
-            const newSubs = []
-
-            getUniqueOfficeCount().then(function (offices) {
-              if (!offices.length) return;
-
-              document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
-              const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
-              selectOfficeInit.listen('MDCSelect:change', function (evt) {
-                getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-                  if (!checkInSub) return;
-                  // requestCreator('create', setVenueForCheckIn([], checkInSub));
-                  checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
-                    if (!venueSubs.length) return;
-                    header.textContent = 'What Do You Want to do ?'
-
-                    document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(venueSubs, 'Choose','select-subs',`<option value='NONE'>
-                    None
-                    </option>`)}`
-                    const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-                    subsSelect.listen('MDCSelect:change', function (subEvent) {
-                      createForm(evt.detail.value, subEvent.detail.value,'',location)
-
-                    })
-                    subsSelect.selectedIndex = 0
-                  });
-                });
-              });
-              if (offices.length == 1) {
-                selectOfficeInit.selectedIndex = 0
-              }
-              if (offices.length > 1) {
-                selectOfficeInit.selectedIndex = -1
-                header.textContent = 'Choose Office'
-              }
-            })
-            return;
-          }
-
-          document.getElementById('office-cont').innerHTML = ''
-          document.getElementById('subs-cont').innerHTML = ''
-          document.getElementById('submit-cont').innerHTML = ''
-
-          getSubscription(value.office, 'check-in').then(function (result) {
-            // requestCreator('create', setVenueForCheckIn([value], result));
-            getAvailbleSubs(value).then(function (subs) {
-              if (!subs.length) return;
-              header.textContent = 'What Do You Want to do ?'
-
-              document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
-              None
-              </option>`)}`
-              const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-              subsSelect.selectedIndex = -1
-              subsSelect.listen('MDCSelect:change', function (evt) {
-                createForm(value.office, evt.detail.value, value,location)
-              })
-            })
-          })
-        });
-
-        if (!markers.length) {
-          selectVenue.selectedIndex = 0
-
-        }
-        if (markers.length == 1) {
-          selectVenue.selectedIndex = 1
-        }
-        if (markers.length > 1) {
-          selectVenue.selectedIndex = -1
-          header.textContent = 'Where Are You ?'
-
-        }
-      })
+      // createForm('Puja Capital', 'customer','',location)
+      // return
+      loadCardData(o,map,location)
+     
     });
 
 
@@ -198,197 +100,369 @@ function mapView() {
   })
 }
 
-function createForm(office, template, venue,location) {
+function createForm(office, template, venue, location) {
 
-  // const submitCont = document.getElementById('submit-cont')
-  // if(template === 'NONE')  return submitCont.innerHTML = ''
-  // submitCont.innerHTML = `<button class='mdc-button' id='create-form'>Create ${template}</button>`
-  // const btn = new mdc.ripple.MDCRipple(document.getElementById('create-form'))
-  // btn.root_.addEventListener('click',function(){
+  const submitCont = document.getElementById('submit-cont')
+  if (template === '') return submitCont.innerHTML = ''
+  submitCont.innerHTML = `<button class='mdc-button' id='create-form'>Create ${template}</button>`
+  const btn = new mdc.ripple.MDCRipple(document.getElementById('create-form'))
+  btn.root_.addEventListener('click', function () {
 
-  toggleCardHeight(true, 'card-form');
-  const cardHeader = new mdc.topAppBar.MDCTopAppBar(document.getElementById('card-header'))
-  cardHeader.root_.querySelector('.mdc-top-app-bar__title').textContent = template;
+    toggleCardHeight(true, 'card-form');
+    const cardHeader = new mdc.topAppBar.MDCTopAppBar(document.getElementById('card-header'))
+    cardHeader.root_.querySelector('.mdc-top-app-bar__title').textContent = template;
 
-  cardHeader.setScrollTarget(document.getElementById('form-container'));
-  cardHeader.navIcon_.addEventListener('click', function () {
-    toggleCardHeight(false, 'card-form');
-
-  })
-  history.pushState(['cardView'], null, null);
-
-  getSubscription(office, template).then(function (subscription) {
-
-    document.getElementById('form-container').innerHTML = customer(subscription);
-
-    [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
-
-      // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
-      new mdc.textField.MDCTextField(el);
-    });
-   const select=  new mdc.select.MDCSelect(document.querySelector('#form-container > div.mdc-select'));
-    const type = new mdc.list.MDCList(document.getElementById('template-type'))
-    type.singleSelection = true;
-    type.listen('MDCList:action', function (evt) {
-      const list = `<ul class="mdc-list" role="radiogroup">
-  <li class="mdc-list-item" role="radio" aria-checked="false">
-    <span class="mdc-list-item__graphic">
-      <div class="mdc-radio">
-        <input class="mdc-radio__native-control"
-              type="radio"
-              id="demo-list-radio-item-1"
-              name="demo-list-radio-item-group"
-              value="1">
-        <div class="mdc-radio__background">
-          <div class="mdc-radio__outer-circle"></div>
-          <div class="mdc-radio__inner-circle"></div>
-        </div>
-      </div>
-    </span>
-    <label class="mdc-list-item__text" for="demo-list-radio-item-1">Option 1</label>
-  </li>
-  <li class="mdc-list-item" role="radio" aria-checked="true" tabindex="0">
-    <span class="mdc-list-item__graphic">
-      <div class="mdc-radio">
-        <input class="mdc-radio__native-control"
-              type="radio"
-              id="demo-list-radio-item-2"
-              name="demo-list-radio-item-group"
-              value="2"
-              checked>
-        <div class="mdc-radio__background">
-          <div class="mdc-radio__outer-circle"></div>
-          <div class="mdc-radio__inner-circle"></div>
-        </div>
-      </div>
-    </span>
-    <label class="mdc-list-item__text" for="demo-list-radio-item-2">Option 2</label>
-  </li>
-  <li class="mdc-list-item" role="radio" aria-checked="false">
-    <span class="mdc-list-item__graphic">
-      <div class="mdc-radio">
-        <input class="mdc-radio__native-control"
-              type="radio"
-              id="demo-list-radio-item-3"
-              name="demo-list-radio-item-group"
-              value="3">
-        <div class="mdc-radio__background">
-          <div class="mdc-radio__outer-circle"></div>
-          <div class="mdc-radio__inner-circle"></div>
-        </div>
-      </div>
-    </span>
-    <label class="mdc-list-item__text" for="demo-list-radio-item-3">Option 3</label>
-  </li>
-</ul>`
-      const dialog = new Dialog('Select Customer Type', list).create();
-      dialog.open();
-      const listInit = new mdc.list.MDCList(document.querySelector('.mdc-dialog .mdc-list'));
-      dialog.listen('MDCDialog:opened', () => {
-        listInit.layout();
-        listInit.singleSelection = true;
-      });
+    cardHeader.setScrollTarget(document.getElementById('form-container'));
+    cardHeader.navIcon_.addEventListener('click', function () {
+      toggleCardHeight(false, 'card-form');
 
     })
-    const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
-    const duplicate = JSON.parse(JSON.stringify(subscription));
-    document.getElementById('send-form').addEventListener('click', function () {
-      // console.log(fields);
+    history.pushState(['cardView'], null, null);
 
+    getSubscription(office, template).then(function (subscription) {
+      const duplicate = JSON.parse(JSON.stringify(subscription));
+
+      if (template === 'customer') {
+        const random = Math.floor(Math.random() * Math.floor(100000))
+        document.getElementById('form-container').innerHTML = customer(subscription,random);
+      
+        const select = new mdc.select.MDCSelect(document.querySelector('#form-container > div.mdc-select'));
+        const type = new mdc.list.MDCList(document.getElementById('template-type'))
+        type.singleSelection = true;
+        type.listen('MDCList:action', function (evt) {
+          const list = `<ul class="mdc-list" role="radiogroup">
+    <li class="mdc-list-item" role="radio" aria-checked="false">
+      <span class="mdc-list-item__graphic">
+        <div class="mdc-radio">
+          <input class="mdc-radio__native-control"
+                type="radio"
+                id="demo-list-radio-item-1"
+                name="demo-list-radio-item-group"
+                value="1">
+          <div class="mdc-radio__background">
+            <div class="mdc-radio__outer-circle"></div>
+            <div class="mdc-radio__inner-circle"></div>
+          </div>
+        </div>
+      </span>
+      <label class="mdc-list-item__text" for="demo-list-radio-item-1">Option 1</label>
+    </li>
+    <li class="mdc-list-item" role="radio" aria-checked="true" tabindex="0">
+      <span class="mdc-list-item__graphic">
+        <div class="mdc-radio">
+          <input class="mdc-radio__native-control"
+                type="radio"
+                id="demo-list-radio-item-2"
+                name="demo-list-radio-item-group"
+                value="2"
+                checked>
+          <div class="mdc-radio__background">
+            <div class="mdc-radio__outer-circle"></div>
+            <div class="mdc-radio__inner-circle"></div>
+          </div>
+        </div>
+      </span>
+      <label class="mdc-list-item__text" for="demo-list-radio-item-2">Option 2</label>
+    </li>
+    <li class="mdc-list-item" role="radio" aria-checked="false">
+      <span class="mdc-list-item__graphic">
+        <div class="mdc-radio">
+          <input class="mdc-radio__native-control"
+                type="radio"
+                id="demo-list-radio-item-3"
+                name="demo-list-radio-item-group"
+                value="3">
+          <div class="mdc-radio__background">
+            <div class="mdc-radio__outer-circle"></div>
+            <div class="mdc-radio__inner-circle"></div>
+          </div>
+        </div>
+      </span>
+      <label class="mdc-list-item__text" for="demo-list-radio-item-3">Option 3</label>
+    </li>
+  </ul>`
+          const dialog = new Dialog('Select Customer Type', list).create();
+          dialog.open();
+          const listInit = new mdc.list.MDCList(document.querySelector('.mdc-dialog .mdc-list'));
+          dialog.listen('MDCDialog:opened', () => {
+            listInit.layout();
+            listInit.singleSelection = true;
+          });
+  
+        })
+        const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
+        document.getElementById('send-form').addEventListener('click', function () {
+     
+              duplicate.venue = [{
+                geopoint: {
+                  latitude: location.latitude,
+                  longitude: location.longitude
+                },
+                location: 'Dummy Location '+random,
+                address: 'Dummy Location '+random,
+                venueDescriptor: duplicate.venue[0]
+              }]
+             
+              duplicate.attachment.Name.value ='Dummy Name '+random;
+              duplicate.share = []
+              console.log(duplicate);
+             
+              requestCreator('create', [duplicate]);
+            
+              // loadCardData(o,map,location)
+              
+
+  
+          });
+      }
+      if(template  ==='dsr' || template ==='tour plan' || template === 'duty roster') {
+        document.getElementById('form-container').innerHTML = common(subscription);
+        document.getElementById('send-form').addEventListener('click', function () {
+
+            if(duplicate.attachment.Name) {
+              duplicate.attachment.Name.value = 'sample name' +Math.floor(Math.random() * Math.floor(100));
+            }
+            
+            const scheules = []
+            duplicate.schedule.forEach(function(value){
+             scheules.push({
+               name:value,
+               startTime:Date.now(),
+               endTime:Date.now()
+             })
+            })
+            duplicate.schedule = scheules;
+            duplicate.share = []
+            console.log(duplicate);
+         
+            requestCreator('create', [duplicate]);
+          
+            // loadCardData(o,map,location);
+            
+          
+        });
+
+      }
       [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
 
-        // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
-        
-        const field = new mdc.textField.MDCTextField(el);
-        const type = el.dataset.type
-
-      
-        if (type === 'venue') {
-          duplicate[type] = [{
-            geopoint: {
-              latitude: location.latitude,
-              longitude: location.longitude
-            },
-            location:field.value,
-            address:field.value,
-            venueDescriptor : duplicate.venue[0]
-          }]
-        }
-        else {
-          if(el.dataset.value === 'Name' && !field.value) {
-            const helper = new mdc.textField.MDCTextFieldHelperText(document.querySelector('.mdc-text-field-helper-text'));
-            console.log(helper)
-            helper.foundation_.setContent('Please Add A Name')
-            return;
-          }
-          duplicate[type][el.dataset.value].value = field.value
-        }
-
-      });
-      duplicate.attachment['Weekly Off'].value = select.value;
-      duplicate.share = []
-      console.log(duplicate);
-      prog.open();
-      requestCreator('create',[duplicate]);
-      successDialog();
-
-      prog.close();
-
-      toggleCardHeight(false,'card-form')
-      
-      // Object.keys(subscription.attachment).forEach(function(att){
-
-      //   const el = document.querySelector(`[data-attchment="${att}"]`)
-      //   // console.log(el);
-      //   if(!el) {
-      //     console.log(att)
-      //     return;
-      //   }
-      //   let value;
-      //   if(subscription.attachment[att].type ==='weekday') {
-      //      value = new mdc.select.MDCSelect(el);
-      //   }
-      //   else {
-      //     value = new mdc.textField.MDCTextField(el);
-      //   }
-
-
-      //   if(att ==='Name' && !value){
-
-      //     return;
-      //   }
-      //   subscription.attachment[att].value = value
-      //   console.log(subscription)
-      // });
-      // subscription.venue = [{
-      //   geopoint: {
-      //     latitude:location.latitude,
-      //     longitude:location.longitude,
-      //     address:document.querySelector('[data-venue="${subscription.venue[0]}"]').value,
-      //     location:document.querySelector('[data-venue="${subscription.venue[0]}"]').value
-      //   }
-      // }]
+          // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
+          new mdc.textField.MDCTextField(el);
+        });
     })
-
   })
-  // })
   // })
 }
 
+function loadCardData(o,map,location){
+  loadNearByLocations(o, map, location).then(function (markers) {
 
-function customer(subscription) {
-  return `<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='venue' data-value='${subscription.venue[0]}'>
+    const el = document.getElementById('selection-box');
+    const contentBody = el.querySelector('.content-body');
+    const header = document.getElementById('card-primary')
+    header.textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
+    el.classList.remove('hidden');
+
+    contentBody.innerHTML = `<div>
+    ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
+    <div id='office-cont' class='pt-10'></div>
+    <div id='subs-cont' class='pt-10'></div>
+    <div id='submit-cont' class='pt-10'></div>
+    </div>`
+    selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
+
+    selectVenue.listen('MDCSelect:change', (evt) => {
+      console.log(evt.detail.value)
+      if (!evt.detail.value) return;
+      const value = JSON.parse(evt.detail.value)
+      if (value === 1 || value === 0) {
+
+        const newSubs = []
+
+        getUniqueOfficeCount().then(function (offices) {
+          if (!offices.length) return;
+
+          document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
+          const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
+          selectOfficeInit.listen('MDCSelect:change', function (evt) {
+            getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
+              if (!checkInSub) return;
+              requestCreator('create', setVenueForCheckIn([], checkInSub));
+
+              checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
+                if (!venueSubs.length) return;
+                header.textContent = 'What Do You Want to do ?'
+
+                document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(venueSubs, 'Choose','select-subs',`<option value='NONE'>
+                None
+                </option>`)}`
+                const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+                subsSelect.listen('MDCSelect:change', function (subEvent) {
+                  createForm(evt.detail.value, subEvent.detail.value, '', location)
+                  
+                })
+                subsSelect.selectedIndex = 0
+              });
+            });
+          });
+          if (offices.length == 1) {
+            selectOfficeInit.selectedIndex = 0
+          }
+          if (offices.length > 1) {
+            selectOfficeInit.selectedIndex = -1
+            header.textContent = 'Choose Office'
+          }
+        })
+        return;
+      }
+
+      document.getElementById('office-cont').innerHTML = ''
+      document.getElementById('subs-cont').innerHTML = ''
+      document.getElementById('submit-cont').innerHTML = ''
+
+      getSubscription(value.office, 'check-in').then(function (result) {
+        requestCreator('create', setVenueForCheckIn([value], result));
+        getAvailbleSubs(value).then(function (subs) {
+          if (!subs.length) return;
+          header.textContent = 'What Do You Want to do ?'
+
+          document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
+          None
+          </option>`)}`
+          const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+          subsSelect.listen('MDCSelect:change', function (evt) {
+            createForm(value.office, evt.detail.value, value, location)
+          })
+          subsSelect.selectedIndex = subs.length +1
+        })
+      })
+    });
+
+    if (!markers.length) {
+      selectVenue.selectedIndex = 0
+
+    }
+    if (markers.length == 1) {
+      selectVenue.selectedIndex = 1
+    }
+    if (markers.length > 1) {
+        selectVenue.selectedIndex = -1
+      
+      header.textContent = 'Where Are You ?'
+
+    }
+  })
+}
+
+function common(subscription){
+  return `
+  <div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
   <i class="material-icons mdc-text-field__icon">location_on</i>
   <input class="mdc-text-field__input">
   <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Customer Office</label>
+  <label class="mdc-floating-label">Follow Up Date</label>
+</div>
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
+<i class="material-icons mdc-text-field__icon">location_on</i>
+<input class="mdc-text-field__input">
+<div class="mdc-line-ripple"></div>
+<label class="mdc-floating-label">Closure Date</label>
+</div>
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
+<i class="material-icons mdc-text-field__icon">location_on</i>
+<input class="mdc-text-field__input">
+<div class="mdc-line-ripple"></div>
+<label class="mdc-floating-label">Visit Date</label>
 </div>
 
 <div class="mdc-text-field mdc-text-field--with-leading-icon" data-value=Name data-type='attachment'>
   <i class="material-icons mdc-text-field__icon">account_circle</i>
-  <input class="mdc-text-field__input" required autofocus='true'>
+  <input class="mdc-text-field__input"  autofocus='true'>
   <div class="mdc-line-ripple"></div>
   <label class="mdc-floating-label">Name</label>
+</div>
+<div class="mdc-text-field-helper-line">
+<div class="mdc-text-field-helper-text"aria-hidden="true">Name Of The Customer</div>
+</div>
+
+<div class="mdc-text-field" style='width:46%;float: left;' data-value='Daily Start Time' data-type='attachment'>
+  <input class="mdc-text-field__input" type='time'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Daily End Time</label>
+</div>
+
+<div class="mdc-text-field " style='width:46%;float: right;' data-value='Daily End Time' data-type='attachment'>
+  <input class="mdc-text-field__input" type='time'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Daily Start Time</label>
+</div>
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Second Contact' data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">phone</i>
+  <input class="mdc-text-field__input" type='tel'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Second Contact</label>
+</div>
+<div class="mdc-text-field mdc-text-field--with-leading-icon " data-value='First Contact' data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">phone</i>
+  <input class="mdc-text-field__input" type='tel'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">First Contact</label>
+</div>
+
+
+
+<div class="mdc-text-field mdc-text-field--with-leading-icon " data-value='Customer Code' data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">code</i>
+  <input class="mdc-text-field__input">
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Comment</label>
+</div>
+
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">email</i>
+  <input class="mdc-text-field__input" type='email'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Product 1</label>
+</div>
+
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">email</i>
+  <input class="mdc-text-field__input" type='email'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Product 2</label>
+</div>
+
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">email</i>
+  <input class="mdc-text-field__input" type='email'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label">Product 3</label>
+</div>
+
+<ul class="mdc-list demo-list" id='template-type'>
+  <li class="mdc-list-item mdc-ripple-upgraded" tabindex="0"
+      style="--mdc-ripple-fg-size:360px; --mdc-ripple-fg-scale:1.69977; --mdc-ripple-fg-translate-start:276.613px, -164.313px; --mdc-ripple-fg-translate-end:120px, -156px;">
+      Customer<span class="mdc-list-item__meta material-icons" aria-hidden="true">add_circle</span>
+  </li>
+
+</ul>
+
+  `
+}
+
+function customer(subscription,random) {
+  
+  return `<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='venue' data-value='${subscription.venue[0]}'>
+  <i class="material-icons mdc-text-field__icon">location_on</i>
+  <input class="mdc-text-field__input" value='Dummy Location ${random}'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label mdc-floating-label--float-above">Customer Office</label>
+</div>
+
+<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value=Name data-type='attachment'>
+  <i class="material-icons mdc-text-field__icon">account_circle</i>
+  <input class="mdc-text-field__input" required autofocus='true' value='Dummy Name ${random}'>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
 </div>
 <div class="mdc-text-field-helper-line">
 <div class="mdc-text-field-helper-text"aria-hidden="true">Name Of The Customer</div>
@@ -425,22 +499,22 @@ function customer(subscription) {
       <option value="Sunday">
           Sunday
       </option>
-      <option value="Monday">
+      <option value="monday">
           Monday
       </option>
-      <option value="Tuesday">
+      <option value="tuesday">
           Tuesday
       </option>
-      <option value="Wednesday">
+      <option value="wednesday">
           Wednesday
       </option>
-      <option value="Thrusday">
+      <option value="thrusday">
           Thrusday
       </option>
-      <option value="Friday">
+      <option value="friday">
           Friday
       </option>
-      <option value="Saturday">
+      <option value="saturday">
           Saturday
       </option>
   </select>
@@ -547,6 +621,7 @@ function toggleCardHeight(toggle, cardSelector) {
 
   } else {
     el.classList.remove('hidden');
+    document.getElementById('selection-box').classList.remove('hidden');
     card.classList.add('hidden');
     document.getElementById('app-header').classList.remove('hidden')
 
@@ -657,7 +732,7 @@ function mapDom() {
       <span class="mdc-top-app-bar__title">Title</span>
     </section>
     <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar" id='section-end'>
-    <button class="material-icons mdc-top-app-bar__action-item--unbounded" aria-label="Send" id='send-form'>send</button>
+    <button class="material-icons mdc-top-app-bar__action-item--unbounded" style='color:white' aria-label="Send" id='send-form'>send</button>
     </section>
   </div>
   <div role="progressbar"
@@ -852,6 +927,7 @@ function mdcSelectVenue(venues, label, id) {
   <select class="mdc-select__native-control">
 
   <option value=${JSON.stringify('1')}>New Venue</option>
+
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
     ${value.location}
@@ -911,7 +987,7 @@ function getMapBounds(map) {
 function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
     var markerImage = new google.maps.MarkerImage(
-      './img/marker.png',
+      './img/m.png',
       new google.maps.Size(30, 30), //size
       null, //origin
       null, //anchor
@@ -938,7 +1014,7 @@ function loadNearByLocations(o, map, location) {
           return;
         };
         if (lastCursor) {
-          if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude) {
+          if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude && lastCursor.location === cursor.value.location) {
             cursor.continue();
             return;
           }
@@ -951,7 +1027,7 @@ function loadNearByLocations(o, map, location) {
           },
 
           icon: {
-            url: './img/marker.png',
+            url: './img/m.png',
             size: new google.maps.Size(71, 71),
             origin: new google.maps.Point(0, 0),
             anchor: new google.maps.Point(17, 34),
@@ -992,7 +1068,8 @@ function loadNearByLocations(o, map, location) {
         }
         lastCursor = {
           lat: cursor.value.latitude,
-          lng: cursor.value.longitude
+          lng: cursor.value.longitude,
+          location:cursor.value.location
         };
         cursor.continue();
       }
