@@ -21,7 +21,7 @@ function mapView() {
   progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
   const chatIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat" onclick="chatView()">chat</a>`
-  const header = getHeader('app-header', headerImage, chatIcon);
+  const header = getHeader('app-header', headerImage,'');
   header.root_.classList.remove('hidden')
   header.setScrollTarget(document.getElementById('main-content'));
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
@@ -92,6 +92,14 @@ function mapView() {
       console.log('idle_once');
       // createForm('Puja Capital', 'customer','',location)
       // return
+
+      // map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+
+      var addControlDiv = document.createElement('div');
+      var addControl = new Add(addControlDiv);
+      addControlDiv.index = 1;
+      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(addControlDiv);
+
       loadCardData(o, map, location)
 
     });
@@ -256,6 +264,7 @@ function loadCardData(o, map, location, preSelected) {
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 cardProd.close()
+                addSnapControl(map,evt.detail.value);
 
                 checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
                   if (!venueSubs.length) return;
@@ -316,6 +325,8 @@ function loadCardData(o, map, location, preSelected) {
 
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
+            addSnapControl(map,value.office);
+
             cardProd.close()
             console.log("done")
             known(value, header, location)
@@ -658,8 +669,20 @@ function addSnapControl(map, office) {
   var snapControlDiv = document.createElement('div');
   var snapControl = new TakeSnap(snapControlDiv, office);
   snapControlDiv.index = 1;
-
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
+}
+
+function Add(el){
+  const add = new Fab('add').getButton();
+  add.root_.id = 'add';
+  add.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg')
+  el.appendChild(add.root_);
+  add.root_.addEventListener('click', function () {
+    console.log('clicked')
+    // localStorage.setItem('snap_office', office)
+    // AndroidInterface.startCamera();
+    // setFilePath();
+  });
 
 }
 
@@ -828,14 +851,7 @@ function checkForVenueSubs(office) {
   })
 }
 
-function ChatControl(chatDiv) {
 
-  const chat = new Fab('chat').getButton();
-  chat.root_.id = 'recenter-action'
-  chat.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mdc-theme--secondary');
-  chatDiv.appendChild(chat.root_);
-  chat.root_.addEventListener('click', function () {});
-}
 
 function TakeSnap(el, office) {
 

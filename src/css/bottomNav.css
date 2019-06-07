@@ -28,7 +28,8 @@
     user-select: none;
   }
   .mdc-bottom-navigation__list-item__icon {
-    padding-top: 8px;
+    font-size: 32px;
+    padding-top: 12px;
     pointer-events: none;
     transition-property: padding-top, color;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -47,7 +48,7 @@
     transition-duration: 100ms;
   }
   .mdc-bottom-navigation__list-item--activated .mdc-bottom-navigation__list-item__icon {
-    padding-top: 6px;
+    /* padding-top: 6px; */
   }
   .mdc-bottom-navigation__list-item--activated .mdc-bottom-navigation__list-item__text {
     font-size: 0.875rem;
