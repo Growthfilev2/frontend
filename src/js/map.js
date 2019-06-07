@@ -29,7 +29,7 @@ function mapView() {
   header.listen('MDCTopAppBar:nav', handleNav);
 
   document.getElementById('app-current-panel').innerHTML = mapDom();
-  document.getElementById('app-current-panel').classList.add('user-detail-bckg')
+  document.getElementById('app-current-panel').classList.remove('user-detail-bckg')
   document.getElementById('map-view').style.height = '100%';
 
   manageLocation().then(function (location) {
@@ -114,20 +114,22 @@ function mapView() {
 function createForm(office, template, venue, location) {
 
   const submitCont = document.getElementById('submit-cont')
-  if (template === '') return submitCont.innerHTML = ''
   submitCont.innerHTML = `<button class='mdc-button' id='create-form'>Create ${template}</button>`
   const btn = new mdc.ripple.MDCRipple(document.getElementById('create-form'))
   btn.root_.addEventListener('click', function () {
 
-    toggleCardHeight(true, 'card-form');
     const cardHeader = new mdc.topAppBar.MDCTopAppBar(document.getElementById('card-header'))
     cardHeader.root_.querySelector('.mdc-top-app-bar__title').textContent = template;
-
+    cardHeader.root_.querySelector('#section-end').innerHTML = `    <button class="material-icons mdc-top-app-bar__action-item--unbounded" style='color:white' aria-label="Send" id='send-form'>send</button>
+    `
     cardHeader.setScrollTarget(document.getElementById('form-container'));
     cardHeader.navIcon_.addEventListener('click', function () {
+      history.pushState(['mapView'], null, null)
       toggleCardHeight(false, 'card-form');
 
     })
+
+    toggleCardHeight(true, 'card-form');
     history.pushState(['cardView'], null, null);
 
     getSubscription(office, template).then(function (subscription) {
@@ -136,74 +138,11 @@ function createForm(office, template, venue, location) {
       if (template === 'customer') {
         const random = Math.floor(Math.random() * Math.floor(100000))
         document.getElementById('form-container').innerHTML = customer(subscription, random);
+        // const select = new mdc.select.MDCSelect(document.querySelector('#form-container > div.mdc-select'));
 
-        const select = new mdc.select.MDCSelect(document.querySelector('#form-container > div.mdc-select'));
-        const type = new mdc.list.MDCList(document.getElementById('template-type'))
-        type.singleSelection = true;
-        type.listen('MDCList:action', function (evt) {
-          const list = `<ul class="mdc-list" role="radiogroup">
-    <li class="mdc-list-item" role="radio" aria-checked="false">
-      <span class="mdc-list-item__graphic">
-        <div class="mdc-radio">
-          <input class="mdc-radio__native-control"
-                type="radio"
-                id="demo-list-radio-item-1"
-                name="demo-list-radio-item-group"
-                value="1">
-          <div class="mdc-radio__background">
-            <div class="mdc-radio__outer-circle"></div>
-            <div class="mdc-radio__inner-circle"></div>
-          </div>
-        </div>
-      </span>
-      <label class="mdc-list-item__text" for="demo-list-radio-item-1">Option 1</label>
-    </li>
-    <li class="mdc-list-item" role="radio" aria-checked="true" tabindex="0">
-      <span class="mdc-list-item__graphic">
-        <div class="mdc-radio">
-          <input class="mdc-radio__native-control"
-                type="radio"
-                id="demo-list-radio-item-2"
-                name="demo-list-radio-item-group"
-                value="2"
-                checked>
-          <div class="mdc-radio__background">
-            <div class="mdc-radio__outer-circle"></div>
-            <div class="mdc-radio__inner-circle"></div>
-          </div>
-        </div>
-      </span>
-      <label class="mdc-list-item__text" for="demo-list-radio-item-2">Option 2</label>
-    </li>
-    <li class="mdc-list-item" role="radio" aria-checked="false">
-      <span class="mdc-list-item__graphic">
-        <div class="mdc-radio">
-          <input class="mdc-radio__native-control"
-                type="radio"
-                id="demo-list-radio-item-3"
-                name="demo-list-radio-item-group"
-                value="3">
-          <div class="mdc-radio__background">
-            <div class="mdc-radio__outer-circle"></div>
-            <div class="mdc-radio__inner-circle"></div>
-          </div>
-        </div>
-      </span>
-      <label class="mdc-list-item__text" for="demo-list-radio-item-3">Option 3</label>
-    </li>
-  </ul>`
-          const dialog = new Dialog('Select Customer Type', list).create();
-          dialog.open();
-          const listInit = new mdc.list.MDCList(document.querySelector('.mdc-dialog .mdc-list'));
-          dialog.listen('MDCDialog:opened', () => {
-            listInit.layout();
-            listInit.singleSelection = true;
-          });
-
-        })
-        const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
+        // const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
         document.getElementById('send-form').addEventListener('click', function () {
-
+          const vd = duplicate.venue[0]
           duplicate.venue = [{
             geopoint: {
               latitude: location.latitude,
@@ -211,17 +150,27 @@ function createForm(office, template, venue, location) {
             },
             location: 'Dummy Location ' + random,
             address: 'Dummy Location ' + random,
-            venueDescriptor: duplicate.venue[0]
+            venueDescriptor: vd
           }]
 
           duplicate.attachment.Name.value = 'Dummy Name ' + random;
           duplicate.share = []
           console.log(duplicate);
 
-          requestCreator('create', duplicate).then(function(){
+          requestCreator('create', duplicate).then(function () {
+
             successDialog();
             toggleCardHeight(false, 'card-form');
-
+            history.pushState(['mapView'], null, null)
+            loadCardData(o, map, location, {
+              latitude: location.latitude,
+              longitude: location.longitude,
+              location: 'Dummy Location ' + random,
+              address: 'Dummy Location ' + random,
+              venueDescriptor: vd,
+              office: duplicate.office,
+              template: duplicate.template
+            })
           });
         });
       }
@@ -245,10 +194,11 @@ function createForm(office, template, venue, location) {
           duplicate.share = []
           console.log(duplicate);
 
-          requestCreator('create', duplicate).then(function(){
+          requestCreator('create', duplicate).then(function () {
             successDialog();
-            // toggleCardHeight(false, 'card-form');
-            mapView();
+            toggleCardHeight(false, 'card-form');
+            history.pushState(['mapView'], null, null)
+
           });
         });
 
@@ -262,17 +212,22 @@ function createForm(office, template, venue, location) {
   // })
 }
 
-function loadCardData(o, map, location) {
+
+
+function loadCardData(o, map, location, preSelected) {
   loadNearByLocations(o, map, location).then(function (markers) {
 
     const el = document.getElementById('selection-box');
     const contentBody = el.querySelector('.content-body');
-    const header = document.getElementById('card-primary')
+    contentBody.innerHTML = '';
+
+    const header = document.getElementById('card-primary');
+    const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
     header.textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
     el.classList.remove('hidden');
 
     contentBody.innerHTML = `<div>
-    ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
+    ${mdcSelectVenue(markers, 'Where Are You ?','select-venue',preSelected)}
     <div id='office-cont' class='pt-10'></div>
     <div id='subs-cont' class='pt-10'></div>
     <div id='submit-cont' class='pt-10'></div>
@@ -283,9 +238,11 @@ function loadCardData(o, map, location) {
       console.log(evt.detail.value)
       if (!evt.detail.value) return;
       const value = JSON.parse(evt.detail.value)
-      if (value === 1 || value === 0) {
+      if (value === 1) {
 
-        const newSubs = []
+        document.getElementById('office-cont').innerHTML = ''
+        document.getElementById('subs-cont').innerHTML = ''
+        document.getElementById('submit-cont').innerHTML = ''
 
         getUniqueOfficeCount().then(function (offices) {
           if (!offices.length) return;
@@ -295,22 +252,35 @@ function loadCardData(o, map, location) {
           selectOfficeInit.listen('MDCSelect:change', function (evt) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) return;
-              requestCreator('create', setVenueForCheckIn('', checkInSub));
+              cardProd.open()
+              requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+                snacks('Check-in created');
+                cardProd.close()
 
-              checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
-                if (!venueSubs.length) return;
-                header.textContent = 'What Do You Want to do ?'
+                checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
+                  if (!venueSubs.length) return;
+                  header.textContent = 'What Do You Want to do ?'
 
-                document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(venueSubs, 'Choose','select-subs',`<option value='NONE'>
-                None
-                </option>`)}`
-                const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-                subsSelect.listen('MDCSelect:change', function (subEvent) {
-                  createForm(evt.detail.value, subEvent.detail.value, '', location)
+                  document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(venueSubs, 'Choose','select-subs',`<option value='NONE'>
+                  None
+                  </option>`)}`
 
-                })
-                subsSelect.selectedIndex = 0
-              });
+                  const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+                  subsSelect.listen('MDCSelect:change', function (subEvent) {
+                    console.log(subEvent)
+                    if (subEvent.detail.value === 'NONE' || subEvent.detail.index == -1) {
+                      document.getElementById('submit-cont').innerHTML = '';
+                      return;
+                    }
+                    createForm(evt.detail.value, subEvent.detail.value, '', location)
+
+                  })
+                  subsSelect.selectedIndex = -1
+                });
+              }).catch(function (error) {
+                snacks('Please Try again later');
+                cardProd.close()
+              })
             });
           });
           if (offices.length == 1) {
@@ -329,38 +299,80 @@ function loadCardData(o, map, location) {
       document.getElementById('submit-cont').innerHTML = ''
 
       getSubscription(value.office, 'check-in').then(function (result) {
-        requestCreator('create', setVenueForCheckIn(value, result)).then(function(){
-          snacks('Check-in created')
-          console.log("done")
-          getAvailbleSubs(value).then(function (subs) {
-            if (!subs.length) return;
-            header.textContent = 'What Do You Want to do ?'
-  
-            document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
-            None
-            </option>`)}`
-            const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-            subsSelect.listen('MDCSelect:change', function (evt) {
-              createForm(value.office, evt.detail.value, value, location)
-            })
-            subsSelect.selectedIndex = subs.length + 1
+
+        if (preSelected && preSelected.location === value.location) {
+          known(value, header, location)
+          return;
+        }
+
+        document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
+        <span class='mdc-button__label'>Confirm</span>
+        </button>`
+        const confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
+        confirm.root_.onclick = function () {
+
+          confirm.root_.classList.add('hidden')
+          cardProd.open();
+
+          requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+            snacks('Check-in created');
+            cardProd.close()
+            console.log("done")
+            known(value, header, location)
+
+          }).catch(function (error) {
+            console.log(error)
+            confirm.root_.classList.remove('hidden');
+            snacks('Please Try Again');
+            cardProd.close()
           })
-        })
+
+        }
+
       })
     });
 
+
+    if (preSelected) {
+      selectVenue.selectedIndex = 1
+      return;
+    }
+
     if (!markers.length) {
       selectVenue.selectedIndex = 0
-
-    }
+    };
     if (markers.length == 1) {
       selectVenue.selectedIndex = 1
-    }
+    };
+
     if (markers.length > 1) {
       selectVenue.selectedIndex = -1
-
       header.textContent = 'Where Are You ?'
+    }
+  })
+}
 
+function known(value, header, location) {
+  getAvailbleSubs(value).then(function (subs) {
+    if (!subs.length) return;
+    header.textContent = 'What Do You Want to do ?'
+
+    document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
+    None
+    </option>`)}`
+    const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
+    subsSelect.listen('MDCSelect:change', function (evt) {
+      if (evt.detail.value === 'NONE' || evt.detail.index == -1) {
+        document.getElementById('submit-cont').innerHTML = '';
+        return;
+      }
+      createForm(value.office, evt.detail.value, value, location)
+    })
+    if (subs.length > 1) {
+      subsSelect.selectedIndex = -1
+    }
+    if (subs.length == 1) {
+      subsSelect.selectedIndex = 0;
     }
   })
 }
@@ -741,7 +753,6 @@ function mapDom() {
       <span class="mdc-top-app-bar__title">Title</span>
     </section>
     <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar" id='section-end'>
-    <button class="material-icons mdc-top-app-bar__action-item--unbounded" style='color:white' aria-label="Send" id='send-form'>send</button>
     </section>
   </div>
   <div role="progressbar"
@@ -924,14 +935,14 @@ ${option}
 }
 
 
-function mdcSelectVenue(venues, label, id) {
+function mdcSelectVenue(venues, label, id, preSelected) {
   let float;
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
 
   <option value=${JSON.stringify('1')}>New Venue</option>
-
+  ${preSelected ? `<option value='${JSON.stringify(preSelected)}'>${preSelected.location}</option>` :''}
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
     ${value.location}
@@ -1048,12 +1059,10 @@ function loadNearByLocations(o, map, location) {
           return function () {
             if (lastOpen) {
               lastOpen.close();
-            }
-
+            };
             infowindow.setContent(content);
             infowindow.open(map, marker);
             lastOpen = infowindow;
-
           };
         })(marker, content, infowindow));
         result.push(cursor.value)

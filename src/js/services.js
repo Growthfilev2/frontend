@@ -432,12 +432,10 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
-  'initFirstLoad': initFirstLoad,
   'update-app': updateApp,
   'removed-from-office': officeRemovalSuccess,
   'revoke-session': revokeSession,
   'notification': successDialog,
-  'apiFail': apiFail,
 };
 
 function messageReceiver(response) {
