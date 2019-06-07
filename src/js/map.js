@@ -99,7 +99,7 @@ function mapView() {
 
   }).catch(function (error) {
     console.log(error);
-    document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+    // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
     document.getElementById('start-load').classList.add('hidden')
 
     document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>'
@@ -712,7 +712,7 @@ function newLocationSelectionForm(options) {
 
 function mapDom() {
   return `
-  <div id='map-view' class='mdc-top-app-bar--dense-fixed-adjust'>
+  <div id='map-view' class=''>
     <div id='map'></div>
     <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
       <div class="card__primary">
