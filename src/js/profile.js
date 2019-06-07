@@ -1,6 +1,9 @@
 function profileView() {
+
   history.pushState(['profileView'], null, null);
-  document.getElementById('start-load').classList.add('hidden')
+  document.getElementById('start-load').classList.add('hidden');
+  document.querySelector('.mdc-bottom-navigation').classList.add('hidden')
+
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon'>arrow_back</a>`

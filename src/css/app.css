@@ -97,11 +97,13 @@ body {
 }
 /** custom control **/
 
-/* .custom-control span {
-  font-size: 32px !important;
-} */
+.custom-control span {
+  font-size: 40px !important;
+}
+#add > span {
+  font-size: 50px !important
+}
 
- 
 /** roller **/
 #start-load {
   position: absolute;

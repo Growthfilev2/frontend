@@ -17,6 +17,7 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
+  document.querySelector('.mdc-bottom-navigation').classList.remove('hidden')
 
   progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
@@ -30,6 +31,8 @@ function mapView() {
 
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('app-current-panel').classList.remove('user-detail-bckg')
+  document.getElementById('app-current-panel').classList.remove('mdc-top-app-bar--dense-fixed-adjust')
+
   document.getElementById('map-view').style.height = '100%';
 
   manageLocation().then(function (location) {
@@ -94,13 +97,7 @@ function mapView() {
       // return
 
       // map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
-
-      var addControlDiv = document.createElement('div');
-      var addControl = new Add(addControlDiv);
-      addControlDiv.index = 1;
-      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(addControlDiv);
       loadCardData(o, map, location)
-
     });
 
 
@@ -663,12 +660,19 @@ function toggleCardHeight(toggle, cardSelector) {
 }
 
 function addSnapControl(map, office) {
-  map.controls[1].clear();
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
 
   var snapControlDiv = document.createElement('div');
   var snapControl = new TakeSnap(snapControlDiv, office);
   snapControlDiv.index = 2;
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
+
+
+  var addControlDiv = document.createElement('div');
+  var addControl = new Add(addControlDiv);
+  addControlDiv.index = 1;
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(addControlDiv);
+
 }
 
 function Add(el){
@@ -869,10 +873,13 @@ function TakeSnap(el, office) {
 }
 
 function setFilePath(base64) {
+  document.querySelector('.mdc-bottom-navigation').classList.add('hidden')
+
   const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--on-primary'>arrow_back</a>`
   const header = getHeader('app-header', backIcon, '');
   history.pushState(['snapView'], null, null)
   const url = `data:image/jpg;base64,${base64}`
+  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--dense-fixed-adjust')
   document.getElementById('app-current-panel').innerHTML = `
   
 <div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
@@ -906,7 +913,11 @@ function setFilePath(base64) {
       sub.attachment.Photo.value = url
       sub.attachment.Comment.value = textValue;
       progressBar.open();
-      requestCreator('create', setVenueForCheckIn('', sub))
+      requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
+        mapView();
+      }).catch(function(){
+        snacks('Please Try again later')
+      })
       history.back();
     })
   })

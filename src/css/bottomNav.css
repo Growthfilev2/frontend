@@ -102,7 +102,7 @@
     width: 100%;
     flex-wrap: wrap;
   }
-  .demo-card {
+  /* .demo-card {
     position: relative;
     align-items: flex-end;
     width: 400px;
@@ -116,7 +116,7 @@
     box-sizing: border-box;
     overflow: hidden;
     z-index: 2;
-  }
+  } */
     .demo-card--landscape {
     width: 616px;
     height: 350px;
