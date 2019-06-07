@@ -528,10 +528,24 @@ function startApp(start) {
             calendar.createIndex('office', 'office')
           }
         }
-      }
+      };
       req.onsuccess = function () {
         db = req.result;
-
+        if(!areObjectStoreValid(db.objectStoreNames)) {
+          db.close();
+          console.log(auth)
+          const deleteIDB = indexedDB.deleteDatabase(auth.uid);
+          deleteIDB.onsuccess = function(){
+            window.location.reload();
+          }
+          deleteIDB.onblocked = function(){
+            snacks('Please Re-Install The App')
+          }
+          deleteIDB.onerror = function(){
+            snacks('Please Re-Install The App')
+          }
+          return;
+        }
         const startLoad = document.querySelector('#start-load')
         startLoad.classList.remove('hidden');
         console.log("run app")
@@ -596,6 +610,16 @@ function startApp(start) {
   })
 }
 
+function areObjectStoreValid(names){
+  const stores = ['map','children','calendar','root','subscriptions','list','users','activity','addendum']
+  
+  for (let index = 0; index < stores.length; index++) {
+    const el = stores[index];
+    if(!names.contains(el)) return false;
+  }
+  return true;
+  
+}
 
 function getEmployeeDetails(range, indexName) {
   return new Promise(function (resolve, reject) {

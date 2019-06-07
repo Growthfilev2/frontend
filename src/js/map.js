@@ -142,7 +142,7 @@ function createForm(office, template, venue, location) {
 
         // const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
         document.getElementById('send-form').addEventListener('click', function () {
-          const vd = duplicate.venue[0]
+       
           duplicate.venue = [{
             geopoint: {
               latitude: location.latitude,
@@ -150,7 +150,7 @@ function createForm(office, template, venue, location) {
             },
             location: 'Dummy Location ' + random,
             address: 'Dummy Location ' + random,
-            venueDescriptor: vd
+            venueDescriptor: 'Customer Office'
           }]
 
           duplicate.attachment.Name.value = 'Dummy Name ' + random;
@@ -167,7 +167,7 @@ function createForm(office, template, venue, location) {
               longitude: location.longitude,
               location: 'Dummy Location ' + random,
               address: 'Dummy Location ' + random,
-              venueDescriptor: vd,
+              venueDescriptor:'Customer Office',
               office: duplicate.office,
               template: duplicate.template
             })
