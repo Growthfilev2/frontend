@@ -95,8 +95,11 @@ body {
   margin: auto;
   text-align: center;
 }
-/** skew **/
+/** custom control **/
 
+/* .custom-control span {
+  font-size: 32px !important;
+} */
 
  
 /** roller **/

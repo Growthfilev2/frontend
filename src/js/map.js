@@ -99,7 +99,6 @@ function mapView() {
       var addControl = new Add(addControlDiv);
       addControlDiv.index = 1;
       map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(addControlDiv);
-
       loadCardData(o, map, location)
 
     });
@@ -664,18 +663,18 @@ function toggleCardHeight(toggle, cardSelector) {
 }
 
 function addSnapControl(map, office) {
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
+  map.controls[1].clear();
 
   var snapControlDiv = document.createElement('div');
   var snapControl = new TakeSnap(snapControlDiv, office);
-  snapControlDiv.index = 1;
+  snapControlDiv.index = 2;
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
 }
 
 function Add(el){
   const add = new Fab('add').getButton();
   add.root_.id = 'add';
-  add.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg')
+  add.root_.classList.add('custom-control','right', 'mdc-theme--primary-bg','mb-10')
   el.appendChild(add.root_);
   add.root_.addEventListener('click', function () {
     console.log('clicked')
