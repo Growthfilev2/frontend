@@ -323,14 +323,17 @@ window.onpopstate = function (event) {
 
 window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
-  // progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
+  progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   var lists = document.querySelectorAll('.mdc-bottom-navigation__list');
   var activatedClass = 'mdc-bottom-navigation__list-item--activated';
   // const states = ['mapView','snapView','add','chatView','profileView']
   for (var i = 0, list; list = lists[i]; i++) {
     list.addEventListener('click', function(event) {
+
       var el = event.target;
+      if(el.dataset.state === history.state[0]) return;
+
       while (!el.classList.contains('mdc-bottom-navigation__list-item') && el) {
         el = el.parentNode;
       }
@@ -571,7 +574,7 @@ function startApp(start) {
         startLoad.classList.remove('hidden');
         console.log("run app")
         document.getElementById("main-layout-app").style.display = 'block'
-        localStorage.setItem('dbexist', auth.uid);
+        // localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
         
         const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
@@ -585,42 +588,42 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
 
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        }).then(function (response) {
-          if (response.updateClient) {
-            updateApp()
-            return
-          }
+        // requestCreator('now', {
+        //   device: native.getInfo(),
+        //   from: '',
+        //   registerToken: native.getFCMToken()
+        // }).then(function (response) {
+        //   if (response.updateClient) {
+        //     updateApp()
+        //     return
+        //   }
 
-          if (response.revokeSession) {
-            revokeSession();
-            return
-          };
-          if (response.hasOwnProperty('removeFromOffice')) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
-              })
-            };
-            return;
-          };
+        //   if (response.revokeSession) {
+        //     revokeSession();
+        //     return
+        //   };
+        //   if (response.hasOwnProperty('removeFromOffice')) {
+        //     if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+        //       requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
+        //       })
+        //     };
+        //     return;
+        //   };
 
 
-          getRootRecord().then(function (rootRecord) {
-            requestCreator('Null').then(function (response) {
-              if (rootRecord.fromTime) return mapView();
+          // getRootRecord().then(function (rootRecord) {
+          //   requestCreator('Null').then(function (response) {
+              // if (rootRecord.fromTime) return mapView();
               const auth = firebase.auth().currentUser;
               getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
                 if (!result.length) return mapView();
                 if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
                 return mapView();
-              })
-              return
-            }).catch(console.log)
+            //   })
+            //   return
+            // }).catch(console.log)
           })
-        }).catch(console.log)
+        // }).catch(console.log)
       }
       req.onerror = function () {
         handleError({

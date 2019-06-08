@@ -35,6 +35,7 @@
   <script src="js/start.js" defer></script>
   <script src="js/services.js" defer></script>
   <script src="js/map.js" defer></script>
+  <script src="js/addView.js" defer></script>
   <script src="js/profile.js" defer async></script>
   <script src="js/chatView.js" defer async></script>
 
@@ -79,7 +80,7 @@
     <div class="success--check"></div>
   </div>
 
-  <div id="growthfile">
+  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
 
     <div id='main-content'>
       <div id='login-container'></div>
@@ -92,14 +93,21 @@
         <div class="mdc-layout-grid__cell--span-12">
           <div class="mdc-bottom-navigation">
             <nav class="mdc-bottom-navigation__list">
-              <span class="mdc-bottom-navigation__list-item  mdc-bottom-navigation__list-item--activated"  >
+              <span class="mdc-bottom-navigation__list-item  mdc-bottom-navigation__list-item--activated" data-state='mapView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">map</span>
                 <!-- <span class="mdc-bottom-navigation__list-item__text">Recents</span> -->
               </span>
-              <span class="mdc-bottom-navigation__list-item" data-state='snapView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
+              
+              <span class="mdc-bottom-navigation__list-item" data-state='addView'>
+                <span class="material-icons mdc-bottom-navigation__list-item__icon">add_circle_outline
+                </span>
                 <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
               </span>
+              <span class="mdc-bottom-navigation__list-item" data-state='chatView'>
+                <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
+                <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
+              </span>;
+  
             </nav>
           </div>
 
