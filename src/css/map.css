@@ -13,6 +13,7 @@
     min-height:200px;
     border: 0px;
     overflow-y: auto;
+    width: 100%;
 }
 
 #selection-box.large {
