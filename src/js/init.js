@@ -7,6 +7,7 @@ let change;
 let next;
 let emailInit;
 let db;
+let isCheckInCreated;
 
 var gray = [{
 

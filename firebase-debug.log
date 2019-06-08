@@ -1,0 +1,31 @@
+[debug] [2019-06-08T07:36:49.235Z] ----------------------------------------------------------------------
+[debug] [2019-06-08T07:36:49.240Z] Command:       /usr/local/bin/node /usr/local/bin/firebase deploy
+[debug] [2019-06-08T07:36:49.240Z] CLI Version:   6.0.1
+[debug] [2019-06-08T07:36:49.241Z] Platform:      darwin
+[debug] [2019-06-08T07:36:49.241Z] Node Version:  v10.13.0
+[debug] [2019-06-08T07:36:49.242Z] Time:          Sat Jun 08 2019 13:06:49 GMT+0530 (India Standard Time)
+[debug] [2019-06-08T07:36:49.243Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2019-06-08T07:36:49.260Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2019-06-08T07:36:49.262Z] > authorizing via signed-in user
+[debug] [2019-06-08T07:36:49.263Z] [iam] checking project growthfile-testing for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2019-06-08T07:36:49.269Z] >>> HTTP REQUEST POST https://cloudresourcemanager.googleapis.com/v1/projects/growthfile-testing:testIamPermissions  
+
+[debug] [2019-06-08T07:36:51.029Z] <<< HTTP RESPONSE 200
+[debug] [2019-06-08T07:36:51.031Z] >>> HTTP REQUEST GET https://firebase.googleapis.com/v1beta1/projects/growthfile-testing  
+ 
+[debug] [2019-06-08T07:36:51.737Z] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'growthfile-testing'...
+[info] 
+[info] i  deploying hosting
+[debug] [2019-06-08T07:36:51.741Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/growthfile-testing/versions  
+
+[debug] [2019-06-08T07:36:53.989Z] <<< HTTP RESPONSE 200
+[info] i  hosting[growthfile-testing]: beginning deploy...
+[info] i  hosting[growthfile-testing]: found 20 files in dist
+[debug] [2019-06-08T07:36:54.007Z] [hosting] hash cache [ZGlzdA] load error: lines is not defined
+[debug] [2019-06-08T07:36:54.073Z] [hosting] hash cache [ZGlzdA] stored for 20 files
+[debug] [2019-06-08T07:36:54.073Z] [hosting][hash queue][FINAL]
+[debug] [2019-06-08T07:36:54.073Z] >>> HTTP REQUEST POST https://firebasehosting.googleapis.com/v1beta1/sites/growthfile-testing/versions/0a58e07bf3af06fb:populateFiles  
+ <request body omitted>

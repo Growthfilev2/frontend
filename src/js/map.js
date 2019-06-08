@@ -17,10 +17,12 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-
+  if(isCheckInCreated) {
+    showBottomNav();
+  }
   progressBar.close();
   const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
-  const photoIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary" aria-label="chat">photo_camera</a>`
+  const photoIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary mdc-theme--text-primary-on-light" aria-label="chat" onclick="takeSnap()">photo_camera</a>`
   const header = getHeader('app-header', headerImage, photoIcon);
   header.root_.classList.remove('hidden')
   header.setScrollTarget(document.getElementById('main-content'));
@@ -236,6 +238,7 @@ function loadCardData(o, map, location, preSelected) {
 
     selectVenue.listen('MDCSelect:change', (evt) => {
       console.log(evt.detail.value)
+      
       if (!evt.detail.value) return;
       const value = JSON.parse(evt.detail.value)
       if (value === 1) {
@@ -255,6 +258,9 @@ function loadCardData(o, map, location, preSelected) {
               cardProd.open()
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
+                isCheckInCreated = true
+                showBottomNav()
+
                 cardProd.close()
 
                 checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
@@ -303,12 +309,13 @@ function loadCardData(o, map, location, preSelected) {
         if (preSelected && preSelected.location === value.location) {
           known(value, header, location)
           return;
-        }
+        };
 
         document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
         </button>`
         const confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
+
         confirm.root_.onclick = function () {
 
           confirm.root_.classList.add('hidden')
@@ -316,10 +323,12 @@ function loadCardData(o, map, location, preSelected) {
 
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
-            cardProd.close()
-            console.log("done")
-            known(value, header, location)
+            isCheckInCreated = true
+            document.getElementById('selection-box').classList.add('large')
 
+            showBottomNav()
+            cardProd.close();
+            known(value, header, location);
           }).catch(function (error) {
             console.log(error)
             confirm.root_.classList.remove('hidden');
@@ -352,11 +361,19 @@ function loadCardData(o, map, location, preSelected) {
   })
 }
 
+function showBottomNav(){
+  document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
+}
+
 function known(value, header, location) {
   getAvailbleSubs(value).then(function (subs) {
-    if (!subs.length) return;
-    header.textContent = 'What Do You Want to do ?'
+    if (!subs.length) {
 
+      return;
+    };
+
+    header.textContent = 'What Do You Want to do ?'
+   
     document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
     None
     </option>`)}`
@@ -714,7 +731,7 @@ function mapDom() {
   return `
   <div id='map-view' class=''>
     <div id='map'></div>
-    <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
+    <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
       <div class="card__primary">
         <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
 
@@ -837,23 +854,30 @@ function ChatControl(chatDiv) {
   chat.root_.addEventListener('click', function () {});
 }
 
-function TakeSnap(el, office) {
-
-  const snap = new Fab('photo_camera').getButton();
-  snap.root_.id = 'take-snap';
-  snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg')
-  el.appendChild(snap.root_);
-  snap.root_.addEventListener('click', function () {
-
-    console.log('clicked')
-    localStorage.setItem('snap_office', office)
-    AndroidInterface.startCamera();
-    // setFilePath();
-  });
-
+function takeSnap(){
+  // localStorage.setItem('snap_office', office)
+  AndroidInterface.startCamera();
 }
 
+// function takeSnap(el, office) {
+
+//   const snap = new Fab('photo_camera').getButton();
+//   snap.root_.id = 'take-snap';
+//   snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg')
+//   el.appendChild(snap.root_);
+//   snap.root_.addEventListener('click', function () {
+
+//     console.log('clicked')
+//     localStorage.setItem('snap_office', office)
+//     AndroidInterface.startCamera();
+//     // setFilePath();
+//   });
+
+// }
+
 function setFilePath(base64) {
+  document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
+
   const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--on-primary'>arrow_back</a>`
   const header = getHeader('app-header', backIcon, '');
   history.pushState(['snapView'], null, null)
@@ -871,6 +895,7 @@ function setFilePath(base64) {
 </div>
 </div>
   `
+
   const content = document.getElementById('snap')
   const textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'))
   const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))
@@ -887,12 +912,15 @@ function setFilePath(base64) {
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
 
-    getSubscription(localStorage.getItem('snap_office'), 'check-in').then(function (sub) {
+    getSubscription('Puja Capital', 'check-in').then(function (sub) {
       sub.attachment.Photo.value = url
       sub.attachment.Comment.value = textValue;
       progressBar.open();
-      requestCreator('create', setVenueForCheckIn('', sub))
-      history.back();
+      requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
+        mapView()
+      }).catch(function(){
+        mapView()
+      })
     })
   })
 

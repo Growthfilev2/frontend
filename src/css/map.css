@@ -7,10 +7,16 @@
     background-color: transparent !important;
 }
 #selection-box {
-   
-    position: absolute;
-    bottom: 0;
+    position: fixed;
+    bottom: 0px;
     z-index: 6;
+    min-height:200px;
+    border: 0px;
+    overflow-y: auto;
+}
+
+#selection-box.large {
+    bottom: 56px
 }
 .selection-box-auto button {
     width: 100%;
