@@ -111,22 +111,22 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  topBar =   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  topBar.listen('MDCTopAppBar:nav',function(e){
+  topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  topBar.listen('MDCTopAppBar:nav', function (e) {
     console.log(e);
-    
+
   })
   console.log(topBar);
-  
+
   if ('serviceWorker' in navigator) {
 
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      for(let registration of registrations) {
-       registration.unregister()
-     } })
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+      for (let registration of registrations) {
+        registration.unregister()
+      }
+    })
 
   }
-
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -147,8 +147,8 @@ window.addEventListener("load", function () {
     ]
   })
 
-  if (!window.Worker && !window.indexedDB)  {
-    const incompatibleDialog = new Dialog('App Incompatiblity','Growthfile is incompatible with this device').create();
+  if (!window.Worker && !window.indexedDB) {
+    const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
@@ -226,12 +226,12 @@ function startApp(start) {
         return;
       }
     }
-    
+
     if (!localStorage.getItem('error') || isNewDay()) {
       localStorage.setItem('error', JSON.stringify({}));
     };
 
-   
+
     if (start) {
       const req = window.indexedDB.open(auth.uid, 4);
       let db;
@@ -259,7 +259,7 @@ function startApp(start) {
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        ga('set','userId',JSON.parse(native.getInfo()).id)
+        ga('set', 'userId', JSON.parse(native.getInfo()).id)
 
         resetScroll();
         listView();
@@ -466,7 +466,7 @@ function redirect() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-   
+
     if (!e.detail) return;
     if (!e.detail.newDay && !e.detail.locationChanged) return;
 
@@ -510,7 +510,7 @@ function runAppChecks() {
           templateDialog({
             title: 'Reminder',
             data: data
-          }, true,offices.length > 1 ? true : false)
+          }, true, offices.length > 1 ? true : false)
         }).catch(console.log)
 
       })
