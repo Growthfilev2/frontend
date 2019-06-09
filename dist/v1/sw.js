@@ -1,6 +1,6 @@
-// Service Worker Version 20
+// Service Worker Version 27
 
-var CACHE_NAME = 'gf-20'
+var CACHE_NAME = 'gf-27'
 const cacheToAdd = [
     '/v1/',
     '/v1/external/js/firebase-app.js',
@@ -15,6 +15,7 @@ const cacheToAdd = [
     '/v1/img/placeholder.png',
     '/v1/img/empty-user.jpg',
     '/v1/img/empty-user-big.jpg',
+    '/v1/img/favicon.png',
     '/v1/offline.html',
     'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js',
 ]
@@ -59,7 +60,7 @@ self.addEventListener('fetch', function (event) {
                 console.log(event.request)
                 return cache.match(event.request).then(function (response) {
                     
-                    return response || fetch(event.request)
+                    return response || fetch(event.request);
                 })
 
             })
