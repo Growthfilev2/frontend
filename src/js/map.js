@@ -220,6 +220,7 @@ function loadCardData(o, map, location, preSelected) {
   loadNearByLocations(o, map, location).then(function (markers) {
 
     const el = document.getElementById('selection-box');
+    const aside = el.querySelector('aside')
     const contentBody = el.querySelector('.content-body');
     contentBody.innerHTML = '';
 
@@ -238,9 +239,10 @@ function loadCardData(o, map, location, preSelected) {
 
     selectVenue.listen('MDCSelect:change', (evt) => {
       console.log(evt.detail.value)
-      
+      aside.classList.add('open')
       if (!evt.detail.value) return;
       const value = JSON.parse(evt.detail.value)
+
       if (value === 1) {
 
         document.getElementById('office-cont').innerHTML = ''
@@ -259,6 +261,7 @@ function loadCardData(o, map, location, preSelected) {
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
+                aside.classList.add('large')
                 showBottomNav()
 
                 cardProd.close()
@@ -324,7 +327,7 @@ function loadCardData(o, map, location, preSelected) {
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
             isCheckInCreated = true
-            document.getElementById('selection-box').classList.add('large')
+            aside.classList.add('large')
 
             showBottomNav()
             cardProd.close();
@@ -727,11 +730,7 @@ function newLocationSelectionForm(options) {
 `
 }
 
-function mapDom() {
-  return `
-  <div id='map-view' class=''>
-    <div id='map'></div>
-    <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
+{/* <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
       <div class="card__primary">
         <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
 
@@ -761,7 +760,39 @@ function mapDom() {
         </div> -->
     </div>
     
-  </div>
+  </div> */}
+
+function mapDom() {
+  return `
+  <div id='map-view' class=''>
+    <div id='map'></div>
+    <div  class="overlay selection-box-auto hidden" id='selection-box'>
+              <aside class="social" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
+                <div class="card__primary">
+                  <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
+                  </h2>
+
+                </div>
+                <div role="progressbar"
+                  class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+                  id='check-in-prog'>
+                  <div class="mdc-linear-progress__buffering-dots"></div>
+                  <div class="mdc-linear-progress__buffer"></div>
+                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+                    <span class="mdc-linear-progress__bar-inner"></span>
+                  </div>
+                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+                    <span class="mdc-linear-progress__bar-inner"></span>
+                  </div>
+                </div>
+
+                <div class="content-body">
+
+                </div>
+                <div id='submit-cont'>
+                </div>
+              </aside>
+            </div>
   <div id='card-form' class='hidden'>
   <header class="mdc-top-app-bar mdc-top-app-bar--dense" id='card-header'>
   <div class="mdc-top-app-bar__row">
