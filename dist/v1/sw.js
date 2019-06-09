@@ -1,6 +1,6 @@
-// Service Worker Version 20
+// Service Worker Version 21
 
-var CACHE_NAME = 'gf-20'
+var CACHE_NAME = 'gf-21'
 const cacheToAdd = [
     '/v1/',
     '/v1/external/js/firebase-app.js',

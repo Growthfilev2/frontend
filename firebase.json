@@ -13,34 +13,6 @@
       "source": "growthfile-207204.firebaseapp.com",
       "destination": "index.html"
     }],
-    "headers": [{
-        "source": "**/*.@(jpg|jpeg|gif|png)",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "max-age=0"
-        }]
-      }, {
-        "source": "**/*.@(js)",
-        "headers": [{
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        }, {
-          "key": "Cache-Control",
-          "value": "max-age=0"
-        }]
-      },
-      {
-        "source": "**/*.@(css)",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "max-age=0"
-        }]
-      },{
-        "source": "/v1/**",
-        "headers": [{
-          "key": "Cache-Control",
-          "value": "max-age=0"
-        }]
-      }]
+  
   }
 }
