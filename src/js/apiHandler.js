@@ -71,12 +71,27 @@ function http(request) {
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhr.setRequestHeader('Content-Type', 'application/json')
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
-
+    if(request.method !== 'GET') {
+      xhr.timeout = 15000
+      xhr.ontimeout = function(){
+        return reject({
+          code: 400,
+          message:'Request Timed Out. Please Try Again Later'
+        });
+        
+      }
+    }
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
 
-        if (!xhr.status) return;
+        if (!xhr.status) {
+          return reject({
+            code: 400,
+            message:'Please Make sure you have a working Internet Connection'
+          });
+        };
+
 
         if (xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)

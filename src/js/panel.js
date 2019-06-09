@@ -241,8 +241,8 @@ function getActivityDataForList(activity, value, currentLocation) {
       let venueSpan;
       const dateSpan = generateLastestSchedule(schedules, value.createdTime);
 
-      if (currentLocation) {
-        venueSpan = generateLatestVenue(venues, currentLocation);
+      if (record.template === 'check-in') {
+        venueSpan = venues[0].location
       }
       if (venueSpan && !dateSpan) {
         secondLineVenue.textContent = venueSpan;
@@ -323,36 +323,6 @@ function isToday(comparisonTimestamp) {
   return false;
 }
 
-function generateLatestVenue(venues, currentLocation) {
-  const validVenues = removeEmptyObjects(venues, 'location', 'address')
-  const length = validVenues.length
-  if (!length) {
-    return ''
-  }
-
-  if (length == 1) {
-    return validVenues[0].location;
-  }
-
-  const distances = []
-  venues.forEach(function (venue) {
-
-    const lat = venue.geopoint['_latitude']
-    const lon = venue.geopoint['_longitude']
-
-    const geopoint = {
-      latitude: lat,
-      longitude: lon
-    }
-    distances.push({
-      distance: calculateDistanceBetweenTwoPoints(geopoint, currentLocation),
-      location: venue.location
-    })
-  })
-
-  const sortedDistance = sortNearestLocation(distances)
-  return sortedDistance[0].location;
-}
 
 function sortNearestLocation(distances) {
   const dataset = distances.slice();
@@ -537,7 +507,7 @@ function creatListHeader(headerName) {
       const sectionStart = document.getElementById('section-start');
 
       const object = document.createElement('object');
-      object.className = 'list-photo-header';
+      object.className = 'list-photo-header mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon';
       object.type = 'image/jpeg';
       object.data = userRecord.photoURL || './img/empty-user.jpg';
       object.onclick = function () {
@@ -554,6 +524,7 @@ function creatListHeader(headerName) {
       sectionStart.innerHTML =''
       sectionStart.appendChild(object)
       sectionStart.appendChild(headerText);
+      
     })
   }
 }
