@@ -9,6 +9,8 @@ const cacheToAdd = [
     '/v1/external/js/material.min.js',
     '/v1/external/css/material.min.css',
     '/v1/external/css/firebaseui.css',
+    '/v1/external/fonts/font.woff2',
+    '/v1/external/css/material-icons.css',
     '/v1/css/bundle.css',
     '/v1/js/bundle.min.js',
     '/v1/js/apiHandler.js',
