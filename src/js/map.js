@@ -223,6 +223,7 @@ function loadCardData(o, map, location, preSelected) {
   loadNearByLocations(o, map, location).then(function (markers) {
 
     const el = document.getElementById('selection-box');
+    const aside = el.querySelector('aside')
     const contentBody = el.querySelector('.content-body');
     contentBody.innerHTML = '';
 
@@ -241,9 +242,10 @@ function loadCardData(o, map, location, preSelected) {
 
     selectVenue.listen('MDCSelect:change', (evt) => {
       console.log(evt.detail.value)
-      
+      aside.classList.add('open')
       if (!evt.detail.value) return;
       const value = JSON.parse(evt.detail.value)
+
       if (value === 1) {
 
         document.getElementById('office-cont').innerHTML = ''
@@ -262,6 +264,7 @@ function loadCardData(o, map, location, preSelected) {
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
+                aside.classList.add('large')
                 showBottomNav()
 
                 cardProd.close()
@@ -328,7 +331,7 @@ function loadCardData(o, map, location, preSelected) {
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
             isCheckInCreated = true
-            document.getElementById('selection-box').classList.add('large')
+            aside.classList.add('large')
 
             showBottomNav()
             cardProd.close();
@@ -750,11 +753,7 @@ function newLocationSelectionForm(options) {
 `
 }
 
-function mapDom() {
-  return `
-  <div id='map-view' class=''>
-    <div id='map'></div>
-    <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
+{/* <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
       <div class="card__primary">
         <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
 
@@ -784,7 +783,39 @@ function mapDom() {
         </div> -->
     </div>
     
-  </div>
+  </div> */}
+
+function mapDom() {
+  return `
+  <div id='map-view' class=''>
+    <div id='map'></div>
+    <div  class="overlay selection-box-auto hidden" id='selection-box'>
+              <aside class="social" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
+                <div class="card__primary">
+                  <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
+                  </h2>
+
+                </div>
+                <div role="progressbar"
+                  class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+                  id='check-in-prog'>
+                  <div class="mdc-linear-progress__buffering-dots"></div>
+                  <div class="mdc-linear-progress__buffer"></div>
+                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+                    <span class="mdc-linear-progress__bar-inner"></span>
+                  </div>
+                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+                    <span class="mdc-linear-progress__bar-inner"></span>
+                  </div>
+                </div>
+
+                <div class="content-body">
+
+                </div>
+                <div id='submit-cont'>
+                </div>
+              </aside>
+            </div>
   <div id='card-form' class='hidden'>
   <header class="mdc-top-app-bar mdc-top-app-bar--dense" id='card-header'>
   <div class="mdc-top-app-bar__row">
@@ -871,25 +902,9 @@ function checkForVenueSubs(office) {
 
 
 function takeSnap(){
-  // localStorage.setItem('snap_office', office)
   AndroidInterface.startCamera();
 }
 
-// function takeSnap(el, office) {
-
-//   const snap = new Fab('photo_camera').getButton();
-//   snap.root_.id = 'take-snap';
-//   snap.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg')
-//   el.appendChild(snap.root_);
-//   snap.root_.addEventListener('click', function () {
-
-//     console.log('clicked')
-//     localStorage.setItem('snap_office', office)
-//     AndroidInterface.startCamera();
-//     // setFilePath();
-//   });
-
-// }
 
 function setFilePath(base64) {
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
@@ -928,17 +943,67 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
+    getUniqueOfficeCount().then(function(offices){
+        if(!offices.length) return;  
+        if(offices.length ==1) {
+          getSubscription(offices[0], 'check-in').then(function (sub) {
+            sub.attachment.Photo.value = url
+            sub.attachment.Comment.value = textValue;
+            progressBar.open();
+            requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
+              mapView()
+            }).catch(function(){
+              mapView()
+            })
+          })
+          return
+        }
+        if(offices.length > 1) {
+          const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
+            ${offices.map(function(office,idx){
+              return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
+              <span class="mdc-list-item__graphic">
+                <div class="mdc-radio">
+                  <input class="mdc-radio__native-control"
+                        type="radio"
+                        id='demo-list-radio-item-${idx}'
+                        name="demo-list-radio-item-group"
+                        value="1">
+                  <div class="mdc-radio__background">
+                    <div class="mdc-radio__outer-circle"></div>
+                    <div class="mdc-radio__inner-circle"></div>
+                  </div>
+                </div>
+              </span>
+              <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
+            </li>`
+            }).join("")}
+          
+          <ul>`
+          const dialog = new Dialog('Choose Office',template).create();
+          const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
+          dialog.open();
+          dialog.listen('MDCDialog:opened', () => {
+            list.layout();
+            list.singleSelection = true
+          });
+          dialog.listen('MDCDialog:closed',function(evt){
+            if(evt.detail.action !== 'accept') return;
 
-    getSubscription('Puja Capital', 'check-in').then(function (sub) {
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      progressBar.open();
-      requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
-        mapView()
-      }).catch(function(){
-        mapView()
-      })
+            getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
+              sub.attachment.Photo.value = url
+              sub.attachment.Comment.value = textValue;
+              progressBar.open();
+              requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
+                mapView()
+              }).catch(function(){
+                mapView()
+              })
+            })
+          })
+        }
     })
+
   })
 
   const image = new Image();

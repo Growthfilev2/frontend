@@ -1,9 +1,7 @@
 /* Important stuff */
 .mdc-bottom-navigation {
-    /* height: 56px; */
     background-color:  #FFFFFF;
     width: 100%;
-    box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
     overflow: hidden;
     z-index: 8;
     position: fixed;
@@ -196,5 +194,201 @@
   }
   .status-bar .material-icons {
     font-size: 18px;
+  }
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  ul.menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    opacity: 1;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    transition: all 450ms cubic-bezier(0.32, 1, 0.23, 1) 0ms;
+  }
+  .overlay .social {
+    z-index: 9;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #fff;
+    padding: 8px 24px 16px;
+    box-sizing: border-box;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.22), 0px 14px 56px rgba(0, 0, 0, 0.25);
+    transform: translate(0, 100%);
+    transition: all 450ms cubic-bezier(0.32, 1, 0.23, 1) 100ms;
+  }
+  .overlay .social.open {
+    transform: translate(0, 0);
+  }
+  .overlay .social.open.large {
+      bottom: 56px
+  
+  }
+  .overlay .social ul {
+    text-align: justify;
+    columns: 74px 3;
+    vertical-align: bottom;
+  }
+  .overlay .social ul li {
+    width: 74px;
+    display: inline-block;
+  }
+  .overlay .social ul a {
+    display: block;
+    margin: 8px 0;
+    color: gray;
+    text-decoration: none;
+    text-align: center;
+  }
+  .overlay .social ul a span {
+    display: inline-block;
+    width: 100%;
+  }
+  .overlay .social .facebook span {
+    color: #3b5998;
+  }
+  .overlay .social .twitter span {
+    color: #00aced;
+  }
+  .overlay .social .linkedin span {
+    color: #007bb5;
+  }
+  .overlay .social .reddit span {
+    display: block;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    border-radius: 2px;
+    background-color: #cee3f8;
+    color: #fff;
+    text-shadow: 1px 1px #000, -1px -1px #000, -1px 1px #000, 1px -1px #000;
+  }
+  .overlay .social .reddit span::after {
+    content: "";
+    display: block;
+    height: 4px;
+    width: 4px;
+    background-color: red;
+    border-radius: 50%;
+    position: relative;
+    top: -24px;
+    left: 16px;
+    box-shadow: 12px 0 red;
+  }
+  .overlay .social .whatsapp span {
+    color: #4dc247;
+  }
+  .overlay .btn-close {
+    color: #666;
+    transform: scale(0, 0);
+    transition: all 450ms ease-in-out 0;
+  }
+  .overlay:target {
+    display: block;
+    position: fixed;
+    top: 0;
+    opacity: 1;
+  }
+  .overlay:target .social {
+    transform: translate(0, 0);
+    z-index: 9;
+  }
+  .overlay:target .btn-close {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    outline: 0 none;
+    transform: scale(1, 1);
+  }
+  @media screen and (min-width: 640px) {
+    .overlay {
+      padding: 0 19%;
+    }
+    .overlay .social {
+      max-width: 62%;
+      margin: 0 auto;
+    }
+    .overlay .social ul {
+      column-gap: 64px;
+    }
+  }
+  @media screen and (min-width: 960px) {
+    .overlay {
+      padding: 0 23.5%;
+    }
+    .overlay .social {
+      min-width: 384px;
+      max-width: 50%;
+    }
+    .overlay .social ul {
+      column-gap: 124px;
+    }
+  }
+  @media screen and (min-width: 1280px) {
+    .overlay {
+      padding: 0 26%;
+    }
+    .overlay .social {
+      min-width: 512px;
+      max-width: 48%;
+    }
+  }
+  @media screen and (min-width: 1440px) {
+    .overlay {
+      padding: 0 28%;
+    }
+    .overlay .social {
+      min-width: 576px;
+      max-width: 44%;
+    }
+  }
+  .mdi::before {
+    font-size: 24px;
+    line-height: 48px;
+  }
+  .social .mdi::before {
+    font-size: 48px;
+  }
+  .sr-only {
+    /* a generic way to visually hide content while remaining accessible to screen readers (h5bp.com) */
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+    position: absolute;
+    height: 1px;
+    width: 1px;
   }
   

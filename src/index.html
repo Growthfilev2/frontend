@@ -51,7 +51,7 @@
 </head>
 
 <body class="mdc-typography">
-   <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense hidden' id='app-header'>
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
 
@@ -69,12 +69,21 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
-  </header> 
+  </header>
   <div id='start-load' class="hidden">
-    <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    <div class="lds-roller">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
     <p></p>
   </div>
-</div>
+  </div>
 
   <div class="success--container hidden" id="success-animation">
     <div class="success--check"></div>
@@ -90,14 +99,17 @@
         <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
 
         </div>
+
         <div class="mdc-layout-grid__cell--span-12">
           <div class="mdc-bottom-navigation hidden">
+          
             <nav class="mdc-bottom-navigation__list">
-              <span class="mdc-bottom-navigation__list-item  mdc-bottom-navigation__list-item--activated" data-state='mapView'>
+              <span class="mdc-bottom-navigation__list-item  mdc-bottom-navigation__list-item--activated"
+                data-state='mapView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">map</span>
                 <!-- <span class="mdc-bottom-navigation__list-item__text">Recents</span> -->
               </span>
-              
+
               <span class="mdc-bottom-navigation__list-item" data-state='addView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">add_circle_outline
                 </span>
@@ -107,7 +119,7 @@
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
                 <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
               </span>;
-  
+
             </nav>
           </div>
         </div>
@@ -131,7 +143,3 @@
 </body>
 
 </html>
-
-
-
-
