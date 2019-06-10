@@ -1806,6 +1806,7 @@ input[type="datetime-local"] {
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+  padding: 0px;
 }
 
 #enable-gps {
@@ -2066,4 +2067,7 @@ input[type="datetime-local"] {
   background-color: #0399f4;
     font-size: 16px;
   
+}
+.banner {
+  text-align: center;
 }
