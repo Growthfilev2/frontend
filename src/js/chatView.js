@@ -31,9 +31,14 @@ function chatView(){
         ulInit.singleSelection = true;
     }
 
-
-    
 }
+function formatCreatedTime(createdTime) {
+    if (!createdTime) return ''
+    if (isToday(createdTime)) {
+      return moment(createdTime).format('hh:mm')
+    }
+    return moment(createdTime).format('D, MMM').replace(',', '')
+  }
 
 function getChatList(){
     return `
