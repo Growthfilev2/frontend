@@ -21,8 +21,8 @@ function mapView() {
     showBottomNav();
   }
   progressBar.close();
-  const headerImage = `<img  class="material-icons mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
-  const photoIcon = `<span class="material-icons mdc-top-app-bar__action-item mdc-theme--secondary mdc-theme--text-primary-on-light" aria-label="chat" onclick="takeSnap()">photo_camera</a>`
+  const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
+  const photoIcon = `<svg class='mdc-top-app-bar__action-item' onclick="takeSnap()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`
   const header = getHeader('app-header', headerImage, photoIcon);
   header.root_.classList.remove('hidden')
   header.setScrollTarget(document.getElementById('main-content'));
@@ -882,8 +882,7 @@ function takeSnap() {
 
 function setFilePath(base64) {
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
-
-  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon mdc-theme--on-primary'>arrow_back</a>`
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
   history.pushState(['snapView'], null, null)
   const url = `data:image/jpg;base64,${base64}`
@@ -896,7 +895,8 @@ function setFilePath(base64) {
       <textarea
       class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100" autofocus="true"></textarea></div>
       <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"
-    style="z-index: 9;"><i class="mdc-fab__icon material-icons">send</i>
+    style="z-index: 9;">
+    <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
     </button>
 </div>
 </div>
@@ -917,15 +917,17 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-
+    
     getSubscription('Puja Capital', 'check-in').then(function (sub) {
       sub.attachment.Photo.value = url
       sub.attachment.Comment.value = textValue;
       progressBar.open();
       requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
         mapView()
-      }).catch(function () {
-        mapView()
+        snacks('Check-in Created')
+      }).catch(function (error) {
+        snacks(error.message)
+        // mapView()
       })
     })
 
