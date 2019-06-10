@@ -17,9 +17,7 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-  if (isCheckInCreated) {
-    showBottomNav();
-  }
+ 
   progressBar.close();
   const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
   const photoIcon = `<svg class='mdc-top-app-bar__action-item' onclick="takeSnap()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`
@@ -214,7 +212,10 @@ function loadCardData(o, map, location, preSelected) {
   loadNearByLocations(o, map, location).then(function (markers) {
 
     const el = document.getElementById('selection-box');
-    const aside = el.querySelector('aside')
+    const aside = el.querySelector('aside');
+    if (isCheckInCreated) {
+      showBottomNav(aside);
+    }
     const contentBody = el.querySelector('.content-body');
     contentBody.innerHTML = '';
 
@@ -255,11 +256,10 @@ function loadCardData(o, map, location, preSelected) {
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
-                aside.classList.add('large')
-                showBottomNav()
+              
+                showBottomNav(aside)
 
                 cardProd.close()
-                addSnapControl(map,evt.detail.value);
 
                 checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
                   if (!venueSubs.length) return;
@@ -322,9 +322,9 @@ function loadCardData(o, map, location, preSelected) {
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
             isCheckInCreated = true
-            aside.classList.add('large')
+           
 
-            showBottomNav()
+            showBottomNav(aside)
             cardProd.close();
             known(value, header, location);
           }).catch(function (error) {
@@ -359,10 +359,14 @@ function loadCardData(o, map, location, preSelected) {
   })
 }
 
-function showBottomNav() {
+function showBottomNav(aside) {
+  aside.classList.add('large')
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
 }
 
+function hideBottomNav(){
+  document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
+}
 function known(value, header, location) {
   getAvailbleSubs(value).then(function (subs) {
     if (!subs.length) {

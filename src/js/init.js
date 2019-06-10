@@ -552,6 +552,12 @@ function startApp(start) {
             listStore.createIndex('office', 'office');
             calendar.createIndex('office', 'office')
           }
+          if (evt.oldVersion < 9) {
+            var tx = req.transaction;
+            const userStore = tx.objectStore('users');
+            userStore.createIndex('mobile','mobile');
+            const addendumStore = tx.objectStore('addendum');
+            addendumStore.createIndex('user','user')
         }
       };
       req.onsuccess = function () {
@@ -589,31 +595,31 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
 
-        // requestCreator('now', {
-        //   device: native.getInfo(),
-        //   from: '',
-        //   registerToken: native.getFCMToken()
-        // }).then(function (response) {
-        //   if (response.updateClient) {
-        //     updateApp()
-        //     return
-        //   }
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: '',
+          registerToken: native.getFCMToken()
+        }).then(function (response) {
+          if (response.updateClient) {
+            updateApp()
+            return
+          }
 
-        //   if (response.revokeSession) {
-        //     revokeSession();
-        //     return
-        //   };
-        //   if (response.hasOwnProperty('removeFromOffice')) {
-        //     if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-        //       requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
-        //       })
-        //     };
-        //     return;
-        //   };
+          if (response.revokeSession) {
+            revokeSession();
+            return
+          };
+          if (response.hasOwnProperty('removeFromOffice')) {
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
+              })
+            };
+            return;
+          };
 
 
           getRootRecord().then(function (rootRecord) {
-            // requestCreator('Null').then(function (response) {
+            requestCreator('Null').then(function (response) {
               if (rootRecord.fromTime) return mapView();
               const auth = firebase.auth().currentUser;
               getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
@@ -622,9 +628,9 @@ function startApp(start) {
                 return mapView();
               })
               return
-            // }).catch(console.log)
+            }).catch(console.log)
           })
-        // }).catch(console.log)
+        }).catch(console.log)
       }
       req.onerror = function () {
         handleError({
@@ -693,13 +699,13 @@ function createObjectStores(db, uid) {
   users.createIndex('displayName', 'displayName')
   users.createIndex('isUpdated', 'isUpdated')
   users.createIndex('count', 'count')
-
+  users.createIndex('mobile', 'mobile')
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
 
   addendum.createIndex('activityId', 'activityId')
-
+  addendum.createIndex('user','user');
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
