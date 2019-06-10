@@ -17,7 +17,7 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-  if(isCheckInCreated) {
+  if (isCheckInCreated) {
     showBottomNav();
   }
   progressBar.close();
@@ -123,31 +123,17 @@ function createForm(office, template, venue, location) {
   const btn = new mdc.ripple.MDCRipple(document.getElementById('create-form'))
   btn.root_.addEventListener('click', function () {
 
-    const cardHeader = new mdc.topAppBar.MDCTopAppBar(document.getElementById('card-header'))
-    cardHeader.root_.querySelector('.mdc-top-app-bar__title').textContent = template;
-    cardHeader.root_.querySelector('#section-end').innerHTML = `    <button class="material-icons mdc-top-app-bar__action-item--unbounded" style='color:white' aria-label="Send" id='send-form'>send</button>
-    `
-    cardHeader.setScrollTarget(document.getElementById('form-container'));
-    cardHeader.navIcon_.addEventListener('click', function () {
-      history.pushState(['mapView'], null, null)
-      toggleCardHeight(false, 'card-form');
-
-    })
-
-    toggleCardHeight(true, 'card-form');
     history.pushState(['cardView'], null, null);
 
     getSubscription(office, template).then(function (subscription) {
       const duplicate = JSON.parse(JSON.stringify(subscription));
-
+      const random = Math.floor(Math.random() * Math.floor(100000));
       if (template === 'customer') {
-        const random = Math.floor(Math.random() * Math.floor(100000))
-        document.getElementById('form-container').innerHTML = customer(subscription, random);
-        // const select = new mdc.select.MDCSelect(document.querySelector('#form-container > div.mdc-select'));
 
-        // const prog = new mdc.linearProgress.MDCLinearProgress(document.getElementById('form-prog'))
-        document.getElementById('send-form').addEventListener('click', function () {
-       
+        const dialog = new Dialog('Customer', customer(subscription, random)).create();
+        dialog.open();
+        dialog.listen('MDCDialog:closed', function (evt) {
+          if (evt.detail.action !== 'accept') return;
           duplicate.venue = [{
             geopoint: {
               latitude: location.latitude,
@@ -165,26 +151,32 @@ function createForm(office, template, venue, location) {
           requestCreator('create', duplicate).then(function () {
 
             successDialog();
-            toggleCardHeight(false, 'card-form');
+            document.getElementById('selection-box').querySelector('aside').classList.add('large')
             history.pushState(['mapView'], null, null)
             loadCardData(o, map, location, {
               latitude: location.latitude,
               longitude: location.longitude,
               location: 'Dummy Location ' + random,
               address: 'Dummy Location ' + random,
-              venueDescriptor:'Customer Office',
+              venueDescriptor: 'Customer Office',
               office: duplicate.office,
               template: duplicate.template
             })
-          });
-        });
+          }).catch(function (error) {
+            snacks(error.message)
+          })
+        })
+
       }
       if (template === 'dsr' || template === 'tour plan' || template === 'duty roster') {
-        document.getElementById('form-container').innerHTML = common(subscription);
-        document.getElementById('send-form').addEventListener('click', function () {
+
+        const dialog = new Dialog(template, common(subscription)).create();
+        dialog.open();
+        dialog.listen('MDCDialog:closed', function (evt) {
+          if(evt.detail.action !== 'accept') return;
 
           if (duplicate.attachment.Name) {
-            duplicate.attachment.Name.value = 'sample name' + Math.floor(Math.random() * Math.floor(100));
+            duplicate.attachment.Name.value = 'sample name' + random;
           }
 
           const scheules = []
@@ -201,11 +193,10 @@ function createForm(office, template, venue, location) {
 
           requestCreator('create', duplicate).then(function () {
             successDialog();
-            toggleCardHeight(false, 'card-form');
             history.pushState(['mapView'], null, null)
 
           });
-        });
+        })
 
       }
       [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
@@ -368,7 +359,7 @@ function loadCardData(o, map, location, preSelected) {
   })
 }
 
-function showBottomNav(){
+function showBottomNav() {
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
 }
 
@@ -380,7 +371,7 @@ function known(value, header, location) {
     };
 
     header.textContent = 'What Do You Want to do ?'
-   
+
     document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
     None
     </option>`)}`
@@ -402,7 +393,7 @@ function known(value, header, location) {
 }
 
 function common(subscription) {
-  return `
+  return `<div class='form-container'>
   <div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
   <i class="material-icons mdc-text-field__icon">location_on</i>
   <input class="mdc-text-field__input">
@@ -493,13 +484,16 @@ function common(subscription) {
   </li>
 
 </ul>
-
+</div>
   `
 }
 
 function customer(subscription, random) {
 
-  return `<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='venue' data-value='${subscription.venue[0]}'>
+  return `
+  <div class='form-container'>
+  
+  <div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='venue' data-value='${subscription.venue[0]}'>
   <i class="material-icons mdc-text-field__icon">location_on</i>
   <input class="mdc-text-field__input" value='Dummy Location ${random}'>
   <div class="mdc-line-ripple"></div>
@@ -589,7 +583,8 @@ function customer(subscription, random) {
       Customer Type<span class="mdc-list-item__meta material-icons" aria-hidden="true">add_circle</span>
   </li>
 
-</ul>`
+</ul>
+</div>`
 }
 
 function venueSection(venues) {
@@ -753,37 +748,39 @@ function newLocationSelectionForm(options) {
 `
 }
 
-{/* <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
-      <div class="card__primary">
-        <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
-
-      </div>
-      <div role="progressbar"
-        class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-        id='check-in-prog'>
-        <div class="mdc-linear-progress__buffering-dots"></div>
-        <div class="mdc-linear-progress__buffer"></div>
-        <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-          <span class="mdc-linear-progress__bar-inner"></span>
-        </div>
-        <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-          <span class="mdc-linear-progress__bar-inner"></span>
-        </div>
-      </div>
-      <div class="card__secondary mdc-typography mdc-typography--body2">
-        <!-- 'mdc-card__primary-action card__primary-action' -->
-        <div class="content-body">
+{
+  /* <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
+        <div class="card__primary">
+          <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
 
         </div>
-        <div id='submit-cont'>
+        <div role="progressbar"
+          class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+          id='check-in-prog'>
+          <div class="mdc-linear-progress__buffering-dots"></div>
+          <div class="mdc-linear-progress__buffer"></div>
+          <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+            <span class="mdc-linear-progress__bar-inner"></span>
+          </div>
+          <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+            <span class="mdc-linear-progress__bar-inner"></span>
+          </div>
         </div>
-      </div>
+        <div class="card__secondary mdc-typography mdc-typography--body2">
+          <!-- 'mdc-card__primary-action card__primary-action' -->
+          <div class="content-body">
 
-      <!-- <div class="mdc-card__actions">
-        </div> -->
-    </div>
-    
-  </div> */}
+          </div>
+          <div id='submit-cont'>
+          </div>
+        </div>
+
+        <!-- <div class="mdc-card__actions">
+          </div> -->
+      </div>
+      
+    </div> */
+}
 
 function mapDom() {
   return `
@@ -816,31 +813,7 @@ function mapDom() {
                 </div>
               </aside>
             </div>
-  <div id='card-form' class='hidden'>
-  <header class="mdc-top-app-bar mdc-top-app-bar--dense" id='card-header'>
-  <div class="mdc-top-app-bar__row">
-    <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" id='section-start'>
-      <a  class="material-icons mdc-top-app-bar__navigation-icon">arrow_back</a>
-      <span class="mdc-top-app-bar__title">Title</span>
-    </section>
-    <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar" id='section-end'>
-    </section>
-  </div>
-  <div role="progressbar"
-        class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-        id='form-prog'>
-        <div class="mdc-linear-progress__buffering-dots"></div>
-        <div class="mdc-linear-progress__buffer"></div>
-        <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-          <span class="mdc-linear-progress__bar-inner"></span>
-        </div>
-        <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-          <span class="mdc-linear-progress__bar-inner"></span>
-        </div>
-      </div>
-</header>
-  <div id='form-container' class='mdc-top-app-bar--fixed-adjust pl-20 pr-20'></div>
-  </div>
+
   `
 }
 
@@ -901,7 +874,8 @@ function checkForVenueSubs(office) {
 
 
 
-function takeSnap(){
+function takeSnap() {
+  // localStorage.setItem('snap_office', office)
   AndroidInterface.startCamera();
 }
 
@@ -943,65 +917,16 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    getUniqueOfficeCount().then(function(offices){
-        if(!offices.length) return;  
-        if(offices.length ==1) {
-          getSubscription(offices[0], 'check-in').then(function (sub) {
-            sub.attachment.Photo.value = url
-            sub.attachment.Comment.value = textValue;
-            progressBar.open();
-            requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
-              mapView()
-            }).catch(function(){
-              mapView()
-            })
-          })
-          return
-        }
-        if(offices.length > 1) {
-          const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
-            ${offices.map(function(office,idx){
-              return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
-              <span class="mdc-list-item__graphic">
-                <div class="mdc-radio">
-                  <input class="mdc-radio__native-control"
-                        type="radio"
-                        id='demo-list-radio-item-${idx}'
-                        name="demo-list-radio-item-group"
-                        value="1">
-                  <div class="mdc-radio__background">
-                    <div class="mdc-radio__outer-circle"></div>
-                    <div class="mdc-radio__inner-circle"></div>
-                  </div>
-                </div>
-              </span>
-              <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
-            </li>`
-            }).join("")}
-          
-          <ul>`
-          const dialog = new Dialog('Choose Office',template).create();
-          const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
-          dialog.open();
-          dialog.listen('MDCDialog:opened', () => {
-            list.layout();
-            list.singleSelection = true
-          });
-          dialog.listen('MDCDialog:closed',function(evt){
-            if(evt.detail.action !== 'accept') return;
 
-            getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
-              sub.attachment.Photo.value = url
-              sub.attachment.Comment.value = textValue;
-              progressBar.open();
-              requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
-                mapView()
-              }).catch(function(){
-                mapView()
-              })
-            })
-          })
-        }
+    getSubscription('Puja Capital', 'check-in').then(function (sub) {
+      sub.attachment.Photo.value = url
+      sub.attachment.Comment.value = textValue;
+      progressBar.open();
+      requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+        mapView()
+      }).catch(function () {
+        mapView()
+      })
     })
 
   })
