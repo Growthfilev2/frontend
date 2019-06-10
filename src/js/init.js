@@ -330,10 +330,10 @@ window.addEventListener("load", function () {
   var activatedClass = 'mdc-bottom-navigation__list-item--activated';
   // const states = ['mapView','snapView','add','chatView','profileView']
   for (var i = 0, list; list = lists[i]; i++) {
-    list.addEventListener('click', function(event) {
+    list.addEventListener('click', function (event) {
 
       var el = event.target;
-      if(el.dataset.state === history.state[0]) return;
+      if (el.dataset.state === history.state[0]) return;
 
       while (!el.classList.contains('mdc-bottom-navigation__list-item') && el) {
         el = el.parentNode;
@@ -350,7 +350,7 @@ window.addEventListener("load", function () {
       }
     });
   }
-  
+
 
 
   if ('serviceWorker' in navigator) {
@@ -482,7 +482,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 9);
+      const req = window.indexedDB.open(auth.uid, 10);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -555,24 +555,27 @@ function startApp(start) {
           if (evt.oldVersion < 9) {
             var tx = req.transaction;
             const userStore = tx.objectStore('users');
-            userStore.createIndex('mobile','mobile');
+            userStore.createIndex('mobile', 'mobile');
+            
             const addendumStore = tx.objectStore('addendum');
-            addendumStore.createIndex('user','user')
-        }
-      };
+            addendumStore.createIndex('user', 'user');
+            addendumStore.createIndex('timestamp','timestamp')
+          }
+        };
+      }
       req.onsuccess = function () {
         db = req.result;
-        if(!areObjectStoreValid(db.objectStoreNames)) {
+        if (!areObjectStoreValid(db.objectStoreNames)) {
           db.close();
           console.log(auth)
           const deleteIDB = indexedDB.deleteDatabase(auth.uid);
-          deleteIDB.onsuccess = function(){
+          deleteIDB.onsuccess = function () {
             window.location.reload();
           }
-          deleteIDB.onblocked = function(){
+          deleteIDB.onblocked = function () {
             snacks('Please Re-Install The App')
           }
-          deleteIDB.onerror = function(){
+          deleteIDB.onerror = function () {
             snacks('Please Re-Install The App')
           }
           return;
@@ -583,9 +586,9 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         // localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
-        
+
         const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
-        
+
         let index = 0;
         var interval = setInterval(function () {
           if (index == texts.length - 1) {
@@ -595,42 +598,43 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
 
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        }).then(function (response) {
-          if (response.updateClient) {
-            updateApp()
-            return
-          }
+        // requestCreator('now', {
+        //   device: native.getInfo(),
+        //   from: '',
+        //   registerToken: native.getFCMToken()
+        // }).then(function (response) {
+        //   if (response.updateClient) {
+        //     updateApp()
+        //     return
+        //   }
 
-          if (response.revokeSession) {
-            revokeSession();
-            return
-          };
-          if (response.hasOwnProperty('removeFromOffice')) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
-              })
-            };
-            return;
-          };
+        //   if (response.revokeSession) {
+        //     revokeSession();
+        //     return
+        //   };
+        //   if (response.hasOwnProperty('removeFromOffice')) {
+        //     if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+        //       requestCreator('removeFromOffice', response.removeFromOffice).then(function () {})
+        //     };
+        //     return;
+        //   };
 
 
-          getRootRecord().then(function (rootRecord) {
-            requestCreator('Null').then(function (response) {
-              if (rootRecord.fromTime) return mapView();
-              const auth = firebase.auth().currentUser;
-              getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-                if (!result.length) return mapView();
-                if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-                return mapView();
-              })
-              return
-            }).catch(console.log)
-          })
-        }).catch(console.log)
+        //   getRootRecord().then(function (rootRecord) {
+          chatView()
+          // mapView()
+          // requestCreator('Null').then(function (response) {
+            //   if (rootRecord.fromTime) return chatView();
+            //   const auth = firebase.auth().currentUser;
+            //   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+            //     if (!result.length) return mapView();
+            //     if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+            //     return mapView();
+            //   })
+            //   return
+            // }).catch(console.log)
+        //   })
+        // }).catch(console.log)
       }
       req.onerror = function () {
         handleError({
@@ -641,15 +645,15 @@ function startApp(start) {
   })
 }
 
-function areObjectStoreValid(names){
-  const stores = ['map','children','calendar','root','subscriptions','list','users','activity','addendum']
-  
+function areObjectStoreValid(names) {
+  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum']
+
   for (let index = 0; index < stores.length; index++) {
     const el = stores[index];
-    if(!names.contains(el)) return false;
+    if (!names.contains(el)) return false;
   }
   return true;
-  
+
 }
 
 function getEmployeeDetails(range, indexName) {
@@ -700,12 +704,14 @@ function createObjectStores(db, uid) {
   users.createIndex('isUpdated', 'isUpdated')
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
+
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
 
   addendum.createIndex('activityId', 'activityId')
-  addendum.createIndex('user','user');
+  addendum.createIndex('user', 'user');
+  addendum.createIndex('timestamp','timestamp');
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })

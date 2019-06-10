@@ -919,7 +919,6 @@ function setFilePath(base64) {
       submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
     }
   });
-    
     submit.root_.addEventListener('click', function () {
       const textValue = textarea.value;
       getUniqueOfficeCount().then(function(offices){
