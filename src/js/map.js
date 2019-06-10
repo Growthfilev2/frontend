@@ -915,23 +915,77 @@ function setFilePath(base64) {
       submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
     }
   });
-  submit.root_.addEventListener('click', function () {
-    const textValue = textarea.value;
     
-    getSubscription('Puja Capital', 'check-in').then(function (sub) {
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      progressBar.open();
-      requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-        mapView()
-        snacks('Check-in Created')
-      }).catch(function (error) {
-        snacks(error.message)
-        // mapView()
+    submit.root_.addEventListener('click', function () {
+      const textValue = textarea.value;
+      getUniqueOfficeCount().then(function(offices){
+          if(!offices.length) return;  
+          if(offices.length ==1) {
+            getSubscription(offices[0], 'check-in').then(function (sub) {
+              sub.attachment.Photo.value = url
+              sub.attachment.Comment.value = textValue;
+              progressBar.open();
+              requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
+                mapView()
+                snacks('Check-In Created')
+
+              }).catch(function(){
+                snacks(error.message)
+
+              })
+            })
+            return
+          }
+          if(offices.length > 1) {
+            const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
+              ${offices.map(function(office,idx){
+                return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
+                <span class="mdc-list-item__graphic">
+                  <div class="mdc-radio">
+                    <input class="mdc-radio__native-control"
+                          type="radio"
+                          id='demo-list-radio-item-${idx}'
+                          name="demo-list-radio-item-group"
+                          value="1">
+                    <div class="mdc-radio__background">
+                      <div class="mdc-radio__outer-circle"></div>
+                      <div class="mdc-radio__inner-circle"></div>
+                    </div>
+                  </div>
+                </span>
+                <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
+              </li>`
+              }).join("")}
+            
+            <ul>`
+            const dialog = new Dialog('Choose Office',template).create();
+            const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
+            dialog.open();
+            dialog.listen('MDCDialog:opened', () => {
+              list.layout();
+              list.singleSelection = true
+            });
+            dialog.listen('MDCDialog:closed',function(evt){
+              if(evt.detail.action !== 'accept') return;
+  
+              getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
+                sub.attachment.Photo.value = url
+                sub.attachment.Comment.value = textValue;
+                progressBar.open();
+                requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
+                  mapView()
+                  snacks('Check-In Created')
+
+                }).catch(function(){
+                  snacks(error.message)
+                })
+              })
+            })
+          }
       })
+  
     })
 
-  })
 
   const image = new Image();
   image.onload = function () {
