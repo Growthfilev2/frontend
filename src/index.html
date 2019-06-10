@@ -35,13 +35,10 @@
   <script src="js/start.js" defer></script>
   <script src="js/services.js" defer></script>
   <script src="js/map.js" defer></script>
+  <script src="js/addView.js" defer></script>
   <script src="js/profile.js" defer async></script>
   <script src="js/chatView.js" defer async></script>
 
-  <!-- <script src="js/panel.js" defer async></script>
-  <script src="js/conversation.js" defer async></script>
-  <script src="js/selector.js" defer async></script>
-  <script src="js/searchDB.js" defer async></script> -->
   <script>
     window.ga = window.ga || function () {
       (ga.q = ga.q || []).push(arguments)
@@ -54,7 +51,7 @@
 </head>
 
 <body class="mdc-typography">
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense hidden' id='app-header'>
+   <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
 
@@ -72,98 +69,52 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
-  </header>
+  </header> 
   <div id='start-load' class="hidden">
     <div class="lds-roller"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
     <p></p>
   </div>
-
+</div>
 
   <div class="success--container hidden" id="success-animation">
     <div class="success--check"></div>
   </div>
 
-  <div id="growthfile">
+  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
 
     <div id='main-content'>
       <div id='login-container'></div>
 
       <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
 
-        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel"></div>
-        <div class="mdc-layout-grid__cell--span-12" id=''>
-          <div class="mdc-card card basic-with-header selection-box-auto hidden" id='selection-box'>
-            <div class="card__primary">
-              <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
-      
-            </div>
-            <div role="progressbar"
-              class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-              id='check-in-prog'>
-              <div class="mdc-linear-progress__buffering-dots"></div>
-              <div class="mdc-linear-progress__buffer"></div>
-              <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-                <span class="mdc-linear-progress__bar-inner"></span>
-              </div>
-              <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-                <span class="mdc-linear-progress__bar-inner"></span>
-              </div>
-            </div>
-            <div class="card__secondary mdc-typography mdc-typography--body2">
-              <!-- 'mdc-card__primary-action card__primary-action' -->
-              <div class="content-body">
-      
-              </div>
-              <div id='submit-cont'>
-              </div>
-            </div>
-      
-            <!-- <div class="mdc-card__actions">
-              </div> -->
-          </div>
-          <div id='card-form' class='hidden'>
-            <header class="mdc-top-app-bar mdc-top-app-bar--dense" id='card-header'>
-            <div class="mdc-top-app-bar__row">
-              <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start" id='section-start'>
-                <a  class="material-icons mdc-top-app-bar__navigation-icon">arrow_back</a>
-                <span class="mdc-top-app-bar__title">Title</span>
-              </section>
-              <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar" id='section-end'>
-              </section>
-            </div>
-            <div role="progressbar"
-                  class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-                  id='form-prog'>
-                  <div class="mdc-linear-progress__buffering-dots"></div>
-                  <div class="mdc-linear-progress__buffer"></div>
-                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-                    <span class="mdc-linear-progress__bar-inner"></span>
-                  </div>
-                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-                    <span class="mdc-linear-progress__bar-inner"></span>
-                  </div>
-                </div>
-          </header>
-            <div id='form-container' class='mdc-top-app-bar--fixed-adjust pl-20 pr-20'></div>
-            </div>  
+        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
+
         </div>
-      
         <div class="mdc-layout-grid__cell--span-12">
-          <div class="mdc-bottom-navigation">
+          <div class="mdc-bottom-navigation hidden">
             <nav class="mdc-bottom-navigation__list">
-              <span class="mdc-bottom-navigation__list-item mdc-bottom-navigation__list-item--activated" >
+              <span class="mdc-bottom-navigation__list-item  mdc-bottom-navigation__list-item--activated" data-state='mapView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">map</span>
+                <!-- <span class="mdc-bottom-navigation__list-item__text">Recents</span> -->
               </span>
-              <span class="mdc-bottom-navigation__list-item" >
+              
+              <span class="mdc-bottom-navigation__list-item" data-state='addView'>
+                <span class="material-icons mdc-bottom-navigation__list-item__icon">add_circle_outline
+                </span>
+                <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
+              </span>
+              <span class="mdc-bottom-navigation__list-item" data-state='chatView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
-              </span>
+                <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
+              </span>;
+  
             </nav>
           </div>
         </div>
-        </div>
-       
       </div>
     </div>
+
+  </div>
 
   <div id="snackbar-container">
     <div class="mdc-snackbar">

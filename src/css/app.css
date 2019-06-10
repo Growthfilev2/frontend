@@ -1,6 +1,6 @@
-html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
+/* html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
   height: 100%;
-}
+} */
 
 :root {
   --mdc-theme-primary: #89273E ;
