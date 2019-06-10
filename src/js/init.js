@@ -589,31 +589,31 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
 
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        }).then(function (response) {
-          if (response.updateClient) {
-            updateApp()
-            return
-          }
+        // requestCreator('now', {
+        //   device: native.getInfo(),
+        //   from: '',
+        //   registerToken: native.getFCMToken()
+        // }).then(function (response) {
+        //   if (response.updateClient) {
+        //     updateApp()
+        //     return
+        //   }
 
-          if (response.revokeSession) {
-            revokeSession();
-            return
-          };
-          if (response.hasOwnProperty('removeFromOffice')) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
-              })
-            };
-            return;
-          };
+        //   if (response.revokeSession) {
+        //     revokeSession();
+        //     return
+        //   };
+        //   if (response.hasOwnProperty('removeFromOffice')) {
+        //     if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+        //       requestCreator('removeFromOffice', response.removeFromOffice).then(function () {
+        //       })
+        //     };
+        //     return;
+        //   };
 
 
           getRootRecord().then(function (rootRecord) {
-            requestCreator('Null').then(function (response) {
+            // requestCreator('Null').then(function (response) {
               if (rootRecord.fromTime) return mapView();
               const auth = firebase.auth().currentUser;
               getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
@@ -622,9 +622,9 @@ function startApp(start) {
                 return mapView();
               })
               return
-            }).catch(console.log)
+            // }).catch(console.log)
           })
-        }).catch(console.log)
+        // }).catch(console.log)
       }
       req.onerror = function () {
         handleError({

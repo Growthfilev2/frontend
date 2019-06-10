@@ -6,11 +6,11 @@ function profileView() {
 
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
-  const backIcon = `<a class='material-icons mdc-top-app-bar__navigation-icon'>arrow_back</a>`
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header',backIcon,'');
   header.setScrollTarget(document.getElementById('main-content'));
 
-  const root = `<div class="mdc-card demo-card mdc-top-app-bar--dense-fixed-adjust" id='profile-card'>
+  const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
   <div class="mdc-card__media mdc-card__media--16-9 demo-card__media"
@@ -20,8 +20,10 @@ function profileView() {
   aria-label="Add to favorites"
   aria-hidden="true"
   aria-pressed="false">
-  <i class="material-icons mdc-icon-button__icon mdc-icon-button__icon--on">check</i>
-  <i class="material-icons mdc-icon-button__icon">edit</i>
+
+  <svg class='mdc-icon-button__icon  mdc-icon-button__icon--on' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+  <svg class='mdc-icon-button__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+
 </button>
 </div>
 <div id='base-details'></div>
@@ -105,13 +107,16 @@ function createBaseDetails() {
 
   <h1 class="mdc-typography--headline5 mb-0 mt-0" id='view-name'>
       ${firebase.auth().currentUser.displayName || '-'}</h1>
-  <h1 class="mdc-typography--headline6 mb-0 mt-0"><i
-          class="material-icons meta-icon mdc-theme--text-primary-on-dark">email</i><span id='view-email'>
+  <h1 class="mdc-typography--headline6 mb-0 mt-0">
+  <svg class='meta-icon' fill='#cccccc' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+  <span id='view-email'>
           ${firebase.auth().currentUser.email}
       </span>
 
   </h1>
-  <h1 class="mdc-typography--headline6 mt-0"> <i class="material-icons meta-icon mdc-theme--text-primary-on-dark">phone</i><span
+  <h1 class="mdc-typography--headline6 mt-0"> 
+  <svg class='meta-icon' fill='#cccccc' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+  <span
           class="mdc-typography--headline6">+91</span> 9999288921
   </h1>
 </div>`
@@ -205,7 +210,6 @@ function createViewProfile() {
 
           tx.oncomplete = function () {
             if (supers) {
-              console.log(supers)
               document.getElementById('supervisors').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Supervisors</h1>
                   <div class="mdc-chip-set supervisor">
                   ${supers}
@@ -213,7 +217,6 @@ function createViewProfile() {
                   `
             }
             if (team) {
-              console.log(team)
 
               document.getElementById('my-team').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
                   <div class="mdc-chip-set">
@@ -232,7 +235,7 @@ function createEditProfile(name, email) {
   return ` <div class="mdc-typography mdc-typography--body2 p-10" id='card-body-edit'>
   <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
 
-      <i class="material-icons mdc-text-field__icon">account_circle</i>
+  <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
       <input class="mdc-text-field__input" value="${name}">
       <div class="mdc-line-ripple"></div>
       <label class="mdc-floating-label ${name ? 'mdc-floating-label--float-above' :''}">Name</label>
@@ -250,7 +253,7 @@ function createEditProfile(name, email) {
 
 function emailField (email,label,setFocus){
   return `<div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
-  <i class="material-icons mdc-text-field__icon">email</i>
+  <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
   <input class="mdc-text-field__input" type='email' value="${email}" autofocus=${setFocus ? 'true':'false'}>
   <div class="mdc-line-ripple"></div>
   <label class="mdc-floating-label ${email ? 'mdc-floating-label--float-above' :''} ">Email</label>
@@ -282,7 +285,9 @@ function addTabs(name) {
 function addUserChips(user) {
   return `
   <div class="mdc-chip">
-    ${user.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${user.photoURL}>`:`<i class="material-icons mdc-chip__icon mdc-chip__icon--leading">supervisor_account</i>`}
+    ${user.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${user.photoURL}>`:`
+    
+    <svg class="mdc-chip__icon mdc-chip__icon--leading" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.33-2.34 2.37-3.47C10.5 13.1 9.66 13 9 13z"/></svg>`}
     <div class="mdc-chip__text">${user.displayName || user.mobile}</div>
 </div>`
 
