@@ -82,6 +82,9 @@ function newMessage() {
 
 function searchUsers(evt){
 const value = evt.target.value;
+const tx = db.transaction('users');
+
+
 if(!value.trim())  {
     loadAllUsers().then(function(allUsersString){
         if(!allUsersString) return;
@@ -90,10 +93,16 @@ if(!value.trim())  {
     })
     return;
 }
+const bound = IDBKeyRange.bound(value, value + '\uffff')
+tx.objectStore('users').openCursor(bound).onsuccess = function (event) {
+    const cursor = event.target.result
+    if (!cursor) return
 
-
-
+    cursor.continue()
 }
+}
+
+
 
 function readLatestChats() {
 
