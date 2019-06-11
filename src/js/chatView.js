@@ -1,5 +1,10 @@
-function chatView() {
-    history.pushState(['chatView'], null, null);
+function chatView(replaceState) {
+    if(!replaceState) {
+        history.pushState(['chatView'], null, null);
+    }
+    else {
+        history.replaceState(['chatView'], null, null);
+    }
     hideBottomNav()
     document.getElementById('start-load').classList.add('hidden');
 
@@ -16,19 +21,14 @@ function chatView() {
 function chatDom(currentChats, suggestions) {
     return `<div class='user-chats'>
     
-    
-    <div style="
-    padding: 20px;
-    /* padding-bottom: 0px; */
-">
 <div id='search-users-container'>
 <div id="search-users" class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon mdc-text-field--dense">
-  <i class="material-icons mdc-text-field__icon">favorite</i>
+  <i class="material-icons mdc-text-field__icon">search</i>
   <input class="mdc-text-field__input">
-  <div class="mdc-notched-outline mdc-notched-outline--upgraded mdc-notched-outline--notched">
+  <div class="mdc-notched-outline">
     <div class="mdc-notched-outline__leading"></div>
-    <div class="mdc-notched-outline__notch" style="width: 54.15px;">
-      <label class="mdc-floating-label mdc-floating-label--float-above" style="">Search</label>
+    <div class="mdc-notched-outline__notch">
+      <label class="mdc-floating-label">Search</label>
     </div>
     <div class="mdc-notched-outline__trailing"></div>
   </div>
@@ -50,15 +50,15 @@ function chatDom(currentChats, suggestions) {
     <h3 class="mdc-list-group__subheader mdc-typography--headline6 ">Suggestions</h3>
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='suggestions'>${suggestions}</ul>
 </div>
-</div>
+
 </div>`
 }
 
 function newMessage() {
-    history.pushState(['newMessage'],null,null);
+    history.pushState(['newMessage'], null, null);
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>`
-    
+
     const header = getHeader('app-header', backIcon, '');
     document.getElementById('search-users-container').innerHTML = `
     <h3 class="mdc-list-group__subheader mdc-typography--headline6 mb-0 mr-0 ml-0">To</h3>
@@ -71,37 +71,71 @@ function newMessage() {
   </div>`
     const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
     searchInit.focus()
-    searchInit.input_.addEventListener('keyup',searchUsers)
+    searchInit.input_.addEventListener('input', searchUsers)
     document.querySelector('.chats-list-container').classList.add('hidden')
-    loadAllUsers().then(function(allUsersString){
-        if(!allUsersString) return;
+    document.querySelector('.new-message-container').classList.add('hidden');
+    loadAllUsers().then(function (allUsersString) {
+        if (!allUsersString) return;
         document.getElementById('suggestions').innerHTML = allUsersString
         document.querySelector('.suggestions-list-container').classList.remove('hidden')
     })
 }
 
-function searchUsers(evt){
-const value = evt.target.value;
-const tx = db.transaction('users');
+function searchUsers(evt) {
+    if (history.state[0] !== 'searchUsers') {
+        if (history.state[0] !== 'newMessage') {
+            const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </a>`
+            const header = getHeader('app-header', backIcon, '');
+            history.pushState(['searchUsers'], null, null)
+        }
+    }
+    let value = evt.target.value;
+    let indexName;
+    let searchResult = ''
+    document.querySelector('.chats-list-container').classList.add('hidden')
+    document.querySelector('.new-message-container').classList.add('hidden')
 
+    if (isNumber(value)) {
+        indexName = 'mobile'
+        value = formatNumber(value);
+    } else {
+        indexName = 'displayName'
+    }
+    const bound = IDBKeyRange.bound(value, value + '\uffff')
+    const tx = db.transaction('users');
+    const myNumber = firebase.auth().currentUser.phoneNumber;
 
-if(!value.trim())  {
-    loadAllUsers().then(function(allUsersString){
-        if(!allUsersString) return;
-        document.getElementById('suggestions').innerHTML = allUsersString
-        document.querySelector('.suggestions-list-container').classList.remove('hidden')
-    })
-    return;
+    tx.objectStore('users').index(indexName).openCursor(bound).onsuccess = function (event) {
+        const cursor = event.target.result
+        if (!cursor) return
+        if (cursor.value.mobile === myNumber) {
+            cursor.continue();
+            return;
+        }
+        searchResult += userLi(cursor.value, '', '')
+        cursor.continue()
+    }
+    tx.oncomplete = function () {
+
+        document.getElementById('suggestions').innerHTML = searchResult
+    }
 }
-const bound = IDBKeyRange.bound(value, value + '\uffff')
-tx.objectStore('users').openCursor(bound).onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) return
 
-    cursor.continue()
-}
+function isNumber(searchTerm) {
+    return !isNaN(searchTerm)
 }
 
+function formatNumber(numberString) {
+    let number = numberString;
+    if (number.substring(0, 2) === '91') {
+        number = '+' + number
+    } else if (number.substring(0, 3) !== '+91') {
+        number = '+91' + number
+    }
+
+    return number
+}
 
 
 function readLatestChats() {
@@ -117,9 +151,9 @@ function readLatestChats() {
             cursor.continue();
             return;
         };
-        db.transaction('users').objectStore('users').index('mobile').get(cursor.value.user).onsuccess = function(event){
-            if(!event.target.result) return
-            string += userLi(event.target.result,cursor.value.comment,cursor.value.timestamp);
+        db.transaction('users').objectStore('users').index('mobile').get(cursor.value.user).onsuccess = function (event) {
+            if (!event.target.result) return
+            string += userLi(event.target.result, cursor.value.comment, cursor.value.timestamp);
         }
         cursor.continue();
     }
@@ -134,21 +168,25 @@ function readLatestChats() {
 
         } else {
             getSuggestions().then(function (suggestionString) {
+                console.log(suggestionString)
                 document.getElementById('app-current-panel').innerHTML = chatDom('', suggestionString);
+
+                const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
+                searchInit.input_.addEventListener('keyup', searchUsers);
+                const suggestionsChats = document.getElementById('suggestions')
+                if (suggestionsChats) {
+                    suggestionsInit = new mdc.list.MDCList(suggestionsChats)
+                }
+
             })
 
-            const suggestionsChats = document.getElementById('suggestions')
-            if (suggestionsChats) {
-                suggestionsInit = new mdc.list.MDCList(suggestionsChats)
-            }
         }
-        const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
     }
 
 }
 
 function userLi(userRecord, secondaryText, time) {
-    return `<li class="mdc-list-item" onclick=enterChat('${userRecord.mobile}',${userRecord.photoURL})>
+    return `<li class="mdc-list-item" onclick=enterChat('${userRecord.mobile}','${userRecord.photoURL}')>
     <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || '../src/img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
@@ -162,27 +200,27 @@ function userLi(userRecord, secondaryText, time) {
     </li>`
 }
 
-function loadAllUsers(){
+function loadAllUsers() {
     return new Promise(function (resolve, reject) {
         const tx = db.transaction(['users']);
         const store = tx.objectStore('users');
         const myNumber = firebase.auth().currentUser.phoneNumber
-        let string ='';
-        
-            store.openCursor().onsuccess = function(event){
-                const cursor = event.target.result;
-                if(!cursor) return;
-                if(cursor.value.mobile === myNumber) {
-                    cursor.continue();
-                    return;
-                }
-                string += userLi(cursor.value,'','');
-                cursor.continue()
+        let string = '';
+
+        store.openCursor().onsuccess = function (event) {
+            const cursor = event.target.result;
+            if (!cursor) return;
+            if (cursor.value.mobile === myNumber) {
+                cursor.continue();
+                return;
             }
-            tx.oncomplete = function(){
-                return resolve(string)
-            }
-        
+            string += userLi(cursor.value, '', '');
+            cursor.continue()
+        }
+        tx.oncomplete = function () {
+            return resolve(string)
+        }
+
     });
 }
 
@@ -192,7 +230,7 @@ function getSuggestions() {
 
         let teamString = '';
         let superString = '';
-        let all='';
+        let all = '';
 
         Promise.all([getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees'), getEmployeeDetails(IDBKeyRange.only(1), 'team')]).then(function (result) {
             const tx = db.transaction(['users']);
@@ -231,7 +269,8 @@ function getSuggestions() {
                 })
             }
             tx.oncomplete = function () {
-                return resolve(superString || teamString || all)
+
+                return resolve(superString + teamString + all)
 
             }
         })
@@ -240,7 +279,7 @@ function getSuggestions() {
 
 function selectNew() {
     return `<div class='new-message-container'>
-        <h2 class='mdc-typography--headline5'>Message Team With Direct</h2>
+        <h2 class='mdc-typography--headline5 mt-0 mb-0'>Message Team With Direct</h2>
     <p>Send private message.... </p>
     <button class='mdc-button' onclick=newMessage()>
     <span class="mdc-button__label">Send Message</span>
@@ -265,11 +304,12 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(number, photo) {
-    history.pushState(['userChat'], null, null);
+
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>`
 
     const header = getHeader('app-header', backIcon, '');
+    // history.pushState(['enterChat'],null,null)
     console.log(header)
     document.getElementById('app-current-panel').innerHTML = `
     <div class="wrapper">
@@ -358,7 +398,7 @@ function getUserChats(number, opImage) {
 
             })
         });
-        commentInit.input_.addEventListener('keyup', function () {
+        commentInit.input_.addEventListener('input', function () {
             if (this.scrollHeight >= 200) return;
 
             this.style.paddingTop = '10px';

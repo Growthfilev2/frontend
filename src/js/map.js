@@ -123,7 +123,7 @@ function createForm(office, template, venue, location) {
   const btn = new mdc.ripple.MDCRipple(document.getElementById('create-form'))
   btn.root_.addEventListener('click', function () {
 
-    history.pushState(['cardView'], null, null);
+    // history.pushState(['cardView'], null, null);
 
     getSubscription(office, template).then(function (subscription) {
       const duplicate = JSON.parse(JSON.stringify(subscription));
@@ -151,7 +151,7 @@ function createForm(office, template, venue, location) {
           requestCreator('create', duplicate).then(function () {
 
             successDialog();
-            document.getElementById('selection-box').querySelector('aside').classList.add('large')
+            // document.getElementById('selection-box').querySelector('aside').classList.add('large')
             history.pushState(['mapView'], null, null)
             loadCardData(o, map, location, {
               latitude: location.latitude,
@@ -362,8 +362,8 @@ function loadCardData(o, map, location, preSelected) {
 }
 
 function showBottomNav(aside) {
-  aside.classList.add('large')
-  document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
+  // aside.classList.add('large')
+  // document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
   document.getElementById('chat-icon').classList.remove('hidden')
 }
 

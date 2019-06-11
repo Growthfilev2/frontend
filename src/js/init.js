@@ -316,7 +316,8 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
-  window[event.state[0]]();
+ 
+  window[event.state[0]](true);
 }
 
 
@@ -598,7 +599,7 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
         // chatView()
-        chatView()
+        mapView()
         requestCreator('now', {
           device: native.getInfo(),
           from: '',

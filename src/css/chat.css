@@ -1,7 +1,12 @@
 .new-message-container {
   text-align: center;
-  padding: 30px;
+  padding: 20px;
+  padding-top: 10px;
   border-bottom: 1px solid lightgray;
+}
+.user-chats {
+  padding: 20px;
+  padding-bottom: 10px;
 }
 #search-users {
   width: 100%;
