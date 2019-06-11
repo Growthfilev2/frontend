@@ -367,7 +367,7 @@ function getUserChats(number, opImage) {
             image = myImage
         } else {
             position = 'them';
-            image = opImage || '../src/img/empty-user.jpg'
+            image = opImage || '../img/empty-user.jpg'
         }
         timeLine += messageBox(cursor.value.comment, position, image)
         cursor.continue();

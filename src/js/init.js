@@ -598,8 +598,6 @@ function startApp(start) {
           startLoad.querySelector('p').textContent = texts[index]
           index++;
         }, index + 1 * 1000);
-        // chatView()
-        mapView()
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -622,20 +620,19 @@ function startApp(start) {
           };
 
 
-          // getRootRecord().then(function (rootRecord) {
-            // chatView()
+          getRootRecord().then(function (rootRecord) {
           
-          // requestCreator('Null').then(function (response) {
-          //     if (rootRecord.fromTime) return mapView();
-          //     const auth = firebase.auth().currentUser;
-          //     getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-          //       if (!result.length) return mapView();
-          //       if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-          //       return mapView();
-          //     })
-          //     return
-          //   }).catch(console.log)
-          // })
+          requestCreator('Null').then(function (response) {
+              if (rootRecord.fromTime) return mapView();
+              const auth = firebase.auth().currentUser;
+              getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+                if (!result.length) return mapView();
+                if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+                return mapView();
+              })
+              return
+            }).catch(console.log)
+          })
         }).catch(console.log)
       }
       req.onerror = function () {
