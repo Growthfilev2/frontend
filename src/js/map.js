@@ -4,14 +4,14 @@ let o;
 
 function handleNav(evt) {
   const state = history.state[0]
-  if (state === 'profileView' || state === 'snapView' || state === 'chatView') {
-    return history.back();
-  }
+
   if (state === 'cardView') {
     history.pushState(['mapView'], null, null)
     return toggleCardHeight(false, 'card-form');
   }
-  return profileView();
+  if(state === 'mapView') return profileView()
+  
+  return history.back();
 }
 
 function mapView() {
@@ -21,7 +21,9 @@ function mapView() {
   progressBar.close();
   const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
   const photoIcon = `<svg class='mdc-top-app-bar__action-item' onclick="takeSnap()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`
-  const header = getHeader('app-header', headerImage, photoIcon);
+  const chatIcon = `<svg id='chat-icon' class='mdc-top-app-bar__action-item hidden' onclick="chatView()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`
+  
+  const header = getHeader('app-header', headerImage, photoIcon+chatIcon);
   header.root_.classList.remove('hidden')
   header.setScrollTarget(document.getElementById('main-content'));
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
@@ -362,6 +364,7 @@ function loadCardData(o, map, location, preSelected) {
 function showBottomNav(aside) {
   aside.classList.add('large')
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
+  document.getElementById('chat-icon').classList.remove('hidden')
 }
 
 function hideBottomNav(){

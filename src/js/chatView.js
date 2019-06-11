@@ -3,40 +3,95 @@ function chatView() {
     hideBottomNav()
     document.getElementById('start-load').classList.add('hidden');
 
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-
-    </a>`
-
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
     const addIcon = `<a class='mdc-top-app-bar__action-item' onclick=newMessage()>
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
     </a>`
-
     const header = getHeader('app-header', backIcon, addIcon);
-    // getChatList();
-    readLatestChats()
-
+    readLatestChats();
 }
 
 
 
 function chatDom(currentChats, suggestions) {
-return `<div class='user-chats'>
+    return `<div class='user-chats'>
+    
+    
+    <div style="
+    padding: 20px;
+    /* padding-bottom: 0px; */
+">
+<div id='search-users-container'>
+<div id="search-users" class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon mdc-text-field--dense">
+  <i class="material-icons mdc-text-field__icon">favorite</i>
+  <input class="mdc-text-field__input">
+  <div class="mdc-notched-outline mdc-notched-outline--upgraded mdc-notched-outline--notched">
+    <div class="mdc-notched-outline__leading"></div>
+    <div class="mdc-notched-outline__notch" style="width: 54.15px;">
+      <label class="mdc-floating-label mdc-floating-label--float-above" style="">Search</label>
+    </div>
+    <div class="mdc-notched-outline__trailing"></div>
+  </div>
+</div>
+</div>
 
+</div>
+
+</div>
 <div class="mdc-list-group">
-  <h3 class="mdc-list-group__subheader mdc-typography--headline6">Messages</h3>
-  ${currentChats ?  '':selectNew()}
-  <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
-    ${currentChats}
-  </ul>
-  <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions</h3>
-  <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='suggestions'>
-        ${suggestions}
-  </ul>
+    ${currentChats ? '' : selectNew()}
+    <div class='chats-list-container ${currentChats ? '':'hidden'}'>
+        <h3 class="mdc-list-group__subheader mdc-typography--headline6">Messages</h3>
+         <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
+         ${currentChats}
+         </ul>
+    </div>
+    <div class='suggestions-list-container ${suggestions ?'':'hidden'}'>
+    <h3 class="mdc-list-group__subheader mdc-typography--headline6 ">Suggestions</h3>
+    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='suggestions'>${suggestions}</ul>
+</div>
 </div>
 </div>`
 }
 
 function newMessage() {
+    history.pushState(['newMessage'],null,null);
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>`
+    
+    const header = getHeader('app-header', backIcon, '');
+    document.getElementById('search-users-container').innerHTML = `
+    <h3 class="mdc-list-group__subheader mdc-typography--headline6 mb-0 mr-0 ml-0">To</h3>
+    <div class="mdc-text-field mdc-text-field--fullwidth mdc-text-field--dense mdc-text-field--no-label" id='search-users' style='height:48px'>
+    <input class="mdc-text-field__input"
+           type="text"
+           placeholder=""
+           aria-label="Full-Width Text Field">
+           <div class="mdc-line-ripple"></div>
+  </div>`
+    const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
+    searchInit.focus()
+    searchInit.input_.addEventListener('keyup',searchUsers)
+    document.querySelector('.chats-list-container').classList.add('hidden')
+    loadAllUsers().then(function(allUsersString){
+        if(!allUsersString) return;
+        document.getElementById('suggestions').innerHTML = allUsersString
+        document.querySelector('.suggestions-list-container').classList.remove('hidden')
+    })
+}
+
+function searchUsers(evt){
+const value = evt.target.value;
+if(!value.trim())  {
+    loadAllUsers().then(function(allUsersString){
+        if(!allUsersString) return;
+        document.getElementById('suggestions').innerHTML = allUsersString
+        document.querySelector('.suggestions-list-container').classList.remove('hidden')
+    })
+    return;
+}
+
+
 
 }
 
@@ -53,67 +108,90 @@ function readLatestChats() {
             cursor.continue();
             return;
         };
-
-        string += userLi(cursor.value.user, cursor.value.comment, cursor.value.timestamp);
+        db.transaction('users').objectStore('users').index('mobile').get(cursor.value.user).onsuccess = function(event){
+            if(!event.target.result) return
+            string += userLi(event.target.result,cursor.value.comment,cursor.value.timestamp);
+        }
         cursor.continue();
     }
     tx.oncomplete = function () {
         let suggestion = '';
         if (string) {
             document.getElementById('app-current-panel').innerHTML = chatDom(string, '');
+            const currentChats = document.getElementById('chats')
+            if (currentChats) {
+                currentChatsInit = new mdc.list.MDCList(currentChats);
+            }
+
         } else {
             getSuggestions().then(function (suggestionString) {
                 document.getElementById('app-current-panel').innerHTML = chatDom('', suggestionString);
             })
-        }
 
-        let currentChatsInit;
-        let suggestionsInit;
-        const currentChats = document.getElementById('chats')
-        const suggestionsChats = document.getElementById('suggestions')
-        if (currentChats) {
-            currentChatsInit = new mdc.list.MDCList(currentChats);
+            const suggestionsChats = document.getElementById('suggestions')
+            if (suggestionsChats) {
+                suggestionsInit = new mdc.list.MDCList(suggestionsChats)
+            }
         }
-        if (suggestionsChats) {
-            suggestionsInit = new mdc.list.MDCList(suggestionsChats)
-        }
-
-        // const ulInit = addUserLiToList(string, ul);
-        // ulInit.singleSelection = true;
-        // console.log(ulInit)
+        const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
     }
 
-    // ul.innerHTML = liString;
-    // return new mdc.list.MDCList(ul)
 }
 
-function userLi(number, comment, time, photo) {
-    return `<li class="mdc-list-item" onclick=enterChat(${number},${photo})>
-    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${photo || '../src/img/empty-user.jpg'} data-number=${number}>
+function userLi(userRecord, secondaryText, time) {
+    return `<li class="mdc-list-item" onclick=enterChat('${userRecord.mobile}',${userRecord.photoURL})>
+    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || '../src/img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
-        ${number}
+        ${userRecord.displayName || userRecord.mobile}
     </span>
     <span class="mdc-list-item__secondary-text">
-    ${comment}
+    ${secondaryText}
     </span>
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">${formatCreatedTime(time)}</span>
     </li>`
 }
 
+function loadAllUsers(){
+    return new Promise(function (resolve, reject) {
+        const tx = db.transaction(['users']);
+        const store = tx.objectStore('users');
+        const myNumber = firebase.auth().currentUser.phoneNumber
+        let string ='';
+        
+            store.openCursor().onsuccess = function(event){
+                const cursor = event.target.result;
+                if(!cursor) return;
+                if(cursor.value.mobile === myNumber) {
+                    cursor.continue();
+                    return;
+                }
+                string += userLi(cursor.value,'','');
+                cursor.continue()
+            }
+            tx.oncomplete = function(){
+                return resolve(string)
+            }
+        
+    });
+}
+
 function getSuggestions() {
+
     return new Promise(function (resolve, reject) {
 
         let teamString = '';
         let superString = '';
+        let all='';
+
         Promise.all([getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees'), getEmployeeDetails(IDBKeyRange.only(1), 'team')]).then(function (result) {
             const tx = db.transaction(['users']);
             const store = tx.objectStore('users');
             const self = result[0]
             const team = result[1];
             if (!self.length && !team.length) {
-                return;
+                return loadAllUsers()
             }
             if (self.length) {
                 self.forEach(function (record) {
@@ -121,7 +199,7 @@ function getSuggestions() {
                         store.get(record.attachment['First Supervisor'].value).onsuccess = function (event) {
                             const userRecord = event.target.result;
                             if (!userRecord) return;
-                            superString += userLi(userRecord.displayName || userRecord.mobile, 'First Supervisor', '', userRecord.photoURL)
+                            superString += userLi(userRecord, 'First Supervisor', '')
                         }
                     };
 
@@ -129,7 +207,7 @@ function getSuggestions() {
                         store.get(record.attachment['Second Supervisor'].value).onsuccess = function (event) {
                             const userRecord = event.target.result;
                             if (!userRecord) return;
-                            superString += userLi(userRecord.displayName || userRecord.mobile, 'Second Supervisor', '', userRecord.photoURL)
+                            superString += userLi(userRecord, 'Second Supervisor', '')
                         }
                     }
                 })
@@ -139,13 +217,13 @@ function getSuggestions() {
                     store.get(person.attachment['Employee Contact'].value).onsuccess = function (event) {
                         const userRecord = event.target.result;
                         if (!userRecord) return;
-                        teamString += userLi(userRecord.displayName || userRecord.mobile, person.attachment.Designation.value, '', userRecord.photoURL)
+                        teamString += userLi(userRecord, person.attachment.Designation.value, '')
                     }
                 })
             }
             tx.oncomplete = function () {
-                return resolve(superString+teamString)
-                
+                return resolve(superString || teamString || all)
+
             }
         })
     })
@@ -177,13 +255,14 @@ function isToday(comparisonTimestamp) {
     return false;
 }
 
-function enterChat(number,photo){
-    history.pushState(['userChat'],null,null);
+function enterChat(number, photo) {
+    history.pushState(['userChat'], null, null);
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>`
-    const header = getHeader('app-header', backIcon, '');
 
-    document.getElementById('app-current-panel').innerHTML =  `
+    const header = getHeader('app-header', backIcon, '');
+    console.log(header)
+    document.getElementById('app-current-panel').innerHTML = `
     <div class="wrapper">
         <div class="inner" id="inner">
           <div class="content" id="content"></div>
@@ -198,7 +277,7 @@ function enterChat(number,photo){
       
         </div>
 
-        <button class="mdc-fab send mdc-theme--primary-bg mdc-theme-on--primary" aria-label="Favorite">
+        <button id='comment-send' class="mdc-fab send mdc-theme--primary-bg mdc-theme-on--primary" aria-label="Favorite">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
     </button>
         </div>
@@ -207,67 +286,95 @@ function enterChat(number,photo){
   </div>
         </div>
     </div>`
-    getUserChats(number,photo)
+    getUserChats(number, photo)
 }
 
-{/* <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus></input> */}
+{
+    /* <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus></input> */
+}
 
 
-function messageBox (comment,position,image){
+function messageBox(comment, position, image) {
     return `<div class="message-wrapper ${position}">
     <img class="circle-wrapper" src=${image}>
     <div class="text-wrapper">${comment}</div>
     </div>`
 }
 
-function getUserChats(number,opImage){
+function getUserChats(number, opImage) {
     const tx = db.transaction('addendum');
     const index = tx.objectStore('addendum').index('user')
     const myNumber = firebase.auth().currentUser.phoneNumber;
-    const myImage = firebase.auth().currentUser.photoURL;
+    const myImage = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
     let image = ''
-    index.openCursor(number).onsuccess = function(event){
+    index.openCursor(number).onsuccess = function (event) {
         const cursor = event.target.result;
-        if(!cursor) return;
-        if(cursor.value.user === myNumber) {
+        if (!cursor) return;
+        if (cursor.value.user === myNumber) {
             position = 'me';
             image = myImage
-        }
-        else {
+        } else {
             position = 'them';
-            image = opImage;
+            image = opImage || '../src/img/empty-user.jpg'
         }
-        timeLine += messageBox(cursor.value.comment,image)
+        timeLine += messageBox(cursor.value.comment, position, image)
         cursor.continue();
     }
-    tx.oncomplete = function(){
+    tx.oncomplete = function () {
         parent.innerHTML = timeLine;
+        setBottomScroll()
         const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
-        btn.root_.addEventListener('click',function(){
-            
-        });
         const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
         const form = document.querySelector('.conversation-compose');
         const bottom = document.getElementById('bottom')
+        btn.root_.addEventListener('click', function () {
+
+            if (!commentInit.value.trim()) return;
+            progressBar.open()
+            requestCreator('comment', {
+                comment: commentInit.value,
+                activityId: "MvzCZw5ravEU4L3PWiKB",
+            }).then(function () {
+                parent.innerHTML += messageBox(commentInit.value, 'me', firebase.auth().currentUser.photoURL);
+                commentInit.value = ''
+                resetCommentField(bottom, form, commentInit.input_)
+                setBottomScroll()
+                progressBar.close()
+
+            }).catch(function (error) {
+                progressBar.close()
+
+            })
+        });
         commentInit.input_.addEventListener('keyup', function () {
-            if(this.scrollHeight >= 200) return;
+            if (this.scrollHeight >= 200) return;
 
             this.style.paddingTop = '10px';
             this.style.height = '5px'
             this.style.height = (this.scrollHeight) + "px";
             form.style.height = this.style.height
-            bottom.style.height = (this.scrollHeight + 20)+'px'
+            bottom.style.height = (this.scrollHeight + 20) + 'px'
             //not
-            if(!this.value.trim()) {
-                bottom.style.height = '72px'
-                form.style.height = '56px';
-                this.style.height = 'auto'
+            if (!this.value.trim()) {
+                resetCommentField(bottom, form, this)
+
             }
 
-          
+
         });
     }
+}
+
+function resetCommentField(bottom, form, input) {
+    bottom.style.height = '72px'
+    form.style.height = '56px';
+    input.style.height = 'auto'
+}
+
+function setBottomScroll() {
+    document.getElementById('inner').scrollTo(0, document.getElementById('inner').scrollHeight);
+
 }

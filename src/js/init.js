@@ -597,7 +597,8 @@ function startApp(start) {
           startLoad.querySelector('p').textContent = texts[index]
           index++;
         }, index + 1 * 1000);
-
+        // chatView()
+        chatView()
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -621,7 +622,7 @@ function startApp(start) {
 
 
           // getRootRecord().then(function (rootRecord) {
-            chatView()
+            // chatView()
           
           // requestCreator('Null').then(function (response) {
           //     if (rootRecord.fromTime) return mapView();

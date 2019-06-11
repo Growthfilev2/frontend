@@ -3,7 +3,9 @@
   padding: 30px;
   border-bottom: 1px solid lightgray;
 }
-
+#search-users {
+  width: 100%;
+}
 
 .wrapper {
 
@@ -44,7 +46,7 @@
   padding: 10.66667px;
   position: relative;
   margin-bottom: 32px;
-  top: 100px;
+  top: 50px;
 }
 
 .bottom {
@@ -76,7 +78,7 @@
 .bottom .send {
 
   margin-left: 8px;
-
+  bottom: 1px;
 }
 
 
@@ -103,8 +105,8 @@
   border-radius: 2px;
   font-weight: 300;
   position: relative;
-  /* word-break: break-all; */
-  opacity: 0;
+  word-break: break-all;
+  opacity: 1;
 }
 
 .message-wrapper .text-wrapper:before {
@@ -257,8 +259,11 @@
   margin: 0;
   outline: none;
   min-width: 50px;
-  padding-right: 10px;
-  padding-left: 10px;
+
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 .conversation-compose .photo {
