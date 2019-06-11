@@ -189,18 +189,28 @@ function enterChat(number,photo){
           <div class="content" id="content"></div>
         </div>
         <div class="bottom" id="bottom">
-        <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
-        <textarea class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100" autofocus="true" id='comment-textarea'></textarea></div>
-    <button id='comment-sent' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"
-      style="z-index: 9;">
-      <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+        <div class="conversation-compose">
+      
+        <div id='comment-textarea' class="mdc-text-field text-field mdc-text-field--fullwidth mdc-text-field--no-label  mdc-text-field--textarea">
+      
+        <textarea id="text-field-fullwidth-textarea-helper" class="mdc-text-field__input mdc-text-field__input  input-msg">
+        </textarea>
+      
+        </div>
+
+        <button class="mdc-fab send mdc-theme--primary-bg mdc-theme-on--primary" aria-label="Favorite">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
     </button>
+        </div>
+
+      </div>
   </div>
         </div>
     </div>`
     getUserChats(number,photo)
 }
 
+{/* <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus></input> */}
 
 
 function messageBox (comment,position,image){
@@ -235,17 +245,29 @@ function getUserChats(number,opImage){
     }
     tx.oncomplete = function(){
         parent.innerHTML = timeLine;
-        document.getElementById('comment-sent').addEventListener('click',function(){
-
+        const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
+        btn.root_.addEventListener('click',function(){
+            
         });
+        const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
+        const form = document.querySelector('.conversation-compose');
+        const bottom = document.getElementById('bottom')
+        commentInit.input_.addEventListener('keyup', function () {
+            if(this.scrollHeight >= 200) return;
 
-       document.getElementById('comment-textarea').addEventListener('keyup', function () {
-            this.style.paddingTop = '25px';
+            this.style.paddingTop = '10px';
             this.style.height = '5px'
             this.style.height = (this.scrollHeight) + "px";
-            if (this.scrollHeight <= 300) {
-                document.getElementById('comment-sent').style.bottom = (this.scrollHeight - 20) + "px";
+            form.style.height = this.style.height
+            bottom.style.height = (this.scrollHeight + 20)+'px'
+            //not
+            if(!this.value.trim()) {
+                bottom.style.height = '72px'
+                form.style.height = '56px';
+                this.style.height = 'auto'
             }
+
+          
         });
     }
 }
