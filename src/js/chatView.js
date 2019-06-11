@@ -187,7 +187,7 @@ function readLatestChats() {
 
 function userLi(userRecord, secondaryText, time) {
     return `<li class="mdc-list-item" onclick=enterChat('${userRecord.mobile}','${userRecord.photoURL}')>
-    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || '../src/img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
+    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || './img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
         ${userRecord.displayName || userRecord.mobile}
@@ -354,7 +354,7 @@ function getUserChats(number, opImage) {
     const tx = db.transaction('addendum');
     const index = tx.objectStore('addendum').index('user')
     const myNumber = firebase.auth().currentUser.phoneNumber;
-    const myImage = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
+    const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
@@ -367,7 +367,7 @@ function getUserChats(number, opImage) {
             image = myImage
         } else {
             position = 'them';
-            image = opImage || '../img/empty-user.jpg'
+            image = opImage || './img/empty-user.jpg'
         }
         timeLine += messageBox(cursor.value.comment, position, image)
         cursor.continue();

@@ -893,7 +893,6 @@ function setFilePath(base64) {
   const header = getHeader('app-header', backIcon, '');
   history.pushState(['snapView'], null, null)
   const url = `data:image/jpg;base64,${base64}`
-  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--dense-fixed-adjust')
   document.getElementById('app-current-panel').innerHTML = `
   
 <div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
