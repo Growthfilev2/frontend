@@ -1,12 +1,13 @@
 /* Important stuff */
 .mdc-bottom-navigation {
-    background-color:  #FFFFFF;
+  background-color: #FFFFFF;
     width: 100%;
     overflow: hidden;
     z-index: 6;
     position: fixed;
     bottom: 0;
-    padding: 10px 0px 15px 0px;
+    
+    border-top: 1px solid gray;
   }
   .mdc-bottom-navigation__list {
     display: flex;
@@ -23,7 +24,6 @@
     min-width: 60px;
     max-width: 168px;
     box-sizing: border-box;
-    color: var(--mdc-theme-text-secondary-on-background, rgba(0, 0, 0, 0.54));
     user-select: none;
   }
   .mdc-bottom-navigation__list-item__icon {

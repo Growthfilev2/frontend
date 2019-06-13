@@ -52,7 +52,7 @@
 </head>
 
 <body class="mdc-typography">
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense' id='app-header'>
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
 
@@ -117,7 +117,7 @@
     <div class="success--check"></div>
   </div>
 
-  <div id="growthfile" class="">
+  <div id="growthfile">
 
     <div id='main-content'>
       <div id='login-container'></div>
@@ -131,21 +131,21 @@
         <div class="mdc-layout-grid__cell--span-12">
           <div class="mdc-bottom-navigation hidden">
           
-            <nav class="mdc-bottom-navigation__list">
-              <span class="mdc-bottom-navigation__list-item"
+            <ul class="mdc-bottom-navigation__list mdc-list" id='nav-list'>
+              <li class="mdc-list-item mdc-bottom-navigation__list-item"
                 data-state='mapView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">photo_camera</span>
               </span>
 
-              <span class="mdc-bottom-navigation__list-item mdc-bottom-navigation__list-item--activated" data-state='homeView'>
+              <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='homeView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">home
                 </span>
               </span>
-              <span class="mdc-bottom-navigation__list-item" data-state='chatView'>
+              <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='chatView'>
                 <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
               </span>;
 
-            </nav>
+            </ul>
           </div>
         </div>
       </div>

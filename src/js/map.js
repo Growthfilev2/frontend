@@ -1,16 +1,12 @@
 var map;
 var globMark;
 let o;
-
+let selectedSubs;
 function handleNav(evt) {
   const state = history.state[0]
 
-  if (state === 'cardView') {
-    history.pushState(['mapView'], null, null)
-    return toggleCardHeight(false, 'card-form');
-  }
-  if(state === 'mapView') {
-    console.log(drawer)
+
+  if(state === 'homeView') {
     drawer.open = true
     return;
   }
@@ -21,15 +17,6 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-  progressBar.close();
-  const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
- 
-  const header = getHeader('app-header', headerImage,'');
-  header.root_.classList.remove('hidden')
-  header.setScrollTarget(document.getElementById('main-content'));
-  header.navIcon_.src = firebase.auth().currentUser.photoURL;
-
-  header.listen('MDCTopAppBar:nav', handleNav);
 
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('app-current-panel').classList.remove('user-detail-bckg')
@@ -211,14 +198,12 @@ function createForm(office, template, venue, location) {
 
 
 
-function loadCardData(o, map, location, preSelected) {
+function loadCardData(o, map, location) {
   loadNearByLocations(o, map, location).then(function (markers) {
 
     const el = document.getElementById('selection-box');
     const aside = el.querySelector('aside');
-    if (isCheckInCreated) {
-      homeView(aside);
-    }
+   
     const contentBody = el.querySelector('.content-body');
     contentBody.innerHTML = '';
 
@@ -228,7 +213,7 @@ function loadCardData(o, map, location, preSelected) {
     el.classList.remove('hidden');
 
     contentBody.innerHTML = `<div>
-    ${mdcSelectVenue(markers, 'Where Are You ?','select-venue',preSelected)}
+    ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
     <div id='office-cont' class='pt-10'></div>
     <div id='subs-cont' class='pt-10'></div>
     <div id='submit-cont' class='pt-10'></div>
@@ -259,31 +244,14 @@ function loadCardData(o, map, location, preSelected) {
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
+                checkForVenueSubs(evt.detail.value).then(function (subs) {
+                  cardProd.close()
+                  selectedSubs = subs
+                  homeView(subs)
+                })
+
               
-                homeView(aside)
-
-                cardProd.close()
-
-                checkForVenueSubs(evt.detail.value).then(function (venueSubs) {
-                  if (!venueSubs.length) return;
-                  header.textContent = 'What Do You Want to do ?'
-
-                  document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(venueSubs, 'Choose','select-subs',`<option value='NONE'>
-                  None
-                  </option>`)}`
-
-                  const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-                  subsSelect.listen('MDCSelect:change', function (subEvent) {
-                    console.log(subEvent)
-                    if (subEvent.detail.value === 'NONE' || subEvent.detail.index == -1) {
-                      document.getElementById('submit-cont').innerHTML = '';
-                      return;
-                    }
-                    createForm(evt.detail.value, subEvent.detail.value, '', location)
-
-                  })
-                  subsSelect.selectedIndex = -1
-                });
+              
               }).catch(function (error) {
                 snacks('Please Try again later');
                 cardProd.close()
@@ -307,10 +275,6 @@ function loadCardData(o, map, location, preSelected) {
 
       getSubscription(value.office, 'check-in').then(function (result) {
 
-        if (preSelected && preSelected.location === value.location) {
-          known(value, header, location)
-          return;
-        };
 
         document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -322,28 +286,27 @@ function loadCardData(o, map, location, preSelected) {
           confirm.root_.classList.add('hidden')
           cardProd.open();
 
-          requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+          // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
             isCheckInCreated = true
-            homeView(aside)
-            cardProd.close();
-            known(value, header, location);
-          }).catch(function (error) {
-            console.log(error)
-            confirm.root_.classList.remove('hidden');
-            snacks('Please Try Again');
-            cardProd.close()
-          })
+            getAvailbleSubs(value).then(function (subs) {
+              cardProd.close();
+              selectedSubs = subs
+              homeView(subs)
+            })
+           
+          // }).catch(function (error) {
+          //   console.log(error)
+          //   confirm.root_.classList.remove('hidden');
+          //   snacks('Please Try Again');
+          //   cardProd.close()
+          // })
         }
 
       })
     });
 
 
-    if (preSelected) {
-      selectVenue.selectedIndex = 1
-      return;
-    }
 
     if (!markers.length) {
       selectVenue.selectedIndex = 0
@@ -359,304 +322,78 @@ function loadCardData(o, map, location, preSelected) {
   })
 };
 
-function homeView(aside){
-  document.getElementById('selection-box').innerHTML = ''
+function homeView(subs){
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
-  document.getElementById('map').classList.add('hidden')
+  document.getElementById('app-header').classList.remove('hidden')
+  navList.selectedIndex = 1;
+  // document.querySelector(`[data-state="homeView"]`).classList.add('mdc-bottom-navigation__list-item--activated')
+  const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
+ 
+  const header = getHeader('app-header', headerImage,'');
+  header.setScrollTarget(document.getElementById('main-content'));
+  header.navIcon_.src = firebase.auth().currentUser.photoURL;
+
+  header.listen('MDCTopAppBar:nav', handleNav);
+  document.getElementById('growthfile').classList.add('mdc-top-app-bar--dense-fixed-adjust')
+  document.getElementById('app-current-panel').innerHTML = `
+  <div class="mdc-list-group" id='subscription-list-group'>
+  ${subs.pending ? `  <h3 class="mdc-list-group__subheader mdc-typography--headline5 mdc-theme--primary">Pending Tasks</h3>
+  <ul class="mdc-list";
+  left: 0;'>
+    <li class="mdc-list-item" tabindex="0">
+      <span class="mdc-list-item__text">line item</span>
+    </li>
+    <li class="mdc-list-item">
+      <span class="mdc-list-item__text">line item</span>
+    </li>
+    <li class="mdc-list-item">
+      <span class="mdc-list-item__text">line item</span>
+    </li>
+  </ul>`:''}
+  <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ? </h3>
+  ${subs.suggested.length ? ` <h3 class="mdc-list-group__subheader">Suggestions</h3>
+  <ul class="mdc-list subscription-list" id='suggested-list'>
+  ${subs.suggested.map(function(sub){
+    return `<li class='mdc-list-item'>
+    ${sub.template}
+    <span class='mdc-list-item__meta material-icons'>
+    keyboard_arrow_right
+    </span>
+    </li>`
+  }).join("")}
+  </ul>` :''}
+ ${subs.other.length ? ` <h3 class="mdc-list-group__subheader">Recently used</h3>
+ <ul class="mdc-list subscription-list" id='other-list'>
+ ${subs.other.map(function(sub){
+   return `<li class='mdc-list-item'>
+   ${sub.template}
+   <span class='mdc-list-item__meta material-icons'>
+   keyboard_arrow_right
+   </span>
+   </li>`
+ }).join("")}
+ </ul>`:''}
+ 
+</div>`
+history.pushState(['homeView'],null,null)
+  if(subs.suggested.length) {
+    const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+    suggestedInit.singleSelection = true; 
+    suggestedInit.selectedIndex = 0
+  }
+  if(subs.other.length) {
+    const otherInit = new mdc.list.MDCList(document.getElementById('other-list'))
+    otherInit.singleSelection = true;
+  }
 }
+
+
 
 function hideBottomNav(){
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
 }
 
-function known(value, header, location) {
-  getAvailbleSubs(value).then(function (subs) {
-    if (!subs.length) {
 
-      return;
-    };
-
-    header.textContent = 'What Do You Want to do ?'
-
-    document.getElementById('subs-cont').innerHTML = `${mdcDefaultSelect(subs, 'Choose','select-subs',`<option value='NONE'>
-    None
-    </option>`)}`
-    const subsSelect = new mdc.select.MDCSelect(document.getElementById('select-subs'))
-    subsSelect.listen('MDCSelect:change', function (evt) {
-      if (evt.detail.value === 'NONE' || evt.detail.index == -1) {
-        document.getElementById('submit-cont').innerHTML = '';
-        return;
-      }
-      createForm(value.office, evt.detail.value, value, location)
-    })
-    if (subs.length > 1) {
-      subsSelect.selectedIndex = -1
-    }
-    if (subs.length == 1) {
-      subsSelect.selectedIndex = 0;
-    }
-  })
-}
-
-function common(subscription) {
-  return `<div class='form-container'>
-  <div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
-  <i class="material-icons mdc-text-field__icon">location_on</i>
-  <input class="mdc-text-field__input">
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Follow Up Date</label>
-</div>
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
-<i class="material-icons mdc-text-field__icon">location_on</i>
-<input class="mdc-text-field__input">
-<div class="mdc-line-ripple"></div>
-<label class="mdc-floating-label">Closure Date</label>
-</div>
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='schedule' data-value='${subscription.schedule[0]}'>
-<i class="material-icons mdc-text-field__icon">location_on</i>
-<input class="mdc-text-field__input">
-<div class="mdc-line-ripple"></div>
-<label class="mdc-floating-label">Visit Date</label>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value=Name data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">account_circle</i>
-  <input class="mdc-text-field__input"  autofocus='true'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Name</label>
-</div>
-<div class="mdc-text-field-helper-line">
-<div class="mdc-text-field-helper-text"aria-hidden="true">Name Of The Customer</div>
-</div>
-
-<div class="mdc-text-field" style='width:46%;float: left;' data-value='Daily Start Time' data-type='attachment'>
-  <input class="mdc-text-field__input" type='time'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Daily End Time</label>
-</div>
-
-<div class="mdc-text-field " style='width:46%;float: right;' data-value='Daily End Time' data-type='attachment'>
-  <input class="mdc-text-field__input" type='time'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Daily Start Time</label>
-</div>
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Second Contact' data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">phone</i>
-  <input class="mdc-text-field__input" type='tel'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Second Contact</label>
-</div>
-<div class="mdc-text-field mdc-text-field--with-leading-icon " data-value='First Contact' data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">phone</i>
-  <input class="mdc-text-field__input" type='tel'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">First Contact</label>
-</div>
-
-
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon " data-value='Customer Code' data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">code</i>
-  <input class="mdc-text-field__input">
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Comment</label>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">email</i>
-  <input class="mdc-text-field__input" type='email'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Product 1</label>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">email</i>
-  <input class="mdc-text-field__input" type='email'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Product 2</label>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">email</i>
-  <input class="mdc-text-field__input" type='email'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Product 3</label>
-</div>
-
-<ul class="mdc-list demo-list" id='template-type'>
-  <li class="mdc-list-item mdc-ripple-upgraded" tabindex="0"
-      style="--mdc-ripple-fg-size:360px; --mdc-ripple-fg-scale:1.69977; --mdc-ripple-fg-translate-start:276.613px, -164.313px; --mdc-ripple-fg-translate-end:120px, -156px;">
-      Customer<span class="mdc-list-item__meta material-icons" aria-hidden="true">add_circle</span>
-  </li>
-
-</ul>
-</div>
-  `
-}
-
-function customer(subscription, random) {
-
-  return `
-  <div class='form-container'>
-  
-  <div class="mdc-text-field mdc-text-field--with-leading-icon" data-type='venue' data-value='${subscription.venue[0]}'>
-  <i class="material-icons mdc-text-field__icon">location_on</i>
-  <input class="mdc-text-field__input" value='Dummy Location ${random}'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label mdc-floating-label--float-above">Customer Office</label>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value=Name data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">account_circle</i>
-  <input class="mdc-text-field__input" required autofocus='true' value='Dummy Name ${random}'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
-</div>
-<div class="mdc-text-field-helper-line">
-<div class="mdc-text-field-helper-text"aria-hidden="true">Name Of The Customer</div>
-</div>
-
-<div class="mdc-text-field" style='width:46%;float: left;' data-value='Daily Start Time' data-type='attachment'>
-  <input class="mdc-text-field__input" type='time'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Daily End Time</label>
-</div>
-
-<div class="mdc-text-field " style='width:46%;float: right;' data-value='Daily End Time' data-type='attachment'>
-  <input class="mdc-text-field__input" type='time'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Daily Start Time</label>
-</div>
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Second Contact' data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">phone</i>
-  <input class="mdc-text-field__input" type='tel'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Second Contact</label>
-</div>
-<div class="mdc-text-field mdc-text-field--with-leading-icon " data-value='First Contact' data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">phone</i>
-  <input class="mdc-text-field__input" type='tel'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">First Contact</label>
-</div>
-
-<div class="mdc-select" data-value='Weekly Off' style='width:100%' data-type='attachment'>
-  <i class="mdc-select__dropdown-icon"></i>
-  <select class="mdc-select__native-control">
-      <option value="" disabled selected></option>
-      <option value="Sunday">
-          Sunday
-      </option>
-      <option value="monday">
-          Monday
-      </option>
-      <option value="tuesday">
-          Tuesday
-      </option>
-      <option value="wednesday">
-          Wednesday
-      </option>
-      <option value="thrusday">
-          Thrusday
-      </option>
-      <option value="friday">
-          Friday
-      </option>
-      <option value="saturday">
-          Saturday
-      </option>
-  </select>
-  <label class="mdc-floating-label">WeeKLY Off</label>
-  <div class="mdc-line-ripple"></div>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon " data-value='Customer Code' data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">code</i>
-  <input class="mdc-text-field__input">
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Customer Code</label>
-</div>
-
-<div class="mdc-text-field mdc-text-field--with-leading-icon" data-value='Customer E-mail Id'  data-type='attachment'>
-  <i class="material-icons mdc-text-field__icon">email</i>
-  <input class="mdc-text-field__input" type='email'>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label">Customer Email</label>
-</div>
-<ul class="mdc-list demo-list" id='template-type'>
-  <li class="mdc-list-item mdc-ripple-upgraded" tabindex="0"
-      style="--mdc-ripple-fg-size:360px; --mdc-ripple-fg-scale:1.69977; --mdc-ripple-fg-translate-start:276.613px, -164.313px; --mdc-ripple-fg-translate-end:120px, -156px;">
-      Customer Type<span class="mdc-list-item__meta material-icons" aria-hidden="true">add_circle</span>
-  </li>
-
-</ul>
-</div>`
-}
-
-function venueSection(venues) {
-  const template = `${venues.map(function(venue){
-    return `<div class="mdc-text-field mdc-text-field--textarea" data-venue=${venue} >
-    <textarea  class="mdc-text-field__input resize-veritcal" rows="2" cols="100"></textarea>
-    <div class="mdc-notched-outline">
-      <div class="mdc-notched-outline__leading"></div>
-      <div class="mdc-notched-outline__notch">
-        <label for="textarea" class="mdc-floating-label">${venue}</label>
-      </div>
-      <div class="mdc-notched-outline__trailing"></div>
-    </div>
-  </div>
-  `
-  }).join("")}`
-  return template;
-
-}
-
-function scheduleSection(schedules) {
-  const template = `${schedules.map(function(schedule){
-    return `
-    <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon">
-    <i class="material-icons mdc-text-field__icon">today</i>
-    <input class="mdc-text-field__input" type='date'>
-    <div class="mdc-notched-outline">
-      <div class="mdc-notched-outline__leading"></div>
-      <div class="mdc-notched-outline__notch">
-        <label class="mdc-floating-label">From</label>
-      </div>
-      <div class="mdc-notched-outline__trailing"></div>
-    </div>
-  </div>
-
-  <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-leading-icon">
-  <i class="material-icons mdc-text-field__icon">calendar_today</i>
-  <input class="mdc-text-field__input" type='date'>
-  <div class="mdc-notched-outline">
-    <div class="mdc-notched-outline__leading"></div>
-    <div class="mdc-notched-outline__notch">
-      <label class="mdc-floating-label">To</label>
-    </div>
-    <div class="mdc-notched-outline__trailing"></div>
-  </div>
-
-</div>
-
-  `
-  }).join("")}`
-  return template;
-}
-
-function simpleInput(name, type, attr) {
-  return `<div class="mdc-text-field ${attr.isFullWidth ? 'mdc-text-field--fullwidth' :''} ${attr.leadingIcon ? 'mdc-text-field--with-leading-icon':''} ${attr.isOutline ? 'mdc-text-field--outlined' :''}" ${attr.dataset}>
-  ${attr.leadingIcon ? '<i class="material-icons mdc-text-field__icon">favorite</i>' :''}
-  <input class="mdc-text-field__input" type=${type}>
-  <div class="mdc-notched-outline">
-    <div class="mdc-notched-outline__leading"></div>
-    <div class="mdc-notched-outline__notch">
-      <label class="mdc-floating-label">${name}</label>
-    </div>
-    <div class="mdc-notched-outline__trailing"></div>
-  </div>
-</div>`
-}
 
 
 function toggleCardHeight(toggle, cardSelector) {
@@ -711,16 +448,32 @@ function getAvailbleSubs(venue) {
   return new Promise(function (resolve, reject) {
     const tx = db.transaction(['subscriptions']);
     const store = tx.objectStore('subscriptions');
-    const index = store.index('office');
-    const result = [];
-    index.openCursor(venue.office).onsuccess = function (event) {
+    const index = store.index('count');
+    const result = {
+      suggested:[],
+      other:[]
+    };
+    index.openCursor(null,'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
+      if(cursor.value.office !== venue.office) {
+        cursor.continue();
+        return;
+      }
+      if(cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
+      let found = false;
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
-          result.push(cursor.value.template)
+          result.suggested.push(cursor.value)
+          found = true;
         }
       })
+      if(!found) {
+          result.other.push(cursor.value)
+      }
       cursor.continue();
     }
     tx.oncomplete = function () {
@@ -729,63 +482,46 @@ function getAvailbleSubs(venue) {
 
   })
 }
+function checkForVenueSubs(office) {
+  return new Promise(function (resolve, reject) {
+    const tx = db.transaction(['subscriptions']);
+    const store = tx.objectStore('subscriptions');
+    const index = store.index('count')
+    const result = {
+      suggested:[],
+      other:[]
+    };
 
-function newLocationSelectionForm(options) {
-  return `<ul class="mdc-list" role="radiogroup" id='new-location-selection'>
-  ${options.map(function(option){
-    return `<li class="mdc-list-item" role="radio" aria-checked="false">
-    <span class="mdc-list-item__graphic">
-      <div class="mdc-radio">
-        <input class="mdc-radio__native-control"
-              type="radio"
-              id=${option.id}
-              name=${option.name}
-              value=${option.value}>
-        <div class="mdc-radio__background">
-          <div class="mdc-radio__outer-circle"></div>
-          <div class="mdc-radio__inner-circle"></div>
-        </div>
-      </div>
-    </span>
-    <label class="mdc-list-item__text" for=${option.id}>${option.label}</label>
-  </li>`
-  }).join("")}
-  </ul>
-`
-}
+    index.openCursor(null,'prev').onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return
+      if (cursor.value.template === 'check-in') {
+        cursor.continue();
+        return;
+      }
+      if(cursor.value.office !== office) {
+        cursor.continue();
+        return;
+      }
 
-{
-  /* <div class="mdc-card card basic-with-header selection-box-auto hidden mdc-card--outlined" id='selection-box'>
-        <div class="card__primary">
-          <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'></h2>
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
+      if (!cursor.value.venue.length) {
+          result.other.push(cursor.value);
+      }
+      else {
+          result.suggested.push(cursor.value)
+      }
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      resolve(result)
+    }
 
-        </div>
-        <div role="progressbar"
-          class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-          id='check-in-prog'>
-          <div class="mdc-linear-progress__buffering-dots"></div>
-          <div class="mdc-linear-progress__buffer"></div>
-          <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-            <span class="mdc-linear-progress__bar-inner"></span>
-          </div>
-          <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-            <span class="mdc-linear-progress__bar-inner"></span>
-          </div>
-        </div>
-        <div class="card__secondary mdc-typography mdc-typography--body2">
-          <!-- 'mdc-card__primary-action card__primary-action' -->
-          <div class="content-body">
 
-          </div>
-          <div id='submit-cont'>
-          </div>
-        </div>
-
-        <!-- <div class="mdc-card__actions">
-          </div> -->
-      </div>
-      
-    </div> */
+  })
 }
 
 function mapDom() {
@@ -823,60 +559,8 @@ function mapDom() {
   `
 }
 
-function getAdddress(location) {
-  return new Promise(function (resolve, reject) {
-
-    const latLng = {
-      lat: location.latitude,
-      lng: location.longitude
-    }
-    const geocoder = new google.maps.Geocoder;
-    geocoder.geocode({
-      'location': latLng
-    }, function (results, status) {
-
-      if (status !== 'OK') return reject({
-        message: 'Geocoder failed due to: ' + status
-      })
-      if (!results[0]) return reject({
-        message: 'No Results Found'
-      })
-      return resolve(results[0].formatted_address)
-    })
-  })
-}
-
-function checkForVenueSubs(office) {
-  return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['subscriptions']);
-    const store = tx.objectStore('subscriptions');
-    const index = store.index('office')
-    const result = []
-    index.openCursor(office).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return
-      if (cursor.value.template === 'check-in') {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      if (!cursor.value.venue[0]) {
-        cursor.continue();
-        return;
-      }
-      result.push(cursor.value.template)
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      resolve(result)
-    }
 
 
-  })
-}
 
 
 
@@ -1030,14 +714,13 @@ ${option}
 }
 
 
-function mdcSelectVenue(venues, label, id, preSelected) {
+function mdcSelectVenue(venues, label, id) {
   let float;
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
 
   <option value=${JSON.stringify('1')}>New Venue</option>
-  ${preSelected ? `<option value='${JSON.stringify(preSelected)}'>${preSelected.location}</option>` :''}
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
     ${value.location}

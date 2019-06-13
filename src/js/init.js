@@ -9,7 +9,7 @@ let emailInit;
 let db;
 let isCheckInCreated;
 let drawer;
-
+let navList;
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -99,8 +99,11 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
- 
-  window[event.state[0]](true);
+  if(event.state[0] === 'homeView') {
+    window[event.state[0]](selectedSubs);
+    return
+  }
+  window[event.state[0]]();
 }
 
 
@@ -111,39 +114,28 @@ window.addEventListener("load", function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  var lists = document.querySelectorAll('.mdc-bottom-navigation__list');
-  var activatedClass = 'mdc-bottom-navigation__list-item--activated';
-  // const states = ['mapView','snapView','add','chatView','profileView']
-  for (var i = 0, list; list = lists[i]; i++) {
-    list.addEventListener('click', function (event) {
+   navList = new mdc.list.MDCList(document.getElementById('nav-list'))
+  navList.singleSelection = true;
+  navList.listen('MDCList:action',function(evt){
+    console.log(evt)
+    const state = navList.listElements[evt.detail.index].dataset.state
+    if(state === 'homeView') {
+      window[state](selectedSubs)
+      return
+    }
+    window[state]()
 
-      var el = event.target;
-      if (el.dataset.state === history.state[0]) return;
-
-      while (!el.classList.contains('mdc-bottom-navigation__list-item') && el) {
-        el = el.parentNode;
-      }
-      if (el) {
-        var selectRegex = /.*(demo-card-\d).*/;
-        var activatedItem = document.querySelector('.' + event.target.parentElement.parentElement.parentElement.className.replace(selectRegex, '$1') + ' .' + activatedClass);
-        if (activatedItem) {
-          activatedItem.classList.remove(activatedClass);
-        }
-        event.target.classList.add(activatedClass);
-        console.log(el)
-        window[el.dataset.state]();
-      }
-    });
-  }
+  })
 
   drawer.listen('MDCDrawer:opened',function(evt){
     document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
     document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
     document.querySelector(".mdc-drawer__header img").onclick = function(){
       profileView();
-      
+
     }
   })
+
 
 
   if ('serviceWorker' in navigator) {
@@ -275,7 +267,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 10);
+      const req = window.indexedDB.open(auth.uid, 11);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -353,6 +345,12 @@ function startApp(start) {
             const addendumStore = tx.objectStore('addendum');
             addendumStore.createIndex('user', 'user');
             addendumStore.createIndex('timestamp','timestamp')
+          }
+          if (evt.oldVersion <= 10) {
+            var tx = req.transaction;
+            const subscriptionStore = tx.objectStore('subscriptions')
+            subscriptionStore.createIndex('count','count');
+
           }
         };
       }
@@ -513,6 +511,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
   subscriptions.createIndex('status', 'status');
+  subscriptions.createIndex('count','count');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })

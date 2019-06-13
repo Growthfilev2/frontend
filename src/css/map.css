@@ -26,7 +26,37 @@
 .selection-box-auto .content-body .mdc-select {
     width: 100%;
 }
+#subscription-list-group {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+#subscription-list-group ul {
+    padding-left: 20px;
+}
+.subscription-list {
+    animation: left_to_right 0.3s ease;
+}
+.subscription-list li {
+    min-height: 60px;
+    font-size: 22px;
+    /* padding-left: 40px; */
 
+}
+.subscription-list  span{
+    font-size: 22px;
+    
+}
+
+
+  
+  @keyframes left_to_right {
+    from {
+      margin-left: -100%;
+    }
+    to {
+      margin-left: 0;
+    }
+  }
 /* .selection-box-auto ul li {
     padding-right: 0px;
     padding-left: 0px;

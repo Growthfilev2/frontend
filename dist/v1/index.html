@@ -26,95 +26,119 @@
 
 
 <body class="mdc-typography">
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense hidden' id='app-header'>
-    <div class='mdc-top-app-bar__row'>
-      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
-
-      </section>
-      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
-      </section>
-    </div>
-    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
-      <div class="mdc-linear-progress__buffering-dots"></div>
-      <div class="mdc-linear-progress__buffer"></div>
-      <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-        <span class="mdc-linear-progress__bar-inner"></span>
-      </div>
-      <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-        <span class="mdc-linear-progress__bar-inner"></span>
-      </div>
-    </div>
-  </header>
-  <div id='start-load' class="hidden">
-    <div class="lds-roller">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-    <p></p>
-  </div>
-  </div>
-
-  <div class="success--container hidden" id="success-animation">
-    <div class="success--check"></div>
-  </div>
-
-  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
-
-    <div id='main-content'>
-      <div id='login-container'></div>
-
-      <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
-
-        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
-
+    <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-top-app-bar--dense' id='app-header'>
+        <div class='mdc-top-app-bar__row'>
+          <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
+    
+          </section>
+          <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
+          </section>
         </div>
-
-        <div class="mdc-layout-grid__cell--span-12 hidden">
-          <div class="mdc-bottom-navigation hidden">
-          
-            <nav class="mdc-bottom-navigation__list">
-              <span class="mdc-bottom-navigation__list-item  mdc-bottom-navigation__list-item--activated"
-                data-state='mapView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">map</span>
-                <!-- <span class="mdc-bottom-navigation__list-item__text">Recents</span> -->
-              </span>
-
-              <span class="mdc-bottom-navigation__list-item" data-state='addView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">add_circle_outline
-                </span>
-                <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
-              </span>
-              <span class="mdc-bottom-navigation__list-item" data-state='chatView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
-                <!-- <span class="mdc-bottom-navigation__list-item__text">Favourites</span> -->
-              </span>;
-
+        <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+          <div class="mdc-linear-progress__buffering-dots"></div>
+          <div class="mdc-linear-progress__buffer"></div>
+          <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+            <span class="mdc-linear-progress__bar-inner"></span>
+          </div>
+          <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+            <span class="mdc-linear-progress__bar-inner"></span>
+          </div>
+        </div>
+      </header>
+      <aside class="mdc-drawer mdc-drawer--modal">
+          <div class="mdc-drawer__header">
+              <img src="">
+    
+              <h3 class="mdc-drawer__title mdc-theme--text-primary-on-light"></h3>
+             
+            </div>
+          <div class="mdc-drawer__content">
+            <nav class="mdc-list">
+              <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
+                <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
+                <span class="mdc-list-item__text">Inbox</span>
+              </a>
+              <a class="mdc-list-item" href="#">
+                <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
+                <span class="mdc-list-item__text">Outgoing</span>
+              </a>
+              <a class="mdc-list-item" href="#">
+                <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
+                <span class="mdc-list-item__text">Drafts</span>
+              </a>
             </nav>
+          </div>
+        </aside>
+      
+        <div class="mdc-drawer-scrim"></div>
+    
+      <div id='start-load' class="hidden">
+        <div class="lds-roller">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <p></p>
+      </div>
+      </div>
+    
+      <div class="success--container hidden" id="success-animation">
+        <div class="success--check"></div>
+      </div>
+    
+      <div id="growthfile" class="mdc-top-app-bar--dense-fixed-adjust">
+    
+        <div id='main-content'>
+          <div id='login-container'></div>
+    
+          <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
+    
+            <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
+    
+            </div>
+    
+            <div class="mdc-layout-grid__cell--span-12">
+              <div class="mdc-bottom-navigation hidden">
+              
+                <nav class="mdc-bottom-navigation__list">
+                  <span class="mdc-bottom-navigation__list-item"
+                    data-state='mapView'>
+                    <span class="material-icons mdc-bottom-navigation__list-item__icon">photo_camera</span>
+                  </span>
+    
+                  <span class="mdc-bottom-navigation__list-item mdc-bottom-navigation__list-item--activated" data-state='homeView'>
+                    <span class="material-icons mdc-bottom-navigation__list-item__icon">home
+                    </span>
+                  </span>
+                  <span class="mdc-bottom-navigation__list-item" data-state='chatView'>
+                    <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
+                  </span>;
+    
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+      </div>
+    
+      <div id="snackbar-container">
+        <div class="mdc-snackbar">
+          <div class="mdc-snackbar__surface">
+            <div class="mdc-snackbar__label" role="status" aria-live="polite">
+            </div>
+            <div class="mdc-snackbar__actions">
+              <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-  </div>
-
-  <div id="snackbar-container">
-    <div class="mdc-snackbar">
-      <div class="mdc-snackbar__surface">
-        <div class="mdc-snackbar__label" role="status" aria-live="polite">
-        </div>
-        <div class="mdc-snackbar__actions">
-          <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id='dialog-container'></div>
+      <div id='dialog-container'></div>
   <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>
   <script src="external/js/firebaseui.js"></script>
