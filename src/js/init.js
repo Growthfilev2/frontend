@@ -8,7 +8,7 @@ let next;
 let emailInit;
 let db;
 let isCheckInCreated;
-
+let drawer;
 
 let native = function () {
   return {
@@ -109,6 +109,7 @@ window.onpopstate = function (event) {
 window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
+  drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   var lists = document.querySelectorAll('.mdc-bottom-navigation__list');
   var activatedClass = 'mdc-bottom-navigation__list-item--activated';
@@ -135,6 +136,14 @@ window.addEventListener("load", function () {
     });
   }
 
+  drawer.listen('MDCDrawer:opened',function(evt){
+    document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
+    document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
+    document.querySelector(".mdc-drawer__header img").onclick = function(){
+      profileView();
+      
+    }
+  })
 
 
   if ('serviceWorker' in navigator) {

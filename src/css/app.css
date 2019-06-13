@@ -221,6 +221,21 @@ body {
 
 
 /** override **/
+.mdc-drawer__header {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  align-items: center;
+  vertical-align: middle;
+ 
+  background-color: #89273E;
+}
+.mdc-drawer__header img {
+  width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    float: left;
+    margin-right: 5%;
+}
 .mdc-text-field .snap-text{
   caret-color: var(--mdc-theme-on-secondary);
 }

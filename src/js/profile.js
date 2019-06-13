@@ -1,5 +1,5 @@
 function profileView() {
-
+  drawer.open = false;
   history.pushState(['profileView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden')

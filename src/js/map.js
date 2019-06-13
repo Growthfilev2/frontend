@@ -9,7 +9,11 @@ function handleNav(evt) {
     history.pushState(['mapView'], null, null)
     return toggleCardHeight(false, 'card-form');
   }
-  if(state === 'mapView') return profileView()
+  if(state === 'mapView') {
+    console.log(drawer)
+    drawer.open = true
+    return;
+  }
   
   return history.back();
 }
