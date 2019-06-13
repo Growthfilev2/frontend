@@ -17,13 +17,10 @@ function handleNav(evt) {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
- 
   progressBar.close();
   const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
-  const photoIcon = `<svg class='mdc-top-app-bar__action-item' onclick="takeSnap()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`
-  const chatIcon = `<svg id='chat-icon' class='mdc-top-app-bar__action-item hidden' onclick="chatView()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`
-  
-  const header = getHeader('app-header', headerImage, photoIcon+chatIcon);
+ 
+  const header = getHeader('app-header', headerImage,'');
   header.root_.classList.remove('hidden')
   header.setScrollTarget(document.getElementById('main-content'));
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
@@ -60,7 +57,7 @@ function mapView() {
       zoom: 18,
       // maxZoom:18,
       disableDefaultUI: true,
-      styles: gray,
+    
       restriction: {
         latLngBounds: {
           north: offsetBounds.north(),
@@ -216,7 +213,7 @@ function loadCardData(o, map, location, preSelected) {
     const el = document.getElementById('selection-box');
     const aside = el.querySelector('aside');
     if (isCheckInCreated) {
-      showBottomNav(aside);
+      homeView(aside);
     }
     const contentBody = el.querySelector('.content-body');
     contentBody.innerHTML = '';
@@ -259,7 +256,7 @@ function loadCardData(o, map, location, preSelected) {
                 snacks('Check-in created');
                 isCheckInCreated = true
               
-                showBottomNav(aside)
+                homeView(aside)
 
                 cardProd.close()
 
@@ -324,9 +321,7 @@ function loadCardData(o, map, location, preSelected) {
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
             isCheckInCreated = true
-           
-
-            showBottomNav(aside)
+            homeView(aside)
             cardProd.close();
             known(value, header, location);
           }).catch(function (error) {
@@ -335,7 +330,6 @@ function loadCardData(o, map, location, preSelected) {
             snacks('Please Try Again');
             cardProd.close()
           })
-
         }
 
       })
@@ -359,17 +353,18 @@ function loadCardData(o, map, location, preSelected) {
       header.textContent = 'Where Are You ?'
     }
   })
-}
+};
 
-function showBottomNav(aside) {
-  // aside.classList.add('large')
-  // document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
-  document.getElementById('chat-icon').classList.remove('hidden')
+function homeView(aside){
+  document.getElementById('selection-box').innerHTML = ''
+  document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
+  document.getElementById('map').classList.add('hidden')
 }
 
 function hideBottomNav(){
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
 }
+
 function known(value, header, location) {
   getAvailbleSubs(value).then(function (subs) {
     if (!subs.length) {
@@ -1070,8 +1065,8 @@ function GetOffsetBounds(latlng, offset) {
   this.latLng = latlng
   this.ratio = (offset / radius) * d;
   this.radioLon = (this.ratio) / Math.cos(this.latLng.latitude * Math.PI / 180)
-
 }
+
 GetOffsetBounds.prototype.north = function () {
   return this.latLng.latitude + this.ratio
 }

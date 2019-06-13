@@ -9,223 +9,6 @@ let emailInit;
 let db;
 let isCheckInCreated;
 
-var gray = [{
-
-    "featureType": "administrative",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#D6E2E6"
-    }]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "geometry.stroke",
-    "stylers": [{
-      "color": "#CFD4D5"
-    }]
-  },
-  {
-    "featureType": "administrative",
-    "elementType": "labels.text.fill",
-    "stylers": [{
-      "color": "#7492A8"
-    }]
-  },
-  {
-    "featureType": "landscape.man_made",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#DDE2E3"
-    }]
-  },
-  {
-    "featureType": "landscape.man_made",
-    "elementType": "geometry.stroke",
-    "stylers": [{
-      "color": "#CFD4D5"
-    }]
-  },
-  {
-    "featureType": "landscape.natural",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#dde2e3"
-    }]
-  },
-  {
-    "featureType": "landscape.natural",
-    "elementType": "labels.text.fill",
-    "stylers": [{
-      "color": "#7492A8"
-    }]
-  },
-  {
-    "featureType": "landscape.natural.terrain",
-    "stylers": [{
-      "visibility": "off"
-    }]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#DDE2E3"
-    }]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.icon",
-    "stylers": [{
-      "saturation": -100
-    }]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [{
-      "color": "#588CA4"
-    }]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#B9F6CA"
-    }]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry.stroke",
-    "stylers": [{
-      "color": "#BAE6A1"
-    }]
-  },
-  {
-    "featureType": "poi.sports_complex",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#C6E8B3"
-    }]
-  },
-  {
-    "featureType": "poi.sports_complex",
-    "elementType": "geometry.stroke",
-    "stylers": [{
-      "color": "#BAE6A1"
-    }]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.icon",
-    "stylers": [{
-        "saturation": -45
-      },
-      {
-        "lightness": 10
-      },
-      {
-        "visibility": "on"
-      }
-    ]
-  },
-  {
-    "featureType": "road",
-    "elementType": "labels.text.fill",
-    "stylers": [{
-      "color": "#41626B"
-    }]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#FFFFFF"
-    }]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#C1D1D6"
-    }]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry.stroke",
-    "stylers": [{
-      "color": "#A6B5BB"
-    }]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.icon",
-    "stylers": [{
-      "visibility": "on"
-    }]
-  },
-  {
-    "featureType": "road.highway.controlled_access",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#9FB6BD"
-    }]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#FFFFFF"
-    }]
-  },
-  {
-    "featureType": "transit",
-    "elementType": "labels.icon",
-    "stylers": [{
-      "saturation": -70
-    }]
-  },
-  {
-    "featureType": "transit.line",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#CFD4D5"
-    }]
-  },
-  {
-    "featureType": "transit.line",
-    "elementType": "labels.text.fill",
-    "stylers": [{
-      "color": "#CFD4D5"
-    }]
-  },
-  {
-    "featureType": "transit.station",
-    "elementType": "labels.text.fill",
-    "stylers": [{
-        "color": "#90CAF9"
-      },
-
-    ]
-  },
-  {
-    "featureType": "transit.station.airport",
-    "elementType": "geometry.fill",
-    "stylers": [{
-        "saturation": -100
-      },
-      {
-        "lightness": -5
-      }
-    ]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry.fill",
-    "stylers": [{
-      "color": "#A6CBE3"
-    }]
-  }
-]
 
 let native = function () {
   return {
@@ -598,42 +381,44 @@ function startApp(start) {
           startLoad.querySelector('p').textContent = texts[index]
           index++;
         }, index + 1 * 1000);
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        }).then(function (response) {
-          if (response.updateClient) {
-            updateApp()
-            return
-          }
+        mapView()
 
-          if (response.revokeSession) {
-            revokeSession();
-            return
-          };
-          if (response.hasOwnProperty('removeFromOffice')) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {})
-            };
-            return;
-          };
+        // requestCreator('now', {
+        //   device: native.getInfo(),
+        //   from: '',
+        //   registerToken: native.getFCMToken()
+        // }).then(function (response) {
+        //   if (response.updateClient) {
+        //     updateApp()
+        //     return
+        //   }
+
+        //   if (response.revokeSession) {
+        //     revokeSession();
+        //     return
+        //   };
+        //   if (response.hasOwnProperty('removeFromOffice')) {
+        //     if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+        //       requestCreator('removeFromOffice', response.removeFromOffice).then(function () {})
+        //     };
+        //     return;
+        //   };
 
 
-          getRootRecord().then(function (rootRecord) {
+        //   getRootRecord().then(function (rootRecord) {
           
-          requestCreator('Null').then(function (response) {
-              if (rootRecord.fromTime) return mapView();
-              const auth = firebase.auth().currentUser;
-              getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-                if (!result.length) return mapView();
-                if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-                return mapView();
-              })
-              return
-            }).catch(console.log)
-          })
-        }).catch(console.log)
+        //   requestCreator('Null').then(function (response) {
+        //       if (rootRecord.fromTime) return mapView();
+        //       const auth = firebase.auth().currentUser;
+        //       getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+        //         if (!result.length) return mapView();
+        //         if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+        //         return mapView();
+        //       })
+        //       return
+        //     }).catch(console.log)
+        //   })
+        // }).catch(console.log)
       }
       req.onerror = function () {
         handleError({
