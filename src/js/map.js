@@ -564,7 +564,7 @@ function mapDom() {
 
 
 
-function takeSnap() {
+function snapView() {
   // localStorage.setItem('snap_office', office)
   AndroidInterface.startCamera();
 }
