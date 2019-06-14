@@ -393,6 +393,9 @@ function hideBottomNav(){
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
 }
 
+function  showBottomNav(){
+  document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
+}
 
 
 

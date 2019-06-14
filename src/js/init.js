@@ -99,6 +99,7 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
+
   if(event.state[0] === 'homeView') {
     window[event.state[0]](selectedSubs);
     return
@@ -388,44 +389,44 @@ function startApp(start) {
           startLoad.querySelector('p').textContent = texts[index]
           index++;
         }, index + 1 * 1000);
-        mapView()
+        // mapView()
 
-        // requestCreator('now', {
-        //   device: native.getInfo(),
-        //   from: '',
-        //   registerToken: native.getFCMToken()
-        // }).then(function (response) {
-        //   if (response.updateClient) {
-        //     updateApp()
-        //     return
-        //   }
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: '',
+          registerToken: native.getFCMToken()
+        }).then(function (response) {
+          if (response.updateClient) {
+            updateApp()
+            return
+          }
 
-        //   if (response.revokeSession) {
-        //     revokeSession();
-        //     return
-        //   };
-        //   if (response.hasOwnProperty('removeFromOffice')) {
-        //     if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-        //       requestCreator('removeFromOffice', response.removeFromOffice).then(function () {})
-        //     };
-        //     return;
-        //   };
+          if (response.revokeSession) {
+            revokeSession();
+            return
+          };
+          if (response.hasOwnProperty('removeFromOffice')) {
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {})
+            };
+            return;
+          };
 
 
-        //   getRootRecord().then(function (rootRecord) {
+          getRootRecord().then(function (rootRecord) {
           
-        //   requestCreator('Null').then(function (response) {
-        //       if (rootRecord.fromTime) return mapView();
-        //       const auth = firebase.auth().currentUser;
-        //       getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-        //         if (!result.length) return mapView();
-        //         if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-        //         return mapView();
-        //       })
-        //       return
-        //     }).catch(console.log)
-        //   })
-        // }).catch(console.log)
+          requestCreator('Null').then(function (response) {
+              if (rootRecord.fromTime) return mapView();
+              const auth = firebase.auth().currentUser;
+              getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+                if (!result.length) return mapView();
+                if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+                return mapView();
+              })
+              return
+            }).catch(console.log)
+          })
+        }).catch(console.log)
       }
       req.onerror = function () {
         handleError({
