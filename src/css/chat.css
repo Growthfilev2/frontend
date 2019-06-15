@@ -8,6 +8,9 @@
 .user-chats {
   padding-bottom: 10px;
 }
+.user-chats ul {
+  padding-bottom: 56px;
+}
 .chat-count {
   font-size: 20px;
     

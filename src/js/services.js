@@ -372,6 +372,11 @@ function requestCreator(requestType, requestBody, location) {
 
     } else {
       getRootRecord().then(function (rootRecord) {
+        if(!rootRecord.serverTime) {
+        
+
+          return;
+        }
         let location = rootRecord.location;
         let isLocationOld = true;
         location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 10) : '';

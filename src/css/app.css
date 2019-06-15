@@ -99,6 +99,9 @@ body {
 .hidden {
   display: none !important;
 }
+.text-center {
+  text-align: center
+}
 
 .resize-veritcal {
   resize: vertical;
