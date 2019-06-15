@@ -268,7 +268,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 11);
+      const req = window.indexedDB.open(auth.uid, 12);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -351,7 +351,11 @@ function startApp(start) {
             var tx = req.transaction;
             const subscriptionStore = tx.objectStore('subscriptions')
             subscriptionStore.createIndex('count','count');
-
+          }
+          if(evt.oldVersion <= 11) {
+            var tx  = req.transaction;
+            const userStore = tx.objectStore('users')
+            userStore.createIndex('timestamp','timestamp')
           }
         };
       }
@@ -496,14 +500,14 @@ function createObjectStores(db, uid) {
   users.createIndex('isUpdated', 'isUpdated')
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
-
+  users.createIndex('timestamp','timestamp')
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
 
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
-  addendum.createIndex('timestamp','timestamp');
+  
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })

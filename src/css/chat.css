@@ -29,7 +29,7 @@
   bottom:5rem !important;
   
 }
-#search-users-container{
+.search-field{
   position: fixed;
   top: 0;
   width: 100%;

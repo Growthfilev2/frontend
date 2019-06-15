@@ -717,10 +717,10 @@ function successResponse(read, param, db, resolve, reject) {
   const activityObjectStore = updateTx.objectStore('activity');
   const userStore = updateTx.objectStore('users')
   let counter = {};
+  let userTimestamp = {}
 
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
-
       if (addendum.user == param.user.phoneNumber) {
         removeActivitiesForUser.push(addendum.activityId)
       } else {
@@ -731,19 +731,25 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
 
+
+
     if (addendum.isComment) {
       let key = addendum.activityId
-      counter[key] = (counter[key] || 0) + 1
+      // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
+      userTimestamp[addendum.user]= {
+        ts:addendum.timestamp,
+        comment:addendum.comment
+      }
     }
     addendumObjectStore.add(addendum)
   })
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
   removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
+
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activityObjectStore.put(activity);
-
     updateMap(activity, updateTx);
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -751,11 +757,15 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
+   
       userStore.put({
         displayName: user.displayName,
         mobile: user.phoneNumber,
-        photoURL: user.photoURL
+        photoURL: user.photoURL,
+        timestamp:userTimestamp[user.phoneNumber].ts || '', 
+        comment:userTimestamp[user.phoneNumber].comment || ''
       })
+
     })
   })
 
@@ -767,10 +777,7 @@ function successResponse(read, param, db, resolve, reject) {
   updateTx.oncomplete = function () {
     console.log("all completed");
     return resolve(true)
-    // if (!read.from) {
-    //   requestHandlerResponse('initFirstLoad', 200, )
-    // }
-    // db.close();
+
   }
   updateTx.onerror = function () {
     return reject(updateTx.error)
