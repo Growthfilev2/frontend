@@ -279,49 +279,53 @@ function enterChat(number,state) {
     // debugger;
     
     hideBottomNav()
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-   
-    </a>
-    <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
-    <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
-    `
-
-    const header = getHeader('app-header', backIcon, '');
-    console.log(header)
-    history[state](['enterChat'],null,null)
-   
-    document.getElementById('app-header').classList.remove("hidden")
-    document.getElementById('growthfile').classList.remove('mdc-top-app-bar--dense-fixed-adjust')
-
-    document.getElementById('app-current-panel').innerHTML = `
-    <div class="wrapper">
+    db.transaction('users').objectStore('users').index('mobile').get(number).onsuccess = function(event){
+        const record = event.target.result;
+        if(!record) return;
+        
+        const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
+        </a>
+        <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
+        <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
+        `
+        
+        const header = getHeader('app-header', backIcon, '');
+        console.log(header)
+        history[state](['enterChat'],null,null)
+        
+        document.getElementById('app-header').classList.remove("hidden")
+        document.getElementById('growthfile').classList.remove('mdc-top-app-bar--dense-fixed-adjust')
+        
+        document.getElementById('app-current-panel').innerHTML = `
+        <div class="wrapper">
         <div class="inner" id="inner">
-          <div class="content" id="content"></div>
+        <div class="content" id="content"></div>
         </div>
         <div class="bottom" id="bottom">
         <div class="conversation-compose">
-      
+        
         <div id='comment-textarea' class="mdc-text-field text-field mdc-text-field--fullwidth mdc-text-field--no-label  mdc-text-field--textarea">
-      
+        
         <textarea id="text-field-fullwidth-textarea-helper" class="mdc-text-field__input mdc-text-field__input  input-msg">
         </textarea>
-      
+        
         </div>
-
+        
         <button id='comment-send' class="mdc-fab send mdc-theme--primary-bg mdc-theme-on--primary" aria-label="Favorite">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
-    </button>
+        </button>
         </div>
-
-      </div>
-  </div>
+        
         </div>
-    </div>`
-    getUserChats(userRecord)
+        </div>
+        </div>
+        </div>`
+        getUserChats(userRecord)
+    }
 }
-
-
-
+    
+    
+    
 function messageBox(comment, position, image, time) {
     return `<div class="message-wrapper ${position}">
     <img class="circle-wrapper" src=${image}>
