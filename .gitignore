@@ -1,3 +1,4 @@
 node_modules/
 .firebase/
 firebase.json
+src/js/config.js
