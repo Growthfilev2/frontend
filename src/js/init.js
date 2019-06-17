@@ -175,6 +175,9 @@ window.addEventListener("load", function () {
   startApp(true)
 })
 
+// function firebaseUiConfig()
+
+
 function firebaseUiConfig(value, redirect) {
 
   return {
@@ -209,10 +212,11 @@ function firebaseUiConfig(value, redirect) {
 
       },
       signInFailure: function (error) {
-
         return handleUIError(error)
       },
-      uiShown: function () {}
+      uiShown: function () {
+
+      }
     },
     // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
@@ -222,7 +226,7 @@ function firebaseUiConfig(value, redirect) {
         provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
         recaptchaParameters: {
           type: 'image', // 'audio'
-          size: 'normal', // 'invisible' or 'compact'
+          size: 'invisible', // 'invisible' or 'compact'
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
@@ -416,19 +420,12 @@ function startApp(start) {
             return;
           };
 
-
           getRootRecord().then(function (rootRecord) {
-          
-          requestCreator('Null').then(function (response) {
-              if (rootRecord.fromTime) return mapView();
-              const auth = firebase.auth().currentUser;
-              getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-                if (!result.length) return mapView();
-                if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-                return mapView();
-              })
-              return
-            }).catch(console.log)
+            if(!rootRecord.fromTime) {
+              requestCreator('Null').then(checkForRecipient).catch(console.log)
+              return;
+            }
+            checkForRecipient();
           })
         }).catch(console.log)
       }
@@ -438,6 +435,16 @@ function startApp(start) {
         })
       }
     }
+  })
+}
+
+function checkForRecipient(){
+  const auth = firebase.auth().currentUser;
+  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+    return profileView(result, auth);
+    if (!result.length) return mapView();
+    if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
+    return mapView();
   })
 }
 

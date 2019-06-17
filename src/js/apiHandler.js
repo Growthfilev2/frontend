@@ -757,13 +757,12 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
-   
       userStore.put({
         displayName: user.displayName,
         mobile: user.phoneNumber,
         photoURL: user.photoURL,
-        timestamp:userTimestamp[user.phoneNumber].ts || '', 
-        comment:userTimestamp[user.phoneNumber].comment || ''
+        timestamp:  userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].ts : '', 
+        comment:userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].comment : ''
       })
 
     })
@@ -777,7 +776,6 @@ function successResponse(read, param, db, resolve, reject) {
   updateTx.oncomplete = function () {
     console.log("all completed");
     return resolve(true)
-
   }
   updateTx.onerror = function () {
     return reject(updateTx.error)

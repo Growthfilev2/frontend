@@ -7,7 +7,7 @@ function profileView() {
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
-  const header = getHeader('app-header',backIcon,'');
+  const header = getHeader('app-header', backIcon, '');
   header.setScrollTarget(document.getElementById('main-content'));
 
   const root = `<div class="mdc-card demo-card" id='profile-card'>
@@ -58,35 +58,23 @@ function profileView() {
     newName = nameInit.value;
     newEmail = emailInit.value;
     progressBar.foundation_.open();
-    if (newName !== currentName && isEmailValid(newEmail, currentEmail)) {
-      auth.updateProfile({
-        displayName: newName
-      }).then(function () {
-        if (timeDiff(lastSignInTime) <= 2) {
-          updateEmail(auth, newEmail);
-        } else {
-          newSignIn(newEmail);
-        }
-      })
-      return
-    }
-
-    if (newName !== currentName && !isEmailValid(newEmail, currentEmail)) {
-      auth.updateProfile({
-        displayName: newName
-      }).then(setDetails)
-      return;
-
-    }
-    if (newName === currentName && isEmailValid(newEmail, currentEmail)) {
-      if (timeDiff(lastSignInTime) <= 2) {
-        updateEmail(auth, newEmail);
-      } else {
-        newSignIn(newEmail);
+    auth.updateProfile({
+      displayName: newName
+    }).then(function () {
+      if (!isEmailValid(newEmail, currentEmail)) return setDetails();
+      return emailFlow(auth, newEmail)
+    }).then(setDetails).catch(function (error) {
+      if (error.code === 'auth/too-many-requests') {
+        setDetails()
+        snacks('Please Try Again Later. Too Many Attempts')
+        return;
       }
-      return;
-    }
-    setDetails()
+      if (error.code === 'auth/requires-recent-login') {
+        newSignIn(newEmail)
+        return
+      }
+      snacks(error.message)
+    })
   })
 
   console.log(editInit)
@@ -183,47 +171,47 @@ function createViewProfile() {
                           }).join("")}
                       </h1>`
         }
-          const tx = db.transaction(['users']);
-          const store = tx.objectStore('users');
-          let team = '';
-          let supers = '';
+        const tx = db.transaction(['users']);
+        const store = tx.objectStore('users');
+        let team = '';
+        let supers = '';
 
-          mySupervisors.forEach(function (value) {
-            store.get(value).onsuccess = function (event) {
+        mySupervisors.forEach(function (value) {
+          store.get(value).onsuccess = function (event) {
+            const record = event.target.result;
+            if (!record) return;
+            supers += addUserChips(record)
+
+          }
+        })
+
+        if (myTeam.length) {
+          myTeam.forEach(function (member) {
+            store.get(member.attachment['Employee Contact'].value).onsuccess = function (event) {
               const record = event.target.result;
               if (!record) return;
-              supers += addUserChips(record)
-
+              team += addUserChips(record)
             }
           })
+        };
 
-          if (myTeam.length) {
-            myTeam.forEach(function (member) {
-              store.get(member.attachment['Employee Contact'].value).onsuccess = function (event) {
-                const record = event.target.result;
-                if (!record) return;
-                team += addUserChips(record)
-              }
-            })
-          };
-
-          tx.oncomplete = function () {
-            if (supers) {
-              document.getElementById('supervisors').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Supervisors</h1>
+        tx.oncomplete = function () {
+          if (supers) {
+            document.getElementById('supervisors').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Supervisors</h1>
                   <div class="mdc-chip-set supervisor">
                   ${supers}
                   </div>
                   `
-            }
-            if (team) {
+          }
+          if (team) {
 
-              document.getElementById('my-team').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
+            document.getElementById('my-team').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
                   <div class="mdc-chip-set">
                   ${team}
                   </div>`
-            }
           }
-        
+        }
+
       })
     })
   })
@@ -250,7 +238,7 @@ function createEditProfile(name, email) {
 </div>`
 }
 
-function emailField (email,label,setFocus){
+function emailField(email, label, setFocus) {
   return `<div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
   <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
   <input class="mdc-text-field__input" type='email' value="${email}" autofocus=${setFocus ? 'true':'false'}>
@@ -359,11 +347,11 @@ function updateEmail(user, email) {
   }).catch(console.log);
 }
 
-function emailUpdateSuccess(user,) {
-  user.sendEmailVerification().then(function(){
+function emailUpdateSuccess(user, ) {
+  user.sendEmailVerification().then(function () {
     emailVerificationSuccess()
   }).catch(emailVerificationError);
-  
+
 }
 
 function emailVerificationSuccess() {
@@ -377,28 +365,28 @@ function emailVerificationError(error) {
   snacks(error.message);
   try {
     progressBar.foundation_.close();
-  }catch(e){
+  } catch (e) {
     console.log(e)
   }
 }
 
-function newSignIn(value,redirect) {
+function newSignIn(value, redirect) {
   const dialog = new Dialog('', createElement('div', {
     id: 'refresh-login'
   })).create();
   dialog.open();
   dialog.root_.querySelector('.mdc-dialog__content').style.padding = '0px';
   console.log(dialog)
-  
+
   dialog.listen('MDCDialog:opened', function (evt) {
-    dialog.buttons_.forEach(function(el){
+    dialog.buttons_.forEach(function (el) {
       el.classList.add('hidden')
     })
     try {
       if (!ui) {
         ui = new firebaseui.auth.AuthUI(firebase.auth())
       }
-      ui.start('#refresh-login', firebaseUiConfig(value,redirect));
+      ui.start('#refresh-login', firebaseUiConfig(value, redirect));
       setTimeout(function () {
         document.querySelector('.firebaseui-id-phone-number').disabled = true;
         document.querySelector('.firebaseui-label').remove();
@@ -411,7 +399,7 @@ function newSignIn(value,redirect) {
       handleError({
         message: `${e.message} from newSignIn function during email updation`
       });
-      if(redirect) {
+      if (redirect) {
         mapView();
         return
       }
