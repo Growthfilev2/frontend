@@ -448,6 +448,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
+  'now-set':nowSet,
   'initFirstLoad': initFirstLoad,
   'update-app': updateApp,
   'removed-from-office': officeRemovalSuccess,
@@ -458,6 +459,10 @@ var receiverCaller = {
 
 function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
+}
+
+function nowSet(){
+  listView();
 }
 
 

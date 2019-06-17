@@ -262,7 +262,7 @@ function startApp(start) {
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
 
         resetScroll();
-        listView();
+
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
