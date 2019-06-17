@@ -1,3 +1,5 @@
+
+
 const appKey = new AppKeys();
 let progressBar;
 let snackBar;
@@ -155,6 +157,42 @@ window.addEventListener("load", function () {
   startApp(true)
 })
 
+function appIncompatible() {
+  document.getElementById('start-loader').classList.add('hidden')
+  const banner = createElement('div', {
+    className: 'banner'
+  })
+  const message = createElement('div', {
+    className: 'message'
+  });
+  const h2 = createElement('h2', {
+    textContent: 'Device Support',
+    className: 'mdc-typography--headline3'
+  })
+  message.appendChild(h2)
+
+  const device = native.getInfo();
+  let bodyMessage;
+  if (!device) {
+    bodyMessage = 'This Device is not Supported'
+  } else {
+    const os = JSON.parse(device).baseOs
+    if (os === 'android') {
+      bodyMessage = 'Growthfile requires Android version 5.1 to run.'
+    }
+    if (os === 'Ios') {
+      bodyMessage = 'Growthfile requires iOS version equal or greater than 12 to run.'
+    }
+  }
+
+  const p = createElement('p', {
+    textContent: bodyMessage
+  })
+  message.appendChild(p)
+  banner.appendChild(message);
+  return banner;
+}
+
 function resetScroll() {
   scroll_namespace.count = 0;
   scroll_namespace.size = 20;
@@ -262,7 +300,7 @@ function startApp(start) {
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
 
         resetScroll();
-
+      
         requestCreator('now', {
           device: native.getInfo(),
           from: '',

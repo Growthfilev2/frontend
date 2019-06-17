@@ -477,6 +477,7 @@ function createActivityIconDom() {
       eventLabel: 'Choose Subscription'
     });
     if(!isLocationStatusWorking()) return
+    
     selectorUI({
       store: 'subscriptions',
       suggestCheckIn: false
