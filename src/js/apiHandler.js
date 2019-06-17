@@ -34,7 +34,9 @@ function sendApiFailToMainThread(error) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(console.log);
+    fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(function(error){
+      instant({message:JSON.stringify(error),body:''})
+    });
     return
   }
 
@@ -216,6 +218,7 @@ function putServerTime(data) {
         rootObjectStore.put(record)
       }
       rootTx.oncomplete = function () {
+        requestHandlerResponse('now-set',200)
         resolve(data.meta)
       }
     }
