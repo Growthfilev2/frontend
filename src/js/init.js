@@ -1,3 +1,5 @@
+
+
 const appKey = new AppKeys();
 let progressBar;
 let snackBar;
@@ -111,20 +113,21 @@ window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  topBar =   new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  topBar.listen('MDCTopAppBar:nav',function(e){
+  topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+  topBar.listen('MDCTopAppBar:nav', function (e) {
     console.log(e);
-    
+
   })
   console.log(topBar);
-  
+
 
   if ('serviceWorker' in navigator) {
-  
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      for(let registration of registrations) {
-       registration.unregister()
-     } })
+
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+      for (let registration of registrations) {
+        registration.unregister()
+      }
+    })
 
   }
   moment.updateLocale('en', {
@@ -151,29 +154,37 @@ window.addEventListener("load", function () {
   startApp(true)
 })
 
-function appIncompatible(){
+function appIncompatible() {
   document.getElementById('start-loader').classList.add('hidden')
-  const banner = createElement('div',{className:'banner'})
-  const message = createElement('div',{className:'message'});
-  const h2 = createElement('h2',{textContent:'Device Support',className:'mdc-typography--headline3'})
+  const banner = createElement('div', {
+    className: 'banner'
+  })
+  const message = createElement('div', {
+    className: 'message'
+  });
+  const h2 = createElement('h2', {
+    textContent: 'Device Support',
+    className: 'mdc-typography--headline3'
+  })
   message.appendChild(h2)
-  
+
   const device = native.getInfo();
   let bodyMessage;
-  if(!device) {
+  if (!device) {
     bodyMessage = 'This Device is not Supported'
-  }
-  else {
+  } else {
     const os = JSON.parse(device).baseOs
-    if(os === 'android') {
+    if (os === 'android') {
       bodyMessage = 'Growthfile requires Android version 5.1 to run.'
     }
-    if(os === 'Ios') {
+    if (os === 'Ios') {
       bodyMessage = 'Growthfile requires iOS version equal or greater than 12 to run.'
     }
   }
 
-  const p = createElement('p',{textContent:bodyMessage})
+  const p = createElement('p', {
+    textContent: bodyMessage
+  })
   message.appendChild(p)
   banner.appendChild(message);
   return banner;
@@ -254,7 +265,7 @@ function startApp(start) {
       localStorage.setItem('error', JSON.stringify({}));
     };
 
-   
+
     if (start) {
       const req = window.indexedDB.open(auth.uid, 4);
       let db;
@@ -282,10 +293,10 @@ function startApp(start) {
         db = req.result;
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
-        ga('set','userId',JSON.parse(native.getInfo()).id)
+        ga('set', 'userId', JSON.parse(native.getInfo()).id)
 
         resetScroll();
-
+      
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -489,7 +500,7 @@ function redirect() {
 function runAppChecks() {
 
   window.addEventListener('suggestCheckIn', function _suggestCheckIn(e) {
-   
+
     if (!e.detail) return;
     if (!e.detail.newDay && !e.detail.locationChanged) return;
 
@@ -533,7 +544,7 @@ function runAppChecks() {
           templateDialog({
             title: 'Reminder',
             data: data
-          }, true,offices.length > 1 ? true : false)
+          }, true, offices.length > 1 ? true : false)
         }).catch(console.log)
 
       })

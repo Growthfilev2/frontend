@@ -35,6 +35,7 @@ function sendApiFailToMainThread(error) {
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
     fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(function(error){
+      
       instant({message:JSON.stringify(error),body:''})
     });
     return

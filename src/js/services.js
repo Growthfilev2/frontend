@@ -342,6 +342,12 @@ function isLocationStatusWorking() {
     'samsung': true,
     'OnePlus': true
   }
+  
+  if(!navigator.onLine) {
+    const connectionDialog = new Dialog('BROKEN INTERNET CONNECTION', 'Make Sure You have a working Internet Connection').create()
+    connectionDialog.open();
+    return;
+  }
   if (native.getName() !== 'Android') return true;
 
   if (!AndroidInterface.isLocationPermissionGranted()) {
@@ -560,7 +566,7 @@ function initFirstLoad(response) {
 }
 
 function updateApp() {
-  if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
+  // if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
 
   updateAppDialog.open();
