@@ -1,0 +1,28 @@
+.forms {
+    width: 640px;
+    margin: auto;
+}
+.forms .form-list {
+    padding:  0 17px;
+}
+.forms .form-list .form-component {
+    background-color: transparent;
+    margin-top: 2px;
+    padding: 16px 17px;
+    page-break-inside: avoid;
+    -webkit-transition: background-color 200ms cubic-bezier(0.0,0.0,0.2,1);
+    transition: background-color 200ms cubic-bezier(0.0,0.0,0.2,1);
+}
+.forms .form-list .form-component .mdc-text-field {
+    width: 50%
+}
+@media (max-width:660px) {
+    .forms {
+        width:90vw;
+    }
+}
+@media (max-width:480px) {
+    .forms .form-list .form-component .mdc-text-field {
+        width: 100%;
+    }
+}

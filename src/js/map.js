@@ -2,15 +2,16 @@ var map;
 var globMark;
 let o;
 let selectedSubs;
+
 function handleNav(evt) {
   const state = history.state[0]
 
 
-  if(state === 'homeView') {
+  if (state === 'homeView') {
     drawer.open = true
     return;
   }
-  
+
   return history.back();
 }
 
@@ -48,7 +49,7 @@ function mapView() {
       zoom: 18,
       // maxZoom:18,
       disableDefaultUI: true,
-    
+
       restriction: {
         latLngBounds: {
           north: offsetBounds.north(),
@@ -161,7 +162,7 @@ function createForm(office, template, venue, location) {
         const dialog = new Dialog(template, common(subscription)).create();
         dialog.open();
         dialog.listen('MDCDialog:closed', function (evt) {
-          if(evt.detail.action !== 'accept') return;
+          if (evt.detail.action !== 'accept') return;
 
           if (duplicate.attachment.Name) {
             duplicate.attachment.Name.value = 'sample name' + random;
@@ -203,7 +204,7 @@ function loadCardData(o, map, location) {
 
     const el = document.getElementById('selection-box');
     const aside = el.querySelector('aside');
-   
+
     const contentBody = el.querySelector('.content-body');
     contentBody.innerHTML = '';
 
@@ -249,9 +250,6 @@ function loadCardData(o, map, location) {
                   selectedSubs = subs
                   homeView(subs)
                 })
-
-              
-              
               }).catch(function (error) {
                 snacks('Please Try again later');
                 cardProd.close()
@@ -286,7 +284,7 @@ function loadCardData(o, map, location) {
           confirm.root_.classList.add('hidden')
           cardProd.open();
 
-          // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+          requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
             snacks('Check-in created');
             isCheckInCreated = true
             getAvailbleSubs(value).then(function (subs) {
@@ -294,13 +292,13 @@ function loadCardData(o, map, location) {
               selectedSubs = subs
               homeView(subs)
             })
-           
-          // }).catch(function (error) {
-          //   console.log(error)
-          //   confirm.root_.classList.remove('hidden');
-          //   snacks('Please Try Again');
-          //   cardProd.close()
-          // })
+
+          }).catch(function (error) {
+            console.log(error)
+            confirm.root_.classList.remove('hidden');
+            snacks('Please Try Again');
+            cardProd.close()
+          })
         }
 
       })
@@ -322,14 +320,14 @@ function loadCardData(o, map, location) {
   })
 };
 
-function homeView(subs){
+function homeView(subs) {
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
   document.getElementById('app-header').classList.remove('hidden')
   navList.selectedIndex = 1;
   // document.querySelector(`[data-state="homeView"]`).classList.add('mdc-bottom-navigation__list-item--activated')
   const headerImage = `<img  class="mdc-top-app-bar__navigation-icon mdc-theme--secondary header-photo" src='./img/empty-user.jpg'>`
- 
-  const header = getHeader('app-header', headerImage,'');
+
+  const header = getHeader('app-header', headerImage, '');
   header.setScrollTarget(document.getElementById('main-content'));
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
 
@@ -354,7 +352,7 @@ function homeView(subs){
   ${subs.suggested.length ? ` <h3 class="mdc-list-group__subheader">Suggestions</h3>
   <ul class="mdc-list subscription-list" id='suggested-list'>
   ${subs.suggested.map(function(sub){
-    return `<li class='mdc-list-item'>
+    return `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}'>
     ${sub.template}
     <span class='mdc-list-item__meta material-icons'>
     keyboard_arrow_right
@@ -375,13 +373,17 @@ function homeView(subs){
  </ul>`:''}
  
 </div>`
-history.pushState(['homeView'],null,null)
-  if(subs.suggested.length) {
+  history.pushState(['homeView'], null, null)
+  if (subs.suggested.length) {
     const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-    suggestedInit.singleSelection = true; 
+    suggestedInit.singleSelection = true;
     suggestedInit.selectedIndex = 0
+    suggestedInit.listen('MDCList:action', function (evt) {
+      console.log(suggestedInit.listElements[evt.detail.index].dataset)
+      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
+    })
   }
-  if(subs.other.length) {
+  if (subs.other.length) {
     const otherInit = new mdc.list.MDCList(document.getElementById('other-list'))
     otherInit.singleSelection = true;
   }
@@ -389,11 +391,11 @@ history.pushState(['homeView'],null,null)
 
 
 
-function hideBottomNav(){
+function hideBottomNav() {
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
 }
 
-function  showBottomNav(){
+function showBottomNav() {
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
 }
 
@@ -433,10 +435,10 @@ function addSnapControl(map, office) {
 
 }
 
-function Add(el){
+function Add(el) {
   const add = new Fab('add').getButton();
   add.root_.id = 'add';
-  add.root_.classList.add('custom-control','right', 'mdc-theme--primary-bg','mb-10')
+  add.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mb-10')
   el.appendChild(add.root_);
   add.root_.addEventListener('click', function () {
     console.log('clicked')
@@ -453,17 +455,17 @@ function getAvailbleSubs(venue) {
     const store = tx.objectStore('subscriptions');
     const index = store.index('count');
     const result = {
-      suggested:[],
-      other:[]
+      suggested: [],
+      other: []
     };
-    index.openCursor(null,'prev').onsuccess = function (event) {
+    index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if(cursor.value.office !== venue.office) {
+      if (cursor.value.office !== venue.office) {
         cursor.continue();
         return;
       }
-      if(cursor.value.status === 'CANCELLED') {
+      if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
       }
@@ -474,8 +476,8 @@ function getAvailbleSubs(venue) {
           found = true;
         }
       })
-      if(!found) {
-          result.other.push(cursor.value)
+      if (!found) {
+        result.other.push(cursor.value)
       }
       cursor.continue();
     }
@@ -485,24 +487,25 @@ function getAvailbleSubs(venue) {
 
   })
 }
+
 function checkForVenueSubs(office) {
   return new Promise(function (resolve, reject) {
     const tx = db.transaction(['subscriptions']);
     const store = tx.objectStore('subscriptions');
     const index = store.index('count')
     const result = {
-      suggested:[],
-      other:[]
+      suggested: [],
+      other: []
     };
 
-    index.openCursor(null,'prev').onsuccess = function (event) {
+    index.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return
       if (cursor.value.template === 'check-in') {
         cursor.continue();
         return;
       }
-      if(cursor.value.office !== office) {
+      if (cursor.value.office !== office) {
         cursor.continue();
         return;
       }
@@ -512,14 +515,14 @@ function checkForVenueSubs(office) {
         return;
       }
       if (!cursor.value.venue.length) {
-          result.other.push(cursor.value);
-      }
-      else {
-          result.suggested.push(cursor.value)
+        result.other.push(cursor.value);
+      } else {
+        result.suggested.push(cursor.value)
       }
       cursor.continue();
     }
     tx.oncomplete = function () {
+
       resolve(result)
     }
 
@@ -607,28 +610,28 @@ function setFilePath(base64) {
       submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
     }
   });
-    submit.root_.addEventListener('click', function () {
-      const textValue = textarea.value;
-      getUniqueOfficeCount().then(function(offices){
-          if(!offices.length) return;  
-          if(offices.length ==1) {
-            getSubscription(offices[0], 'check-in').then(function (sub) {
-              sub.attachment.Photo.value = url
-              sub.attachment.Comment.value = textValue;
-              progressBar.open();
-              requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
-                mapView()
-                snacks('Check-In Created')
+  submit.root_.addEventListener('click', function () {
+    const textValue = textarea.value;
+    getUniqueOfficeCount().then(function (offices) {
+      if (!offices.length) return;
+      if (offices.length == 1) {
+        getSubscription(offices[0], 'check-in').then(function (sub) {
+          sub.attachment.Photo.value = url
+          sub.attachment.Comment.value = textValue;
+          progressBar.open();
+          requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+            mapView()
+            snacks('Check-In Created')
 
-              }).catch(function(){
-                snacks(error.message)
+          }).catch(function () {
+            snacks(error.message)
 
-              })
-            })
-            return
-          }
-          if(offices.length > 1) {
-            const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
+          })
+        })
+        return
+      }
+      if (offices.length > 1) {
+        const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
               ${offices.map(function(office,idx){
                 return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
                 <span class="mdc-list-item__graphic">
@@ -649,33 +652,33 @@ function setFilePath(base64) {
               }).join("")}
             
             <ul>`
-            const dialog = new Dialog('Choose Office',template).create();
-            const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
-            dialog.open();
-            dialog.listen('MDCDialog:opened', () => {
-              list.layout();
-              list.singleSelection = true
-            });
-            dialog.listen('MDCDialog:closed',function(evt){
-              if(evt.detail.action !== 'accept') return;
-  
-              getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
-                sub.attachment.Photo.value = url
-                sub.attachment.Comment.value = textValue;
-                progressBar.open();
-                requestCreator('create', setVenueForCheckIn('', sub)).then(function(){
-                  mapView()
-                  snacks('Check-In Created')
+        const dialog = new Dialog('Choose Office', template).create();
+        const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
+        dialog.open();
+        dialog.listen('MDCDialog:opened', () => {
+          list.layout();
+          list.singleSelection = true
+        });
+        dialog.listen('MDCDialog:closed', function (evt) {
+          if (evt.detail.action !== 'accept') return;
 
-                }).catch(function(){
-                  snacks(error.message)
-                })
-              })
+          getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
+            sub.attachment.Photo.value = url
+            sub.attachment.Comment.value = textValue;
+            progressBar.open();
+            requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+              mapView()
+              snacks('Check-In Created')
+
+            }).catch(function () {
+              snacks(error.message)
             })
-          }
-      })
-  
+          })
+        })
+      }
     })
+
+  })
 
 
   const image = new Image();

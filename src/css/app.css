@@ -24,7 +24,9 @@ body {
 #app-current-panel {
   position: relative;
 }
-
+.app-padding {
+  padding: 20px;
+}
 #login-container {
   top: 5rem;
   position: relative;
@@ -395,4 +397,10 @@ body {
 #user-fill .user-card,
 #user-fill .mdc-card__actions {
   padding: 16px;
+}
+
+/**iframe **/
+#form-iframe {
+  width: 100%;
+  height: calc(100vh -  56px);
 }

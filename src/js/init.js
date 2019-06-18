@@ -6,7 +6,7 @@ let send;
 let change;
 let next;
 let emailInit;
-let db;
+var db;
 let isCheckInCreated;
 let drawer;
 let navList;
@@ -365,6 +365,13 @@ function startApp(start) {
       }
       req.onsuccess = function () {
         db = req.result;
+        db.transaction('addendum', 'readwrite').objectStore('addendum').put({
+          activityId: '1',
+          addendumId: "90",
+          comment: "Hello",
+          timestamp: 1560864769859,
+          user: "+919654564390"
+      })
         if (!areObjectStoreValid(db.objectStoreNames)) {
           db.close();
           console.log(auth)
@@ -418,6 +425,7 @@ function startApp(start) {
               return;
             }
             checkForRecipient();
+            requestCreator('Null').then(console.log).catch(console.log)
           })
         }).catch(console.log)
       }

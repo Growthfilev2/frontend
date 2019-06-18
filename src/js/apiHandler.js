@@ -732,14 +732,19 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
+      const ob = { displayName: user.displayName,
+        mobile: user.phoneNumber,
+        photoURL: user.photoURL
+      }
+      if(userTimestamp[user.phoneNumber]) {
+        ob.timestamp = userTimestamp[user.phoneNumber].ts
+        ob.comment = userTimestamp[user.phoneNumber].comment
+      }
       userStore.put({
         displayName: user.displayName,
         mobile: user.phoneNumber,
         photoURL: user.photoURL,
-        timestamp: userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].ts : '',
-        comment: userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].comment : ''
       })
-
     })
   })
 

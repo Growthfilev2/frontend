@@ -2,6 +2,13 @@ function chatView() {
     // if(!replaceState) {
     history.pushState(['chatView'], null, null);
     showBottomNav()
+    db.transaction('users', 'readwrite').objectStore('users').put({
+        displayName: 'Parastish',
+        comment: "Hello",
+        timestamp: 1560864769859,
+        mobile: "+919654564390"
+    })
+  
     // }
     // else {
     //     history.replaceState(['chatView'], null, null);
@@ -48,7 +55,6 @@ function chatDom() {
     <div class='search-field'></div>
     <div class='search-result-container'></div>
 </div>
-
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
        
     </ul>
@@ -62,11 +68,10 @@ function search() {
     document.getElementById('app-header').classList.add("hidden")
 
     const searchField = `<div id='search-users' class="mdc-text-field mdc-text-field--with-leading-icon mdc-text-field--with-trailing-icon mdc-text-field--no-label">
-    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id='search-back'>arrow_back</i>
-    <i class="material-icons mdc-text-field__icon hidden"  tabindex="0" role="button" id='clear-search'>clear</i>
-
-    <input type="text" id="my-input" class="mdc-text-field__input" placeholder='Search...'>
-    <div class="mdc-line-ripple"></div>
+        <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id='search-back'>arrow_back</i>
+        <i class="material-icons mdc-text-field__icon hidden"  tabindex="0" role="button" id='clear-search'>clear</i>
+        <input type="text" id="my-input" class="mdc-text-field__input" placeholder='Search...' style='padding-left:48px;padding-right: 48px;'>
+        <div class="mdc-line-ripple"></div>
   </div>`
 
     document.querySelector('#search-users-container .search-field').innerHTML = searchField;
@@ -82,12 +87,6 @@ function search() {
             readLatestChats()
             return;
         }
-        // if(history.state[0] === 'seach') {
-        //     history.replaceState(['search'], null, null);
-        // }
-        // else {
-        //     history.pushState(['search'], null, null);
-        // }
 
         document.getElementById('chats').innerHTML = ''
         searchUsers(evt, parent)
@@ -182,31 +181,27 @@ function readLatestChats() {
     const tx = db.transaction('users');
     const index = tx.objectStore('users').index('timestamp');
     let string = ''
-
+    const myNumber = firebase.auth().currentUser.phoneNumber
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        string += userLi(cursor.value, cursor.value.comment, cursor.value.ts);
+        if (cursor.value.mobile === myNumber) {
+            cursor.continue();
+            return;
+        }
+        console.log(cursor.value)
+        string += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
         cursor.continue();
     }
     tx.oncomplete = function () {
         let suggestion = '';
-        if(string) {
+        if (string) {
             document.getElementById('search-btn').classList.remove('hidden')
         }
-       
-        // if (string) {
+
+
         document.getElementById('chats').innerHTML = string
-        // const contactsBtn = new mdc.ripple.MDCRipple(document.getElementById('get-contacts'));
-        // contactsBtn.root_.addEventListener('click',function(evt){
-        //     AndroidInterface.getContact();
-        // })
-        // const currentChats = document.getElementById('chats')
-        // currentChatsInit = new mdc.list.MDCList(currentChats);
-        // currentChatsInit.listen('MDCList:action', function (evt) {
-        //     enterChat(JSON.parse(currentChatsInit.listElements[evt.detail.index].dataset.user),'pushState')
-        // })
-        // } 
+
     }
 
 }
@@ -396,9 +391,12 @@ function getUserChats(userRecord) {
             if (this.scrollHeight >= 200) return;
 
             this.style.paddingTop = '10px';
+
+            this.style.lineHeight = '1'
             this.style.height = '5px'
             this.style.height = (this.scrollHeight) + "px";
-            form.style.height = this.style.height
+            form.style.minHeight = '56px';
+            form.style.height = 'auto'
             bottom.style.height = (this.scrollHeight + 20) + 'px'
             //not
             if (!this.value.trim()) {
