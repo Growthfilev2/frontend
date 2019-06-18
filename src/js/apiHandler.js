@@ -20,18 +20,20 @@ const requestFunctionCaller = {
   backblaze: backblaze,
 }
 
-function requestHandlerResponse(type, code, message, params) {
+function sendSuccessRequestToMainThread(response,success) {
   self.postMessage({
-    type: type,
-    code: code,
-    msg: message,
-    params: params
+    response: response,
+    success:true
   })
 }
 
 
-function sendApiFailToMainThread(error) {
-  requestHandlerResponse('apiFail', error.code, error);
+
+function sendErrorRequestToMainThread(error) {
+  self.postMessage({
+    response:error,
+    success:false
+  })
 }
 
 self.onmessage = function (event) {
@@ -51,22 +53,25 @@ self.onmessage = function (event) {
           rootObjectStore.put(record)
         }
         rootTx.oncomplete = function () {
+    
+          if (response.removeFromOffice) {
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) { 
+              removeFromOffice(response.removeFromOffice, event.data.meta, db).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
+            };
+            return;
+          };
+          
           self.postMessage({
             response:response,
             success:true
           })
         }
           
-        })
+      })
     
       return
     }
-    
-    if(event.data.type === 'removeFromOffice'){
-      removeFromOffice(event.data.body, event.data.meta, db)
-      return;
-    }
-
+  
     if (event.data.type === 'instant') {
       instant(event.data.body, event.data.meta)
       return
@@ -76,33 +81,11 @@ self.onmessage = function (event) {
       updateIDB({
         meta: event.data.meta,
         db: db
-      }).then(function (res) {
-        self.postMessage({
-          response:res,
-          success:true
-        })
-      }).catch(function (error) {
-        self.postMessage({
-          response:error,
-          success:false
-        })
-      })
+      }).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
       return;
     }
 
-    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(function (res) {
-      self.postMessage({
-        response:res,
-        success:true
-      })
-      console.log(res)
-    }).catch(function (error) {
-      self.postMessage({
-        response:error,
-        success:false
-      })
-      console.log(error)
-    })
+    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
   }
   req.onerror = function () {
 
@@ -338,41 +321,45 @@ function create(requestBody, meta) {
 }
 
 function removeFromOffice(offices, meta, db) {
-  const deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
-  deleteTx.oncomplete = function () {
+  return new Promise(function(resolve,reject){
 
-    const rootTx = db.transaction(['root'], 'readwrite')
-    const rootStore = rootTx.objectStore('root')
-    rootStore.get(meta.user.uid).onsuccess = function (event) {
-      const record = event.target.result;
-      if (!record) return;
-      record.officesRemoved = offices
-      rootStore.put(record)
-    }
-    rootTx.oncomplete = function () {
-      console.log("run read after removal")
-      self.postMessage({
-        response:'Office Removed',
-        success:true
-      })
+    const deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
+    deleteTx.oncomplete = function () {
+      
+      const rootTx = db.transaction(['root'], 'readwrite')
+      const rootStore = rootTx.objectStore('root')
+      rootStore.get(meta.user.uid).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return;
+        record.officesRemoved = offices
+        rootStore.put(record)
+      }
+      rootTx.oncomplete = function () {
+        console.log("run read after removal")
+       resolve({
+          response:'Office Removed',
+          success:true
+        })
+        
+      }
+      rootTx.onerror = function(error){
+       
+      reject({
+          response:error,
+          success:false
+        })
+      }
+      
+    };
     
+    deleteTx.onerror = function () {
+      console.log(tx.error)
     }
-    rootTx.onerror = function(error){
-      self.postMessage({
-        response:error,
-        success:false
-      })
-    }
-
-  };
-
-  deleteTx.onerror = function () {
-    console.log(tx.error)
-  }
-
-  removeActivity(offices, deleteTx)
-
-
+    
+    removeActivity(offices, deleteTx)
+    
+    
+  })
 }
 
 
@@ -750,7 +737,9 @@ function successResponse(read, param, db, resolve, reject) {
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activityObjectStore.put(activity);
+
     updateMap(activity, updateTx);
+    
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
     if (activity.hidden === 0) {

@@ -100,7 +100,7 @@ window.onpopstate = function (event) {
 
   if (!event.state) return;
 
-  if(event.state[0] === 'homeView') {
+  if (event.state[0] === 'homeView') {
     window[event.state[0]](selectedSubs);
     return
   }
@@ -115,12 +115,12 @@ window.addEventListener("load", function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-   navList = new mdc.list.MDCList(document.getElementById('nav-list'))
+  navList = new mdc.list.MDCList(document.getElementById('nav-list'))
   navList.singleSelection = true;
-  navList.listen('MDCList:action',function(evt){
+  navList.listen('MDCList:action', function (evt) {
     console.log(evt)
     const state = navList.listElements[evt.detail.index].dataset.state
-    if(state === 'homeView') {
+    if (state === 'homeView') {
       window[state](selectedSubs)
       return
     }
@@ -128,10 +128,10 @@ window.addEventListener("load", function () {
 
   })
 
-  drawer.listen('MDCDrawer:opened',function(evt){
+  drawer.listen('MDCDrawer:opened', function (evt) {
     document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
     document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
-    document.querySelector(".mdc-drawer__header img").onclick = function(){
+    document.querySelector(".mdc-drawer__header img").onclick = function () {
       profileView();
 
     }
@@ -346,20 +346,20 @@ function startApp(start) {
             var tx = req.transaction;
             const userStore = tx.objectStore('users');
             userStore.createIndex('mobile', 'mobile');
-            
+
             const addendumStore = tx.objectStore('addendum');
             addendumStore.createIndex('user', 'user');
-            addendumStore.createIndex('timestamp','timestamp')
+            addendumStore.createIndex('timestamp', 'timestamp')
           }
           if (evt.oldVersion <= 10) {
             var tx = req.transaction;
             const subscriptionStore = tx.objectStore('subscriptions')
-            subscriptionStore.createIndex('count','count');
+            subscriptionStore.createIndex('count', 'count');
           }
-          if(evt.oldVersion <= 11) {
-            var tx  = req.transaction;
+          if (evt.oldVersion <= 11) {
+            var tx = req.transaction;
             const userStore = tx.objectStore('users')
-            userStore.createIndex('timestamp','timestamp')
+            userStore.createIndex('timestamp', 'timestamp')
           }
         };
       }
@@ -408,20 +408,13 @@ function startApp(start) {
             updateApp()
             return
           }
-
           if (response.revokeSession) {
             revokeSession();
             return
           };
-          if (response.hasOwnProperty('removeFromOffice')) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
-              requestCreator('removeFromOffice', response.removeFromOffice).then(function () {})
-            };
-            return;
-          };
 
           getRootRecord().then(function (rootRecord) {
-            if(!rootRecord.fromTime) {
+            if (!rootRecord.fromTime) {
               requestCreator('Null').then(checkForRecipient).catch(console.log)
               return;
             }
@@ -438,10 +431,10 @@ function startApp(start) {
   })
 }
 
-function checkForRecipient(){
+
+function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    return profileView(result, auth);
     if (!result.length) return mapView();
     if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
     return mapView();
@@ -507,14 +500,14 @@ function createObjectStores(db, uid) {
   users.createIndex('isUpdated', 'isUpdated')
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
-  users.createIndex('timestamp','timestamp')
+  users.createIndex('timestamp', 'timestamp')
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
 
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
-  
+
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
@@ -523,7 +516,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
   subscriptions.createIndex('status', 'status');
-  subscriptions.createIndex('count','count');
+  subscriptions.createIndex('count', 'count');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
