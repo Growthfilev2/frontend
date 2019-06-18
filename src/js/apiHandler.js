@@ -144,7 +144,7 @@ function http(request) {
 }
 
 function fetchServerTime(body, meta, db) {
-  return new Promise(function (resolve) {
+  return new Promise(function (resolve,reject) {
     currentDevice = body.device;
     const parsedDeviceInfo = JSON.parse(currentDevice);
     let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
@@ -160,7 +160,7 @@ function fetchServerTime(body, meta, db) {
         });
         delete record.officesRemoved;
       }
-      if (!record.venuesSet) {
+      if (record.venuesSet) {
         url = url + "&venues=true"
         delete record.venuesSet;
       }
@@ -175,7 +175,7 @@ function fetchServerTime(body, meta, db) {
         token: meta.user.token
       }
 
-      return http(httpReq)
+      http(httpReq).then(resolve).catch(reject)
 
     }
   })
