@@ -412,7 +412,6 @@ function startApp(start) {
             revokeSession();
             return
           };
-
           getRootRecord().then(function (rootRecord) {
             if (!rootRecord.fromTime) {
               requestCreator('Null').then(checkForRecipient).catch(console.log)

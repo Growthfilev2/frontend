@@ -43,27 +43,30 @@ self.onmessage = function (event) {
     const db = req.result
 
     if (event.data.type === 'now') {
-
+      let rootRecord = ''
       fetchServerTime(event.data.body, event.data.meta, db).then(function (response) {
         const rootTx = db.transaction(['root'], 'readwrite')
         const rootObjectStore = rootTx.objectStore('root')
         rootObjectStore.get(event.data.meta.user.uid).onsuccess = function (event) {
-          const record = event.target.result
-          record.serverTime = response.timestamp - Date.now()
-          rootObjectStore.put(record)
+          rootRecord = event.target.result
+          rootRecord.serverTime = response.timestamp - Date.now()
+          rootObjectStore.put(rootRecord)
         }
         rootTx.oncomplete = function () {
           if (response.venues) {
-            const tx = db.transaction('map')
+            const tx = db.transaction('map', 'readwrite')
             response.venues.forEach(function (venue) {
               updateMap(venue, tx)
             })
             tx.oncomplete = function () {
-              sendSuccessRequestToMainThread('map-set')
+              rootRecord.venues = true
+              db.transaction('root','readwrite').objectStore('root').put(rootRecord)
+              sendSuccessRequestToMainThread('venues-set')
             }
             tx.onerror = function () {
               sendErrorRequestToMainThread(tx.error)
             }
+            return;
           }
           if (response.removeFromOffice) {
             if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
@@ -151,17 +154,18 @@ function fetchServerTime(body, meta, db) {
     rootStore.get(meta.user.uid).onsuccess = function (event) {
       const record = event.target.result;
       if (!record) return;
-      if (!record.hasOwnProperty('officesRemoved')) return;
       if (record.officesRemoved) {
         record.officesRemoved.forEach(function (office) {
-
           url = url + `&removeFromOffice=${office.replace(' ','%20')}`
         });
         delete record.officesRemoved;
-        rootStore.put(record);
       }
+      if (!record.venuesSet) {
+        url = url + "&venues=true"
+        delete record.venuesSet;
+      }
+      rootStore.put(record);
     }
-
     tx.oncomplete = function () {
 
       const httpReq = {
@@ -171,19 +175,8 @@ function fetchServerTime(body, meta, db) {
         token: meta.user.token
       }
 
-      http(httpReq).then(function (response) {
+      return http(httpReq)
 
-        return resolve(response);
-
-        resolve({
-          ts: response.timestamp,
-          meta: meta,
-          db: db
-        })
-
-      }).catch(function (error) {
-        reject(error)
-      })
     }
   })
 }
@@ -732,7 +725,6 @@ function successResponse(read, param, db, resolve, reject) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activityObjectStore.put(activity);
 
-    // updateMap(activity, updateTx);
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
