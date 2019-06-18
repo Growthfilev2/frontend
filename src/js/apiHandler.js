@@ -20,10 +20,10 @@ const requestFunctionCaller = {
   backblaze: backblaze,
 }
 
-function sendSuccessRequestToMainThread(response,success) {
+function sendSuccessRequestToMainThread(response, success) {
   self.postMessage({
     response: response,
-    success:true
+    success: true
   })
 }
 
@@ -31,13 +31,13 @@ function sendSuccessRequestToMainThread(response,success) {
 
 function sendErrorRequestToMainThread(error) {
   self.postMessage({
-    response:error,
-    success:false
+    response: error,
+    success: false
   })
 }
 
 self.onmessage = function (event) {
-  
+
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
     const db = req.result
@@ -53,25 +53,36 @@ self.onmessage = function (event) {
           rootObjectStore.put(record)
         }
         rootTx.oncomplete = function () {
-    
+          if (response.venues) {
+            const tx = db.transaction('map')
+            response.venues.forEach(function (venue) {
+              updateMap(venue, tx)
+            })
+            tx.oncomplete = function () {
+              sendSuccessRequestToMainThread('map-set')
+            }
+            tx.onerror = function () {
+              sendErrorRequestToMainThread(tx.error)
+            }
+          }
           if (response.removeFromOffice) {
-            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) { 
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
               removeFromOffice(response.removeFromOffice, event.data.meta, db).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
             };
             return;
           };
-          
+
           self.postMessage({
-            response:response,
-            success:true
+            response: response,
+            success: true
           })
         }
-          
+
       })
-    
+
       return
     }
-  
+
     if (event.data.type === 'instant') {
       instant(event.data.body, event.data.meta)
       return
@@ -321,11 +332,11 @@ function create(requestBody, meta) {
 }
 
 function removeFromOffice(offices, meta, db) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
 
     const deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
     deleteTx.oncomplete = function () {
-      
+
       const rootTx = db.transaction(['root'], 'readwrite')
       const rootStore = rootTx.objectStore('root')
       rootStore.get(meta.user.uid).onsuccess = function (event) {
@@ -336,29 +347,29 @@ function removeFromOffice(offices, meta, db) {
       }
       rootTx.oncomplete = function () {
         console.log("run read after removal")
-       resolve({
-          response:'Office Removed',
-          success:true
+        resolve({
+          response: 'Office Removed',
+          success: true
         })
-        
+
       }
-      rootTx.onerror = function(error){
-       
-      reject({
-          response:error,
-          success:false
+      rootTx.onerror = function (error) {
+
+        reject({
+          response: error,
+          success: false
         })
       }
-      
+
     };
-    
+
     deleteTx.onerror = function () {
       console.log(tx.error)
     }
-    
+
     removeActivity(offices, deleteTx)
-    
-    
+
+
   })
 }
 
@@ -456,32 +467,17 @@ function instantUpdateDB(data, type, user) {
 }
 
 
-function updateMap(activity, tx) {
+function updateMap(venue, tx) {
 
-  if (activity.template === 'check-in') return;
   const mapObjectStore = tx.objectStore('map')
   const mapActivityIdIndex = mapObjectStore.index('activityId')
-  mapActivityIdIndex.openCursor(activity.activityId).onsuccess = function (event) {
+  mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
       console.log("start adding");
-      activity.venue.forEach(function (newVenue) {
-        console.log("adding " + activity.activityId, "location " + newVenue.location)
-        mapObjectStore.add({
-          activityId: activity.activityId,
-          latitude: newVenue.geopoint['_latitude'],
-          longitude: newVenue.geopoint['_longitude'],
-          location: newVenue.location,
-          template: activity.template,
-          address: newVenue.address,
-          venueDescriptor: newVenue.venueDescriptor,
-          status: activity.status,
-          office: activity.office,
-          hidden: activity.hidden
-        })
-      })
+      console.log("adding " + venue.activityId, "location " + venue.location)
+      mapObjectStore.add(venue);
       console.log("finished adding to map")
-
       return;
     }
 
@@ -496,8 +492,6 @@ function updateMap(activity, tx) {
       })
     }
   }
-
-
 }
 
 function updateCalendar(activity, tx) {
@@ -723,9 +717,9 @@ function successResponse(read, param, db, resolve, reject) {
     if (addendum.isComment) {
       let key = addendum.activityId
       // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
-      userTimestamp[addendum.user]= {
-        ts:addendum.timestamp,
-        comment:addendum.comment
+      userTimestamp[addendum.user] = {
+        ts: addendum.timestamp,
+        comment: addendum.comment
       }
     }
     addendumObjectStore.add(addendum)
@@ -738,8 +732,8 @@ function successResponse(read, param, db, resolve, reject) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activityObjectStore.put(activity);
 
-    updateMap(activity, updateTx);
-    
+    // updateMap(activity, updateTx);
+
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
     if (activity.hidden === 0) {
@@ -750,8 +744,8 @@ function successResponse(read, param, db, resolve, reject) {
         displayName: user.displayName,
         mobile: user.phoneNumber,
         photoURL: user.photoURL,
-        timestamp:  userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].ts : '', 
-        comment:userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].comment : ''
+        timestamp: userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].ts : '',
+        comment: userTimestamp[user.phoneNumber] ? userTimestamp[user.phoneNumber].comment : ''
       })
 
     })
