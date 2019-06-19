@@ -284,18 +284,18 @@ body {
 
 
 /** override **/
-.mdc-top-app-bar__row {
+/* .mdc-top-app-bar__row {
   height: 80px;
-}
-.mdc-top-app-bar--fixed-adjust {
+} */
+/* .mdc-top-app-bar--fixed-adjust {
   padding-top: 80px;
-}
-.mdc-top-app-bar__navigation-icon {
+} */
+/* .mdc-top-app-bar__navigation-icon {
   font-size: 36px;
 }
 .mdc-top-app-bar__title  {
   font-size: 28px;
-}
+} */
 .mdc-drawer__header {
   padding-top: 16px;
   padding-bottom: 16px;

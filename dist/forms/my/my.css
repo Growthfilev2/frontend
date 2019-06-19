@@ -2,20 +2,114 @@ body {
     margin: 0;
 
 }
+
 .content {
-    padding: 20px;
+    padding: 10px;
 }
 
 .image {
-    width: 300px;
-    height: 300px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    
+
 }
+
 .mdc-card__media-content {
     top: auto;
     color: white;
 }
-.mdc-card__media-content  h3 {
+
+.mdc-card__media-content h3 {
     margin: 0
+}
+
+.mdc-card__primary-action {
+    display: block;
+
+}
+
+.actions {
+    float: right;
+    padding: 10px;
+}
+
+.actions .action {
+    margin-bottom: 10px;
+}
+
+.actions .action span {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    font-size: 1.3rem;
+}
+
+.actions .action span i {
+    padding-right: 10px;
+    font-size: 28px;
+}
+
+.mdc-card__primary-action {
+    padding: 10px;
+}
+
+.mdc-card__primary-action .simple {
+    display: inline-flex;
+    align-items: center;
+}
+
+.mdc-card__primary-action .simple h3 {
+    margin-left: 10px;
+}
+
+.demo-card__primary {
+    padding: 1rem;
+}
+
+.demo-card__title {
+    margin: 0;
+}
+
+.demo-card__secondary,
+.demo-card__subtitle {
+    color: var(--mdc-theme-text-secondary-on-background, rgba(0, 0, 0, .54));
+}
+
+.demo-card__subtitle {
+    margin: 0;
+}
+
+.tasks-heading {
+    display: inline-flex;
+    align-items: center;
+}
+
+.tasks-heading i {
+    padding-right: 10px;
+}
+
+.mdc-list-group .mdc-list {
+    /* padding-left: 10px; */
+}
+
+.mdc-list-group h3 {
+    font-weight: bold;
+    margin-left: 0px;
+}
+
+.count {
+
+    font-size: 20px;
+
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--mdc-theme-primary);
+
+    text-align: center;
+    display: table-cell;
+    overflow: hidden;
+    vertical-align: middle;
+    color: white;
+
 }

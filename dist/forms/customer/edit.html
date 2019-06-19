@@ -46,17 +46,7 @@
                             <div class="mdc-line-ripple"></div>
                         </div>
                     </div>
-                    <div class="form-component">
-                            <div class="mdc-text-field  mdc-text-field--with-leading-icon"
-                            data-mdc-auto-init="MDCTextField" id='location'>
-                            <input class=" mdc-text-field__input" type="text" id="location">
-                            <label for="input" class="mdc-floating-label" id="cc">Location</label>
-                            <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
-                                id="logo">location_on</i>
-                            <div class="mdc-line-ripple"></div>
-                        </div>
-
-                    </div>
+                  
             <div class="form-component">
                     <div class="mdc-text-field   mdc-text-field--textarea"
                         data-mdc-auto-init="MDCTextField">
@@ -113,7 +103,7 @@
         function setContact(contactString) {
             console.log(contactString);
             customerContact.value = contactString.split("&")[0].split("=")[1]
-            customerName.value = contactString.split("&")[1].split("=")[1]
+            
         }
     </script>
 </body>
