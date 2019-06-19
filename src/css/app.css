@@ -284,6 +284,18 @@ body {
 
 
 /** override **/
+.mdc-top-app-bar__row {
+  height: 80px;
+}
+.mdc-top-app-bar--fixed-adjust {
+  padding-top: 80px;
+}
+.mdc-top-app-bar__navigation-icon {
+  font-size: 36px;
+}
+.mdc-top-app-bar__title  {
+  font-size: 28px;
+}
 .mdc-drawer__header {
   padding-top: 16px;
   padding-bottom: 16px;
@@ -309,7 +321,11 @@ body {
 :not(.mdc-list--non-interactive)>:not(.mdc-list-item--disabled).mdc-list-item::after {
   background-color: #cccccc
 }
-
+/** override **/
+.banner {
+  background-color: rgba(0,0,0,.1);
+  height: calc(50vh - 56px);
+}
 .header-photo {
   border-radius: 50%;
   padding: 6px;
@@ -386,7 +402,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  margin: auto;
+  
   text-align: center;
 }
 
@@ -403,4 +419,10 @@ body {
 #form-iframe {
   width: 100%;
   height: calc(100vh -  56px);
+  position: absolute;
+  top:15%;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border: 0px
 }

@@ -11,22 +11,12 @@
 </head>
 
 <body>
-    <div class='forms'>
+    <div class='forms mdc-card'>
         <div class="form-list">
               
+          
             <div class="form-component">
-
-                <div class="mdc-select" style="width: 100%;">
-                    <i class="mdc-select__dropdown-icon"></i>
-                    <select class="mdc-select__native-control">
-                        <option value="" disabled selected></option>
-                    </select>
-                    <label class="mdc-floating-label">Customer Type</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
-            <div class="form-component">
-                    <div class="mdc-text-field mdc-text-field--with-trailing-icon"
+                    <div class="mdc-text-field mdc-text-field--with-leading-icon"
                         data-mdc-auto-init="MDCTextField" id='customer-contact'>
                         <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0" role="button">contacts</i>
                         <input class="mdc-text-field__input" type="tel">
@@ -36,17 +26,37 @@
                 </div>
             <div class="form-component">
 
-                    <div class="mdc-text-field  mdc-text-field--with-trailing-icon"
+                    <div class="mdc-text-field  mdc-text-field--with-leading-icon"
                         data-mdc-auto-init="MDCTextField" id='customer-name'>
-                        <input class=" mdc-text-field__input" type="text" id="input">
+                        <input class=" mdc-text-field__input" type="text" id="" required>
                         <label for="input" class="mdc-floating-label" id="cc">Customer Name</label>
                         <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
                             id="logo">perm_identity</i>
                         <div class="mdc-line-ripple"></div>
                     </div>
                 </div>
-            
-           
+                <div class="form-component">
+
+                        <div class="mdc-select">
+                            <i class="mdc-select__dropdown-icon"></i>
+                            <select class="mdc-select__native-control">
+                                <option value="" disabled selected></option>
+                            </select>
+                            <label class="mdc-floating-label">Customer Type</label>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+                    </div>
+                    <div class="form-component">
+                            <div class="mdc-text-field  mdc-text-field--with-leading-icon"
+                            data-mdc-auto-init="MDCTextField" id='location'>
+                            <input class=" mdc-text-field__input" type="text" id="location">
+                            <label for="input" class="mdc-floating-label" id="cc">Location</label>
+                            <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
+                                id="logo">location_on</i>
+                            <div class="mdc-line-ripple"></div>
+                        </div>
+
+                    </div>
             <div class="form-component">
                     <div class="mdc-text-field   mdc-text-field--textarea"
                         data-mdc-auto-init="MDCTextField">

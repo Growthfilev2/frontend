@@ -21,7 +21,7 @@ function mapView() {
 
   document.getElementById('app-current-panel').innerHTML = mapDom();
   document.getElementById('app-current-panel').classList.remove('user-detail-bckg')
-  document.getElementById('app-current-panel').classList.remove('mdc-top-app-bar--dense-fixed-adjust')
+  document.getElementById('app-current-panel').classList.remove('mdc-top-app-bar--fixed-adjust')
 
   document.getElementById('map-view').style.height = '100%';
 
@@ -242,7 +242,7 @@ function loadCardData(o, map, location) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) return;
               cardProd.open()
-              requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
@@ -250,10 +250,10 @@ function loadCardData(o, map, location) {
                   selectedSubs = subs
                   homeView(subs)
                 })
-              }).catch(function (error) {
-                snacks('Please Try again later');
-                cardProd.close()
-              })
+              // }).catch(function (error) {
+              //   snacks('Please Try again later');
+              //   cardProd.close()
+              // })
             });
           });
           if (offices.length == 1) {
@@ -332,7 +332,7 @@ function homeView(subs) {
   header.navIcon_.src = firebase.auth().currentUser.photoURL;
 
   header.listen('MDCTopAppBar:nav', handleNav);
-  document.getElementById('growthfile').classList.add('mdc-top-app-bar--dense-fixed-adjust')
+  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
   document.getElementById('app-current-panel').innerHTML = `
   <div class="mdc-list-group" id='subscription-list-group'>
   ${subs.pending ? `  <h3 class="mdc-list-group__subheader mdc-typography--headline5 mdc-theme--primary">Pending Tasks</h3>
@@ -620,9 +620,8 @@ function setFilePath(base64) {
           sub.attachment.Comment.value = textValue;
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            mapView()
+            homeView(selectedSubs)
             snacks('Check-In Created')
-
           }).catch(function () {
             snacks(error.message)
 
@@ -667,7 +666,7 @@ function setFilePath(base64) {
             sub.attachment.Comment.value = textValue;
             progressBar.open();
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              mapView()
+              homeView(selectedSubs)
               snacks('Check-In Created')
 
             }).catch(function () {

@@ -1,0 +1,21 @@
+body {
+    margin: 0;
+
+}
+.content {
+    padding: 20px;
+}
+
+.image {
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    
+}
+.mdc-card__media-content {
+    top: auto;
+    color: white;
+}
+.mdc-card__media-content  h3 {
+    margin: 0
+}

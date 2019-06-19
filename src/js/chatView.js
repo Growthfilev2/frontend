@@ -27,7 +27,7 @@ function chatView() {
 
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
-    document.getElementById('growthfile').classList.add('mdc-top-app-bar--dense-fixed-adjust')
+    document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
     const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
     contactsBtn.root_.addEventListener('click', function (evt) {
         contactsBtn.root_.remove();
@@ -295,7 +295,7 @@ function enterChat(number) {
         history.pushState(['enterChat'], null, null)
 
         document.getElementById('app-header').classList.remove("hidden")
-        document.getElementById('growthfile').classList.remove('mdc-top-app-bar--dense-fixed-adjust')
+        document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
 
         document.getElementById('app-current-panel').innerHTML = `
         <div class="wrapper">
