@@ -4,8 +4,8 @@ function addView(sub, location) {
     `
     const header = getHeader('app-header', backIcon, '');
 
-    history.pushState(['addView'], null, null);
-    hideBottomNav();
+    
+    // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
     <iframe id='form-iframe' src="https://growthfile-testing.firebaseapp.com/forms/customer/edit.html"></iframe>

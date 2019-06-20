@@ -1,14 +1,7 @@
 function chatView() {
     // if(!replaceState) {
-    history.pushState(['chatView'], null, null);
-    showBottomNav()
-    db.transaction('users', 'readwrite').objectStore('users').put({
-        displayName: 'Parastish',
-        comment: "Hello",
-        timestamp: 1560864769859,
-        mobile: "+919654564390"
-    })
-  
+
+    // showBottomNav()  
     // }
     // else {
     //     history.replaceState(['chatView'], null, null);
@@ -16,7 +9,7 @@ function chatView() {
     // hideBottomNav()
     document.getElementById('start-load').classList.add('hidden');
 
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon hidden'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons hidden' id='search-btn'>
         search
     </a>`
@@ -279,7 +272,7 @@ function enterChat(number) {
     // const userRecord = JSON.parse(userRecordString)
     // debugger;
 
-    hideBottomNav()
+    // hideBottomNav()
     db.transaction('users').objectStore('users').index('mobile').get(number).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;

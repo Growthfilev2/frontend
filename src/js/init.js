@@ -101,7 +101,7 @@ window.onpopstate = function (event) {
   if (!event.state) return;
 
   if (event.state[0] === 'homeView') {
-    window[event.state[0]](selectedSubs);
+    window[event.state[0]](selectedSubs,event.state[1]);
     return
   }
   window[event.state[0]]();
@@ -115,18 +115,18 @@ window.addEventListener("load", function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  navList = new mdc.list.MDCList(document.getElementById('nav-list'))
-  navList.singleSelection = true;
-  navList.listen('MDCList:action', function (evt) {
-    console.log(evt)
-    const state = navList.listElements[evt.detail.index].dataset.state
-    if (state === 'homeView') {
-      window[state](selectedSubs)
-      return
-    }
-    window[state]()
+  // navList = new mdc.list.MDCList(document.getElementById('nav-list'))
+  // navList.singleSelection = true;
+  // navList.listen('MDCList:action', function (evt) {
+  //   console.log(evt)
+  //   const state = navList.listElements[evt.detail.index].dataset.state
+  //   if (state === 'homeView') {
+  //     window[state](selectedSubs)
+  //     return
+  //   }
+  //   window[state]()
 
-  })
+  // })
 
   drawer.listen('MDCDrawer:opened', function (evt) {
     document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
@@ -365,13 +365,7 @@ function startApp(start) {
       }
       req.onsuccess = function () {
         db = req.result;
-        db.transaction('addendum', 'readwrite').objectStore('addendum').put({
-          activityId: '1',
-          addendumId: "90",
-          comment: "Hello",
-          timestamp: 1560864769859,
-          user: "+919654564390"
-      })
+    
         if (!areObjectStoreValid(db.objectStoreNames)) {
           db.close();
           console.log(auth)

@@ -105,98 +105,6 @@ function mapView() {
   })
 }
 
-function createForm(office, template, venue, location) {
-
-  const submitCont = document.getElementById('submit-cont')
-  submitCont.innerHTML = `<button class='mdc-button' id='create-form'>Create ${template}</button>`
-  const btn = new mdc.ripple.MDCRipple(document.getElementById('create-form'))
-  btn.root_.addEventListener('click', function () {
-
-    // history.pushState(['cardView'], null, null);
-
-    getSubscription(office, template).then(function (subscription) {
-      const duplicate = JSON.parse(JSON.stringify(subscription));
-      const random = Math.floor(Math.random() * Math.floor(100000));
-      if (template === 'customer') {
-
-        const dialog = new Dialog('Customer', customer(subscription, random)).create();
-        dialog.open();
-        dialog.listen('MDCDialog:closed', function (evt) {
-          if (evt.detail.action !== 'accept') return;
-          duplicate.venue = [{
-            geopoint: {
-              latitude: location.latitude,
-              longitude: location.longitude
-            },
-            location: 'Dummy Location ' + random,
-            address: 'Dummy Location ' + random,
-            venueDescriptor: 'Customer Office'
-          }]
-
-          duplicate.attachment.Name.value = 'Dummy Name ' + random;
-          duplicate.share = []
-          console.log(duplicate);
-
-          requestCreator('create', duplicate).then(function () {
-
-            successDialog();
-            // document.getElementById('selection-box').querySelector('aside').classList.add('large')
-            history.pushState(['mapView'], null, null)
-            loadCardData(o, map, location, {
-              latitude: location.latitude,
-              longitude: location.longitude,
-              location: 'Dummy Location ' + random,
-              address: 'Dummy Location ' + random,
-              venueDescriptor: 'Customer Office',
-              office: duplicate.office,
-              template: duplicate.template
-            })
-          }).catch(function (error) {
-            snacks(error.message)
-          })
-        })
-
-      }
-      if (template === 'dsr' || template === 'tour plan' || template === 'duty roster') {
-
-        const dialog = new Dialog(template, common(subscription)).create();
-        dialog.open();
-        dialog.listen('MDCDialog:closed', function (evt) {
-          if (evt.detail.action !== 'accept') return;
-
-          if (duplicate.attachment.Name) {
-            duplicate.attachment.Name.value = 'sample name' + random;
-          }
-
-          const scheules = []
-          duplicate.schedule.forEach(function (value) {
-            scheules.push({
-              name: value,
-              startTime: Date.now(),
-              endTime: Date.now()
-            })
-          })
-          duplicate.schedule = scheules;
-          duplicate.share = []
-          console.log(duplicate);
-
-          requestCreator('create', duplicate).then(function () {
-            successDialog();
-            history.pushState(['mapView'], null, null)
-
-          });
-        })
-
-      }
-      [].map.call(document.querySelectorAll('.mdc-text-field'), function (el) {
-        // fields[el.dataset[Object.keys(el.dataset)]] =  new mdc.textField.MDCTextField(el);
-        new mdc.textField.MDCTextField(el);
-      });
-    })
-  })
-  // })
-}
-
 
 
 function loadCardData(o, map, location) {
@@ -242,7 +150,7 @@ function loadCardData(o, map, location) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) return;
               cardProd.open()
-              requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
@@ -250,10 +158,10 @@ function loadCardData(o, map, location) {
                   selectedSubs = subs
                   homeView(subs, location)
                 })
-              }).catch(function (error) {
-                snacks('Please Try again later');
-                cardProd.close()
-              })
+              // }).catch(function (error) {
+              //   snacks('Please Try again later');
+              //   cardProd.close()
+              // })
             });
           });
           if (offices.length == 1) {
@@ -509,7 +417,7 @@ function snapView() {
 
 
 function setFilePath(base64) {
-  document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
+  // document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
   history.pushState(['snapView'], null, null)
