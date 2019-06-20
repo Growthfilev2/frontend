@@ -4,8 +4,8 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+     <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/styles.css" rel="stylesheet" type="text/css">
 </head>
@@ -68,7 +68,7 @@
                         <div class="mdc-text-field-helper-text"></div>
                     </div>
                 </div>
-
+               
                 <!-- <input type="text" name="fname" required> -->
                 <div class="form-component">
                 <input type="submit" value="CREATE CUSTOMER"  class="mdc-button submit-btn" >
@@ -78,13 +78,13 @@
 
     </div>
     <script type=" text/javascript">
-        window.mdc.autoInit();
+        parent.window.mdc.autoInit();
        
         function init(subscriptionTemplate, currentLocation) {
-            const select = new mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            const customerContact = new mdc.textField.MDCTextField(document.getElementById('customer-contact'))
-            const customerName = new mdc.textField.MDCTextField(document.getElementById('customer-name'))
-            const customerAddress = new mdc.textField.MDCTextField(document.getElementById('address'))
+            const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+            const customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
+            const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
+            const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
 
             console.log(customerContact.foundation_.adapter_.getNativeInput())
             customerContact.foundation_.adapter_.getNativeInput().addEventListener('click', function () {
@@ -99,7 +99,7 @@
                     cursor.continue();
                     return;
                 }
-                select.nativeControl_.innerHTML += ` <option value="cursor.value.attachment.Name.value">
+                select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
                         ${cursor.value.attachment.Name.value}
                       </option>`
                 cursor.continue();
@@ -113,14 +113,15 @@
             var formEl = document.getElementById('form');
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
-        
-                subscriptionTemplate.attachment.Name.value = customerName.value;
-
-                subscriptionTemplate.attachment['Customer Type'].value = select.value;
-                subscriptionTemplate.attachment['First Contact'].value = customerContact.value;
-
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate))
                 const vd = subscriptionTemplate.venue[0];
-                subscriptionTemplate.venue = [{
+
+                copy.attachment.Name.value = customerName.value;
+
+                copy.attachment['Customer Type'].value = select.value;
+                copy.attachment['First Contact'].value = customerContact.value;
+
+                copy.venue = [{
                     venueDescriptor: vd,
                     address: customerAddress.value,
                     location: customerName.value,
@@ -129,8 +130,8 @@
                         longitude: currentLocation.longitude
                     }
                 }]
-                subscriptionTemplate.share=[]
-                parent.sendFormToParent(subscriptionTemplate, currentLocation)
+                copy.share=[]
+                parent.sendFormToParent(copy, currentLocation)
             })
         }
 
