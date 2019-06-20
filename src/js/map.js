@@ -321,6 +321,7 @@ function loadCardData(o, map, location) {
 };
 
 function homeView(subs, location) {
+  progressBar.close();
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
   document.getElementById('app-header').classList.remove('hidden')
   navList.selectedIndex = 1;
