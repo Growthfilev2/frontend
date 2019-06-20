@@ -242,18 +242,18 @@ function loadCardData(o, map, location) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) return;
               cardProd.open()
-              // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
                   cardProd.close()
                   selectedSubs = subs
-                  homeView(subs,location)
+                  homeView(subs, location)
                 })
-              // }).catch(function (error) {
-              //   snacks('Please Try again later');
-              //   cardProd.close()
-              // })
+              }).catch(function (error) {
+                snacks('Please Try again later');
+                cardProd.close()
+              })
             });
           });
           if (offices.length == 1) {
@@ -261,7 +261,7 @@ function loadCardData(o, map, location) {
           }
           if (offices.length > 1) {
             selectOfficeInit.selectedIndex = -1
-            header.textContent = 'Choose Office'
+
           }
         })
         return;
@@ -290,7 +290,7 @@ function loadCardData(o, map, location) {
             getAvailbleSubs(value).then(function (subs) {
               cardProd.close();
               selectedSubs = subs
-              homeView(subs,location)
+              homeView(subs, location)
             })
 
           }).catch(function (error) {
@@ -320,7 +320,7 @@ function loadCardData(o, map, location) {
   })
 };
 
-function homeView(subs,location) {
+function homeView(subs, location) {
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
   document.getElementById('app-header').classList.remove('hidden')
   navList.selectedIndex = 1;
@@ -380,7 +380,7 @@ function homeView(subs,location) {
     suggestedInit.selectedIndex = 0
     suggestedInit.listen('MDCList:action', function (evt) {
       console.log(suggestedInit.listElements[evt.detail.index].dataset)
-      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value),location)
+      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value), location)
     })
   }
   if (subs.other.length) {
@@ -620,8 +620,8 @@ function setFilePath(base64) {
           sub.attachment.Comment.value = textValue;
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            manageLocation().then(function(location){
-              homeView(selectedSubs,location)
+            manageLocation().then(function (location) {
+              homeView(selectedSubs, location)
             })
             snacks('Check-In Created')
           }).catch(function () {
@@ -668,8 +668,8 @@ function setFilePath(base64) {
             sub.attachment.Comment.value = textValue;
             progressBar.open();
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              manageLocation().then(function(location){
-                  homeView(selectedSubs,location)
+              manageLocation().then(function (location) {
+                homeView(selectedSubs, location)
               });
               snacks('Check-In Created')
             }).catch(function () {
