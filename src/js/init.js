@@ -309,6 +309,7 @@ function startApp(start) {
         rootTx.onerror = function () {
           handleError({message:rootTx.error,body:''})
           loadApp()
+          
         }
       }
       req.onerror = function () {

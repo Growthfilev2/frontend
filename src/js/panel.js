@@ -14,7 +14,7 @@ function resetScroll() {
 function initDomLoad() {
   document.getElementById('start-loader').classList.remove('hidden')
   progressBar.foundation_.close();
-  
+  console.log("a")
   document.body.classList.remove('mdc-dialog-scroll-lock')
 
   listPanel()
