@@ -34,9 +34,12 @@ function sendApiFailToMainThread(error) {
 
 self.onmessage = function (event) {
   if (event.data.type === 'now') {
-    fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(function(error){
-      
-      instant({message:JSON.stringify(error),body:''})
+    fetchServerTime(event.data.body, event.data.meta).then(putServerTime).then(updateIDB).catch(function (error) {
+
+      instant({
+        message: JSON.stringify(error),
+        body: ''
+      })
     });
     return
   }
@@ -74,14 +77,14 @@ function http(request) {
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
     xhr.setRequestHeader('Content-Type', 'application/json')
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
-    if(request.method !== 'GET') {
+    if (request.method !== 'GET') {
       xhr.timeout = 15000
-      xhr.ontimeout = function(){
+      xhr.ontimeout = function () {
         return reject({
           code: 400,
-          message:'Request Timed Out. Please Try Again Later'
+          message: 'Request Timed Out. Please Try Again Later'
         });
-        
+
       }
     }
     xhr.onreadystatechange = function () {
@@ -91,7 +94,7 @@ function http(request) {
         if (!xhr.status) {
           return reject({
             code: 400,
-            message:'Please Make sure you have a working Internet Connection'
+            message: 'Please Make sure you have a working Internet Connection'
           });
         };
 
@@ -217,9 +220,13 @@ function putServerTime(data) {
         const record = event.target.result
         record.serverTime = data.ts - Date.now()
         rootObjectStore.put(record)
-      }
+      };
+
+
+
       rootTx.oncomplete = function () {
-        requestHandlerResponse('now-set',200)
+
+        requestHandlerResponse('nowValid', 200)
         resolve(data.meta)
       }
     }
@@ -957,7 +964,7 @@ function successResponse(read, param) {
       }
     }
 
- 
+
     updateRoot(param, read).then(function () {
       updateSubscription(read.templates, param).then(function () {
         requestHandlerResponse('initFirstLoad', 200, {

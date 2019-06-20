@@ -391,21 +391,19 @@ function requestCreator(requestType, requestBody) {
     if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
       requestGenerator.body = requestBody;
       requestGenerator.meta.user.token = token;
-
       apiHandler.postMessage(requestGenerator);
-
     } else {
+
       getRootRecord().then(function (rootRecord) {
-        let location = rootRecord.location;
-        let isLocationOld = true;
-        location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
-        requestGenerator.meta.user.token = token;
-        if (isLocationOld) {
-          manageLocation().then(function (location) {
-            createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,location)
-          }).catch(locationErrorDialog)
-        } else {
-          createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,rootRecord.location)
+        if(!rootRecord.nowValid) {
+          window.addEventListener('nowValid', function _nowValid(e) {
+         
+            handleRequestCreation(rootRecord,location,requestGenerator,token,requestType,requestBody)
+            window.removeEventListener('nowValid', _nowValid, true);
+          }, true)
+        }
+        else {
+          handleRequestCreation(rootRecord,location,requestGenerator,token,requestType,requestBody)
         }
       });
     }
@@ -416,6 +414,19 @@ function requestCreator(requestType, requestBody) {
   apiHandler.onerror = onErrorMessage;
 }
 
+function handleRequestCreation(rootRecord,location,requestGenerator,token,requestType,requestBody){
+  let currlocation = rootRecord.location;
+  let isLocationOld = true;
+  currlocation ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
+  requestGenerator.meta.user.token = token;
+  if (isLocationOld) {
+    manageLocation().then(function (newLocation) {
+      createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,newLocation)
+    }).catch(locationErrorDialog)
+  } else {
+    createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,currlocation)
+  }
+}
 function createRequestBody(requestType, requestBody, requestGenerator,serverTime, location) {
 
   if (requestType === 'create') {
@@ -454,7 +465,7 @@ function isLastLocationOlderThanThreshold(test, threshold) {
 }
 
 var receiverCaller = {
-  'now-set':nowSet,
+  'nowValid':nowValid,
   'initFirstLoad': initFirstLoad,
   'update-app': updateApp,
   'removed-from-office': officeRemovalSuccess,
@@ -467,9 +478,6 @@ function messageReceiver(response) {
   receiverCaller[response.data.type](response.data);
 }
 
-function nowSet(){
-  listView();
-}
 
 
 function emailVerify(notification) {
@@ -548,7 +556,31 @@ function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
     });
   })
 }
+function nowValid(){
+  const uid = firebase.auth().currentUser.uid
 
+  const req = indexedDB.open(uid);
+  req.onsuccess = function(){
+    const db = req.result;
+    const tx =  db.transaction('root','readwrite')
+    const store = tx.objectStore('root')
+    store.get(uid).onsuccess = function(event){
+      const record = event.target.result;
+      record.nowValid = true;
+      store.put(record);
+    }
+    tx.oncomplete = function(){
+      
+      var nowEvent = new CustomEvent("nowValid", {
+        "detail": {
+          valid:true
+        }
+      });
+      window.dispatchEvent(nowEvent)
+    }
+  }
+ 
+}
 function initFirstLoad(response) {
   if (history.state[0] !== 'listView') return;
   if (response.msg.hasOwnProperty('activity')) {
