@@ -210,7 +210,7 @@ function loadCardData(o, map, location) {
 
     const header = document.getElementById('card-primary');
     const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
-    header.textContent = `Hello, ${firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber }`;
+    header.textContent = `Where Are You`;
     el.classList.remove('hidden');
 
     contentBody.innerHTML = `<div>
