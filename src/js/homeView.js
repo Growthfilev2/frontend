@@ -13,7 +13,7 @@ function homeView(subs, location) {
     header.listen('MDCTopAppBar:nav', handleNav);
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
     document.getElementById('app-current-panel').innerHTML =`
-    <div class="container">
+    <div class="container home-container">
     <div class="profile-container mdc-card">
     <div class="mdc-card__primary-action">
       <div class="simple">
