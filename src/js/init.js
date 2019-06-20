@@ -1,5 +1,3 @@
-
-
 const appKey = new AppKeys();
 let progressBar;
 let snackBar;
@@ -294,17 +292,20 @@ function startApp(start) {
         document.getElementById("main-layout-app").style.display = 'block'
         localStorage.setItem('dbexist', auth.uid);
         ga('set', 'userId', JSON.parse(native.getInfo()).id)
-
-        resetScroll();
-      
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        });
-        runAppChecks()
-        manageLocation().then(console.log).catch(handleError)
-
+        const rootTx = db.transaction('root', 'readwrite')
+        const rootStore = rootTx.objectStore('root')
+        rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+          const record = event.target.result;
+          record.nowValid = false;
+          rootStore.put(record)
+        }
+        rootTx.oncomplete = function () {
+          loadApp()
+        }
+        rootTx.onerror = function () {
+          handleError({message:rootTx.error,body:''})
+          loadApp()
+        }
       }
       req.onerror = function () {
         handleError({
@@ -315,6 +316,17 @@ function startApp(start) {
   })
 }
 
+function loadApp() {
+  resetScroll();
+  listView();
+  requestCreator('now', {
+    device: native.getInfo(),
+    from: '',
+    registerToken: native.getFCMToken()
+  });
+  runAppChecks()
+  manageLocation().then(console.log).catch(handleError)
+}
 
 function getEmployeeDetails() {
   return new Promise(function (resolve, reject) {
