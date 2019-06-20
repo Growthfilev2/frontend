@@ -1,6 +1,32 @@
 body {
     margin: 0;
 }
+.hidden {
+    display: none !important;
+}
+
+.tasks-heading{
+    display: inline-flex;
+    align-items: inherit;
+}
+.tasks-heading i {
+    padding-right: 10px;
+}
+/** view **/
+.view-list .mdc-chip-set {
+    padding: 0px;
+}
+.view-list .mdc-chip-set .mdc-chip {
+    margin: 0px;
+}
+.view-list .mdc-chip__text {
+    /* white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 70px; */
+  }
+  
+  /** view-form**/
 .forms {
     width: 640px;
     margin: auto;

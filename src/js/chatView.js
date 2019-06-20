@@ -318,7 +318,15 @@ function enterChat(number) {
     }
 }
 
-
+function actionBox(value) {
+    return `<div class="message-wrapper aciton-info" onclick="showActivity(${value.activityId})">
+    <div class="text-wrapper">${value.comment}
+    <span class="metadata">
+    <i class='material-icons'>info</i>
+    </span>
+    </div>
+    </div>`
+}
 
 function messageBox(comment, position, image, time) {
     return `<div class="message-wrapper ${position}">
@@ -330,6 +338,75 @@ function messageBox(comment, position, image, time) {
 </span></span>
     </div>
     </div>`
+}
+
+function showActivity(activityId) {
+    db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
+        const record = event.target.result;
+        if (!record) return;
+        const dialog = new Dialog(record.activityName, activityDomCustomer(record)).create('simple');
+        dialog.open();
+
+
+    }
+}
+
+
+
+function iconByType(type, name) {
+    if (type === 'string') {
+        if (name === 'Name') {
+            return 'account_circle'
+        }
+        return 'info'
+    }
+
+    const iconObject = {
+        'phoneNumber': 'phone',
+        'HH:MM': 'access_time',
+        'weekday': 'today',
+
+    }
+    return iconObject[type]
+}
+
+function activityDomCustomer(activityRecord) {
+    console.log(activityRecord);
+
+    return `
+
+    ${Object.keys(activityRecord.attachment).map(function(attachmentName){
+        console.log(iconByType(activityRecord.attachment[attachmentName].type,attachmentName))
+        return `${activityRecord.attachment[attachmentName].value ? `<h3 class="mdc-typography--body1  tasks-heading">
+        <i class="material-icons">${iconByType(activityRecord.attachment[attachmentName].type,attachmentName)}</i>
+        <span>${activityRecord.attachment[attachmentName].value}</span>
+    </h3>` :''}`
+    }).join("")}
+    
+    ${activityRecord.venue.map(function(v){
+        return `
+            <h3 class="mdc-typography--body1  tasks-heading">
+                <i class="material-icons">location_on</i>
+                <span>${v.address}</span>
+            </h3>`
+    }).join("")}
+        
+        <div class="assignees tasks-heading">
+                <i class="material-icons">share</i>
+                <div class="mdc-chip-set" id='share'>
+                ${activityRecord.assignees.map(function(user){
+                    return `<div class="mdc-chip" tabindex="0">
+                    ${user.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${user.photoURL}`:`  <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">account_circle</i>`}
+                        <div class="mdc-chip__text">${user.displayName || user.mobile}</div>
+                    </div>`
+                }).join("")}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    `
+
 }
 
 function getUserChats(userRecord) {
@@ -351,7 +428,11 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         }
-        timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
+        if (cursor.value.isComment) {
+            timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
+        } else {
+            timeLine += actionBox(cursor.value)
+        }
         cursor.continue();
     }
     tx.oncomplete = function () {

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/styles.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+        <div class="view-list">
+            <div class="form-component">
+                <h3 class="mdc-typography--body1 hidden tasks-heading" id='customer-name'>
+                    <i class="material-icons">perm_identity</i>
+                    <span></span>
+                </h3>
+                <h3 class="mdc-typography--body1 hidden tasks-heading" id='customer-contact'>
+                    <i class="material-icons">contacts</i>
+                    <span></span>
+                </h3>
+
+                <h3 class="mdc-typography--body1 hidden tasks-heading" id='customer-type'>
+                    <i class="material-icons">info</i>
+                    <span></span>
+                </h3>
+                <h3 class="mdc-typography--body1 hidden tasks-heading" id='customer-address'>
+                    <i class="material-icons">location_on</i>
+                    <span>
+
+                </span>
+                </h3>
+                <div class="assignees tasks-heading">
+                    <i class="material-icons">share</i>
+                    <div class="mdc-chip-set" id='share'>
+                        
+
+                    </div>
+                </div>
+
+            </div>
+
+            </form>
+        </div>
+
+   
+    <script type=" text/javascript">
+        parent.window.mdc.autoInit();
+
+        function init(record) {
+
+            const customerContact = document.getElementById('customer-contact')
+            const customerName = document.getElementById('customer-name')
+            const customerAddress = document.getElementById('customer-address')
+            const customerType = document.getElementById('customer-type')
+
+            if (record.attachment['First Contact'].value) {
+                customerContact.classList.remove('hidden')
+                customerContact.querySelector('span').textContent = record.attachment['First Contact'].value;
+            }
+            if (record.attachment.Name.value) {
+                customerName.classList.remove('hidden')
+                customerName.querySelector('span').textContent = record.attachment.Name.value;
+            }
+            if (record.venue[0].address) {
+                customerAddress.classList.remove('hidden')
+                customerAddress.querySelector('span').textContent = record.venue[0].address
+            }
+
+            if (record.attachment['Customer Type'].value) {
+                customerType.classList.remove('hidden')
+                customerType.querySelector('span').textContent = record.attachment['Customer Type'].value
+            }
+            if(record.assignees.length){
+                const tx =  parent.db.transaction('users')
+                let chipString = '';
+                record.assignees.forEach(function(user){
+                    tx.objectStore('users').get(user.phoneNumber).onsuccess = function(event){
+                        const record = event.target.result;
+                        if(record) {
+                            chipString+= `<div class="mdc-chip" tabindex="0">
+                                ${record.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${record.photoURL}`:`  <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">account_circle</i>`}
+                                 
+                                    <div class="mdc-chip__text">${record.displayName || record.mobile}</div>
+                                </div>`
+                        }
+                    }
+                })
+                tx.oncomplete = function(){
+                    console.log(chipString)
+                    document.getElementById('share').innerHTML = chipString;
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
