@@ -24,8 +24,6 @@ function successDialog(data) {
       successMark.classList.add('hidden');
       viewContainer.style.opacity = '1';
     }, 1500);
-
-  
   }
   
 

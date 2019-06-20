@@ -248,7 +248,7 @@ function loadCardData(o, map, location) {
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
                   cardProd.close()
                   selectedSubs = subs
-                  homeView(subs)
+                  homeView(subs,location)
                 })
               // }).catch(function (error) {
               //   snacks('Please Try again later');
@@ -290,7 +290,7 @@ function loadCardData(o, map, location) {
             getAvailbleSubs(value).then(function (subs) {
               cardProd.close();
               selectedSubs = subs
-              homeView(subs)
+              homeView(subs,location)
             })
 
           }).catch(function (error) {
@@ -320,7 +320,7 @@ function loadCardData(o, map, location) {
   })
 };
 
-function homeView(subs) {
+function homeView(subs,location) {
   document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
   document.getElementById('app-header').classList.remove('hidden')
   navList.selectedIndex = 1;
@@ -380,7 +380,7 @@ function homeView(subs) {
     suggestedInit.selectedIndex = 0
     suggestedInit.listen('MDCList:action', function (evt) {
       console.log(suggestedInit.listElements[evt.detail.index].dataset)
-      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
+      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value),location)
     })
   }
   if (subs.other.length) {
