@@ -620,7 +620,9 @@ function setFilePath(base64) {
           sub.attachment.Comment.value = textValue;
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            homeView(selectedSubs)
+            manageLocation().then(function(location){
+              homeView(selectedSubs,location)
+            })
             snacks('Check-In Created')
           }).catch(function () {
             snacks(error.message)
@@ -651,7 +653,7 @@ function setFilePath(base64) {
               }).join("")}
             
             <ul>`
-        const dialog = new Dialog('Choose Office', template).create();
+        const dialog = new Dialog('Send To', template).create();
         const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
         dialog.open();
         dialog.listen('MDCDialog:opened', () => {
@@ -666,9 +668,10 @@ function setFilePath(base64) {
             sub.attachment.Comment.value = textValue;
             progressBar.open();
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              homeView(selectedSubs)
+              manageLocation().then(function(location){
+                  homeView(selectedSubs,location)
+              });
               snacks('Check-In Created')
-
             }).catch(function () {
               snacks(error.message)
             })
