@@ -50,10 +50,6 @@ function GetCellularInformation() {
     return body
 }
                                             
-
-
-
-
 function removeFalseCellIds(cellTowers) {
     const max_value = 2147483647
     const filtered = cellTowers.filter(function (tower) {
@@ -99,46 +95,6 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function createHeader(startContent, endContent, id) {
-    const header = createElement('header', {
-        className: 'mdc-top-app-bar',
-        id: id
-    });
-    const div = createElement('div', {
-        className: 'mdc-top-app-bar__row'
-    })
-    const start = createElement('section', {
-        className: 'mdc-top-app-bar__section mdc-top-app-bar__section--align-start'
-    })
-
-    startContent.forEach(function (label) {
-        const a = createElement('a', {
-            className: 'material-icons mdc-top-app-bar__navigation-icon',
-            textContent: label
-        })
-        start.appendChild(a)
-    })
-    div.appendChild(start)
-
-    if (endContent.length) {
-        const end = createElement('section', {
-            className: 'mdc-top-app-bar__section mdc-top-app-bar__section--align-end'
-        })
-        end.setAttribute('role', 'toolbar')
-        endContent.forEach(function (label) {
-            const a = createElement('a', {
-                className: 'material-icons mdc-top-app-bar__action-item',
-                textContent: label
-            })
-            end.appendChild(a)
-        })
-        div.appendChild(end);
-    }
-
-
-    header.appendChild(div)
-    return new mdc.topAppBar.MDCTopAppBar(header);
-}
 
 
 function Dialog(title, content,id,footerContent) {
@@ -216,75 +172,7 @@ Dialog.prototype.create = function (type) {
     return new mdc.dialog.MDCDialog(parent);
 }
 
-function Button(name) {
-    this.name = name
-    var button = createElement('button', {
-        className: 'mdc-button'
-    })
-    button.appendChild(createElement('span', {
-        className: 'mdc-button__label',
-        textContent: this.name
-    }))
-    this.base = button;
-}
-Button.prototype.getButton = function () {
 
-    return new mdc.ripple.MDCRipple(this.base)
-}
-Button.prototype.disabled = function (value) {
-    this.base.disabled = value
-}
-Button.prototype.raised = function () {
-    this.base.classList.add('mdc-button--raised');
-}
-Button.prototype.shaped = function () {
-    this.base.classList.add('shaped')
-}
-Button.prototype.selectorButton = function () {
-    this.base.classList.add('selector-send', 'selector-submit--button')
-}
-
-function iconButton(attr) {
-    this.base = createElement('button', {
-        className: 'mdc-icon-button ' + attr.className,
-        id: attr.id
-    });
-    this.base.setAttribute('aria-label', attr.label);
-    this.base.setAttribute('aria-hidden', 'true')
-    this.base.setAttribute('aria-pressed', 'false');
-    this.base.appendChild(createElement('i', {
-        className: 'material-icons mdc-icon-button__icon mdc-icon-button__icon--on',
-        textContent: attr.initialState
-    }))
-    this.base.appendChild(createElement('i', {
-        className: 'material-icons mdc-icon-button__icon',
-        textContent: attr.finalState
-    }))
-    return new mdc.iconButton.MDCIconButtonToggle(this.base)
-}
-
-function Fab(name) {
-    this.fabName = name
-    var button = createElement('button', {
-        className: 'mdc-fab'
-    })
-    this.span = createElement('span', {
-        className: 'mdc-fab__icon material-icons',
-        textContent: this.fabName
-    })
-    button.appendChild(this.span)
-    this.base = button;
-}
-Fab.prototype = Object.create(new Button())
-Fab.prototype.extended = function (labelName) {
-    this.base.classList.add('mdc-fab--extended')
-    const label = createElement('label', {
-        className: 'mdc-fab__label',
-        textContent: labelName
-    })
-    this.base.appendChild(label);
-    return this.getButton();
-}
 
 
 function getHeader(parentSelector,sectionStart,sectionEnd){
