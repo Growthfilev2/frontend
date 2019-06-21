@@ -345,7 +345,7 @@ function showActivity(activityId) {
         const record = event.target.result;
         if (!record) return;
         const dialog = new Dialog(`<div class='custom-dialog-heading'> <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${record.activityName}</h2>
-        <p class='card-time mdc-typography--caption1 mb-0 mt-0'>${formatCreatedTime(record.timestamp)}</p>
+        <p class='card-time mdc-typography--caption1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
         <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by
             ${record.creator.displayName || record.creator.phoneNumber}</h3></div>`, activityDomCustomer(record), 'view-form', viewFormActions()).create();
         dialog.open();
@@ -412,7 +412,7 @@ function viewVenue(activityRecord){
      }).join("")}`
 }
 function viewAssignee(activityRecord){
-    var f =  `
+    return  `
     <div class="mdc-chip-set" id='share'>
      ${activityRecord.assignees.map(function(user){
         return `<div class="mdc-chip">
@@ -421,9 +421,7 @@ function viewAssignee(activityRecord){
                 </div>`
     }).join("")}
     </div>`
-
-    console.log(f)
-    return f
+   
 }
 
 

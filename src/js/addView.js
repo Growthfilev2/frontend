@@ -4,7 +4,7 @@ function addView(sub, location) {
     `
     const header = getHeader('app-header', backIcon, '');
 
-    
+
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
@@ -17,14 +17,27 @@ function addView(sub, location) {
     })
 }
 
-function sendFormToParent(formData,location) {
+function sendFormToParent(formData, location) {
     progressBar.open();
     requestCreator('create', formData).then(function () {
-        progressBar.close();
-        successDialog()
-        homeView(selectedSubs,location)
-    }).catch(function(error){
-        progressBar.close();
-        snacks(error.response.message)
-    })
+            progressBar.close();
+            successDialog()
+            if (formData.template === 'customer') {
+                const venue = {
+                    office: formData.office,
+                    template: formData.template,
+                    status: formData.status
+                }
+                getAvailbleSubs(venue).then(function (subs) {
+                    selectedSubs = subs;
+                    homeView(selectedSubs, location)
+                })
+                return;
+            }
+            homeView(selectedSubs, location)
+        })
+        .catch(function (error) {
+            progressBar.close();
+            snacks(error.response.message)
+        })
 }

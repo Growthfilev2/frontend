@@ -68,7 +68,7 @@
                 </div>
             </div>
 
-            <!-- <input type="text" name="fname" required> -->
+          
             <div class="form-component">
                 <input type="submit" value="CREATE CUSTOMER" class="mdc-button submit-btn">
             </div>
@@ -83,17 +83,16 @@
 
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
-
         function init(subscriptionTemplate, currentLocation) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
             const customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
             const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
-
             console.log(customerContact.foundation_.adapter_.getNativeInput())
             customerContact.foundation_.adapter_.getNativeInput().addEventListener('click', function () {
                 AndroidInterface.getContact()
             });
+
             const tx = parent.db.transaction(['children'])
             const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'customer-type'])
             tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
@@ -137,11 +136,10 @@
                     }
                 }]
                 copy.share = []
+                
                 parent.sendFormToParent(copy, currentLocation)
             })
         }
-
-
         function setContact(contactString) {
             console.log(contactString);
             customerContact.value = contactString.split("&")[0].split("=")[1]
