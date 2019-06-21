@@ -39,5 +39,5 @@ function sendFormToParent(formData, location) {
         .catch(function (error) {
             progressBar.close();
             snacks(error.response.message)
-        })
+    })
 }
