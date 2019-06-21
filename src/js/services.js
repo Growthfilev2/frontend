@@ -78,6 +78,14 @@ function geolocationApi(body) {
   });
 }
 
+function storeModLocation(){
+
+  
+
+
+
+
+}
 
 
 function manageLocation() {

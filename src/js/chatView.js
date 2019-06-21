@@ -344,10 +344,8 @@ function showActivity(activityId) {
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
-        const dialog = new Dialog(record.activityName, activityDomCustomer(record)).create('simple');
+        const dialog = new Dialog('', activityDomCustomer(record), 'view-form').create('simple');
         dialog.open();
-
-
     }
 }
 
@@ -374,39 +372,76 @@ function activityDomCustomer(activityRecord) {
     console.log(activityRecord);
 
     return `
-
+    <div class='mdc-card'>
+    <div class='view-card'>
+    <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${activityRecord.activityName}</h2>
+    <span class='card-time mdc-typography--caption1'>${activityRecord.timestamp}</span>
+    <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activityRecord.creator.displayName || activityRecord.creator.phoneNumber}</h3>
     ${Object.keys(activityRecord.attachment).map(function(attachmentName){
-        console.log(iconByType(activityRecord.attachment[attachmentName].type,attachmentName))
-        return `${activityRecord.attachment[attachmentName].value ? `<h3 class="mdc-typography--body1  tasks-heading">
-        <i class="material-icons">${iconByType(activityRecord.attachment[attachmentName].type,attachmentName)}</i>
-        <span>${activityRecord.attachment[attachmentName].value}</span>
-    </h3>` :''}`
-    }).join("")}
-    
-    ${activityRecord.venue.map(function(v){
-        return `
-            <h3 class="mdc-typography--body1  tasks-heading">
-                <i class="material-icons">location_on</i>
-                <span>${v.address}</span>
-            </h3>`
-    }).join("")}
-        
-        <div class="assignees tasks-heading">
-                <i class="material-icons">share</i>
-                <div class="mdc-chip-set" id='share'>
-                ${activityRecord.assignees.map(function(user){
-                    return `<div class="mdc-chip" tabindex="0">
-                    ${user.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${user.photoURL}`:`  <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">account_circle</i>`}
-                        <div class="mdc-chip__text">${user.displayName || user.mobile}</div>
-                    </div>`
-                }).join("")}
-                </div>
-            </div>
-        </div>
+       console.log(iconByType(activityRecord.attachment[attachmentName].type,attachmentName))
+       return `${activityRecord.attachment[attachmentName].value ? `<h3 class="mdc-typography--body1  tasks-heading">
+       <i class="material-icons">${iconByType(activityRecord.attachment[attachmentName].type,attachmentName)}</i>
+       <span>${activityRecord.attachment[attachmentName].value}</span>
+   </h3>` :''}`
+   }).join("")}
+   ${activityRecord.venue.map(function(v){
+       return `
+           <h3 class="mdc-typography--body1  tasks-heading">
+               <i class="material-icons">location_on</i>
+               <span>${v.address}</span>
+           </h3>`
+   }).join("")}
+   <div class="assignees tasks-heading center">
+           <i class="material-icons">share</i>
+           <div class="mdc-chip-set" id='share'>
+           ${activityRecord.assignees.map(function(user){
+               return `<div class="mdc-chip" tabindex="0">
+               ${user.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${user.photoURL}`:`  <i class="material-icons mdc-chip__icon mdc-chip__icon--leading">account_circle</i>`}
+                   <div class="mdc-chip__text">${user.displayName || user.mobile}</div>
+               </div>`
+           }).join("")}
+           </div>
+           <div class='status-change'>
+           <h3 class="mdc-typography--subtitle1 mb-0">Mark</h3>
+           <div class='mdc-form-field'>
+               ${createStatusChange(activityRecord.status)}
+           </div>
+           </div>
+       </div>
     </div>
+    
+    
+    <div class="mdc-card__actions">
+    <div class="mdc-card__action-buttons">
+ 
+    <button class="mdc-button">
+        <i class="material-icons mdc-button__icon" aria-hidden="true">delete</i>
+        <span class="mdc-button__label">Remove</span>
+    </button>
+    </div>
+    <div class="mdc-card__action-icons">
+   
+    <button class="mdc-icon-button material-icons mdc-card__action mdc-card__action--icon " title="edit" data-mdc-ripple-is-unbounded="true">edit</button>
+    </div>
+    </div>
+        
+    </div>
+</div>`
+    
+}
 
-    `
+function createStatusChange(status){
+if(status === 'CONFIRMED') {
+    return createSimpleRadio('pending-radio','PENDING')+createSimpleRadio('cancelled-radio','CANCELLED')
+} 
+if(status === 'CANCELLED') {
+    return createSimpleRadio('pending-radio','PENDING')+createSimpleRadio('confirmed-radio','CONFIRMED')
 
+}
+if(status === 'PENDING') {
+    return createSimpleRadio('confirmed-radio','CONFIRMED')+createSimpleRadio('cancelled-radio','CANCELLED')
+
+}
 }
 
 function getUserChats(userRecord) {

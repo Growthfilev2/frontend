@@ -344,3 +344,11 @@
   top: 50%;
   left: 50%;
 }
+
+/** view-form**/
+#view-form .mdc-dialog__content {
+  padding: 0px;
+}
+#view-form .mdc-card .view-card {
+  padding: 20px 24px;
+}

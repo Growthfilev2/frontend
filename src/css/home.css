@@ -53,16 +53,16 @@
     margin-left: 10px;
 }
 
-.home-container .demo-card__primary {
+ .demo-card__primary {
     padding: 1rem;
 }
 
-.home-container .demo-card__title {
+ .demo-card__title {
     margin: 0;
 }
 
-.home-container .demo-card__secondary,
-.home-container .demo-card__subtitle {
+ .demo-card__secondary,
+ .demo-card__subtitle {
     color: var(--mdc-theme-text-secondary-on-background, rgba(0, 0, 0, .54));
 }
 
@@ -72,9 +72,11 @@
 
 .tasks-heading {
     display: inline-flex;
+    align-items: end;
+}
+.tasks-heading.center {
     align-items: center;
 }
-
 .tasks-heading i {
     padding-right: 10px;
 }

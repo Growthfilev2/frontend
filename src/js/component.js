@@ -1,4 +1,6 @@
-function getCellularInformation() {
+
+function GetCellularInformation() {
+
     let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
     const mnc = AndroidInterface.getMobileNetworkCode()
@@ -10,6 +12,7 @@ function getCellularInformation() {
     } catch (e) {
         console.log(e)
     }
+
     let wifiAccessPointsArray = [];
     let cellTowerArray = [];
     if (wifiQueryString) {
@@ -31,7 +34,7 @@ function getCellularInformation() {
     }
     if (radioType) {
         body.radioType = radioType
-    }
+    }  
 
     if (wifiAccessPointsArray.length) {
         body.wifiAccessPoints = wifiAccessPointsArray
@@ -44,9 +47,12 @@ function getCellularInformation() {
     } else {
         body.considerIp = true
     }
-
     return body
 }
+                                            
+
+
+
 
 function removeFalseCellIds(cellTowers) {
     const max_value = 2147483647
@@ -135,16 +141,17 @@ function createHeader(startContent, endContent, id) {
 }
 
 
-function Dialog(title, content) {
+function Dialog(title, content,id) {
     this.title = title;
     this.content = content;
-
+    this.id = id;
 }
 
 Dialog.prototype.create = function (type) {
     const parent = createElement('div', {
         className: 'mdc-dialog',
-        role: 'alertDialog'
+        role: 'alertDialog',
+        id:this.id
     })
     parent.setAttribute('aria-modal', 'true')
     parent.setAttribute('aria-labelledby', 'Title')
@@ -283,4 +290,18 @@ function getHeader(parentSelector,sectionStart,sectionEnd){
     topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
     return topAppBar;
     
+}
+
+function createSimpleRadio(id,label){
+    return `<div class='mdc-radio'>
+    <input class="mdc-radio__native-control" type="radio" name="demo-radio-set" id=${id}>
+    <div class="mdc-radio__background">
+    <div class="mdc-radio__outer-circle">
+    </div>
+    <div class="mdc-radio__inner-circle">
+    </div>
+    </div>
+    </div>
+    <label for=${id}>${label}</label>
+    `
 }
