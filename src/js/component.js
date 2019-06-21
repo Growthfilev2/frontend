@@ -141,10 +141,11 @@ function createHeader(startContent, endContent, id) {
 }
 
 
-function Dialog(title, content,id) {
+function Dialog(title, content,id,footerContent) {
     this.title = title;
     this.content = content;
     this.id = id;
+    this.footerContent = footerContent
 }
 
 Dialog.prototype.create = function (type) {
@@ -162,9 +163,8 @@ Dialog.prototype.create = function (type) {
     const surface = createElement('div', {
         className: 'mdc-dialog__surface'
     })
-    const h2 = createElement('h2', {
-        className: `mdc-dialog__title ${this.title ? '':'hidden'}`,
-        textContent: this.title
+    const footer = createElement('footer', {
+        className: 'mdc-dialog__actions'
     })
     const contentContainer = createElement('div', {
         className: 'mdc-dialog__content'
@@ -176,12 +176,16 @@ Dialog.prototype.create = function (type) {
         contentContainer.innerHTML = this.content
     }
 
-    surface.appendChild(h2)
+    surface.innerHTML = this.title
     surface.appendChild(contentContainer);
     if (type !== 'simple') {
-        const footer = createElement('footer', {
-            className: 'mdc-dialog__actions'
-        })
+        
+        if(this.footerContent) {
+            footer.classList.add('custom-footer')
+            footer.innerHTML = this.footerContent;
+        }
+        else {
+
         const cancelButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
@@ -197,7 +201,8 @@ Dialog.prototype.create = function (type) {
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
         footer.appendChild(cancelButton)
         footer.appendChild(okButton);
-        surface.appendChild(footer)
+    }
+    surface.appendChild(footer)
     }
 
     container.appendChild(surface)

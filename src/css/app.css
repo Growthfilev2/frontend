@@ -268,6 +268,13 @@ body {
   color: #0399f4;
 }
 
+.custom-dialog-heading {
+  padding: 20px 24px 0px 20px;
+  border-bottom: 1px solid lightgray;
+}
+.custom-footer {
+  display: block;
+}
 
 /** fab**/
 
@@ -287,25 +294,10 @@ body {
 
 
 /** override **/
-.mdc-chip__text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 106px;
-}
 
-/* .mdc-top-app-bar__row {
-  height: 80px;
-} */
-/* .mdc-top-app-bar--fixed-adjust {
-  padding-top: 80px;
-} */
-/* .mdc-top-app-bar__navigation-icon {
-  font-size: 36px;
+.mdc-list-item__graphic.without-icon {
+  width: auto;
 }
-.mdc-top-app-bar__title  {
-  font-size: 28px;
-} */
 .mdc-drawer__header {
   padding-top: 16px;
   padding-bottom: 16px;

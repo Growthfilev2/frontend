@@ -707,14 +707,14 @@ function successResponse(read, param, db, resolve, reject) {
 
 
 
-    if (addendum.isComment) {
+    // if (addendum.isComment) {
       let key = addendum.activityId
       // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
       userTimestamp[addendum.user] = {
         ts: addendum.timestamp,
         comment: addendum.comment
       }
-    }
+    // }
     addendumObjectStore.add(addendum)
   })
 
@@ -740,11 +740,7 @@ function successResponse(read, param, db, resolve, reject) {
         ob.timestamp = userTimestamp[user.phoneNumber].ts
         ob.comment = userTimestamp[user.phoneNumber].comment
       }
-      userStore.put({
-        displayName: user.displayName,
-        mobile: user.phoneNumber,
-        photoURL: user.photoURL,
-      })
+      userStore.put(ob)
     })
   })
 

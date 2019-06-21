@@ -9,34 +9,39 @@
   padding-bottom: 10px;
   /* padding: 20px; */
 }
+
 .user-chats ul {
   padding-bottom: 56px;
 }
+
 .chat-count {
   font-size: 20px;
-    
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: var(--mdc-theme-primary);
-   
-    text-align: center;
-    display: table-cell;
-    overflow: hidden;
-    vertical-align: middle;
-    color: white;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--mdc-theme-primary);
+
+  text-align: center;
+  display: table-cell;
+  overflow: hidden;
+  vertical-align: middle;
+  color: white;
 }
+
 .open-contacts-btn {
   /* bottom:5rem !important; */
-  
+
 }
-.search-field{
+
+.search-field {
   position: fixed;
   top: 0;
   width: 100%;
   background-color: white;
   z-index: 99;
 }
+
 #search-users {
   width: 100%;
   background-color: white;
@@ -148,19 +153,22 @@
 
 }
 
-.message-wrapper.them .text-wrapper:before,.message-wrapper.me  .text-wrapper:before {
+.message-wrapper.them .text-wrapper:before,
+.message-wrapper.me .text-wrapper:before {
   content: '';
   width: 0;
   height: 0;
   border-style: solid;
 }
+
 .message-wrapper.aciton-info {
-  background-color:#89273ea6;
+  background-color: #89273ea6;
   border-radius: 12px;
   width: fit-content;
-  margin: 10.66667px  auto;
+  margin: 10.66667px auto;
   padding: 0px;
 }
+
 .message-wrapper.aciton-info .text-wrapper {
   text-align: center;
   color: white;
@@ -170,12 +178,15 @@
   font-size: 16px;
   box-shadow: none;
 }
+
 .message-wrapper.aciton-info .text-wrapper .metadata {
   bottom: -2px;
 }
+
 .message-wrapper.aciton-info .text-wrapper .metadata i {
   font-size: 16px;
 }
+
 .message-wrapper.them .circle-wrapper,
 .message-wrapper.them .text-wrapper {
   background: white;
@@ -349,6 +360,24 @@
 #view-form .mdc-dialog__content {
   padding: 0px;
 }
+
 #view-form .mdc-card .view-card {
   padding: 20px 24px;
+}
+
+#view-form .mdc-card .view-card .mdc-list {
+  padding: 0px;
+}
+
+#view-form .mdc-card .view-card .mdc-list li {
+  padding-left: 0px;
+}
+
+#view-form .mdc-card .view-card .mdc-list li .list-text {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-top: 0;
+  line-height: normal;
+  display: block;
 }

@@ -150,7 +150,7 @@ function loadCardData(o, map, location) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) return;
               cardProd.open()
-              // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 isCheckInCreated = true
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
@@ -158,10 +158,10 @@ function loadCardData(o, map, location) {
                   selectedSubs = subs
                   homeView(subs, location)
                 })
-              // }).catch(function (error) {
-              //   snacks('Please Try again later');
-              //   cardProd.close()
-              // })
+              }).catch(function (error) {
+                snacks('Please Try again later');
+                cardProd.close()
+              })
             });
           });
           if (offices.length == 1) {

@@ -4,7 +4,7 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/styles.css" rel="stylesheet" type="text/css">
@@ -12,74 +12,78 @@
 
 <body>
     <form class='forms mdc-card' id='form'>
-    
-            <div class="form-list">
+
+        <div class="form-list">
 
 
-                <div class="form-component">
-                    <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                        id='customer-contact'>
-                        <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
-                            role="button">contacts</i>
-                        <input class="mdc-text-field__input" type="tel">
-                        <div class="mdc-line-ripple"></div>
-                        <label class="mdc-floating-label">Customer Contact</label>
-                    </div>
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='customer-contact'>
+                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                        role="button">contacts</i>
+                    <input class="mdc-text-field__input" type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Customer Contact</label>
                 </div>
-                <div class="form-component">
+            </div>
+            <div class="form-component">
 
-                    <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                        id='customer-name'>
-                        <input class=" mdc-text-field__input" type="text" id="" required>
-                        <label for="input" class="mdc-floating-label" id="cc">Customer Name</label>
-                        <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
-                            id="logo">perm_identity</i>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
-                    <div class="mdc-text-field-helper-line">
-                        <div class="mdc-text-field-helper-text"></div>
-                    </div>
+                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='customer-name'>
+                    <input class=" mdc-text-field__input" type="text" id="" required>
+                    <label for="input" class="mdc-floating-label" id="cc">Customer Name</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
+                        id="logo">perm_identity</i>
+                    <div class="mdc-line-ripple"></div>
                 </div>
-                <div class="form-component">
-
-                    <div class="mdc-select">
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <select class="mdc-select__native-control">
-                            <option value="" disabled selected></option>
-                        </select>
-                        <label class="mdc-floating-label">Customer Type</label>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text"></div>
                 </div>
+            </div>
+            <div class="form-component">
 
-                <div class="form-component">
-                    <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
-                        id='address'>
-                        <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
-                        <div class="mdc-notched-outline">
-                            <div class="mdc-notched-outline__leading"></div>
-                            <div class="mdc-notched-outline__notch">
-                                <label for="textarea" class="mdc-floating-label">Address</label>
-                            </div>
-                            <div class="mdc-notched-outline__trailing"></div>
+                <div class="mdc-select">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" disabled selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Customer Type</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='address'>
+                    <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Address</label>
                         </div>
-                    </div>
-                    <div class="mdc-text-field-helper-line">
-                        <div class="mdc-text-field-helper-text"></div>
+                        <div class="mdc-notched-outline__trailing"></div>
                     </div>
                 </div>
-               
-                <!-- <input type="text" name="fname" required> -->
-                <div class="form-component">
-                <input type="submit" value="CREATE CUSTOMER"  class="mdc-button submit-btn" >
-                </div> 
-        </form>
+                <div class="mdc-text-field-helper-line">
+                    <div class="mdc-text-field-helper-text"></div>
+                </div>
+            </div>
+
+            <!-- <input type="text" name="fname" required> -->
+            <div class="form-component">
+                <input type="submit" value="CREATE CUSTOMER" class="mdc-button submit-btn">
+            </div>
+    </form>
+
+
     </div>
 
     </div>
+
+    
+
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
-       
+
         function init(subscriptionTemplate, currentLocation) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
             const customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
@@ -91,11 +95,12 @@
                 AndroidInterface.getContact()
             });
             const tx = parent.db.transaction(['children'])
-            const keyRange= IDBKeyRange.only([subscriptionTemplate.office,'customer-type'])
-            tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function(event){
+            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'customer-type'])
+            tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
                 const cursor = event.target.result;
-                if(!cursor) return;
-                if(cursor.value.status === 'CANCELLED') {
+                console.log(cursor)
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
                     cursor.continue();
                     return;
                 }
@@ -104,8 +109,9 @@
                       </option>`
                 cursor.continue();
             }
-            tx.oncomplete = function(){
-                if(select.nativeControl_.children.length <= 1) {
+            tx.oncomplete = function () {
+                if (select.nativeControl_.children.length <= 1) {
+
                     select.foundation_.adapter_.addClass('hidden')
                 }
             }
@@ -130,7 +136,7 @@
                         longitude: currentLocation.longitude
                     }
                 }]
-                copy.share=[]
+                copy.share = []
                 parent.sendFormToParent(copy, currentLocation)
             })
         }

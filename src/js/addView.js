@@ -8,7 +8,7 @@ function addView(sub, location) {
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src="https://growthfile-testing.firebaseapp.com/forms/customer/edit.html"></iframe>
+    <iframe id='form-iframe' src="../dist/forms/customer/edit.html"></iframe>
     `
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {
