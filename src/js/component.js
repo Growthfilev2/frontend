@@ -95,8 +95,6 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-
-
 function Dialog(title, content,id,footerContent) {
     this.title = title;
     this.content = content;
@@ -119,6 +117,10 @@ Dialog.prototype.create = function (type) {
     const surface = createElement('div', {
         className: 'mdc-dialog__surface'
     })
+    const h2 = createElement('h2',{
+        className:'mdc-dialog__title',
+    })
+    h2.innerHTML = this.title
     const footer = createElement('footer', {
         className: 'mdc-dialog__actions'
     })
@@ -132,7 +134,8 @@ Dialog.prototype.create = function (type) {
         contentContainer.innerHTML = this.content
     }
 
-    surface.innerHTML = this.title
+   
+    surface.appendChild(h2)
     surface.appendChild(contentContainer);
     if (type !== 'simple') {
         

@@ -344,10 +344,11 @@ function showActivity(activityId) {
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
-        const dialog = new Dialog(`<div class='custom-dialog-heading'> <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${record.activityName}</h2>
-        <p class='card-time mdc-typography--caption1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
-        <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by
-            ${record.creator.displayName || record.creator.phoneNumber}</h3></div>`, activityDomCustomer(record), 'view-form', viewFormActions()).create();
+        const heading = `${record.activityName}
+        <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
+        <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
+
+        const dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions()).create();
         dialog.open();
     }
 }
