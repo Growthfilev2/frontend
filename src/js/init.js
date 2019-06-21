@@ -617,7 +617,7 @@ function getUniqueOfficeCount() {
     let offices = []
     const tx = db.transaction(['children']);
     const childrenStore = tx.objectStore('children').index('employees');
-    childrenStore.openCursor(firebase.auth().currentUser.uid).onsuccess = function (event) {
+    childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) return;
 
