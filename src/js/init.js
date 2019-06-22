@@ -421,7 +421,10 @@ function startApp(start) {
             checkForRecipient();
             requestCreator('Null').then(console.log).catch(console.log)
           })
-        }).catch(console.log)
+        }).catch(function(error){
+          console.log(error)
+          snacks(error.response.message)
+        })
       }
       req.onerror = function () {
         handleError({
