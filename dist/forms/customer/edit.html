@@ -83,9 +83,10 @@
 
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
+        let customerContact = '';
         function init(subscriptionTemplate, currentLocation) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            const customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
+             customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
             const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
             console.log(customerContact.foundation_.adapter_.getNativeInput())
@@ -145,9 +146,7 @@
             customerContact.value = contactString.split("&")[0].split("=")[1]
         }
 
-        function getValues(location) {
-
-        }
+      
     </script>
 </body>
 

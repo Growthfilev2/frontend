@@ -1,10 +1,12 @@
 function addView(sub, location) {
+
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template.toUpperCase()}</span>
     `
     const header = getHeader('app-header', backIcon, '');
-
-
+    header.root_.classList.remove('hidden')
+    document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+    
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
