@@ -155,6 +155,8 @@ function loadCardData(o, map, location) {
               cursor.continue();
             }
             tx.oncomplete = function(){
+              selectedSubs = subs
+
               homeView({suggested:subs,other:[]},location)
             }
             return;
@@ -167,6 +169,8 @@ function loadCardData(o, map, location) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) {
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
+                  selectedSubs = subs
+
                   homeView({suggested:subs,other:[]}, location)
                 })
                 return;
@@ -203,6 +207,8 @@ function loadCardData(o, map, location) {
       getSubscription(value.office, 'check-in').then(function (result) {
         if(!result) {
           getAvailbleSubs(value).then(function (subs) {
+            selectedSubs = subs
+
             homeView({suggested:subs,other:[]},location)
           })
           return;
