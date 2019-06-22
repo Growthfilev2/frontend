@@ -191,8 +191,6 @@ function readLatestChats() {
         if (string) {
             document.getElementById('search-btn').classList.remove('hidden')
         }
-
-
         document.getElementById('chats').innerHTML = string
 
     }
@@ -273,7 +271,7 @@ function enterChat(number) {
     // debugger;
 
     // hideBottomNav()
-    db.transaction('users').objectStore('users').index('mobile').get(number).onsuccess = function (event) {
+    db.transaction('users').objectStore('users').get(number).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
         const userRecord = record;
@@ -285,7 +283,7 @@ function enterChat(number) {
 
         const header = getHeader('app-header', backIcon, '');
         console.log(header)
-        history.pushState(['enterChat'], null, null)
+        history.pushState(['enterChat',record], null, null)
 
         document.getElementById('app-header').classList.remove("hidden")
         document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
@@ -476,6 +474,35 @@ function createStatusChange(status) {
 
     }
 }
+
+function dynamicAppendChats(addendums){
+    const parent = document.getElementById('content');
+    let string = ''
+    const myNumber  = firebase.auth().currentUser.phoneNumber
+    const myImage = firebase.auth().currentUser.photoURL;
+    addendums.forEach(function(addendum){
+        let position  = '';
+        let image = ''
+        if(addendum.user === myNumber) {
+            position = 'me'
+            image = myImage
+        }
+        else {
+            position = 'them'
+            image = history.state[1].photoURL
+        }
+        if(addendum.isComment) {
+            string += messageBox(addendum.comment, position, image, addendum.timestamp)
+        }
+        else {
+            string +=  actionBox(addendum)
+        }
+    })
+    parent.innerHTML += string;
+    setBottomScroll()
+}
+
+
 
 function getUserChats(userRecord) {
     const tx = db.transaction('addendum');

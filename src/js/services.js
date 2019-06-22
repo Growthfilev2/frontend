@@ -583,14 +583,15 @@ function getInputText(selector) {
   return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
 }
 
+function handleComponentUpdation(readResponse){
+  // retuern 
+}
 
 function runRead(value) {
   // if (!localStorage.getItem('dbexist')) return
   if (!value || value.read) {
-    requestCreator('Null', value).then(function(res){
-      console.log(res)
-    }).catch(console.log)
-
+    requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
+    return;
   }
 
 

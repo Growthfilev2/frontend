@@ -81,7 +81,7 @@ self.onmessage = function (event) {
           })
         }
 
-      })
+      }).catch(sendErrorRequestToMainThread)
 
       return
     }

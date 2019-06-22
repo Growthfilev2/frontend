@@ -134,21 +134,43 @@ function loadCardData(o, map, location) {
       aside.classList.add('open')
       if (!evt.detail.value) return;
       const value = JSON.parse(evt.detail.value)
-
+      
       if (value === 1) {
-
+        
         document.getElementById('office-cont').innerHTML = ''
         document.getElementById('subs-cont').innerHTML = ''
         document.getElementById('submit-cont').innerHTML = ''
-
         getUniqueOfficeCount().then(function (offices) {
-          if (!offices.length) return;
+          if (!offices.length) {
+            const subs = []
+            const tx = db.transaction("subscriptions");
+            tx.objectStore('subscriptions').openCursor().onsuccess = function(event){
+              const cursor = event.target.result;
+              if(!cursor) return;
+              if(cursor.value.status === 'CANCELLED') {
+                cursor.continue();
+                return;
+              }
+              subs.push(cursor.value)
+              cursor.continue();
+            }
+            tx.oncomplete = function(){
+              homeView({suggested:subs,other:[]},location)
+            }
+            return;
+          }
 
           document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
           const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
           selectOfficeInit.listen('MDCSelect:change', function (evt) {
+            if(!evt.detail.value) return;
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-              if (!checkInSub) return;
+              if (!checkInSub) {
+                checkForVenueSubs(evt.detail.value).then(function (subs) {
+                  homeView({suggested:subs,other:[]}, location)
+                })
+                return;
+              }
               cardProd.open()
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
@@ -179,7 +201,12 @@ function loadCardData(o, map, location) {
       document.getElementById('submit-cont').innerHTML = ''
 
       getSubscription(value.office, 'check-in').then(function (result) {
-
+        if(!result) {
+          getAvailbleSubs(value).then(function (subs) {
+            homeView({suggested:subs,other:[]},location)
+          })
+          return;
+        }
 
         document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -211,8 +238,6 @@ function loadCardData(o, map, location) {
       })
     });
 
-
-
     if (!markers.length) {
       selectVenue.selectedIndex = 0
     };
@@ -226,10 +251,6 @@ function loadCardData(o, map, location) {
     }
   })
 };
-
-
-
-
 
 function hideBottomNav() {
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');

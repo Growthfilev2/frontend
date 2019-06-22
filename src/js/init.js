@@ -421,7 +421,10 @@ function startApp(start) {
             checkForRecipient();
             requestCreator('Null').then(console.log).catch(console.log)
           })
-        }).catch(console.log)
+        }).catch(function(error){
+          console.log(error)
+          snacks(error.response.message)
+        })
       }
       req.onerror = function () {
         handleError({
@@ -612,6 +615,7 @@ function setVenueForCheckIn(venueData, value) {
 }
 
 
+
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     let offices = []
@@ -629,7 +633,6 @@ function getUniqueOfficeCount() {
       return resolve(offices);
     }
     tx.onerror = function () {
-
       return reject({
         message: tx.error.message,
         body: JSON.stringify(tx.error)
