@@ -99,11 +99,12 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
-
+  if(event.state[0] === 'mapView') return;
   if (event.state[0] === 'homeView') {
     window[event.state[0]](selectedSubs,event.state[1]);
     return
   }
+  
   window[event.state[0]]();
 }
 
