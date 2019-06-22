@@ -420,6 +420,9 @@ function setFilePath(base64) {
   // document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
+  header.root_.classList.remove('hidden')
+  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+
   history.pushState(['snapView'], null, null)
   const url = `data:image/jpg;base64,${base64}`
   document.getElementById('app-current-panel').innerHTML = `
@@ -428,7 +431,7 @@ function setFilePath(base64) {
 <div class="form-meta snap-form">
   <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
       <textarea
-      class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100" autofocus="true"></textarea></div>
+      class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>
       <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"
     style="z-index: 9;">
     <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
@@ -442,6 +445,7 @@ function setFilePath(base64) {
   const submit = new mdc.ripple.MDCRipple(document.getElementById('snap-submit'))
 
 
+  textarea.focus();
   textarea.input_.addEventListener('keyup', function () {
     this.style.paddingTop = '25px';
     this.style.height = '5px'
