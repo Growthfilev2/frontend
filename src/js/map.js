@@ -572,7 +572,7 @@ function mdcSelectVenue(venues, label, id) {
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
 
-  <option value=${JSON.stringify('1')}>New Venue</option>
+  <option value=${JSON.stringify('1')}>UNKNOWN LOCATION</option>
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
     ${value.location}
