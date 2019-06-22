@@ -632,7 +632,6 @@ function getUniqueOfficeCount() {
       return resolve(offices);
     }
     tx.onerror = function () {
-
       return reject({
         message: tx.error.message,
         body: JSON.stringify(tx.error)
