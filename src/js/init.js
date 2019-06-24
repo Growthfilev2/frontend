@@ -99,12 +99,12 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
-  if(event.state[0] === 'mapView') return;
+  if (event.state[0] === 'mapView') return;
   if (event.state[0] === 'homeView') {
-    window[event.state[0]](selectedSubs,event.state[1]);
+    window[event.state[0]](selectedSubs, event.state[1]);
     return
   }
-  
+
   window[event.state[0]]();
 }
 
@@ -366,7 +366,7 @@ function startApp(start) {
       }
       req.onsuccess = function () {
         db = req.result;
-    
+
         if (!areObjectStoreValid(db.objectStoreNames)) {
           db.close();
           console.log(auth)
@@ -422,7 +422,7 @@ function startApp(start) {
             checkForRecipient();
             requestCreator('Null').then(console.log).catch(console.log)
           })
-        }).catch(function(error){
+        }).catch(function (error) {
           console.log(error)
           snacks(error.response.message)
         })
@@ -436,13 +436,20 @@ function startApp(start) {
   })
 }
 
+function profileUpdateAnimation(auth, reports) {
+
+}
 
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (!result.length) return mapView();
-    if (!auth.email || !auth.emailVerified) return userDetails(result, auth);
-    return mapView();
+    if (!result.length) {
+      if (!auth.displayName || !auth.photoURL) return profileUpdateAnimation(auth, result)
+      return mapView();
+    }
+
+    if (auth.displayName && auth.photoURL && auth.email && auth.emailVerified) return mapView();
+    return profileUpdateAnimation(auth, result);
   })
 }
 
