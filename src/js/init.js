@@ -481,12 +481,14 @@ function miniProfileCard(content, headerTitle, action) {
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
   if (auth.photoURL) {
-    const content = `<div class='photo-container'>
-    <img src="./img/empty-user.jpg" id="image-update">
-    <div class="image-overlay">
-      <i class="material-icons">photo_camera</i>
-    </div>
+    const content = `
     
+    <div class='photo-container'>
+    <img src="./img/empty-user.jpg" id="image-update">
+    <button class="mdc-fab mdc-theme--primary-bg" aria-label="Photo_Camera" id='update-photo>
+      <span class="mdc-fab__icon material-icons">photo_camera</span>
+    </button>
+    </div>
     <div class="view-container">
     <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
   <i class="material-icons mdc-text-field__icon mdc-theme--primary">account_circle</i>

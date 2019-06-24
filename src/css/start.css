@@ -29,16 +29,27 @@
 }
 .profile-update-init .photo-container {
     position: relative;
+    display: table;
+    margin: 0 auto;
 }
-.profile-update-init .photo-container .mdc-text-field{
+.profile-update-init .photo-container .mdc-fab {
+    position: absolute;
+    right: 0px;
+   
+    bottom: 0;
+  
+    bottom: 5px;
+    right: 5px;
+}
+.profile-update-init .view-container .mdc-text-field{
     border-bottom: none;
     background-color: white;
 }
-.profile-update-init .photo-container .mdc-text-field::before, .profile-update-init .photo-container .mdc-text-field::after {
+.profile-update-init .view-container .mdc-text-field::before, .profile-update-init .view-container .mdc-text-field::after {
     background-color: white;
 
 }
-.profile-update-init .photo-container .mdc-text-field input {
+.profile-update-init .view-container .mdc-text-field input {
     border-bottom-color: transparent !important;
 }
 #image-update {
