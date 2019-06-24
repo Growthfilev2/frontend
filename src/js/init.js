@@ -401,31 +401,32 @@ function startApp(start) {
         }, index + 1 * 1000);
         // mapView()
         // enterChat('+919999288921')
-        requestCreator('now', {
-          device: native.getInfo(),
-          from: '',
-          registerToken: native.getFCMToken()
-        }).then(function (response) {
-          if (response.updateClient) {
-            updateApp()
-            return
-          }
-          if (response.revokeSession) {
-            revokeSession();
-            return
-          };
-          getRootRecord().then(function (rootRecord) {
-            if (!rootRecord.fromTime) {
-              requestCreator('Null').then(checkForRecipient).catch(console.log)
-              return;
-            }
-            checkForRecipient();
-            requestCreator('Null').then(console.log).catch(console.log)
-          })
-        }).catch(function (error) {
-          console.log(error)
-          snacks(error.response.message)
-        })
+        profileCheck();
+        // requestCreator('now', {
+        //   device: native.getInfo(),
+        //   from: '',
+        //   registerToken: native.getFCMToken()
+        // }).then(function (response) {
+        //   if (response.updateClient) {
+        //     updateApp()
+        //     return
+        //   }
+        //   if (response.revokeSession) {
+        //     revokeSession();
+        //     return
+        //   };
+        //   getRootRecord().then(function (rootRecord) {
+        //     if (!rootRecord.fromTime) {
+        //       requestCreator('Null').then(profileCheck).catch(console.log)
+        //       return;
+        //     }
+        //     profileCheck();
+        //     requestCreator('Null').then(console.log).catch(console.log)
+        //   })
+        // }).catch(function (error) {
+        //   console.log(error)
+        //   snacks(error.response.message)
+        // })
       }
       req.onerror = function () {
         handleError({
@@ -436,21 +437,166 @@ function startApp(start) {
   })
 }
 
-function profileUpdateAnimation(auth, reports) {
+
+
+function miniProfileCard(content, headerTitle, action) {
+
+  return `<div class='mdc-card profile-update-init'>
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed' id='card-header'>
+    <div class='mdc-top-app-bar__row'>
+      <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='card-header-start'>
+        ${headerTitle}
+      </section>
+    </div>
+    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id='card-progress'>
+      <div class="mdc-linear-progress__buffering-dots"></div>
+      <div class="mdc-linear-progress__buffer"></div>
+      <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+        <span class="mdc-linear-progress__bar-inner"></span>
+      </div>
+      <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+        <span class="mdc-linear-progress__bar-inner"></span>
+      </div>
+    </div>
+  </header>
+  <div class='content-area mdc-top-app-bar--fixed-adjust'>
+  <div id='primary-content'>
+  
+  ${content}
+  </div>
+  </div>
+  ${action}
+</div>`
+
+  // document.getElementById('next').addEventListener('click', function () {
+
+  //   document.getElementById('action-content').innerHTML = fields[position];
+  // })
 
 }
 
-function checkForRecipient() {
-  const auth = firebase.auth().currentUser;
-  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (!result.length) {
-      if (!auth.displayName || !auth.photoURL) return profileUpdateAnimation(auth, result)
-      return mapView();
-    }
 
-    if (auth.displayName && auth.photoURL && auth.email && auth.emailVerified) return mapView();
-    return profileUpdateAnimation(auth, result);
+
+
+function checkForPhoto() {
+  const auth = firebase.auth().currentUser;
+  if (auth.photoURL) {
+    const content = `<div class='photo-container'>
+    <img src="./img/empty-user.jpg" id="image-update">
+    <div class="image-overlay">
+      <i class="material-icons">photo_camera</i>
+    </div>
+    
+    <div class="view-container">
+    <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
+  <i class="material-icons mdc-text-field__icon mdc-theme--primary">account_circle</i>
+  <input class="mdc-text-field__input" value="${auth.displayName}" disabled>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
+</div>
+
+<div class="mdc-text-field mdc-text-field--with-leading-icon mt-0">
+  <i class="material-icons mdc-text-field__icon mdc-theme--primary">phone</i>
+  <input class="mdc-text-field__input" value="${auth.phoneNumber}" disabled>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label mdc-floating-label--float-above">Phone</label>
+</div>
+    </div>
+    </div>
+    `
+    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>','')
+
+    return
+  }
+  // getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+  //   if (!result) return mapView();
+  //   if (!auth.email) return;
+  //   if (!auth.emailVerified) return;
+  // });
+}
+
+function simpleInputField() {
+
+}
+
+function profileCheck() {
+
+  document.getElementById('start-load').classList.add('hidden');
+  const auth = firebase.auth().currentUser;
+  // if(!auth.displayName) {
+  const content = `
+  <div class="mdc-text-field mdc-text-field--outlined" id='name'>
+  <input class="mdc-text-field__input" required>
+  <div class="mdc-notched-outline">
+    <div class="mdc-notched-outline__leading"></div>
+    <div class="mdc-notched-outline__notch">
+      <label class="mdc-floating-label">Name</label>
+    </div>
+    <div class="mdc-notched-outline__trailing"></div>
+  </div>
+</div>
+`
+  const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
+<span class="mdc-button__label">NEXT</span>
+<i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
+</button></div></div>`
+
+  document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
+  const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+  const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
+  console.log(nameInput)
+  history.pushState(['profileCheck'], null, null)
+  new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
+    if (!nameInput.value) {
+      nameInput.focus();
+      return;
+    }
+    progCard.open();
+    auth.updateProfile({
+      displayName: nameInput.value
+    }).then(checkForPhoto).catch(console.log)
   })
+  return
+  // }
+  // checkForPhoto()
+
+
+  // getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+  //   if (!auth.displayName) {
+  //     fields.push({
+  //       label: 'Enter Your Display Name',
+  //       type: 'text',
+  //       actionable: 'updateName'
+  //     })
+  //   }
+  //   if (!auth.photoURL) {
+  //     fields.push({
+  //       label: '',
+  //       type: '',
+  //       actionable: 'updatePhoto'
+  //     })
+  //   }
+
+  //   if (!result.length) {
+  //     if (!auth.displayName || !auth.photoURL) return profileUpdateAnimation(fields, result)
+  //     return mapView();
+  //   }
+
+  //   if (auth.displayName && auth.photoURL && auth.email && auth.emailVerified) return mapView();
+  //   if(!auth.email) {
+  //     fields.push({
+  //       label:'Enter Your Email Address',
+  //       type:'email',
+  //       actionable:'updateEmail'
+  //     })
+  //   }
+  //   if(!auth.emailVerified) {
+  //     fields.push({
+
+  //     })
+  //   }
+  //   return profileUpdateAnimation(auth, result);
+  // })
 }
 
 function areObjectStoreValid(names) {

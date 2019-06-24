@@ -96,11 +96,10 @@
 .full-width {
     width: 100%;
 }
-
-#name,
-#email {
+#profile-card #name, #profile-card #email {
     margin-top: 10%
 }
+
 
 #email.recp {
     margin-top: 2%;
