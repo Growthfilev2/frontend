@@ -485,9 +485,8 @@ function checkForPhoto() {
     
     <div class='photo-container'>
     <img src="./img/empty-user.jpg" id="image-update">
-    <button class="mdc-fab mdc-theme--primary-bg" aria-label="Photo_Camera" id='update-photo>
-      <span class="mdc-fab__icon material-icons">photo_camera</span>
-    </button>
+    <input type='file' accept='image/jpeg;capture=camera' id='choose'>
+  
     </div>
     <div class="view-container">
     <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
@@ -507,7 +506,28 @@ function checkForPhoto() {
     </div>
     `
     document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>','')
+   document.getElementById('choose').addEventListener('change',function(evt){
+     var t1 = performance.now();
+     console.log(evt)
+     const files = document.getElementById('choose').files
+     console.log(files);
+     if(files.length > 0) {
+       const file = files[0];
+       var fileReader = new FileReader();
+       fileReader.onload = function(fileLoadEvt){
+         const srcData = fileLoadEvt.target.result;
+        document.getElementById('image-update').src = srcData;
+        requestCreator('backblaze',{})
+        var t2 = performance.now();
+        console.log(t2-t1);
+        }
+        fileReader.readAsDataURL(file);
+     }
+   })
+    // new mdc.ripple.MDCRipple(document.getElementById('update-photo')).root_.addEventListener('click',function(){
+      // AndroidInterface.openImagePicker();
 
+    // })
     return
   }
   // getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
@@ -517,6 +537,8 @@ function checkForPhoto() {
   // });
 }
 
+
+
 function simpleInputField() {
 
 }
@@ -524,43 +546,43 @@ function simpleInputField() {
 function profileCheck() {
 
   document.getElementById('start-load').classList.add('hidden');
-  const auth = firebase.auth().currentUser;
-  // if(!auth.displayName) {
-  const content = `
-  <div class="mdc-text-field mdc-text-field--outlined" id='name'>
-  <input class="mdc-text-field__input" required>
-  <div class="mdc-notched-outline">
-    <div class="mdc-notched-outline__leading"></div>
-    <div class="mdc-notched-outline__notch">
-      <label class="mdc-floating-label">Name</label>
-    </div>
-    <div class="mdc-notched-outline__trailing"></div>
-  </div>
-</div>
-`
-  const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
-<span class="mdc-button__label">NEXT</span>
-<i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-</button></div></div>`
+//   const auth = firebase.auth().currentUser;
+//   // if(!auth.displayName) {
+//   const content = `
+//   <div class="mdc-text-field mdc-text-field--outlined" id='name'>
+//   <input class="mdc-text-field__input" required>
+//   <div class="mdc-notched-outline">
+//     <div class="mdc-notched-outline__leading"></div>
+//     <div class="mdc-notched-outline__notch">
+//       <label class="mdc-floating-label">Name</label>
+//     </div>
+//     <div class="mdc-notched-outline__trailing"></div>
+//   </div>
+// </div>
+// `
+//   const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
+// <span class="mdc-button__label">NEXT</span>
+// <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
+// </button></div></div>`
 
-  document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
-  const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-  const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
-  console.log(nameInput)
-  history.pushState(['profileCheck'], null, null)
-  new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
-    if (!nameInput.value) {
-      nameInput.focus();
-      return;
-    }
-    progCard.open();
-    auth.updateProfile({
-      displayName: nameInput.value
-    }).then(checkForPhoto).catch(console.log)
-  })
-  return
+//   document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
+//   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+//   const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
+//   console.log(nameInput)
+//   history.pushState(['profileCheck'], null, null)
+//   new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
+//     if (!nameInput.value) {
+//       nameInput.focus();
+//       return;
+//     }
+//     progCard.open();
+//     auth.updateProfile({
+//       displayName: nameInput.value
+//     }).then(checkForPhoto).catch(console.log)
+//   })
+//   return
   // }
-  // checkForPhoto()
+  checkForPhoto()
 
 
   // getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
