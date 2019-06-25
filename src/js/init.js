@@ -480,63 +480,177 @@ function miniProfileCard(content, headerTitle, action) {
 
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
-  if (auth.photoURL) {
+  if (!auth.photoURL) {
     const content = `
-    
-    <div class='photo-container'>
-    <img src="./img/empty-user.jpg" id="image-update">
-    <input type='file' accept='image/jpeg;capture=camera' id='choose'>
-  
-    </div>
-    <div class="view-container">
-    <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
-  <i class="material-icons mdc-text-field__icon mdc-theme--primary">account_circle</i>
-  <input class="mdc-text-field__input" value="${auth.displayName}" disabled>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
-</div>
 
-<div class="mdc-text-field mdc-text-field--with-leading-icon mt-0">
-  <i class="material-icons mdc-text-field__icon mdc-theme--primary">phone</i>
-  <input class="mdc-text-field__input" value="${auth.phoneNumber}" disabled>
-  <div class="mdc-line-ripple"></div>
-  <label class="mdc-floating-label mdc-floating-label--float-above">Phone</label>
-</div>
-    </div>
-    </div>
-    `
-    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>','')
-   document.getElementById('choose').addEventListener('change',function(evt){
-     var t1 = performance.now();
-     console.log(evt)
-     const files = document.getElementById('choose').files
-     console.log(files);
-     if(files.length > 0) {
-       const file = files[0];
-       var fileReader = new FileReader();
-       fileReader.onload = function(fileLoadEvt){
-         const srcData = fileLoadEvt.target.result;
-        document.getElementById('image-update').src = srcData;
-        requestCreator('backblaze',{})
-        var t2 = performance.now();
-        console.log(t2-t1);
+      <div class='photo-container'>
+      <img src="./img/empty-user.jpg" id="image-update">
+      <input type='file' accept='image/jpeg;capture=camera' id='choose'>
+
+      </div>
+      <div class="view-container">
+      <div class="mdc-text-field mdc-text-field--with-leading-icon mb-10 mt-20">
+    <i class="material-icons mdc-text-field__icon mdc-theme--primary">account_circle</i>
+    <input class="mdc-text-field__input" value="${auth.displayName}" disabled>
+    <div class="mdc-line-ripple"></div>
+    <label class="mdc-floating-label mdc-floating-label--float-above">Name</label>
+  </div>
+
+  <div class="mdc-text-field mdc-text-field--with-leading-icon mt-0">
+    <i class="material-icons mdc-text-field__icon mdc-theme--primary">phone</i>
+    <input class="mdc-text-field__input" value="${auth.phoneNumber}" disabled>
+    <div class="mdc-line-ripple"></div>
+    <label class="mdc-floating-label mdc-floating-label--float-above">Phone</label>
+  </div>
+      </div>
+      </div>
+      `
+    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, ' <span class="mdc-top-app-bar__title">Add Your Profile Picture</span>', '')
+    const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+
+    document.getElementById('choose').addEventListener('change', function (evt) {
+      var t1 = performance.now();
+      console.log(evt)
+      const files = document.getElementById('choose').files
+      console.log(files);
+      if (files.length > 0) {
+        const file = files[0];
+        var fileReader = new FileReader();
+        fileReader.onload = function (fileLoadEvt) {
+          const srcData = fileLoadEvt.target.result;
+          document.getElementById('image-update').src = srcData;
+          progCard.open();
+          requestCreator('backblaze', {
+            'imageBase64': srcData
+          }).then(function () {
+            progCard.close();
+            checkForRecipient()
+            auth.reload();
+          }).catch(function (error) {
+            progCard.close();
+            snacks(error.response.message)
+          })
+          var t2 = performance.now();
+          console.log(t2 - t1);
         }
         fileReader.readAsDataURL(file);
-     }
-   })
-    // new mdc.ripple.MDCRipple(document.getElementById('update-photo')).root_.addEventListener('click',function(){
-      // AndroidInterface.openImagePicker();
-
-    // })
+      }
+    })
     return
   }
-  // getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-  //   if (!result) return mapView();
-  //   if (!auth.email) return;
-  //   if (!auth.emailVerified) return;
-  // });
+  checkForRecipient()
 }
 
+function checkForRecipient() {
+  const auth = firebase.auth().currentUser;
+
+  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+    if (!result.length) return mapView();
+    if (auth.email && auth.emailVerified) return mapView();
+
+    const text = getReportNameString(result)
+    if (!auth.email) {
+      const content = `<h3 class='mdc-typography--headline6 mt-0'>${text}</h3>
+    <div class="mdc-text-field mdc-text-field--outlined" id='email'>
+       <input class="mdc-text-field__input" required>
+      <div class="mdc-notched-outline">
+          <div class="mdc-notched-outline__leading"></div>
+          <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label">Email</label>
+          </div>
+          <div class="mdc-notched-outline__trailing"></div>
+      </div>
+    </div>`
+
+      const button = `<div class="mdc-card__actions">
+    <div class="mdc-card__action-icons"></div>
+    <div class="mdc-card__action-buttons">
+    <button class="mdc-button" id='addEmail'>
+      <span class="mdc-button__label">UPDATE</span>
+      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
+    </button>
+ </div>
+ </div>`
+
+
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add You Email Address</span>', button)
+      const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
+      const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+
+
+      new mdc.ripple.MDCRipple(document.getElementById('addEmail')).root_.addEventListener('click', function (evt) {
+        if (!emailInit.value) {
+          emailInit.focus();
+          return
+        }
+        progCard.open();
+        requestCreator('updateEmail', {
+          email: emailInit.value
+        }).then(function () {
+          snacks('Verification Link has been Sent to ' + emailInit.value)
+          mapView();
+          progCard.close();
+
+        }).catch(console.log)
+      })
+      return
+    }
+
+    if (!auth.emailVerified) {
+      const currentEmail = firebase.auth().currentUser.email
+      const content = `<h3 class='mdc-typography--headline6 mt-0'>${text}</h3>
+      <h3 class='mdc-typography--body1'>Click To Send a verification Email</h3>
+      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id='sendVerification'>
+      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>
+      </button>`
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '')
+      const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+
+      new mdc.ripple.MDCRipple(document.getElementById('sendVerification')).root_.addEventListener('click', function (evt) {
+        progCard.open();
+        requestCreator('updateEmail', {
+          email: currentEmail
+        }).then(function () {
+          progCard.close();
+          snacks('Verification Link has been Sent to ' + currentEmail)
+          mapView();
+        }).catch(console.log)
+      })
+
+      return;
+    };
+
+  });
+}
+
+function getReportNameString(result) {
+  let string = ''
+  let base = 'You are a recipient in '
+  const offices = {}
+  result.forEach(function (report) {
+    if (!offices[report.office]) {
+      offices[report.office] = [report.attachment.Name.value]
+    } else {
+      offices[report.office].push(report.attachment.Name.value)
+    }
+  })
+
+  const keys = Object.keys(offices)
+  keys.forEach(function (office, idx) {
+    const reportNames = offices[office].join(',')
+    console.log(idx)
+
+    base += ' ' + reportNames + ' For ' + office + ' &'
+
+
+
+  })
+  const lastChar = base[base.length - 1];
+  if (lastChar === '&') {
+    return base.substring(0, base.length - 1)
+  }
+  return base;
+}
 
 
 function simpleInputField() {
@@ -546,81 +660,45 @@ function simpleInputField() {
 function profileCheck() {
 
   document.getElementById('start-load').classList.add('hidden');
-//   const auth = firebase.auth().currentUser;
-//   // if(!auth.displayName) {
-//   const content = `
-//   <div class="mdc-text-field mdc-text-field--outlined" id='name'>
-//   <input class="mdc-text-field__input" required>
-//   <div class="mdc-notched-outline">
-//     <div class="mdc-notched-outline__leading"></div>
-//     <div class="mdc-notched-outline__notch">
-//       <label class="mdc-floating-label">Name</label>
-//     </div>
-//     <div class="mdc-notched-outline__trailing"></div>
-//   </div>
-// </div>
-// `
-//   const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
-// <span class="mdc-button__label">NEXT</span>
-// <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-// </button></div></div>`
+  const auth = firebase.auth().currentUser;
+  if (!auth.displayName) {
+    const content = `
+    <div class="mdc-text-field mdc-text-field--outlined" id='name'>
+    <input class="mdc-text-field__input" required>
+    <div class="mdc-notched-outline">
+      <div class="mdc-notched-outline__leading"></div>
+      <div class="mdc-notched-outline__notch">
+        <label class="mdc-floating-label">Name</label>
+      </div>
+      <div class="mdc-notched-outline__trailing"></div>
+    </div>
+  </div>
+  `
+    const action = `<div class="mdc-card__actions"><div class="mdc-card__action-icons"></div><div class="mdc-card__action-buttons"><button class="mdc-button" id='updateName'>
+  <span class="mdc-button__label">NEXT</span>
+  <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
+  </button></div></div>`
 
-//   document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
-//   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-//   const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
-//   console.log(nameInput)
-//   history.pushState(['profileCheck'], null, null)
-//   new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
-//     if (!nameInput.value) {
-//       nameInput.focus();
-//       return;
-//     }
-//     progCard.open();
-//     auth.updateProfile({
-//       displayName: nameInput.value
-//     }).then(checkForPhoto).catch(console.log)
-//   })
-//   return
-  // }
+    document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, `<span class="mdc-top-app-bar__title">Enter Your Name</span>`, action)
+    const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
+    const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
+    console.log(nameInput)
+    history.pushState(['profileCheck'], null, null)
+    new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
+      if (!nameInput.value) {
+        nameInput.focus();
+        return;
+      }
+      progCard.open();
+      auth.updateProfile({
+        displayName: nameInput.value
+      }).then(checkForPhoto).catch(console.log)
+    })
+    return
+  }
   checkForPhoto()
 
 
-  // getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-  //   if (!auth.displayName) {
-  //     fields.push({
-  //       label: 'Enter Your Display Name',
-  //       type: 'text',
-  //       actionable: 'updateName'
-  //     })
-  //   }
-  //   if (!auth.photoURL) {
-  //     fields.push({
-  //       label: '',
-  //       type: '',
-  //       actionable: 'updatePhoto'
-  //     })
-  //   }
-
-  //   if (!result.length) {
-  //     if (!auth.displayName || !auth.photoURL) return profileUpdateAnimation(fields, result)
-  //     return mapView();
-  //   }
-
-  //   if (auth.displayName && auth.photoURL && auth.email && auth.emailVerified) return mapView();
-  //   if(!auth.email) {
-  //     fields.push({
-  //       label:'Enter Your Email Address',
-  //       type:'email',
-  //       actionable:'updateEmail'
-  //     })
-  //   }
-  //   if(!auth.emailVerified) {
-  //     fields.push({
-
-  //     })
-  //   }
-  //   return profileUpdateAnimation(auth, result);
-  // })
 }
 
 function areObjectStoreValid(names) {

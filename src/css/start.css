@@ -89,3 +89,6 @@
 #updateName {
     float: right;
 }
+#sendVerification {
+    width: 100%;
+}
