@@ -155,6 +155,7 @@ function loadCardData(o, map, location) {
               cursor.continue();
             }
             tx.oncomplete = function(){
+
               selectedSubs = subs
 
               homeView({suggested:subs,other:[]},location)
@@ -169,6 +170,7 @@ function loadCardData(o, map, location) {
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
               if (!checkInSub) {
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
+                  
                   selectedSubs = subs
 
                   homeView({suggested:subs,other:[]}, location)
@@ -181,6 +183,7 @@ function loadCardData(o, map, location) {
                 isCheckInCreated = true
                 checkForVenueSubs(evt.detail.value).then(function (subs) {
                   cardProd.close()
+      
                   selectedSubs = subs
                   homeView(subs, location)
                 })
@@ -230,6 +233,7 @@ function loadCardData(o, map, location) {
             getAvailbleSubs(value).then(function (subs) {
               cardProd.close();
               selectedSubs = subs
+              
               homeView(subs, location)
             })
 
@@ -339,6 +343,7 @@ function getAvailbleSubs(venue) {
       let found = false;
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
+          
           result.suggested.push(cursor.value)
           found = true;
         }
@@ -349,6 +354,7 @@ function getAvailbleSubs(venue) {
       cursor.continue();
     }
     tx.oncomplete = function () {
+      result.newLocation = false;
       resolve(result)
     }
 
@@ -359,13 +365,12 @@ function checkForVenueSubs(office) {
   return new Promise(function (resolve, reject) {
     const tx = db.transaction(['subscriptions']);
     const store = tx.objectStore('subscriptions');
-    const index = store.index('count')
     const result = {
       suggested: [],
       other: []
     };
 
-    index.openCursor(null, 'prev').onsuccess = function (event) {
+    store.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return
       if (cursor.value.template === 'check-in') {
@@ -389,7 +394,7 @@ function checkForVenueSubs(office) {
       cursor.continue();
     }
     tx.oncomplete = function () {
-
+      result.newLocation = true
       resolve(result)
     }
 

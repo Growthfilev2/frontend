@@ -10,7 +10,7 @@ function homeView(subs, location) {
     header.listen('MDCTopAppBar:nav', handleNav);
     document.getElementById('app-header').classList.add('hidden')
     document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
-
+    getPendingLocationActivities(subs)
     document.getElementById('app-current-panel').innerHTML =`
     <div class="container home-container">
     <div class="profile-container mdc-card">
@@ -33,12 +33,15 @@ function homeView(subs, location) {
     </div>
   </div>
   
-  <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ? </h3>
-  ${subs.suggested.length ? ` <h3 class="mdc-list-group__subheader">Suggestions</h3>
+  <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
+  
+  ${subs.suggested.length ? `
+  
   <ul class="mdc-list subscription-list" id='suggested-list'>
     ${subs.suggested.map(function(sub){
     return `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}'>
-      ${sub.template}
+      ${subs.newLocation ? `New ${sub.template} ?` : `${sub.template}`}
+   
       <span class='mdc-list-item__meta material-icons'>
         keyboard_arrow_right
       </span>
@@ -70,4 +73,15 @@ function homeView(subs, location) {
       })
     }
 
+  }
+
+  function getPendingLocationActivities(subs){
+    const tx = db.transaction('calendar');
+    
+    tx.objectStore('calendar').index('status').openCursor('PENDING').onsuccess = function(evt){
+      const cursor = evt.target.result;
+      if(!cursor) return;
+      console.log(cursor.value)
+      cursor.continue();
+    }
   }
