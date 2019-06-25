@@ -399,34 +399,33 @@ function startApp(start) {
           startLoad.querySelector('p').textContent = texts[index]
           index++;
         }, index + 1 * 1000);
-        // mapView()
-        // enterChat('+919999288921')
-        profileCheck();
-        // requestCreator('now', {
-        //   device: native.getInfo(),
-        //   from: '',
-        //   registerToken: native.getFCMToken()
-        // }).then(function (response) {
-        //   if (response.updateClient) {
-        //     updateApp()
-        //     return
-        //   }
-        //   if (response.revokeSession) {
-        //     revokeSession();
-        //     return
-        //   };
-        //   getRootRecord().then(function (rootRecord) {
-        //     if (!rootRecord.fromTime) {
-        //       requestCreator('Null').then(profileCheck).catch(console.log)
-        //       return;
-        //     }
-        //     profileCheck();
-        //     requestCreator('Null').then(console.log).catch(console.log)
-        //   })
-        // }).catch(function (error) {
-        //   console.log(error)
-        //   snacks(error.response.message)
-        // })
+       
+       
+        requestCreator('now', {
+          device: native.getInfo(),
+          from: '',
+          registerToken: native.getFCMToken()
+        }).then(function (response) {
+          if (response.updateClient) {
+            updateApp()
+            return
+          }
+          if (response.revokeSession) {
+            revokeSession();
+            return
+          };
+          getRootRecord().then(function (rootRecord) {
+            if (!rootRecord.fromTime) {
+              requestCreator('Null').then(profileCheck).catch(console.log)
+              return;
+            }
+            profileCheck();
+            requestCreator('Null').then(console.log).catch(console.log)
+          })
+        }).catch(function (error) {
+          console.log(error)
+          snacks(error.response.message)
+        })
       }
       req.onerror = function () {
         handleError({
