@@ -57,6 +57,14 @@
       margin-left: 0;
     }
   }
+  @keyframes right_to_left {
+    from {
+      margin-right: -100%;
+    }
+    to {
+      margin-right: 0;
+    }
+  }
 /* .selection-box-auto ul li {
     padding-right: 0px;
     padding-left: 0px;

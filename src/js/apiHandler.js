@@ -18,6 +18,7 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   backblaze: backblaze,
+  updateEmail:updateEmail
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -397,6 +398,17 @@ function removeByIndex(index, range) {
       cursor.continue();
     }
   }
+}
+
+function updateEmail(body,meta){
+  const req = {
+    method: 'POST',
+    url: `https://growthfile.com/json?action=verifyEmail`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+
+  return http(req)
 }
 
 function backblaze(body, meta) {
