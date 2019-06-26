@@ -394,8 +394,8 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
        
-        profileCheck();
-        return;
+        // profileCheck();
+        // return;
         requestCreator('now', {
           device: native.getInfo(), 
           from: '',
@@ -462,10 +462,6 @@ function miniProfileCard(content, headerTitle, action) {
   ${action}
 </div>`
 
-  // document.getElementById('next').addEventListener('click', function () {
-
-  //   document.getElementById('action-content').innerHTML = fields[position];
-  // })
 
 }
 

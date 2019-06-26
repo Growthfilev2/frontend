@@ -585,6 +585,10 @@ function getInputText(selector) {
 
 function handleComponentUpdation(readResponse){
   // retuern 
+  if(history.state[0] === 'homeView') {
+    getSuggestions()
+    return;
+  }
 }
 
 function runRead(value) {

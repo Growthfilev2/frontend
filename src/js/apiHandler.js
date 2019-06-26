@@ -211,7 +211,6 @@ function putServerTime(data) {
 
 function comment(body, meta) {
   console.log(body)
-  // return new Promise(function (resolve, reject) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}activities/comment`,
@@ -220,11 +219,6 @@ function comment(body, meta) {
   }
   return http(req)
 
-  // http(req).then(function () {
-
-  //   resolve(true)
-  // }).catch(sendApiFailToMainThread)
-  // })
 }
 
 function statusChange(body, meta) {
@@ -712,12 +706,12 @@ function successResponse(read, param, db, resolve, reject) {
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
   removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-
+  
   if (read.locations) {
     read.locations.forEach(function (location) {
-
       updateMap(location, updateTx)
     })
+
     // updateTx.oncomplete = function () {
     // rootRecord.locations = true
     // db.transaction('root','readwrite').objectStore('root').put(rootRecord)
@@ -728,6 +722,7 @@ function successResponse(read, param, db, resolve, reject) {
     // sendErrorRequestToMainThread(tx.error)
     // }
     // return;
+  
   }
 
   read.activities.slice().reverse().forEach(function (activity) {
@@ -756,7 +751,6 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx)
-
   })
   updateRoot(read, updateTx, param.user.uid);
   updateTx.oncomplete = function () {

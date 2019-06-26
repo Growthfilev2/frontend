@@ -137,7 +137,8 @@ function homePanel() {
   return ` <div class="container home-container"> 
   ${topNavCard()}
   <div class='work-tasks'>
-  <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
+  <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>
+  <h3 class="mdc-list-group__subheader">Suggestions</h3>
   <div id='pending-location-tasks'></div>
   <div id='suggestions-container'></div>
   </div>
@@ -213,8 +214,7 @@ function homeView(suggestedTemplates) {
         console.log(activities[evt.detail.index])
         const activityClicked = activities[evt.detail.index];
         progCard.open();
-     
-
+    
         requestCreator('statusChange',{
           activityId: activityClicked.activityId,
           status: 'CONFIRMED'
@@ -235,6 +235,7 @@ function homeView(suggestedTemplates) {
   document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   suggestedInit.singleSelection = true;
+  suggestedInit.selectedIndex = 0;
   suggestedInit.listen('MDCList:action', function (evt) {
     console.log(suggestedInit.listElements[evt.detail.index].dataset)
     history.pushState(['addView'], null, null);

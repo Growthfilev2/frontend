@@ -608,16 +608,17 @@ function loadNearByLocations(o, map, location) {
         })(marker, content, infowindow));
         result.push(cursor.value)
         bounds.extend(marker.getPosition())
-      } else {
-        console.log(calculateDistanceBetweenTwoPoints({
-          latitude: location.latitude,
-          longitude: location.longitude
-        }, {
-          latitude: cursor.value.latitude,
-          longitude: cursor.value.longitude
-        }))
-        console.log(cursor.value)
-      }
+      } 
+      // else {
+      //   console.log(calculateDistanceBetweenTwoPoints({
+      //     latitude: location.latitude,
+      //     longitude: location.longitude
+      //   }, {
+      //     latitude: cursor.value.latitude,
+      //     longitude: cursor.value.longitude
+      //   }))
+      //   console.log(cursor.value)
+      // }
       lastCursor = {
         lat: cursor.value.latitude,
         lng: cursor.value.longitude,
