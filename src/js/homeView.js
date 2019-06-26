@@ -1,13 +1,6 @@
 function getSuggestions() {
   if (ApplicationState.knownLocation) {
-    Promise.all([getPendingLocationActivities(), getKnownLocationSubs()]).then(function (result) {
-      console.log(result);
-      const suggestedTemplates = {
-        'pending': result[0],
-        'subscriptions': result[1]
-      }
-      homeView(suggestedTemplates);
-    })
+    getKnownLocationSubs().then(homeView);
     return;
   }
   if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
@@ -143,7 +136,11 @@ function handleNav(evt) {
 function homePanel() {
   return ` <div class="container home-container"> 
   ${topNavCard()}
+  <div class='work-tasks'>
+  <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
+  <div id='pending-location-tasks'></div>
   <div id='suggestions-container'></div>
+  </div>
   </div>`
 }
 
@@ -195,44 +192,33 @@ function homeView(suggestedTemplates) {
     profileView()
   })
   if (ApplicationState.knownLocation) {
-    document.getElementById('suggestions-container').innerHTML = `
-    <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
-    ${pendinglist(suggestedTemplates.pending)}
-    ${templateList(suggestedTemplates.subscriptions)}
-    `
-
-    const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-    suggestedInit.singleSelection = true;
-    suggestedInit.selectedIndex = 0
-    suggestedInit.listen('MDCList:action', function (evt) {
-      console.log(suggestedInit.listElements[evt.detail.index].dataset)
-      history.pushState(['addView'], null, null);
-      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
+    getPendingLocationActivities().then(function (activities) {
+      document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
+      const ul = new mdc.list.MDCList(document.getElementById('confirm-tasks'))
+      ul.singleSelection = true;
+      ul.listen('MDCList:action', function (evt) {
+        console.log(activities[evt.detail.index])
+        const activityClicked = activities[evt.detail.index];
+        requesCreator('statusChange',)  
+      })
     })
-
-    return;
   }
-  document.getElementById('suggestions-container').innerHTML = `
-  <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
-  ${templateList(suggestedTemplates)}
-  `
+  document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   suggestedInit.singleSelection = true;
-  suggestedInit.selectedIndex = 0
   suggestedInit.listen('MDCList:action', function (evt) {
     console.log(suggestedInit.listElements[evt.detail.index].dataset)
     history.pushState(['addView'], null, null);
     addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
   })
-
 }
 
 
 
 function pendinglist(activities) {
-  
+
   return `
-  <ul class="mdc-list" role="group" aria-label="List with checkbox items">
+  <ul class="mdc-list" role="group" aria-label="List with checkbox items" id='confirm-tasks'>
     ${activities.map(function(activity,idx){
       return `
       <li class="mdc-list-item" role="checkbox" aria-checked="false">

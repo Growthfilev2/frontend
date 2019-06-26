@@ -18,7 +18,7 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   backblaze: backblaze,
-  updateEmail:updateEmail
+  updateEmail: updateEmail
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -130,7 +130,7 @@ function http(request) {
 }
 
 function fetchServerTime(body, meta, db) {
-  return new Promise(function (resolve,reject) {
+  return new Promise(function (resolve, reject) {
     currentDevice = body.device;
     const parsedDeviceInfo = JSON.parse(currentDevice);
     let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
@@ -229,20 +229,15 @@ function comment(body, meta) {
 
 function statusChange(body, meta) {
 
-  return new Promise(function (resolve, reject) {
-    const req = {
-      method: 'PATCH',
-      url: `${meta.apiUrl}activities/change-status`,
-      body: JSON.stringify(body),
-      token: meta.user.token
-    }
-    http(req).then(function (success) {
-      resolve(true)
 
-      // instantUpdateDB(body, 'status', meta.user).then(function () {
-      // }).catch(console.log)
-    }).catch(sendApiFailToMainThread)
-  })
+  const req = {
+    method: 'PATCH',
+    url: `${meta.apiUrl}activities/change-status`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+  return http(req)
+
 }
 
 
@@ -385,7 +380,7 @@ function removeByIndex(index, range) {
   }
 }
 
-function updateEmail(body,meta){
+function updateEmail(body, meta) {
   const req = {
     method: 'POST',
     url: `https://growthfile.com/json?action=verifyEmail`,
@@ -707,12 +702,12 @@ function successResponse(read, param, db, resolve, reject) {
 
 
     // if (addendum.isComment) {
-      let key = addendum.activityId
-      // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
-      userTimestamp[addendum.user] = {
-        ts: addendum.timestamp,
-        comment: addendum.comment
-      }
+    let key = addendum.activityId
+    // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
+    userTimestamp[addendum.user] = {
+      ts: addendum.timestamp,
+      comment: addendum.comment
+    }
     // }
     addendumObjectStore.add(addendum)
   })
@@ -727,13 +722,13 @@ function successResponse(read, param, db, resolve, reject) {
       updateMap(read.locations[location], updateTx)
     })
     // updateTx.oncomplete = function () {
-      // rootRecord.locations = true
-      // db.transaction('root','readwrite').objectStore('root').put(rootRecord)
-      // sendSuccessRequestToMainThread('venues-set')
+    // rootRecord.locations = true
+    // db.transaction('root','readwrite').objectStore('root').put(rootRecord)
+    // sendSuccessRequestToMainThread('venues-set')
     // }
     // updateTx.onerror = function () {
     //   console.log(tx.error);
-      // sendErrorRequestToMainThread(tx.error)
+    // sendErrorRequestToMainThread(tx.error)
     // }
     // return;
   }
@@ -749,11 +744,12 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
-      const ob = { displayName: user.displayName,
+      const ob = {
+        displayName: user.displayName,
         mobile: user.phoneNumber,
         photoURL: user.photoURL
       }
-      if(userTimestamp[user.phoneNumber]) {
+      if (userTimestamp[user.phoneNumber]) {
         ob.timestamp = userTimestamp[user.phoneNumber].ts
         ob.comment = userTimestamp[user.phoneNumber].comment
       }
