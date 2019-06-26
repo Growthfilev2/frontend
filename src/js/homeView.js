@@ -165,6 +165,16 @@ function topNavCard() {
       </div>
   
     </div>
+    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id='suggestion-progress'>
+    <div class="mdc-linear-progress__buffering-dots"></div>
+    <div class="mdc-linear-progress__buffer"></div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+  </div>
   </div>
   
   `
@@ -179,6 +189,8 @@ function homeView(suggestedTemplates) {
   const panel = document.getElementById('app-current-panel')
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
   panel.innerHTML = homePanel();
+  const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('suggestion-progress'))
+
   document.getElementById('camera').addEventListener('click', function () {
     history.pushState(['snapView'], null, null)
     snapView()
@@ -196,10 +208,27 @@ function homeView(suggestedTemplates) {
       document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
       const ul = new mdc.list.MDCList(document.getElementById('confirm-tasks'))
       ul.singleSelection = true;
+      console.log(ul)
       ul.listen('MDCList:action', function (evt) {
         console.log(activities[evt.detail.index])
         const activityClicked = activities[evt.detail.index];
-        requesCreator('statusChange',)  
+        progCard.open();
+     
+
+        requestCreator('statusChange',{
+          activityId: activityClicked.activityId,
+          status: 'CONFIRMED'
+        }).then(function(){
+          progCard.close();
+          ul.listElements[evt.detail.index].classList.add('slide-right');
+          setTimeout(function(){
+            ul.listElements[evt.detail.index].classList.add('hidden');
+          },500)
+        }).catch(function(error){
+          progCard.close();
+          snacks(error.response.message)
+          ul.foundation_.adapter_.setCheckedCheckboxOrRadioAtIndex(evt.detail.index,false)      
+        })
       })
     })
   }
@@ -216,9 +245,8 @@ function homeView(suggestedTemplates) {
 
 
 function pendinglist(activities) {
-
   return `
-  <ul class="mdc-list" role="group" aria-label="List with checkbox items" id='confirm-tasks'>
+  <ul class="mdc-list subscription-list" role="group" aria-label="List with checkbox items" id='confirm-tasks'>
     ${activities.map(function(activity,idx){
       return `
       <li class="mdc-list-item" role="checkbox" aria-checked="false">
@@ -249,7 +277,7 @@ function templateList(suggestedTemplates) {
   ${suggestedTemplates.map(function(sub){
   return `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}'>
       New ${sub.template}  ?
-    <span class='mdc-list-item__meta material-icons'>
+    <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
       keyboard_arrow_right
     </span>
   </li>`

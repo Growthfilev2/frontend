@@ -329,6 +329,11 @@ body {
   height: 50%;
   border-radius: 50%;
 }
+.mdc-checkbox__native-control:enabled:checked~.mdc-checkbox__background, .mdc-checkbox__native-control:enabled:indeterminate~.mdc-checkbox__background {
+  background-color: var(--mdc-theme-primary);
+  border-color: var(--mdc-theme-primary);
+
+}
 
 /** override **/
 .banner {

@@ -461,8 +461,6 @@ function updateMap(venue, tx) {
     if (!cursor) {
       console.log("start adding");
       console.log("adding " + venue.activityId, "location " + venue.location)
-      venue.latitude = venue.geopoint.latitude
-      venue.longitude = venue.geopoint.longitude
       mapObjectStore.add(venue);
       console.log("finished adding to map")
       return;
@@ -716,10 +714,9 @@ function successResponse(read, param, db, resolve, reject) {
   removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
 
   if (read.locations) {
-    Object.keys(read.locations).forEach(function (location) {
-      read.locations[location].activityId = location
-      read.locations[location].office = 'Puja Capital'
-      updateMap(read.locations[location], updateTx)
+    read.locations.forEach(function (location) {
+
+      updateMap(location, updateTx)
     })
     // updateTx.oncomplete = function () {
     // rootRecord.locations = true
