@@ -2,18 +2,14 @@ var map;
 var globMark;
 let o;
 let selectedSubs;
-
-function handleNav(evt) {
-  const state = history.state[0]
-
-
-  if (state === 'homeView') {
-    drawer.open = true
-    return;
-  }
-
-  return history.back();
+ApplicationState = {
+  office:'',
+  location:'',
+  knownLocation:false,
+  venue:''
 }
+
+
 
 function mapView() {
   history.pushState(['mapView'], null, null);
@@ -26,6 +22,7 @@ function mapView() {
   document.getElementById('map-view').style.height = '100%';
 
   manageLocation().then(function (location) {
+    ApplicationState.location = location
 
     document.getElementById('start-load').classList.add('hidden');
 
@@ -87,7 +84,9 @@ function mapView() {
       // return
 
       // map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
-      loadCardData(o, map, location)
+      loadNearByLocations(o, map, location).then(function (markers) {
+        loadCardData(markers)
+      })
     });
 
 
@@ -107,8 +106,7 @@ function mapView() {
 
 
 
-function loadCardData(o, map, location) {
-  loadNearByLocations(o, map, location).then(function (markers) {
+function loadCardData(markers) {
 
     const el = document.getElementById('selection-box');
     const aside = el.querySelector('aside');
@@ -130,63 +128,33 @@ function loadCardData(o, map, location) {
     selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
 
     selectVenue.listen('MDCSelect:change', (evt) => {
+      document.getElementById('office-cont').innerHTML = ''
+      document.getElementById('subs-cont').innerHTML = ''
+      document.getElementById('submit-cont').innerHTML = ''
+
       console.log(evt.detail.value)
       aside.classList.add('open')
       if (!evt.detail.value) return;
       const value = JSON.parse(evt.detail.value)
-      
+
       if (value === 1) {
-        
-        document.getElementById('office-cont').innerHTML = ''
-        document.getElementById('subs-cont').innerHTML = ''
-        document.getElementById('submit-cont').innerHTML = ''
+        ApplicationState.knownLocation = false;
         getUniqueOfficeCount().then(function (offices) {
-          if (!offices.length) {
-            const subs = []
-            const tx = db.transaction("subscriptions");
-            tx.objectStore('subscriptions').openCursor().onsuccess = function(event){
-              const cursor = event.target.result;
-              if(!cursor) return;
-              if(cursor.value.status === 'CANCELLED') {
-                cursor.continue();
-                return;
-              }
-              subs.push(cursor.value)
-              cursor.continue();
-            }
-            tx.oncomplete = function(){
-
-              selectedSubs = subs
-
-              homeView({suggested:subs,other:[]},location)
-            }
-            return;
-          }
+          if (!offices.length) return getSuggestions();
 
           document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
           const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
           selectOfficeInit.listen('MDCSelect:change', function (evt) {
-            if(!evt.detail.value) return;
+            if (!evt.detail.value) return;
+            ApplicationState.office = evt.detail.value
             getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-              if (!checkInSub) {
-                checkForVenueSubs(evt.detail.value).then(function (subs) {
-                  
-                  selectedSubs = subs
-
-                  homeView({suggested:subs,other:[]}, location)
-                })
-                return;
-              }
+              if (!checkInSub)  return getSuggestions()
+            
               cardProd.open()
               requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
-                isCheckInCreated = true
-                checkForVenueSubs(evt.detail.value).then(function (subs) {
-                  cardProd.close()
-      
-                  selectedSubs = subs
-                  homeView(subs, location)
-                })
+                cardProd.close()              
+                getSuggestions()
               }).catch(function (error) {
                 snacks('Please Try again later');
                 cardProd.close()
@@ -203,20 +171,12 @@ function loadCardData(o, map, location) {
         return;
       }
 
-      document.getElementById('office-cont').innerHTML = ''
-      document.getElementById('subs-cont').innerHTML = ''
-      document.getElementById('submit-cont').innerHTML = ''
-
+      ApplicationState.knownLocation = true;
+      ApplicationState.venue = value;
+      ApplicationState.office = value.office;
       getSubscription(value.office, 'check-in').then(function (result) {
-        if(!result) {
-          getAvailbleSubs(value).then(function (subs) {
-            selectedSubs = subs
-
-            homeView({suggested:subs,other:[]},location)
-          })
-          return;
-        }
-
+        if (!result) return getSuggestions();
+         
         document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
         </button>`
@@ -228,15 +188,9 @@ function loadCardData(o, map, location) {
           cardProd.open();
 
           requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
-            snacks('Check-in created');
-            isCheckInCreated = true
-            getAvailbleSubs(value).then(function (subs) {
-              cardProd.close();
-              selectedSubs = subs
-              
-              homeView(subs, location)
-            })
-
+            snacks('Check-in created');        
+            cardProd.close();
+            getSuggestions();
           }).catch(function (error) {
             console.log(error)
             confirm.root_.classList.remove('hidden');
@@ -244,7 +198,6 @@ function loadCardData(o, map, location) {
             cardProd.close()
           })
         }
-
       })
     });
 
@@ -257,10 +210,33 @@ function loadCardData(o, map, location) {
 
     if (markers.length > 1) {
       selectVenue.selectedIndex = -1
-      header.textContent = 'Where Are You ?'
+    }
+  
+};
+
+function getAllSubscriptions() {
+  return new Promise(function (resolve, reject) {
+
+    const tx = db.transaction("subscriptions");
+    const result = [];
+    tx.objectStore('subscriptions').openCursor().onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
+      result.push(cursor.value)
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+
+      return resolve(result)
+
+
     }
   })
-};
+}
 
 function hideBottomNav() {
   document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
@@ -343,7 +319,7 @@ function getAvailbleSubs(venue) {
       let found = false;
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
-          
+
           result.suggested.push(cursor.value)
           found = true;
         }
@@ -449,12 +425,12 @@ function snapView() {
 
 
 function setFilePath(base64) {
-  if(history.state[0] === 'photoUpdate') {
+  if (history.state[0] === 'photoUpdate') {
 
     return
   }
-  if(history.state[0] === 'profileView') {
-    
+  if (history.state[0] === 'profileView') {
+
 
     return;
   }
@@ -463,7 +439,7 @@ function setFilePath(base64) {
   const header = getHeader('app-header', backIcon, '');
   header.root_.classList.remove('hidden')
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-  
+
   const url = `data:image/jpg;base64,${base64}`
   history.pushState(['snapView'], null, null)
   document.getElementById('app-current-panel').innerHTML = `
