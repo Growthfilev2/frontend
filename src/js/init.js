@@ -101,7 +101,7 @@ window.onpopstate = function (event) {
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
   if (event.state[0] === 'homeView') {
-    window[event.state[0]](selectedSubs, event.state[1]);
+    getSuggestions();
     return
   }
 
@@ -116,18 +116,7 @@ window.addEventListener("load", function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
-  // navList = new mdc.list.MDCList(document.getElementById('nav-list'))
-  // navList.singleSelection = true;
-  // navList.listen('MDCList:action', function (evt) {
-  //   console.log(evt)
-  //   const state = navList.listElements[evt.detail.index].dataset.state
-  //   if (state === 'homeView') {
-  //     window[state](selectedSubs)
-  //     return
-  //   }
-  //   window[state]()
-
-  // })
+ 
 
   drawer.listen('MDCDrawer:opened', function (evt) {
     document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
@@ -273,7 +262,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 12);
+      const req = window.indexedDB.open(auth.uid, 13);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -362,6 +351,11 @@ function startApp(start) {
             const userStore = tx.objectStore('users')
             userStore.createIndex('timestamp', 'timestamp')
           }
+          if(evt.oldVersion <= 12) {
+            var tx = req.transaction;
+            const activityStore = tx.objectStore('activity')
+            activityStore.createIndex('status','status')
+          }
         };
       }
       req.onsuccess = function () {
@@ -400,9 +394,10 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
        
-       
+        // profileCheck();
+        // return;
         requestCreator('now', {
-          device: native.getInfo(),
+          device: native.getInfo(), 
           from: '',
           registerToken: native.getFCMToken()
         }).then(function (response) {
@@ -467,10 +462,6 @@ function miniProfileCard(content, headerTitle, action) {
   ${action}
 </div>`
 
-  // document.getElementById('next').addEventListener('click', function () {
-
-  //   document.getElementById('action-content').innerHTML = fields[position];
-  // })
 
 }
 
@@ -743,7 +734,7 @@ function createObjectStores(db, uid) {
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
   activity.createIndex('template', 'template');
-
+  activity.createIndex('status','status')
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
   })
@@ -786,8 +777,8 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
-
+  calendar.createIndex('onLeave', ['template', 'status', 'office']);
+ 
   const map = db.createObjectStore('map', {
     autoIncrement: true,
   })

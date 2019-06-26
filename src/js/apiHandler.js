@@ -18,7 +18,7 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   backblaze: backblaze,
-  updateEmail:updateEmail
+  updateEmail: updateEmail
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -54,21 +54,6 @@ self.onmessage = function (event) {
           rootObjectStore.put(rootRecord)
         }
         rootTx.oncomplete = function () {
-          if (response.venues) {
-            const tx = db.transaction('map', 'readwrite')
-            response.venues.forEach(function (venue) {
-              updateMap(venue, tx)
-            })
-            tx.oncomplete = function () {
-              rootRecord.venues = true
-              db.transaction('root','readwrite').objectStore('root').put(rootRecord)
-              sendSuccessRequestToMainThread('venues-set')
-            }
-            tx.onerror = function () {
-              sendErrorRequestToMainThread(tx.error)
-            }
-            return;
-          }
           if (response.removeFromOffice) {
             if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
               removeFromOffice(response.removeFromOffice, event.data.meta, db).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
@@ -145,7 +130,7 @@ function http(request) {
 }
 
 function fetchServerTime(body, meta, db) {
-  return new Promise(function (resolve,reject) {
+  return new Promise(function (resolve, reject) {
     currentDevice = body.device;
     const parsedDeviceInfo = JSON.parse(currentDevice);
     let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
@@ -226,7 +211,6 @@ function putServerTime(data) {
 
 function comment(body, meta) {
   console.log(body)
-  // return new Promise(function (resolve, reject) {
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}activities/comment`,
@@ -235,29 +219,19 @@ function comment(body, meta) {
   }
   return http(req)
 
-  // http(req).then(function () {
-
-  //   resolve(true)
-  // }).catch(sendApiFailToMainThread)
-  // })
 }
 
 function statusChange(body, meta) {
 
-  return new Promise(function (resolve, reject) {
-    const req = {
-      method: 'PATCH',
-      url: `${meta.apiUrl}activities/change-status`,
-      body: JSON.stringify(body),
-      token: meta.user.token
-    }
-    http(req).then(function (success) {
-      resolve(true)
 
-      // instantUpdateDB(body, 'status', meta.user).then(function () {
-      // }).catch(console.log)
-    }).catch(sendApiFailToMainThread)
-  })
+  const req = {
+    method: 'PATCH',
+    url: `${meta.apiUrl}activities/change-status`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+  return http(req)
+
 }
 
 
@@ -400,7 +374,7 @@ function removeByIndex(index, range) {
   }
 }
 
-function updateEmail(body,meta){
+function updateEmail(body, meta) {
   const req = {
     method: 'POST',
     url: `https://growthfile.com/json?action=verifyEmail`,
@@ -720,18 +694,25 @@ function successResponse(read, param, db, resolve, reject) {
 
 
     // if (addendum.isComment) {
-      let key = addendum.activityId
-      // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
-      userTimestamp[addendum.user] = {
-        ts: addendum.timestamp,
-        comment: addendum.comment
-      }
+    let key = addendum.activityId
+    // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
+    userTimestamp[addendum.user] = {
+      ts: addendum.timestamp,
+      comment: addendum.comment
+    }
     // }
     addendumObjectStore.add(addendum)
   })
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
   removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
+  
+  if (read.locations) {
+    read.locations.forEach(function (location) {
+      updateMap(location, updateTx)
+    })
+
+  }
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
@@ -744,11 +725,12 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
-      const ob = { displayName: user.displayName,
+      const ob = {
+        displayName: user.displayName,
         mobile: user.phoneNumber,
         photoURL: user.photoURL
       }
-      if(userTimestamp[user.phoneNumber]) {
+      if (userTimestamp[user.phoneNumber]) {
         ob.timestamp = userTimestamp[user.phoneNumber].ts
         ob.comment = userTimestamp[user.phoneNumber].comment
       }
@@ -758,7 +740,6 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx)
-
   })
   updateRoot(read, updateTx, param.user.uid);
   updateTx.oncomplete = function () {

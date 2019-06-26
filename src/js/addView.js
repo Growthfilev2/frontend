@@ -1,4 +1,4 @@
-function addView(sub, location) {
+function addView(sub) {
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template.toUpperCase()}</span>
@@ -10,33 +10,36 @@ function addView(sub, location) {
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src="${window.location.origin}/forms/customer/edit.html"></iframe>
+    <iframe id='form-iframe' src="${window.location.origin}/forms/${sub.template}/edit.html"></iframe>
     `
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {
         // your stuff
-        document.getElementById('form-iframe').contentWindow.init(sub, location);
+        document.getElementById('form-iframe').contentWindow.init(sub);
     })
 }
 
-function sendFormToParent(formData, location) {
+function sendFormToParent(formData) {
     progressBar.open();
     requestCreator('create', formData).then(function () {
             progressBar.close();
             successDialog()
             if (formData.template === 'customer') {
-                const venue = {
+                ApplicationState.knownLocation = true;
+                ApplicationState.venue = {
                     office: formData.office,
                     template: formData.template,
-                    status: formData.status
+                    status: formData.status,
+                    location:formData.venue[0].location,
+                    address:formData.venue[0].address,
+                    latitude:formData.venue[0].geopoint.latitude,
+                    longitude:formData.venue[0].geopoint.longitude
                 }
-                getAvailbleSubs(venue).then(function (subs) {
-                    selectedSubs = subs;
-                    homeView(selectedSubs, location)
-                })
+                getSuggestions();
                 return;
             }
-            homeView(selectedSubs, location)
+            getSuggestions();
+            // homeView(selectedSubs, location)
         })
         .catch(function (error) {
             progressBar.close();

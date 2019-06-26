@@ -4,16 +4,16 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../external/css/material.min.css" rel="stylesheet">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/styles.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-    <form class='forms mdc-card' id='form'>
+ <form class='forms mdc-card' id='form'>
 
-        <div class="form-list">
+        <!-- <div class="form-list">
 
 
             <div class="form-component">
@@ -66,11 +66,11 @@
                 <div class="mdc-text-field-helper-line">
                     <div class="mdc-text-field-helper-text"></div>
                 </div>
-            </div>
+            </div>  -->
 
-          
+
             <div class="form-component">
-                <input type="submit" value="CREATE CUSTOMER" class="mdc-button submit-btn">
+                <input type="submit" value="CREATE TOUR PLAN" class="mdc-button submit-btn">
             </div>
     </form>
 
@@ -79,72 +79,30 @@
 
     </div>
 
-    
+ 
+
+
+    </div>
 
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
-        let customerContact = '';
+
         function init(subscriptionTemplate) {
-            const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-             customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
-            const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
-            const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
-            console.log(customerContact.foundation_.adapter_.getNativeInput())
-            customerContact.foundation_.adapter_.getNativeInput().addEventListener('click', function () {
-                AndroidInterface.getContact()
-            });
 
-            const tx = parent.db.transaction(['children'])
-            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'customer-type'])
-            tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
-                const cursor = event.target.result;
-                console.log(cursor)
-                if (!cursor) return;
-                if (cursor.value.status === 'CANCELLED') {
-                    cursor.continue();
-                    return;
-                }
-                select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
-                        ${cursor.value.attachment.Name.value}
-                      </option>`
-                cursor.continue();
-            }
-            tx.oncomplete = function () {
-                if (select.nativeControl_.children.length <= 1) {
-
-                    select.foundation_.adapter_.addClass('hidden')
-                }
-            }
-            console.log(parent)
             var formEl = document.getElementById('form');
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate))
-                const vd = subscriptionTemplate.venue[0];
-                copy.attachment.Name.value = customerName.value;
-                copy.attachment['Customer Type'].value = select.value;
-                copy.attachment['First Contact'].value = customerContact.value;
-                copy.status = 'PENDING'
-                copy.venue = [{
-                    venueDescriptor: vd,
-                    address: customerAddress.value,
-                    location: customerName.value,
-                    geopoint: {
-                        latitude: parent.ApplicationState.location.latitude,
-                        longitude: parent.ApplicationState.location.longitude
-                    }
+                const sc = copy.schedule[0];
+                copy.attachment.Customer.value = 'Testing00'
+                copy.schedule = [{
+                    startTime: 1561545595000,
+                    endTime: 1561631995000,
+                    name: sc
                 }]
                 copy.share = []
-                
                 parent.sendFormToParent(copy)
             })
-        }
-        function setContact(contactString) {
-            console.log(contactString);
-            const number = contactString.split("&")[0].split("=")[1];
-           
-            customerContact.value = contactString.split("&")[0].split("=")[1]
-
         }
     </script>
 </body>

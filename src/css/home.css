@@ -89,3 +89,19 @@
     font-weight: bold;
     margin-left: 0px;
 }
+
+.icons {
+    width: 48%;
+    text-align: center;
+
+}
+.icons .material-icons.mdc-fab__icon {
+    font-size: 35px;
+}
+.icons.one {
+    float: left;
+}
+.icons.two {
+    float: right;
+}
+
