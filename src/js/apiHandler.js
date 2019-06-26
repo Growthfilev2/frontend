@@ -712,17 +712,6 @@ function successResponse(read, param, db, resolve, reject) {
       updateMap(location, updateTx)
     })
 
-    // updateTx.oncomplete = function () {
-    // rootRecord.locations = true
-    // db.transaction('root','readwrite').objectStore('root').put(rootRecord)
-    // sendSuccessRequestToMainThread('venues-set')
-    // }
-    // updateTx.onerror = function () {
-    //   console.log(tx.error);
-    // sendErrorRequestToMainThread(tx.error)
-    // }
-    // return;
-  
   }
 
   read.activities.slice().reverse().forEach(function (activity) {

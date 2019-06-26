@@ -134,15 +134,32 @@ function handleNav(evt) {
 }
 
 function homePanel() {
-  return ` <div class="container home-container"> 
+  return ` <div class="container home-container">
   ${topNavCard()}
   <div class='work-tasks'>
-  <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>
-  <h3 class="mdc-list-group__subheader">Suggestions</h3>
-  <div id='pending-location-tasks'></div>
-  <div id='suggestions-container'></div>
+      <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>
+      <h3 class="mdc-list-group__subheader">Suggestions</h3>
+      <div id='pending-location-tasks'></div>
+      <div id='suggestions-container'></div>
+      <div style="width:100%">
+          <div class='icons one'>
+              <button class="mdc-fab mdc-theme--primary-bg">
+                  <span class="material-icons mdc-fab__icon">fingerprint</span>
+              </button>
+              <p>Attendance Regularization</p>
+          </div>
+          <div class='icons two '>
+              <button class="mdc-fab mdc-theme--primary-bg">
+                  <span class="material-icons mdc-fab__icon">assignment</span>
+              </button>
+              <p>Claims</p>
+          </div>
+
+
+
+      </div>
   </div>
-  </div>`
+</div>`
 }
 
 function topNavCard() {
@@ -265,7 +282,6 @@ function pendinglist(activities) {
           </svg>
           <div class="mdc-checkbox__mixedmark"></div>
         </div>
-
       </div>   
     </li>`
     }).join()}

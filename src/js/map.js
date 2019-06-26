@@ -3,10 +3,10 @@ var globMark;
 let o;
 let selectedSubs;
 ApplicationState = {
-  office:'',
-  location:'',
-  knownLocation:false,
-  venue:''
+  office: '',
+  location: '',
+  knownLocation: false,
+  venue: ''
 }
 
 
@@ -16,7 +16,7 @@ function mapView() {
   document.getElementById('start-load').classList.add('hidden');
   const panel = document.getElementById('app-current-panel')
   panel.innerHTML = mapDom();
-  panel.classList.remove('user-detail-bckg','mdc-top-app-bar--fixed-adjust')
+  panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
 
 
@@ -107,110 +107,111 @@ function mapView() {
 
 function loadCardData(markers) {
 
-    const el = document.getElementById('selection-box');
-    const aside = el.querySelector('aside');
+  const el = document.getElementById('selection-box');
+  const aside = el.querySelector('aside');
 
-    const contentBody = el.querySelector('.content-body');
-    contentBody.innerHTML = '';
+  const contentBody = el.querySelector('.content-body');
+  contentBody.innerHTML = '';
 
-    const header = document.getElementById('card-primary');
-    const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
-    header.textContent = `Where Are You`;
-    el.classList.remove('hidden');
+  const header = document.getElementById('card-primary');
+  const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
+  header.textContent = `Where Are You`;
+  el.classList.remove('hidden');
 
-    contentBody.innerHTML = `<div>
+  contentBody.innerHTML = `<div>
     ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
     <div id='office-cont' class='pt-10'></div>
     <div id='subs-cont' class='pt-10'></div>
     <div id='submit-cont' class='pt-10'></div>
     </div>`
-    selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
+  selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
 
-    selectVenue.listen('MDCSelect:change', (evt) => {
-      document.getElementById('office-cont').innerHTML = ''
-      document.getElementById('subs-cont').innerHTML = ''
-      document.getElementById('submit-cont').innerHTML = ''
+  selectVenue.listen('MDCSelect:change', (evt) => {
+    document.getElementById('office-cont').innerHTML = ''
+    document.getElementById('subs-cont').innerHTML = ''
+    document.getElementById('submit-cont').innerHTML = ''
 
-      console.log(evt.detail.value)
-      aside.classList.add('open')
-      if (!evt.detail.value) return;
-      const value = JSON.parse(evt.detail.value)
+    console.log(evt.detail.value)
+    aside.classList.add('open')
+    if (!evt.detail.value) return;
+    const value = JSON.parse(evt.detail.value)
 
-      if (value === 1) {
-        ApplicationState.knownLocation = false;
-        getUniqueOfficeCount().then(function (offices) {
-          if (!offices.length) return getSuggestions();
+    if (value === 1) {
+      ApplicationState.knownLocation = false;
+      getUniqueOfficeCount().then(function (offices) {
+        if (!offices.length) return getSuggestions();
 
-          document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
-          const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
-          selectOfficeInit.listen('MDCSelect:change', function (evt) {
-            if (!evt.detail.value) return;
-            ApplicationState.office = evt.detail.value
-            getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-              if (!checkInSub)  return getSuggestions()
-            
-              cardProd.open()
-              // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
-                snacks('Check-in created');
-                cardProd.close()              
-                getSuggestions()
-              // }).catch(function (error) {
-              //   snacks('Please Try again later');
-              //   cardProd.close()
-              // })
-            });
+        document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
+        const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
+        selectOfficeInit.listen('MDCSelect:change', function (evt) {
+          if (!evt.detail.value) return;
+          ApplicationState.office = evt.detail.value
+          getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
+            if (!checkInSub) return getSuggestions()
+
+            cardProd.open()
+            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              snacks('Check-in created');
+              cardProd.close()
+              getSuggestions()
+            }).catch(function (error) {
+              snacks('Please Try again later');
+              cardProd.close()
+            })
           });
-          if (offices.length == 1) {
-            selectOfficeInit.selectedIndex = 0
-          }
-          if (offices.length > 1) {
-            selectOfficeInit.selectedIndex = -1
-          }
-        })
-        return;
-      }
-
-      ApplicationState.knownLocation = true;
-      ApplicationState.venue = value;
-      ApplicationState.office = value.office;
-      getSubscription(value.office, 'check-in').then(function (result) {
-        if (!result) return getSuggestions();
-         
-        document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
-        <span class='mdc-button__label'>Confirm</span>
-        </button>`
-        const confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
-
-        confirm.root_.onclick = function () {
-
-          confirm.root_.classList.add('hidden')
-          cardProd.open();
-
-          // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
-            snacks('Check-in created');        
-            cardProd.close();
-            getSuggestions();
-          // }).catch(function (error) {
-          //   console.log(error)
-          //   confirm.root_.classList.remove('hidden');
-          //   snacks('Please Try Again');
-          //   cardProd.close()
-          // })
+        });
+        if (offices.length == 1) {
+          selectOfficeInit.selectedIndex = 0
+        }
+        if (offices.length > 1) {
+          selectOfficeInit.selectedIndex = -1
         }
       })
-    });
-
-    if (!markers.length) {
-      selectVenue.selectedIndex = 0
-    };
-    if (markers.length == 1) {
-      selectVenue.selectedIndex = 1
-    };
-
-    if (markers.length > 1) {
-      selectVenue.selectedIndex = -1
+      return;
     }
-  
+
+    ApplicationState.knownLocation = true;
+    ApplicationState.venue = value;
+    ApplicationState.office = value.office;
+    getSubscription(value.office, 'check-in').then(function (result) {
+      if (!result) return getSuggestions();
+
+      document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
+        <span class='mdc-button__label'>Confirm</span>
+        </button>`
+      const confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
+
+      confirm.root_.onclick = function () {
+
+        confirm.root_.classList.add('hidden')
+        cardProd.open();
+
+        requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+          snacks('Check-in created');
+          cardProd.close();
+          getSuggestions();
+        }).catch(function (error) {
+          console.log(error)
+          confirm.root_.classList.remove('hidden');
+          snacks('Please Try Again');
+          cardProd.close()
+        })
+      }
+    })
+  });
+
+  if (!markers.length) {
+    selectVenue.selectedIndex = 0
+  };
+
+  if (markers.length == 1) {
+    selectVenue.selectedIndex = 1
+  };
+
+  if (markers.length > 1) {
+    selectVenue.selectedIndex = -1
+  }
+
 };
 
 function getAllSubscriptions() {
@@ -330,6 +331,7 @@ function mapDom() {
 
   `
 }
+
 function snapView() {
   // localStorage.setItem('snap_office', office)
   AndroidInterface.startCamera();
@@ -337,7 +339,7 @@ function snapView() {
 
 
 function setFilePath(base64) {
- 
+
   // document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
@@ -590,10 +592,12 @@ function loadNearByLocations(o, map, location) {
         id: cursor.value.activityId,
         value: JSON.stringify(cursor.value)
       });
+
       if (calculateDistanceBetweenTwoPoints(location, {
           latitude: cursor.value.latitude,
           longitude: cursor.value.longitude
         }) < 0.5) {
+          console.log(cursor.value)
         marker.setMap(map);
         const content = `<span>${cursor.value.activityId}</span>`
         google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
@@ -608,7 +612,7 @@ function loadNearByLocations(o, map, location) {
         })(marker, content, infowindow));
         result.push(cursor.value)
         bounds.extend(marker.getPosition())
-      } 
+      }
       // else {
       //   console.log(calculateDistanceBetweenTwoPoints({
       //     latitude: location.latitude,
