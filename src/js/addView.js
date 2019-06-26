@@ -10,7 +10,7 @@ function addView(sub) {
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src="${window.location.origin}/frontend/dist/forms/customer/edit.html"></iframe>
+    <iframe id='form-iframe' src="${window.location.origin}/frontend/dist/forms/${sub.template}/edit.html"></iframe>
     `
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {
@@ -21,7 +21,7 @@ function addView(sub) {
 
 function sendFormToParent(formData) {
     progressBar.open();
-    // requestCreator('create', formData).then(function () {
+    requestCreator('create', formData).then(function () {
             progressBar.close();
             successDialog()
             if (formData.template === 'customer') {
@@ -38,10 +38,11 @@ function sendFormToParent(formData) {
                 getSuggestions();
                 return;
             }
+            getSuggestions();
             // homeView(selectedSubs, location)
-        // })
-    //     .catch(function (error) {
-    //         progressBar.close();
-    //         snacks(error.response.message)
-    // })
+        })
+        .catch(function (error) {
+            progressBar.close();
+            snacks(error.response.message)
+    })
 }

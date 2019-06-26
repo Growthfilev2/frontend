@@ -397,7 +397,7 @@ function startApp(start) {
         profileCheck();
         return;
         requestCreator('now', {
-          device: native.getInfo(),
+          device: native.getInfo(), 
           from: '',
           registerToken: native.getFCMToken()
         }).then(function (response) {

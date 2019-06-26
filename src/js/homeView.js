@@ -1,9 +1,13 @@
 function getSuggestions() {
   if (ApplicationState.knownLocation) {
-    Promise.all([getPendingLocationActivities(),getKnownLocationSubs()]).then(function(result){
-
+    Promise.all([getPendingLocationActivities(), getKnownLocationSubs()]).then(function (result) {
+      console.log(result);
+      const suggestedTemplates = {
+        'pending': result[0],
+        'subscriptions': result[1]
+      }
+      homeView(suggestedTemplates);
     })
-    
     return;
   }
   if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
@@ -14,7 +18,7 @@ function getKnownLocationSubs() {
   return new Promise(function (resolve, reject) {
     const tx = db.transaction(['subscriptions']);
     const store = tx.objectStore('subscriptions');
-    
+    const result = [];
     const venue = ApplicationState.venue
     store.openCursor(null, 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
@@ -27,11 +31,11 @@ function getKnownLocationSubs() {
         cursor.continue();
         return;
       }
-      let found = false;
+
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
           result.push(cursor.value)
-          found = true;
+
         }
       })
       cursor.continue();
@@ -41,6 +45,55 @@ function getKnownLocationSubs() {
     }
   })
 }
+
+function getPendingLocationActivities() {
+  return new Promise(function (resolve, reject) {
+
+    const tx = db.transaction('activity');
+    const result = []
+    const index = tx.objectStore('activity').index('status')
+    index.openCursor('PENDING').onsuccess = function (evt) {
+      const cursor = evt.target.result;
+      if (!cursor) return;
+      if (cursor.value.office !== ApplicationState.office) {
+        cursor.continue();
+        return;
+      }
+      if (cursor.value.hidden) {
+        cursor.continue();
+        return;
+      }
+      let match;
+      Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
+        if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
+          console.log(cursor.value)
+          match = cursor.value
+        }
+      })
+      if (!match) {
+        cursor.continue();
+        return;
+      }
+      let found = false
+      match.schedule.forEach(function (sn) {
+        if (moment(moment()).isBetween(sn.startTime, sn.endTime, null, '[]')) {
+          sn.isValid = true
+          found = true
+        }
+      })
+
+      if (found) {
+        result.push(match);
+      }
+
+      cursor.continue();
+    }
+    tx.oncomplete = function () {
+      return resolve(result)
+    }
+  })
+}
+
 
 function getSubsWithVenue() {
   return new Promise(function (resolve, reject) {
@@ -63,11 +116,11 @@ function getSubsWithVenue() {
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
-      } 
+      }
 
       if (!cursor.value.venue.length) {
-          cursor.continue();
-          return;
+        cursor.continue();
+        return;
       }
       result.push(cursor.value)
       cursor.continue();
@@ -88,8 +141,7 @@ function handleNav(evt) {
 }
 
 function homePanel() {
-  return ` <div class="container home-container">
-  
+  return ` <div class="container home-container"> 
   ${topNavCard()}
   <div id='suggestions-container'></div>
   </div>`
@@ -123,7 +175,6 @@ function topNavCard() {
 
 function homeView(suggestedTemplates) {
   progressBar.close();
-
   const header = getHeader('app-header', '', '');
   header.listen('MDCTopAppBar:nav', handleNav);
   document.getElementById('app-header').classList.add('hidden')
@@ -143,22 +194,28 @@ function homeView(suggestedTemplates) {
     history.pushState(['profileView'], null, null);
     profileView()
   })
+  if (ApplicationState.knownLocation) {
+    document.getElementById('suggestions-container').innerHTML = `
+    <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
+    ${pendinglist(suggestedTemplates.pending)}
+    ${templateList(suggestedTemplates.subscriptions)}
+    `
 
+    const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+    suggestedInit.singleSelection = true;
+    suggestedInit.selectedIndex = 0
+    suggestedInit.listen('MDCList:action', function (evt) {
+      console.log(suggestedInit.listElements[evt.detail.index].dataset)
+      history.pushState(['addView'], null, null);
+      addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
+    })
+
+    return;
+  }
   document.getElementById('suggestions-container').innerHTML = `
   <h3 class="mdc-list-group__subheader mdc-typography--headline6">Suggestions... (Text Content to be changed)</h3>
-
-  <ul class="mdc-list subscription-list" id='suggested-list'>
-    ${suggestedTemplates.map(function(sub){
-    return `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}'>
-        New ${sub.template}  ?
-      <span class='mdc-list-item__meta material-icons'>
-        keyboard_arrow_right
-      </span>
-    </li>`
-    }).join("")}
-  </ul>`
-
-
+  ${templateList(suggestedTemplates)}
+  `
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   suggestedInit.singleSelection = true;
   suggestedInit.selectedIndex = 0
@@ -170,15 +227,46 @@ function homeView(suggestedTemplates) {
 
 }
 
-function getPendingLocationActivities() {
-  const tx = db.transaction('activity');
-  // const 
-  const index = tx.objectStore('activity').index('status')
-  index.openCursor('PENDING').onsuccess = function (evt) {
-    const cursor = evt.target.result;
-    if (!cursor) return;
-    // if(ApplicationState)
-    console.log(cursor.value)
-    cursor.continue();
-  }
+
+
+function pendinglist(activities) {
+  
+  return `
+  <ul class="mdc-list" role="group" aria-label="List with checkbox items">
+    ${activities.map(function(activity,idx){
+      return `
+      <li class="mdc-list-item" role="checkbox" aria-checked="false">
+      Confirm ${activity.activityName} ?    
+      <div class='mdc-checkbox mdc-list-item__meta'>
+        <input type="checkbox"
+                class="mdc-checkbox__native-control"
+                id="demo-list-checkbox-item-${idx}" />
+        <div class="mdc-checkbox__background">
+          <svg class="mdc-checkbox__checkmark"
+                viewBox="0 0 24 24">
+            <path class="mdc-checkbox__checkmark-path"
+                  fill="none"
+                  d="M1.73,12.91 8.1,19.28 22.79,4.59"/>
+          </svg>
+          <div class="mdc-checkbox__mixedmark"></div>
+        </div>
+
+      </div>   
+    </li>`
+    }).join()}
+  </ul>
+  `
+}
+
+function templateList(suggestedTemplates) {
+  return `<ul class="mdc-list subscription-list" id='suggested-list'>
+  ${suggestedTemplates.map(function(sub){
+  return `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}'>
+      New ${sub.template}  ?
+    <span class='mdc-list-item__meta material-icons'>
+      keyboard_arrow_right
+    </span>
+  </li>`
+  }).join("")}
+</ul>`
 }

@@ -54,21 +54,6 @@ self.onmessage = function (event) {
           rootObjectStore.put(rootRecord)
         }
         rootTx.oncomplete = function () {
-          if (response.venues) {
-            const tx = db.transaction('map', 'readwrite')
-            response.venues.forEach(function (venue) {
-              updateMap(venue, tx)
-            })
-            tx.oncomplete = function () {
-              rootRecord.venues = true
-              db.transaction('root','readwrite').objectStore('root').put(rootRecord)
-              sendSuccessRequestToMainThread('venues-set')
-            }
-            tx.onerror = function () {
-              sendErrorRequestToMainThread(tx.error)
-            }
-            return;
-          }
           if (response.removeFromOffice) {
             if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
               removeFromOffice(response.removeFromOffice, event.data.meta, db).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread)
@@ -481,6 +466,8 @@ function updateMap(venue, tx) {
     if (!cursor) {
       console.log("start adding");
       console.log("adding " + venue.activityId, "location " + venue.location)
+      venue.latitude = venue.geopoint.latitude
+      venue.longitude = venue.geopoint.longitude
       mapObjectStore.add(venue);
       console.log("finished adding to map")
       return;
@@ -732,6 +719,24 @@ function successResponse(read, param, db, resolve, reject) {
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
   removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
+
+  if (read.locations) {
+    Object.keys(read.locations).forEach(function (location) {
+      read.locations[location].activityId = location
+      read.locations[location].office = 'Puja Capital'
+      updateMap(read.locations[location], updateTx)
+    })
+    // updateTx.oncomplete = function () {
+      // rootRecord.locations = true
+      // db.transaction('root','readwrite').objectStore('root').put(rootRecord)
+      // sendSuccessRequestToMainThread('venues-set')
+    // }
+    // updateTx.onerror = function () {
+    //   console.log(tx.error);
+      // sendErrorRequestToMainThread(tx.error)
+    // }
+    // return;
+  }
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
