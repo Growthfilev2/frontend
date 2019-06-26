@@ -14,12 +14,11 @@ ApplicationState = {
 function mapView() {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-
-  document.getElementById('app-current-panel').innerHTML = mapDom();
-  document.getElementById('app-current-panel').classList.remove('user-detail-bckg')
-  document.getElementById('app-current-panel').classList.remove('mdc-top-app-bar--fixed-adjust')
-
+  const panel = document.getElementById('app-current-panel')
+  panel.innerHTML = mapDom();
+  panel.classList.remove('user-detail-bckg','mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
+
 
   manageLocation().then(function (location) {
     ApplicationState.location = location
@@ -151,14 +150,14 @@ function loadCardData(markers) {
               if (!checkInSub)  return getSuggestions()
             
               cardProd.open()
-              requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
                 snacks('Check-in created');
                 cardProd.close()              
                 getSuggestions()
-              }).catch(function (error) {
-                snacks('Please Try again later');
-                cardProd.close()
-              })
+              // }).catch(function (error) {
+              //   snacks('Please Try again later');
+              //   cardProd.close()
+              // })
             });
           });
           if (offices.length == 1) {
@@ -296,87 +295,6 @@ function Add(el) {
 
 }
 
-function getAvailbleSubs(venue) {
-  return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['subscriptions']);
-    const store = tx.objectStore('subscriptions');
-    const index = store.index('count');
-    const result = {
-      suggested: [],
-      other: []
-    };
-    index.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (cursor.value.office !== venue.office) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      let found = false;
-      Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
-        if (cursor.value.attachment[attachmentName].type === venue.template) {
-
-          result.suggested.push(cursor.value)
-          found = true;
-        }
-      })
-      if (!found) {
-        result.other.push(cursor.value)
-      }
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      result.newLocation = false;
-      resolve(result)
-    }
-
-  })
-}
-
-function checkForVenueSubs(office) {
-  return new Promise(function (resolve, reject) {
-    const tx = db.transaction(['subscriptions']);
-    const store = tx.objectStore('subscriptions');
-    const result = {
-      suggested: [],
-      other: []
-    };
-
-    store.openCursor(null, 'prev').onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return
-      if (cursor.value.template === 'check-in') {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.office !== office) {
-        cursor.continue();
-        return;
-      }
-
-      if (cursor.value.status === 'CANCELLED') {
-        cursor.continue();
-        return;
-      }
-      if (!cursor.value.venue.length) {
-        result.other.push(cursor.value);
-      } else {
-        result.suggested.push(cursor.value)
-      }
-      cursor.continue();
-    }
-    tx.oncomplete = function () {
-      result.newLocation = true
-      resolve(result)
-    }
-
-
-  })
-}
 
 function mapDom() {
   return `
@@ -412,12 +330,6 @@ function mapDom() {
 
   `
 }
-
-
-
-
-
-
 function snapView() {
   // localStorage.setItem('snap_office', office)
   AndroidInterface.startCamera();
@@ -425,15 +337,7 @@ function snapView() {
 
 
 function setFilePath(base64) {
-  if (history.state[0] === 'photoUpdate') {
-
-    return
-  }
-  if (history.state[0] === 'profileView') {
-
-
-    return;
-  }
+ 
   // document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
@@ -441,7 +345,6 @@ function setFilePath(base64) {
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
   const url = `data:image/jpg;base64,${base64}`
-  history.pushState(['snapView'], null, null)
   document.getElementById('app-current-panel').innerHTML = `
   
 <div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
@@ -636,15 +539,6 @@ GetOffsetBounds.prototype.west = function () {
   return this.latLng.longitude - this.radioLon
 }
 
-function getMapBounds(map) {
-  const northEast = map.getBounds().getNorthEast()
-  const southWest = map.getBounds().getSouthWest()
-
-  return {
-    ne: [northEast.lat(), northEast.lng()],
-    sw: [southWest.lat(), southWest.lng()]
-  }
-}
 
 function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {

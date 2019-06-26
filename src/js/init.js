@@ -101,7 +101,7 @@ window.onpopstate = function (event) {
   if (!event.state) return;
   if (event.state[0] === 'mapView') return;
   if (event.state[0] === 'homeView') {
-    window[event.state[0]](selectedSubs, event.state[1]);
+    getSuggestions();
     return
   }
 
@@ -262,7 +262,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 14);
+      const req = window.indexedDB.open(auth.uid, 13);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -353,17 +353,8 @@ function startApp(start) {
           }
           if(evt.oldVersion <= 12) {
             var tx = req.transaction;
-            const calendarStore = tx.objectStore('calendar')
-            calendarStore.createIndex('status','status')
-            calendarStore.createIndex('pendingActivities',['start','end','status','hidden'])
-
-          }
-          if(evt.oldVersion <= 13) {
-            var tx = req.transaction;
-            const calendarStore = tx.objectStore('calendar')
-            calendarStore.createIndex('pending',['start','end'])
-            
-
+            const activityStore = tx.objectStore('activity')
+            activityStore.createIndex('status','status')
           }
         };
       }
@@ -403,7 +394,8 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
        
-       
+        profileCheck();
+        return;
         requestCreator('now', {
           device: native.getInfo(),
           from: '',
@@ -746,7 +738,7 @@ function createObjectStores(db, uid) {
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
   activity.createIndex('template', 'template');
-
+  activity.createIndex('status','status')
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
   })
@@ -790,8 +782,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
   calendar.createIndex('onLeave', ['template', 'status', 'office']);
-  calendar.createIndex('status','status');
-  calendar.createIndex('pendingActivities',['start','end','status','hidden'])
+ 
   const map = db.createObjectStore('map', {
     autoIncrement: true,
   })

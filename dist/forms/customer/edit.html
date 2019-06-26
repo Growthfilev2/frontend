@@ -84,7 +84,7 @@
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
         let customerContact = '';
-        function init(subscriptionTemplate, currentLocation) {
+        function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
              customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
             const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
@@ -121,24 +121,22 @@
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate))
                 const vd = subscriptionTemplate.venue[0];
-
                 copy.attachment.Name.value = customerName.value;
-
                 copy.attachment['Customer Type'].value = select.value;
                 copy.attachment['First Contact'].value = customerContact.value;
-
+                copy.status = 'PENDING'
                 copy.venue = [{
                     venueDescriptor: vd,
                     address: customerAddress.value,
                     location: customerName.value,
                     geopoint: {
-                        latitude: currentLocation.latitude,
-                        longitude: currentLocation.longitude
+                        latitude: parent.ApplicationState.location.latitude,
+                        longitude: parent.ApplicationState.location.longitude
                     }
                 }]
                 copy.share = []
                 
-                parent.sendFormToParent(copy, currentLocation)
+                parent.sendFormToParent(copy)
             })
         }
         function setContact(contactString) {
