@@ -154,7 +154,7 @@ Dialog.prototype.create = function (type) {
         const okButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
-            textContent: 'Create'
+            textContent: 'Okay'
         });
 
         okButton.setAttribute('data-mdc-dialog-action', 'accept')

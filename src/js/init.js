@@ -394,8 +394,8 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
        
-        // profileCheck();
-        // return;
+        profileCheck();
+        return;
         requestCreator('now', {
           device: native.getInfo(), 
           from: '',

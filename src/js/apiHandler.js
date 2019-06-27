@@ -744,7 +744,7 @@ function successResponse(read, param, db, resolve, reject) {
   updateRoot(read, updateTx, param.user.uid);
   updateTx.oncomplete = function () {
     console.log("all completed");
-    return resolve(true)
+    return resolve(read)
   }
   updateTx.onerror = function () {
     return reject(updateTx.error)

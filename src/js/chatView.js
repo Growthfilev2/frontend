@@ -348,24 +348,30 @@ function showActivity(activityId) {
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
 
-        const dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions()).create();
+        const dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create();
         dialog.open();
+        console.log(dialog)
+        if(record.canEdit) {
+        dialog.root_.querySelector('footer').innerHTML = viewFormActions(record)
+        }
+        else {
+            dialog.root_.querySelector('footer').classList.add('hidden')
+        }
     }
 }
 
-function viewFormActions() {
+function viewFormActions(activityRecord) {
     return `
-
     <div class="mdc-card__actions">
     <div class="mdc-card__action-buttons">
-
-        <button class="mdc-button">
-            <i class="material-icons mdc-button__icon" aria-hidden="true">delete</i>
-            <span class="mdc-button__label">Remove</span>
-        </button>
+        ${activityRecord.status === 'CONFIRMED' || activityRecord.status === 'PENDING' ?` <button class="mdc-button">
+        <i class="material-icons mdc-button__icon" aria-hidden="true">delete</i>
+        <span class="mdc-button__label">Remove</span>
+    </button>`:''}
+       
     </div>
+    
     <div class="mdc-card__action-icons">
-
         <button class="mdc-icon-button material-icons mdc-card__action mdc-card__action--icon " title="edit"
             data-mdc-ripple-is-unbounded="true">edit</button>
     </div>
@@ -412,6 +418,22 @@ function viewVenue(activityRecord){
               </li>`:''}`
      }).join("")}`
 }
+
+function viewSchedule(activityRecord){
+    return `${activityRecord.schedule.map(function(sc,idx){
+            return  `
+            <li class="mdc-list-item">
+            ${idx == 0 ? `<span class="mdc-list-item__graphic material-icons"
+            aria-hidden="true">today</span>`:`<span class="mdc-list-item__graphic" aria-hidden="true"
+            style='background-color:white'></span>`}
+            <span class="mdc-list-item__text">
+              <span class="mdc-list-item__primary-text">${sc.name}</span>
+              <span class="mdc-list-item__secondary-text">${formatCreatedTime(sc.startTime)} - ${formatCreatedTime(sc.endTime)}</span>
+            </span>
+          </li>`
+    }).join("")}`
+}
+
 function viewAssignee(activityRecord){
     return  `
     <div class="mdc-chip-set" id='share'>
@@ -440,19 +462,23 @@ function activityDomCustomer(activityRecord) {
                 ${viewVenue(activityRecord)}
             </ul>
         </div>
-
+        <div id='schedule-container'>
+            <ul class='mdc-list mdc-list--two-line'>
+                ${viewSchedule(activityRecord)}
+            </ul>
+        </div>
         <div id='schedule-container'></div>
         <div id='assignee-container'>
             <div class="assignees tasks-heading center">
                 <i class="material-icons">share</i>
                 ${viewAssignee(activityRecord)}
-               
             </div>
         </div>
         <div id='status-container'>
             <div class='status-change'>
                 <h3 class="mdc-typography--subtitle1 mb-0">Mark</h3>
                 <div class='mdc-form-field'>
+
                     ${createStatusChange(activityRecord.status)}
                 </div>
             </div>
@@ -463,18 +489,19 @@ function activityDomCustomer(activityRecord) {
 
 
 
+
 function createStatusChange(status) {
+
     if (status === 'CONFIRMED') {
         return createSimpleRadio('pending-radio', 'PENDING') + createSimpleRadio('cancelled-radio', 'CANCEL')
     }
     if (status === 'CANCELLED') {
         return createSimpleRadio('pending-radio', 'PENDING') + createSimpleRadio('confirmed-radio', 'CONFIRMED')
-
     }
     if (status === 'PENDING') {
         return createSimpleRadio('confirmed-radio', 'CONFIRMED') + createSimpleRadio('cancelled-radio', 'CANCEL')
-
     }
+
 }
 
 function dynamicAppendChats(addendums){
@@ -589,12 +616,4 @@ function resetCommentField(bottom, form, input) {
 function setBottomScroll() {
     document.getElementById('inner').scrollTo(0, document.getElementById('inner').scrollHeight);
 
-}
-
-function getSelectedContact(contactString) {
-    console.log(contactString);
-    // const  contactSearch  = new URLSearchParams(contactString);
-    // const userRecord = {
-    //     displayName
-    // }
 }
