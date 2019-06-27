@@ -351,6 +351,8 @@ function isLocationStatusWorking() {
 
 
 function requestCreator(requestType, requestBody, location) {
+  return new Promise(function(resolve,reject){
+
   var auth = firebase.auth().currentUser;
   if (!auth) return;
   var requestGenerator = {
@@ -399,7 +401,6 @@ function requestCreator(requestType, requestBody, location) {
 
   // handle the response from apiHandler when operation is completed
   // apiHandler.onmessage = messageReceiver;
-  return new Promise(function(resolve,reject){
 
     apiHandler.onmessage = function(event){
       console.log(event)

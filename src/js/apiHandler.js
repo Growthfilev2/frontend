@@ -12,7 +12,7 @@ function getTime() {
 // function name
 
 const requestFunctionCaller = {
-  comment: comment,
+  dm: comment,
   statusChange: statusChange,
   share: share,
   update: update,
@@ -213,12 +213,11 @@ function comment(body, meta) {
   console.log(body)
   const req = {
     method: 'POST',
-    url: `${meta.apiUrl}activities/comment`,
+    url: `${meta.apiUrl}dm`,
     body: JSON.stringify(body),
     token: meta.user.token
   }
   return http(req)
-
 }
 
 function statusChange(body, meta) {

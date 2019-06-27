@@ -124,13 +124,12 @@ function loadCardData(markers) {
     <div id='subs-cont' class='pt-10'></div>
     <div id='submit-cont' class='pt-10'></div>
     </div>`
+  
   selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
-
   selectVenue.listen('MDCSelect:change', (evt) => {
     document.getElementById('office-cont').innerHTML = ''
     document.getElementById('subs-cont').innerHTML = ''
     document.getElementById('submit-cont').innerHTML = ''
-
     console.log(evt.detail.value)
     aside.classList.add('open')
     if (!evt.detail.value) return;
@@ -201,15 +200,15 @@ function loadCardData(markers) {
   });
 
   if (!markers.length) {
-    selectVenue.selectedIndex = 0
+    selectVenue.selectedIndex = 0;
   };
 
   if (markers.length == 1) {
-    selectVenue.selectedIndex = 1
+    selectVenue.selectedIndex = 1;
   };
 
   if (markers.length > 1) {
-    selectVenue.selectedIndex = -1
+    selectVenue.selectedIndex = -1;
   }
 
 };

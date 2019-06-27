@@ -10,6 +10,7 @@ var db;
 let isCheckInCreated;
 let drawer;
 let navList;
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -394,8 +395,8 @@ function startApp(start) {
           index++;
         }, index + 1 * 1000);
        
-        profileCheck();
-        return;
+        // profileCheck();
+        // return;
         requestCreator('now', {
           device: native.getInfo(), 
           from: '',

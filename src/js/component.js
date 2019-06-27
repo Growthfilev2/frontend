@@ -201,3 +201,14 @@ function createSimpleRadio(id,label){
     <label for=${id}>${label}</label>
     `
 }
+
+function createSimpleToggle(id) {
+    return `<div class="mdc-switch mdc-list-item__meta" id=${id}>
+    <div class="mdc-switch__track"></div>
+    <div class="mdc-switch__thumb-underlay">
+      <div class="mdc-switch__thumb">
+          <input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
+      </div>
+    </div>
+  </div>`
+}

@@ -357,6 +357,13 @@
 }
 
 /** view-form**/
+#view-form .mdc-dialog__container {
+  width: 100%;
+}
+#view-form .mdc-dialog__container  .mdc-dialog__surface{
+width: inherit;
+max-height:80%;
+}
 #view-form .mdc-dialog__content {
   padding: 0px;
 }
@@ -380,4 +387,12 @@
   margin-top: 0;
   line-height: normal;
   display: block;
+}
+
+/** status-change **/
+
+.status-select {
+  max-width: 300px;
+  min-width: 280px;
+
 }
