@@ -154,7 +154,7 @@ Dialog.prototype.create = function (type) {
         const okButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
-            textContent: 'Create'
+            textContent: 'Okay'
         });
 
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
@@ -200,4 +200,15 @@ function createSimpleRadio(id,label){
     </div>
     <label for=${id}>${label}</label>
     `
+}
+
+function createSimpleToggle(id) {
+    return `<div class="mdc-switch mdc-list-item__meta" id=${id}>
+    <div class="mdc-switch__track"></div>
+    <div class="mdc-switch__thumb-underlay">
+      <div class="mdc-switch__thumb">
+          <input type="checkbox" id="basic-switch" class="mdc-switch__native-control" role="switch">
+      </div>
+    </div>
+  </div>`
 }

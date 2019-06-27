@@ -283,7 +283,7 @@ function enterChat(number) {
 
         const header = getHeader('app-header', backIcon, '');
         console.log(header)
-        history.pushState(['enterChat',record], null, null)
+        history.pushState(['enterChat', record], null, null)
 
         document.getElementById('app-header').classList.remove("hidden")
         document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
@@ -346,24 +346,63 @@ function showActivity(activityId) {
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
 
-        const dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions()).create();
+        let dialog;
+        if (record.canEdit) {
+            dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
+
+        } else {
+            dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
+
+        }
+        dialog.listen('MDCDialog:opened', function () {
+            if (!record.canEdit) return;
+            const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
+            statusChange.listen('MDCSelect:change', function (evt) {
+                if (evt.detail.value === record.status) return;
+                dialog.close();
+                setActivityStatus(record, evt.detail.value)
+
+            })
+            const cancelBtn = document.getElementById('mark-cancel');
+            if (!cancelBtn) return;
+            new mdc.ripple.MDCRipple(document.getElementById('mark-cancel')).root_.addEventListener('click', function (evt) {
+                dialog.close();
+                setActivityStatus(record, 'CANCELLED')
+            })
+        })
+
         dialog.open();
+        console.log(dialog)
     }
 }
 
-function viewFormActions() {
-    return `
+function setActivityStatus(record, status) {
+    progressBar.open();
+    requestCreator('statusChange', {
+        activityId: record.activityId,
+        status: status
+    }).then(function () {
+        snacks(`${record.activityName} is ${status}`)
+        progressBar.close();
 
+    }).catch(function (error) {
+        snacks(error.response.message);
+        progressBar.close();
+    })
+}
+
+function viewFormActions(activityRecord) {
+    return `
     <div class="mdc-card__actions">
     <div class="mdc-card__action-buttons">
-
-        <button class="mdc-button">
-            <i class="material-icons mdc-button__icon" aria-hidden="true">delete</i>
-            <span class="mdc-button__label">Remove</span>
-        </button>
+        ${activityRecord.status === 'CONFIRMED' || activityRecord.status === 'PENDING' ?` <button class="mdc-button" id='mark-cancel'>
+        <i class="material-icons mdc-button__icon" aria-hidden="true">delete</i>
+        <span class="mdc-button__label">CANCEL</span>
+    </button>`:''}
+       
     </div>
+    
     <div class="mdc-card__action-icons">
-
         <button class="mdc-icon-button material-icons mdc-card__action mdc-card__action--icon " title="edit"
             data-mdc-ripple-is-unbounded="true">edit</button>
     </div>
@@ -371,6 +410,9 @@ function viewFormActions() {
 `
 }
 
+function markCancelled(record) {
+    console.log(record)
+}
 
 function iconByType(type, name) {
     if (type === 'string') {
@@ -390,14 +432,15 @@ function iconByType(type, name) {
     return iconObject[type]
 }
 
-function viewAttachment(activityRecord){
-    return  `${Object.keys(activityRecord.attachment).map(function(attachmentName){
+function viewAttachment(activityRecord) {
+    return `${Object.keys(activityRecord.attachment).map(function(attachmentName){
         return `${activityRecord.attachment[attachmentName].value ? `<h1 class="mdc-typography--subtitle1 mt-0">
         ${attachmentName} : ${activityRecord.attachment[attachmentName].value}
         </h1>` :''}`
     }).join("")}`
 }
-function viewVenue(activityRecord){
+
+function viewVenue(activityRecord) {
     return `${activityRecord.venue.map(function(v,idx){
         return `
             ${v.location && v.address ? `
@@ -410,8 +453,24 @@ function viewVenue(activityRecord){
               </li>`:''}`
      }).join("")}`
 }
-function viewAssignee(activityRecord){
-    return  `
+
+function viewSchedule(activityRecord) {
+    return `${activityRecord.schedule.map(function(sc,idx){
+            return  `
+            <li class="mdc-list-item">
+            ${idx == 0 ? `<span class="mdc-list-item__graphic material-icons"
+            aria-hidden="true">today</span>`:`<span class="mdc-list-item__graphic" aria-hidden="true"
+            style='background-color:white'></span>`}
+            <span class="mdc-list-item__text">
+              <span class="mdc-list-item__primary-text">${sc.name}</span>
+              <span class="mdc-list-item__secondary-text">${formatCreatedTime(sc.startTime)} - ${formatCreatedTime(sc.endTime)}</span>
+            </span>
+          </li>`
+    }).join("")}`
+}
+
+function viewAssignee(activityRecord) {
+    return `
     <div class="mdc-chip-set" id='share'>
      ${activityRecord.assignees.map(function(user){
         return `<div class="mdc-chip">
@@ -420,7 +479,7 @@ function viewAssignee(activityRecord){
                 </div>`
     }).join("")}
     </div>`
-   
+
 }
 
 
@@ -438,64 +497,98 @@ function activityDomCustomer(activityRecord) {
                 ${viewVenue(activityRecord)}
             </ul>
         </div>
-
+        <div id='schedule-container'>
+            <ul class='mdc-list mdc-list--two-line'>
+                ${viewSchedule(activityRecord)}
+            </ul>
+        </div>
         <div id='schedule-container'></div>
         <div id='assignee-container'>
             <div class="assignees tasks-heading center">
                 <i class="material-icons">share</i>
                 ${viewAssignee(activityRecord)}
-               
             </div>
         </div>
-        <div id='status-container'>
-            <div class='status-change'>
-                <h3 class="mdc-typography--subtitle1 mb-0">Mark</h3>
-                <div class='mdc-form-field'>
-                    ${createStatusChange(activityRecord.status)}
-                </div>
-            </div>
+        ${activityRecord.canEdit ?`<div id='status-container'>
+        <div class='status-change pt-20'>
+            
+            ${createStatusChange(activityRecord.status)}
+         
         </div>
+    </div>`:''}
+    
     </div>
 </div>`
 }
 
 
 
-function createStatusChange(status) {
-    if (status === 'CONFIRMED') {
-        return createSimpleRadio('pending-radio', 'PENDING') + createSimpleRadio('cancelled-radio', 'CANCEL')
-    }
-    if (status === 'CANCELLED') {
-        return createSimpleRadio('pending-radio', 'PENDING') + createSimpleRadio('confirmed-radio', 'CONFIRMED')
 
+function createStatusChange(status) {
+
+    let selectStrings = ''
+    if (status === 'CANCELLED') {
+        selectStrings = `<li class="mdc-list-item" data-value="PENDING">
+       PENDING
+      </li>
+      <li class="mdc-list-item" data-value="CONFIRMED">
+        CONFIRMED
+    </li>
+      `
     }
     if (status === 'PENDING') {
-        return createSimpleRadio('confirmed-radio', 'CONFIRMED') + createSimpleRadio('cancelled-radio', 'CANCEL')
-
+        selectStrings = `<li class="mdc-list-item mdc-list-item--selected" data-value="PENDING" aria-selected="true">
+        PENDING
+       </li>
+       <li class="mdc-list-item" data-value="CONFIRMED">
+         CONFIRMED
+     </li>
+       `
     }
+    if (status === 'CONFIRMED') {
+        selectStrings = `<li class="mdc-list-item mdc-list-item--selected" data-value="CONFIRMED" aria-selected="true">
+        CONFIRMED
+       </li>
+       <li class="mdc-list-item" data-value="PENDING">
+         PENDING
+     </li>
+       `
+    }
+
+    return `<div class="mdc-select status-select" id='status-enhanced-select'>
+    <input type="hidden" name="enhanced-select">
+    <i class="mdc-select__dropdown-icon"></i>
+    <div class="mdc-select__selected-text"></div>
+    <div class="mdc-select__menu mdc-menu mdc-menu-surface status-select">
+      <ul class="mdc-list">
+        ${selectStrings}
+      </ul>
+    </div>
+    <span class="mdc-floating-label">Change Status</span>
+    <div class="mdc-line-ripple"></div>
+  </div>`
+
 }
 
-function dynamicAppendChats(addendums){
+function dynamicAppendChats(addendums) {
     const parent = document.getElementById('content');
     let string = ''
-    const myNumber  = firebase.auth().currentUser.phoneNumber
+    const myNumber = firebase.auth().currentUser.phoneNumber
     const myImage = firebase.auth().currentUser.photoURL;
-    addendums.forEach(function(addendum){
-        let position  = '';
+    addendums.forEach(function (addendum) {
+        let position = '';
         let image = ''
-        if(addendum.user === myNumber) {
+        if (addendum.user === myNumber) {
             position = 'me'
             image = myImage
-        }
-        else {
+        } else {
             position = 'them'
             image = history.state[1].photoURL
         }
-        if(addendum.isComment) {
+        if (addendum.isComment) {
             string += messageBox(addendum.comment, position, image, addendum.timestamp)
-        }
-        else {
-            string +=  actionBox(addendum)
+        } else {
+            string += actionBox(addendum)
         }
     })
     parent.innerHTML += string;
@@ -541,9 +634,9 @@ function getUserChats(userRecord) {
 
             if (!commentInit.value.trim()) return;
             progressBar.open()
-            requestCreator('comment', {
+            requestCreator('dm', {
                 comment: commentInit.value,
-                activityId: "MvzCZw5ravEU4L3PWiKB",
+                assignee: userRecord.mobile
             }).then(function () {
                 parent.innerHTML += messageBox(commentInit.value, 'me', firebase.auth().currentUser.photoURL);
                 commentInit.value = ''
@@ -553,6 +646,8 @@ function getUserChats(userRecord) {
 
             }).catch(function (error) {
                 progressBar.close()
+                commentInit.value = ''
+                snacks(error.response.message);
 
             })
         });
@@ -578,6 +673,7 @@ function getUserChats(userRecord) {
     }
 }
 
+
 function resetCommentField(bottom, form, input) {
     bottom.style.height = '72px'
     form.style.height = '56px';
@@ -587,12 +683,4 @@ function resetCommentField(bottom, form, input) {
 function setBottomScroll() {
     document.getElementById('inner').scrollTo(0, document.getElementById('inner').scrollHeight);
 
-}
-
-function getSelectedContact(contactString) {
-    console.log(contactString);
-    // const  contactSearch  = new URLSearchParams(contactString);
-    // const userRecord = {
-    //     displayName
-    // }
 }

@@ -142,22 +142,22 @@ function homePanel() {
       <div id='pending-location-tasks'></div>
       <div id='suggestions-container'></div>
       <div style="width:100%; position:fixed;bottom:0">
-          <div class='icons one'>
-              <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
-                  <span class="material-icons mdc-fab__icon">fingerprint</span>
-              </button>
-              <p>Attendance Regularization</p>
-          </div>
-          <div class='icons two '>
-              <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
-                  <span class="material-icons mdc-fab__icon">assignment</span>
-              </button>
-              <p>Claims</p>
-          </div>
-
-
-
+      <div class='icons one'>
+          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
+              <span class="material-icons mdc-fab__icon">fingerprint</span>
+          </button>
+          <p>Attendance</p>
       </div>
+      <div class='icons two '>
+          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
+              <span class="material-icons mdc-fab__icon">assignment</span>
+          </button>
+          <p>Claims</p>
+      </div>
+
+
+
+  </div>
   </div>
 </div>`
 }

@@ -12,7 +12,7 @@ function getTime() {
 // function name
 
 const requestFunctionCaller = {
-  comment: comment,
+  dm: comment,
   statusChange: statusChange,
   share: share,
   update: update,
@@ -213,12 +213,11 @@ function comment(body, meta) {
   console.log(body)
   const req = {
     method: 'POST',
-    url: `${meta.apiUrl}activities/comment`,
+    url: `${meta.apiUrl}dm`,
     body: JSON.stringify(body),
     token: meta.user.token
   }
   return http(req)
-
 }
 
 function statusChange(body, meta) {
@@ -744,7 +743,7 @@ function successResponse(read, param, db, resolve, reject) {
   updateRoot(read, updateTx, param.user.uid);
   updateTx.oncomplete = function () {
     console.log("all completed");
-    return resolve(true)
+    return resolve(read)
   }
   updateTx.onerror = function () {
     return reject(updateTx.error)

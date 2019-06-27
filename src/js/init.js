@@ -10,6 +10,7 @@ var db;
 let isCheckInCreated;
 let drawer;
 let navList;
+
 let native = function () {
   return {
     setFCMToken: function (token) {
