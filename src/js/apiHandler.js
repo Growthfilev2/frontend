@@ -711,7 +711,18 @@ function successResponse(read, param, db, resolve, reject) {
       }
       
     }
-      addendumObjectStore.add(addendum)
+    else {
+      if(addendum.user !== param.user.phoneNumber) {
+        addendum.key= param.user.phoneNumber+addendum.user
+      }
+      userTimestamp[addendum.user] = {
+        ts: addendum.timestamp,
+        comment: addendum.comment,
+        user:addendum.user,
+        assignee:addendum.assignee
+      }
+    }
+    addendumObjectStore.add(addendum)
   })
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
@@ -735,12 +746,16 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
-      userStore.put({
-        displayName: user.displayName,
-        mobile: user.phoneNumber,
-        photoURL: user.photoURL
-      })
-     
+      userStore.get(user.phoneNumber).onsuccess = function(event){
+        let record = event.target.result;
+        if(!record) {
+          record = {};
+        }
+        record.displayName = user.displayName;
+        record.mobile = user.phoneNumber;
+        record.photoURL = user.photoURL;
+        userStore.put(record)
+      }
     })
   })
   Object.keys(userTimestamp).forEach(function(u){
