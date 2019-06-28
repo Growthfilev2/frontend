@@ -690,17 +690,28 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
 
-
-
-    // if (addendum.isComment) {
-    let key = addendum.activityId
-    // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
-    userTimestamp[addendum.user] = {
-      ts: addendum.timestamp,
-      comment: addendum.comment
+    if(addendum.isComment) {
+      if(addendum.assignee === param.user.phoneNumber) {
+        addendum.key= param.user.phoneNumber+addendum.user
+        userTimestamp[addendum.user] = {
+          ts: addendum.timestamp,
+          comment: addendum.comment,
+          user:addendum.user,
+          assignee:addendum.assignee
+        }
+      }
+      else {
+        addendum.key= param.user.phoneNumber+addendum.assignee
+        userTimestamp[addendum.assignee] = {
+          ts: addendum.timestamp,
+          comment: addendum.comment,
+          user:addendum.user,
+          assignee:addendum.assignee
+        }
+      }
+      
     }
-    // }
-    addendumObjectStore.add(addendum)
+      addendumObjectStore.add(addendum)
   })
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
@@ -724,19 +735,25 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
-      const ob = {
+      userStore.put({
         displayName: user.displayName,
         mobile: user.phoneNumber,
         photoURL: user.photoURL
-      }
-      if (userTimestamp[user.phoneNumber]) {
-        ob.timestamp = userTimestamp[user.phoneNumber].ts
-        ob.comment = userTimestamp[user.phoneNumber].comment
-      }
-      userStore.put(ob)
+      })
+     
     })
   })
-
+  Object.keys(userTimestamp).forEach(function(u){
+    userStore.get(u).onsuccess = function(event){
+      const record = event.target.result;
+      if(!record) return;
+      record.timestamp = userTimestamp[u].ts
+      record.comment = userTimestamp[u].comment
+      record.user = userTimestamp[u].user
+      record.assignee = userTimestamp[u].assignee
+      userStore.put(record)
+    }
+  })
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx)
   })

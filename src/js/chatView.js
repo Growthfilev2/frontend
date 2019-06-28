@@ -602,14 +602,14 @@ function dynamicAppendChats(addendums) {
 
 function getUserChats(userRecord) {
     const tx = db.transaction('addendum');
-    const index = tx.objectStore('addendum').index('user')
+    const index = tx.objectStore('addendum').index('key')
     const myNumber = firebase.auth().currentUser.phoneNumber;
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
     let image = ''
-    index.openCursor(userRecord.mobile).onsuccess = function (event) {
+    index.openCursor(myNumber+userRecord.mobile).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.user === myNumber) {

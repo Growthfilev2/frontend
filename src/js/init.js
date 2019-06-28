@@ -263,7 +263,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 13);
+      const req = window.indexedDB.open(auth.uid, 14);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -356,6 +356,11 @@ function startApp(start) {
             var tx = req.transaction;
             const activityStore = tx.objectStore('activity')
             activityStore.createIndex('status','status')
+          }
+          if(evt.oldVersion <= 13) {
+            var tx = req.transaction;
+            const addendum = tx.objectStore('addendum')
+            addendum.createIndex('key','key')
           }
         };
       }
@@ -534,7 +539,7 @@ function checkForPhoto() {
 
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
-
+  return mapView();
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     if (!result.length) return mapView();
     if (auth.email && auth.emailVerified) return mapView();
@@ -758,7 +763,7 @@ function createObjectStores(db, uid) {
 
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
-
+  addendum.createIndex('key','key')
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
