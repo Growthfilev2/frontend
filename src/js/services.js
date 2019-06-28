@@ -350,8 +350,7 @@ function isLocationStatusWorking() {
 
 
 
-function requestCreator(requestType, requestBody, location) {
-  return new Promise(function(resolve,reject){
+function requestCreator(requestType, requestBody) {
 
   var auth = firebase.auth().currentUser;
   if (!auth) return;
@@ -371,36 +370,22 @@ function requestCreator(requestType, requestBody, location) {
   };
 
   auth.getIdToken(false).then(function (token) {
+    requestGenerator.meta.user.token = token;
     if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
       requestGenerator.body = requestBody;
-      requestGenerator.meta.user.token = token;
-
       apiHandler.postMessage(requestGenerator);
-
     } else {
       getRootRecord().then(function (rootRecord) {
-        if(!rootRecord.serverTime) {
-        
-
-          return;
-        }
-        let location = rootRecord.location;
-        let isLocationOld = true;
-        location ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 10) : '';
-        requestGenerator.meta.user.token = token;
-        if (isLocationOld) {
-          manageLocation().then(function (location) {
-            createRequestBody(requestBody, requestGenerator, rootRecord.serverTime, location)
-          }).catch(locationErrorDialog)
-        } else {
-          createRequestBody(requestBody, requestGenerator, rootRecord.serverTime, rootRecord.location)
-        }
+        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+        requestBody['geopoint'] = ApplicationState.location;
+        requestGenerator.body = requestBody;
+        apiHandler.postMessage(requestGenerator);
       });
     }
   }).catch(console.log)
 
-  // handle the response from apiHandler when operation is completed
-  // apiHandler.onmessage = messageReceiver;
+  
+  return new Promise(function(resolve,reject){
 
     apiHandler.onmessage = function(event){
       console.log(event)
@@ -414,12 +399,6 @@ function requestCreator(requestType, requestBody, location) {
   })
 }
 
-function createRequestBody(requestBody, requestGenerator, serverTime, location) {
-  requestBody['timestamp'] = fetchCurrentTime(serverTime);
-  requestBody['geopoint'] = location;
-  requestGenerator.body = requestBody;
-  apiHandler.postMessage(requestGenerator);
-}
 
 
 
