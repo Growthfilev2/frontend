@@ -154,9 +154,6 @@ function homePanel() {
           </button>
           <p>Reimbursements</p>
       </div>
-
-
-
   </div>
   </div>
 </div>`
@@ -220,7 +217,10 @@ function homeView(suggestedTemplates) {
   document.getElementById('profile-image-card').addEventListener('click', function () {
     history.pushState(['profileView'], null, null);
     profileView()
-  })
+  });
+
+  
+
   if (ApplicationState.knownLocation) {
     getPendingLocationActivities().then(function (activities) {
       document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);

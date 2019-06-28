@@ -130,6 +130,10 @@ function getLocation() {
       })
       return;
     }
+
+
+    
+
     try {
       webkit.messageHandlers.locationService.postMessage('start');
       window.addEventListener('iosLocation', function _iosLocation(e) {

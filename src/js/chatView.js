@@ -178,10 +178,10 @@ function readLatestChats() {
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        if (cursor.value.mobile === myNumber) {
-            cursor.continue();
-            return;
-        }
+        // if (cursor.value.mobile === myNumber) {
+        //     cursor.continue();
+        //     return;
+        // }
         console.log(cursor.value)
         string += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
         cursor.continue();
@@ -295,7 +295,7 @@ function enterChat(number) {
         <div class="inner" id="inner">
         <div class="content" id="content"></div>
         </div>
-        <div class="bottom" id="bottom">
+        ${record.mobile === firebase.auth().currentUser.phoneNumber ?'':`      <div class="bottom" id="bottom">
         <div class="conversation-compose">
         
         <div id='comment-textarea' class="mdc-text-field text-field mdc-text-field--fullwidth mdc-text-field--no-label  mdc-text-field--textarea">
@@ -310,7 +310,8 @@ function enterChat(number) {
         </button>
         </div>
         
-        </div>
+        </div>`}
+  
         </div>
         </div>
         </div>`
@@ -618,7 +619,13 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         }
+        if(userRecord.mobile === myNumber) {
+            timeLine += actionBox(cursor.value)
+            cursor.continue();
+            return;
+        }
         if (cursor.value.isComment) {
+            
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {
             timeLine += actionBox(cursor.value)
@@ -628,6 +635,7 @@ function getUserChats(userRecord) {
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll()
+        if(userRecord.mobile === myNumber) return;
         const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
         const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
         const form = document.querySelector('.conversation-compose');
