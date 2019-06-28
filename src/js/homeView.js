@@ -152,7 +152,7 @@ function homePanel() {
           <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
               <span class="material-icons mdc-fab__icon">assignment</span>
           </button>
-          <p>Claims</p>
+          <p>Reimbursements</p>
       </div>
 
 
