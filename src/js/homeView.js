@@ -143,20 +143,17 @@ function homePanel() {
       <div id='suggestions-container'></div>
       <div style="width:100%; position:fixed;bottom:0">
       <div class='icons one'>
-          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
+          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" id='attendence'>
               <span class="material-icons mdc-fab__icon">fingerprint</span>
           </button>
           <p>Attendance</p>
       </div>
       <div class='icons two '>
-          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
+          <button class="mdc-fab mdc-fab--mini" id='claims'>
               <span class="material-icons mdc-fab__icon">assignment</span>
           </button>
           <p>Reimbursements</p>
       </div>
-
-
-
   </div>
   </div>
 </div>`
@@ -221,6 +218,17 @@ function homeView(suggestedTemplates) {
     history.pushState(['profileView'], null, null);
     profileView()
   })
+  document.getElementById('attendence').addEventListener('click',function(){
+    history.pushState(['attendenceView'],null,null);
+    attendenceView();
+  })
+
+  document.getElementById('claims').addEventListener('click',function(){
+    
+    history.pushState(['claimsView'],null,null);
+    claimsView()
+  })
+
   if (ApplicationState.knownLocation) {
     getPendingLocationActivities().then(function (activities) {
       document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);

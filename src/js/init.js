@@ -534,7 +534,7 @@ function checkForPhoto() {
 
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
-
+  return mapView();
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     if (!result.length) return mapView();
     if (auth.email && auth.emailVerified) return mapView();
