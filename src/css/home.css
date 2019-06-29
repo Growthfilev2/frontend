@@ -105,3 +105,9 @@
     float: right;
 }
 
+.attendence-claims-btn-container {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+
+}

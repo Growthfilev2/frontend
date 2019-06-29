@@ -263,7 +263,7 @@ function startApp(start) {
 
 
     if (start) {
-      const req = window.indexedDB.open(auth.uid, 13);
+      const req = window.indexedDB.open(auth.uid, 14);
 
       req.onupgradeneeded = function (evt) {
         db = req.result;
@@ -357,6 +357,13 @@ function startApp(start) {
             const activityStore = tx.objectStore('activity')
             activityStore.createIndex('status','status')
           }
+          if(evt.oldVersion <= 13) {
+            var tx = req.transaction;
+            const subscriptions = tx.objectStore('subscriptions')
+            subscriptions.createIndex('validSubscription', ['office', 'template','status'])
+          }
+
+
         };
       }
       req.onsuccess = function () {
@@ -766,6 +773,8 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('office', 'office')
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
+  subscriptions.createIndex('validSubscription', ['office', 'template','status'])
+
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
   const calendar = db.createObjectStore('calendar', {
@@ -779,7 +788,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
   calendar.createIndex('onLeave', ['template', 'status', 'office']);
- 
+
   const map = db.createObjectStore('map', {
     autoIncrement: true,
   })

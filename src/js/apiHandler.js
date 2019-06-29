@@ -452,16 +452,16 @@ function updateMap(venue, tx) {
   mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
-      console.log("start adding");
-      console.log("adding " + venue.activityId, "location " + venue.location)
+      // console.log("start adding");
+      // console.log("adding " + venue.activityId, "location " + venue.location)
       mapObjectStore.add(venue);
-      console.log("finished adding to map")
+      // console.log("finished adding to map")
       return;
     }
 
     let deleteRecordReq = cursor.delete()
     deleteRecordReq.onsuccess = function () {
-      console.log("deleted " + cursor.value.activityId)
+      // console.log("deleted " + cursor.value.activityId)
       cursor.continue()
     }
     deleteRecordReq.onerror = function () {
