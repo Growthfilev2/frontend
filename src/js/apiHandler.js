@@ -690,37 +690,27 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
 
+
+    userTimestamp[addendum.user] = {
+      ts: addendum.timestamp,
+      comment: addendum.comment,
+      user:addendum.user,
+      assignee:addendum.assignee
+    }
+    
     if(addendum.isComment) {
       if(addendum.assignee === param.user.phoneNumber) {
         addendum.key= param.user.phoneNumber+addendum.user
-        userTimestamp[addendum.user] = {
-          ts: addendum.timestamp,
-          comment: addendum.comment,
-          user:addendum.user,
-          assignee:addendum.assignee
-        }
       }
       else {
         addendum.key= param.user.phoneNumber+addendum.assignee
-        userTimestamp[addendum.assignee] = {
-          ts: addendum.timestamp,
-          comment: addendum.comment,
-          user:addendum.user,
-          assignee:addendum.assignee
-        }
       }
-      
     }
     else {
       if(addendum.user !== param.user.phoneNumber) {
         addendum.key= param.user.phoneNumber+addendum.user
-      }
-      userTimestamp[addendum.user] = {
-        ts: addendum.timestamp,
-        comment: addendum.comment,
-        user:addendum.user,
-        assignee:addendum.assignee
-      }
+      } 
+      userTimestamp[addendum.user].activityId = addendum.activityId;
     }
     addendumObjectStore.add(addendum)
   })
@@ -735,10 +725,12 @@ function successResponse(read, param, db, resolve, reject) {
 
   }
 
+
+
+
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activityObjectStore.put(activity);
-
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -747,6 +739,7 @@ function successResponse(read, param, db, resolve, reject) {
     };
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function(event){
+        
         let record = event.target.result;
         if(!record) {
           record = {};
@@ -754,21 +747,36 @@ function successResponse(read, param, db, resolve, reject) {
         record.displayName = user.displayName;
         record.mobile = user.phoneNumber;
         record.photoURL = user.photoURL;
+        if(userTimestamp[user.phoneNumber]) {
+          if(userTimestamp[user.phoneNumber].activityId === activity.activityId){
+            record.comment = userTimestamp[user.phoneNumber].comment
+            record.timestamp = userTimestamp[user.phoneNumber].timestamp
+            record.user = userTimestamp[user.phoneNumber].user
+          }
+        }
         userStore.put(record)
       }
     })
   })
-  Object.keys(userTimestamp).forEach(function(u){
-    userStore.get(u).onsuccess = function(event){
-      const record = event.target.result;
-      if(!record) return;
-      record.timestamp = userTimestamp[u].ts
-      record.comment = userTimestamp[u].comment
-      record.user = userTimestamp[u].user
-      record.assignee = userTimestamp[u].assignee
-      userStore.put(record)
-    }
-  })
+
+
+
+
+
+  // Object.keys(userTimestamp).forEach(function(u){
+  //   userStore.get(u).onsuccess = function(event){
+  //     const record = event.target.result;
+  //     if(!record) return;
+  //     record.timestamp = userTimestamp[u].ts
+  //     record.comment = userTimestamp[u].comment
+  //     record.user = userTimestamp[u].user
+  //     record.assignee = userTimestamp[u].assignee
+  //     userStore.put(record)
+  //   }
+  // })
+
+
+
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx)
   })

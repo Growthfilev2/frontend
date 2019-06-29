@@ -264,7 +264,7 @@ function startApp(start) {
 
     if (start) {
       const req = window.indexedDB.open(auth.uid, 14);
-
+      console.log("callback")
       req.onupgradeneeded = function (evt) {
         db = req.result;
         db.onerror = function () {
@@ -417,15 +417,21 @@ function startApp(start) {
           };
           getRootRecord().then(function (rootRecord) {
             if (!rootRecord.fromTime) {
-              requestCreator('Null').then(profileCheck).catch(console.log)
+              requestCreator('Null').then(profileCheck).catch(function(error){
+                snacks(error.response.message,'Okay')
+              })
               return;
             }
             profileCheck();
-            requestCreator('Null').then(console.log).catch(console.log)
+            requestCreator('Null').then(console.log).catch(function(error){
+              snacks(error.response.message,'Okay',(function(){
+                startApp(true)
+              }))
+            })
           })
         }).catch(function (error) {
           console.log(error)
-          snacks(error.response.message)
+          snacks(error.response.message,'Retry')
         })
       }
       req.onerror = function () {

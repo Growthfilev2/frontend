@@ -57,17 +57,26 @@ function chatDom() {
 </div>`
 }
 
+function searchBar(){
+    return `<div id='search-users' class="mdc-text-field mdc-text-field--with-leading-icon mdc-text-field--with-trailing-icon mdc-text-field--no-label">
+    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id='search-back'>arrow_back</i>
+    <i class="material-icons mdc-text-field__icon hidden"  tabindex="0" role="button" id='clear-search'>clear</i>
+    <input type="text" id="my-input" class="mdc-text-field__input" placeholder='Search...' style='padding-left:48px;padding-right: 48px;'>
+    <div class="mdc-line-ripple"></div>
+</div>`
+
+}
+
+function Search(){
+
+}
+Search.prototype.
+
 function search() {
     document.getElementById('app-header').classList.add("hidden")
 
-    const searchField = `<div id='search-users' class="mdc-text-field mdc-text-field--with-leading-icon mdc-text-field--with-trailing-icon mdc-text-field--no-label">
-        <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id='search-back'>arrow_back</i>
-        <i class="material-icons mdc-text-field__icon hidden"  tabindex="0" role="button" id='clear-search'>clear</i>
-        <input type="text" id="my-input" class="mdc-text-field__input" placeholder='Search...' style='padding-left:48px;padding-right: 48px;'>
-        <div class="mdc-line-ripple"></div>
-  </div>`
 
-    document.querySelector('#search-users-container .search-field').innerHTML = searchField;
+    document.querySelector('#search-users-container .search-field').innerHTML = searchBar();
 
     const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
     searchInit.focus()
@@ -82,7 +91,45 @@ function search() {
         }
 
         document.getElementById('chats').innerHTML = ''
-        searchUsers(evt, parent)
+        let currentChats = '';
+        let newContacts = '';
+        const myNumber = firebase.auth().currentUser.phoneNumber;
+        const searchable =  getSearchBound(evt)
+        searchable.bound.onsuccess = function(event){
+            const cursor = event.target.result
+            if (!cursor) return
+            if (cursor.value.mobile === myNumber) {
+                cursor.continue();
+                return;
+            }
+           
+            if (cursor.value.timestamp) {
+                currentChats += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
+            } else {
+                newContacts += userLi(cursor.value)
+            }
+    
+            cursor.continue()
+        }
+        searchable.tx.oncomplete = function () {
+            if (!currentChats && !newContacts) {
+                parent.innerHTML = `<h3 class="mdc-list-group__subheader text-center">No Results Found</h3>`
+                return;
+            }
+            const listGroup = `<div class="mdc-list-group" id='search-list-group'>
+           ${currentChats ?` <h3 class="mdc-list-group__subheader">Chats</h3>
+           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
+            ${currentChats}
+           </ul>`:'' }
+           ${newContacts ?`  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
+           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
+            ${newContacts}
+           </ul>`:''}
+          </div>`
+            parent.innerHTML = listGroup;
+        
+        }
+      
     });
 
     searchInit.leadingIcon_.root_.onclick = function () {
@@ -94,12 +141,10 @@ function search() {
 
 }
 
-function searchUsers(evt, parent) {
-
+function getSearchBound(evt) {
     let value = evt.target.value;
     let indexName;
-    let currentChats = '';
-    let newContacts = '';
+  
     if (isNumber(value)) {
         indexName = 'mobile'
         value = formatNumber(value);
@@ -108,50 +153,16 @@ function searchUsers(evt, parent) {
     }
     const bound = IDBKeyRange.bound(value, value + '\uffff')
     const tx = db.transaction(['users', 'addendum']);
-    const myNumber = firebase.auth().currentUser.phoneNumber;
+  
     // tx.objectStore('addendum').index('user').openCursor(bound).onsuccess = function(event)
-    tx.objectStore('users').index(indexName).openCursor(bound).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return
-        if (cursor.value.mobile === myNumber) {
-            cursor.continue();
-            return;
-        }
-        // tx.objectStore('addendum').index('user').get(cursor.value.mobile).onsuccess = function (event) {
-        //     const record = event.target.result;
-        if (cursor.value.timestamp) {
-
-            currentChats += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
-        } else {
-            newContacts += userLi(cursor.value)
-        }
-
-        cursor.continue()
-    }
-    tx.oncomplete = function () {
-        if (!currentChats && !newContacts) {
-            parent.innerHTML = `<h3 class="mdc-list-group__subheader text-center">No Results Found</h3>`
-            return;
-        }
-        const listGroup = `<div class="mdc-list-group" id='search-list-group'>
-       ${currentChats ?` <h3 class="mdc-list-group__subheader">Chats</h3>
-       <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
-        ${currentChats}
-       </ul>`:'' }
-       ${newContacts ?`  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
-       <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
-        ${newContacts}
-       </ul>`:''}
-      </div>`
-        parent.innerHTML = listGroup;
-        // [].map.call(document.querySelectorAll('#search-list-group ul'),function(el){
-        //     const ul =  new mdc.list.MDCList(el)
-        //       ul.listen('MDCList:action',function(evt){
-        //         enterChat(JSON.parse(ul.listElements[evt.detail.index].dataset.user),'replaceState')
-        //     })
-        // })
+    return {
+        tx:tx,
+        bound:tx.objectStore('users').index(indexName).openCursor(bound)
     }
 }
+
+
+
 
 function isNumber(searchTerm) {
     return !isNaN(searchTerm)
@@ -178,10 +189,10 @@ function readLatestChats() {
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-        // if (cursor.value.mobile === myNumber) {
-        //     cursor.continue();
-        //     return;
-        // }
+        if (cursor.value.mobile === myNumber) {
+            cursor.continue();
+            return;
+        }
         console.log(cursor.value)
         string += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
         cursor.continue();
@@ -295,7 +306,7 @@ function enterChat(number) {
         <div class="inner" id="inner">
         <div class="content" id="content"></div>
         </div>
-        ${record.mobile === firebase.auth().currentUser.phoneNumber ?'':`      <div class="bottom" id="bottom">
+        <div class="bottom" id="bottom">
         <div class="conversation-compose">
         
         <div id='comment-textarea' class="mdc-text-field text-field mdc-text-field--fullwidth mdc-text-field--no-label  mdc-text-field--textarea">
@@ -310,8 +321,7 @@ function enterChat(number) {
         </button>
         </div>
         
-        </div>`}
-  
+        </div>
         </div>
         </div>
         </div>`
@@ -320,7 +330,7 @@ function enterChat(number) {
 }
 
 function actionBox(value) {
-    return `<div class="message-wrapper aciton-info" onclick="showActivity('${value.activityId}')">
+    return `<div class="message-wrapper aciton-info" ontouchstart="showActivity('${this,value.activityId,value.addendumId}')">
     <div class="text-wrapper">${value.comment}
     <span class="metadata">
     <i class='material-icons'>info</i>
@@ -341,22 +351,29 @@ function messageBox(comment, position, image, time) {
     </div>`
 }
 
-function showActivity(activityId) {
+function showActivity(activityId,addendumId) {
+
+    document.getElementById(addendumId).addEventListener('mouseup')
+
+
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
+
+
         const heading = `${record.activityName}
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
 
         let dialog;
+        
         if (record.canEdit) {
-            dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
-
+            dialog = new Dialog(heading, viewForm(record), 'view-form', viewFormActions(record)).create();
         } else {
-            dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
-
+            dialog = new Dialog(heading, viewForm(record), 'view-form').create('simple');
         }
+
+
         dialog.listen('MDCDialog:opened', function () {
             if (!record.canEdit) return;
             const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
@@ -377,6 +394,32 @@ function showActivity(activityId) {
         dialog.open();
         console.log(dialog)
     }
+}
+
+function createDynamicChips(){
+    return ;
+}
+
+function share(activity){
+    const alreadySelected = {};
+    const dialogConetnt = `
+    <h3 class='mdc-typography--headline6'>Already Added</h3>
+    ${viewAssignee(activity)}
+    <ul>
+    `
+
+    activity.assignees.forEach(function(ass){
+        alreadySelected[ass.phoneNumber] = true
+    });
+
+    const dialog = new Dialog(searchBar()).create()
+    dialog.open();
+    dialog.listen('MDCDialog:closed',function(evt){
+
+    })
+    dialog.listen('MDCDialog:opened',function(evt){
+            
+    })
 }
 
 function setActivityStatus(record, status) {
@@ -487,7 +530,7 @@ function viewAssignee(activityRecord) {
 
 
 
-function activityDomCustomer(activityRecord) {
+function viewForm(activityRecord) {
     console.log(activityRecord);
     return ` <div class='mdc-card'>
     <div class='view-card'>
@@ -602,14 +645,14 @@ function dynamicAppendChats(addendums) {
 
 function getUserChats(userRecord) {
     const tx = db.transaction('addendum');
-    const index = tx.objectStore('addendum').index('key')
+    const index = tx.objectStore('addendum').index('user')
     const myNumber = firebase.auth().currentUser.phoneNumber;
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
     let image = ''
-    index.openCursor(myNumber+userRecord.mobile).onsuccess = function (event) {
+    index.openCursor(userRecord.mobile).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.user === myNumber) {
@@ -619,13 +662,7 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         }
-        if(userRecord.mobile === myNumber) {
-            timeLine += actionBox(cursor.value)
-            cursor.continue();
-            return;
-        }
         if (cursor.value.isComment) {
-            
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {
             timeLine += actionBox(cursor.value)
@@ -635,7 +672,6 @@ function getUserChats(userRecord) {
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll()
-        if(userRecord.mobile === myNumber) return;
         const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
         const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
         const form = document.querySelector('.conversation-compose');

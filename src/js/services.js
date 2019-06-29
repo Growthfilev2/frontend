@@ -27,11 +27,18 @@ function successDialog(data) {
   }
   
 
-function snacks(message, type) {
+function snacks(message, text,callback) {
   snackBar.labelText = message;
   snackBar.open();
   snackBar.timeoutMs = 4000
-  snackBar.actionButtonText = 'okay';
+  snackBar.actionButtonText = text ? text :'Okay';
+
+  snackBar.listen('MDCSnackbar:closed',function(evt){
+    if(evt.detail.reason !== 'action')  return;
+    if(callback && typeof callback === 'function') {
+      callback()
+    }
+  })
 }
 
 function fetchCurrentTime(serverTime) {
