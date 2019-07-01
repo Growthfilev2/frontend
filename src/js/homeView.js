@@ -141,23 +141,18 @@ function homePanel() {
       <h3 class="mdc-list-group__subheader">Suggestions</h3>
       <div id='pending-location-tasks'></div>
       <div id='suggestions-container'></div>
-      <div style="width:100%; position:fixed;bottom:0">
-      <div class='icons one'>
-          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
-              <span class="material-icons mdc-fab__icon">fingerprint</span>
-          </button>
-          <p>Attendance</p>
-      </div>
-      <div class='icons two '>
-          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini">
-              <span class="material-icons mdc-fab__icon">assignment</span>
-          </button>
-          <p>Claims</p>
+      <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
+                                
       </div>
 
+      <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
+      <span class="material-icons mdc-fab__icon">add</span>
+      <span class="mdc-fab__label">Create</span>
+     </button>
 
 
-  </div>
+    
+
   </div>
 </div>`
 }
@@ -221,6 +216,24 @@ function homeView(suggestedTemplates) {
     history.pushState(['profileView'], null, null);
     profileView()
   })
+
+  document.getElementById('reports').addEventListener('click',function(){
+    history.pushState(['reportView'],null,null)
+    reportView();
+  })
+  
+
+  // document.getElementById('attendence').addEventListener('click',function(){
+  //   history.pushState(['attendenceView'],null,null);
+  //   attendenceView();
+  // })
+
+  // document.getElementById('claims').addEventListener('click',function(){
+    
+  //   history.pushState(['claimsView'],null,null);
+  //   claimsView()
+  // })
+
   if (ApplicationState.knownLocation) {
     getPendingLocationActivities().then(function (activities) {
       document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
@@ -257,7 +270,10 @@ function homeView(suggestedTemplates) {
     console.log(suggestedInit.listElements[evt.detail.index].dataset)
     history.pushState(['addView'], null, null);
     addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
-  })
+  });
+  Promise.all([getSubscription(ApplicationState.office,'attendance regularization','CONFIRMED'),getSubscription(ApplicationState.office,'leave','CONFIRMED'),getSubscription(ApplicationState.office,'expense claim','CONFIRMED')]).then(function(result){
+    
+  }).catch(console.log)
 }
 
 

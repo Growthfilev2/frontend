@@ -666,24 +666,25 @@ function getUserRecord(data, tx) {
   })
 }
 
-function getSubscription(office, template) {
+function getSubscription(office, template,status) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['subscriptions']);
     const subscription = tx.objectStore('subscriptions')
-    const officeTemplateCombo = subscription.index('officeTemplate')
-    const range = IDBKeyRange.only([office, template])
-    let record;
+    const officeTemplateCombo = subscription.index('validSubscription')
+    const range = IDBKeyRange.only([office, template,status])
     officeTemplateCombo.get(range).onsuccess = function (event) {
-      if (!event.target.result) return;
-      if (event.target.result.status !== 'CANCELLED') {
-        record = event.target.result;
-      }
+      if (!event.target.result) return resolve({});
+
+       return resolve(event.target.result)
     }
 
-    tx.oncomplete = function () {
+    // tx.oncomplete = function () {
 
-      return resolve(record)
+    //   return resolve(record)
 
+    // }
+    tx.onerror = function(){
+      return reject({message:tx.error,body:''})
     }
 
   })

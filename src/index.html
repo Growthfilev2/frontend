@@ -27,7 +27,9 @@
   <link href="css/start.css" rel="stylesheet" type="text/css"> 
   <link href="css/bottomNav.css" rel="stylesheet" type="text/css">
   <link href="css/map.css" rel="stylesheet" type="text/css">
- 
+  <link href="css/claims.css" rel="stylesheet" type="text/css">
+  <link href="css/attendence.css" rel="stylesheet" type="text/css">
+
   <link href="css/snap.css" rel="stylesheet" type="text/css">
   <link href="css/profile.css" rel="stylesheet" type="text/css">
   <link href="css/chat.css" rel="stylesheet" type="text/css">
@@ -42,8 +44,11 @@
   <script src="js/addView.js" defer></script>
   <script src="js/profile.js" defer async></script>
   <script src="js/chatView.js" defer async></script>
+  <script src="js/claims.js" defer async></script>
+  <script src="js/attendence.js" defer async></script>
+  <script src="js/reportView.js" defer async></script>
 
-  <script>
+<script>
     window.ga = window.ga || function () {
       (ga.q = ga.q || []).push(arguments)
     };
@@ -73,6 +78,7 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
+    <div id='tabs'></div>
   </header>
   <aside class="mdc-drawer mdc-drawer--modal">
       <div class="mdc-drawer__header">
@@ -127,11 +133,11 @@
 
       <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
 
-        <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
+        <div id="app-current-panel">
 
         </div>
 
-        <div class="mdc-layout-grid__cell--span-12">
+        <!-- <div class="mdc-layout-grid__cell--span-12">
           <div class="mdc-bottom-navigation hidden">
           
             <ul class="mdc-bottom-navigation__list mdc-list" id='nav-list'>
@@ -149,7 +155,7 @@
               </span>;
             </ul>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
 
