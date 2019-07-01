@@ -12,6 +12,7 @@ function addView(sub) {
     <div class='banner'></div>
     <iframe id='form-iframe' src="${window.location.origin}/forms/customer/edit.html"></iframe>
     `
+    
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {
         // your stuff

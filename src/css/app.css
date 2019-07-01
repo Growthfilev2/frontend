@@ -455,7 +455,7 @@ iframe {
 
 
 #app-header #tabs .mdc-tab-indicator__content--underline {
-    border-color: white;
+    border-color: white !important;
 }
 .mdc-top-app-bar--fixed-adjust-with-tabs {
   padding-top: 100px;
