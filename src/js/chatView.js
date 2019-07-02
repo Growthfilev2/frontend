@@ -29,12 +29,7 @@ function chatView() {
             document.getElementById('search-btn').classList.remove('hidden')
 
             document.getElementById('chats').innerHTML = allUsers;
-            // history.pushState(['search'],null,null)
-            // const currentChats = document.getElementById('chats')
-            // currentChatsInit = new mdc.list.MDCList(currentChats);
-            // currentChatsInit.listen('MDCList:action', function (evt) {
-            //     enterChat(JSON.parse(currentChatsInit.listElements[evt.detail.index].dataset.user),'pushState')
-            // })
+           
 
         })
     })
@@ -144,12 +139,7 @@ function searchUsers(evt, parent) {
        </ul>`:''}
       </div>`
         parent.innerHTML = listGroup;
-        // [].map.call(document.querySelectorAll('#search-list-group ul'),function(el){
-        //     const ul =  new mdc.list.MDCList(el)
-        //       ul.listen('MDCList:action',function(evt){
-        //         enterChat(JSON.parse(ul.listElements[evt.detail.index].dataset.user),'replaceState')
-        //     })
-        // })
+     
     }
 }
 
@@ -200,7 +190,7 @@ function readLatestChats() {
 }
 
 function userLi(userRecord, secondaryText, time, count) {
-    return `<li class="mdc-list-item"  onclick=enterChat('${userRecord.mobile}')>
+    return `<li class="mdc-list-item"  onclick="enterChat(${userRecord.mobile})">
     <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || './img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
@@ -273,6 +263,9 @@ function enterChat(number) {
     // debugger;
 
     // hideBottomNav()
+  
+
+
     db.transaction('users').objectStore('users').get(number).onsuccess = function (event) {
         const record = event.target.result;
         if (!record) return;
@@ -319,7 +312,7 @@ function enterChat(number) {
 }
 
 function actionBox(value) {
-    return `<div class="message-wrapper aciton-info" onclick="showActivity('${value.activityId}')">
+    return `<div class="message-wrapper aciton-info"  data-id=${value.activityId} onmousedown="showActivity(event)">
     <div class="text-wrapper">${value.comment}
     <span class="metadata">
     <i class='material-icons'>info</i>
@@ -340,42 +333,56 @@ function messageBox(comment, position, image, time) {
     </div>`
 }
 
-function showActivity(activityId) {
-    db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
-        const record = event.target.result;
-        if (!record) return;
-        const heading = `${record.activityName}
-        <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
-        <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
+function showActivity(event) {
 
-        let dialog;
-        if (record.canEdit) {
-            dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
-
-        } else {
-            dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
-
+    console.log('mousedown',event)
+    const startTime = new Date();
+    event.target.addEventListener('mouseup',function(mouseupEvent){
+        console.log('mouseup',mouseupEvent)
+        const endTime  = new Date();
+        const delta = startTime - endTime
+        if(delta < 800) return;
+        
+        console.log("long press");
+        const activityId = event.target.dataset.id;
+        db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
+            const record = event.target.result;
+            if (!record) return;
+            const heading = `${record.activityName}
+            <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
+            <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
+    
+            let dialog;
+            if (record.canEdit) {
+                dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
+    
+            } else {
+                dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
+    
+            }
+            dialog.listen('MDCDialog:opened', function () {
+                if (!record.canEdit) return;
+                const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
+                statusChange.listen('MDCSelect:change', function (evt) {
+                    if (evt.detail.value === record.status) return;
+                    dialog.close();
+                    setActivityStatus(record, evt.detail.value)
+    
+                })
+                const cancelBtn = document.getElementById('mark-cancel');
+                if (!cancelBtn) return;
+                new mdc.ripple.MDCRipple(document.getElementById('mark-cancel')).root_.addEventListener('click', function (evt) {
+                    dialog.close();
+                    setActivityStatus(record, 'CANCELLED')
+                })
+            })
+    
+            dialog.open();
+            console.log(dialog)
         }
-        dialog.listen('MDCDialog:opened', function () {
-            if (!record.canEdit) return;
-            const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
-            statusChange.listen('MDCSelect:change', function (evt) {
-                if (evt.detail.value === record.status) return;
-                dialog.close();
-                setActivityStatus(record, evt.detail.value)
+    })
 
-            })
-            const cancelBtn = document.getElementById('mark-cancel');
-            if (!cancelBtn) return;
-            new mdc.ripple.MDCRipple(document.getElementById('mark-cancel')).root_.addEventListener('click', function (evt) {
-                dialog.close();
-                setActivityStatus(record, 'CANCELLED')
-            })
-        })
-
-        dialog.open();
-        console.log(dialog)
-    }
+   
 }
 
 function setActivityStatus(record, status) {
