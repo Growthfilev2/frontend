@@ -129,15 +129,6 @@ window.addEventListener("load", function () {
   })
 
 
-
-  if ('serviceWorker' in navigator) {
-    // navigator.serviceWorker.register('sw.js').then(function (registeration) {
-    //   console.log('sw registered with scope :', registeration.scope);
-    // }, function (err) {
-    //   console.log('sw registeration failed :', err);
-    // });
-  }
-
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -166,7 +157,6 @@ window.addEventListener("load", function () {
   startApp(true)
 })
 
-// function firebaseUiConfig()
 
 
 function firebaseUiConfig(value, redirect) {
@@ -174,33 +164,7 @@ function firebaseUiConfig(value, redirect) {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        document.getElementById('dialog-container').innerHTML = ''
-
-        if (redirect) {
-          emailFlow(firebase.auth().currentUser, value).then(function () {
-            snacks('Verification Link has Been Send To you Email Address');
-            emailInit.foundation_.setDisabled(true);
-            change.root_.classList.remove('hidden');
-            next.root_.classList.remove('hidden');
-            new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress')).close();
-          }).catch(function (error) {
-            new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress')).close();
-            if (error.code === 'auth/too-many-requests') {
-              mapView();
-              snacks('You Can Also Update Your Email Address From Your Profile')
-              return;
-            }
-            send.root_.classList.remove('hidden');
-            snacks(error.message)
-
-          })
-          return false
-        }
-        if (value) {
-          updateEmail(authResult.user, value);
-          return false;
-        }
-
+        return false;
       },
       signInFailure: function (error) {
         return handleUIError(error)
@@ -231,16 +195,12 @@ function firebaseUiConfig(value, redirect) {
 
 
 function userSignedOut() {
-
-  if (!ui) {
-    ui = new firebaseui.auth.AuthUI(firebase.auth())
-  }
-
+  ui = new firebaseui.auth.AuthUI(firebase.auth())
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
 
-function startApp(start) {
+function startApp() {
 
   firebase.auth().onAuthStateChanged(function (auth) {
 
@@ -262,7 +222,7 @@ function startApp(start) {
     };
 
 
-    if (start) {
+    
       const req = window.indexedDB.open(auth.uid, 14);
 
       req.onupgradeneeded = function (evt) {
@@ -435,7 +395,7 @@ function startApp(start) {
           message: `${req.error.message} from startApp`
         })
       }
-    }
+    
   })
 }
 
