@@ -367,8 +367,8 @@ function startApp() {
         index++;
       }, index + 1 * 1000);
 
-      enterChat("+919000000000")
-      return;
+      // enterChat("+919000000000")
+      // return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',

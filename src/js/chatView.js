@@ -358,14 +358,22 @@ function createActivityActionMenu(id) {
     db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
         const activity = event.target.result;
         if (!activity) return;
-        const items = []
-        if (activity.canEdit) {
-            items.push('View/Edit')
-            items.push('Share')
+        const heading = `${activity.activityName}
+        <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
+        <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
+        const items = ['View/Edit','Share']
+        if(!activity.canEdit) {
+            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create('simple');
+            dialog.open();
+            return
+        };
+
+       
+      
+        
             if (activity.status === 'CANCELLED') {
                 items.push('Mark Confirmed')
                 items.push('Mark Pending')
-
             }
             if (activity.status === 'PENDING') {
                 items.push('Mark Confirmed')
@@ -376,39 +384,34 @@ function createActivityActionMenu(id) {
                 items.push('Mark Pending')
                 items.push('Mark Cancelled')
             }
-        } else {
-            items.push('View')
-        }
-
-        document.querySelector(`[data-id="${id}"]`).innerHTML = createSimpleMenu(items)
-        menu = new mdc.menu.MDCMenu(document.querySelector(`[data-id="${id}"]`))
-        menu.open = true
-        menu.root_.classList.add('align-right-menu')
-        menu.listen('MDCMenu:selected',function(evt){
-            switch(items[evt.detail.index]){
-                case 'View':
-                case 'View/Edit':
-                
-                break;
-
-                case 'share':
-                break;
-                
-                case 'Mark Pending':
-                setActivityStatus(activity,'PENDING')
-                break;
-                case 'Mark Confirmed':
-                setActivityStatus(activity,'CONFIRMED')
-                break;
-
-                case 'Mark Cancelled':
-                setActivityStatus(activity,'CANCELLED')
-                break;
-                default:
-                break;
-            }
-        })
-        console.log(menu)
+            document.querySelector(`[data-id="${id}"]`).innerHTML = createSimpleMenu(items)
+            menu = new mdc.menu.MDCMenu(document.querySelector(`[data-id="${id}"]`))
+            menu.open = true
+            menu.root_.classList.add('align-right-menu')
+            menu.listen('MDCMenu:selected',function(evt){
+              
+                switch(items[evt.detail.index]){
+                    case 'View/Edit':
+                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form', viewFormActions()).create();
+                    dialog.open()
+                    break;
+                    case 'share':
+                    break;
+                    case 'Mark Pending':
+                    setActivityStatus(activity,'PENDING')
+                    break;
+                    case 'Mark Confirmed':
+                    setActivityStatus(activity,'CONFIRMED')
+                    break;
+    
+                    case 'Mark Cancelled':
+                    setActivityStatus(activity,'CANCELLED')
+                    break;
+                    default:
+                    break;
+                }
+            })
+        
     }
     //  return;
     //  db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
@@ -476,6 +479,37 @@ function share(activity) {
     })
 }
 
+function activityDomCustomer(activityRecord) {
+    console.log(activityRecord);
+    return ` <div class='mdc-card'>
+    <div class='view-card'>
+
+        <div id='attachment-container'>
+            ${viewAttachment(activityRecord)}
+        </div>
+        <div id='venue-container'>
+            <ul class="mdc-list">
+                ${viewVenue(activityRecord)}
+            </ul>
+        </div>
+        <div id='schedule-container'>
+            <ul class='mdc-list mdc-list--two-line'>
+                ${viewSchedule(activityRecord)}
+            </ul>
+        </div>
+        <div id='schedule-container'></div>
+        <div id='assignee-container'>
+            <div class="assignees tasks-heading center">
+                <i class="material-icons">share</i>
+                ${viewAssignee(activityRecord)}
+            </div>
+        </div>
+    
+    </div>
+</div>`
+}
+
+
 function setActivityStatus(record, status) {
     progressBar.open();
     requestCreator('statusChange', {
@@ -491,22 +525,15 @@ function setActivityStatus(record, status) {
     })
 }
 
-function viewFormActions(activityRecord) {
+function viewFormActions() {
     return `
-    <div class="mdc-card__actions">
-    <div class="mdc-card__action-buttons">
-        ${activityRecord.status === 'CONFIRMED' || activityRecord.status === 'PENDING' ?` <button class="mdc-button" id='mark-cancel'>
-        <i class="material-icons mdc-button__icon" aria-hidden="true">delete</i>
-        <span class="mdc-button__label">CANCEL</span>
-    </button>`:''}
-       
-    </div>
+   
     
     <div class="mdc-card__action-icons">
         <button class="mdc-icon-button material-icons mdc-card__action mdc-card__action--icon " title="edit"
             data-mdc-ripple-is-unbounded="true">edit</button>
     </div>
-</div>
+
 `
 }
 
