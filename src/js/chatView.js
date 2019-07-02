@@ -97,9 +97,9 @@ function search() {
             }
 
             if (cursor.value.timestamp) {
-                currentChats += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
+                currentChats += userLi(cursor.value,true);
             } else {
-                newContacts += userLi(cursor.value)
+                newContacts += userLi(cursor.value,true)
             }
 
             cursor.continue()
@@ -186,7 +186,7 @@ function readLatestChats() {
             return;
         }
         console.log(cursor.value)
-        string += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
+        string += userLi(cursor.value,true);
         cursor.continue();
     }
     tx.oncomplete = function () {
@@ -202,21 +202,21 @@ function readLatestChats() {
 
 }
 
-function userLi(userRecord, secondaryText, time, count) {
-    return `<li class="mdc-list-item"  onclick="enterChat('${userRecord.mobile}')">
-    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || './img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
+function userLi(value,isClickable,attr) {
+    return `<li class="mdc-list-item ${attr ? attr.class.join("") :''}" ${isClickable ?`onclick="enterChat('${value.mobile}')"`: ''}>
+    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.phoneNumber}>
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
-        ${userRecord.displayName || userRecord.mobile}
+        ${value.displayName || value.mobile}
     </span>
     <span class="mdc-list-item__secondary-text">
-    ${secondaryText || ''}
+    ${value.comment || ''}
     </span>
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">
     ${count ? `<div class='chat-count'>${count}</div>` :''}
     
-    ${time ? formatCreatedTime(time) : ''}</span>
+    ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
     </li>`
 }
 
@@ -234,7 +234,7 @@ function loadAllUsers() {
                 cursor.continue();
                 return;
             }
-            string += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
+            string += userLi(cursor.value,true);
             cursor.continue()
         }
         tx.oncomplete = function () {
@@ -396,6 +396,7 @@ function createActivityActionMenu(id) {
                     dialog.open()
                     break;
                     case 'share':
+                    createShareUI(activity)
                     break;
                     case 'Mark Pending':
                     setActivityStatus(activity,'PENDING')
@@ -413,70 +414,89 @@ function createActivityActionMenu(id) {
             })
         
     }
-    //  return;
-    //  db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
-    //      const record = event.target.result;
-    //      if (!record) return;
-    //      const heading = `${record.activityName}
-    //      <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
-    //      <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
-
-    //      let dialog;
-    //      if (record.canEdit) {
-    //          dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
-
-    //      } else {
-    //          dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
-
-    //      }
-    //      dialog.listen('MDCDialog:opened', function () {
-    //          if (!record.canEdit) return;
-    //          const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
-    //          statusChange.listen('MDCSelect:change', function (evt) {
-    //              if (evt.detail.value === record.status) return;
-    //              dialog.close();
-    //              setActivityStatus(record, evt.detail.value)
-
-    //          })
-    //          const cancelBtn = document.getElementById('mark-cancel');
-    //          if (!cancelBtn) return;
-    //          new mdc.ripple.MDCRipple(document.getElementById('mark-cancel')).root_.addEventListener('click', function (evt) {
-    //              dialog.close();
-    //              setActivityStatus(record, 'CANCELLED')
-    //          })
-    //      })
-
-    //      dialog.open();
-    //      console.log(dialog)
-    //  }
-
+   
 }
 
 
-function createDynamicChips() {
-    return;
+function createDynamicChips(user) {
+    const chip = createElement('div',{className:'mdc-chip'});
+    const image = createElement('image',{className:'mdc-chip__icon mdc-chip__icon--leading',src:`${user.photoURL || '../img/empty-user.jpg'}`})
+    const text = createElement('div',{className:'mdc-chip__text',textContent:`${user.displayName || user.phoneNumber}`})
+    const trailingIcon = createElement('i',{className:'mdc-chip__icon mdc-chip__icon--trailing material-icons',textContent:'clear'})
+    chip.appendChild(image)
+    chip.appendChild(text)
+    chip.appendChild(trailingIcon)
+    return chip
+
 }
 
 function share(activity) {
     const alreadySelected = {};
-    const dialogConetnt = `
-    <h3 class='mdc-typography--headline6'>Already Added</h3>
+    const newSelected = {};
+    const content = `
+    ${searchBar()}
+    <h3 class='mdc-typography--headline6'>Added</h3>
     ${viewAssignee(activity)}
-    <ul>
+    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='users-list'>
+
+    </ul>
     `
 
     activity.assignees.forEach(function (ass) {
         alreadySelected[ass.phoneNumber] = true
     });
 
-    const dialog = new Dialog(searchBar()).create()
-    dialog.open();
-    dialog.listen('MDCDialog:closed', function (evt) {
+    document.getElementById('app-header').classList.add("hidden")
+    document.getElementById('app-current-panel').innerHTML = content();
+    const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
+    searchInit.focus()
+    const results = [];
+    searchInit.addEventListener('input',function(evt){
+        const searchable = getSearchBound(evt);
+        let userString = '';
+        searchable.bound.onsuccess = function(searchEvent) {
+            const cursor = searchEvent.target.result;
+            if(!cursor) return;
+            if(alreadySelected[cursor.value.mobile]) {
+                cursor.continue();
+                return;
+            }
+            results.push(cursor.value)
+            if(newSelected[cursor.value.mobile]) {
+                userString += userLi(cursor.value) = userLi(cursor.value,false,{class:'selected'})
+            }
+            else {
+                userString += userLi(cursor.value);
+            }
 
-    })
-    dialog.listen('MDCDialog:opened', function (evt) {
+            cursor.continue();
+        }
+        searchable.tx.oncomplete = function(){
+            const ulSelector =  document.getElementById('users-list') 
+            ulSelector.innerHTML = userString;
+            const ul = new mdc.list.MDCList(ulSelector)
+            ul.listen('MDCList:action',function(listActionEvent){
+                const el =  ul.listElements[listActionEvent.detail.index]
+                const selectedUser = results[listActionEvent.detail.index]
+                if(el.classList.contains('selected')) {
+                    delete newSelected[selectedUser.mobile]
+                    ul.listElements[listActionEvent.detail.index].classList.remove('selected')
+                }
+                else {
+                    newSelected[selectedUser.mobile] = true;
+                    ul.listElements[listActionEvent.detail.index].classList.add('selected')
+                    document.getElementById('share').appendChild(createDynamicChips(selectedUser))
+                }
+            })
 
+            // const chipInit = new mdc.chips.MDCChipSet(document.getElementById('share'))
+            // chipInit.listen('MDCChip:action',function(chipEvent){
+            //     delete alreadySelected[selectedUser.mobile]
+            //     ul.listElements[listActionEvent.detail.index].classList.remove('selected')
+            // })
+        }
     })
+   
 }
 
 function activityDomCustomer(activityRecord) {
@@ -608,46 +628,6 @@ function viewAssignee(activityRecord) {
     </div>`
 
 }
-
-
-
-function viewForm(activityRecord) {
-    console.log(activityRecord);
-    return ` <div class='mdc-card'>
-    <div class='view-card'>
-
-        <div id='attachment-container'>
-            ${viewAttachment(activityRecord)}
-        </div>
-        <div id='venue-container'>
-            <ul class="mdc-list">
-                ${viewVenue(activityRecord)}
-            </ul>
-        </div>
-        <div id='schedule-container'>
-            <ul class='mdc-list mdc-list--two-line'>
-                ${viewSchedule(activityRecord)}
-            </ul>
-        </div>
-        <div id='schedule-container'></div>
-        <div id='assignee-container'>
-            <div class="assignees tasks-heading center">
-                <i class="material-icons">share</i>
-                ${viewAssignee(activityRecord)}
-            </div>
-        </div>
-        ${activityRecord.canEdit ?`<div id='status-container'>
-        <div class='status-change pt-20'>
-            
-            ${createStatusChange(activityRecord.status)}
-         
-        </div>
-    </div>`:''}
-    
-    </div>
-</div>`
-}
-
 
 
 

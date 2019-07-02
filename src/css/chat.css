@@ -408,3 +408,9 @@ max-height:80%;
   
 
 }
+
+/** share selection **/
+
+.selected {
+  background-color: green;
+}
