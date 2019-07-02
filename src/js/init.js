@@ -117,7 +117,7 @@ window.addEventListener("load", function () {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
- 
+
 
   drawer.listen('MDCDrawer:opened', function (evt) {
     document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
@@ -222,180 +222,190 @@ function startApp() {
     };
 
 
-    
-      const req = window.indexedDB.open(auth.uid, 14);
 
-      req.onupgradeneeded = function (evt) {
-        db = req.result;
-        db.onerror = function () {
-          handleError({
-            message: `${db.error.message} from startApp on upgradeneeded`
-          })
-          return;
-        }
+    const req = window.indexedDB.open(auth.uid, 14);
 
-        if (!evt.oldVersion) {
-          createObjectStores(db, auth.uid)
-        } else {
-          if (evt.oldVersion < 4) {
-            const subscriptionStore = req.transaction.objectStore('subscriptions')
-            subscriptionStore.createIndex('status', 'status');
-          }
-          if (evt.oldVersion < 5) {
-            var tx = req.transaction;
-
-            const mapStore = tx.objectStore('map');
-            mapStore.createIndex('bounds', ['latitude', 'longitude']);
-
-          }
-          if (evt.oldVersion < 6) {
-            var tx = req.transaction;
-            const childrenStore = tx.objectStore('children')
-            childrenStore.createIndex('officeTemplate', ['office', 'template']);
-
-            childrenStore.createIndex('employees', 'employee');
-            childrenStore.createIndex('employeeOffice', ['employee', 'office'])
-            childrenStore.createIndex('team', 'team')
-            childrenStore.createIndex('teamOffice', ['team', 'office'])
-            const myNumber = firebase.auth().currentUser.phoneNumber;
-
-            childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
-              const cursor = event.target.result;
-              if (!cursor) {
-                console.log("finished modiying children")
-                return;
-              }
-              cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-              if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
-                cursor.value.team = 1
-              }
-              cursor.update(cursor.value)
-              cursor.continue();
-            };
-
-            tx.oncomplete = function () {
-
-              console.log("finsihed backlog")
-            }
-          }
-          if (evt.oldVersion < 7) {
-            var tx = req.transaction;
-            const mapStore = tx.objectStore('map')
-            mapStore.createIndex('office', 'office');
-            mapStore.createIndex('status', 'status');
-            mapStore.createIndex('selection', ['office', 'status', 'location']);
-          }
-          if (evt.oldVersion < 8) {
-            var tx = req.transaction;
-            const listStore = tx.objectStore('list')
-            const calendar = tx.objectStore('calendar')
-
-            listStore.createIndex('office', 'office');
-            calendar.createIndex('office', 'office')
-          }
-          if (evt.oldVersion < 9) {
-            var tx = req.transaction;
-            const userStore = tx.objectStore('users');
-            userStore.createIndex('mobile', 'mobile');
-
-            const addendumStore = tx.objectStore('addendum');
-            addendumStore.createIndex('user', 'user');
-            addendumStore.createIndex('timestamp', 'timestamp')
-          }
-          if (evt.oldVersion <= 10) {
-            var tx = req.transaction;
-            const subscriptionStore = tx.objectStore('subscriptions')
-            subscriptionStore.createIndex('count', 'count');
-          }
-          if (evt.oldVersion <= 11) {
-            var tx = req.transaction;
-            const userStore = tx.objectStore('users')
-            userStore.createIndex('timestamp', 'timestamp')
-          }
-          if(evt.oldVersion <= 12) {
-            var tx = req.transaction;
-            const activityStore = tx.objectStore('activity')
-            activityStore.createIndex('status','status')
-          }
-          if(evt.oldVersion <= 13) {
-            var tx = req.transaction;
-            const subscriptions = tx.objectStore('subscriptions')
-            subscriptions.createIndex('validSubscription', ['office', 'template','status'])
-          }
-
-
-        };
+    req.onupgradeneeded = function (evt) {
+      db = req.result;
+      db.onerror = function () {
+        handleError({
+          message: `${db.error.message} from startApp on upgradeneeded`
+        })
+        return;
       }
-      req.onsuccess = function () {
-        db = req.result;
 
-        if (!areObjectStoreValid(db.objectStoreNames)) {
-          db.close();
-          console.log(auth)
-          const deleteIDB = indexedDB.deleteDatabase(auth.uid);
-          deleteIDB.onsuccess = function () {
-            window.location.reload();
-          }
-          deleteIDB.onblocked = function () {
-            snacks('Please Re-Install The App')
-          }
-          deleteIDB.onerror = function () {
-            snacks('Please Re-Install The App')
-          }
-          return;
+      if (!evt.oldVersion) {
+        createObjectStores(db, auth.uid)
+      } else {
+        if (evt.oldVersion < 4) {
+          const subscriptionStore = req.transaction.objectStore('subscriptions')
+          subscriptionStore.createIndex('status', 'status');
         }
-        const startLoad = document.querySelector('#start-load')
-        startLoad.classList.remove('hidden');
-        console.log("run app")
-        document.getElementById("main-layout-app").style.display = 'block'
-        // localStorage.setItem('dbexist', auth.uid);
-        ga('set', 'userId', JSON.parse(native.getInfo()).id)
+        if (evt.oldVersion < 5) {
+          var tx = req.transaction;
 
-        const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
+          const mapStore = tx.objectStore('map');
+          mapStore.createIndex('bounds', ['latitude', 'longitude']);
 
-        let index = 0;
-        var interval = setInterval(function () {
-          if (index == texts.length - 1) {
-            clearInterval(interval)
-          }
-          startLoad.querySelector('p').textContent = texts[index]
-          index++;
-        }, index + 1 * 1000);
-       
-        // profileCheck();
-        // return;
-        requestCreator('now', {
-          device: native.getInfo(), 
-          from: '',
-          registerToken: native.getFCMToken()
-        }).then(function (response) {
-          if (response.updateClient) {
-            updateApp()
-            return
-          }
-          if (response.revokeSession) {
-            revokeSession();
-            return
-          };
-          getRootRecord().then(function (rootRecord) {
-            if (!rootRecord.fromTime) {
-              requestCreator('Null').then(profileCheck).catch(console.log)
+        }
+        if (evt.oldVersion < 6) {
+          var tx = req.transaction;
+          const childrenStore = tx.objectStore('children')
+          childrenStore.createIndex('officeTemplate', ['office', 'template']);
+
+          childrenStore.createIndex('employees', 'employee');
+          childrenStore.createIndex('employeeOffice', ['employee', 'office'])
+          childrenStore.createIndex('team', 'team')
+          childrenStore.createIndex('teamOffice', ['team', 'office'])
+          const myNumber = firebase.auth().currentUser.phoneNumber;
+
+          childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
+            const cursor = event.target.result;
+            if (!cursor) {
+              console.log("finished modiying children")
               return;
             }
-            profileCheck();
-            requestCreator('Null').then(console.log).catch(console.log)
+            cursor.value.employee = cursor.value.attachment['Employee Contact'].value
+            if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
+              cursor.value.team = 1
+            }
+            cursor.update(cursor.value)
+            cursor.continue();
+          };
+
+          tx.oncomplete = function () {
+
+            console.log("finsihed backlog")
+          }
+        }
+        if (evt.oldVersion < 7) {
+          var tx = req.transaction;
+          const mapStore = tx.objectStore('map')
+          mapStore.createIndex('office', 'office');
+          mapStore.createIndex('status', 'status');
+          mapStore.createIndex('selection', ['office', 'status', 'location']);
+        }
+        if (evt.oldVersion < 8) {
+          var tx = req.transaction;
+          const listStore = tx.objectStore('list')
+          const calendar = tx.objectStore('calendar')
+
+          listStore.createIndex('office', 'office');
+          calendar.createIndex('office', 'office')
+        }
+        if (evt.oldVersion < 9) {
+          var tx = req.transaction;
+          const userStore = tx.objectStore('users');
+          userStore.createIndex('mobile', 'mobile');
+
+          const addendumStore = tx.objectStore('addendum');
+          addendumStore.createIndex('user', 'user');
+          addendumStore.createIndex('timestamp', 'timestamp')
+        }
+        if (evt.oldVersion <= 10) {
+          var tx = req.transaction;
+          const subscriptionStore = tx.objectStore('subscriptions')
+          subscriptionStore.createIndex('count', 'count');
+        }
+        if (evt.oldVersion <= 11) {
+          var tx = req.transaction;
+          const userStore = tx.objectStore('users')
+          userStore.createIndex('timestamp', 'timestamp')
+        }
+        if (evt.oldVersion <= 12) {
+          var tx = req.transaction;
+          const activityStore = tx.objectStore('activity')
+          activityStore.createIndex('status', 'status')
+        }
+        if (evt.oldVersion <= 13) {
+          var tx = req.transaction;
+          const subscriptions = tx.objectStore('subscriptions')
+          subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
+          const addendum = tx.objectStore('addendum')
+          addendum.createIndex('key', 'key')
+        }
+
+
+
+
+      };
+    }
+    req.onsuccess = function () {
+      db = req.result;
+
+      if (!areObjectStoreValid(db.objectStoreNames)) {
+        db.close();
+        console.log(auth)
+        const deleteIDB = indexedDB.deleteDatabase(auth.uid);
+        deleteIDB.onsuccess = function () {
+          window.location.reload();
+        }
+        deleteIDB.onblocked = function () {
+          snacks('Please Re-Install The App')
+        }
+        deleteIDB.onerror = function () {
+          snacks('Please Re-Install The App')
+        }
+        return;
+      }
+      const startLoad = document.querySelector('#start-load')
+      startLoad.classList.remove('hidden');
+      console.log("run app")
+      document.getElementById("main-layout-app").style.display = 'block'
+      // localStorage.setItem('dbexist', auth.uid);
+      ga('set', 'userId', JSON.parse(native.getInfo()).id)
+
+      const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
+
+      let index = 0;
+      var interval = setInterval(function () {
+        if (index == texts.length - 1) {
+          clearInterval(interval)
+        }
+        startLoad.querySelector('p').textContent = texts[index]
+        index++;
+      }, index + 1 * 1000);
+
+      // profileCheck();
+      // return;
+      requestCreator('now', {
+        device: native.getInfo(),
+        from: '',
+        registerToken: native.getFCMToken()
+      }).then(function (response) {
+        if (response.updateClient) {
+          updateApp()
+          return
+        }
+        if (response.revokeSession) {
+          revokeSession();
+          return
+        };
+        getRootRecord().then(function (rootRecord) {
+          if (!rootRecord.fromTime) {
+            requestCreator('Null').then(profileCheck).catch(function (error) {
+              snacks(error.response.message, 'Okay')
+            })
+            return;
+          }
+          profileCheck();
+          requestCreator('Null').then(console.log).catch(function (error) {
+            snacks(error.response.message, 'Okay', (function () {
+              startApp(true)
+            }))
           })
-        }).catch(function (error) {
-          console.log(error)
-          snacks(error.response.message)
         })
-      }
-      req.onerror = function () {
-        handleError({
-          message: `${req.error.message} from startApp`
-        })
-      }
-    
+      }).catch(function (error) {
+        console.log(error)
+        snacks(error.response.message, 'Retry')
+      })
+    }
+    req.onerror = function () {
+      handleError({
+        message: `${req.error.message} from startApp`
+      })
+    }
+
   })
 }
 
@@ -702,7 +712,7 @@ function createObjectStores(db, uid) {
   activity.createIndex('office', 'office')
   activity.createIndex('hidden', 'hidden')
   activity.createIndex('template', 'template');
-  activity.createIndex('status','status')
+  activity.createIndex('status', 'status')
   const list = db.createObjectStore('list', {
     keyPath: 'activityId'
   })
@@ -725,7 +735,7 @@ function createObjectStores(db, uid) {
 
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
-
+  addendum.createIndex('key', 'key')
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
@@ -733,7 +743,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('office', 'office')
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
-  subscriptions.createIndex('validSubscription', ['office', 'template','status'])
+  subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
 
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
@@ -747,7 +757,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-  calendar.createIndex('onLeave', ['template', 'status', 'office']);
+    calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
     autoIncrement: true,

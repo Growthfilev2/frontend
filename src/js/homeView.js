@@ -158,7 +158,11 @@ function homePanel() {
           </button>
           <p>Reimbursements</p>
       </div>
+<<<<<<< HEAD
 
+=======
+  </div>
+>>>>>>> location
   </div>
 </div>`
 }
