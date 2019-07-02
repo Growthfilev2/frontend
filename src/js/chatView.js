@@ -1,3 +1,6 @@
+let delay;
+let longPressTimer = 1000;
+
 function chatView() {
     // if(!replaceState) {
 
@@ -29,7 +32,7 @@ function chatView() {
             document.getElementById('search-btn').classList.remove('hidden')
 
             document.getElementById('chats').innerHTML = allUsers;
-           
+
 
         })
     })
@@ -52,7 +55,7 @@ function chatDom() {
 </div>`
 }
 
-function searchBar(){
+function searchBar() {
     return `<div id='search-users' class="mdc-text-field mdc-text-field--with-leading-icon mdc-text-field--with-trailing-icon mdc-text-field--no-label">
     <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id='search-back'>arrow_back</i>
     <i class="material-icons mdc-text-field__icon hidden"  tabindex="0" role="button" id='clear-search'>clear</i>
@@ -61,11 +64,6 @@ function searchBar(){
 </div>`
 
 }
-
-function Search(){
-
-}
-Search.prototype.
 
 function search() {
     document.getElementById('app-header').classList.add("hidden")
@@ -89,21 +87,21 @@ function search() {
         let currentChats = '';
         let newContacts = '';
         const myNumber = firebase.auth().currentUser.phoneNumber;
-        const searchable =  getSearchBound(evt)
-        searchable.bound.onsuccess = function(event){
+        const searchable = getSearchBound(evt)
+        searchable.bound.onsuccess = function (event) {
             const cursor = event.target.result
             if (!cursor) return
             if (cursor.value.mobile === myNumber) {
                 cursor.continue();
                 return;
             }
-           
+
             if (cursor.value.timestamp) {
                 currentChats += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
             } else {
                 newContacts += userLi(cursor.value)
             }
-    
+
             cursor.continue()
         }
         searchable.tx.oncomplete = function () {
@@ -122,9 +120,9 @@ function search() {
            </ul>`:''}
           </div>`
             parent.innerHTML = listGroup;
-        
+
         }
-      
+
     });
 
     searchInit.leadingIcon_.root_.onclick = function () {
@@ -139,7 +137,7 @@ function search() {
 function getSearchBound(evt) {
     let value = evt.target.value;
     let indexName;
-  
+
     if (isNumber(value)) {
         indexName = 'mobile'
         value = formatNumber(value);
@@ -148,44 +146,11 @@ function getSearchBound(evt) {
     }
     const bound = IDBKeyRange.bound(value, value + '\uffff')
     const tx = db.transaction(['users', 'addendum']);
-  
-    // tx.objectStore('addendum').index('user').openCursor(bound).onsuccess = function(event)
-    tx.objectStore('users').index(indexName).openCursor(bound).onsuccess = function (event) {
-        const cursor = event.target.result
-        if (!cursor) return
-        if (cursor.value.mobile === myNumber) {
-            cursor.continue();
-            return;
-        }
-        // tx.objectStore('addendum').index('user').get(cursor.value.mobile).onsuccess = function (event) {
-        //     const record = event.target.result;
-        if (cursor.value.timestamp) {
-
-            currentChats += userLi(cursor.value, cursor.value.comment, cursor.value.timestamp);
-        } else {
-            newContacts += userLi(cursor.value)
-        }
-
-        cursor.continue()
+    return {
+        tx: tx,
+        bound: tx.objectStore('users').index(indexName).openCursor(bound)
     }
-    tx.oncomplete = function () {
-        if (!currentChats && !newContacts) {
-            parent.innerHTML = `<h3 class="mdc-list-group__subheader text-center">No Results Found</h3>`
-            return;
-        }
-        const listGroup = `<div class="mdc-list-group" id='search-list-group'>
-       ${currentChats ?` <h3 class="mdc-list-group__subheader">Chats</h3>
-       <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
-        ${currentChats}
-       </ul>`:'' }
-       ${newContacts ?`  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
-       <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
-        ${newContacts}
-       </ul>`:''}
-      </div>`
-        parent.innerHTML = listGroup;
-     
-    }
+
 }
 
 
@@ -238,7 +203,7 @@ function readLatestChats() {
 }
 
 function userLi(userRecord, secondaryText, time, count) {
-    return `<li class="mdc-list-item"  onclick="enterChat(${userRecord.mobile})">
+    return `<li class="mdc-list-item"  onclick="enterChat('${userRecord.mobile}')">
     <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${userRecord.photoURL || './img/empty-user.jpg'} data-number=${userRecord.phoneNumber}>
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
@@ -311,7 +276,7 @@ function enterChat(number) {
     // debugger;
 
     // hideBottomNav()
-  
+
 
 
     db.transaction('users').objectStore('users').get(number).onsuccess = function (event) {
@@ -360,13 +325,19 @@ function enterChat(number) {
 }
 
 function actionBox(value) {
-    return `<div class="message-wrapper aciton-info"  data-id=${value.activityId} onmousedown="showActivity(event)">
+    return `
+    <div class='mdc-menu-surface--anchor'>
+    <div class="mdc-menu mdc-menu-surface" data-id="${value.activityId}">
+    </div>
+    <div class="message-wrapper aciton-info" onclick="createActivityActionMenu('${value.activityId}')">
     <div class="text-wrapper">${value.comment}
     <span class="metadata">
     <i class='material-icons'>info</i>
     </span>
     </div>
-    </div>`
+    </div>
+    </div>
+   `
 }
 
 function messageBox(comment, position, image, time) {
@@ -381,63 +352,109 @@ function messageBox(comment, position, image, time) {
     </div>`
 }
 
-function showActivity(event) {
 
-    console.log('mousedown',event)
-    const startTime = new Date();
-    event.target.addEventListener('mouseup',function(mouseupEvent){
-        console.log('mouseup',mouseupEvent)
-        const endTime  = new Date();
-        const delta = startTime - endTime
-        if(delta < 800) return;
-        
-        console.log("long press");
-        const activityId = event.target.dataset.id;
-        db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
-            const record = event.target.result;
-            if (!record) return;
-            const heading = `${record.activityName}
-            <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
-            <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
-    
-            let dialog;
-            if (record.canEdit) {
-                dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
-    
-            } else {
-                dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
-    
+function createActivityActionMenu(id) {
+    console.log("long press")
+    db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
+        const activity = event.target.result;
+        if (!activity) return;
+        const items = []
+        if (activity.canEdit) {
+            items.push('View/Edit')
+            items.push('Share')
+            if (activity.status === 'CANCELLED') {
+                items.push('Mark Confirmed')
+                items.push('Mark Pending')
+
             }
-            dialog.listen('MDCDialog:opened', function () {
-                if (!record.canEdit) return;
-                const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
-                statusChange.listen('MDCSelect:change', function (evt) {
-                    if (evt.detail.value === record.status) return;
-                    dialog.close();
-                    setActivityStatus(record, evt.detail.value)
-    
-                })
-                const cancelBtn = document.getElementById('mark-cancel');
-                if (!cancelBtn) return;
-                new mdc.ripple.MDCRipple(document.getElementById('mark-cancel')).root_.addEventListener('click', function (evt) {
-                    dialog.close();
-                    setActivityStatus(record, 'CANCELLED')
-                })
-            })
-    
-            dialog.open();
-            console.log(dialog)
+            if (activity.status === 'PENDING') {
+                items.push('Mark Confirmed')
+                items.push('Mark Cancelled')
+
+            }
+            if (activity.status === 'CONFIRMED') {
+                items.push('Mark Pending')
+                items.push('Mark Cancelled')
+            }
+        } else {
+            items.push('View')
         }
-    })
 
-   
+        document.querySelector(`[data-id="${id}"]`).innerHTML = createSimpleMenu(items)
+        menu = new mdc.menu.MDCMenu(document.querySelector(`[data-id="${id}"]`))
+        menu.open = true
+        menu.root_.classList.add('align-right-menu')
+        menu.listen('MDCMenu:selected',function(evt){
+            switch(items[evt.detail.index]){
+                case 'View':
+                case 'View/Edit':
+                
+                break;
+
+                case 'share':
+                break;
+                
+                case 'Mark Pending':
+                setActivityStatus(activity,'PENDING')
+                break;
+                case 'Mark Confirmed':
+                setActivityStatus(activity,'CONFIRMED')
+                break;
+
+                case 'Mark Cancelled':
+                setActivityStatus(activity,'CANCELLED')
+                break;
+                default:
+                break;
+            }
+        })
+        console.log(menu)
+    }
+    //  return;
+    //  db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
+    //      const record = event.target.result;
+    //      if (!record) return;
+    //      const heading = `${record.activityName}
+    //      <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(record.timestamp)}</p>
+    //      <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${record.creator.displayName || record.creator.phoneNumber}</span>`
+
+    //      let dialog;
+    //      if (record.canEdit) {
+    //          dialog = new Dialog(heading, activityDomCustomer(record), 'view-form', viewFormActions(record)).create();
+
+    //      } else {
+    //          dialog = new Dialog(heading, activityDomCustomer(record), 'view-form').create('simple');
+
+    //      }
+    //      dialog.listen('MDCDialog:opened', function () {
+    //          if (!record.canEdit) return;
+    //          const statusChange = new mdc.select.MDCSelect(document.getElementById('status-enhanced-select'))
+    //          statusChange.listen('MDCSelect:change', function (evt) {
+    //              if (evt.detail.value === record.status) return;
+    //              dialog.close();
+    //              setActivityStatus(record, evt.detail.value)
+
+    //          })
+    //          const cancelBtn = document.getElementById('mark-cancel');
+    //          if (!cancelBtn) return;
+    //          new mdc.ripple.MDCRipple(document.getElementById('mark-cancel')).root_.addEventListener('click', function (evt) {
+    //              dialog.close();
+    //              setActivityStatus(record, 'CANCELLED')
+    //          })
+    //      })
+
+    //      dialog.open();
+    //      console.log(dialog)
+    //  }
+
 }
 
-function createDynamicChips(){
-    return ;
+
+function createDynamicChips() {
+    return;
 }
 
-function share(activity){
+function share(activity) {
     const alreadySelected = {};
     const dialogConetnt = `
     <h3 class='mdc-typography--headline6'>Already Added</h3>
@@ -445,17 +462,17 @@ function share(activity){
     <ul>
     `
 
-    activity.assignees.forEach(function(ass){
+    activity.assignees.forEach(function (ass) {
         alreadySelected[ass.phoneNumber] = true
     });
 
     const dialog = new Dialog(searchBar()).create()
     dialog.open();
-    dialog.listen('MDCDialog:closed',function(evt){
+    dialog.listen('MDCDialog:closed', function (evt) {
 
     })
-    dialog.listen('MDCDialog:opened',function(evt){
-            
+    dialog.listen('MDCDialog:opened', function (evt) {
+
     })
 }
 
@@ -682,14 +699,18 @@ function dynamicAppendChats(addendums) {
 
 function getUserChats(userRecord) {
     const tx = db.transaction('addendum');
-    const index = tx.objectStore('addendum').index('user')
+    const index = tx.objectStore('addendum').index('key')
     const myNumber = firebase.auth().currentUser.phoneNumber;
+    const range = IDBKeyRange.only(myNumber + userRecord.mobile)
+    index.getAll(range).onsuccess = function (event) {
+        console.log(event.target.result);
+    }
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
     let image = ''
-    index.openCursor(userRecord.mobile).onsuccess = function (event) {
+    index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.user === myNumber) {
@@ -699,6 +720,7 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         }
+        console.log(new Date(cursor.value.timestamp))
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {
@@ -708,7 +730,40 @@ function getUserChats(userRecord) {
     }
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
-        setBottomScroll()
+        setBottomScroll();
+
+        // [...document.querySelectorAll('.mdc-menu-surface--anchor')].forEach(function(el){
+        //         el.addEventListener('mousedown',function(event){
+        //                 console.log('mousedown',event)
+        //                 selectedId = el.dataset.id
+        //                 menu = new mdc.menu.MDCMenu(document.querySelector(`[data-id="${selectedId}"] .mdc-menu`))
+        //                 delay = setTimeout(createActivityActionMenu,longPressTimer);
+        //         },true)
+
+        //         el.addEventListener('mouseup', function (e) {
+        //             selectedId = ''
+        //             console.log('mouseup',menu)
+        //             if(menu){
+        //                 menu.open = true
+        //                 menu.root_.classList.add('mdc-menu-surface--open')
+        //             }
+        //             clearTimeout(delay)
+        //         })
+        //         el.addEventListener('mouseout', function (e) {
+        //             selectedId =''
+        //             console.log('mouseout',menu)
+        //             if(menu){
+                        
+        //                 menu.open = true
+        //                 menu.root_.classList.add('mdc-menu-surface--open')
+        //             }
+        //             clearTimeout(delay)
+        //         })
+
+        // })
+
+
+
         const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
         const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
         const form = document.querySelector('.conversation-compose');

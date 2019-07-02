@@ -212,3 +212,15 @@ function createSimpleToggle(id) {
     </div>
   </div>`
 }
+
+function createSimpleMenu(items){
+    return `
+    <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
+        ${items.map(function(item){
+            return ` <li class="mdc-list-item" role="menuitem">
+                        <span class="mdc-list-item__text">${item}</span>
+                    </li>`
+        }).join("")}
+    </ul>
+  `
+}

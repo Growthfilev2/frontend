@@ -323,6 +323,7 @@ function startApp() {
           subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
           const addendum = tx.objectStore('addendum')
           addendum.createIndex('key', 'key')
+          addendum.createIndex('KeyTimestamp',['timestamp','key'])
         }
 
 
@@ -366,8 +367,8 @@ function startApp() {
         index++;
       }, index + 1 * 1000);
 
-      // profileCheck();
-      // return;
+      enterChat("+919000000000")
+      return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -736,6 +737,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key')
+  addendum.createIndex('KeyTimestamp',['timestamp','key'])
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })

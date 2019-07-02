@@ -62,14 +62,21 @@ function profileView() {
     auth.updateProfile({
       displayName: newName
     }).then(function () {
-      if (!isEmailValid(newEmail, currentEmail)) return setDetails();
+      // if (!isEmailValid(newEmail, currentEmail)) return setDetails();
       requestCreator('updateEmail', {
         email: emailInit.value
       }).then(function () {
         snacks('Verification Link has been Sent to ' + emailInit.value)
+
         setDetails();
       }).catch(function(error){
-        snacks(error.response.message)
+        progressBar.close();
+        if(error) {
+          snacks(error.response.message)
+        }
+        else {
+          snacks('Please Try Again Later')
+        }
       })
     })
   })

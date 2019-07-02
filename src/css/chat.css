@@ -85,7 +85,7 @@
 .wrapper .inner .content {
   padding: 10.66667px;
   position: relative;
-  margin-bottom: 32px;
+  margin-bottom: 72px;
   top: 50px;
 }
 
@@ -167,6 +167,9 @@
   width: fit-content;
   margin: 10.66667px auto;
   padding: 0px;
+}
+.aciton-info * {
+  pointer-events: none
 }
 
 .message-wrapper.aciton-info .text-wrapper {
@@ -394,5 +397,14 @@ max-height:80%;
 .status-select {
   max-width: 300px;
   min-width: 280px;
+
+}
+
+
+/** menu **/
+.align-right-menu {
+  right: 20px;
+  left: auto !important;
+  top: -60px !important;
 
 }
