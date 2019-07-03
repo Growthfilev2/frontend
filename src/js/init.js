@@ -369,8 +369,8 @@ function startApp() {
 
       // enterChat("+919000000000")
       // return;
-      profileCheck();
-      return;
+      // profileCheck();
+      // return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',

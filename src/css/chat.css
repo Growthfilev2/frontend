@@ -162,7 +162,7 @@
 }
 
 .message-wrapper.aciton-info {
-  background-color: #89273ea6;
+  background-color: #5fcced;
   border-radius: 12px;
   width: fit-content;
   margin: 10.66667px auto;
@@ -174,7 +174,7 @@
 
 .message-wrapper.aciton-info .text-wrapper {
   text-align: center;
-  color: white;
+  color: black;
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -209,7 +209,7 @@
 .message-wrapper.me .circle-wrapper,
 .message-wrapper.me .text-wrapper {
   float: right;
-  background: var(--mdc-theme-primary);
+  background: #bd5668;
   color: var(--mdc-theme-on-primary);
   font-weight: 500;
 
@@ -218,7 +218,7 @@
 
 .message-wrapper.me .text-wrapper:before {
   border-width: 10px 10px 0 0;
-  border-color: var(--mdc-theme-primary) transparent transparent transparent;
+  border-color: #bd5668 transparent transparent transparent;
   position: absolute;
   top: 0;
   right: -9px;

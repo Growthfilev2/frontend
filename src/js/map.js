@@ -543,16 +543,10 @@ GetOffsetBounds.prototype.west = function () {
 
 function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
-    var markerImage = new google.maps.MarkerImage(
-      './img/m.png',
-      new google.maps.Size(30, 30), //size
-      null, //origin
-      null, //anchor
-      new google.maps.Size(30, 30) //scale
-    );
+   
     var infowindow = new google.maps.InfoWindow();
     const result = []
-    const req = indexedDB.open(firebase.auth().currentUser.uid);
+   
     let lastOpen;
     let lastCursor;
     const tx = db.transaction(['map'])
@@ -596,7 +590,6 @@ function loadNearByLocations(o, map, location) {
           latitude: cursor.value.latitude,
           longitude: cursor.value.longitude
         }) < 0.5) {
-          console.log(cursor.value)
         marker.setMap(map);
         const content = `<span>${cursor.value.activityId}</span>`
         google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
@@ -612,16 +605,7 @@ function loadNearByLocations(o, map, location) {
         result.push(cursor.value)
         bounds.extend(marker.getPosition())
       }
-      // else {
-      //   console.log(calculateDistanceBetweenTwoPoints({
-      //     latitude: location.latitude,
-      //     longitude: location.longitude
-      //   }, {
-      //     latitude: cursor.value.latitude,
-      //     longitude: cursor.value.longitude
-      //   }))
-      //   console.log(cursor.value)
-      // }
+      
       lastCursor = {
         lat: cursor.value.latitude,
         lng: cursor.value.longitude,

@@ -230,10 +230,10 @@ function loadAllUsers(onclick) {
         }
         tx.oncomplete = function () {
             return resolve({
-                domString :string,
-                data:result
+                domString: string,
+                data: result
             })
-         
+
         }
 
     });
@@ -318,10 +318,11 @@ function enterChat(number) {
 
 function actionBox(value) {
     return `
-    <div class='mdc-menu-surface--anchor'>
-    <div class="mdc-menu mdc-menu-surface" data-id="${value.activityId}">
+    <div class='action-box-container'>
+    <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> 
     </div>
-    <div class="message-wrapper aciton-info" onclick="createActivityActionMenu('${value.activityId}')">
+   
+    <div class="message-wrapper aciton-info" onclick="createActivityActionMenu('${value.addendumId}','${value.activityId}')">
     <div class="text-wrapper">${value.comment}
     <span class="metadata">
     <i class='material-icons'>info</i>
@@ -345,9 +346,9 @@ function messageBox(comment, position, image, time) {
 }
 
 
-function createActivityActionMenu(id) {
+function createActivityActionMenu(addendumId,activityId) {
     console.log("long press")
-    db.transaction('activity').objectStore('activity').get(id).onsuccess = function (event) {
+    db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const activity = event.target.result;
         if (!activity) return;
         const heading = `${activity.activityName}
@@ -359,9 +360,6 @@ function createActivityActionMenu(id) {
             dialog.open();
             return
         };
-
-
-
 
         if (activity.status === 'CANCELLED') {
             items.push('Mark Confirmed')
@@ -376,12 +374,12 @@ function createActivityActionMenu(id) {
             items.push('Mark Pending')
             items.push('Mark Cancelled')
         }
-        document.querySelector(`[data-id="${id}"]`).innerHTML = createSimpleMenu(items)
-        menu = new mdc.menu.MDCMenu(document.querySelector(`[data-id="${id}"]`))
+        const joinedId = addendumId+activityId
+        document.getElementById(addendumId).innerHTML = createSimpleMenu(items,joinedId)
+        const menu = new mdc.menu.MDCMenu(document.getElementById(joinedId))
         menu.open = true
         menu.root_.classList.add('align-right-menu')
         menu.listen('MDCMenu:selected', function (evt) {
-            console.log(items[evt.detail.index])
             switch (items[evt.detail.index]) {
                 case 'View/Edit':
                     dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form', viewFormActions()).create();
@@ -396,7 +394,6 @@ function createActivityActionMenu(id) {
                 case 'Mark Confirmed':
                     setActivityStatus(activity, 'CONFIRMED')
                     break;
-
                 case 'Mark Cancelled':
                     setActivityStatus(activity, 'CANCELLED')
                     break;
@@ -404,18 +401,17 @@ function createActivityActionMenu(id) {
                     break;
             }
         })
-
     }
 
 }
 
 
-function createDynamicChips(user,id) {
+function createDynamicChips(user, id) {
     const chip = createElement('button', {
         className: 'mdc-chip mdc-chip--selected',
-        id:id
+        id: id
     });
-   
+
     const image = createElement('img', {
         className: 'mdc-chip__icon mdc-chip__icon--leading',
         src: user.photoURL || './img/empty-user.jpg'
@@ -428,8 +424,8 @@ function createDynamicChips(user,id) {
         className: 'material-icons mdc-chip__icon mdc-chip__icon--trailing',
         textContent: 'cancel'
     })
-    trailingIcon.setAttribute('tabindex','0');
-    trailingIcon.setAttribute('role','button');
+    trailingIcon.setAttribute('tabindex', '0');
+    trailingIcon.setAttribute('role', 'button');
     chip.appendChild(image)
     chip.appendChild(text)
     chip.appendChild(trailingIcon)
@@ -438,7 +434,7 @@ function createDynamicChips(user,id) {
 }
 
 function share(activity) {
-    
+
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Add People</span>
     `
@@ -450,6 +446,8 @@ function share(activity) {
     const newSelected = {};
 
     const content = `
+    <div id='search-users-container'>
+    </div>
     <div class='share-user-container'>
     <div class="mdc-chip-set" id='share'>
     </div>
@@ -468,94 +466,84 @@ function share(activity) {
     const ulSelector = document.getElementById('users-list')
     const ul = new mdc.list.MDCList(ulSelector)
 
-    chipInit.listen('MDCChip:removal', function(event) {
+    chipInit.listen('MDCChip:removal', function (event) {
         console.log(chipInit.chips)
         chipSetEl.removeChild(event.detail.root);
         ul.listElements[Number(event.detail.chipId)].classList.remove('selected')
         delete newSelected[Number(event.detail.chipId)]
     });
-  
+
     console.log(chipInit)
     loadAllUsers().then(function (userResult) {
-        if(!userResult.data.length) return;
+        if (!userResult.data.length) return;
 
         document.getElementById('users-list').innerHTML = userResult.domString;
         ul.listen('MDCList:action', function (listActionEvent) {
             const index = listActionEvent.detail.index
             const el = ul.listElements[index];
             const clickedUser = userResult.data[index];
-            if (el.classList.contains('selected')) { 
-              
-                const chip = new mdc.chips.MDCChip(document.getElementById(''+index))
+            if (el.classList.contains('selected')) {
+                const chip = new mdc.chips.MDCChip(document.getElementById('' + index))
                 chip.beginExit();
-               
             } else {
                 newSelected[clickedUser.mobile] = true;
                 el.classList.add('selected')
-                const newChip = createDynamicChips(clickedUser,index);
-
+                const newChip = createDynamicChips(clickedUser, index);
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
-
-                newChip.scrollIntoView({behavior: "smooth", block: "center", inline: "end"})
-                           
+                newChip.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                    inline: "end"
+                })
             }
         });
 
-        // document.getElementById('search-btn').addEventListener('click', function (evt) {
-        //     document.getElementById('app-header').classList.add("hidden")
-        //     document.getElementById('search-users-container').innerHTML = `<div class='search-field'>
-        //     ${searchBar()}
-        // </div>`
-        //     const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
-        //     searchInit.focus()
-        //     const results = [];
-        //     searchInit.root_.addEventListener('input', function (evt) {
-        //         const searchable = getSearchBound(evt);
-        //         let userString = '';
-        //         searchable.bound.onsuccess = function (searchEvent) {
-        //             const cursor = searchEvent.target.result;
-        //             if (!cursor) return;
-        //             if (alreadySelected[cursor.value.mobile]) {
-        //                 cursor.continue();
-        //                 return;
-        //             }
-        //             results.push(cursor.value)
-        //             if (newSelected[cursor.value.mobile]) {
-        //                 userString += userLi(cursor.value) = userLi(cursor.value, false, {
-        //                     class: 'selected'
-        //                 })
-        //             } else {
-        //                 userString += userLi(cursor.value);
-        //             }
+        document.getElementById('search-btn').addEventListener('click', function (evt) {
+            document.getElementById('app-header').classList.add("hidden")
+            document.getElementById('search-users-container').innerHTML = `<div class='search-field'>
+            ${searchBar()}
+        </div>`
 
-        //             cursor.continue();
-        //         }
-        //         searchable.tx.oncomplete = function () {
-        //             const ulSelector = document.getElementById('users-list')
-        //             ulSelector.innerHTML = userString;
-        //             // const ul = new mdc.list.MDCList(ulSelector)
-        //             // ul.listen('MDCList:action', function (listActionEvent) {
-        //             //     const el = ul.listElements[listActionEvent.detail.index]
-        //             //     const selectedUser = results[listActionEvent.detail.index]
-        //             //     if (el.classList.contains('selected')) {
-        //             //         delete newSelected[selectedUser.mobile]
-        //             //         ul.listElements[listActionEvent.detail.index].classList.remove('selected')
-        //             //     } else {
-        //             //         newSelected[selectedUser.mobile] = true;
-        //             //         ul.listElements[listActionEvent.detail.index].classList.add('selected')
-        //             //         document.getElementById('share').appendChild(createDynamicChips(selectedUser))
-        //             //     }
-        //             // })
+            const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
+            searchInit.focus()
+            const results = [];
 
-        //             // const chipInit = new mdc.chips.MDCChipSet(document.getElementById('share'))
-        //             // chipInit.listen('MDCChip:action',function(chipEvent){
-        //             //     delete alreadySelected[selectedUser.mobile]
-        //             //     ul.listElements[listActionEvent.detail.index].classList.remove('selected')
-        //             // })
-        //         }
-        //     })
-        // })
+            searchInit.root_.addEventListener('input', function (evt) {
+                // if (!evt.target.value) return;
+                ul.listElements.forEach(function (el) {
+                    el.classList.remove('found')
+                })
+                const searchable = getSearchBound(evt);
+
+                searchable.bound.onsuccess = function (searchEvent) {
+                    const cursor = searchEvent.target.result;
+                    if (!cursor) return;
+
+                    if (alreadySelected[cursor.value.mobile]) {
+                        cursor.continue();
+                        return;
+                    }
+                    console.log(cursor.value)
+                    const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
+                    if (el) {
+                        el.parentNode.classList.add('found');
+                    }
+
+                    cursor.continue();
+                }
+
+                searchable.tx.oncomplete = function () {
+                    ul.listElements.forEach(function (el) {
+                        if (el.classList.contains('found')) {
+                            el.classList.remove('hidden')
+                        } else {
+                            el.classList.add('hidden')
+                        }
+                    })
+                }
+            })
+        })
     });
 
 
@@ -800,37 +788,6 @@ function getUserChats(userRecord) {
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll();
-
-        // [...document.querySelectorAll('.mdc-menu-surface--anchor')].forEach(function(el){
-        //         el.addEventListener('mousedown',function(event){
-        //                 console.log('mousedown',event)
-        //                 selectedId = el.dataset.id
-        //                 menu = new mdc.menu.MDCMenu(document.querySelector(`[data-id="${selectedId}"] .mdc-menu`))
-        //                 delay = setTimeout(createActivityActionMenu,longPressTimer);
-        //         },true)
-
-        //         el.addEventListener('mouseup', function (e) {
-        //             selectedId = ''
-        //             console.log('mouseup',menu)
-        //             if(menu){
-        //                 menu.open = true
-        //                 menu.root_.classList.add('mdc-menu-surface--open')
-        //             }
-        //             clearTimeout(delay)
-        //         })
-        //         el.addEventListener('mouseout', function (e) {
-        //             selectedId =''
-        //             console.log('mouseout',menu)
-        //             if(menu){
-
-        //                 menu.open = true
-        //                 menu.root_.classList.add('mdc-menu-surface--open')
-        //             }
-        //             clearTimeout(delay)
-        //         })
-
-        // })
-
 
 
         const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
