@@ -458,6 +458,9 @@ function share(activity) {
     </div>
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='users-list'>
     </ul>
+    <button class="mdc-fab mdc-theme--primary-bg app-fab--absolute" aria-label="Favorite" id='send-assignee'>
+        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">arrow_forward</span>
+    </button>
     `
     activity.assignees.forEach(function (ass) {
         alreadySelected[ass.phoneNumber] = true
@@ -469,29 +472,44 @@ function share(activity) {
     const chipInit = new mdc.chips.MDCChipSet(chipSetEl)
     const ulSelector = document.getElementById('users-list')
     const ul = new mdc.list.MDCList(ulSelector)
-
-    chipInit.listen('MDCChip:removal', function (event) {
-     
-
-        console.log(chipInit.chips)
-        chipSetEl.removeChild(event.detail.root);
-        ul.listElements[Number(event.detail.chipId)].classList.remove('selected')
-        ul.listElements[Number(event.detail.chipId)].querySelector('.user-selection-icon').classList.add('hidden')
-        ul.listElements[Number(event.detail.chipId)].querySelector('.user-selection-icon').classList.remove('user-selection-show')
-        delete newSelected[Number(event.detail.chipId)]
-        if(!chipInit.chips.length) {
-            chipSetEl.classList.add('hidden')
-        }
-        else {
-            chipSetEl.classList.remove('hidden')
-        }
-    });
+    const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
+   
 
     console.log(chipInit)
     loadAllUsers().then(function (userResult) {
-        if (!userResult.data.length) return;
 
+        if (!userResult.data.length) return;
+        sendBtn.root_.addEventListener('click',function(){
+           const userArray = Object.keys(newSelected);
+           if(!userArray.length) {
+            snacks('At least 1 contact must be selected')
+            return;
+           }
+            console.log(newSelected);
+            addAssignee(activity,userArray);
+
+        })
         document.getElementById('users-list').innerHTML = userResult.domString;
+
+        chipInit.listen('MDCChip:removal', function (event) {
+     
+            console.log(chipInit.chips)
+            const liElement = ul.listElements[Number(event.detail.chipId)]
+            delete newSelected[userResult.data[Number(event.detail.chipId)].mobile]
+            chipSetEl.removeChild(event.detail.root);
+            liElement.classList.remove('selected')
+            liElement.querySelector('.user-selection-icon').classList.add('hidden')
+            liElement.querySelector('.user-selection-icon').classList.remove('user-selection-show')
+            if(!chipInit.chips.length) {
+                chipSetEl.classList.add('hidden')
+            }
+            else {
+                chipSetEl.classList.remove('hidden')
+            }
+        });
+
+
+
         ul.listen('MDCList:action', function (listActionEvent) {
             const index = listActionEvent.detail.index
             const el = ul.listElements[index];
@@ -526,7 +544,6 @@ function share(activity) {
 
             const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
             searchInit.focus()
-            const results = [];
 
             searchInit.input_.addEventListener('input', function (evt) {
                 if (!evt.target.value) {
@@ -582,7 +599,6 @@ function share(activity) {
         })
     });
 
-
 }
 
 function activityDomCustomer(activityRecord) {
@@ -613,6 +629,21 @@ function activityDomCustomer(activityRecord) {
     
     </div>
 </div>`
+}
+
+function addAssignee(record,userArray){
+    // progressBar.open();
+    // requestCreator('share',{
+    //     activityId:record.activityId,
+    //     share:userArray
+    // }).then(function(){
+    //     progressBar.close();
+    //     snacks(`You Added ${userArray.length} People`)
+    //     history.back();
+    // }).catch(function(error){
+    //     snacks(error.response.message)
+    //     progressBar.close();
+    // })
 }
 
 
