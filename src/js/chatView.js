@@ -519,6 +519,7 @@ function share(activity) {
 
         document.getElementById('search-btn').addEventListener('click', function (evt) {
             document.getElementById('app-header').classList.add("hidden")
+
             document.getElementById('search-users-container').innerHTML = `<div class='search-field'>
             ${searchBar()}
         </div>`
@@ -527,8 +528,13 @@ function share(activity) {
             searchInit.focus()
             const results = [];
 
-            searchInit.root_.addEventListener('input', function (evt) {
-                // if (!evt.target.value) return;
+            searchInit.input_.addEventListener('input', function (evt) {
+                if (!evt.target.value) {
+                    searchInit.trailingIcon_.root_.classList.add('hidden')
+                }
+                else {
+                    searchInit.trailingIcon_.root_.classList.remove('hidden')
+                }
                 ul.listElements.forEach(function (el) {
                     el.classList.remove('found')
                 })
@@ -561,6 +567,18 @@ function share(activity) {
                     })
                 }
             })
+
+            searchInit.leadingIcon_.root_.onclick = function () {
+               document.getElementById('search-users').classList.add('hidden')
+               document.getElementById('app-header').classList.remove("hidden")
+               searchInit.value = "";
+               searchInit.input_.dispatchEvent(new Event('input'))
+            }
+            searchInit.trailingIcon_.root_.onclick = function () {
+                searchInit.value = "";
+                searchInit.input_.dispatchEvent(new Event('input'))
+              
+            }
         })
     });
 
