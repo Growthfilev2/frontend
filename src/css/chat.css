@@ -408,7 +408,32 @@ max-height:80%;
   
 
 }
-
+/** Share **/
+.share-user-container {
+  padding: 16px 16px 0px 16px;
+}
+.share-user-container .mdc-chip-set {
+  padding-left: 0px;
+  overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+    display: inline-table;
+    width: 100%;
+    border-bottom: 1px solid lightgray;
+}
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent
+}
+.share-user-container .mdc-chip-set .mdc-chip {
+  margin-left: 0px
+}
+ #users-list {
+  position: fixed;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+}
 /** share selection **/
 
 .selected {

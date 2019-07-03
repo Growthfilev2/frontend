@@ -350,7 +350,7 @@ function startApp() {
         return;
       }
       const startLoad = document.querySelector('#start-load')
-      startLoad.classList.remove('hidden');
+      // startLoad.classList.remove('hidden');
       console.log("run app")
       document.getElementById("main-layout-app").style.display = 'block'
       // localStorage.setItem('dbexist', auth.uid);
@@ -369,6 +369,8 @@ function startApp() {
 
       // enterChat("+919000000000")
       // return;
+      profileCheck();
+      return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
