@@ -192,8 +192,8 @@ function readLatestChats() {
 
 }
 
-function userLi(value, isClickable, attr) {
-    return `<li class="mdc-list-item ${attr ? attr.class.join("") :''}" ${isClickable ?`onclick="enterChat('${value.mobile}')"`: ''}>
+function userLi(value, isClickable) {
+    return `<li class="mdc-list-item" ${isClickable ?`onclick="enterChat('${value.mobile}')"`: ''}>
    <div style="position:relative">
    <img class="mdc-list-item__graphic" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.mobile}>
    <i class="material-icons user-selection-icon">check_circle</i>
@@ -214,7 +214,7 @@ function userLi(value, isClickable, attr) {
     </li>`
 }
 
-function loadAllUsers(onclick) {
+function loadAllUsers(onclick,hideMetaText) {
     return new Promise(function (resolve, reject) {
         const tx = db.transaction(['users']);
         const store = tx.objectStore('users');
@@ -229,7 +229,15 @@ function loadAllUsers(onclick) {
                 return;
             }
             result.push(cursor.value)
-            string += userLi(cursor.value, onclick);
+            if(hideMetaText) {
+               cursor.value.comment = '';
+                cursor.value.count = ''
+                 cursor.value.timestamp = ''
+                string += userLi(cursor.value, onclick);
+            }
+            else {
+                string += userLi(cursor.value, onclick);
+            }
             cursor.continue()
         }
         tx.oncomplete = function () {
@@ -476,7 +484,7 @@ function share(activity) {
    
 
     console.log(chipInit)
-    loadAllUsers().then(function (userResult) {
+    loadAllUsers(false,true).then(function (userResult) {
 
         if (!userResult.data.length) return;
         sendBtn.root_.addEventListener('click',function(){
