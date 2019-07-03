@@ -420,7 +420,9 @@ max-height:80%;
     display: inline-table;
     width: 100%;
     border-bottom: 1px solid lightgray;
+    transition: visibility 0s, opacity 0.5s linear;
 }
+
 ::-webkit-scrollbar {
   width: 0px;
   background: transparent
@@ -434,8 +436,23 @@ max-height:80%;
     width: 100%;
     overflow-y: auto;
 }
+ .user-selection-icon {
+  position: absolute;
+  bottom: 0;
+  right: 10px;
+  transition:.3s ease;
+  color: green;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.5s linear;
+
+
+}
 /** share selection **/
 
-.selected {
-  background-color: green;
+.user-selection-icon.user-selection-show {
+  opacity: 1;
+  visibility: visible;
 }
+
+

@@ -194,7 +194,11 @@ function readLatestChats() {
 
 function userLi(value, isClickable, attr) {
     return `<li class="mdc-list-item ${attr ? attr.class.join("") :''}" ${isClickable ?`onclick="enterChat('${value.mobile}')"`: ''}>
-    <img class="mdc-list-item__graphic material-icons" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.mobile}>
+   <div style="position:relative">
+   <img class="mdc-list-item__graphic" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.mobile}>
+   <i class="material-icons user-selection-icon">check_circle</i>
+   </div>
+    
     <span class="mdc-list-item__text">
     <span class="mdc-list-item__primary-text">
         ${value.displayName || value.mobile}
@@ -449,7 +453,7 @@ function share(activity) {
     <div id='search-users-container'>
     </div>
     <div class='share-user-container'>
-    <div class="mdc-chip-set" id='share'>
+    <div class="mdc-chip-set hidden" id='share'>
     </div>
     </div>
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='users-list'>
@@ -467,10 +471,20 @@ function share(activity) {
     const ul = new mdc.list.MDCList(ulSelector)
 
     chipInit.listen('MDCChip:removal', function (event) {
+     
+
         console.log(chipInit.chips)
         chipSetEl.removeChild(event.detail.root);
         ul.listElements[Number(event.detail.chipId)].classList.remove('selected')
+        ul.listElements[Number(event.detail.chipId)].querySelector('.user-selection-icon').classList.add('hidden')
+        ul.listElements[Number(event.detail.chipId)].querySelector('.user-selection-icon').classList.remove('user-selection-show')
         delete newSelected[Number(event.detail.chipId)]
+        if(!chipInit.chips.length) {
+            chipSetEl.classList.add('hidden')
+        }
+        else {
+            chipSetEl.classList.remove('hidden')
+        }
     });
 
     console.log(chipInit)
@@ -486,8 +500,11 @@ function share(activity) {
                 const chip = new mdc.chips.MDCChip(document.getElementById('' + index))
                 chip.beginExit();
             } else {
+
                 newSelected[clickedUser.mobile] = true;
                 el.classList.add('selected')
+                el.querySelector('.user-selection-icon').classList.remove('hidden')
+                el.querySelector('.user-selection-icon').classList.add('user-selection-show')
                 const newChip = createDynamicChips(clickedUser, index);
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
@@ -496,6 +513,7 @@ function share(activity) {
                     block: "center",
                     inline: "end"
                 })
+                chipSetEl.classList.remove('hidden')
             }
         });
 
@@ -524,10 +542,10 @@ function share(activity) {
                         cursor.continue();
                         return;
                     }
-                    console.log(cursor.value)
                     const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
                     if (el) {
-                        el.parentNode.classList.add('found');
+                        console.log(cursor.value)
+                        el.parentNode.parentNode.classList.add('found');
                     }
 
                     cursor.continue();
