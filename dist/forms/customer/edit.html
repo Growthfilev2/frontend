@@ -15,17 +15,6 @@
 
         <div class="form-list">
 
-
-            <div class="form-component">
-                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='customer-contact'>
-                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
-                        role="button">contacts</i>
-                    <input class="mdc-text-field__input" type="tel">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Customer Contact</label>
-                </div>
-            </div>
             <div class="form-component">
 
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
@@ -40,6 +29,28 @@
                     <div class="mdc-text-field-helper-text"></div>
                 </div>
             </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='customer-contact'>
+                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                        role="button">contacts</i>
+                    <input class="mdc-text-field__input" type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Customer Contact</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--with-leading-icon hidden" data-mdc-auto-init="MDCTextField"
+                    id='customer-second-contact'>
+                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                        role="button">contacts</i>
+                    <input class="mdc-text-field__input" type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Secondary Contact</label>
+                </div>
+            </div>
+         
             <div class="form-component">
 
                 <div class="mdc-select">
@@ -83,7 +94,7 @@
         parent.window.mdc.autoInit();
         let customerContact = '';
         let cusomerSecondContact = ''
-        let email = ''
+        const customerAuths = []
         function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
              customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
@@ -129,7 +140,9 @@
                 const vd = subscriptionTemplate.venue[0];
                 copy.attachment.Name.value = customerName.value;
                 copy.attachment['Customer Type'].value = select.value;
-                copy.attachment['Customer E-mail Id'].value = email;
+              
+                copy.attachment['First Contact'].value = customerContact.value;
+                copy.attachment['Second Contact'].value = cusomerSecondContact.value;
                 copy.status = 'PENDING'
                 copy.venue = [{
                     venueDescriptor: vd,
@@ -141,14 +154,21 @@
                     }
                 }]
                 copy.share = []
-           
+                copy.customerAuths = customerAuths
                 parent.sendFormToParent(copy)
             })
         }
 
-        function setContact(contactObject) {
-            customerContact.value = contactObject.phoneNumber;
-            email = contactObject.email
+        function setContact(contactObject,type) {
+            if(type === 'First Contact') {
+                customerContact.value = contactObject.phoneNumber;
+                customerAuths.push(contactObject)
+                cusomerSecondContact.root_.classList.remove('hidden')
+            }
+            if(type === 'Second Contact') {
+                cusomerSecondContact.value = contactObject.phoneNumber;
+                customerAuths.push(contactObject)
+            }
         }
     </script>
 </body>

@@ -21,6 +21,7 @@ function addView(sub) {
 
 function sendFormToParent(formData) {
     progressBar.open();
+   
     requestCreator('create', formData).then(function () {
             progressBar.close();
             successDialog()
@@ -35,7 +36,15 @@ function sendFormToParent(formData) {
                     latitude:formData.venue[0].geopoint.latitude,
                     longitude:formData.venue[0].geopoint.longitude
                 }
+                const customerAuths = formData.customerAuths;
+                delete formData.customerAuths;
                 getSuggestions();
+                customerAuths.forEach(function(auth){
+                    delete auth.displayName
+                    requestCreator('updateAuth', auth).then(function (response) {
+                        console.log(response)
+                    }).catch(console.log)
+                })
                 return;
             }
             getSuggestions();
@@ -74,7 +83,7 @@ function setContactForSecondCustomer(contactString){
     const contactDetails = parseContact(contactString);
     document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'Second Contact');
 }
-function setContactForSecondCustomer(exceptionMessage){
+function setContactForSecondCustomerFailed(exceptionMessage){
     handleError({
         message:exceptionMessage,
         body:''

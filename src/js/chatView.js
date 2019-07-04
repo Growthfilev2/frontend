@@ -114,20 +114,23 @@ function search() {
            </ul>`:''}
           </div>`
             parent.innerHTML = listGroup;
-            const currenChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(1)'))
-            currenChatsUl.listen('MDCList:action',function(evt){
-                const userRecord = currentChatsArray[evt.detail.index];
-                history.pushState(['enterChat',userRecord],null,null)
-                enterChat(userRecord)
-            })
+            if(currentChatsArray.length) {
 
+                const currenChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(1)'))
+                currenChatsUl.listen('MDCList:action',function(evt){
+                    const userRecord = currentChatsArray[evt.detail.index];
+                    history.pushState(['enterChat',userRecord],null,null)
+                    enterChat(userRecord)
+                })
+            }
+            if(newContactsArray.length) {
             const newChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(2)'))
             newChatsUl.listen('MDCList:action',function(evt){
                 const userRecord = newContactsArray[evt.detail.index];
                 history.pushState(['enterChat',userRecord],null,null)
                 enterChat(userRecord)
             })
-
+        }
         
         }
 
