@@ -144,20 +144,15 @@ function homePanel() {
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
                                 
       </div>
-      
-      <div class='mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-6-desktop'>
-          <button class="mdc-fab mdc-theme--primary-bg mdc-fab--mini" id='attendence'>
-              <span class="material-icons mdc-fab__icon">fingerprint</span>
-          </button>
-          <p>Attendance</p>
-      </div>
 
-      <div class='mdc-layout-grid__cell--span-4-tablet mdc-layout-grid__cell--span-2-phone mdc-layout-grid__cell--span-6-desktop'>
-          <button class="mdc-fab mdc-fab--mini" id='claims'>
-              <span class="material-icons mdc-fab__icon">assignment</span>
-          </button>
-          <p>Reimbursements</p>
-      </div>
+      <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
+      <span class="material-icons mdc-fab__icon">add</span>
+      <span class="mdc-fab__label">Create</span>
+     </button>
+
+
+    
+
   </div>
 </div>`
 }
@@ -222,7 +217,10 @@ function homeView(suggestedTemplates) {
     profileView()
   })
 
-
+  document.getElementById('reports').addEventListener('click',function(){
+    history.pushState(['reportView'],null,null)
+    reportView();
+  })
   
 
   // document.getElementById('attendence').addEventListener('click',function(){

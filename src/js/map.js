@@ -124,7 +124,7 @@ function loadCardData(markers) {
     <div id='subs-cont' class='pt-10'></div>
     <div id='submit-cont' class='pt-10'></div>
     </div>`
-  
+
   selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
   selectVenue.listen('MDCSelect:change', (evt) => {
     document.getElementById('office-cont').innerHTML = ''
@@ -145,7 +145,7 @@ function loadCardData(markers) {
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
-          getSubscription(evt.detail.value, 'check-in','CONFIRMED').then(function (checkInSub) {
+          getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
             if (!checkInSub) return getSuggestions()
 
             cardProd.open()
@@ -172,7 +172,7 @@ function loadCardData(markers) {
     ApplicationState.knownLocation = true;
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
-    getSubscription(value.office, 'check-in','CONFIRMED').then(function (result) {
+    getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
       if (!result) return getSuggestions();
 
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
@@ -186,9 +186,9 @@ function loadCardData(markers) {
         cardProd.open();
 
         // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
-          snacks('Check-in created');
-          cardProd.close();
-          getSuggestions();
+        snacks('Check-in created');
+        cardProd.close();
+        getSuggestions();
         // }).catch(function (error) {
         //   console.log(error)
         //   confirm.root_.classList.remove('hidden');
@@ -380,7 +380,7 @@ function setFilePath(base64) {
     getUniqueOfficeCount().then(function (offices) {
       if (!offices.length) return;
       if (offices.length == 1) {
-        getSubscription(offices[0], 'check-in','CONFIRMED').then(function (sub) {
+        getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
           sub.attachment.Photo.value = url
           sub.attachment.Comment.value = textValue;
           progressBar.open();
@@ -428,7 +428,7 @@ function setFilePath(base64) {
         dialog.listen('MDCDialog:closed', function (evt) {
           if (evt.detail.action !== 'accept') return;
 
-          getSubscription(offices[list.selectedIndex], 'check-in','CONFIRMED').then(function (sub) {
+          getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
             sub.attachment.Photo.value = url
             sub.attachment.Comment.value = textValue;
             progressBar.open();
@@ -543,12 +543,11 @@ GetOffsetBounds.prototype.west = function () {
 
 function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
-   
+
     var infowindow = new google.maps.InfoWindow();
     const result = []
-   
     let lastOpen;
-    let lastCursor;
+
     const tx = db.transaction(['map'])
     const store = tx.objectStore('map');
     const index = store.index('bounds');
@@ -557,18 +556,15 @@ function loadNearByLocations(o, map, location) {
     index.openCursor(idbRange).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-
-      if (!cursor.value.location || !cursor.value.latitude || !cursor.value.longitude) {
+      if (calculateDistanceBetweenTwoPoints(location, {
+          latitude: cursor.value.latitude,
+          longitude: cursor.value.longitude
+        }) > 0.5) {
         cursor.continue();
         return;
-      };
-      if (lastCursor) {
-        if (lastCursor.lat === cursor.value.latitude && lastCursor.lng === cursor.value.longitude && lastCursor.location === cursor.value.location) {
-          cursor.continue();
-          return;
-        }
       }
 
+      
       var marker = new google.maps.Marker({
         position: {
           lat: cursor.value.latitude,
@@ -586,31 +582,21 @@ function loadNearByLocations(o, map, location) {
         value: JSON.stringify(cursor.value)
       });
 
-      if (calculateDistanceBetweenTwoPoints(location, {
-          latitude: cursor.value.latitude,
-          longitude: cursor.value.longitude
-        }) < 0.5) {
-        marker.setMap(map);
-        const content = `<span>${cursor.value.activityId}</span>`
-        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-          return function () {
-            if (lastOpen) {
-              lastOpen.close();
-            };
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
-            lastOpen = infowindow;
+
+      marker.setMap(map);
+      const content = `<span>${cursor.value.activityId}</span>`
+      google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+        return function () {
+          if (lastOpen) {
+            lastOpen.close();
           };
-        })(marker, content, infowindow));
-        result.push(cursor.value)
-        bounds.extend(marker.getPosition())
-      }
-      
-      lastCursor = {
-        lat: cursor.value.latitude,
-        lng: cursor.value.longitude,
-        location: cursor.value.location
-      };
+          infowindow.setContent(content);
+          infowindow.open(map, marker);
+          lastOpen = infowindow;
+        };
+      })(marker, content, infowindow));
+      result.push(cursor.value)
+      bounds.extend(marker.getPosition())
       cursor.continue();
     }
     tx.oncomplete = function () {
