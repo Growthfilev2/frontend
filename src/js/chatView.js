@@ -17,7 +17,7 @@ function chatView() {
     const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
     contactsBtn.root_.addEventListener('click', function (evt) {
         contactsBtn.root_.remove();
-        loadAllUsers(true).then(function (result) {
+        loadAllUsers().then(function (result) {
             header.navIcon_.classList.remove('hidden')
             document.getElementById('search-btn').classList.remove('hidden')
 
@@ -238,7 +238,7 @@ function userLi(value) {
     </li>`
 }
 
-function loadAllUsers(onclick,hideMetaText) {
+function loadAllUsers(hideMetaText,exception) {
     return new Promise(function (resolve, reject) {
         const tx = db.transaction(['users']);
         const store = tx.objectStore('users');
@@ -252,15 +252,21 @@ function loadAllUsers(onclick,hideMetaText) {
                 cursor.continue();
                 return;
             }
+            if(exception) {
+                if(exception[cursor.value.mobile]) {
+                    cursor.continue();
+                    return;
+                }
+            }
             result.push(cursor.value)
             if(hideMetaText) {
-               cursor.value.comment = '';
+                cursor.value.comment = '';
                 cursor.value.count = ''
-                 cursor.value.timestamp = ''
-                string += userLi(cursor.value, onclick);
+                cursor.value.timestamp = ''
+                string += userLi(cursor.value);
             }
             else {
-                string += userLi(cursor.value, onclick);
+                string += userLi(cursor.value);
             }
             cursor.continue()
         }
@@ -498,7 +504,7 @@ function share(activity) {
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
     history.pushState(['share',activity],null,null)
     console.log(chipInit)
-    loadAllUsers(false,true).then(function (userResult) {
+    loadAllUsers(true,alreadySelected).then(function (userResult) {
 
         if (!userResult.data.length) return;
         sendBtn.root_.addEventListener('click',function(){
