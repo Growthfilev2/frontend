@@ -891,9 +891,7 @@ function getUserChats(userRecord) {
     const index = tx.objectStore('addendum').index('key')
     const myNumber = firebase.auth().currentUser.phoneNumber;
     const range = IDBKeyRange.only(myNumber + userRecord.mobile)
-    index.getAll(range).onsuccess = function (event) {
-        console.log(event.target.result);
-    }
+
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
@@ -909,7 +907,6 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         }
-        console.log(new Date(cursor.value.timestamp))
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {

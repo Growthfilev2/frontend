@@ -46,6 +46,7 @@ function profileView() {
   const currentEmail = auth.email;
 
   editInit.listen('MDCIconButtonToggle:change', function (evt) {
+    let imageSrc = firebase.auth().currentUser.photoURL;
     if (evt.detail.isOn) {
       document.getElementById('base-details').innerHTML = ''
       document.querySelector('.mdc-card .mdc-card__actions').classList.add('hidden')
@@ -53,21 +54,43 @@ function profileView() {
       document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
       nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
       emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
+      
+      el.addEventListener('change',function(evt){
+        const file = evt.target.result.files[0];
+        const reader = new FileReader();
+        reader.onload = function(fileEvent){
+          const url = fileEvent.target.result;
+          imageSrc = url
+          document.querySelector('.mdc-card-media').src = url
+        }
+        reader.readAsDataURL(file)
+      })
+
+      AndroidInterface.openImagePicker();
       return;
     }
     document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')
     newName = nameInit.value;
     newEmail = emailInit.value;
     progressBar.foundation_.open();
+
+    if(imageSrc !== firebase.auth().currentUser.photoURL) {
+      requestCreator('backblaze',{
+        imageBase64:imageSrc
+      }).then(function(){
+        snacks('Profile Picture set successfully')
+      }).catch(function(error){
+        snacks(error.response.message)
+      });
+    }
     auth.updateProfile({
       displayName: newName
     }).then(function () {
-      // if (!isEmailValid(newEmail, currentEmail)) return setDetails();
+      if (!isEmailValid(newEmail, currentEmail)) return setDetails();
       requestCreator('updateEmail', {
         email: emailInit.value
       }).then(function () {
-        snacks('Verification Link has been Sent to ' + emailInit.value)
-
+        snacks('Verification Link has been Sent to ' + emailInit.value);
         setDetails();
       }).catch(function(error){
         progressBar.close();
@@ -84,6 +107,11 @@ function profileView() {
   console.log(editInit)
 
 }
+
+
+
+
+
 
 
 function setDetails() {

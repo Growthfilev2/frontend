@@ -153,8 +153,8 @@ function homePanel() {
 }
 
 function topNavCard() {
+
   return `
-   
     <div class="profile-container mdc-card">
     <div class="mdc-card__primary-action">
       <div class="simple">
@@ -163,10 +163,10 @@ function topNavCard() {
         <h3 class="mdc-typography--headline6">My Growthfile</h3>
       </div>
       <div class="actions">
-        <div class="action">
-  
-          <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i>Camera</span>
-        </div>
+      ${ApplicationState.hasCheckIn ?` <div class="action">
+      <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i>Camera</span>
+    </div>` :''}
+       
         <div class="action">
           <span class="mdc-typography--body1" id='chat'><i class="material-icons">comment</i>Chats</span>
         </div>
@@ -196,6 +196,7 @@ function homeView(suggestedTemplates) {
   history.pushState(['homeView'], null, null)
   const panel = document.getElementById('app-current-panel')
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
+ 
   panel.innerHTML = homePanel();
   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('suggestion-progress'))
 

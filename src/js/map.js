@@ -6,7 +6,8 @@ ApplicationState = {
   office: '',
   location: '',
   knownLocation: false,
-  venue: ''
+  venue: '',
+
 }
 
 
@@ -145,7 +146,11 @@ function loadCardData(markers) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
           getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
-            if (!Object.keys(checkInSub).length) return getSuggestions()
+            if (!result) {
+              ApplicationState.hasCheckIn = false
+              return getSuggestions()
+            }
+            ApplicationState.hasCheckIn = true
 
             cardProd.open()
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
@@ -172,7 +177,12 @@ function loadCardData(markers) {
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
     getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
-      if (!result) return getSuggestions();
+      if (!result) {
+        ApplicationState.hasCheckIn = false
+        return getSuggestions();
+      }
+
+      ApplicationState.hasCheckIn = true
 
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -264,35 +274,7 @@ function toggleCardHeight(toggle, cardSelector) {
   }
 }
 
-function addSnapControl(map, office) {
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
 
-  var snapControlDiv = document.createElement('div');
-  var snapControl = new TakeSnap(snapControlDiv, office);
-  snapControlDiv.index = 2;
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
-
-
-  var addControlDiv = document.createElement('div');
-  var addControl = new Add(addControlDiv);
-  addControlDiv.index = 1;
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(addControlDiv);
-
-}
-
-function Add(el) {
-  const add = new Fab('add').getButton();
-  add.root_.id = 'add';
-  add.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mb-10')
-  el.appendChild(add.root_);
-  add.root_.addEventListener('click', function () {
-    console.log('clicked')
-    // localStorage.setItem('snap_office', office)
-    // AndroidInterface.startCamera();
-    // setFilePath();
-  });
-
-}
 
 
 function mapDom() {
@@ -332,13 +314,14 @@ function mapDom() {
 
 function snapView() {
   // localStorage.setItem('snap_office', office)
+  history.pushState(['snapView'], null, null)
   AndroidInterface.startCamera();
 }
 
 
 function setFilePath(base64) {
 
-  // document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
+
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
   header.root_.classList.remove('hidden')
@@ -376,74 +359,17 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    getUniqueOfficeCount().then(function (offices) {
-      if (!offices.length) return;
-      if (offices.length == 1) {
-        getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
-          sub.attachment.Photo.value = url
-          sub.attachment.Comment.value = textValue;
-          progressBar.open();
-          requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            manageLocation().then(function (location) {
-              homeView(selectedSubs, location)
-            })
-            snacks('Check-In Created')
-          }).catch(function () {
-            snacks(error.message)
-
-          })
-        })
-        return
-      }
-      if (offices.length > 1) {
-        const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
-              ${offices.map(function(office,idx){
-                return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
-                <span class="mdc-list-item__graphic">
-                  <div class="mdc-radio">
-                    <input class="mdc-radio__native-control"
-                          type="radio"
-                          id='demo-list-radio-item-${idx}'
-                          name="demo-list-radio-item-group"
-                          value="1">
-                    <div class="mdc-radio__background">
-                      <div class="mdc-radio__outer-circle"></div>
-                      <div class="mdc-radio__inner-circle"></div>
-                    </div>
-                  </div>
-                </span>
-                <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
-              </li>`
-              }).join("")}
-            
-            <ul>`
-        const dialog = new Dialog('Send To', template).create();
-        const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
-        dialog.open();
-        dialog.listen('MDCDialog:opened', () => {
-          list.layout();
-          list.singleSelection = true
-        });
-        dialog.listen('MDCDialog:closed', function (evt) {
-          if (evt.detail.action !== 'accept') return;
-
-          getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
-            sub.attachment.Photo.value = url
-            sub.attachment.Comment.value = textValue;
-            progressBar.open();
-            requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              manageLocation().then(function (location) {
-                homeView(selectedSubs, location)
-              });
-              snacks('Check-In Created')
-            }).catch(function () {
-              snacks(error.message)
-            })
-          })
-        })
-      }
+    getSubscription(ApplicationState.office, 'check-in', 'CONFIRMED').then(function (sub) {
+      sub.attachment.Photo.value = url
+      sub.attachment.Comment.value = textValue;
+      progressBar.open();
+      requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+        snacks('Check-In Created')
+        getSuggestions()
+      }).catch(function (error) {
+        snacks(error.message)
+      })
     })
-
   })
 
 
@@ -464,6 +390,10 @@ function setFilePath(base64) {
     }
   }
   image.src = url;
+
+}
+
+function createPhotoCheckIn() {
 
 }
 
@@ -563,7 +493,7 @@ function loadNearByLocations(o, map, location) {
         return;
       }
 
-      
+
       var marker = new google.maps.Marker({
         position: {
           lat: cursor.value.latitude,

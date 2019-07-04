@@ -655,7 +655,7 @@ function getSubscription(office, template,status) {
     const officeTemplateCombo = subscription.index('validSubscription')
     const range = IDBKeyRange.only([office, template,status])
     officeTemplateCombo.get(range).onsuccess = function (event) {
-      if (!event.target.result) return resolve({});
+      if (!event.target.result) return resolve(null);
        return resolve(event.target.result)
     }
     tx.onerror = function(){

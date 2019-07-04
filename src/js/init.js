@@ -100,7 +100,7 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
-  if (event.state[0] === 'mapView') return;
+  if (event.state[0] === 'mapView' || event.state[0] === 'snapView') return;
   if (event.state[0] === 'homeView') {
     getSuggestions();
     return
@@ -494,6 +494,7 @@ function checkForPhoto() {
           requestCreator('backblaze', {
             'imageBase64': srcData
           }).then(function () {
+            auth.reload();
             progCard.close();
             checkForRecipient()
             auth.reload();
