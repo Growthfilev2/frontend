@@ -29,10 +29,6 @@
   color: white;
 }
 
-.open-contacts-btn {
-  /* bottom:5rem !important; */
-
-}
 
 .search-field {
   position: fixed;
@@ -42,9 +38,11 @@
   z-index: 99;
 }
 
+
 #search-users {
   width: 100%;
   background-color: white;
+  transition: visibility 0s, opacity 0.5s linear;
 }
 
 .wrapper {
@@ -54,8 +52,6 @@
   position: fixed;
   box-shadow: 0px 3px 3px 0px rgba(50, 50, 50, 0.5);
   transition: 0.3s ease;
-
-
   width: 100%;
   height: 100%;
   height: 100vh;
@@ -85,7 +81,7 @@
 .wrapper .inner .content {
   padding: 10.66667px;
   position: relative;
-  margin-bottom: 32px;
+  margin-bottom: 72px;
   top: 50px;
 }
 
@@ -162,16 +158,19 @@
 }
 
 .message-wrapper.aciton-info {
-  background-color: #89273ea6;
+  background-color: #5fcced;
   border-radius: 12px;
   width: fit-content;
   margin: 10.66667px auto;
   padding: 0px;
 }
+.aciton-info * {
+  pointer-events: none
+}
 
 .message-wrapper.aciton-info .text-wrapper {
   text-align: center;
-  color: white;
+  color: black;
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -206,7 +205,7 @@
 .message-wrapper.me .circle-wrapper,
 .message-wrapper.me .text-wrapper {
   float: right;
-  background: var(--mdc-theme-primary);
+  background: #bd5668;
   color: var(--mdc-theme-on-primary);
   font-weight: 500;
 
@@ -215,7 +214,7 @@
 
 .message-wrapper.me .text-wrapper:before {
   border-width: 10px 10px 0 0;
-  border-color: var(--mdc-theme-primary) transparent transparent transparent;
+  border-color: #bd5668 transparent transparent transparent;
   position: absolute;
   top: 0;
   right: -9px;
@@ -240,7 +239,7 @@
 
 .metadata {
   display: inline-block;
-  float: right;
+
   padding: 0 0 0 7px;
   position: relative;
   bottom: -4px;
@@ -396,3 +395,61 @@ max-height:80%;
   min-width: 280px;
 
 }
+
+
+/** menu **/
+.align-right-menu {
+  right: 20px;
+  left: auto !important;
+  
+
+}
+/** Share **/
+.share-user-container {
+  padding: 16px 16px 0px 16px;
+}
+.share-user-container .mdc-chip-set {
+  padding-left: 0px;
+  overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+    display: inline-table;
+    width: 100%;
+    border-bottom: 1px solid lightgray;
+    transition: visibility 0s, opacity 0.5s linear;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent
+}
+.share-user-container .mdc-chip-set .mdc-chip {
+  margin-left: 0px;
+  border: none;
+}
+ #users-list {
+  position: fixed;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+}
+ .user-selection-icon {
+  position: absolute;
+  bottom: 0;
+  right: 10px;
+  transition:.3s ease;
+  color: green;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s, opacity 0.5s linear;
+
+
+}
+/** share selection **/
+
+.user-selection-icon.user-selection-show {
+  opacity: 1;
+  visibility: visible;
+}
+
+

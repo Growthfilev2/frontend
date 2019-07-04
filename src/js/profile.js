@@ -62,19 +62,22 @@ function profileView() {
     auth.updateProfile({
       displayName: newName
     }).then(function () {
-      if (!isEmailValid(newEmail, currentEmail)) return setDetails();
-      return emailFlow(auth, newEmail)
-    }).then(setDetails).catch(function (error) {
-      if (error.code === 'auth/too-many-requests') {
-        setDetails()
-        snacks('Please Try Again Later. Too Many Attempts')
-        return;
-      }
-      if (error.code === 'auth/requires-recent-login') {
-        newSignIn(newEmail)
-        return
-      }
-      snacks(error.message)
+      // if (!isEmailValid(newEmail, currentEmail)) return setDetails();
+      requestCreator('updateEmail', {
+        email: emailInit.value
+      }).then(function () {
+        snacks('Verification Link has been Sent to ' + emailInit.value)
+
+        setDetails();
+      }).catch(function(error){
+        progressBar.close();
+        if(error) {
+          snacks(error.response.message)
+        }
+        else {
+          snacks('Please Try Again Later')
+        }
+      })
     })
   })
 
@@ -343,74 +346,5 @@ function isEmailValid(newEmail, currentEmail) {
     return false;
   }
   return !(newEmail === currentEmail)
-
-}
-
-function updateEmail(user, email) {
-  user.updateEmail(email).then(function () {
-    emailUpdateSuccess(user)
-  }).catch(console.log);
-}
-
-function emailUpdateSuccess(user, ) {
-  user.sendEmailVerification().then(function () {
-    emailVerificationSuccess()
-  }).catch(emailVerificationError);
-
-}
-
-function emailVerificationSuccess() {
-  document.getElementById('dialog-container').innerHTML = ''
-  snacks('Verification link has been send to your email address');
-
-  setDetails();
-}
-
-function emailVerificationError(error) {
-  snacks(error.message);
-  try {
-    progressBar.foundation_.close();
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-function newSignIn(value, redirect) {
-  const dialog = new Dialog('', createElement('div', {
-    id: 'refresh-login'
-  })).create();
-  dialog.open();
-  dialog.root_.querySelector('.mdc-dialog__content').style.padding = '0px';
-  console.log(dialog)
-
-  dialog.listen('MDCDialog:opened', function (evt) {
-    dialog.buttons_.forEach(function (el) {
-      el.classList.add('hidden')
-    })
-    try {
-      if (!ui) {
-        ui = new firebaseui.auth.AuthUI(firebase.auth())
-      }
-      ui.start('#refresh-login', firebaseUiConfig(value, redirect));
-      setTimeout(function () {
-        document.querySelector('.firebaseui-id-phone-number').disabled = true;
-        document.querySelector('.firebaseui-label').remove();
-        document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number';
-      }, 500)
-
-    } catch (e) {
-      // dialogSelector.remove();
-      console.log(e);
-      handleError({
-        message: `${e.message} from newSignIn function during email updation`
-      });
-      if (redirect) {
-        mapView();
-        return
-      }
-      snacks('Please try again later');
-    }
-  })
-
 
 }

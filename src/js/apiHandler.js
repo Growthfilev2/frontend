@@ -18,7 +18,7 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   backblaze: backblaze,
-  updateEmail: updateEmail
+  updateAuth: updateAuth
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -107,9 +107,8 @@ function http(request) {
 
       if (xhr.readyState === 4) {
 
-        if (!xhr.status) return;
 
-        if (xhr.status > 226) {
+        if (!xhr.status || xhr.status > 226) {
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
             res: JSON.parse(xhr.response),
@@ -373,10 +372,10 @@ function removeByIndex(index, range) {
   }
 }
 
-function updateEmail(body, meta) {
+function updateAuth(body, meta) {
   const req = {
     method: 'POST',
-    url: `https://growthfile.com/json?action=verifyEmail`,
+    url: `${meta.apiUrl}update-auth`,
     body: JSON.stringify(body),
     token: meta.user.token
   }
@@ -677,7 +676,7 @@ function successResponse(read, param, db, resolve, reject) {
   const userStore = updateTx.objectStore('users')
   let counter = {};
   let userTimestamp = {}
-
+  let activityAssigneeAddendum = {}
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
@@ -692,20 +691,26 @@ function successResponse(read, param, db, resolve, reject) {
 
 
 
-    // if (addendum.isComment) {
-    let key = addendum.activityId
-    // userTimestamp[key] = (userTimestamp[key] || 0) + 1;
-    userTimestamp[addendum.user] = {
-      ts: addendum.timestamp,
-      comment: addendum.comment
+    if (addendum.isComment) {
+      if (addendum.assignee === param.user.phoneNumber) {
+        addendum.key = param.user.phoneNumber + addendum.user
+        userTimestamp[addendum.user] = addendum;
+
+      } else {
+        addendum.key = param.user.phoneNumber + addendum.assignee
+        userTimestamp[addendum.assignee] = addendum;
+      }
+    } else {
+
+      userTimestamp[addendum.user] = addendum;
+      // activityAssigneeAddendum[addendum.activityId] = addendum
     }
-    // }
     addendumObjectStore.add(addendum)
   })
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
   removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-  
+
   if (read.locations) {
     read.locations.forEach(function (location) {
       updateMap(location, updateTx)
@@ -713,10 +718,12 @@ function successResponse(read, param, db, resolve, reject) {
 
   }
 
+
+
+
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activityObjectStore.put(activity);
-
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
@@ -724,18 +731,100 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx)
     };
     activity.assignees.forEach(function (user) {
-      const ob = {
-        displayName: user.displayName,
-        mobile: user.phoneNumber,
-        photoURL: user.photoURL
-      }
-      if (userTimestamp[user.phoneNumber]) {
-        ob.timestamp = userTimestamp[user.phoneNumber].ts
-        ob.comment = userTimestamp[user.phoneNumber].comment
-      }
-      userStore.put(ob)
+      user.mobile = user.phoneNumber;
+      delete user.phoneNumber;
+      userStore.put(user);
+
+      // userStore.get(user.phoneNumber).onsuccess = function (event) {
+
+      //   let record = event.target.result;
+      //   if (!record) {
+      //     record = {};
+      //   }
+      //   record.displayName = user.displayName;
+      //   record.mobile = user.phoneNumber;
+      //   record.photoURL = user.photoURL;
+
+      //   const addendumIdObject = activityAssigneeAddendum[activity.activityId]
+
+      //   if (addendumIdObject) {
+      //     record.comment = addendumIdObject.comment
+      //     record.timestamp = addendumIdObject.timestamp
+
+      //     addendumIdObject.key = param.user.phoneNumber + addendumIdObject.user
+      //     // if (addendumIdObject.user !== param.user.phoneNumber) {
+      //     // } else {
+      //     //   addendumIdObject.key = param.user.phoneNumber + addendumIdObject.user
+      //     // }
+      //     addendumIdObject.user = user.phoneNumber
+      //     addendumObjectStore.put(addendumIdObject)
+      //   }
+
+      //   userStore.put(record)
+      // }
     })
   })
+
+  Object.keys(userTimestamp).forEach(function (number) {
+    const currentAddendum = userTimestamp[number]
+    const activityId = currentAddendum.activityId
+
+    if (activityId) {
+      // if is system generated
+      activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
+        const record = activityEvent.target.result;
+        if (!record) return;
+        record.assignees.forEach(function (user) {
+          currentAddendum.user = user.phoneNumber
+          currentAddendum.key = param.user.phoneNumber + user.phoneNumber
+          user.comment = currentAddendum.comment;
+          user.timestamp = currentAddendum.timestamp
+          addendumObjectStore.put(currentAddendum);
+          userStore.get(user.phoneNumber).onsuccess = function (event) {
+            const userRecord = event.target.result;
+            if (userRecord) {
+              userRecord.comment = currentAddendum.comment
+              userRecord.timestamp = currentAddendum.timestamp
+              userStore.put(userRecord)
+            }
+          }
+        })
+      }
+      return;
+    }
+
+    userStore.get(number).onsuccess = function (event) {
+      const userRecord = event.target.result;
+      if (userRecord) {
+        userRecord.comment = currentAddendum.comment
+        userRecord.timestamp = currentAddendum.timestamp
+        userStore.put(userRecord)
+      }
+    }
+
+
+
+  })
+
+
+  // Object.keys(userTimestamp).forEach(function(number){
+  //   userStore.get(number).onsuccess = function (event) {
+  //     let record = event.target.result;
+  //     if(!record) {
+  //       record = {
+  //         mobile:number,
+  //         displayName:'',
+  //         photoURL:''
+  //       }
+  //     }
+  //     record.comment = userTimestamp[number].comment
+  //     record.timestamp = userTimestamp[number].ts;
+  //     record.user = userTimestamp[number].user,
+  //     record.assignee = userTimestamp[number].assignee
+  //     userStore.put(record)
+  //   }
+  // })
+
 
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx)

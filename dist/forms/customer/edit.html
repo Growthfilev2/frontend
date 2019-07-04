@@ -7,7 +7,7 @@
     <link href="../../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/styles.css" rel="stylesheet" type="text/css">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -15,17 +15,6 @@
 
         <div class="form-list">
 
-
-            <div class="form-component">
-                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='customer-contact'>
-                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
-                        role="button">contacts</i>
-                    <input class="mdc-text-field__input" type="tel">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Customer Contact</label>
-                </div>
-            </div>
             <div class="form-component">
 
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
@@ -40,6 +29,28 @@
                     <div class="mdc-text-field-helper-text"></div>
                 </div>
             </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='customer-contact'>
+                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                        role="button">contacts</i>
+                    <input class="mdc-text-field__input" type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Customer Contact</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field mdc-text-field--with-leading-icon hidden" data-mdc-auto-init="MDCTextField"
+                    id='customer-second-contact'>
+                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                        role="button">contacts</i>
+                    <input class="mdc-text-field__input" type="tel">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Secondary Contact</label>
+                </div>
+            </div>
+         
             <div class="form-component">
 
                 <div class="mdc-select">
@@ -82,17 +93,23 @@
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
         let customerContact = '';
-      
+        let cusomerSecondContact = ''
+        const customerAuths = []
         function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
              customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
-            const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
+             cusomerSecondContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-second-contact'))
+
+             const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
             const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
             console.log(customerContact.foundation_.adapter_.getNativeInput())
-            customerContact.foundation_.adapter_.getNativeInput().addEventListener('click', function () {
-                AndroidInterface.getContact()
+            
+            customerContact.input_.addEventListener('click', function () {
+                AndroidInterface.getContact("setContactForCustomer");
             });
-
+            cusomerSecondContact.input_.addEventListener('click', function () {
+                AndroidInterface.getContact("setContactForSecondCustomer");
+            });
             const tx = parent.db.transaction(['children'])
             const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'customer-type'])
             tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
@@ -123,7 +140,9 @@
                 const vd = subscriptionTemplate.venue[0];
                 copy.attachment.Name.value = customerName.value;
                 copy.attachment['Customer Type'].value = select.value;
-                copy.attachment['Customer E-mail Id'].value = ontactString.split("&")[2].split("=")[1];
+              
+                copy.attachment['First Contact'].value = customerContact.value;
+                copy.attachment['Second Contact'].value = cusomerSecondContact.value;
                 copy.status = 'PENDING'
                 copy.venue = [{
                     venueDescriptor: vd,
@@ -135,14 +154,21 @@
                     }
                 }]
                 copy.share = []
-           
+                copy.customerAuths = customerAuths
                 parent.sendFormToParent(copy)
             })
         }
-        function setContact(contactString) {
-           
-            customerContact.value = contactString.split("&")[0].split("=")[1]
-          
+
+        function setContact(contactObject,type) {
+            if(type === 'First Contact') {
+                customerContact.value = contactObject.phoneNumber;
+                customerAuths.push(contactObject)
+                cusomerSecondContact.root_.classList.remove('hidden')
+            }
+            if(type === 'Second Contact') {
+                cusomerSecondContact.value = contactObject.phoneNumber;
+                customerAuths.push(contactObject)
+            }
         }
     </script>
 </body>

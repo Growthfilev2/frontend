@@ -1,5 +1,5 @@
 
-function GetCellularInformation() {
+function getCellularInformation() {
 
     let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
@@ -212,4 +212,18 @@ function createSimpleToggle(id) {
       </div>
     </div>
   </div>`
+}
+
+function createSimpleMenu(items,id){
+    return `
+    <div class="mdc-menu mdc-menu-surface" id="${id}">
+    <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
+    ${items.map(function(item){
+        return ` <li class="mdc-list-item" role="menuitem">
+        <span class="mdc-list-item__text">${item}</span>
+        </li>`
+    }).join("")}
+    </ul>
+    </div>
+  `
 }

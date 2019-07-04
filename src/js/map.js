@@ -19,7 +19,6 @@ function mapView() {
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
 
-
   manageLocation().then(function (location) {
     ApplicationState.location = location
 
@@ -149,14 +148,14 @@ function loadCardData(markers) {
             if (!checkInSub) return getSuggestions()
 
             cardProd.open()
-            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()
               getSuggestions()
-            }).catch(function (error) {
-              snacks('Please Try again later');
-              cardProd.close()
-            })
+            // }).catch(function (error) {
+            //   snacks('Please Try again later');
+            //   cardProd.close()
+            // })
           });
         });
         if (offices.length == 1) {
@@ -185,16 +184,16 @@ function loadCardData(markers) {
         confirm.root_.classList.add('hidden')
         cardProd.open();
 
-        requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
-          snacks('Check-in created');
-          cardProd.close();
-          getSuggestions();
-        }).catch(function (error) {
-          console.log(error)
-          confirm.root_.classList.remove('hidden');
-          snacks('Please Try Again');
-          cardProd.close()
-        })
+        // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+        snacks('Check-in created');
+        cardProd.close();
+        getSuggestions();
+        // }).catch(function (error) {
+        //   console.log(error)
+        //   confirm.root_.classList.remove('hidden');
+        //   snacks('Please Try Again');
+        //   cardProd.close()
+        // })
       }
     })
   });
@@ -543,10 +542,11 @@ GetOffsetBounds.prototype.west = function () {
 
 function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
-  
+
     var infowindow = new google.maps.InfoWindow();
     const result = []
-    let lastOpen;  
+    let lastOpen;
+
     const tx = db.transaction(['map'])
     const store = tx.objectStore('map');
     const index = store.index('bounds');
@@ -555,7 +555,15 @@ function loadNearByLocations(o, map, location) {
     index.openCursor(idbRange).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
+      if (calculateDistanceBetweenTwoPoints(location, {
+          latitude: cursor.value.latitude,
+          longitude: cursor.value.longitude
+        }) > 0.5) {
+        cursor.continue();
+        return;
+      }
 
+      
       var marker = new google.maps.Marker({
         position: {
           lat: cursor.value.latitude,
@@ -573,27 +581,21 @@ function loadNearByLocations(o, map, location) {
         value: JSON.stringify(cursor.value)
       });
 
-      if (calculateDistanceBetweenTwoPoints(location, {
-          latitude: cursor.value.latitude,
-          longitude: cursor.value.longitude
-        }) < 0.5) {
-        
-        marker.setMap(map);
-        const content = `<span>${cursor.value.activityId}</span>`
-        google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-          return function () {
-            if (lastOpen) {
-              lastOpen.close();
-            };
-            infowindow.setContent(content);
-            infowindow.open(map, marker);
-            lastOpen = infowindow;
-          };
-        })(marker, content, infowindow));
-        result.push(cursor.value)
-        bounds.extend(marker.getPosition())
-      }
 
+      marker.setMap(map);
+      const content = `<span>${cursor.value.activityId}</span>`
+      google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+        return function () {
+          if (lastOpen) {
+            lastOpen.close();
+          };
+          infowindow.setContent(content);
+          infowindow.open(map, marker);
+          lastOpen = infowindow;
+        };
+      })(marker, content, infowindow));
+      result.push(cursor.value)
+      bounds.extend(marker.getPosition())
       cursor.continue();
     }
     tx.oncomplete = function () {

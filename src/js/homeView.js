@@ -142,17 +142,12 @@ function homePanel() {
       <div id='pending-location-tasks'></div>
       <div id='suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
-                                
       </div>
 
       <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
-      <span class="material-icons mdc-fab__icon">assignment</span>
-      <span class="mdc-fab__label">Reports</span>
+      <span class="material-icons mdc-fab__icon">description</span>
+      <span class="mdc-fab__label">My Reports</span>
      </button>
-
-
-    
-
   </div>
 </div>`
 }

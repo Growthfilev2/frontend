@@ -10,7 +10,7 @@ function addView(sub) {
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src="${window.location.origin}/forms/customer/edit.html"></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/forms/customer/edit.html'></iframe>
     `
     
     console.log(db)
@@ -22,6 +22,7 @@ function addView(sub) {
 
 function sendFormToParent(formData) {
     progressBar.open();
+   
     requestCreator('create', formData).then(function () {
             progressBar.close();
             successDialog()
@@ -36,7 +37,15 @@ function sendFormToParent(formData) {
                     latitude:formData.venue[0].geopoint.latitude,
                     longitude:formData.venue[0].geopoint.longitude
                 }
+                const customerAuths = formData.customerAuths;
+                delete formData.customerAuths;
                 getSuggestions();
+                customerAuths.forEach(function(auth){
+                    delete auth.displayName
+                    requestCreator('updateAuth', auth).then(function (response) {
+                        console.log(response)
+                    }).catch(console.log)
+                })
                 return;
             }
             getSuggestions();
@@ -44,6 +53,42 @@ function sendFormToParent(formData) {
         })
         .catch(function (error) {
             progressBar.close();
-            snacks(error.response.message)
+            snacks(error.response.message,'Okay')
     })
 }
+
+
+function parseContact(contactString){
+const displayName = contactString.split("&")[0].split("=")[1];
+const phoneNumber = contactString.split("&")[1].split("=")[1];
+const email = contactString.split("&")[2].split("=")[1];
+return {
+    displayName:displayName,
+    phoneNumber:phoneNumber ?  formatNumber(phoneNumber) : "",
+    email:email
+    }
+}
+
+function setContactForCustomer(contactString){
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'First Contact');
+}
+function setContactForCustomerFailed(exceptionMessage){
+    handleError({
+        message:exceptionMessage,
+        body:''
+    })
+}
+
+function setContactForSecondCustomer(contactString){
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'Second Contact');
+}
+function setContactForSecondCustomerFailed(exceptionMessage){
+    handleError({
+        message:exceptionMessage,
+        body:''
+    })
+}
+
+
