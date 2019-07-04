@@ -375,7 +375,7 @@ function removeByIndex(index, range) {
 function updateEmail(body, meta) {
   const req = {
     method: 'POST',
-    url: `https://growthfile.com/json?action=verifyEmail`,
+    url: `update-auth`,
     body: JSON.stringify(body),
     token: meta.user.token
   }

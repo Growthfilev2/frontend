@@ -54,20 +54,31 @@ const phoneNumber = contactString.split("&")[1].split("=")[1];
 const email = contactString.split("&")[2].split("=")[1];
 return {
     displayName:displayName,
-    phoneNumber:phoneNumber,
+    phoneNumber:phoneNumber ?  formatNumber(phoneNumber) : "",
     email:email
     }
 }
 
 function setContactForCustomer(contactString){
     const contactDetails = parseContact(contactString);
-    document.getElementById('form-iframe').contentWindow.setContact(contactDetails);
+    document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'First Contact');
 }
-
 function setContactForCustomerFailed(exceptionMessage){
-    debugger;
     handleError({
         message:exceptionMessage,
         body:''
     })
 }
+
+function setContactForSecondCustomer(contactString){
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContact(contactDetails,'Second Contact');
+}
+function setContactForSecondCustomer(exceptionMessage){
+    handleError({
+        message:exceptionMessage,
+        body:''
+    })
+}
+
+
