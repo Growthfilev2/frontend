@@ -203,7 +203,7 @@ function readLatestChats() {
     }
     tx.oncomplete = function () {
         if(!result.length) {
-            document.getElementById('chats').innerHTML = 'No Chats Found'
+            document.getElementById('chats').innerHTML = `<li class='mdc-list-item'>No Chats Found</li>`
             return;
         }
         document.getElementById('search-btn').classList.remove('hidden')
