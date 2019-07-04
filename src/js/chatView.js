@@ -75,7 +75,9 @@ function search() {
 
         document.getElementById('chats').innerHTML = ''
         let currentChats = '';
+        const currentChatsArray = []
         let newContacts = '';
+        const newContactsArray = [];
         const myNumber = firebase.auth().currentUser.phoneNumber;
         const searchable = getSearchBound(evt)
         searchable.bound.onsuccess = function (event) {
@@ -87,9 +89,11 @@ function search() {
             }
 
             if (cursor.value.timestamp) {
-                currentChats += userLi(cursor.value, true);
+                currentChatsArray.push(cursor.value)
+                currentChats += userLi(cursor.value);
             } else {
-                newContacts += userLi(cursor.value, true)
+                newContactsArray.push(cursor.value)
+                newContacts += userLi(cursor.value)
             }
 
             cursor.continue()
@@ -110,7 +114,21 @@ function search() {
            </ul>`:''}
           </div>`
             parent.innerHTML = listGroup;
+            const currenChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(1)'))
+            currenChatsUl.listen('MDCList:action',function(evt){
+                const userRecord = currentChatsArray[evt.detail.index];
+                history.pushState(['enterChat',userRecord],null,null)
+                enterChat(userRecord)
+            })
 
+            const newChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(2)'))
+            newChatsUl.listen('MDCList:action',function(evt){
+                const userRecord = newContactsArray[evt.detail.index];
+                history.pushState(['enterChat',userRecord],null,null)
+                enterChat(userRecord)
+            })
+
+        
         }
 
     });
@@ -168,6 +186,7 @@ function readLatestChats() {
     const index = tx.objectStore('users').index('timestamp');
     let string = ''
     const myNumber = firebase.auth().currentUser.phoneNumber
+    const result = []
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -175,25 +194,30 @@ function readLatestChats() {
             cursor.continue();
             return;
         }
-        console.log(cursor.value)
+        result.push(cursor.value)
         string += userLi(cursor.value, true);
         cursor.continue();
     }
     tx.oncomplete = function () {
-        let suggestion = '';
-        if (string) {
-            document.getElementById('search-btn').classList.remove('hidden')
+        if(!result.length) {
+            document.getElementById('chats').innerHTML = 'No Chats Found'
+            return;
         }
-
-
-        document.getElementById('chats').innerHTML = string
-
+        document.getElementById('search-btn').classList.remove('hidden')
+        const ulSelector =  document.getElementById('chats')
+        ulSelector.innerHTML = string
+        const ul = new mdc.list.MDCList(ulSelector)
+        ul.listen('MDCList:action',function(evt){
+            const userRecord = result[evt.detail.index]
+            history.pushState(['enterChat',userRecord],null,null)
+            enterChat(userRecord);
+        })
     }
 
 }
 
-function userLi(value, isClickable) {
-    return `<li class="mdc-list-item" ${isClickable ?`onclick="enterChat('${value.mobile}')"`: ''}>
+function userLi(value) {
+    return `<li class="mdc-list-item">
    <div style="position:relative">
    <img class="mdc-list-item__graphic" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.mobile}>
    <i class="material-icons user-selection-icon">check_circle</i>
@@ -278,18 +302,8 @@ function isToday(comparisonTimestamp) {
     return false;
 }
 
-function enterChat(number) {
-    // const userRecord = JSON.parse(userRecordString)
-    // debugger;
-
-    // hideBottomNav()
-
-
-
-    db.transaction('users').objectStore('users').get(number).onsuccess = function (event) {
-        const record = event.target.result;
-        if (!record) return;
-        const userRecord = record;
+function enterChat(userRecord) {
+  
         const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
         </a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
@@ -297,8 +311,9 @@ function enterChat(number) {
         `
 
         const header = getHeader('app-header', backIcon, '');
+        header.root_.classList.remove('hidden')
         console.log(header)
-        history.pushState(['enterChat', record], null, null)
+       
 
         document.getElementById('app-current-panel').innerHTML = `
         <div class="wrapper">
@@ -325,7 +340,7 @@ function enterChat(number) {
         </div>
         </div>`
         getUserChats(userRecord)
-    }
+    
 }
 
 function actionBox(value) {
@@ -481,8 +496,7 @@ function share(activity) {
     const ulSelector = document.getElementById('users-list')
     const ul = new mdc.list.MDCList(ulSelector)
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
-   
-
+    history.pushState(['share',activity],null,null)
     console.log(chipInit)
     loadAllUsers(false,true).then(function (userResult) {
 
@@ -575,7 +589,7 @@ function share(activity) {
                     }
                     const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
                     if (el) {
-                        console.log(cursor.value)
+                       
                         el.parentNode.parentNode.classList.add('found');
                     }
 
@@ -640,18 +654,18 @@ function activityDomCustomer(activityRecord) {
 }
 
 function addAssignee(record,userArray){
-    // progressBar.open();
-    // requestCreator('share',{
-    //     activityId:record.activityId,
-    //     share:userArray
-    // }).then(function(){
-    //     progressBar.close();
-    //     snacks(`You Added ${userArray.length} People`)
-    //     history.back();
-    // }).catch(function(error){
-    //     snacks(error.response.message)
-    //     progressBar.close();
-    // })
+    progressBar.open();
+    requestCreator('share',{
+        activityId:record.activityId,
+        share:userArray
+    }).then(function(){
+        progressBar.close();
+        snacks(`You Added ${userArray.length} People`)
+        history.back();
+    }).catch(function(error){
+        snacks(error.response.message)
+        progressBar.close();
+    })
 }
 
 

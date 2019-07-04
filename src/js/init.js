@@ -106,7 +106,7 @@ window.onpopstate = function (event) {
     return
   }
 
-  window[event.state[0]]();
+  window[event.state[0]](event.state[1]);
 }
 
 
