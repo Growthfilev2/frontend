@@ -10,7 +10,7 @@ function addView(sub) {
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/forms/customer/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/forms/customer/edit.html'></iframe>
     `
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {

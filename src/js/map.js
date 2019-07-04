@@ -145,17 +145,17 @@ function loadCardData(markers) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
           getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
-            if (!checkInSub) return getSuggestions()
+            if (!Object.keys(checkInSub).length) return getSuggestions()
 
             cardProd.open()
-            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()
               getSuggestions()
-            // }).catch(function (error) {
-            //   snacks('Please Try again later');
-            //   cardProd.close()
-            // })
+            }).catch(function (error) {
+              snacks('Please Try again later');
+              cardProd.close()
+            })
           });
         });
         if (offices.length == 1) {

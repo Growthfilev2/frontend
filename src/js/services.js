@@ -576,33 +576,25 @@ function getInputText(selector) {
 
 function handleComponentUpdation(readResponse){
   // retuern 
-  if(history.state[0] === 'homeView') {
+  switch(history.state[0]) {
+    case 'homeView':
     getSuggestions()
-    return;
+    break;
+    case 'enterChat':
+    dynamicAppendChats(readResponse.response.addendum)
+    break;
+    default:
+    break;
   }
+ 
 }
 
 function runRead(value) {
-  // if (!localStorage.getItem('dbexist')) return
+
   if (!value || value.read) {
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
     return;
   }
-
-
-  // setTimeout(function () {
-  //   if (value.verifyEmail) {
-  //     const notificationData = JSON.parse(value.verifyEmail)
-  //     emailVerify(notificationData)
-  //     return;
-  //   };
-
-  //   if (value.payroll) {
-  //     const notificationData = JSON.parse(value.payroll)
-  //     templateDialog(notificationData)
-  //     return;
-  //   }
-  // }, 500)
 }
 
 function removeChildNodes(parent) {
@@ -664,15 +656,8 @@ function getSubscription(office, template,status) {
     const range = IDBKeyRange.only([office, template,status])
     officeTemplateCombo.get(range).onsuccess = function (event) {
       if (!event.target.result) return resolve({});
-
        return resolve(event.target.result)
     }
-
-    // tx.oncomplete = function () {
-
-    //   return resolve(record)
-
-    // }
     tx.onerror = function(){
       return reject({message:tx.error,body:''})
     }

@@ -15,17 +15,17 @@ function chatView() {
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
     const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
-    contactsBtn.root_.addEventListener('click', function (evt) {
-        contactsBtn.root_.remove();
-        loadUsers().then(function (result) {
-            header.navIcon_.classList.remove('hidden')
-            document.getElementById('search-btn').classList.remove('hidden')
+    // contactsBtn.root_.addEventListener('click', function (evt) {
+    //     contactsBtn.root_.remove();
+    //     loadUsers().then(function (result) {
+    //         header.navIcon_.classList.remove('hidden')
+    //         document.getElementById('search-btn').classList.remove('hidden')
 
-            document.getElementById('chats').innerHTML = result.domString
+    //         document.getElementById('chats').innerHTML = result.domString
 
 
-        })
-    })
+    //     })
+    // })
     readLatestChats();
 }
 
@@ -325,8 +325,11 @@ function enterChat(userRecord) {
         document.getElementById('app-current-panel').innerHTML = `
         <div class="wrapper">
         <div class="inner" id="inner">
-        <div class="content" id="content"></div>
+    
+        <div class="content" id="content">
+
         </div>
+      
         <div class="bottom" id="bottom">
         <div class="conversation-compose">
         
@@ -350,6 +353,10 @@ function enterChat(userRecord) {
     
 }
 
+
+
+
+
 function actionBox(value) {
     return `
     <div class='action-box-container'>
@@ -372,13 +379,44 @@ function messageBox(comment, position, image, time) {
     <img class="circle-wrapper" src=${image}>
     <div class="text-wrapper">${comment}
     <span class="metadata">
-                      <span class="time">
-        ${moment(time).format('hh:mm')}
-</span></span>
+        <span class="time">
+            ${moment(time).format('hh:mm')}
+        </span>
+    </span>
     </div>
     </div>`
 }
 
+function messageBoxDom(comment,position,image,time) {
+    const wrapper = createElement('div',{className:`message-wrapper ${position}`})
+    const imageEl = createElement('img',{className:'circle-wrapper',src:image});
+    const text = createElement('div',{className:`text-wrapper`,textContent:comment})
+    const metadata = createElement('span',{className:'metadata'});
+    const timeEl = createElement('span',{className:'time',textContent:moment(time).format('hh:mm')})
+    wrapper.appendChild(imageEl);
+    metadata.appendChild(timeEl)
+    text.appendChild(metadata);
+    wrapper.appendChild(text);
+    return wrapper;
+}
+
+function actionBoxDom(value){
+    const container = createElement('div',{className:'action-box-container'})
+    const menuCont = createElement('div',{id:value.addendumId,className:'menu-container mdc-menu-surface--anchor'})
+    const wrapper = createElement('div',{className:`message-wrapper aciton-info`});
+    wrapper.onclick = function(){
+        createActivityActionMenu(value.addendumId,value.activityId)
+    }
+    const text = createElement('div',{className:`text-wrapper`,textContent:value.comment})
+    const metadata = createElement('span',{className:'metadata'});
+    const icon = createElement('i',{className:'material-icons',textContent:'info'})
+    metadata.appendChild(icon)
+    text.appendChild(metadata);
+    wrapper.appendChild(text);
+    container.appendChild(menuCont)
+    container.appendChild(wrapper)
+   return container;
+}
 
 function createActivityActionMenu(addendumId,activityId) {
     console.log("long press")
@@ -824,27 +862,25 @@ function createStatusChange(status) {
 }
 
 function dynamicAppendChats(addendums) {
-    const parent = document.getElementById('content');
-    let string = ''
+    const parent = document.getElementById('content');   
     const myNumber = firebase.auth().currentUser.phoneNumber
-    const myImage = firebase.auth().currentUser.photoURL;
     addendums.forEach(function (addendum) {
         let position = '';
         let image = ''
-        if (addendum.user === myNumber) {
-            position = 'me'
-            image = myImage
-        } else {
+        if (addendum.user !== myNumber) {
             position = 'them'
             image = history.state[1].photoURL
-        }
-        if (addendum.isComment) {
-            string += messageBox(addendum.comment, position, image, addendum.timestamp)
-        } else {
-            string += actionBox(addendum)
+            if(parent) {
+            if (addendum.isComment) {
+                    parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
+                    
+                } else {
+                    parent.appendChild(actionBoxDom(addendum))
+                }
+            }
         }
     })
-    parent.innerHTML += string;
+
     setBottomScroll()
 }
 
@@ -898,7 +934,8 @@ function getUserChats(userRecord) {
                 comment: commentInit.value,
                 assignee: userRecord.mobile
             }).then(function () {
-                parent.innerHTML += messageBox(commentInit.value, 'me', firebase.auth().currentUser.photoURL);
+                if(!parent) return;
+                parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
                 commentInit.value = ''
                 resetCommentField(bottom, form, commentInit.input_)
                 setBottomScroll()
