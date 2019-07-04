@@ -19,7 +19,6 @@ function mapView() {
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
 
-
   manageLocation().then(function (location) {
     ApplicationState.location = location
 

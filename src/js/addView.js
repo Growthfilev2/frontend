@@ -46,3 +46,28 @@ function sendFormToParent(formData) {
             snacks(error.response.message,'Okay')
     })
 }
+
+
+function parseContact(contactString){
+const displayName = contactString.split("&")[0].split("=")[1];
+const phoneNumber = contactString.split("&")[1].split("=")[1];
+const email = contactString.split("&")[2].split("=")[1];
+return {
+    displayName:displayName,
+    phoneNumber:phoneNumber,
+    email:email
+    }
+}
+
+function setContactForCustomer(contactString){
+    const contactDetails = parseContact(contactString);
+    document.getElementById('form-iframe').contentWindow.setContact(contactDetails);
+}
+
+function setContactForCustomerFailed(exceptionMessage){
+    debugger;
+    handleError({
+        message:exceptionMessage,
+        body:''
+    })
+}

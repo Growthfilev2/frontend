@@ -350,10 +350,10 @@ function startApp() {
         return;
       }
       const startLoad = document.querySelector('#start-load')
-      // startLoad.classList.remove('hidden');
+      startLoad.classList.remove('hidden');
       console.log("run app")
       document.getElementById("main-layout-app").style.display = 'block'
-      // localStorage.setItem('dbexist', auth.uid);
+    
       ga('set', 'userId', JSON.parse(native.getInfo()).id)
 
       const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']

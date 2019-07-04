@@ -82,7 +82,7 @@
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
         let customerContact = '';
-      
+        let email = ''
         function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
              customerContact = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
@@ -90,7 +90,7 @@
             const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
             console.log(customerContact.foundation_.adapter_.getNativeInput())
             customerContact.foundation_.adapter_.getNativeInput().addEventListener('click', function () {
-                AndroidInterface.getContact()
+                AndroidInterface.getContact("setContactForCustomer");
             });
 
             const tx = parent.db.transaction(['children'])
@@ -123,7 +123,7 @@
                 const vd = subscriptionTemplate.venue[0];
                 copy.attachment.Name.value = customerName.value;
                 copy.attachment['Customer Type'].value = select.value;
-                copy.attachment['Customer E-mail Id'].value = ontactString.split("&")[2].split("=")[1];
+                copy.attachment['Customer E-mail Id'].value = email;
                 copy.status = 'PENDING'
                 copy.venue = [{
                     venueDescriptor: vd,
@@ -139,10 +139,11 @@
                 parent.sendFormToParent(copy)
             })
         }
-        function setContact(contactString) {
-           
-            customerContact.value = contactString.split("&")[0].split("=")[1]
-          
+
+        function setContact(contactObject) {
+            customerContact.value = contactObject.phoneNumber;
+            email = contactObject.email
+            
         }
     </script>
 </body>
