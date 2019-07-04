@@ -1,5 +1,5 @@
 
-function GetCellularInformation() {
+function getCellularInformation() {
 
     let cellTowerQueryString;
     const mcc = AndroidInterface.getMobileCountryCode()
