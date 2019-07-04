@@ -17,7 +17,7 @@ function chatView() {
     const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
     contactsBtn.root_.addEventListener('click', function (evt) {
         contactsBtn.root_.remove();
-        loadAllUsers().then(function (result) {
+        loadUsers().then(function (result) {
             header.navIcon_.classList.remove('hidden')
             document.getElementById('search-btn').classList.remove('hidden')
 
@@ -238,7 +238,7 @@ function userLi(value) {
     </li>`
 }
 
-function loadAllUsers(hideMetaText,exception) {
+function loadUsers(hideMetaText,exception) {
     return new Promise(function (resolve, reject) {
         const tx = db.transaction(['users']);
         const store = tx.objectStore('users');
@@ -275,9 +275,7 @@ function loadAllUsers(hideMetaText,exception) {
                 domString: string,
                 data: result
             })
-
         }
-
     });
 }
 
@@ -504,7 +502,7 @@ function share(activity) {
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
     history.pushState(['share',activity],null,null)
     console.log(chipInit)
-    loadAllUsers(true,alreadySelected).then(function (userResult) {
+    loadUsers(true,alreadySelected).then(function (userResult) {
 
         if (!userResult.data.length) return;
         sendBtn.root_.addEventListener('click',function(){

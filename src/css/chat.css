@@ -428,7 +428,8 @@ max-height:80%;
   background: transparent
 }
 .share-user-container .mdc-chip-set .mdc-chip {
-  margin-left: 0px
+  margin-left: 0px;
+  border: none;
 }
  #users-list {
   position: fixed;
