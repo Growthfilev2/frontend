@@ -555,8 +555,9 @@ function checkForRecipient() {
           return
         }
         progCard.open();
-        requestCreator('updateEmail', {
-          email: emailInit.value
+        requestCreator('updateAuth', {
+          email: emailInit.value,
+          phoneNumber:firebase.auth().currentUser.phoneNumber
         }).then(function () {
           snacks('Verification Link has been Sent to ' + emailInit.value)
           mapView();
@@ -579,8 +580,9 @@ function checkForRecipient() {
 
       new mdc.ripple.MDCRipple(document.getElementById('sendVerification')).root_.addEventListener('click', function (evt) {
         progCard.open();
-        requestCreator('updateEmail', {
-          email: currentEmail
+        requestCreator('updateAuth', {
+          email: currentEmail,
+          phoneNumber:firebase.auth().currentUser.phoneNumber
         }).then(function () {
           progCard.close();
           snacks('Verification Link has been Sent to ' + currentEmail)

@@ -18,7 +18,7 @@ const requestFunctionCaller = {
   update: update,
   create: create,
   backblaze: backblaze,
-  updateEmail: updateEmail
+  updateAuth: updateAuth
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -372,10 +372,10 @@ function removeByIndex(index, range) {
   }
 }
 
-function updateEmail(body, meta) {
+function updateAuth(body, meta) {
   const req = {
     method: 'POST',
-    url: `update-auth`,
+    url: `${meta.apiUrl}update-auth`,
     body: JSON.stringify(body),
     token: meta.user.token
   }
