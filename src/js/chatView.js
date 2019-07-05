@@ -14,7 +14,7 @@ function chatView() {
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
+    // const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
     // contactsBtn.root_.addEventListener('click', function (evt) {
     //     contactsBtn.root_.remove();
     //     loadUsers().then(function (result) {
@@ -39,9 +39,7 @@ function chatDom() {
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
        
     </ul>
-    <button class="mdc-fab app-fab--absolute open-contacts-btn mdc-theme--primary-bg" aria-label="Contacts">
-        <span class="mdc-fab__icon material-icons mdc-theme--text-primary-on-light">contacts</span>
-    </button>
+    
 </div>`
 }
 
@@ -105,18 +103,18 @@ function search() {
             }
             const listGroup = `<div class="mdc-list-group" id='search-list-group'>
            ${currentChats ?` <h3 class="mdc-list-group__subheader">Chats</h3>
-           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
+           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='current-chats-list'>
             ${currentChats}
            </ul>`:'' }
            ${newContacts ?`  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
-           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
+           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='new-chats-list'>
             ${newContacts}
            </ul>`:''}
           </div>`
             parent.innerHTML = listGroup;
             if(currentChatsArray.length) {
 
-                const currenChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(1)'))
+                const currenChatsUl = new mdc.list.MDCList(document.getElementById('current-chats-list'))
                 currenChatsUl.listen('MDCList:action',function(evt){
                     const userRecord = currentChatsArray[evt.detail.index];
                     history.pushState(['enterChat',userRecord],null,null)
@@ -124,7 +122,7 @@ function search() {
                 })
             }
             if(newContactsArray.length) {
-            const newChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(2)'))
+            const newChatsUl = new mdc.list.MDCList(document.getElementById('new-chats-list'))
             newChatsUl.listen('MDCList:action',function(evt){
                 const userRecord = newContactsArray[evt.detail.index];
                 history.pushState(['enterChat',userRecord],null,null)
