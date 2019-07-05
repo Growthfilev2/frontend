@@ -42,7 +42,7 @@ let native = function () {
       return localStorage.getItem('deviceInfo');
     },
     getInfo: function () {
-      if (!this.getName()) return JSON.stringify({id:'12345'});
+      if (!this.getName()) return false;
 
       if (this.getName() === 'Android') {
         deviceInfo = getAndroidDeviceInformation();

@@ -353,7 +353,7 @@ function officeRemovalSuccess(data) {
 
 
 function handleComponentUpdation(readResponse) {
-
+  if(!history.state) return;
   switch (history.state[0]) {
     case 'homeView':
       getSuggestions()
