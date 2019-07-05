@@ -451,25 +451,25 @@ function createActivityActionMenu(addendumId, activityId) {
         const heading = `${activity.activityName}
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
-        const items = ['View/Edit', 'Share']
         if (!activity.canEdit) {
             dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create('simple');
             dialog.open();
             return
         };
-
+        const items = [{name:'View',icon:'info'}, {name:'Share',icon:'share'},{name:'Edit',icon:'edit'}]
+       
         if (activity.status === 'CANCELLED') {
-            items.push('Mark Confirmed')
-            items.push('Mark Pending')
+            items.push({name:'Confirm',icon:'check'})
+            items.push({name:'Undo',icon:'undo'})
         }
         if (activity.status === 'PENDING') {
-            items.push('Mark Confirmed')
-            items.push('Mark Cancelled')
+            items.push({name:'Confirm',icon:'check'})
+            items.push({name:'Delete',icon:'delete'})
 
         }
         if (activity.status === 'CONFIRMED') {
-            items.push('Mark Pending')
-            items.push('Mark Cancelled')
+            items.push({name:'Undo',icon:'undo'})
+            items.push({name:'Delete',icon:'delete'})
         }
         const joinedId = addendumId + activityId
         document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
@@ -477,21 +477,23 @@ function createActivityActionMenu(addendumId, activityId) {
         menu.open = true
         menu.root_.classList.add('align-right-menu')
         menu.listen('MDCMenu:selected', function (evt) {
-            switch (items[evt.detail.index]) {
-                case 'View/Edit':
-                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form', viewFormActions()).create();
+            switch (items[evt.detail.index].name) {
+                case 'View':
+                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
                     dialog.open()
                     break;
+                case 'Edit':
+                break;
                 case 'Share':
                     share(activity)
                     break;
-                case 'Mark Pending':
+                case 'Undo':
                     setActivityStatus(activity, 'PENDING')
                     break;
-                case 'Mark Confirmed':
+                case 'Confirm':
                     setActivityStatus(activity, 'CONFIRMED')
                     break;
-                case 'Mark Cancelled':
+                case 'Delete':
                     setActivityStatus(activity, 'CANCELLED')
                     break;
                 default:
@@ -897,7 +899,6 @@ function dynamicAppendChats(addendums) {
         if (addendum.isComment && addendum.user === myNumber) return;
         if (addendum.isComment) {
             parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
-
         } else {
             parent.appendChild(actionBoxDom(addendum))
         }

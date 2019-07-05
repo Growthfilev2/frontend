@@ -220,7 +220,10 @@ function createSimpleMenu(items,id){
     <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
     ${items.map(function(item){
         return ` <li class="mdc-list-item" role="menuitem">
-        <span class="mdc-list-item__text">${item}</span>
+        <span class="mdc-list-item__graphic mdc-menu__selection-group-icon">
+        <i class='material-icons'>${item.icon}</i>
+        </span>
+        <span class="mdc-list-item__text">${item.name}</span>
         </li>`
     }).join("")}
     </ul>

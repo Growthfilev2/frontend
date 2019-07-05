@@ -369,8 +369,8 @@ function startApp() {
 
       // enterChat("+919000000000")
       // return;
-      // profileCheck();
-      // return;
+      profileCheck();
+      return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -515,9 +515,9 @@ function checkForPhoto() {
 
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
-  return mapView();
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     if (!result.length) return mapView();
+    return mapView();
     if (auth.email && auth.emailVerified) return mapView();
 
     const text = getReportNameString(result)
