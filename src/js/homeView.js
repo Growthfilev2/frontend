@@ -165,9 +165,9 @@ function topNavCard() {
         <h3 class="mdc-typography--headline6">My Growthfile</h3>
       </div>
       <div class="actions">
-      ${ApplicationState.hasCheckIn ?` <div class="action">
-      <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i>Camera</span>
-    </div>` :''}
+        <div class="action">
+          <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i>Camera</span>
+        </div>
        
         <div class="action">
           <span class="mdc-typography--body1" id='chat'><i class="material-icons">comment</i>Chats</span>

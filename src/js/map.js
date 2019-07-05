@@ -146,11 +146,9 @@ function loadCardData(markers) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
           getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
-            if (!checkInSub) {
-              ApplicationState.hasCheckIn = false
-              return getSuggestions()
-            }
-            ApplicationState.hasCheckIn = true
+            if (!checkInSub) return getSuggestions()
+            
+           
 
             cardProd.open()
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
@@ -177,12 +175,10 @@ function loadCardData(markers) {
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
     getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
-      if (!result) {
-        ApplicationState.hasCheckIn = false
-        return getSuggestions();
-      }
+      if (!result) return getSuggestions();
+      
 
-      ApplicationState.hasCheckIn = true
+     
 
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -358,17 +354,74 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    getSubscription(ApplicationState.office, 'check-in', 'CONFIRMED').then(function (sub) {
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      progressBar.open();
-      requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-        snacks('Check-In Created')
-        getSuggestions()
-      }).catch(function (error) {
-        snacks(error.message)
-      })
+    getUniqueOfficeCount().then(function (offices) {
+      if (!offices.length) return;
+      if (offices.length == 1) {
+        getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
+          sub.attachment.Photo.value = url
+          sub.attachment.Comment.value = textValue;
+          progressBar.open();
+          requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+            manageLocation().then(function (location) {
+              homeView(selectedSubs, location)
+            })
+            snacks('Check-In Created')
+          }).catch(function () {
+            snacks(error.message)
+
+          })
+        })
+        return
+      }
+      if (offices.length > 1) {
+        const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
+              ${offices.map(function(office,idx){
+                return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
+                <span class="mdc-list-item__graphic">
+                  <div class="mdc-radio">
+                    <input class="mdc-radio__native-control"
+                          type="radio"
+                          id='demo-list-radio-item-${idx}'
+                          name="demo-list-radio-item-group"
+                          value="1">
+                    <div class="mdc-radio__background">
+                      <div class="mdc-radio__outer-circle"></div>
+                      <div class="mdc-radio__inner-circle"></div>
+                    </div>
+                  </div>
+                </span>
+                <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
+              </li>`
+              }).join("")}
+            
+            <ul>`
+        const dialog = new Dialog('Send To', template).create();
+        const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
+        dialog.open();
+        dialog.listen('MDCDialog:opened', () => {
+          list.layout();
+          list.singleSelection = true
+        });
+        dialog.listen('MDCDialog:closed', function (evt) {
+          if (evt.detail.action !== 'accept') return;
+
+          getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
+            sub.attachment.Photo.value = url
+            sub.attachment.Comment.value = textValue;
+            progressBar.open();
+            requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+              manageLocation().then(function (location) {
+                homeView(selectedSubs, location)
+              });
+              snacks('Check-In Created')
+            }).catch(function () {
+              snacks(error.message)
+            })
+          })
+        })
+      }
     })
+
   })
 
 
