@@ -137,6 +137,8 @@ function loadCardData(markers) {
 
     if (value === 1) {
       ApplicationState.knownLocation = false;
+      ApplicationState.venue = '';
+      ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
         if (!offices.length) return getSuggestions();
 
