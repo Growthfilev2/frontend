@@ -14,18 +14,30 @@ function chatView() {
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    // const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
-    // contactsBtn.root_.addEventListener('click', function (evt) {
-    //     contactsBtn.root_.remove();
-    //     loadUsers().then(function (result) {
-    //         header.navIcon_.classList.remove('hidden')
-    //         document.getElementById('search-btn').classList.remove('hidden')
+    const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
+    contactsBtn.root_.addEventListener('click', function (evt) {
+        contactsBtn.root_.remove();
+        loadUsers().then(function (result) {
+            header.navIcon_.classList.remove('hidden')
+            evt.target.classList.remove('hidden')
+            const chatsEl  =  document.getElementById('chats');
+            const allContactsEl =  document.getElementById('all-contacts')
+            if(chatsEl) {
 
-    //         document.getElementById('chats').innerHTML = result.domString
-
-
-    //     })
-    // })
+               chatsEl.innerHTML = '';
+            }
+            if(allContactsEl) {
+                allContactsEl.innerHTML = result.domString;
+            }
+          
+            const ul = new mdc.list.MDCList(allContactsEl)
+            ul.listen('MDCList:action', function (evt) {
+                const userRecord = result.data[evt.detail.index];
+                history.pushState(['enterChat', userRecord], null, null)
+                enterChat(userRecord)
+            })
+        });
+    })
     readLatestChats();
 }
 
@@ -39,7 +51,12 @@ function chatDom() {
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
        
     </ul>
-    
+    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
+
+    </ul>
+    <button class="mdc-fab open-contacts-btn app-fab--absolute mdc-theme--primary-bg" aria-label="Favorite">
+  <span class="mdc-fab__icon material-icons mdc-theme--on-primary">contacts</span>
+</button>
 </div>`
 }
 
@@ -72,6 +89,7 @@ function search() {
         }
 
         document.getElementById('chats').innerHTML = ''
+        document.getElementById('all-contacts').innerHTML = ''
         let currentChats = '';
         const currentChatsArray = []
         let newContacts = '';
