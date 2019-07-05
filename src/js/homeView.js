@@ -64,15 +64,13 @@ function getPendingLocationActivities() {
           match = cursor.value
         }
       })
-      
       if (!match) {
         cursor.continue();
         return;
       }
       let found = false
-     
       match.schedule.forEach(function (sn) {
-        if (moment(moment()).isBetween(sn.startTime, sn.endTime, null, '[]')) {
+        if (moment(moment().format('DD-MM-YY')).isBetween(moment(1562284800000).format('DD-MM-YY'), moment(1562284800000).format('DD-MM-YY'), null, '[]')) {
           sn.isValid = true
           found = true
         }

@@ -177,7 +177,7 @@ function formatNumber(numberString) {
         number = '+91' + number
     }
 
-    return number
+    return number.replace(/ +/g, "");
 }
 
 

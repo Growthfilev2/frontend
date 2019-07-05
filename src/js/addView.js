@@ -21,7 +21,8 @@ function addView(sub) {
 
 function sendFormToParent(formData) {
     progressBar.open();
-   
+    const customerAuths = formData.customerAuths;
+    delete formData.customerAuths;
     requestCreator('create', formData).then(function () {
             progressBar.close();
             successDialog()
@@ -36,10 +37,10 @@ function sendFormToParent(formData) {
                     latitude:formData.venue[0].geopoint.latitude,
                     longitude:formData.venue[0].geopoint.longitude
                 }
-                const customerAuths = formData.customerAuths;
-                delete formData.customerAuths;
+               
                 getSuggestions();
                 customerAuths.forEach(function(auth){
+                    if(!auth.email) return;
                     delete auth.displayName
                     requestCreator('updateAuth', auth).then(function (response) {
                         console.log(response)
@@ -48,7 +49,7 @@ function sendFormToParent(formData) {
                 return;
             }
             getSuggestions();
-            // homeView(selectedSubs, location)
+            
         })
         .catch(function (error) {
             progressBar.close();

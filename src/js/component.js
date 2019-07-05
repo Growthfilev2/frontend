@@ -175,9 +175,6 @@ Dialog.prototype.create = function (type) {
     return new mdc.dialog.MDCDialog(parent);
 }
 
-
-
-
 function getHeader(parentSelector,sectionStart,sectionEnd){
     const el = document.getElementById(parentSelector);
     el.querySelector('#section-start').innerHTML = sectionStart;

@@ -55,18 +55,18 @@ function profileView() {
       nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
       emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
       
-      el.addEventListener('change',function(evt){
-        const file = evt.target.result.files[0];
-        const reader = new FileReader();
-        reader.onload = function(fileEvent){
-          const url = fileEvent.target.result;
-          imageSrc = url
-          document.querySelector('.mdc-card-media').src = url
-        }
-        reader.readAsDataURL(file)
-      })
+      // el.addEventListener('change',function(evt){
+      //   const file = evt.target.result.files[0];
+      //   const reader = new FileReader();
+      //   reader.onload = function(fileEvent){
+      //     const url = fileEvent.target.result;
+      //     imageSrc = url
+      //     document.querySelector('.mdc-card-media').src = url
+      //   }
+      //   reader.readAsDataURL(file)
+      // })
 
-      AndroidInterface.openImagePicker();
+      // AndroidInterface.openImagePicker();
       return;
     }
     document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')

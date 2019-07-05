@@ -190,16 +190,16 @@ function loadCardData(markers) {
         confirm.root_.classList.add('hidden')
         cardProd.open();
 
-        // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+        requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
         snacks('Check-in created');
         cardProd.close();
         getSuggestions();
-        // }).catch(function (error) {
-        //   console.log(error)
-        //   confirm.root_.classList.remove('hidden');
-        //   snacks('Please Try Again');
-        //   cardProd.close()
-        // })
+        }).catch(function (error) {
+          console.log(error)
+          confirm.root_.classList.remove('hidden');
+          snacks('Please Try Again');
+          cardProd.close()
+        })
       }
     })
   });
@@ -544,6 +544,7 @@ function loadNearByLocations(o, map, location) {
         cursor.continue();
         return;
       }
+
 
 
       var marker = new google.maps.Marker({
