@@ -87,7 +87,7 @@ function profileView() {
       displayName: newName
     }).then(function () {
       if (!isEmailValid(newEmail, currentEmail)) return setDetails();
-      requestCreator('updateEmail', {
+      requestCreator('updateAuth', {
         email: emailInit.value
       }).then(function () {
         snacks('Verification Link has been Sent to ' + emailInit.value);
