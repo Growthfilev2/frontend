@@ -56,6 +56,7 @@ function getPendingLocationActivities() {
         cursor.continue();
         return;
       }
+      
       let match;
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
@@ -63,22 +64,23 @@ function getPendingLocationActivities() {
           match = cursor.value
         }
       })
+      
       if (!match) {
         cursor.continue();
         return;
       }
       let found = false
+     
       match.schedule.forEach(function (sn) {
         if (moment(moment()).isBetween(sn.startTime, sn.endTime, null, '[]')) {
           sn.isValid = true
           found = true
         }
       })
-
+     
       if (found) {
         result.push(match);
       }
-
       cursor.continue();
     }
     tx.oncomplete = function () {
@@ -199,11 +201,13 @@ function homeView(suggestedTemplates) {
  
   panel.innerHTML = homePanel();
   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('suggestion-progress'))
+  if(document.getElementById('camera')) {
 
-  document.getElementById('camera').addEventListener('click', function () {
-    history.pushState(['snapView'], null, null)
-    snapView()
-  })
+    document.getElementById('camera').addEventListener('click', function () {
+      history.pushState(['snapView'], null, null)
+      snapView()
+    })
+  } 
   document.getElementById('chat').addEventListener('click', function () {
     history.pushState(['chatView'], null, null);
     chatView()
@@ -218,17 +222,6 @@ function homeView(suggestedTemplates) {
     reportView();
   })
   
-
-  // document.getElementById('attendence').addEventListener('click',function(){
-  //   history.pushState(['attendenceView'],null,null);
-  //   attendenceView();
-  // })
-
-  // document.getElementById('claims').addEventListener('click',function(){
-    
-  //   history.pushState(['claimsView'],null,null);
-  //   claimsView()
-  // })
 
   if (ApplicationState.knownLocation) {
     getPendingLocationActivities().then(function (activities) {
