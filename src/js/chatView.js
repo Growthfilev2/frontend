@@ -14,18 +14,18 @@ function chatView() {
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
-    contactsBtn.root_.addEventListener('click', function (evt) {
-        contactsBtn.root_.remove();
-        loadUsers().then(function (result) {
-            header.navIcon_.classList.remove('hidden')
-            document.getElementById('search-btn').classList.remove('hidden')
+    // const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
+    // contactsBtn.root_.addEventListener('click', function (evt) {
+    //     contactsBtn.root_.remove();
+    //     loadUsers().then(function (result) {
+    //         header.navIcon_.classList.remove('hidden')
+    //         document.getElementById('search-btn').classList.remove('hidden')
 
-            document.getElementById('chats').innerHTML = result.domString
+    //         document.getElementById('chats').innerHTML = result.domString
 
 
-        })
-    })
+    //     })
+    // })
     readLatestChats();
 }
 
@@ -39,9 +39,7 @@ function chatDom() {
     <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
        
     </ul>
-    <button class="mdc-fab app-fab--absolute open-contacts-btn mdc-theme--primary-bg" aria-label="Contacts">
-        <span class="mdc-fab__icon material-icons mdc-theme--text-primary-on-light">contacts</span>
-    </button>
+    
 </div>`
 }
 
@@ -105,33 +103,33 @@ function search() {
             }
             const listGroup = `<div class="mdc-list-group" id='search-list-group'>
            ${currentChats ?` <h3 class="mdc-list-group__subheader">Chats</h3>
-           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
+           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='current-chats-list'>
             ${currentChats}
            </ul>`:'' }
            ${newContacts ?`  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
-           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
+           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='new-chats-list'>
             ${newContacts}
            </ul>`:''}
           </div>`
             parent.innerHTML = listGroup;
-            if(currentChatsArray.length) {
+            if (currentChatsArray.length) {
 
-                const currenChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(1)'))
-                currenChatsUl.listen('MDCList:action',function(evt){
+                const currenChatsUl = new mdc.list.MDCList(document.getElementById('current-chats-list'))
+                currenChatsUl.listen('MDCList:action', function (evt) {
                     const userRecord = currentChatsArray[evt.detail.index];
-                    history.pushState(['enterChat',userRecord],null,null)
+                    history.pushState(['enterChat', userRecord], null, null)
                     enterChat(userRecord)
                 })
             }
-            if(newContactsArray.length) {
-            const newChatsUl = new mdc.list.MDCList(document.querySelector('#search-list-group .mdc-list:nth-child(2)'))
-            newChatsUl.listen('MDCList:action',function(evt){
-                const userRecord = newContactsArray[evt.detail.index];
-                history.pushState(['enterChat',userRecord],null,null)
-                enterChat(userRecord)
-            })
-        }
-        
+            if (newContactsArray.length) {
+                const newChatsUl = new mdc.list.MDCList(document.getElementById('new-chats-list'))
+                newChatsUl.listen('MDCList:action', function (evt) {
+                    const userRecord = newContactsArray[evt.detail.index];
+                    history.pushState(['enterChat', userRecord], null, null)
+                    enterChat(userRecord)
+                })
+            }
+
         }
 
     });
@@ -179,7 +177,7 @@ function formatNumber(numberString) {
         number = '+91' + number
     }
 
-    return number
+    return number.replace(/ +/g, "");
 }
 
 
@@ -202,17 +200,17 @@ function readLatestChats() {
         cursor.continue();
     }
     tx.oncomplete = function () {
-        if(!result.length) {
-            document.getElementById('chats').innerHTML = 'No Chats Found'
+        if (!result.length) {
+            document.getElementById('chats').innerHTML = `<li class='mdc-list-item'>No Chats Found</li>`
             return;
         }
         document.getElementById('search-btn').classList.remove('hidden')
-        const ulSelector =  document.getElementById('chats')
+        const ulSelector = document.getElementById('chats')
         ulSelector.innerHTML = string
         const ul = new mdc.list.MDCList(ulSelector)
-        ul.listen('MDCList:action',function(evt){
+        ul.listen('MDCList:action', function (evt) {
             const userRecord = result[evt.detail.index]
-            history.pushState(['enterChat',userRecord],null,null)
+            history.pushState(['enterChat', userRecord], null, null)
             enterChat(userRecord);
         })
     }
@@ -241,7 +239,7 @@ function userLi(value) {
     </li>`
 }
 
-function loadUsers(hideMetaText,exception) {
+function loadUsers(hideMetaText, exception) {
     return new Promise(function (resolve, reject) {
         const tx = db.transaction(['users']);
         const store = tx.objectStore('users');
@@ -255,20 +253,19 @@ function loadUsers(hideMetaText,exception) {
                 cursor.continue();
                 return;
             }
-            if(exception) {
-                if(exception[cursor.value.mobile]) {
+            if (exception) {
+                if (exception[cursor.value.mobile]) {
                     cursor.continue();
                     return;
                 }
             }
             result.push(cursor.value)
-            if(hideMetaText) {
+            if (hideMetaText) {
                 cursor.value.comment = '';
                 cursor.value.count = ''
                 cursor.value.timestamp = ''
                 string += userLi(cursor.value);
-            }
-            else {
+            } else {
                 string += userLi(cursor.value);
             }
             cursor.continue()
@@ -310,23 +307,26 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
-  
-        const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
+
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
         </a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
-        const header = getHeader('app-header', backIcon, '');
-        header.root_.classList.remove('hidden')
-        console.log(header)
-       
+    const header = getHeader('app-header', backIcon, '');
+    header.root_.classList.remove('hidden')
+    console.log(header)
 
-        document.getElementById('app-current-panel').innerHTML = `
+
+    document.getElementById('app-current-panel').innerHTML = `
         <div class="wrapper">
         <div class="inner" id="inner">
-        <div class="content" id="content"></div>
+    
+        <div class="content" id="content">
+
         </div>
+      
         <div class="bottom" id="bottom">
         <div class="conversation-compose">
         
@@ -346,9 +346,13 @@ function enterChat(userRecord) {
         </div>
         </div>
         </div>`
-        getUserChats(userRecord)
-    
+    getUserChats(userRecord)
+
 }
+
+
+
+
 
 function actionBox(value) {
     return `
@@ -372,15 +376,74 @@ function messageBox(comment, position, image, time) {
     <img class="circle-wrapper" src=${image}>
     <div class="text-wrapper">${comment}
     <span class="metadata">
-                      <span class="time">
-        ${moment(time).format('hh:mm')}
-</span></span>
+        <span class="time">
+            ${moment(time).format('hh:mm')}
+        </span>
+    </span>
     </div>
     </div>`
 }
 
+function messageBoxDom(comment, position, image, time) {
+    const wrapper = createElement('div', {
+        className: `message-wrapper ${position}`
+    })
+    const imageEl = createElement('img', {
+        className: 'circle-wrapper',
+        src: image
+    });
+    const text = createElement('div', {
+        className: `text-wrapper`,
+        textContent: comment
+    })
+    const metadata = createElement('span', {
+        className: 'metadata'
+    });
+    const timeEl = createElement('span', {
+        className: 'time',
+        textContent: moment(time).format('hh:mm')
+    })
+    wrapper.appendChild(imageEl);
+    metadata.appendChild(timeEl)
+    text.appendChild(metadata);
+    wrapper.appendChild(text);
+    return wrapper;
+}
 
-function createActivityActionMenu(addendumId,activityId) {
+function actionBoxDom(value) {
+    const container = createElement('div', {
+        className: 'action-box-container'
+    })
+    const menuCont = createElement('div', {
+        id: value.addendumId,
+        className: 'menu-container mdc-menu-surface--anchor'
+    })
+    const wrapper = createElement('div', {
+        className: `message-wrapper aciton-info`
+    });
+    wrapper.onclick = function () {
+        createActivityActionMenu(value.addendumId, value.activityId)
+    }
+    const text = createElement('div', {
+        className: `text-wrapper`,
+        textContent: value.comment
+    })
+    const metadata = createElement('span', {
+        className: 'metadata'
+    });
+    const icon = createElement('i', {
+        className: 'material-icons',
+        textContent: 'info'
+    })
+    metadata.appendChild(icon)
+    text.appendChild(metadata);
+    wrapper.appendChild(text);
+    container.appendChild(menuCont)
+    container.appendChild(wrapper)
+    return container;
+}
+
+function createActivityActionMenu(addendumId, activityId) {
     console.log("long press")
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const activity = event.target.result;
@@ -388,47 +451,51 @@ function createActivityActionMenu(addendumId,activityId) {
         const heading = `${activity.activityName}
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
-        const items = ['View/Edit', 'Share']
         if (!activity.canEdit) {
-            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create('simple');
+            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
+            dialog.buttons_[1].classList.add('hidden')
             dialog.open();
             return
         };
-
+        const items = [{name:'View',icon:'info'}, {name:'Share',icon:'share'},{name:'Edit',icon:'edit'}]
+       
         if (activity.status === 'CANCELLED') {
-            items.push('Mark Confirmed')
-            items.push('Mark Pending')
+            items.push({name:'Confirm',icon:'check'})
+            items.push({name:'Undo',icon:'undo'})
         }
         if (activity.status === 'PENDING') {
-            items.push('Mark Confirmed')
-            items.push('Mark Cancelled')
+            items.push({name:'Confirm',icon:'check'})
+            items.push({name:'Delete',icon:'delete'})
 
         }
         if (activity.status === 'CONFIRMED') {
-            items.push('Mark Pending')
-            items.push('Mark Cancelled')
+            items.push({name:'Undo',icon:'undo'})
+            items.push({name:'Delete',icon:'delete'})
         }
-        const joinedId = addendumId+activityId
-        document.getElementById(addendumId).innerHTML = createSimpleMenu(items,joinedId)
+        const joinedId = addendumId + activityId
+        document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
         const menu = new mdc.menu.MDCMenu(document.getElementById(joinedId))
         menu.open = true
         menu.root_.classList.add('align-right-menu')
         menu.listen('MDCMenu:selected', function (evt) {
-            switch (items[evt.detail.index]) {
-                case 'View/Edit':
-                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form', viewFormActions()).create();
+            switch (items[evt.detail.index].name) {
+                case 'View':
+                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
+                    dialog.buttons_[1].classList.add('hidden')
                     dialog.open()
                     break;
+                case 'Edit':
+                break;
                 case 'Share':
                     share(activity)
                     break;
-                case 'Mark Pending':
+                case 'Undo':
                     setActivityStatus(activity, 'PENDING')
                     break;
-                case 'Mark Confirmed':
+                case 'Confirm':
                     setActivityStatus(activity, 'CONFIRMED')
                     break;
-                case 'Mark Cancelled':
+                case 'Delete':
                     setActivityStatus(activity, 'CANCELLED')
                     break;
                 default:
@@ -503,25 +570,25 @@ function share(activity) {
     const ulSelector = document.getElementById('users-list')
     const ul = new mdc.list.MDCList(ulSelector)
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
-    history.pushState(['share',activity],null,null)
+    history.pushState(['share', activity], null, null)
     console.log(chipInit)
-    loadUsers(true,alreadySelected).then(function (userResult) {
+    loadUsers(true, alreadySelected).then(function (userResult) {
 
         if (!userResult.data.length) return;
-        sendBtn.root_.addEventListener('click',function(){
-           const userArray = Object.keys(newSelected);
-           if(!userArray.length) {
-            snacks('At least 1 contact must be selected')
-            return;
-           }
+        sendBtn.root_.addEventListener('click', function () {
+            const userArray = Object.keys(newSelected);
+            if (!userArray.length) {
+                snacks('At least 1 contact must be selected')
+                return;
+            }
             console.log(newSelected);
-            addAssignee(activity,userArray);
+            addAssignee(activity, userArray);
 
         })
         document.getElementById('users-list').innerHTML = userResult.domString;
 
         chipInit.listen('MDCChip:removal', function (event) {
-     
+
             console.log(chipInit.chips)
             const liElement = ul.listElements[Number(event.detail.chipId)]
             delete newSelected[userResult.data[Number(event.detail.chipId)].mobile]
@@ -529,10 +596,9 @@ function share(activity) {
             liElement.classList.remove('selected')
             liElement.querySelector('.user-selection-icon').classList.add('hidden')
             liElement.querySelector('.user-selection-icon').classList.remove('user-selection-show')
-            if(!chipInit.chips.length) {
+            if (!chipInit.chips.length) {
                 chipSetEl.classList.add('hidden')
-            }
-            else {
+            } else {
                 chipSetEl.classList.remove('hidden')
             }
         });
@@ -577,8 +643,7 @@ function share(activity) {
             searchInit.input_.addEventListener('input', function (evt) {
                 if (!evt.target.value) {
                     searchInit.trailingIcon_.root_.classList.add('hidden')
-                }
-                else {
+                } else {
                     searchInit.trailingIcon_.root_.classList.remove('hidden')
                 }
                 ul.listElements.forEach(function (el) {
@@ -596,7 +661,7 @@ function share(activity) {
                     }
                     const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
                     if (el) {
-                       
+
                         el.parentNode.parentNode.classList.add('found');
                     }
 
@@ -615,15 +680,15 @@ function share(activity) {
             })
 
             searchInit.leadingIcon_.root_.onclick = function () {
-               document.getElementById('search-users').classList.add('hidden')
-               document.getElementById('app-header').classList.remove("hidden")
-               searchInit.value = "";
-               searchInit.input_.dispatchEvent(new Event('input'))
+                document.getElementById('search-users').classList.add('hidden')
+                document.getElementById('app-header').classList.remove("hidden")
+                searchInit.value = "";
+                searchInit.input_.dispatchEvent(new Event('input'))
             }
             searchInit.trailingIcon_.root_.onclick = function () {
                 searchInit.value = "";
                 searchInit.input_.dispatchEvent(new Event('input'))
-              
+
             }
         })
     });
@@ -660,16 +725,16 @@ function activityDomCustomer(activityRecord) {
 </div>`
 }
 
-function addAssignee(record,userArray){
+function addAssignee(record, userArray) {
     progressBar.open();
-    requestCreator('share',{
-        activityId:record.activityId,
-        share:userArray
-    }).then(function(){
+    requestCreator('share', {
+        activityId: record.activityId,
+        share: userArray
+    }).then(function () {
         progressBar.close();
         snacks(`You Added ${userArray.length} People`)
         history.back();
-    }).catch(function(error){
+    }).catch(function (error) {
         snacks(error.response.message)
         progressBar.close();
     })
@@ -693,13 +758,14 @@ function setActivityStatus(record, status) {
 
 function viewFormActions() {
     return `
-   
-    
-    <div class="mdc-card__action-icons">
-        <button class="mdc-icon-button material-icons mdc-card__action mdc-card__action--icon " title="edit"
-            data-mdc-ripple-is-unbounded="true">edit</button>
+    <div class="mdc-card__actions">
+    <div class="mdc-card__action-buttons">
+    <button class="mdc-button mdc-card__action mdc-card__action--button">
+    <span class="mdc-button__label">Close</span>
+    </button>
     </div>
-
+    </div>
+    
 `
 }
 
@@ -725,11 +791,27 @@ function iconByType(type, name) {
     return iconObject[type]
 }
 
+function viewFormAttachmentEl(attachmentName,activityRecord){
+    if(activityRecord.attachment[attachmentName].type === 'base64') {
+        return `<ul class="mdc-image-list my-image-list">
+        <li class="mdc-image-list__item">
+          <div class="mdc-image-list__image-aspect-container">
+            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}">
+          </div>
+          <div class="mdc-image-list__supporting">
+            <span class="mdc-image-list__label">${attachmentName}</span>
+          </div>
+        </li>
+      </ul>`
+    }
+    return `<h1 class="mdc-typography--subtitle1 mt-0">
+        ${attachmentName} : ${activityRecord.attachment[attachmentName].value}
+    </h1>`
+}
+
 function viewAttachment(activityRecord) {
     return `${Object.keys(activityRecord.attachment).map(function(attachmentName){
-        return `${activityRecord.attachment[attachmentName].value ? `<h1 class="mdc-typography--subtitle1 mt-0">
-        ${attachmentName} : ${activityRecord.attachment[attachmentName].value}
-        </h1>` :''}`
+        return `${activityRecord.attachment[attachmentName].value ? viewFormAttachmentEl(attachmentName,activityRecord) :''}`
     }).join("")}`
 }
 
@@ -825,26 +907,22 @@ function createStatusChange(status) {
 
 function dynamicAppendChats(addendums) {
     const parent = document.getElementById('content');
-    let string = ''
     const myNumber = firebase.auth().currentUser.phoneNumber
-    const myImage = firebase.auth().currentUser.photoURL;
     addendums.forEach(function (addendum) {
         let position = '';
         let image = ''
-        if (addendum.user === myNumber) {
-            position = 'me'
-            image = myImage
-        } else {
-            position = 'them'
-            image = history.state[1].photoURL
-        }
+
+        position = 'them'
+        image = history.state[1].photoURL
+        if (!parent) return;
+        if (addendum.isComment && addendum.user === myNumber) return;
         if (addendum.isComment) {
-            string += messageBox(addendum.comment, position, image, addendum.timestamp)
+            parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
         } else {
-            string += actionBox(addendum)
+            parent.appendChild(actionBoxDom(addendum))
         }
     })
-    parent.innerHTML += string;
+
     setBottomScroll()
 }
 
@@ -855,9 +933,7 @@ function getUserChats(userRecord) {
     const index = tx.objectStore('addendum').index('key')
     const myNumber = firebase.auth().currentUser.phoneNumber;
     const range = IDBKeyRange.only(myNumber + userRecord.mobile)
-    index.getAll(range).onsuccess = function (event) {
-        console.log(event.target.result);
-    }
+
     const myImage = firebase.auth().currentUser.photoURL || './img/empty-user.jpg'
     const parent = document.getElementById('content');
     let timeLine = ''
@@ -873,7 +949,6 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         }
-        console.log(new Date(cursor.value.timestamp))
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {
@@ -898,7 +973,8 @@ function getUserChats(userRecord) {
                 comment: commentInit.value,
                 assignee: userRecord.mobile
             }).then(function () {
-                parent.innerHTML += messageBox(commentInit.value, 'me', firebase.auth().currentUser.photoURL);
+                if (!parent) return;
+                parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
                 commentInit.value = ''
                 resetCommentField(bottom, form, commentInit.input_)
                 setBottomScroll()
@@ -941,6 +1017,7 @@ function resetCommentField(bottom, form, input) {
 }
 
 function setBottomScroll() {
-    document.getElementById('inner').scrollTo(0, document.getElementById('inner').scrollHeight);
-
+    const el = document.getElementById('inner')
+    if(!el) return;
+    el.scrollTo(0, el.scrollHeight); 
 }

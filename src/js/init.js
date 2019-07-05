@@ -42,27 +42,11 @@ let native = function () {
       return localStorage.getItem('deviceInfo');
     },
     getInfo: function () {
-      if (!this.getName()) {
-        return false
-      }
-      if (this.getName() === 'Android') {
-        let deviceInfo;
-        try {
-          deviceInfo = getDeviceInfomation();
-          localStorage.setItem('deviceInfo', deviceInfo);
-        } catch (e) {
-          sendExceptionObject(e, `Catch Type 3: AndroidInterface.getDeviceId in native.getInfo()`, []);
+      if (!this.getName()) return JSON.stringify({id:'12345'});
 
-          deviceInfo = JSON.stringify({
-            baseOs: this.getName(),
-            deviceBrand: '',
-            deviceModel: '',
-            appVersion: 10,
-            osVersion: '',
-            id: '',
-          })
-          localStorage.setItem('deviceInfo', deviceInfo);
-        }
+      if (this.getName() === 'Android') {
+        deviceInfo = getAndroidDeviceInformation();
+        localStorage.setItem('deviceInfo', deviceInfo);
         return deviceInfo
       }
       return this.getIosInfo();
@@ -70,22 +54,8 @@ let native = function () {
   }
 }();
 
-function isNewDay(set) {
-  var today = localStorage.getItem('today');
-  if (!today) {
-    set ? localStorage.setItem('today', moment().format('YYYY-MM-DD')) : ''
-    return true;
-  }
-  const isSame = moment(moment().format('YYYY-MM-DD')).isSame(moment(today));
-  if (isSame) {
-    return false;
-  } else {
-    set ? localStorage.setItem('today', moment().format('YYYY-MM-DD')) : ''
-    return true
-  }
-}
 
-function getDeviceInfomation() {
+function getAndroidDeviceInformation() {
   return JSON.stringify({
     'id': AndroidInterface.getId(),
     'deviceBrand': AndroidInterface.getDeviceBrand(),
@@ -100,7 +70,7 @@ function getDeviceInfomation() {
 window.onpopstate = function (event) {
 
   if (!event.state) return;
-  if (event.state[0] === 'mapView') return;
+  if (event.state[0] === 'mapView' || event.state[0] === 'snapView') return;
   if (event.state[0] === 'homeView') {
     getSuggestions();
     return
@@ -217,11 +187,8 @@ function startApp() {
         return;
       }
     }
-    if (!localStorage.getItem('error') || isNewDay()) {
-      localStorage.setItem('error', JSON.stringify({}));
-    };
-
-
+    localStorage.setItem('error', JSON.stringify({}));
+    
 
     const req = window.indexedDB.open(auth.uid, 14);
 
@@ -354,7 +321,7 @@ function startApp() {
       console.log("run app")
       document.getElementById("main-layout-app").style.display = 'block'
     
-      ga('set', 'userId', JSON.parse(native.getInfo()).id)
+      // ga('set', 'userId', '12345')
 
       const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
 
@@ -367,10 +334,6 @@ function startApp() {
         index++;
       }, index + 1 * 1000);
 
-      // enterChat("+919000000000")
-      // return;
-      // profileCheck();
-      // return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -494,6 +457,7 @@ function checkForPhoto() {
           requestCreator('backblaze', {
             'imageBase64': srcData
           }).then(function () {
+            auth.reload();
             progCard.close();
             checkForRecipient()
             auth.reload();
@@ -514,9 +478,9 @@ function checkForPhoto() {
 
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
-  return mapView();
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     if (!result.length) return mapView();
+  
     if (auth.email && auth.emailVerified) return mapView();
 
     const text = getReportNameString(result)
@@ -893,11 +857,8 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         cursor.continue();
         return;
       }
-
       const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-
       if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-
         results.push(cursor.value);
       }
       cursor.continue();

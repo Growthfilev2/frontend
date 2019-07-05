@@ -451,10 +451,7 @@ function updateMap(venue, tx) {
   mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
-      // console.log("start adding");
-      // console.log("adding " + venue.activityId, "location " + venue.location)
       mapObjectStore.add(venue);
-      // console.log("finished adding to map")
       return;
     }
 
@@ -701,9 +698,7 @@ function successResponse(read, param, db, resolve, reject) {
         userTimestamp[addendum.assignee] = addendum;
       }
     } else {
-
       userTimestamp[addendum.user] = addendum;
-      // activityAssigneeAddendum[addendum.activityId] = addendum
     }
     addendumObjectStore.add(addendum)
   })
@@ -734,34 +729,6 @@ function successResponse(read, param, db, resolve, reject) {
       user.mobile = user.phoneNumber;
       delete user.phoneNumber;
       userStore.put(user);
-
-      // userStore.get(user.phoneNumber).onsuccess = function (event) {
-
-      //   let record = event.target.result;
-      //   if (!record) {
-      //     record = {};
-      //   }
-      //   record.displayName = user.displayName;
-      //   record.mobile = user.phoneNumber;
-      //   record.photoURL = user.photoURL;
-
-      //   const addendumIdObject = activityAssigneeAddendum[activity.activityId]
-
-      //   if (addendumIdObject) {
-      //     record.comment = addendumIdObject.comment
-      //     record.timestamp = addendumIdObject.timestamp
-
-      //     addendumIdObject.key = param.user.phoneNumber + addendumIdObject.user
-      //     // if (addendumIdObject.user !== param.user.phoneNumber) {
-      //     // } else {
-      //     //   addendumIdObject.key = param.user.phoneNumber + addendumIdObject.user
-      //     // }
-      //     addendumIdObject.user = user.phoneNumber
-      //     addendumObjectStore.put(addendumIdObject)
-      //   }
-
-      //   userStore.put(record)
-      // }
     })
   })
 
@@ -780,6 +747,7 @@ function successResponse(read, param, db, resolve, reject) {
           user.comment = currentAddendum.comment;
           user.timestamp = currentAddendum.timestamp
           addendumObjectStore.put(currentAddendum);
+          
           userStore.get(user.phoneNumber).onsuccess = function (event) {
             const userRecord = event.target.result;
             if (userRecord) {

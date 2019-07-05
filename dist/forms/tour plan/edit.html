@@ -7,101 +7,123 @@
     <link href="../../v1/external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link href="../styles/styles.css" rel="stylesheet" type="text/css">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
- <form class='forms mdc-card' id='form'>
+    <form class='forms mdc-card' id='form'>
 
-        <!-- <div class="form-list">
-
-
+        <div class="form-list">
             <div class="form-component">
-                <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='customer-contact'>
-                    <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
-                        role="button">contacts</i>
-                    <input class="mdc-text-field__input" type="tel">
-                    <div class="mdc-line-ripple"></div>
-                    <label class="mdc-floating-label">Customer Contact</label>
-                </div>
-            </div>
-            <div class="form-component">
-
-                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='customer-name'>
-                    <input class=" mdc-text-field__input" type="text" id="" required>
-                    <label for="input" class="mdc-floating-label" id="cc">Customer Name</label>
-                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
-                        id="logo">perm_identity</i>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-                <div class="mdc-text-field-helper-line">
-                    <div class="mdc-text-field-helper-text"></div>
-                </div>
-            </div>
-            <div class="form-component">
-
-                <div class="mdc-select">
+                <div class="mdc-select hidden" id='select-customer'>
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
                         <option value="" disabled selected></option>
                     </select>
-                    <label class="mdc-floating-label">Customer Type</label>
+                    <label class="mdc-floating-label">Customer</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
-
-            <div class="form-component">
-                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='address'>
-                    <textarea class="mdc-text-field__input" rows="4" cols="100" required="true"></textarea>
-                    <div class="mdc-notched-outline">
-                        <div class="mdc-notched-outline__leading"></div>
-                        <div class="mdc-notched-outline__notch">
-                            <label for="textarea" class="mdc-floating-label">Address</label>
-                        </div>
-                        <div class="mdc-notched-outline__trailing"></div>
-                    </div>
-                </div>
-                <div class="mdc-text-field-helper-line">
-                    <div class="mdc-text-field-helper-text"></div>
-                </div>
-            </div>  -->
-
-
-            <div class="form-component">
-                <input type="submit" value="CREATE TOUR PLAN" class="mdc-button submit-btn">
+        
+        <div class="form-component">
+            <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                id='start-date'>
+                <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                    role="button">today</i>
+                <input class="mdc-text-field__input" type="date">
+                <div class="mdc-line-ripple"></div>
+                <label class="mdc-floating-label">Start Date</label>
             </div>
+        </div>
+
+        <div class="form-component">
+            <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                id='end-date'>
+                <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                    role="button">today</i>
+                <input class="mdc-text-field__input" type="date">
+                <div class="mdc-line-ripple"></div>
+                <label class="mdc-floating-label">End Date</label>
+            </div>
+        </div>
+        <div class="form-component">
+            <div class="mdc-text-field mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                id='travel-mode'>
+                <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                    role="button">travel</i>
+                <input class="mdc-text-field__input" type="text">
+                <div class="mdc-line-ripple"></div>
+                <label class="mdc-floating-label">Travel Mode</label>
+            </div>
+        </div>
+
+        <div class="form-component">
+            <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='comment'>
+                <textarea class="mdc-text-field__input" rows="4" cols="100"></textarea>
+                <div class="mdc-notched-outline">
+                    <div class="mdc-notched-outline__leading"></div>
+                    <div class="mdc-notched-outline__notch">
+                        <label for="textarea" class="mdc-floating-label">Description</label>
+                    </div>
+                    <div class="mdc-notched-outline__trailing"></div>
+                </div>
+            </div>
+            <div class="mdc-text-field-helper-line">
+                <div class="mdc-text-field-helper-text"></div>
+            </div>
+        </div>
+        <div class="form-component">
+            <input type="submit" value="CREATE TOUR PLAN" class="mdc-button submit-btn">
+        </div>
+    </div>
     </form>
 
 
-    </div>
-
-    </div>
-
- 
-
-
-    </div>
-
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
+        const comment = new parent.mdc.textField.MDCTextField(document.getElementById('comment'))
+        const travelMode = new parent.mdc.textField.MDCTextField(document.getElementById('travel-mode'))
+        const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'))
+        const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'))
 
         function init(subscriptionTemplate) {
-
             var formEl = document.getElementById('form');
+            const select = new parent.mdc.select.MDCSelect(document.getElementById('select-customer'))
+            const tx = parent.db.transaction('children');
+            const index = tx.objectStore('children').index('templateStatus');
+            index.openCursor(IDBKeyRange.only(['customer','CONFIRMED'])).onsuccess = function(event){
+                const cursor = event.target.result;
+                if(!cursor) return;
+                if(cursor.value.office !== parent.ApplicationState.office) {
+                    cursor.continue();
+                    return;
+                }
+
+                select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
+                    ${cursor.value.attachment.Name.value}
+                  </option>`
+                cursor.continue();
+            }
+            tx.oncomplete = function(){
+                if (select.nativeControl_.children.length >= 1) {
+                    select.foundation_.adapter_.removeClass('hidden')
+                }
+
+            }
+            
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate))
-                const sc = copy.schedule[0];
-                copy.attachment.Customer.value = 'Testing00'
+                copy.attachment['Travel Mode'].value = travelMode.value
+                copy.attachment['Comment'].value = comment.value
                 copy.schedule = [{
-                    startTime: 1561545595000,
-                    endTime: 1561631995000,
-                    name: sc
+                    startTime: Date.parse(startDate.value),
+                    endTime: Date.parse(endDate.value),
+                    name: subscriptionTemplate.schedule[0]
                 }]
+                copy.attachment['Customer'].value = select.value;
                 copy.share = []
-                parent.sendFormToParent(copy)
+                parent.sendFormToParent(copy);
             })
         }
     </script>

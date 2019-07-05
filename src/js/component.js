@@ -95,11 +95,11 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function Dialog(title, content,id,footerContent) {
+function Dialog(title, content,id) {
     this.title = title;
     this.content = content;
     this.id = id;
-    this.footerContent = footerContent
+   
 }
 
 Dialog.prototype.create = function (type) {
@@ -138,20 +138,16 @@ Dialog.prototype.create = function (type) {
     surface.appendChild(h2)
     surface.appendChild(contentContainer);
     if (type !== 'simple') {
-        
-        if(this.footerContent) {
-            footer.classList.add('custom-footer')
-            footer.innerHTML = this.footerContent;
-        }
-        else {
 
-        const cancelButton = createElement('button', {
+         const cancelButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
             textContent: 'cancel'
         })
-        cancelButton.setAttribute('data-mdc-dialog-action', 'close')
-        const okButton = createElement('button', {
+        cancelButton.setAttribute('data-mdc-dialog-action', 'close');
+
+
+         const okButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
             textContent: 'Okay'
@@ -160,7 +156,7 @@ Dialog.prototype.create = function (type) {
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
         footer.appendChild(cancelButton)
         footer.appendChild(okButton);
-    }
+    
     surface.appendChild(footer)
     }
 
@@ -174,8 +170,6 @@ Dialog.prototype.create = function (type) {
     dialogParent.appendChild(parent)
     return new mdc.dialog.MDCDialog(parent);
 }
-
-
 
 
 function getHeader(parentSelector,sectionStart,sectionEnd){
@@ -220,7 +214,10 @@ function createSimpleMenu(items,id){
     <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
     ${items.map(function(item){
         return ` <li class="mdc-list-item" role="menuitem">
-        <span class="mdc-list-item__text">${item}</span>
+        <span class="mdc-list-item__graphic mdc-menu__selection-group-icon">
+        <i class='material-icons'>${item.icon}</i>
+        </span>
+        <span class="mdc-list-item__text">${item.name}</span>
         </li>`
     }).join("")}
     </ul>

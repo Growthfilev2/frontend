@@ -56,6 +56,7 @@ function getPendingLocationActivities() {
         cursor.continue();
         return;
       }
+      
       let match;
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
@@ -69,16 +70,16 @@ function getPendingLocationActivities() {
       }
       let found = false
       match.schedule.forEach(function (sn) {
-        if (moment(moment()).isBetween(sn.startTime, sn.endTime, null, '[]')) {
+        if(!sn.startTime && !sn.endTime)  return;
+        if (moment(moment().format('DD-MM-YY')).isBetween(moment(sn.startTime).format('DD-MM-YY'), moment(sn.endTime).format('DD-MM-YY'), null, '[]')) {
           sn.isValid = true
           found = true
         }
       })
-
+     
       if (found) {
         result.push(match);
       }
-
       cursor.continue();
     }
     tx.oncomplete = function () {
@@ -153,8 +154,8 @@ function homePanel() {
 }
 
 function topNavCard() {
+
   return `
-   
     <div class="profile-container mdc-card">
     <div class="mdc-card__primary-action">
       <div class="simple">
@@ -164,9 +165,9 @@ function topNavCard() {
       </div>
       <div class="actions">
         <div class="action">
-  
           <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i>Camera</span>
         </div>
+       
         <div class="action">
           <span class="mdc-typography--body1" id='chat'><i class="material-icons">comment</i>Chats</span>
         </div>
@@ -196,13 +197,16 @@ function homeView(suggestedTemplates) {
   history.pushState(['homeView'], null, null)
   const panel = document.getElementById('app-current-panel')
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
+ 
   panel.innerHTML = homePanel();
   const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('suggestion-progress'))
+  if(document.getElementById('camera')) {
 
-  document.getElementById('camera').addEventListener('click', function () {
-    history.pushState(['snapView'], null, null)
-    snapView()
-  })
+    document.getElementById('camera').addEventListener('click', function () {
+      history.pushState(['snapView'], null, null)
+      snapView()
+    })
+  } 
   document.getElementById('chat').addEventListener('click', function () {
     history.pushState(['chatView'], null, null);
     chatView()
@@ -218,19 +222,10 @@ function homeView(suggestedTemplates) {
   })
   
 
-  // document.getElementById('attendence').addEventListener('click',function(){
-  //   history.pushState(['attendenceView'],null,null);
-  //   attendenceView();
-  // })
-
-  // document.getElementById('claims').addEventListener('click',function(){
-    
-  //   history.pushState(['claimsView'],null,null);
-  //   claimsView()
-  // })
-
   if (ApplicationState.knownLocation) {
     getPendingLocationActivities().then(function (activities) {
+      if(!document.getElementById('pending-location-tasks'))  return;
+      
       document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
       const ul = new mdc.list.MDCList(document.getElementById('confirm-tasks'))
       ul.singleSelection = true;

@@ -6,7 +6,8 @@ ApplicationState = {
   office: '',
   location: '',
   knownLocation: false,
-  venue: ''
+  venue: '',
+
 }
 
 
@@ -146,16 +147,18 @@ function loadCardData(markers) {
           ApplicationState.office = evt.detail.value
           getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
             if (!checkInSub) return getSuggestions()
+            
+           
 
             cardProd.open()
-            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()
               getSuggestions()
-            // }).catch(function (error) {
-            //   snacks('Please Try again later');
-            //   cardProd.close()
-            // })
+            }).catch(function (error) {
+              snacks('Please Try again later');
+              cardProd.close()
+            })
           });
         });
         if (offices.length == 1) {
@@ -173,6 +176,9 @@ function loadCardData(markers) {
     ApplicationState.office = value.office;
     getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
       if (!result) return getSuggestions();
+      
+
+     
 
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -184,16 +190,16 @@ function loadCardData(markers) {
         confirm.root_.classList.add('hidden')
         cardProd.open();
 
-        // requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+        requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
         snacks('Check-in created');
         cardProd.close();
         getSuggestions();
-        // }).catch(function (error) {
-        //   console.log(error)
-        //   confirm.root_.classList.remove('hidden');
-        //   snacks('Please Try Again');
-        //   cardProd.close()
-        // })
+        }).catch(function (error) {
+          console.log(error)
+          confirm.root_.classList.remove('hidden');
+          snacks('Please Try Again');
+          cardProd.close()
+        })
       }
     })
   });
@@ -264,35 +270,7 @@ function toggleCardHeight(toggle, cardSelector) {
   }
 }
 
-function addSnapControl(map, office) {
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
 
-  var snapControlDiv = document.createElement('div');
-  var snapControl = new TakeSnap(snapControlDiv, office);
-  snapControlDiv.index = 2;
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(snapControlDiv);
-
-
-  var addControlDiv = document.createElement('div');
-  var addControl = new Add(addControlDiv);
-  addControlDiv.index = 1;
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(addControlDiv);
-
-}
-
-function Add(el) {
-  const add = new Fab('add').getButton();
-  add.root_.id = 'add';
-  add.root_.classList.add('custom-control', 'right', 'mdc-theme--primary-bg', 'mb-10')
-  el.appendChild(add.root_);
-  add.root_.addEventListener('click', function () {
-    console.log('clicked')
-    // localStorage.setItem('snap_office', office)
-    // AndroidInterface.startCamera();
-    // setFilePath();
-  });
-
-}
 
 
 function mapDom() {
@@ -332,13 +310,13 @@ function mapDom() {
 
 function snapView() {
   // localStorage.setItem('snap_office', office)
+  history.pushState(['snapView'], null, null)
   AndroidInterface.startCamera();
 }
 
 
 function setFilePath(base64) {
 
-  // document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
   header.root_.classList.remove('hidden')
@@ -380,13 +358,17 @@ function setFilePath(base64) {
       if (!offices.length) return;
       if (offices.length == 1) {
         getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
+          if(!sub) {
+            snacks('Check-in Subscription not available')
+            history.back();
+            return
+          }
           sub.attachment.Photo.value = url
           sub.attachment.Comment.value = textValue;
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            manageLocation().then(function (location) {
-              homeView(selectedSubs, location)
-            })
+         
+              getSuggestions()
             snacks('Check-In Created')
           }).catch(function () {
             snacks(error.message)
@@ -428,13 +410,16 @@ function setFilePath(base64) {
           if (evt.detail.action !== 'accept') return;
 
           getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
+            if(!sub) {
+              snacks('Check-in Subscription not available')
+              history.back();
+              return
+            }
             sub.attachment.Photo.value = url
             sub.attachment.Comment.value = textValue;
             progressBar.open();
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              manageLocation().then(function (location) {
-                homeView(selectedSubs, location)
-              });
+              getSuggestions()
               snacks('Check-In Created')
             }).catch(function () {
               snacks(error.message)
@@ -464,6 +449,10 @@ function setFilePath(base64) {
     }
   }
   image.src = url;
+
+}
+
+function createPhotoCheckIn() {
 
 }
 
@@ -563,7 +552,8 @@ function loadNearByLocations(o, map, location) {
         return;
       }
 
-      
+
+
       var marker = new google.maps.Marker({
         position: {
           lat: cursor.value.latitude,
