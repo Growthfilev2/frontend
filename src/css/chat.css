@@ -357,11 +357,11 @@
 
 /** view-form**/
 #view-form .mdc-dialog__container {
-  width: 100%;
+  /* width: 100%; */
 }
 #view-form .mdc-dialog__container  .mdc-dialog__surface{
-width: inherit;
-max-height:80%;
+/* width: inherit;
+max-height:80%; */
 }
 #view-form .mdc-dialog__content {
   padding: 0px;

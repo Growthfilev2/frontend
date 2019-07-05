@@ -112,24 +112,24 @@ function search() {
            </ul>`:''}
           </div>`
             parent.innerHTML = listGroup;
-            if(currentChatsArray.length) {
+            if (currentChatsArray.length) {
 
                 const currenChatsUl = new mdc.list.MDCList(document.getElementById('current-chats-list'))
-                currenChatsUl.listen('MDCList:action',function(evt){
+                currenChatsUl.listen('MDCList:action', function (evt) {
                     const userRecord = currentChatsArray[evt.detail.index];
-                    history.pushState(['enterChat',userRecord],null,null)
+                    history.pushState(['enterChat', userRecord], null, null)
                     enterChat(userRecord)
                 })
             }
-            if(newContactsArray.length) {
-            const newChatsUl = new mdc.list.MDCList(document.getElementById('new-chats-list'))
-            newChatsUl.listen('MDCList:action',function(evt){
-                const userRecord = newContactsArray[evt.detail.index];
-                history.pushState(['enterChat',userRecord],null,null)
-                enterChat(userRecord)
-            })
-        }
-        
+            if (newContactsArray.length) {
+                const newChatsUl = new mdc.list.MDCList(document.getElementById('new-chats-list'))
+                newChatsUl.listen('MDCList:action', function (evt) {
+                    const userRecord = newContactsArray[evt.detail.index];
+                    history.pushState(['enterChat', userRecord], null, null)
+                    enterChat(userRecord)
+                })
+            }
+
         }
 
     });
@@ -200,17 +200,17 @@ function readLatestChats() {
         cursor.continue();
     }
     tx.oncomplete = function () {
-        if(!result.length) {
+        if (!result.length) {
             document.getElementById('chats').innerHTML = `<li class='mdc-list-item'>No Chats Found</li>`
             return;
         }
         document.getElementById('search-btn').classList.remove('hidden')
-        const ulSelector =  document.getElementById('chats')
+        const ulSelector = document.getElementById('chats')
         ulSelector.innerHTML = string
         const ul = new mdc.list.MDCList(ulSelector)
-        ul.listen('MDCList:action',function(evt){
+        ul.listen('MDCList:action', function (evt) {
             const userRecord = result[evt.detail.index]
-            history.pushState(['enterChat',userRecord],null,null)
+            history.pushState(['enterChat', userRecord], null, null)
             enterChat(userRecord);
         })
     }
@@ -239,7 +239,7 @@ function userLi(value) {
     </li>`
 }
 
-function loadUsers(hideMetaText,exception) {
+function loadUsers(hideMetaText, exception) {
     return new Promise(function (resolve, reject) {
         const tx = db.transaction(['users']);
         const store = tx.objectStore('users');
@@ -253,20 +253,19 @@ function loadUsers(hideMetaText,exception) {
                 cursor.continue();
                 return;
             }
-            if(exception) {
-                if(exception[cursor.value.mobile]) {
+            if (exception) {
+                if (exception[cursor.value.mobile]) {
                     cursor.continue();
                     return;
                 }
             }
             result.push(cursor.value)
-            if(hideMetaText) {
+            if (hideMetaText) {
                 cursor.value.comment = '';
                 cursor.value.count = ''
                 cursor.value.timestamp = ''
                 string += userLi(cursor.value);
-            }
-            else {
+            } else {
                 string += userLi(cursor.value);
             }
             cursor.continue()
@@ -308,19 +307,19 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
-  
-        const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
+
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
         </a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
-        const header = getHeader('app-header', backIcon, '');
-        header.root_.classList.remove('hidden')
-        console.log(header)
-       
+    const header = getHeader('app-header', backIcon, '');
+    header.root_.classList.remove('hidden')
+    console.log(header)
 
-        document.getElementById('app-current-panel').innerHTML = `
+
+    document.getElementById('app-current-panel').innerHTML = `
         <div class="wrapper">
         <div class="inner" id="inner">
     
@@ -347,8 +346,8 @@ function enterChat(userRecord) {
         </div>
         </div>
         </div>`
-        getUserChats(userRecord)
-    
+    getUserChats(userRecord)
+
 }
 
 
@@ -385,12 +384,25 @@ function messageBox(comment, position, image, time) {
     </div>`
 }
 
-function messageBoxDom(comment,position,image,time) {
-    const wrapper = createElement('div',{className:`message-wrapper ${position}`})
-    const imageEl = createElement('img',{className:'circle-wrapper',src:image});
-    const text = createElement('div',{className:`text-wrapper`,textContent:comment})
-    const metadata = createElement('span',{className:'metadata'});
-    const timeEl = createElement('span',{className:'time',textContent:moment(time).format('hh:mm')})
+function messageBoxDom(comment, position, image, time) {
+    const wrapper = createElement('div', {
+        className: `message-wrapper ${position}`
+    })
+    const imageEl = createElement('img', {
+        className: 'circle-wrapper',
+        src: image
+    });
+    const text = createElement('div', {
+        className: `text-wrapper`,
+        textContent: comment
+    })
+    const metadata = createElement('span', {
+        className: 'metadata'
+    });
+    const timeEl = createElement('span', {
+        className: 'time',
+        textContent: moment(time).format('hh:mm')
+    })
     wrapper.appendChild(imageEl);
     metadata.appendChild(timeEl)
     text.appendChild(metadata);
@@ -398,25 +410,40 @@ function messageBoxDom(comment,position,image,time) {
     return wrapper;
 }
 
-function actionBoxDom(value){
-    const container = createElement('div',{className:'action-box-container'})
-    const menuCont = createElement('div',{id:value.addendumId,className:'menu-container mdc-menu-surface--anchor'})
-    const wrapper = createElement('div',{className:`message-wrapper aciton-info`});
-    wrapper.onclick = function(){
-        createActivityActionMenu(value.addendumId,value.activityId)
+function actionBoxDom(value) {
+    const container = createElement('div', {
+        className: 'action-box-container'
+    })
+    const menuCont = createElement('div', {
+        id: value.addendumId,
+        className: 'menu-container mdc-menu-surface--anchor'
+    })
+    const wrapper = createElement('div', {
+        className: `message-wrapper aciton-info`
+    });
+    wrapper.onclick = function () {
+        createActivityActionMenu(value.addendumId, value.activityId)
     }
-    const text = createElement('div',{className:`text-wrapper`,textContent:value.comment})
-    const metadata = createElement('span',{className:'metadata'});
-    const icon = createElement('i',{className:'material-icons',textContent:'info'})
+    const text = createElement('div', {
+        className: `text-wrapper`,
+        textContent: value.comment
+    })
+    const metadata = createElement('span', {
+        className: 'metadata'
+    });
+    const icon = createElement('i', {
+        className: 'material-icons',
+        textContent: 'info'
+    })
     metadata.appendChild(icon)
     text.appendChild(metadata);
     wrapper.appendChild(text);
     container.appendChild(menuCont)
     container.appendChild(wrapper)
-   return container;
+    return container;
 }
 
-function createActivityActionMenu(addendumId,activityId) {
+function createActivityActionMenu(addendumId, activityId) {
     console.log("long press")
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const activity = event.target.result;
@@ -444,8 +471,8 @@ function createActivityActionMenu(addendumId,activityId) {
             items.push('Mark Pending')
             items.push('Mark Cancelled')
         }
-        const joinedId = addendumId+activityId
-        document.getElementById(addendumId).innerHTML = createSimpleMenu(items,joinedId)
+        const joinedId = addendumId + activityId
+        document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
         const menu = new mdc.menu.MDCMenu(document.getElementById(joinedId))
         menu.open = true
         menu.root_.classList.add('align-right-menu')
@@ -539,25 +566,25 @@ function share(activity) {
     const ulSelector = document.getElementById('users-list')
     const ul = new mdc.list.MDCList(ulSelector)
     const sendBtn = new mdc.ripple.MDCRipple(document.getElementById('send-assignee'))
-    history.pushState(['share',activity],null,null)
+    history.pushState(['share', activity], null, null)
     console.log(chipInit)
-    loadUsers(true,alreadySelected).then(function (userResult) {
+    loadUsers(true, alreadySelected).then(function (userResult) {
 
         if (!userResult.data.length) return;
-        sendBtn.root_.addEventListener('click',function(){
-           const userArray = Object.keys(newSelected);
-           if(!userArray.length) {
-            snacks('At least 1 contact must be selected')
-            return;
-           }
+        sendBtn.root_.addEventListener('click', function () {
+            const userArray = Object.keys(newSelected);
+            if (!userArray.length) {
+                snacks('At least 1 contact must be selected')
+                return;
+            }
             console.log(newSelected);
-            addAssignee(activity,userArray);
+            addAssignee(activity, userArray);
 
         })
         document.getElementById('users-list').innerHTML = userResult.domString;
 
         chipInit.listen('MDCChip:removal', function (event) {
-     
+
             console.log(chipInit.chips)
             const liElement = ul.listElements[Number(event.detail.chipId)]
             delete newSelected[userResult.data[Number(event.detail.chipId)].mobile]
@@ -565,10 +592,9 @@ function share(activity) {
             liElement.classList.remove('selected')
             liElement.querySelector('.user-selection-icon').classList.add('hidden')
             liElement.querySelector('.user-selection-icon').classList.remove('user-selection-show')
-            if(!chipInit.chips.length) {
+            if (!chipInit.chips.length) {
                 chipSetEl.classList.add('hidden')
-            }
-            else {
+            } else {
                 chipSetEl.classList.remove('hidden')
             }
         });
@@ -613,8 +639,7 @@ function share(activity) {
             searchInit.input_.addEventListener('input', function (evt) {
                 if (!evt.target.value) {
                     searchInit.trailingIcon_.root_.classList.add('hidden')
-                }
-                else {
+                } else {
                     searchInit.trailingIcon_.root_.classList.remove('hidden')
                 }
                 ul.listElements.forEach(function (el) {
@@ -632,7 +657,7 @@ function share(activity) {
                     }
                     const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
                     if (el) {
-                       
+
                         el.parentNode.parentNode.classList.add('found');
                     }
 
@@ -651,15 +676,15 @@ function share(activity) {
             })
 
             searchInit.leadingIcon_.root_.onclick = function () {
-               document.getElementById('search-users').classList.add('hidden')
-               document.getElementById('app-header').classList.remove("hidden")
-               searchInit.value = "";
-               searchInit.input_.dispatchEvent(new Event('input'))
+                document.getElementById('search-users').classList.add('hidden')
+                document.getElementById('app-header').classList.remove("hidden")
+                searchInit.value = "";
+                searchInit.input_.dispatchEvent(new Event('input'))
             }
             searchInit.trailingIcon_.root_.onclick = function () {
                 searchInit.value = "";
                 searchInit.input_.dispatchEvent(new Event('input'))
-              
+
             }
         })
     });
@@ -696,16 +721,16 @@ function activityDomCustomer(activityRecord) {
 </div>`
 }
 
-function addAssignee(record,userArray){
+function addAssignee(record, userArray) {
     progressBar.open();
-    requestCreator('share',{
-        activityId:record.activityId,
-        share:userArray
-    }).then(function(){
+    requestCreator('share', {
+        activityId: record.activityId,
+        share: userArray
+    }).then(function () {
         progressBar.close();
         snacks(`You Added ${userArray.length} People`)
         history.back();
-    }).catch(function(error){
+    }).catch(function (error) {
         snacks(error.response.message)
         progressBar.close();
     })
@@ -860,22 +885,21 @@ function createStatusChange(status) {
 }
 
 function dynamicAppendChats(addendums) {
-    const parent = document.getElementById('content');   
+    const parent = document.getElementById('content');
     const myNumber = firebase.auth().currentUser.phoneNumber
     addendums.forEach(function (addendum) {
         let position = '';
         let image = ''
-        if (addendum.user !== myNumber) {
-            position = 'them'
-            image = history.state[1].photoURL
-            if(parent) {
-            if (addendum.isComment) {
-                    parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
-                    
-                } else {
-                    parent.appendChild(actionBoxDom(addendum))
-                }
-            }
+
+        position = 'them'
+        image = history.state[1].photoURL
+        if (!parent) return;
+        if (addendum.isComment && addendum.user === myNumber) return;
+        if (addendum.isComment) {
+            parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
+
+        } else {
+            parent.appendChild(actionBoxDom(addendum))
         }
     })
 
@@ -929,7 +953,7 @@ function getUserChats(userRecord) {
                 comment: commentInit.value,
                 assignee: userRecord.mobile
             }).then(function () {
-                if(!parent) return;
+                if (!parent) return;
                 parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
                 commentInit.value = ''
                 resetCommentField(bottom, form, commentInit.input_)
