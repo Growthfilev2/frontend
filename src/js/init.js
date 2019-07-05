@@ -480,7 +480,7 @@ function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     if (!result.length) return mapView();
-    return mapView();
+  
     if (auth.email && auth.emailVerified) return mapView();
 
     const text = getReportNameString(result)
@@ -856,11 +856,8 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
         cursor.continue();
         return;
       }
-
       const distanceBetweenBoth = calculateDistanceBetweenTwoPoints(cursor.value, currentLocation);
-
       if (isLocationLessThanThreshold(distanceBetweenBoth)) {
-
         results.push(cursor.value);
       }
       cursor.continue();

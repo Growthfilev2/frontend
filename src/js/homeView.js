@@ -224,6 +224,8 @@ function homeView(suggestedTemplates) {
 
   if (ApplicationState.knownLocation) {
     getPendingLocationActivities().then(function (activities) {
+      if(!document.getElementById('pending-location-tasks'))  return;
+      
       document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
       const ul = new mdc.list.MDCList(document.getElementById('confirm-tasks'))
       ul.singleSelection = true;

@@ -358,13 +358,17 @@ function setFilePath(base64) {
       if (!offices.length) return;
       if (offices.length == 1) {
         getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
+          if(!sub) {
+            snacks('Check-in Subscription not available')
+            history.back();
+            return
+          }
           sub.attachment.Photo.value = url
           sub.attachment.Comment.value = textValue;
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            manageLocation().then(function (location) {
-              homeView(selectedSubs, location)
-            })
+         
+              getSuggestions()
             snacks('Check-In Created')
           }).catch(function () {
             snacks(error.message)
@@ -406,13 +410,16 @@ function setFilePath(base64) {
           if (evt.detail.action !== 'accept') return;
 
           getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
+            if(!sub) {
+              snacks('Check-in Subscription not available')
+              history.back();
+              return
+            }
             sub.attachment.Photo.value = url
             sub.attachment.Comment.value = textValue;
             progressBar.open();
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              manageLocation().then(function (location) {
-                homeView(selectedSubs, location)
-              });
+              getSuggestions()
               snacks('Check-In Created')
             }).catch(function () {
               snacks(error.message)

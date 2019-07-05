@@ -452,7 +452,8 @@ function createActivityActionMenu(addendumId, activityId) {
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
         if (!activity.canEdit) {
-            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create('simple');
+            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
+            dialog.buttons_[1].classList.add('hidden')
             dialog.open();
             return
         };
@@ -480,6 +481,7 @@ function createActivityActionMenu(addendumId, activityId) {
             switch (items[evt.detail.index].name) {
                 case 'View':
                     dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
+                    dialog.buttons_[1].classList.add('hidden')
                     dialog.open()
                     break;
                 case 'Edit':
@@ -756,13 +758,14 @@ function setActivityStatus(record, status) {
 
 function viewFormActions() {
     return `
-   
-    
-    <div class="mdc-card__action-icons">
-        <button class="mdc-icon-button material-icons mdc-card__action mdc-card__action--icon " title="edit"
-            data-mdc-ripple-is-unbounded="true">edit</button>
+    <div class="mdc-card__actions">
+    <div class="mdc-card__action-buttons">
+    <button class="mdc-button mdc-card__action mdc-card__action--button">
+    <span class="mdc-button__label">Close</span>
+    </button>
     </div>
-
+    </div>
+    
 `
 }
 
@@ -788,11 +791,27 @@ function iconByType(type, name) {
     return iconObject[type]
 }
 
+function viewFormAttachmentEl(attachmentName,activityRecord){
+    if(activityRecord.attachment[attachmentName].type === 'base64') {
+        return `<ul class="mdc-image-list my-image-list">
+        <li class="mdc-image-list__item">
+          <div class="mdc-image-list__image-aspect-container">
+            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}">
+          </div>
+          <div class="mdc-image-list__supporting">
+            <span class="mdc-image-list__label">${attachmentName}</span>
+          </div>
+        </li>
+      </ul>`
+    }
+    return `<h1 class="mdc-typography--subtitle1 mt-0">
+        ${attachmentName} : ${activityRecord.attachment[attachmentName].value}
+    </h1>`
+}
+
 function viewAttachment(activityRecord) {
     return `${Object.keys(activityRecord.attachment).map(function(attachmentName){
-        return `${activityRecord.attachment[attachmentName].value ? `<h1 class="mdc-typography--subtitle1 mt-0">
-        ${attachmentName} : ${activityRecord.attachment[attachmentName].value}
-        </h1>` :''}`
+        return `${activityRecord.attachment[attachmentName].value ? viewFormAttachmentEl(attachmentName,activityRecord) :''}`
     }).join("")}`
 }
 
@@ -998,6 +1017,7 @@ function resetCommentField(bottom, form, input) {
 }
 
 function setBottomScroll() {
-    document.getElementById('inner').scrollTo(0, document.getElementById('inner').scrollHeight);
-
+    const el = document.getElementById('inner')
+    if(!el) return;
+    el.scrollTo(0, el.scrollHeight); 
 }

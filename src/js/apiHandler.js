@@ -451,10 +451,7 @@ function updateMap(venue, tx) {
   mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
-      // console.log("start adding");
-      // console.log("adding " + venue.activityId, "location " + venue.location)
       mapObjectStore.add(venue);
-      // console.log("finished adding to map")
       return;
     }
 
