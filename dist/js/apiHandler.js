@@ -694,26 +694,15 @@ function successResponse(read, param, db, resolve, reject) {
         record.assignees.forEach(function (user) {
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(currentAddendum);
-          if (number === param.user.phoneNumber) {
-            userStore.get(user.phoneNumber).onsuccess = function (event) {
-              var selfRecord = event.target.result;
-              if (!selfRecord) return;
-              selfRecord.comment = currentAddendum.comment;
-              selfRecord.timestamp = currentAddendum.timestamp;
-              userStore.put(selfRecord);
-            };
-            return;
-          }
-          if (number === user.phoneNumber) {
-            userStore.get(number).onsuccess = function (event) {
-              var userRecord = event.target.result;
-              if (!userRecord) return;
+          userStore.get(user.phoneNumber).onsuccess = function (event) {
+            var userRecord = event.target.result;
+            if (userRecord) {
               userRecord.comment = currentAddendum.comment;
               userRecord.timestamp = currentAddendum.timestamp;
+              userRecord.addendumCreator = currentAddendum.user;
               userStore.put(userRecord);
-            };
-            return;
-          }
+            }
+          };
         });
       };
       return;
