@@ -740,21 +740,35 @@ function successResponse(read, param, db, resolve, reject) {
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
         if (!record) return;
-        record.assignees.forEach(function(user) {
+        record.assignees.forEach(function (user) {
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(currentAddendum);
-          userStore.get(user.phoneNumber).onsuccess = function (event) {
-            const userRecord = event.target.result;
-            if (userRecord) {
-              userRecord.comment =  currentAddendum.comment 
-              userRecord.timestamp = currentAddendum.timestamp 
+          if(number === param.user.phoneNumber)  {
+            userStore.get(user.phoneNumber).onsuccess = function (event) {
+              const selfRecord = event.target.result;
+              if (!selfRecord) return;
+              selfRecord.comment = currentAddendum.comment
+              selfRecord.timestamp = currentAddendum.timestamp
+              userStore.put(selfRecord)
+            }
+            return;
+          }
+          if (number === user.phoneNumber) {
+            userStore.get(number).onsuccess = function (event) {
+              const userRecord = event.target.result;
+              if (!userRecord) return;
+              userRecord.comment = currentAddendum.comment
+              userRecord.timestamp = currentAddendum.timestamp
               userStore.put(userRecord)
             }
-          }
+            return;
+          } 
+      
         })
       }
       return;
     }
+
 
     userStore.get(number).onsuccess = function (event) {
       const userRecord = event.target.result;
