@@ -212,6 +212,9 @@ function readLatestChats() {
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
             return;
+        };
+        if(!cursor.value.addendumUser === myNumber || !cursor.value.addendumUser === cursor.value.user) {
+            cursor.value.comment = ''
         }
         result.push(cursor.value)
         string += userLi(cursor.value, true);
