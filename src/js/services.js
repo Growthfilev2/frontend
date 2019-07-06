@@ -194,7 +194,6 @@ function html5Geolocation() {
   })
 }
 
-
 function toRad(value) {
   return value * Math.PI / 180;
 }

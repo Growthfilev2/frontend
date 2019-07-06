@@ -692,15 +692,14 @@ function successResponse(read, param, db, resolve, reject) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
-
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] = addendum;
       }
+      addendumObjectStore.add(addendum)
     } else {
       userTimestamp[addendum.user] = addendum;
     }
-    addendumObjectStore.add(addendum)
   })
 
   removeActivityFromDB(db, removeActivitiesForUser, param)
@@ -741,18 +740,14 @@ function successResponse(read, param, db, resolve, reject) {
       activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
         const record = activityEvent.target.result;
         if (!record) return;
-        record.assignees.forEach(function (user) {
-          currentAddendum.user = user.phoneNumber
-          currentAddendum.key = param.user.phoneNumber + user.phoneNumber
-          user.comment = currentAddendum.comment;
-          user.timestamp = currentAddendum.timestamp
+        record.assignees.forEach(function(user) {
+          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(currentAddendum);
-          
           userStore.get(user.phoneNumber).onsuccess = function (event) {
             const userRecord = event.target.result;
             if (userRecord) {
-              userRecord.comment = currentAddendum.comment
-              userRecord.timestamp = currentAddendum.timestamp
+              userRecord.comment =  currentAddendum.comment 
+              userRecord.timestamp = currentAddendum.timestamp 
               userStore.put(userRecord)
             }
           }

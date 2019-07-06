@@ -368,6 +368,7 @@ max-height:80%; */
 
 #view-form .mdc-card .view-card {
   padding: 20px 24px;
+  padding-top: 0px;
 }
 
 #view-form .mdc-card .view-card .mdc-list {
@@ -387,6 +388,10 @@ max-height:80%; */
   display: block;
 }
 
+#assignee-container #share {
+  max-height: 150px;
+  overflow-y: auto;
+}
 /** status-change **/
 
 .status-select {
