@@ -213,13 +213,7 @@ function readLatestChats() {
             cursor.continue();
             return;
         };
-        const value = cursor.value
-        if(cursor.value.addendumCreator === myNumber && cursor.value.addendumCreator === cursor.value.mobile) {
-            value.comment = cursor.value.comment
-        }
-        else {
-            value.comment = ''
-        }
+  
         result.push(cursor.value)
         string += userLi(value);
         cursor.continue();
