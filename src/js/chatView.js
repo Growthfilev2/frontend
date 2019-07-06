@@ -939,12 +939,21 @@ function dynamicAppendChats(addendums) {
         if (addendum.isComment) {
             parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
         } else {
-            if(addendum.user === myNumber || addendum.user === userRecord.mobile) {
+            if(addendum.user === history.state[1].mobile) {
                 parent.appendChild(actionBoxDom(addendum))
+            }
+            else {
+                db.transaction('activity').objectStore('activity').get(addendum.activityId).onsuccess = function(evt){
+                    const activity = evt.target.result;
+                    const showActionAddendum = activity.assignees.filter(function(val){
+                        return val.phoneNumber === history.state[1].mobile
+                    })
+                    if(!showActionAddendum.length) return;
+                    parent.appendChild(actionBoxDom(addendum))
+                }
             }
         }
     })
-
     setBottomScroll()
 }
 
