@@ -215,7 +215,7 @@ function readLatestChats() {
         };
   
         result.push(cursor.value)
-        string += userLi(value);
+        string += userLi(cursor.value);
         cursor.continue();
     }
     tx.oncomplete = function () {
