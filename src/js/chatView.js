@@ -970,7 +970,9 @@ function getUserChats(userRecord) {
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {
-            timeLine += actionBox(cursor.value)
+            if(cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
+                timeLine += actionBox(cursor.value)
+            }
         }
         cursor.continue();
     }
