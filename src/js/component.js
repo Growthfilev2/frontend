@@ -142,7 +142,7 @@ Dialog.prototype.create = function (type) {
          const cancelButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
-            textContent: 'cancel'
+            textContent: 'Close'
         })
         cancelButton.setAttribute('data-mdc-dialog-action', 'close');
 

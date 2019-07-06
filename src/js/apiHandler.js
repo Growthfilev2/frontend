@@ -741,15 +741,13 @@ function successResponse(read, param, db, resolve, reject) {
         const record = activityEvent.target.result;
         if (!record) return;
         record.assignees.forEach(function(user) {
-
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(currentAddendum);
-          
           userStore.get(user.phoneNumber).onsuccess = function (event) {
             const userRecord = event.target.result;
             if (userRecord) {
-              userRecord.comment = currentAddendum.key ?  currentAddendum.comment : ''
-              userRecord.timestamp = currentAddendum.key ? currentAddendum.timestamp : ''
+              userRecord.comment =  currentAddendum.comment 
+              userRecord.timestamp = currentAddendum.timestamp 
               userStore.put(userRecord)
             }
           }

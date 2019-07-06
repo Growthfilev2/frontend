@@ -471,8 +471,9 @@ function createActivityActionMenu(addendumId, activityId) {
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
         if (!activity.canEdit) {
             dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
-            dialog.buttons_[1].classList.add('hidden')
             dialog.open();
+            dialog.buttons_[1].classList.add('hidden')
+            dialog.autoStackButtons = false;
             return
         };
         const items = [{name:'View',icon:'info'}, {name:'Share',icon:'share'},{name:'Edit',icon:'edit'}]
@@ -499,8 +500,9 @@ function createActivityActionMenu(addendumId, activityId) {
             switch (items[evt.detail.index].name) {
                 case 'View':
                     dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
-                    dialog.buttons_[1].classList.add('hidden')
                     dialog.open()
+                    dialog.buttons_[1].classList.add('hidden')
+                    dialog.autoStackButtons = false;
                     break;
                 case 'Edit':
                 break;
@@ -937,7 +939,9 @@ function dynamicAppendChats(addendums) {
         if (addendum.isComment) {
             parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
         } else {
-            parent.appendChild(actionBoxDom(addendum))
+            if(addendum.user === myNumber || addendum.user === userRecord.mobile) {
+                parent.appendChild(actionBoxDom(addendum))
+            }
         }
     })
 
