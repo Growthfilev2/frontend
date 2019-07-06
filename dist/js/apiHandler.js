@@ -676,9 +676,17 @@ function successResponse(read, param, db, resolve, reject) {
       createListStore(activity, counter, updateTx);
     };
     activity.assignees.forEach(function (user) {
-      user.mobile = user.phoneNumber;
-      delete user.phoneNumber;
-      userStore.put(user);
+      userStore.get(user.phoneNumber).onsuccess = function (event) {
+        var selfRecord = event.target.result;
+        if (!selfRecord) {
+          selfRecord = {};
+        };
+        selfRecord.mobile = user.phoneNumber;
+        selfRecord.displayName = user.displayName;
+        selfRecord.photoURL = user.photoURL;
+
+        userStore.put(selfRecord);
+      };
     });
   });
 
