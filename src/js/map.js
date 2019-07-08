@@ -22,7 +22,8 @@ function mapView() {
 
   manageLocation().then(function (location) {
     ApplicationState.location = location
-
+    firebase.auth().currentUser.reload()
+    console.log("auth relaoderd")
     document.getElementById('start-load').classList.add('hidden');
 
     const latLng = {
@@ -150,8 +151,6 @@ function loadCardData(markers) {
           getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
             if (!checkInSub) return getSuggestions()
             
-           
-
             cardProd.open()
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
@@ -576,16 +575,16 @@ function loadNearByLocations(o, map, location) {
 
       marker.setMap(map);
       const content = `<span>${cursor.value.activityId}</span>`
-      google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-        return function () {
-          if (lastOpen) {
-            lastOpen.close();
-          };
-          infowindow.setContent(content);
-          infowindow.open(map, marker);
-          lastOpen = infowindow;
-        };
-      })(marker, content, infowindow));
+      // google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+      //   return function () {
+      //     if (lastOpen) {
+      //       lastOpen.close();
+      //     };
+      //     infowindow.setContent(content);
+      //     infowindow.open(map, marker);
+      //     lastOpen = infowindow;
+      //   };
+      // })(marker, content, infowindow));
       result.push(cursor.value)
       bounds.extend(marker.getPosition())
       cursor.continue();

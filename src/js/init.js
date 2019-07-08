@@ -419,7 +419,10 @@ function checkForPhoto() {
 
       <div class='photo-container'>
       <img src="./img/empty-user.jpg" id="image-update">
-      <input type='file' accept='image/jpeg;capture=camera' id='choose'>
+      <button class="mdc-fab mdc-theme--primary-bg" aria-label="Favorite">
+        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">camera</span>
+        <input type='file' accept='image/jpeg;capture=camera' id='choose'>
+      </button>
 
       </div>
       <div class="view-container">
@@ -446,55 +449,50 @@ function checkForPhoto() {
    
     
       const files = document.getElementById('choose').files
-     
-      if (files.length > 0) {
+      if(!files.length) return;
         const file = files[0];
         var fileReader = new FileReader();
-        
-
         fileReader.onload = function (fileLoadEvt) {
           const srcData = fileLoadEvt.target.result;
           const image = new Image();
           image.src = srcData;
           image.onload = function(){
-         
-            var canvas = document.createElement('canvas');
-            const canvasDimension = new CanvasDimension(image.width,image.height);
-            canvasDimension.setMaxHeight(screen.height)
-            canvasDimension.setMaxWidth(screen.width);
-            const newDimension = canvasDimension.getNewDimension()
-            canvas.width = newDimension.width
-            canvas.height = newDimension.height;
-            var ctx = canvas.getContext("2d");
-            ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
-            const newDataUrl = canvas.toDataURL('image/jpeg',0.5);
+            const newDataUrl = resizeAndCompressImage(image);
             document.getElementById('image-update').src = newDataUrl;
-         
             progCard.open();
             requestCreator('backblaze', {
               'imageBase64': newDataUrl
             }).then(function () {
-              auth.reload();
               progCard.close();
               checkForRecipient()
-              auth.reload();
             }).catch(function (error) {
               progCard.close();
               snacks(error.response.message)
             })
           }
-        
-        
-         
         }
         fileReader.readAsDataURL(file);
-      }
     })
     return
   }
   checkForRecipient()
 }
 
+
+function resizeAndCompressImage(image){
+  var canvas = document.createElement('canvas');
+  const canvasDimension = new CanvasDimension(image.width,image.height);
+  canvasDimension.setMaxHeight(screen.height)
+  canvasDimension.setMaxWidth(screen.width);
+  const newDimension = canvasDimension.getNewDimension()
+  canvas.width = newDimension.width
+  canvas.height = newDimension.height;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
+  const newDataUrl = canvas.toDataURL('image/jpeg',0.5);
+  return newDataUrl;
+
+}
 
 function CanvasDimension(width,height){
 this.MAX_HEIGHT = ''
@@ -647,7 +645,7 @@ function simpleInputField() {
 }
 
 function profileCheck() {
-
+  history.state = null;
   document.getElementById('start-load').classList.add('hidden');
   const auth = firebase.auth().currentUser;
   if (!auth.displayName) {

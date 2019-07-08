@@ -448,6 +448,7 @@ function updateMap(venue, tx) {
 
   const mapObjectStore = tx.objectStore('map')
   const mapActivityIdIndex = mapObjectStore.index('activityId')
+  if(!venue.activityId) return;
   mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
