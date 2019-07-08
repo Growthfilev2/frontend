@@ -46,7 +46,7 @@ Choose Image
   let newEmail;
   const currentName = auth.displayName;
   const currentEmail = auth.email;
-  const imageSrc = firebase.auth().currentUser.photoURL;
+  let imageSrc = firebase.auth().currentUser.photoURL;
 
   document.getElementById('edit-profile').addEventListener('click',function(evt){
     // evt.target.classList.add('hidden')

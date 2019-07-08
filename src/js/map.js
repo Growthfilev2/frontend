@@ -368,10 +368,9 @@ function setFilePath(base64) {
           sub.attachment.Comment.value = textValue;
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-         
-              getSuggestions()
+            getSuggestions()
             snacks('Check-In Created')
-          }).catch(function () {
+          }).catch(function (error) {
             snacks(error.message)
 
           })
@@ -422,8 +421,8 @@ function setFilePath(base64) {
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
               getSuggestions()
               snacks('Check-In Created')
-            }).catch(function () {
-              snacks(error.message)
+            }).catch(function (error) {
+              snacks(error.response.message)
             })
           })
         })
