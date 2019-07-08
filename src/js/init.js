@@ -333,7 +333,8 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-
+      // profileView();
+      // return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -414,7 +415,7 @@ function miniProfileCard(content, headerTitle, action) {
 
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
-  if (auth.photoURL) {
+  if (!auth.photoURL) {
     const content = `
 
       <div class='photo-container'>

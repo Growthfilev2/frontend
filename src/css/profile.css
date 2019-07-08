@@ -62,10 +62,10 @@
 
 #edit-profile {
 
-    border-radius: 50%;
+    /* border-radius: 50%;
     right: 1rem;
     top: 1rem;
-    float: right;
+    float: right; */
 }
 
 #edit-profile.without-tabs-des {
