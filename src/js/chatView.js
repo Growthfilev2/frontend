@@ -9,35 +9,34 @@ function chatView() {
 
     const header = getHeader('app-header', backIcon, searchIcon);
 
-    document.getElementById('search-btn').addEventListener('click', search)
 
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
-    contactsBtn.root_.addEventListener('click', function (evt) {
-        contactsBtn.root_.remove();
-        loadUsers().then(function (result) {
-            header.navIcon_.classList.remove('hidden')
-            evt.target.classList.remove('hidden')
-            const chatsEl  =  document.getElementById('chats');
-            const allContactsEl =  document.getElementById('all-contacts')
-            if(chatsEl) {
+    // const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
+    // contactsBtn.root_.addEventListener('click', function (evt) {
+    //     contactsBtn.root_.remove();
+    //     loadUsers().then(function (result) {
+    //         header.navIcon_.classList.remove('hidden')
+    //         evt.target.classList.remove('hidden')
+    //         const chatsEl  =  document.getElementById('chats');
+    //         const allContactsEl =  document.getElementById('all-contacts')
+    //         if(chatsEl) {
 
-               chatsEl.innerHTML = '';
-            }
-            if(allContactsEl) {
-                allContactsEl.innerHTML = result.domString;
-            }
+    //            chatsEl.innerHTML = '';
+    //         }
+    //         if(allContactsEl) {
+    //             allContactsEl.innerHTML = result.domString;
+    //         }
           
-            const ul = new mdc.list.MDCList(allContactsEl)
-            ul.listen('MDCList:action', function (evt) {
-                const userRecord = result.data[evt.detail.index];
-                history.pushState(['enterChat', userRecord], null, null)
-                enterChat(userRecord)
-            })
-        });
-    })
+    //         const ul = new mdc.list.MDCList(allContactsEl)
+    //         ul.listen('MDCList:action', function (evt) {
+    //             const userRecord = result.data[evt.detail.index];
+    //             history.pushState(['enterChat', userRecord], null, null)
+    //             enterChat(userRecord)
+    //         })
+    //     });
+    // })
     readLatestChats();
 }
 
@@ -70,30 +69,25 @@ function searchBar() {
 
 }
 
-function search() {
+function search(chatsUl,contactsUl) {
     document.getElementById('app-header').classList.add("hidden")
-
-
     document.querySelector('#search-users-container .search-field').innerHTML = searchBar();
-
     const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
-    searchInit.focus()
-    const parent = document.querySelector('#search-users-container .search-result-container')
+    searchInit.focus();
     searchInit.input_.addEventListener('input', function (evt) {
         searchInit.trailingIcon_.root_.classList.remove('hidden')
         if (!evt.target.value) {
             searchInit.trailingIcon_.root_.classList.add('hidden')
-            parent.innerHTML = ''
-            readLatestChats()
-            return;
+        } else {
+            searchInit.trailingIcon_.root_.classList.remove('hidden')
         }
-
-        document.getElementById('chats').innerHTML = ''
-        document.getElementById('all-contacts').innerHTML = ''
-        let currentChats = '';
-        const currentChatsArray = []
-        let newContacts = '';
-        const newContactsArray = [];
+        chatsUl.listElements.forEach(function (el) {
+            el.classList.remove('found')
+        })
+        contactsUl.listElements.forEach(function (el) {
+            el.classList.remove('found')
+        })
+    
         const myNumber = firebase.auth().currentUser.phoneNumber;
         const searchable = getSearchBound(evt)
         searchable.bound.onsuccess = function (event) {
@@ -103,62 +97,42 @@ function search() {
                 cursor.continue();
                 return;
             }
-
-            if (cursor.value.timestamp) {
-                currentChatsArray.push(cursor.value)
-                currentChats += userLi(cursor.value);
-            } else {
-                newContactsArray.push(cursor.value)
-                newContacts += userLi(cursor.value)
+            const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
+            if (el) {
+                el.parentNode.parentNode.classList.add('found');
             }
-
             cursor.continue()
         }
         searchable.tx.oncomplete = function () {
-            if (!currentChats && !newContacts) {
-                parent.innerHTML = `<h3 class="mdc-list-group__subheader text-center">No Results Found</h3>`
-                return;
-            }
-            const listGroup = `<div class="mdc-list-group" id='search-list-group'>
-           ${currentChats ?` <h3 class="mdc-list-group__subheader">Chats</h3>
-           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='current-chats-list'>
-            ${currentChats}
-           </ul>`:'' }
-           ${newContacts ?`  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
-           <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='new-chats-list'>
-            ${newContacts}
-           </ul>`:''}
-          </div>`
-            parent.innerHTML = listGroup;
-            if (currentChatsArray.length) {
-
-                const currenChatsUl = new mdc.list.MDCList(document.getElementById('current-chats-list'))
-                currenChatsUl.listen('MDCList:action', function (evt) {
-                    const userRecord = currentChatsArray[evt.detail.index];
-                    history.pushState(['enterChat', userRecord], null, null)
-                    enterChat(userRecord)
-                })
-            }
-            if (newContactsArray.length) {
-                const newChatsUl = new mdc.list.MDCList(document.getElementById('new-chats-list'))
-                newChatsUl.listen('MDCList:action', function (evt) {
-                    const userRecord = newContactsArray[evt.detail.index];
-                    history.pushState(['enterChat', userRecord], null, null)
-                    enterChat(userRecord)
-                })
-            }
-
+            chatsUl.listElements.forEach(function (el) {
+                if (el.classList.contains('found')) {
+                    el.classList.remove('hidden')
+                } else {
+                    el.classList.add('hidden')
+                }
+            })
+            contactsUl.listElements.forEach(function (el) {
+                if (el.classList.contains('found')) {
+                    el.classList.remove('hidden')
+                } else {
+                    el.classList.add('hidden')
+                }
+            });
+           
         }
 
     });
 
     searchInit.leadingIcon_.root_.onclick = function () {
-        history.back()
+        document.getElementById('search-users').classList.add('hidden')
+        document.getElementById('app-header').classList.remove("hidden")
+        searchInit.value = "";
+        searchInit.input_.dispatchEvent(new Event('input'))
     }
     searchInit.trailingIcon_.root_.onclick = function () {
-        searchInit.value = ''
+        searchInit.value = "";
+        searchInit.input_.dispatchEvent(new Event('input'))
     }
-
 }
 
 function getSearchBound(evt) {
@@ -203,33 +177,63 @@ function readLatestChats() {
 
     const tx = db.transaction('users');
     const index = tx.objectStore('users').index('timestamp');
-    let string = ''
     const myNumber = firebase.auth().currentUser.phoneNumber
-    const result = []
+    let currentChats = '';
+    let currentChatsArray = [];
+    let currentContacts = ''
+    let currentContactsArray = [];
+
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.mobile === myNumber) {
             cursor.continue();
             return;
+        };
+        if(cursor.value.timestamp) {
+            currentChats += userLi(cursor.value)
+            currentChatsArray.push(cursor.value)
         }
-        result.push(cursor.value)
-        string += userLi(cursor.value, true);
+        else {
+            currentContacts += userLi(cursor.value)
+            currentContactsArray.push(cursor.value)
+        }
+       
         cursor.continue();
     }
     tx.oncomplete = function () {
-        if (!result.length) {
-            document.getElementById('chats').innerHTML = `<li class='mdc-list-item'>No Chats Found</li>`
-            return;
+   
+        const chatsEl = document.getElementById('chats')
+        const contactsEl = document.getElementById('all-contacts')
+        if(chatsEl) {
+            if(!currentChatsArray.length) {
+                currentChats = 'No Chat Found. '
+            }
+            chatsUl.innerHTML = currentChats
+            const chatsUl = new mdc.list.MDCList(chatsEl);
+            chatsUl.listen('MDCList:action',function(evt){
+                const userRecord = currentChatsArray[evt.detail.index]
+                history.pushState(['enterChat', userRecord], null, null)
+                enterChat(userRecord);
+            })
         }
-        document.getElementById('search-btn').classList.remove('hidden')
-        const ulSelector = document.getElementById('chats')
-        ulSelector.innerHTML = string
-        const ul = new mdc.list.MDCList(ulSelector)
-        ul.listen('MDCList:action', function (evt) {
-            const userRecord = result[evt.detail.index]
-            history.pushState(['enterChat', userRecord], null, null)
-            enterChat(userRecord);
+        if(contactsEl) {
+            contactsEl.innerHTML  = currentContacts;
+            if(!currentContacts) {
+                currentContacts = 'No Contacts Found'
+            };
+
+            const contactsUl = new mdc.list.MDCList(contactsEl);
+            contactsUl.listen('MDCList:action',function(evt){
+                const userRecord = currentContactsArray[evt.detail.index]
+                history.pushState(['enterChat', userRecord], null, null)
+                enterChat(userRecord);
+            })
+        }
+        if(!document.getElementById('search-btn')) return;
+        document.getElementById('search-btn').addEventListener('click', function(){
+            history.pushState(['search'],null,null);
+            search(chatsUl,contactsUl)
         })
     }
 

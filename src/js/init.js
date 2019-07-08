@@ -190,7 +190,7 @@ function startApp() {
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(auth.uid, 14);
+    const req = window.indexedDB.open(auth.uid, 15);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -293,7 +293,25 @@ function startApp() {
           addendum.createIndex('KeyTimestamp',['timestamp','key'])
         }
 
+        if(evt.oldVersion <= 14) {
+          var tx = req.transaction;
+          const users = tx.objectStore('users');
+          users.openCursor().onsuccess = function(event){
+            const cursor = event.target.result;
+            if(!cursor) return;
+            if(cursor.value.timestamp) {
+              cursor.continue();
+              return;
+            }
+            cursor.value.timestamp = ''
+            const update =  cursor.update(cursor.value)
+            update.onsuccess = function(){
+              console.log("updated user ",cursor.value)
+            }
 
+            cursor.continue();  
+          }
+        }
 
 
       };
