@@ -16,6 +16,7 @@ function profileView() {
   
   <div class="mdc-card__media mdc-card__media--16-9 demo-card__media"
   style="background-image: url(${firebase.auth().currentUser.photoURL || './img/empty-user-big.jpg'});">
+
   <button id="edit-profile"
   class="mdc-icon-button mdc-theme--primary-bg mdc-theme--on-primary"
   aria-label="Add to favorites"
@@ -27,6 +28,13 @@ function profileView() {
 
 </button>
 </div>
+<button class='mdc-button overlay-text'>
+<i class='material-icons mdc-button__icon mdc-theme--on-primary'>add_a_photo</i>
+<span class='mdc-button__label mdc-theme--on-primary'>
+Choose Image
+</span>
+<input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera' class='overlay-text'>
+</button>
 <div id='base-details'></div>
 <div id='user-details'></div>  
 <div class="mdc-card__actions">
@@ -44,7 +52,7 @@ function profileView() {
   let newEmail;
   const currentName = auth.displayName;
   const currentEmail = auth.email;
-
+ 
   editInit.listen('MDCIconButtonToggle:change', function (evt) {
     let imageSrc = firebase.auth().currentUser.photoURL;
     if (evt.detail.isOn) {
@@ -54,19 +62,33 @@ function profileView() {
       document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
       nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
       emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
-      
-      // el.addEventListener('change',function(evt){
-      //   const file = evt.target.result.files[0];
-      //   const reader = new FileReader();
-      //   reader.onload = function(fileEvent){
-      //     const url = fileEvent.target.result;
-      //     imageSrc = url
-      //     document.querySelector('.mdc-card-media').src = url
-      //   }
-      //   reader.readAsDataURL(file)
-      // })
+    
+    
+      const imageBckg = document.querySelector('.mdc-card__media');
+      imageBckg.classList.add('reduced-brightness');
+      document.querySelector('.mdc-button.overlay-text').classList.add('show');
 
-      // AndroidInterface.openImagePicker();
+      const input = document.getElementById('choose-profile-image')
+      document.querySelector('.overlay-text').style.opacity = 1;
+
+      input.addEventListener('change',function(evt){
+
+        const files = input.files
+          if(!files.length) return;
+          const file = files[0];
+          var fileReader = new FileReader();
+          fileReader.onload = function (fileLoadEvt) {
+            const image = new Image();
+            image.src = srcData;
+            image.onload = function(){
+            const newSrc = resizeAndCompressImage(image);
+            imageBckg.style.backgroundImage = `url(${newSrc})`
+            imageSrc = newSrc;
+            }
+          }
+          fileReader.readAsDataURL(file);
+      })
+    
       return;
     }
     document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')

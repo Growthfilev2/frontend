@@ -2,8 +2,32 @@
     border-radius: 50%;
     width: 140px;
     height: 140px;
+    transition: .5s ease;
+}
+.mdc-button.overlay-text {
+    display: inline-block;
+    align-items: center;
+}
+.overlay-text {
+    transition: .5s ease;
+    opacity: 0;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    text-align: center;
+    top: 30% !important;
+    
+    width: 100%;
+}
+.overlay-text.show , .overlay-text.show i {
+    font-size: 22px;   
 }
 
+
+.mdc-card__media.mdc-card__media--16-9.reduced-brightness {
+    filter: brightness(0.4);
+}
 
 #profile-card {
     min-height: 100vh;
