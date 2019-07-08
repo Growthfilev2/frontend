@@ -414,7 +414,7 @@ function miniProfileCard(content, headerTitle, action) {
 
 function checkForPhoto() {
   const auth = firebase.auth().currentUser;
-  if (!auth.photoURL) {
+  if (auth.photoURL) {
     const content = `
 
       <div class='photo-container'>
@@ -443,30 +443,49 @@ function checkForPhoto() {
     const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
 
     document.getElementById('choose').addEventListener('change', function (evt) {
-      var t1 = performance.now();
-      console.log(evt)
+   
+    
       const files = document.getElementById('choose').files
-      console.log(files);
+     
       if (files.length > 0) {
         const file = files[0];
         var fileReader = new FileReader();
+        
+
         fileReader.onload = function (fileLoadEvt) {
           const srcData = fileLoadEvt.target.result;
-          document.getElementById('image-update').src = srcData;
-          progCard.open();
-          requestCreator('backblaze', {
-            'imageBase64': srcData
-          }).then(function () {
-            auth.reload();
-            progCard.close();
-            checkForRecipient()
-            auth.reload();
-          }).catch(function (error) {
-            progCard.close();
-            snacks(error.response.message)
-          })
-          var t2 = performance.now();
-          console.log(t2 - t1);
+          const image = new Image();
+          image.src = srcData;
+          image.onload = function(){
+         
+            var canvas = document.createElement('canvas');
+            const canvasDimension = new CanvasDimension(image.width,image.height);
+            canvasDimension.setMaxHeight(screen.height)
+            canvasDimension.setMaxWidth(screen.width);
+            const newDimension = canvasDimension.getNewDimension()
+            canvas.width = newDimension.width
+            canvas.height = newDimension.height;
+            var ctx = canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
+            const newDataUrl = canvas.toDataURL('image/jpeg',0.5);
+            document.getElementById('image-update').src = newDataUrl;
+         
+            progCard.open();
+            requestCreator('backblaze', {
+              'imageBase64': newDataUrl
+            }).then(function () {
+              auth.reload();
+              progCard.close();
+              checkForRecipient()
+              auth.reload();
+            }).catch(function (error) {
+              progCard.close();
+              snacks(error.response.message)
+            })
+          }
+        
+        
+         
         }
         fileReader.readAsDataURL(file);
       }
@@ -474,6 +493,39 @@ function checkForPhoto() {
     return
   }
   checkForRecipient()
+}
+
+
+function CanvasDimension(width,height){
+this.MAX_HEIGHT = ''
+this.MAX_WIDTH =''
+this.width = width;
+this.height = height;
+}
+CanvasDimension.prototype.setMaxWidth = function(MAX_WIDTH) {
+  this.MAX_WIDTH = MAX_WIDTH
+}
+CanvasDimension.prototype.setMaxHeight = function(MAX_HEIGHT) {
+  this.MAX_HEIGHT = MAX_HEIGHT
+}
+CanvasDimension.prototype.getNewDimension = function(){
+  if(this.width > this.height) {
+    if(this.width > this.MAX_WIDTH) {
+      this.height *= this.MAX_WIDTH/ this.width;
+      this.width = this.MAX_WIDTH;
+
+    }
+  }
+  else {
+    if(this.height > this.MAX_HEIGHT) {
+      this.width *= this.MAX_HEIGHT / this.height;
+      this.height = this.MAX_HEIGHT
+    }
+  }
+  return {
+    width:this.width,
+    height:this.height
+  }
 }
 
 function checkForRecipient() {
