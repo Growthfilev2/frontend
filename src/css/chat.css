@@ -452,3 +452,10 @@ max-height:80%; */
 }
 
 
+
+
+.abs-hidden {
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+}

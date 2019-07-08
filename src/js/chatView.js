@@ -1,9 +1,13 @@
+var contactsUl;
+var chatsUl;
+let currentChatsArray = [];
+let currentContactsArray = [];
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
-    const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons hidden' id='search-btn'>
+    const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
 
@@ -13,30 +17,7 @@ function chatView() {
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    // const contactsBtn = new mdc.ripple.MDCRipple(document.querySelector('.open-contacts-btn'));
-    // contactsBtn.root_.addEventListener('click', function (evt) {
-    //     contactsBtn.root_.remove();
-    //     loadUsers().then(function (result) {
-    //         header.navIcon_.classList.remove('hidden')
-    //         evt.target.classList.remove('hidden')
-    //         const chatsEl  =  document.getElementById('chats');
-    //         const allContactsEl =  document.getElementById('all-contacts')
-    //         if(chatsEl) {
 
-    //            chatsEl.innerHTML = '';
-    //         }
-    //         if(allContactsEl) {
-    //             allContactsEl.innerHTML = result.domString;
-    //         }
-          
-    //         const ul = new mdc.list.MDCList(allContactsEl)
-    //         ul.listen('MDCList:action', function (evt) {
-    //             const userRecord = result.data[evt.detail.index];
-    //             history.pushState(['enterChat', userRecord], null, null)
-    //             enterChat(userRecord)
-    //         })
-    //     });
-    // })
     readLatestChats();
 }
 
@@ -47,15 +28,20 @@ function chatDom() {
     <div class='search-field'></div>
     <div class='search-result-container'></div>
 </div>
-    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
-       
-    </ul>
-    <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
+<div class="mdc-list-group">
+ <h3 id='no-result-found' style='text-align:center'></h3>   
+<div class='chats-container'>
+<h3 class="mdc-list-group__subheader">Chats</h3>
+<ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
 
-    </ul>
-    <button class="mdc-fab open-contacts-btn app-fab--absolute mdc-theme--primary-bg" aria-label="Favorite">
-  <span class="mdc-fab__icon material-icons mdc-theme--on-primary">contacts</span>
-</button>
+</ul>
+</div>
+<div class='contacts-container'>
+  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
+  <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
+  </ul>
+</div>
+  </div>
 </div>`
 }
 
@@ -69,7 +55,7 @@ function searchBar() {
 
 }
 
-function search(chatsUl,contactsUl) {
+function search() {
     document.getElementById('app-header').classList.add("hidden")
     document.querySelector('#search-users-container .search-field').innerHTML = searchBar();
     const searchInit = new mdc.textField.MDCTextField(document.getElementById('search-users'))
@@ -80,16 +66,15 @@ function search(chatsUl,contactsUl) {
             searchInit.trailingIcon_.root_.classList.add('hidden')
         } else {
             searchInit.trailingIcon_.root_.classList.remove('hidden')
-        }
-        chatsUl.listElements.forEach(function (el) {
-            el.classList.remove('found')
-        })
-        contactsUl.listElements.forEach(function (el) {
-            el.classList.remove('found')
-        })
-    
+        };
+
+     
         const myNumber = firebase.auth().currentUser.phoneNumber;
         const searchable = getSearchBound(evt)
+        let currentChats = '';
+        let currentContacts = '';
+        currentChatsArray = [];
+        currentContactsArray  = [];
         searchable.bound.onsuccess = function (event) {
             const cursor = event.target.result
             if (!cursor) return
@@ -97,28 +82,49 @@ function search(chatsUl,contactsUl) {
                 cursor.continue();
                 return;
             }
-            const el = document.querySelector(`[data-number="${cursor.value.mobile}"]`)
-            if (el) {
-                el.parentNode.parentNode.classList.add('found');
-            }
+
+            if (cursor.value.timestamp) {
+                currentChats += userLi(cursor.value)
+                currentChatsArray.push(cursor.value)
+            } else {
+                currentContacts += userLi(cursor.value)
+                currentContactsArray.push(cursor.value)
+            }                
             cursor.continue()
         }
         searchable.tx.oncomplete = function () {
-            chatsUl.listElements.forEach(function (el) {
-                if (el.classList.contains('found')) {
-                    el.classList.remove('hidden')
-                } else {
-                    el.classList.add('hidden')
+            const chatsEl = document.getElementById('chats')
+            const contactsEl = document.getElementById('all-contacts')
+            const noResultEl = document.getElementById('no-result-found');
+            if(noResultEl) {
+                if(!currentChatsArray.length && !currentContactsArray.length) {
+                    noResultEl.innerHTML = 'No Results Found'
                 }
-            })
-            contactsUl.listElements.forEach(function (el) {
-                if (el.classList.contains('found')) {
-                    el.classList.remove('hidden')
-                } else {
-                    el.classList.add('hidden')
+                else {
+                    noResultEl.innerHTML = ''
                 }
-            });
-           
+            }
+            if (chatsEl) {
+                if (!currentChatsArray.length) {
+                    document.querySelector('.chats-container').classList.add("hidden")
+                }
+                else {
+                    document.querySelector('.chats-container').classList.remove("hidden")
+                }
+                chatsEl.innerHTML = currentChats
+            }
+            if (contactsEl) {
+                if (!currentContacts) {
+                    document.querySelector('.contacts-container').classList.add("hidden")
+                }
+                else {
+                    document.querySelector('.contacts-container').classList.remove("hidden")
+                }
+                contactsEl.innerHTML = currentContacts;
+    
+            }
+
+         
         }
 
     });
@@ -179,9 +185,8 @@ function readLatestChats() {
     const index = tx.objectStore('users').index('timestamp');
     const myNumber = firebase.auth().currentUser.phoneNumber
     let currentChats = '';
-    let currentChatsArray = [];
+   
     let currentContacts = ''
-    let currentContactsArray = [];
 
     index.openCursor(null, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
@@ -190,53 +195,77 @@ function readLatestChats() {
             cursor.continue();
             return;
         };
-        if(cursor.value.timestamp) {
+        if (cursor.value.timestamp) {
             currentChats += userLi(cursor.value)
             currentChatsArray.push(cursor.value)
-        }
-        else {
+        } else {
             currentContacts += userLi(cursor.value)
             currentContactsArray.push(cursor.value)
         }
-       
+
         cursor.continue();
     }
     tx.oncomplete = function () {
-   
+
         const chatsEl = document.getElementById('chats')
         const contactsEl = document.getElementById('all-contacts')
-        if(chatsEl) {
-            if(!currentChatsArray.length) {
+        let chatsUl;
+        let contactsUl;
+        if (chatsEl) {
+            chatsEl.innerHTML = currentChats
+            if (!currentChatsArray.length) {
                 currentChats = 'No Chat Found. '
             }
-            chatsUl.innerHTML = currentChats
-            const chatsUl = new mdc.list.MDCList(chatsEl);
-            chatsUl.listen('MDCList:action',function(evt){
-                const userRecord = currentChatsArray[evt.detail.index]
-                history.pushState(['enterChat', userRecord], null, null)
-                enterChat(userRecord);
-            })
+            chatsUl = new mdc.list.MDCList(chatsEl);
+            
+            initializeChatList(chatsUl)
+            // chatsUl.listen('MDCList:action', function (evt) {
+            //     const userRecord = currentChatsArray[evt.detail.index]
+            //     history.pushState(['enterChat', userRecord], null, null)
+            //     enterChat(userRecord);
+            // })
         }
-        if(contactsEl) {
-            contactsEl.innerHTML  = currentContacts;
-            if(!currentContacts) {
+        if (contactsEl) {
+            contactsEl.innerHTML = currentContacts;
+            if (!currentContacts) {
                 currentContacts = 'No Contacts Found'
             };
 
-            const contactsUl = new mdc.list.MDCList(contactsEl);
-            contactsUl.listen('MDCList:action',function(evt){
-                const userRecord = currentContactsArray[evt.detail.index]
-                history.pushState(['enterChat', userRecord], null, null)
-                enterChat(userRecord);
+            contactsUl = new mdc.list.MDCList(contactsEl);
+            initializeContactList(contactsUl)
+            // contactsUl.listen('MDCList:action', function (evt) {
+            //     const userRecord = currentContactsArray[evt.detail.index]
+            //     history.pushState(['enterChat', userRecord], null, null)
+            //     enterChat(userRecord);
+            // })
+        }
+        if (!document.getElementById('search-btn')) return;
+        if (chatsUl && contactsUl) {
+            document.getElementById('search-btn').addEventListener('click', function () {
+
+                search()
             })
         }
-        if(!document.getElementById('search-btn')) return;
-        document.getElementById('search-btn').addEventListener('click', function(){
-            history.pushState(['search'],null,null);
-            search(chatsUl,contactsUl)
-        })
     }
+}
 
+
+function initializeChatList(chatsUl) {
+
+    chatsUl.listen('MDCList:action', function (evt) {
+        const userRecord = currentChatsArray[evt.detail.index]
+        history.pushState(['enterChat', userRecord], null, null)
+        enterChat(userRecord);
+    })
+}
+
+function initializeContactList(contactsUl){
+    contactsUl.listen('MDCList:action', function (evt) {
+        const userRecord = currentContactsArray[evt.detail.index]
+        history.pushState(['enterChat', userRecord], null, null)
+        enterChat(userRecord);
+    })
+    
 }
 
 function userLi(value) {
@@ -479,20 +508,47 @@ function createActivityActionMenu(addendumId, activityId) {
             dialog.open();
             return
         };
-        const items = [{name:'View',icon:'info'}, {name:'Share',icon:'share'},{name:'Edit',icon:'edit'}]
-       
+        const items = [{
+            name: 'View',
+            icon: 'info'
+        }, {
+            name: 'Share',
+            icon: 'share'
+        }, {
+            name: 'Edit',
+            icon: 'edit'
+        }]
+
         if (activity.status === 'CANCELLED') {
-            items.push({name:'Confirm',icon:'check'})
-            items.push({name:'Undo',icon:'undo'})
+            items.push({
+                name: 'Confirm',
+                icon: 'check'
+            })
+            items.push({
+                name: 'Undo',
+                icon: 'undo'
+            })
         }
         if (activity.status === 'PENDING') {
-            items.push({name:'Confirm',icon:'check'})
-            items.push({name:'Delete',icon:'delete'})
+            items.push({
+                name: 'Confirm',
+                icon: 'check'
+            })
+            items.push({
+                name: 'Delete',
+                icon: 'delete'
+            })
 
         }
         if (activity.status === 'CONFIRMED') {
-            items.push({name:'Undo',icon:'undo'})
-            items.push({name:'Delete',icon:'delete'})
+            items.push({
+                name: 'Undo',
+                icon: 'undo'
+            })
+            items.push({
+                name: 'Delete',
+                icon: 'delete'
+            })
         }
         const joinedId = addendumId + activityId
         document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId)
@@ -507,7 +563,7 @@ function createActivityActionMenu(addendumId, activityId) {
                     dialog.open()
                     break;
                 case 'Edit':
-                break;
+                    break;
                 case 'Share':
                     share(activity)
                     break;
@@ -813,8 +869,8 @@ function iconByType(type, name) {
     return iconObject[type]
 }
 
-function viewFormAttachmentEl(attachmentName,activityRecord){
-    if(activityRecord.attachment[attachmentName].type === 'base64') {
+function viewFormAttachmentEl(attachmentName, activityRecord) {
+    if (activityRecord.attachment[attachmentName].type === 'base64') {
         return `<ul class="mdc-image-list my-image-list">
         <li class="mdc-image-list__item">
           <div class="mdc-image-list__image-aspect-container">
@@ -1040,6 +1096,6 @@ function resetCommentField(bottom, form, input) {
 
 function setBottomScroll() {
     const el = document.getElementById('inner')
-    if(!el) return;
-    el.scrollTo(0, el.scrollHeight); 
+    if (!el) return;
+    el.scrollTo(0, el.scrollHeight);
 }
