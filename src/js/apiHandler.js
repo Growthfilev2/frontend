@@ -641,11 +641,11 @@ function updateSubscription(subscription, tx) {
 }
 
 
-function createListStore(activity, counter, tx) {
+function createListStore(activity, tx) {
 
   const requiredData = {
     'activityId': activity.activityId,
-    'count': counter[activity.activityId],
+    
     'timestamp': activity.timestamp,
     'activityName': activity.activityName,
     'status': activity.status
@@ -692,17 +692,17 @@ function successResponse(read, param, db, resolve, reject) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
-        counter[addendum.user]  ? counter[addendum.user] + 1 : 0
+        counter[addendum.user]  ? counter[addendum.user] + 1 : counter[addendum.user] = 1
         
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] = addendum;
-        counter[addendum.assignee]  ? counter[addendum.assignee] + 1 : 0
+        counter[addendum.assignee]  ? counter[addendum.assignee] + 1 :  counter[addendum.assignee] =1 
 
       }
     } else {
       userTimestamp[addendum.user] = addendum;
-      counter[addendum.user]  ? counter[addendum.user] + 1 : 0
+      counter[addendum.user]  ? counter[addendum.user] + 1 :  counter[addendum.user] = 1
     }
     addendumObjectStore.add(addendum)
   })
@@ -726,9 +726,9 @@ function successResponse(read, param, db, resolve, reject) {
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
-    if (activity.hidden === 0) {
-      createListStore(activity, counter, updateTx)
-    };
+    // if (activity.hidden === 0) {
+    //   createListStore(activity, updateTx)
+    // };
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;
@@ -738,7 +738,10 @@ function successResponse(read, param, db, resolve, reject) {
         selfRecord.mobile = user.phoneNumber;
         selfRecord.displayName = user.displayName;
         selfRecord.photoURL = user.photoURL;
-      
+        selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
+        if(!selfRecord.timestamp) {
+          selfRecord.timestamp = ''
+        }
         userStore.put(selfRecord)
       }
     })
@@ -763,8 +766,11 @@ function successResponse(read, param, db, resolve, reject) {
               if (!selfRecord) return;
               selfRecord.comment = currentAddendum.comment
               selfRecord.timestamp = currentAddendum.timestamp
-              if(userRecord.count) {
-                userRecord.count += counter[number];
+              if(selfRecord.count) {
+                selfRecord.count += counter[number];
+              }
+              else {
+                selfRecord.count = counter[number];
               }
               userStore.put(selfRecord)
             }
@@ -778,6 +784,9 @@ function successResponse(read, param, db, resolve, reject) {
               userRecord.timestamp = currentAddendum.timestamp
               if(userRecord.count) {
                 userRecord.count += counter[number];
+              }
+              else {
+                userRecord.count = counter[number];
               }
               userStore.put(userRecord)
             }
@@ -797,11 +806,12 @@ function successResponse(read, param, db, resolve, reject) {
         if(userRecord.count) {
           userRecord.count += counter[number];
         }
+        else {
+          userRecord.count = counter[number];
+        }
         userStore.put(userRecord)
       }
     }
-
-
 
   })
 

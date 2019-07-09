@@ -352,7 +352,8 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-
+      profileCheck();
+      return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -717,6 +718,7 @@ function createObjectStores(db, uid) {
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
   users.createIndex('timestamp', 'timestamp')
+  users.createIndex('NAME_SEARCH','NAME_SEARCH')
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })

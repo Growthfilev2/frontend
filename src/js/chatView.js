@@ -121,30 +121,50 @@ function search() {
     });
 
     searchInit.leadingIcon_.root_.onclick = function () {
-        searchInitBack(searchInit)
+        history.back();
+        // searchInitBack(searchInit)
     }
     searchInit.trailingIcon_.root_.onclick = function () {
-       searchInitCancel(searchInit)
+        searchInitCancel(searchInit);
     }
 }
 
 function getSearchBound(evt) {
     let value = evt.target.value;
     let indexName;
-
-    if (isNumber(value)) {
+    let bound;
+    let direction = 'next'
+    if(!evt.target.value) {
+        if(history.state[0] === 'searchChats') {
+            indexName =  'timestamp'
+            direction = 'prev'
+        }
+    }
+    else if (isNumber(value)) {
         indexName = 'mobile'
         value = formatNumber(value);
-    } else {
-        indexName = 'NAME_SEARCH'
+        bound = IDBKeyRange.bound(value, value + '\uffff');
     }
-    const bound = IDBKeyRange.bound(value, value + '\uffff')
+     else {
+        indexName = 'NAME_SEARCH'
+        value = value.toLowerCase();
+        bound = IDBKeyRange.bound(value, value + '\uffff')
+    };
     const tx = db.transaction(['users', 'addendum']);
+    let store = tx.objectStore('users');
+    if(indexName) {
+        store = store.index(indexName).openCursor(bound,direction)
+    }
+    else {
+        store  = store.openCursor(bound,direction)
+    }
     return {
         tx: tx,
-        bound: tx.objectStore('users').index(indexName).openCursor(bound)
+        bound: store
     }
 }
+
+
 
 function isNumber(searchTerm) {
     return !isNaN(searchTerm)
@@ -192,6 +212,7 @@ function readLatestChats() {
         let contactsUl;
         if (chatsEl) {
             chatsEl.innerHTML = currentChats
+            document.querySelector('.chats-container').classList.remove("hidden")
             if (!currentChatsArray.length) {
                 currentChats = 'No Chat Found. '
             }
@@ -199,6 +220,7 @@ function readLatestChats() {
             initializeChatList(chatsUl)
         }
         if (contactsEl) {
+            document.querySelector('.contacts-container').classList.remove("hidden")
             contactsEl.innerHTML = currentContacts;
             if (!currentContacts) {
                 currentContacts = 'No Contacts Found'
@@ -262,7 +284,6 @@ function userLi(value) {
     </span>
     <span class="mdc-list-item__meta" aria-hidden="true">
     ${value.count ? `<div class='chat-count'>${value.count}</div>` :''}
-    
     ${value.timestamp ? formatCreatedTime(value.timestamp) : ''}</span>
     </li>`
 }
@@ -746,7 +767,7 @@ function share(activity) {
 
 }
 
-function searchInitBack(){
+function searchInitBack(searchInit){
     document.getElementById('search-users').classList.add('hidden')
     document.getElementById('app-header').classList.remove("hidden")
     searchInit.value = "";
