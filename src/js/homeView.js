@@ -160,7 +160,7 @@ function topNavCard() {
     <div class="mdc-card__primary-action">
       <div class="simple">
   
-        <img src="${firebase.auth().currentUser.photoURL}" class="image" id='profile-image-card'>
+        <img src="${firebase.auth().currentUser.photoURL}" class="image" id='profile-image-card' onerror="imgErr(this)">
         <h3 class="mdc-typography--headline6">My Growthfile</h3>
       </div>
       <div class="actions">

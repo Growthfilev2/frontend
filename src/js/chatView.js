@@ -278,7 +278,7 @@ function initializeContactList(contactsUl){
 function userLi(value) {
     return `<li class="mdc-list-item">
    <div style="position:relative">
-   <img class="mdc-list-item__graphic" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.mobile}>
+   <img class="mdc-list-item__graphic"  aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'}  onerror="imgErr(this)" data-number=${value.mobile}>
    <i class="material-icons user-selection-icon">check_circle</i>
    </div>
     
@@ -367,7 +367,7 @@ function enterChat(userRecord) {
     ApplicationState.currentChatSlected = userRecord.mobile;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
         </a>
-        <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
+        <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
@@ -430,7 +430,7 @@ function actionBox(value) {
 
 function messageBox(comment, position, image, time) {
     return `<div class="message-wrapper ${position}">
-    <img class="circle-wrapper" src=${image}>
+    <img class="circle-wrapper" src=${image} onerror="imgErr(this)">
     <div class="text-wrapper">${comment}
     <span class="metadata">
         <span class="time">
@@ -891,7 +891,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
         return `<ul class="mdc-image-list my-image-list">
         <li class="mdc-image-list__item">
           <div class="mdc-image-list__image-aspect-container">
-            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}">
+            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}" onerror="imgErr(this)">
           </div>
           <div class="mdc-image-list__supporting">
             <span class="mdc-image-list__label">${attachmentName}</span>
@@ -944,7 +944,7 @@ function viewAssignee(activityRecord) {
     <div class="mdc-chip-set" id='share'>
      ${activityRecord.assignees.map(function(user,idx){
         return `<div class="mdc-chip" id='${idx}-preselected'>
-                    <img class='mdc-chip__icon mdc-chip__icon--leading' src=${user.photoURL || '../img/empty-user.jpg'}>
+                    <img class='mdc-chip__icon mdc-chip__icon--leading' src=${user.photoURL || '../img/empty-user.jpg'} onerror="imgErr(this)">
                     <div class='mdc-chip__text'>${user.displayName || user.phoneNumber}</div>
                 </div>`
     }).join("")}

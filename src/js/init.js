@@ -11,6 +11,12 @@ let isCheckInCreated;
 let drawer;
 let navList;
 
+function imgErr(source) {
+  source.onerror = '';
+  source.src = './img/empty-user.jpg';
+  return true;
+}
+
 let native = function () {
   return {
     setFCMToken: function (token) {
@@ -89,14 +95,14 @@ window.addEventListener("load", function () {
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
 
-  drawer.listen('MDCDrawer:opened', function (evt) {
-    document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-    document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
-    document.querySelector(".mdc-drawer__header img").onclick = function () {
-      profileView();
+  // drawer.listen('MDCDrawer:opened', function (evt) {
+  //   document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
+  //   document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
+  //   document.querySelector(".mdc-drawer__header img").onclick = function () {
+  //     profileView();
 
-    }
-  })
+  //   }
+  // })
 
 
   moment.updateLocale('en', {
