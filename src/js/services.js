@@ -349,8 +349,6 @@ function officeRemovalSuccess(data) {
   return
 }
 
-
-
 function handleComponentUpdation(readResponse) {
   if(!history.state) return;
   switch (history.state[0]) {
@@ -369,6 +367,7 @@ function handleComponentUpdation(readResponse) {
 function runRead(value) {
 
   if (!value || value.read) {
+    firebase.auth().currentUser.reload();
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
     return;
   }

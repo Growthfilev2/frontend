@@ -352,8 +352,8 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-      profileCheck();
-      return;
+      // profileView();
+      // return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -439,7 +439,10 @@ function checkForPhoto() {
 
       <div class='photo-container'>
       <img src="./img/empty-user.jpg" id="image-update">
-      <input type='file' accept='image/jpeg;capture=camera' id='choose'>
+      <button class="mdc-fab mdc-theme--primary-bg" aria-label="Favorite">
+        <span class="mdc-fab__icon material-icons mdc-theme--on-primary">camera</span>
+        <input type='file' accept='image/jpeg;capture=camera' id='choose'>
+      </button>
 
       </div>
       <div class="view-container">
@@ -463,37 +466,84 @@ function checkForPhoto() {
     const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
 
     document.getElementById('choose').addEventListener('change', function (evt) {
-      var t1 = performance.now();
-      console.log(evt)
+   
+    
       const files = document.getElementById('choose').files
-      console.log(files);
-      if (files.length > 0) {
+      if(!files.length) return;
         const file = files[0];
         var fileReader = new FileReader();
         fileReader.onload = function (fileLoadEvt) {
           const srcData = fileLoadEvt.target.result;
-          document.getElementById('image-update').src = srcData;
-          progCard.open();
-          requestCreator('backblaze', {
-            'imageBase64': srcData
-          }).then(function () {
-            auth.reload();
-            progCard.close();
-            checkForRecipient()
-            auth.reload();
-          }).catch(function (error) {
-            progCard.close();
-            snacks(error.response.message)
-          })
-          var t2 = performance.now();
-          console.log(t2 - t1);
+          const image = new Image();
+          image.src = srcData;
+          image.onload = function(){
+            const newDataUrl = resizeAndCompressImage(image);
+            document.getElementById('image-update').src = newDataUrl;
+            progCard.open();
+            requestCreator('backblaze', {
+              'imageBase64': newDataUrl
+            }).then(function () {
+              progCard.close();
+              checkForRecipient()
+            }).catch(function (error) {
+              progCard.close();
+              snacks(error.response.message)
+            })
+          }
         }
         fileReader.readAsDataURL(file);
-      }
     })
     return
   }
   checkForRecipient()
+}
+
+
+function resizeAndCompressImage(image){
+  var canvas = document.createElement('canvas');
+  const canvasDimension = new CanvasDimension(image.width,image.height);
+  canvasDimension.setMaxHeight(screen.height)
+  canvasDimension.setMaxWidth(screen.width);
+  const newDimension = canvasDimension.getNewDimension()
+  canvas.width = newDimension.width
+  canvas.height = newDimension.height;
+  var ctx = canvas.getContext("2d");
+  ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
+  const newDataUrl = canvas.toDataURL('image/jpeg',0.5);
+  return newDataUrl;
+
+}
+
+function CanvasDimension(width,height){
+this.MAX_HEIGHT = ''
+this.MAX_WIDTH =''
+this.width = width;
+this.height = height;
+}
+CanvasDimension.prototype.setMaxWidth = function(MAX_WIDTH) {
+  this.MAX_WIDTH = MAX_WIDTH
+}
+CanvasDimension.prototype.setMaxHeight = function(MAX_HEIGHT) {
+  this.MAX_HEIGHT = MAX_HEIGHT
+}
+CanvasDimension.prototype.getNewDimension = function(){
+  if(this.width > this.height) {
+    if(this.width > this.MAX_WIDTH) {
+      this.height *= this.MAX_WIDTH/ this.width;
+      this.width = this.MAX_WIDTH;
+
+    }
+  }
+  else {
+    if(this.height > this.MAX_HEIGHT) {
+      this.width *= this.MAX_HEIGHT / this.height;
+      this.height = this.MAX_HEIGHT
+    }
+  }
+  return {
+    width:this.width,
+    height:this.height
+  }
 }
 
 function checkForRecipient() {
@@ -615,7 +665,7 @@ function simpleInputField() {
 }
 
 function profileCheck() {
-
+  history.state = null;
   document.getElementById('start-load').classList.add('hidden');
   const auth = firebase.auth().currentUser;
   if (!auth.displayName) {
