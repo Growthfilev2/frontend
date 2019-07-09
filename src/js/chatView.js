@@ -67,8 +67,6 @@ function search() {
         } else {
             searchInit.trailingIcon_.root_.classList.remove('hidden')
         };
-
-     
         const myNumber = firebase.auth().currentUser.phoneNumber;
         const searchable = getSearchBound(evt)
         let currentChats = '';
@@ -128,14 +126,10 @@ function search() {
     });
 
     searchInit.leadingIcon_.root_.onclick = function () {
-        document.getElementById('search-users').classList.add('hidden')
-        document.getElementById('app-header').classList.remove("hidden")
-        searchInit.value = "";
-        searchInit.input_.dispatchEvent(new Event('input'))
+        searchInitBack(searchInit)
     }
     searchInit.trailingIcon_.root_.onclick = function () {
-        searchInit.value = "";
-        searchInit.input_.dispatchEvent(new Event('input'))
+       searchInitCancel(searchInit)
     }
 }
 
@@ -712,7 +706,8 @@ function share(activity) {
                 }
                 ul.listElements.forEach(function (el) {
                     el.classList.remove('found')
-                })
+                });
+
                 const searchable = getSearchBound(evt);
 
                 searchable.bound.onsuccess = function (searchEvent) {
@@ -744,19 +739,26 @@ function share(activity) {
             })
 
             searchInit.leadingIcon_.root_.onclick = function () {
-                document.getElementById('search-users').classList.add('hidden')
-                document.getElementById('app-header').classList.remove("hidden")
-                searchInit.value = "";
-                searchInit.input_.dispatchEvent(new Event('input'))
+                searchInitBack(searchInit)
             }
             searchInit.trailingIcon_.root_.onclick = function () {
-                searchInit.value = "";
-                searchInit.input_.dispatchEvent(new Event('input'))
-
+               searchInitCancel(searchInit)
             }
         })
     });
 
+}
+
+function searchInitBack(){
+    document.getElementById('search-users').classList.add('hidden')
+    document.getElementById('app-header').classList.remove("hidden")
+    searchInit.value = "";
+    searchInit.input_.dispatchEvent(new Event('input'));
+}
+
+function searchInitCancel(searchInit){
+    searchInit.value = "";
+    searchInit.input_.dispatchEvent(new Event('input'));
 }
 
 function activityDomCustomer(activityRecord) {
