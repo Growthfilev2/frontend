@@ -13,7 +13,7 @@ let navList;
 
 function imgErr(source) {
   source.onerror = '';
-  source.src = 'file:///android_asset/empty-user.jpg';
+  source.src = './img/empty-user.jpg';
   return true;
 }
 

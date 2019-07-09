@@ -509,10 +509,8 @@ function createActivityActionMenu(addendumId, activityId) {
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
         if (!activity.canEdit) {
-            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
-            dialog.open();
-            dialog.buttons_[1].classList.add('hidden')
-            dialog.autoStackButtons = false;
+            showViewDialog(heading,activity,'view-form')
+    
             return
         };
         const items = [{
@@ -565,10 +563,7 @@ function createActivityActionMenu(addendumId, activityId) {
         menu.listen('MDCMenu:selected', function (evt) {
             switch (items[evt.detail.index].name) {
                 case 'View':
-                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
-                    dialog.open()
-                    dialog.buttons_[1].classList.add('hidden')
-                    dialog.autoStackButtons = false;
+                showViewDialog(heading,activity,'view-form')
                     break;
                 case 'Edit':
                     break;
@@ -592,6 +587,27 @@ function createActivityActionMenu(addendumId, activityId) {
 
 }
 
+function showViewDialog(heading,activity,id){
+    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
+    dialog.open()
+    dialog.buttons_[1].classList.add('hidden')
+    dialog.autoStackButtons = false;
+    
+    dialog.listen("MDCDialog:opened",function(evt){
+        const venueEl = document.getElementById('venue-container')
+        const scheduleEl = document.getElementById('schedule-container');
+        if(venueEl) {
+            const venueList = new mdc.list.MDCList(venueEl);
+            venueList.singleSelection  = true;
+            venueList.layout()    
+         
+        }
+        if(scheduleEl) {
+            const scheduleList = new mdc.list.MDCList(venueEl);
+            scheduleList.layout()    
+        }
+    })
+}
 
 function createDynamicChips(user, id) {
     const chip = createElement('button', {
@@ -799,7 +815,7 @@ function activityDomCustomer(activityRecord) {
             ${viewAttachment(activityRecord)}
         </div>
         <div id='venue-container'>
-            <ul class="mdc-list">
+            <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
                 ${viewVenue(activityRecord)}
             </ul>
         </div>
@@ -912,6 +928,7 @@ function viewAttachment(activityRecord) {
 
 function viewVenue(activityRecord) {
     return `${activityRecord.venue.map(function(v,idx){
+    
         return `
             ${v.location && v.address ? `
             <li class="mdc-list-item">
@@ -919,7 +936,11 @@ function viewVenue(activityRecord) {
                  aria-hidden="true">location_on</span>` :
                  `<span class="mdc-list-item__graphic" aria-hidden="true"
                     style='background-color:white'></span>`}
-                     <span class='list-text'>${v.location}</span>
+                    <span class='mdc-list-item__text'>
+                    <span class='mdc-list-item__primary-text'>${v.location}</span>
+                    <span class='mdc-list-item__secondary-text'>${v.address}</span>
+                    </span>
+                     <a class="mdc-list-item__meta material-icons venue-map-intent mdc-theme--primary" aria-hidden="true" href='geo:${v.geopoint._latitude},${v.geopoint._longitude}'>map</a>
               </li>`:''}`
      }).join("")}`
 }
