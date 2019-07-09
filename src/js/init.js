@@ -296,14 +296,15 @@ function startApp() {
         if(evt.oldVersion <= 14) {
           var tx = req.transaction;
           const users = tx.objectStore('users');
+          users.createIndex('NAME_SEARCH','NAME_SEARCH')
+        
           users.openCursor().onsuccess = function(event){
             const cursor = event.target.result;
             if(!cursor) return;
-            if(cursor.value.timestamp) {
-              cursor.continue();
-              return;
+            if(!cursor.value.timestamp) {
+                cursor.value.timestamp = '';
             }
-            cursor.value.timestamp = ''
+            cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
             const update =  cursor.update(cursor.value)
             update.onsuccess = function(){
               console.log("updated user ",cursor.value)

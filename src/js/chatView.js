@@ -96,6 +96,7 @@ function search() {
             const chatsEl = document.getElementById('chats')
             const contactsEl = document.getElementById('all-contacts')
             const noResultEl = document.getElementById('no-result-found');
+            
             if(noResultEl) {
                 if(!currentChatsArray.length && !currentContactsArray.length) {
                     noResultEl.innerHTML = 'No Results Found'
@@ -121,10 +122,7 @@ function search() {
                     document.querySelector('.contacts-container').classList.remove("hidden")
                 }
                 contactsEl.innerHTML = currentContacts;
-    
             }
-
-         
         }
 
     });
@@ -149,7 +147,7 @@ function getSearchBound(evt) {
         indexName = 'mobile'
         value = formatNumber(value);
     } else {
-        indexName = 'displayName'
+        indexName = 'NAME_SEARCH'
     }
     const bound = IDBKeyRange.bound(value, value + '\uffff')
     const tx = db.transaction(['users', 'addendum']);
@@ -180,7 +178,8 @@ function formatNumber(numberString) {
 
 
 function readLatestChats() {
-
+    currentChatsArray = [];
+    currentContactsArray = [];
     const tx = db.transaction('users');
     const index = tx.objectStore('users').index('timestamp');
     const myNumber = firebase.auth().currentUser.phoneNumber
@@ -202,7 +201,6 @@ function readLatestChats() {
             currentContacts += userLi(cursor.value)
             currentContactsArray.push(cursor.value)
         }
-
         cursor.continue();
     }
     tx.oncomplete = function () {
@@ -217,33 +215,21 @@ function readLatestChats() {
                 currentChats = 'No Chat Found. '
             }
             chatsUl = new mdc.list.MDCList(chatsEl);
-            
             initializeChatList(chatsUl)
-            // chatsUl.listen('MDCList:action', function (evt) {
-            //     const userRecord = currentChatsArray[evt.detail.index]
-            //     history.pushState(['enterChat', userRecord], null, null)
-            //     enterChat(userRecord);
-            // })
         }
         if (contactsEl) {
             contactsEl.innerHTML = currentContacts;
             if (!currentContacts) {
                 currentContacts = 'No Contacts Found'
             };
-
             contactsUl = new mdc.list.MDCList(contactsEl);
             initializeContactList(contactsUl)
-            // contactsUl.listen('MDCList:action', function (evt) {
-            //     const userRecord = currentContactsArray[evt.detail.index]
-            //     history.pushState(['enterChat', userRecord], null, null)
-            //     enterChat(userRecord);
-            // })
         }
         if (!document.getElementById('search-btn')) return;
         if (chatsUl && contactsUl) {
             document.getElementById('search-btn').addEventListener('click', function () {
 
-                search()
+                search()    
             })
         }
     }
