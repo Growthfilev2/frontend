@@ -17,8 +17,8 @@
 .chat-count {
   font-size: 20px;
 
-  width: 30px;
-  height: 30px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   background-color: var(--mdc-theme-primary);
 
@@ -457,3 +457,10 @@ max-height:80%; */
 }
 
 
+
+
+.abs-hidden {
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+}

@@ -641,11 +641,11 @@ function updateSubscription(subscription, tx) {
 }
 
 
-function createListStore(activity, counter, tx) {
+function createListStore(activity, tx) {
 
   const requiredData = {
     'activityId': activity.activityId,
-    'count': counter[activity.activityId],
+    
     'timestamp': activity.timestamp,
     'activityName': activity.activityName,
     'status': activity.status
@@ -673,7 +673,7 @@ function successResponse(read, param, db, resolve, reject) {
   const userStore = updateTx.objectStore('users')
   let counter = {};
   let userTimestamp = {}
-  let activityAssigneeAddendum = {}
+
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
@@ -686,19 +686,24 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
 
-
+    
 
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
+        counter[addendum.user]  ? counter[addendum.user] + 1 : counter[addendum.user] = 1
+        
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] = addendum;
+        counter[addendum.assignee]  ? counter[addendum.assignee] + 1 :  counter[addendum.assignee] =1 
+
       }
       addendumObjectStore.add(addendum)
     } else {
       userTimestamp[addendum.user] = addendum;
+      counter[addendum.user]  ? counter[addendum.user] + 1 :  counter[addendum.user] = 1
     }
   })
 
@@ -721,19 +726,31 @@ function successResponse(read, param, db, resolve, reject) {
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
-    if (activity.hidden === 0) {
-      createListStore(activity, counter, updateTx)
-    };
+    // if (activity.hidden === 0) {
+    //   createListStore(activity, updateTx)
+    // };
     activity.assignees.forEach(function (user) {
-      user.mobile = user.phoneNumber;
-      delete user.phoneNumber;
-      userStore.put(user);
+      userStore.get(user.phoneNumber).onsuccess = function (event) {
+        let selfRecord = event.target.result;
+        if (!selfRecord) {
+          selfRecord = {}
+        };
+        selfRecord.mobile = user.phoneNumber;
+        selfRecord.displayName = user.displayName;
+        selfRecord.photoURL = user.photoURL;
+        selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
+        if(!selfRecord.timestamp) {
+          selfRecord.timestamp = ''
+        }
+        userStore.put(selfRecord)
+      }
     })
   })
 
   Object.keys(userTimestamp).forEach(function (number) {
     const currentAddendum = userTimestamp[number]
     const activityId = currentAddendum.activityId
+    console.log(counter);
 
     if (activityId) {
       // if is system generated
@@ -749,6 +766,12 @@ function successResponse(read, param, db, resolve, reject) {
               if (!selfRecord) return;
               selfRecord.comment = currentAddendum.comment
               selfRecord.timestamp = currentAddendum.timestamp
+              if(selfRecord.count) {
+                selfRecord.count += counter[number];
+              }
+              else {
+                selfRecord.count = counter[number];
+              }
               userStore.put(selfRecord)
             }
             return;
@@ -759,11 +782,16 @@ function successResponse(read, param, db, resolve, reject) {
               if (!userRecord) return;
               userRecord.comment = currentAddendum.comment
               userRecord.timestamp = currentAddendum.timestamp
+              if(userRecord.count) {
+                userRecord.count += counter[number];
+              }
+              else {
+                userRecord.count = counter[number];
+              }
               userStore.put(userRecord)
             }
             return;
           } 
-      
         })
       }
       return;
@@ -775,33 +803,17 @@ function successResponse(read, param, db, resolve, reject) {
       if (userRecord) {
         userRecord.comment = currentAddendum.comment
         userRecord.timestamp = currentAddendum.timestamp
+        if(userRecord.count) {
+          userRecord.count += counter[number];
+        }
+        else {
+          userRecord.count = counter[number];
+        }
         userStore.put(userRecord)
       }
     }
 
-
-
   })
-
-
-  // Object.keys(userTimestamp).forEach(function(number){
-  //   userStore.get(number).onsuccess = function (event) {
-  //     let record = event.target.result;
-  //     if(!record) {
-  //       record = {
-  //         mobile:number,
-  //         displayName:'',
-  //         photoURL:''
-  //       }
-  //     }
-  //     record.comment = userTimestamp[number].comment
-  //     record.timestamp = userTimestamp[number].ts;
-  //     record.user = userTimestamp[number].user,
-  //     record.assignee = userTimestamp[number].assignee
-  //     userStore.put(record)
-  //   }
-  // })
-
 
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx)

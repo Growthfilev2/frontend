@@ -190,7 +190,7 @@ function startApp() {
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(auth.uid, 14);
+    const req = window.indexedDB.open(auth.uid, 15);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -293,7 +293,26 @@ function startApp() {
           addendum.createIndex('KeyTimestamp',['timestamp','key'])
         }
 
+        if(evt.oldVersion <= 14) {
+          var tx = req.transaction;
+          const users = tx.objectStore('users');
+          users.createIndex('NAME_SEARCH','NAME_SEARCH')
+        
+          users.openCursor().onsuccess = function(event){
+            const cursor = event.target.result;
+            if(!cursor) return;
+            if(!cursor.value.timestamp) {
+                cursor.value.timestamp = '';
+            }
+            cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
+            const update =  cursor.update(cursor.value)
+            update.onsuccess = function(){
+              console.log("updated user ",cursor.value)
+            }
 
+            cursor.continue();  
+          }
+        }
 
 
       };
@@ -333,7 +352,8 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-
+      profileCheck();
+      return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -698,6 +718,7 @@ function createObjectStores(db, uid) {
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
   users.createIndex('timestamp', 'timestamp')
+  users.createIndex('NAME_SEARCH','NAME_SEARCH')
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
