@@ -14,6 +14,7 @@ function chatView() {
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+
     readLatestChats();
 }
 
@@ -179,6 +180,8 @@ function formatNumber(numberString) {
     return number.replace(/ +/g, "");
 }
 function readLatestChats() {
+    var v1 = performance.now();
+    document.querySelector('.user-chats').classList.add('hidden')
     currentChatsArray = [];
     currentContactsArray = [];
     const tx = db.transaction('users','readwrite');
@@ -219,23 +222,27 @@ function readLatestChats() {
         let chatsUl;
         let contactsUl;
         if (chatsEl) {
-            chatsEl.innerHTML = currentChats
             document.querySelector('.chats-container').classList.remove("hidden")
             if (!currentChatsArray.length) {
                 currentChats = 'No Chat Found. '
             }
+            chatsEl.innerHTML = currentChats
             chatsUl = new mdc.list.MDCList(chatsEl);
             initializeChatList(chatsUl)
         }
         if (contactsEl) {
             document.querySelector('.contacts-container').classList.remove("hidden")
-            contactsEl.innerHTML = currentContacts;
             if (!currentContacts) {
                 currentContacts = 'No Contacts Found'
             };
+            contactsEl.innerHTML = currentContacts;
             contactsUl = new mdc.list.MDCList(contactsEl);
             initializeContactList(contactsUl)
         }
+        document.querySelector('.user-chats').classList.remove('hidden')
+
+        var v2 = performance.now();
+        console.log('performance',v2 - v1)
         if (!document.getElementById('search-btn')) return;
         if (chatsUl && contactsUl) {
             document.getElementById('search-btn').addEventListener('click', function () {
