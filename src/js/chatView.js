@@ -3,6 +3,7 @@ var chatsUl;
 let currentChatsArray = [];
 let currentContactsArray = [];
 function chatView() {
+  
     document.getElementById('start-load').classList.add('hidden');
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
@@ -180,8 +181,9 @@ function formatNumber(numberString) {
 function readLatestChats() {
     currentChatsArray = [];
     currentContactsArray = [];
-    const tx = db.transaction('users');
+    const tx = db.transaction('users','readwrite');
     const index = tx.objectStore('users').index('timestamp');
+    
     const myNumber = firebase.auth().currentUser.phoneNumber
     let currentChats = '';
    
@@ -194,6 +196,14 @@ function readLatestChats() {
             cursor.continue();
             return;
         };
+        if(ApplicationState.currentChatSlected === cursor.value.mobile) {
+                cursor.value.count = 0;
+                const update = cursor.update(cursor.value);
+                update.onsuccess = function(){
+                    ApplicationState.currentChatSlected = null;
+                    console.log("count reset")
+                }
+        }
         if (cursor.value.timestamp) {
             currentChats += userLi(cursor.value)
             currentChatsArray.push(cursor.value)
@@ -354,7 +364,7 @@ function isToday(comparisonTimestamp) {
 }
 
 function enterChat(userRecord) {
-
+    ApplicationState.currentChatSlected = userRecord.mobile;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
         </a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
