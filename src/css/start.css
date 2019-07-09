@@ -32,14 +32,15 @@
     display: table;
     margin: 0 auto;
 }
-.profile-update-init .photo-container .mdc-fab {
+.profile-update-init .photo-container .mdc-fab , .profile-update-init .photo-container input {
     position: absolute;
     right: 0px;
-   
     bottom: 0;
-  
     bottom: 5px;
     right: 5px;
+}
+.profile-update-init .photo-container input {
+    opacity: 0;
 }
 .profile-update-init .view-container .mdc-text-field{
     border-bottom: none;
