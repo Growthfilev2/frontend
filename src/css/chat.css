@@ -369,6 +369,7 @@ max-height:80%; */
 #view-form .mdc-card .view-card {
   padding: 20px 24px;
   padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 #view-form .mdc-card .view-card .mdc-list {
@@ -386,6 +387,9 @@ max-height:80%; */
   margin-top: 0;
   line-height: normal;
   display: block;
+}
+.venue-map-intent {
+  text-decoration: none;
 }
 
 #assignee-container #share {

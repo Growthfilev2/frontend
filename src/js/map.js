@@ -157,7 +157,7 @@ function loadCardData(markers) {
               cardProd.close()
               getSuggestions()
             }).catch(function (error) {
-              snacks('Please Try again later');
+              snacks(error.response.message);
               cardProd.close()
             })
           });
@@ -198,7 +198,7 @@ function loadCardData(markers) {
         }).catch(function (error) {
           console.log(error)
           confirm.root_.classList.remove('hidden');
-          snacks('Please Try Again');
+          snacks(error.response.message);
           cardProd.close()
         })
       }
@@ -312,9 +312,12 @@ function mapDom() {
 function snapView() {
   // localStorage.setItem('snap_office', office)
   history.pushState(['snapView'], null, null)
-  AndroidInterface.startCamera();
+  AndroidInterface.startCamera("setFilePath");
 }
 
+function setFilePathFailed(error){
+  snacks(error);
+}
 
 function setFilePath(base64) {
 

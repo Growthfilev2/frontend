@@ -278,7 +278,7 @@ function initializeContactList(contactsUl){
 function userLi(value) {
     return `<li class="mdc-list-item">
    <div style="position:relative">
-   <img class="mdc-list-item__graphic" aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'} data-number=${value.mobile}>
+   <img class="mdc-list-item__graphic"  aria-hidden="true" src=${value.photoURL || './img/empty-user.jpg'}  onerror="imgErr(this)" data-number=${value.mobile}>
    <i class="material-icons user-selection-icon">check_circle</i>
    </div>
     
@@ -367,7 +367,7 @@ function enterChat(userRecord) {
     ApplicationState.currentChatSlected = userRecord.mobile;
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
         </a>
-        <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image'>
+        <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
 
@@ -430,7 +430,7 @@ function actionBox(value) {
 
 function messageBox(comment, position, image, time) {
     return `<div class="message-wrapper ${position}">
-    <img class="circle-wrapper" src=${image}>
+    <img class="circle-wrapper" src=${image} onerror="imgErr(this)">
     <div class="text-wrapper">${comment}
     <span class="metadata">
         <span class="time">
@@ -509,10 +509,8 @@ function createActivityActionMenu(addendumId, activityId) {
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
         if (!activity.canEdit) {
-            dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
-            dialog.open();
-            dialog.buttons_[1].classList.add('hidden')
-            dialog.autoStackButtons = false;
+            showViewDialog(heading,activity,'view-form')
+    
             return
         };
         const items = [{
@@ -565,10 +563,7 @@ function createActivityActionMenu(addendumId, activityId) {
         menu.listen('MDCMenu:selected', function (evt) {
             switch (items[evt.detail.index].name) {
                 case 'View':
-                    dialog = new Dialog(heading, activityDomCustomer(activity), 'view-form').create();
-                    dialog.open()
-                    dialog.buttons_[1].classList.add('hidden')
-                    dialog.autoStackButtons = false;
+                showViewDialog(heading,activity,'view-form')
                     break;
                 case 'Edit':
                     break;
@@ -592,6 +587,27 @@ function createActivityActionMenu(addendumId, activityId) {
 
 }
 
+function showViewDialog(heading,activity,id){
+    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
+    dialog.open()
+    dialog.buttons_[1].classList.add('hidden')
+    dialog.autoStackButtons = false;
+    
+    dialog.listen("MDCDialog:opened",function(evt){
+        const venueEl = document.getElementById('venue-container')
+        const scheduleEl = document.getElementById('schedule-container');
+        if(venueEl) {
+            const venueList = new mdc.list.MDCList(venueEl);
+            venueList.singleSelection  = true;
+            venueList.layout()    
+         
+        }
+        if(scheduleEl) {
+            const scheduleList = new mdc.list.MDCList(venueEl);
+            scheduleList.layout()    
+        }
+    })
+}
 
 function createDynamicChips(user, id) {
     const chip = createElement('button', {
@@ -799,7 +815,7 @@ function activityDomCustomer(activityRecord) {
             ${viewAttachment(activityRecord)}
         </div>
         <div id='venue-container'>
-            <ul class="mdc-list">
+            <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
                 ${viewVenue(activityRecord)}
             </ul>
         </div>
@@ -891,7 +907,7 @@ function viewFormAttachmentEl(attachmentName, activityRecord) {
         return `<ul class="mdc-image-list my-image-list">
         <li class="mdc-image-list__item">
           <div class="mdc-image-list__image-aspect-container">
-            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}">
+            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}" onerror="imgErr(this)">
           </div>
           <div class="mdc-image-list__supporting">
             <span class="mdc-image-list__label">${attachmentName}</span>
@@ -912,6 +928,7 @@ function viewAttachment(activityRecord) {
 
 function viewVenue(activityRecord) {
     return `${activityRecord.venue.map(function(v,idx){
+    
         return `
             ${v.location && v.address ? `
             <li class="mdc-list-item">
@@ -919,7 +936,11 @@ function viewVenue(activityRecord) {
                  aria-hidden="true">location_on</span>` :
                  `<span class="mdc-list-item__graphic" aria-hidden="true"
                     style='background-color:white'></span>`}
-                     <span class='list-text'>${v.location}</span>
+                    <span class='mdc-list-item__text'>
+                    <span class='mdc-list-item__primary-text'>${v.location}</span>
+                    <span class='mdc-list-item__secondary-text'>${v.address}</span>
+                    </span>
+                     <a class="mdc-list-item__meta material-icons venue-map-intent mdc-theme--primary" aria-hidden="true" href='geo:${v.geopoint._latitude},${v.geopoint._longitude}'>map</a>
               </li>`:''}`
      }).join("")}`
 }
@@ -944,7 +965,7 @@ function viewAssignee(activityRecord) {
     <div class="mdc-chip-set" id='share'>
      ${activityRecord.assignees.map(function(user,idx){
         return `<div class="mdc-chip" id='${idx}-preselected'>
-                    <img class='mdc-chip__icon mdc-chip__icon--leading' src=${user.photoURL || '../img/empty-user.jpg'}>
+                    <img class='mdc-chip__icon mdc-chip__icon--leading' src=${user.photoURL || '../img/empty-user.jpg'} onerror="imgErr(this)">
                     <div class='mdc-chip__text'>${user.displayName || user.phoneNumber}</div>
                 </div>`
     }).join("")}
