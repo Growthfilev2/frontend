@@ -673,7 +673,7 @@ function successResponse(read, param, db, resolve, reject) {
   const userStore = updateTx.objectStore('users')
   let counter = {};
   let userTimestamp = {}
-  let activityAssigneeAddendum = {}
+
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
@@ -686,19 +686,23 @@ function successResponse(read, param, db, resolve, reject) {
       }
     }
 
-
+    
 
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
-
+        counter[addendum.user]  ? counter[addendum.user] + 1 : 0
+        
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] = addendum;
+        counter[addendum.assignee]  ? counter[addendum.assignee] + 1 : 0
+
       }
     } else {
       userTimestamp[addendum.user] = addendum;
+      counter[addendum.user]  ? counter[addendum.user] + 1 : 0
     }
     addendumObjectStore.add(addendum)
   })
@@ -743,6 +747,7 @@ function successResponse(read, param, db, resolve, reject) {
   Object.keys(userTimestamp).forEach(function (number) {
     const currentAddendum = userTimestamp[number]
     const activityId = currentAddendum.activityId
+    console.log(counter);
 
     if (activityId) {
       // if is system generated
@@ -758,6 +763,9 @@ function successResponse(read, param, db, resolve, reject) {
               if (!selfRecord) return;
               selfRecord.comment = currentAddendum.comment
               selfRecord.timestamp = currentAddendum.timestamp
+              if(userRecord.count) {
+                userRecord.count += counter[number];
+              }
               userStore.put(selfRecord)
             }
             return;
@@ -768,11 +776,13 @@ function successResponse(read, param, db, resolve, reject) {
               if (!userRecord) return;
               userRecord.comment = currentAddendum.comment
               userRecord.timestamp = currentAddendum.timestamp
+              if(userRecord.count) {
+                userRecord.count += counter[number];
+              }
               userStore.put(userRecord)
             }
             return;
           } 
-      
         })
       }
       return;
@@ -784,6 +794,9 @@ function successResponse(read, param, db, resolve, reject) {
       if (userRecord) {
         userRecord.comment = currentAddendum.comment
         userRecord.timestamp = currentAddendum.timestamp
+        if(userRecord.count) {
+          userRecord.count += counter[number];
+        }
         userStore.put(userRecord)
       }
     }
