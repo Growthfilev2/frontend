@@ -131,8 +131,9 @@ function search() {
 
 function getSearchBound(evt) {
     let value = evt.target.value;
-    let indexName;
-    let bound;
+    const tx = db.transaction(['users', 'addendum']);
+    let STORE_OR_INDEX = tx.objectStore('users')
+    let bound = null
     let direction = 'next'
     if(!evt.target.value) {
         if(history.state[0] === 'searchChats') {
@@ -140,27 +141,24 @@ function getSearchBound(evt) {
             direction = 'prev'
         }
     }
-    else if (isNumber(value)) {
-        indexName = 'mobile'
-        value = formatNumber(value);
-        bound = IDBKeyRange.bound(value, value + '\uffff');
-    }
-     else {
-        indexName = 'NAME_SEARCH'
-        value = value.toLowerCase();
-        bound = IDBKeyRange.bound(value, value + '\uffff')
-    };
-    const tx = db.transaction(['users', 'addendum']);
-    let store = tx.objectStore('users');
-    if(indexName) {
-        store = store.index(indexName).openCursor(bound,direction)
-    }
     else {
-        store  = store.openCursor(bound,direction)
+        if (isNumber(value)) {
+            indexName = 'mobile'
+            value = formatNumber(value);
+        }
+         else {
+            indexName = 'NAME_SEARCH'
+            value = value.toLowerCase();
+        };
+        bound = IDBKeyRange.bound(value, value + '\uffff');
+        STORE_OR_INDEX =   STORE_OR_INDEX.index(indexName)
     }
+    
+    STORE_OR_INDEX = STORE_OR_INDEX.openCursor(bound,direction)
+    
     return {
         tx: tx,
-        bound: store
+        bound: STORE_OR_INDEX
     }
 }
 
