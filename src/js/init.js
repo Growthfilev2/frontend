@@ -531,7 +531,6 @@ CanvasDimension.prototype.getNewDimension = function(){
     if(this.width > this.MAX_WIDTH) {
       this.height *= this.MAX_WIDTH/ this.width;
       this.width = this.MAX_WIDTH;
-
     }
   }
   else {
@@ -540,6 +539,7 @@ CanvasDimension.prototype.getNewDimension = function(){
       this.height = this.MAX_HEIGHT
     }
   }
+  
   return {
     width:this.width,
     height:this.height
