@@ -3,21 +3,16 @@ var chatsUl;
 let currentChatsArray = [];
 let currentContactsArray = [];
 function chatView() {
-
     document.getElementById('start-load').classList.add('hidden');
-
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
 
     const header = getHeader('app-header', backIcon, searchIcon);
-
-
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-
     readLatestChats();
 }
 
@@ -149,11 +144,7 @@ function getSearchBound(evt) {
         tx: tx,
         bound: tx.objectStore('users').index(indexName).openCursor(bound)
     }
-
 }
-
-
-
 
 function isNumber(searchTerm) {
     return !isNaN(searchTerm)
@@ -166,11 +157,8 @@ function formatNumber(numberString) {
     } else if (number.substring(0, 3) !== '+91') {
         number = '+91' + number
     }
-
     return number.replace(/ +/g, "");
 }
-
-
 function readLatestChats() {
     currentChatsArray = [];
     currentContactsArray = [];
@@ -198,7 +186,6 @@ function readLatestChats() {
         cursor.continue();
     }
     tx.oncomplete = function () {
-
         const chatsEl = document.getElementById('chats')
         const contactsEl = document.getElementById('all-contacts')
         let chatsUl;
@@ -222,7 +209,7 @@ function readLatestChats() {
         if (!document.getElementById('search-btn')) return;
         if (chatsUl && contactsUl) {
             document.getElementById('search-btn').addEventListener('click', function () {
-
+                history.pushState(['searchChats'],null,null)
                 search()    
             })
         }
@@ -234,7 +221,13 @@ function initializeChatList(chatsUl) {
 
     chatsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentChatsArray[evt.detail.index]
-        history.pushState(['enterChat', userRecord], null, null)
+        if(history.state[0] === 'searchChats') {
+            history.replaceState(['enterChat', userRecord], null, null)
+        }
+        else {
+            history.pushState(['enterChat', userRecord], null, null)
+
+        }
         enterChat(userRecord);
     })
 }
@@ -242,10 +235,14 @@ function initializeChatList(chatsUl) {
 function initializeContactList(contactsUl){
     contactsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentContactsArray[evt.detail.index]
-        history.pushState(['enterChat', userRecord], null, null)
+        if(history.state[0] === 'searchChats') {
+            history.replaceState(['enterChat', userRecord], null, null)
+        }
+        else {
+            history.pushState(['enterChat', userRecord], null, null)
+        }
         enterChat(userRecord);
-    })
-    
+    })   
 }
 
 function userLi(value) {
@@ -754,6 +751,7 @@ function searchInitBack(){
     document.getElementById('app-header').classList.remove("hidden")
     searchInit.value = "";
     searchInit.input_.dispatchEvent(new Event('input'));
+
 }
 
 function searchInitCancel(searchInit){
