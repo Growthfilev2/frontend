@@ -10,11 +10,10 @@ function addView(sub) {
     // hideBottomNav();
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/forms/${sub.template}/edit.html'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
     `
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {
-
         document.getElementById('form-iframe').contentWindow.init(sub);
     })
 }
@@ -39,13 +38,15 @@ function sendFormToParent(formData) {
                 }
                
                 getSuggestions();
-                customerAuths.forEach(function(auth){
-                    if(!auth.email) return;
-                    delete auth.displayName
-                    requestCreator('updateAuth', auth).then(function (response) {
+                Object.keys(customerAuths).forEach(function(customerNumber){
+                
+                    requestCreator('updateAuth', customerAuths[customerNumber]).then(function (response) {
                         console.log(response)
-                    }).catch(console.log)
+                    }).catch(function(error){
+                        console.log(error.response.message)
+                    })
                 })
+      
                 return;
             }
             getSuggestions();
@@ -63,9 +64,9 @@ const displayName = contactString.split("&")[0].split("=")[1];
 const phoneNumber = contactString.split("&")[1].split("=")[1];
 const email = contactString.split("&")[2].split("=")[1];
 return {
-    displayName:displayName,
+    displayName:displayName || "",
     phoneNumber:phoneNumber ?  formatNumber(phoneNumber) : "",
-    email:email
+    email:email || ""
     }
 }
 

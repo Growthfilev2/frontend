@@ -6,10 +6,9 @@ function addView(sub) {
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
     // hideBottomNav();
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/forms/' + sub.template + '/edit.html\'></iframe>\n    ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
     console.log(db);
     document.getElementById('form-iframe').addEventListener("load", function (ev) {
-
         document.getElementById('form-iframe').contentWindow.init(sub);
     });
 }
@@ -34,13 +33,15 @@ function sendFormToParent(formData) {
             };
 
             getSuggestions();
-            customerAuths.forEach(function (auth) {
-                if (!auth.email) return;
-                delete auth.displayName;
-                requestCreator('updateAuth', auth).then(function (response) {
+            Object.keys(customerAuths).forEach(function (customerNumber) {
+
+                requestCreator('updateAuth', customerAuths[customerNumber]).then(function (response) {
                     console.log(response);
-                }).catch(console.log);
+                }).catch(function (error) {
+                    console.log(error.response.message);
+                });
             });
+
             return;
         }
         getSuggestions();
@@ -55,9 +56,9 @@ function parseContact(contactString) {
     var phoneNumber = contactString.split("&")[1].split("=")[1];
     var email = contactString.split("&")[2].split("=")[1];
     return {
-        displayName: displayName,
+        displayName: displayName || "",
         phoneNumber: phoneNumber ? formatNumber(phoneNumber) : "",
-        email: email
+        email: email || ""
     };
 }
 
@@ -2283,8 +2284,8 @@ ApplicationState = {
   office: '',
   location: '',
   knownLocation: false,
-  venue: ''
-
+  venue: '',
+  iframeVersion: 3
 };
 
 function mapView() {
@@ -2427,10 +2428,10 @@ function loadCardData(markers) {
           });
         });
         if (offices.length == 1) {
-          selectOfficeInit.selectedIndex = 0;
+          selectOfficeInit.selectedIndex = 1;
         }
         if (offices.length > 1) {
-          selectOfficeInit.selectedIndex = -1;
+          selectOfficeInit.selectedIndex = 0;
         }
       });
       return;
@@ -2446,10 +2447,8 @@ function loadCardData(markers) {
       var confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
 
       confirm.root_.onclick = function () {
-
         confirm.root_.classList.add('hidden');
         cardProd.open();
-
         requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
           snacks('Check-in created');
           cardProd.close();
@@ -2465,15 +2464,15 @@ function loadCardData(markers) {
   });
 
   if (!markers.length) {
-    selectVenue.selectedIndex = 0;
-  };
-
-  if (markers.length == 1) {
     selectVenue.selectedIndex = 1;
   };
 
+  if (markers.length == 1) {
+    selectVenue.selectedIndex = 2;
+  };
+
   if (markers.length > 1) {
-    selectVenue.selectedIndex = -1;
+    selectVenue.selectedIndex = 0;
   }
 };
 
@@ -2530,7 +2529,11 @@ function mapDom() {
 function snapView() {
   // localStorage.setItem('snap_office', office)
   history.pushState(['snapView'], null, null);
-  AndroidInterface.startCamera("setFilePath");
+  if (native.getName() === "Android") {
+    AndroidInterface.startCamera("setFilePath");
+    return;
+  }
+  webkit.messageHandlers.startCamera.postMessage("setFilePath");
 }
 
 function setFilePathFailed(error) {
@@ -2545,7 +2548,7 @@ function setFilePath(base64) {
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
   var url = 'data:image/jpg;base64,' + base64;
-  document.getElementById('app-current-panel').innerHTML = '\n  \n<div id=\'snap\' class="snap-bckg" style="background-image: url(' + url + '); padding: 0px; overflow: hidden; background-size: cover;">\n<div class="form-meta snap-form">\n  <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id=\'snap-textarea\'>\n      <textarea\n      class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>\n      <button id=\'snap-submit\' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"\n    style="z-index: 9;">\n    <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>\n    </button>\n</div>\n</div>\n  ';
+  document.getElementById('app-current-panel').innerHTML = '\n\n  <div class=\'image-container\'>\n  <div id=\'snap\' class="snap-bckg">\n  <div class="form-meta snap-form">\n    <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id=\'snap-textarea\'>\n        <textarea\n        class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>\n        <button id=\'snap-submit\' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"\n      style="z-index: 9;">\n      <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>\n      </button>\n  </div>\n  </div>\n\n  </div>\n  ';
 
   var content = document.getElementById('snap');
   var textarea = new mdc.textField.MDCTextField(document.getElementById('snap-textarea'));
@@ -2620,16 +2623,11 @@ function setFilePath(base64) {
 
   var image = new Image();
   image.onload = function () {
-
+    var sizeInBytes = 4 * Math.ceil(image.src.length / 3) * 0.5624896334383812;
+    var sizeInKb = sizeInBytes / 1000;
+    snacks('image width : ' + image.width + ' , image Height ' + image.height + ' , image size ' + sizeInKb);
     var orientation = getOrientation(image);
     content.style.backgroundImage = 'url(' + url + ')';
-    content.style.padding = '0px';
-    content.style.overflow = 'hidden';
-    content.classList.add('snap-bckg');
-
-    if (orientation == 'potrait') {
-      content.style.backgroundSize = 'cover';
-    }
     if (orientation == 'landscape' || orientation == 'sqaure') {
       content.style.backgroundSize = 'contain';
     }
@@ -2637,10 +2635,8 @@ function setFilePath(base64) {
   image.src = url;
 }
 
-function createPhotoCheckIn() {}
-
 function mdcDefaultSelect(data, label, id, option) {
-  var template = '<div class="mdc-select" id=' + id + '>\n  <i class="mdc-select__dropdown-icon"></i>\n  <select class="mdc-select__native-control">\n  ' + data.map(function (value) {
+  var template = '<div class="mdc-select" id=' + id + '>\n  <i class="mdc-select__dropdown-icon"></i>\n  <select class="mdc-select__native-control">\n  <option disabled selected></option>\n  ' + data.map(function (value) {
     return ' <option value=\'' + value + '\'>\n    ' + value + '\n    </option>';
   }).join("") + '\n' + option + '\n\n  </select>\n  <label class=\'mdc-floating-label\'>' + label + '</label>\n  <div class="mdc-line-ripple"></div>\n</div>';
   return template;
@@ -2648,7 +2644,7 @@ function mdcDefaultSelect(data, label, id, option) {
 
 function mdcSelectVenue(venues, label, id) {
   var float = void 0;
-  var template = '<div class="mdc-select" id=' + id + '>\n  <i class="mdc-select__dropdown-icon"></i>\n  <select class="mdc-select__native-control">\n\n  <option value=' + JSON.stringify('1') + '>UNKNOWN LOCATION</option>\n  ' + venues.map(function (value) {
+  var template = '<div class="mdc-select" id=' + id + '>\n  <i class="mdc-select__dropdown-icon"></i>\n  <select class="mdc-select__native-control">\n  <option disabled selected value=' + JSON.stringify('0') + '></option>\n  <option value=' + JSON.stringify('1') + '>UNKNOWN LOCATION</option>\n  ' + venues.map(function (value) {
     return ' <option value=\'' + JSON.stringify(value) + '\'>\n    ' + value.location + '\n    </option>';
   }).join("") + '\n  </select>\n  <label class=\'mdc-floating-label\'>' + label + '</label>\n  <div class="mdc-line-ripple"></div>\n</div>';
   return template;
@@ -3146,16 +3142,16 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true);
     } catch (e) {
-      // resolve({
-      //   latitude: 28.549173600000003,
-      //   longitude: 77.25055569999999,
-      //   accuracy: 24
-      // })
-      html5Geolocation().then(function (location) {
-        resolve(location);
-      }).catch(function (error) {
-        reject(error);
+      resolve({
+        latitude: 28.549173600000003,
+        longitude: 77.25055569999999,
+        accuracy: 24
       });
+      // html5Geolocation().then(function (location) {
+      //   resolve(location)
+      // }).catch(function (error) {
+      //   reject(error)
+      // })
     }
   });
 }
@@ -3359,6 +3355,10 @@ function updateIosLocation(geopointIos) {
 
   ApplicationState.location = geopointIos;
   ApplicationState.lastLocationTime = Date.now();
+  var iosLocation = new CustomEvent('iosLocation', {
+    "detail": ApplicationState.location
+  });
+  window.dispatchEvent(iosLocation);
 }
 
 function handleComponentUpdation(readResponse) {

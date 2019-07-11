@@ -7,7 +7,7 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-
+  iframeVersion:3
 }
 
 
@@ -135,7 +135,7 @@ function loadCardData(markers) {
     aside.classList.add('open')
     if (!evt.detail.value) return;
     const value = JSON.parse(evt.detail.value)
-
+    if(!value) return;
     if (value === 1) {
       ApplicationState.knownLocation = false;
       ApplicationState.venue = '';
@@ -163,10 +163,10 @@ function loadCardData(markers) {
           });
         });
         if (offices.length == 1) {
-          selectOfficeInit.selectedIndex = 0
+          selectOfficeInit.selectedIndex = 1
         }
         if (offices.length > 1) {
-          selectOfficeInit.selectedIndex = -1
+          selectOfficeInit.selectedIndex = 0
         }
       })
       return;
@@ -178,19 +178,14 @@ function loadCardData(markers) {
     getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
       if (!result) return getSuggestions();
       
-
-     
-
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
         </button>`
       const confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
 
       confirm.root_.onclick = function () {
-
         confirm.root_.classList.add('hidden')
         cardProd.open();
-
         requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
         snacks('Check-in created');
         cardProd.close();
@@ -206,15 +201,15 @@ function loadCardData(markers) {
   });
 
   if (!markers.length) {
-    selectVenue.selectedIndex = 0;
-  };
-
-  if (markers.length == 1) {
     selectVenue.selectedIndex = 1;
   };
 
+  if (markers.length == 1) {
+    selectVenue.selectedIndex = 2;
+  };
+
   if (markers.length > 1) {
-    selectVenue.selectedIndex = -1;
+    selectVenue.selectedIndex = 0;
   }
 
 };
@@ -312,7 +307,11 @@ function mapDom() {
 function snapView() {
   // localStorage.setItem('snap_office', office)
   history.pushState(['snapView'], null, null)
-  AndroidInterface.startCamera("setFilePath");
+  if(native.getName() ==="Android") {
+    AndroidInterface.startCamera("setFilePath");
+    return
+  }
+  webkit.messageHandlers.startCamera.postMessage("setFilePath")
 }
 
 function setFilePathFailed(error){
@@ -328,18 +327,21 @@ function setFilePath(base64) {
 
   const url = `data:image/jpg;base64,${base64}`
   document.getElementById('app-current-panel').innerHTML = `
-  
-<div id='snap' class="snap-bckg" style="background-image: url(${url}); padding: 0px; overflow: hidden; background-size: cover;">
-<div class="form-meta snap-form">
-  <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
-      <textarea
-      class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>
-      <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"
-    style="z-index: 9;">
-    <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
-    </button>
-</div>
-</div>
+
+  <div class='image-container'>
+  <div id='snap' class="snap-bckg">
+  <div class="form-meta snap-form">
+    <div class="mdc-text-field mdc-text-field--no-label mdc-text-field--textarea" id='snap-textarea'>
+        <textarea
+        class="mdc-text-field__input  snap-text mdc-theme--on-primary" rows="1" cols="100"></textarea></div>
+        <button id='snap-submit' class="mdc-fab app-fab--absolute mdc-theme--primary-bg  mdc-ripple-upgraded"
+      style="z-index: 9;">
+      <svg class="mdc-button__icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+      </button>
+  </div>
+  </div>
+
+  </div>
   `
 
   const content = document.getElementById('snap')
@@ -437,32 +439,23 @@ function setFilePath(base64) {
 
   const image = new Image();
   image.onload = function () {
-
+    var sizeInBytes = 4 * Math.ceil((image.src.length / 3))*0.5624896334383812;
+    var sizeInKb=sizeInBytes/1000;
+    snacks('image width : ' + image.width + ' , image Height ' + image.height+ ' , image size ' + sizeInKb)
     const orientation = getOrientation(image);
     content.style.backgroundImage = `url(${url})`
-    content.style.padding = '0px'
-    content.style.overflow = 'hidden'
-    content.classList.add('snap-bckg');
-
-    if (orientation == 'potrait') {
-      content.style.backgroundSize = 'cover'
-    }
     if (orientation == 'landscape' || orientation == 'sqaure') {
       content.style.backgroundSize = 'contain'
     }
   }
   image.src = url;
-
-}
-
-function createPhotoCheckIn() {
-
 }
 
 function mdcDefaultSelect(data, label, id, option) {
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
+  <option disabled selected></option>
   ${data.map(function(value){
     return ` <option value='${value}'>
     ${value}
@@ -483,7 +476,7 @@ function mdcSelectVenue(venues, label, id) {
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
-
+  <option disabled selected value=${JSON.stringify('0')}></option>
   <option value=${JSON.stringify('1')}>UNKNOWN LOCATION</option>
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
@@ -538,7 +531,6 @@ function loadNearByLocations(o, map, location) {
     var infowindow = new google.maps.InfoWindow();
     const result = []
     let lastOpen;
-
     const tx = db.transaction(['map'])
     const store = tx.objectStore('map');
     const index = store.index('bounds');

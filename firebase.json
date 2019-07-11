@@ -26,20 +26,20 @@
           "value": "*"
         }, {
           "key": "Cache-Control",
-          "value": "max-age=10000"
+          "value": "max-age=0"
         }]
       },
       {
         "source": "**/*.@(css)",
         "headers": [{
           "key": "Cache-Control",
-          "value": "max-age=10000"
+          "value": "max-age=0"
         }]
       },{
         "source": "/v1/**",
         "headers": [{
           "key": "Cache-Control",
-          "value": "max-age=10000"
+          "value": "max-age=0"
         }]
       }]
   }
