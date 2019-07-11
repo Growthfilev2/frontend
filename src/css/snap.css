@@ -1,15 +1,25 @@
-
+.image-container {
+  width: 100%;
+  height: 100%;
+  padding: 0px;
+}
 .snap-bckg {
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    width: 100vw;
-    height: 100vh;
-  }
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  width: 100%;
+  height: calc(100vh - 56px);
+ 
+}
   
   .snap-form {
     background-color: rgba(0, 0, 0, 0.6);
     width: 100%;
-    position: absolute;
+    position: fixed;
     bottom: 0;
   
   }

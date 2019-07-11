@@ -66,7 +66,8 @@ function geolocationApi(body) {
           latitude: response.location.lat,
           longitude: response.location.lng,
           accuracy: response.accuracy,
-          provider: body
+          provider: body,
+          lastLocationTime:Date.now()
         });
       }
     };
@@ -347,6 +348,16 @@ function officeRemovalSuccess(data) {
 
   });
   return
+}
+
+function updateIosLocation(geopointIos){
+  
+ ApplicationState.location = geopointIos;
+ ApplicationState.lastLocationTime = Date.now();
+ var iosLocation = new CustomEvent('iosLocation', {
+  "detail":  ApplicationState.location 
+});
+window.dispatchEvent(iosLocation)
 }
 
 function handleComponentUpdation(readResponse) {
