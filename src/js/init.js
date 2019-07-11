@@ -144,8 +144,6 @@ window.addEventListener("load", function () {
     if(firebase.auth().currentUser) {
       ApplicationState.idToken = idToken;
     }
-  }).catch(function(error){
-    console.log(error);
   })
 })
 
@@ -204,7 +202,7 @@ function startApp() {
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(auth.uid,5);
+    const req = window.indexedDB.open(firebase.auth().currentUser.uid,5);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -228,15 +226,14 @@ function startApp() {
           const activityStore = tx.objectStore('activity')
           const childrenStore = tx.objectStore('children');
 
-          subscriptionStore.createIndex('status', 'status');
           subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
           calendar.createIndex('office', 'office');
 
           userStore.createIndex('mobile', 'mobile');
           userStore.createIndex('timestamp', 'timestamp')
-          users.createIndex('NAME_SEARCH','NAME_SEARCH')
+          userStore.createIndex('NAME_SEARCH','NAME_SEARCH')
         
-          users.openCursor().onsuccess = function(event){
+          userStore.openCursor().onsuccess = function(event){
             const cursor = event.target.result;
             if(!cursor) return;
             if(!cursor.value.timestamp) {
@@ -253,8 +250,8 @@ function startApp() {
 
           addendumStore.createIndex('user', 'user');
           addendumStore.createIndex('timestamp', 'timestamp')
-          addendum.createIndex('key', 'key')
-          addendum.createIndex('KeyTimestamp',['timestamp','key'])
+          addendumStore.createIndex('key', 'key')
+          addendumStore.createIndex('KeyTimestamp',['timestamp','key'])
 
           mapStore.createIndex('office', 'office');
           mapStore.createIndex('status', 'status');
