@@ -130,16 +130,16 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      resolve({
-        latitude: 28.549173600000003,
-        longitude: 77.25055569999999,
-        accuracy: 24
-      })
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
+      // resolve({
+      //   latitude: 28.549173600000003,
+      //   longitude: 77.25055569999999,
+      //   accuracy: 24
       // })
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
     }
   })
 }

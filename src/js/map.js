@@ -133,7 +133,6 @@ function loadCardData(markers) {
     document.getElementById('submit-cont').innerHTML = ''
     console.log(evt.detail.value)
     aside.classList.add('open')
-    if (!evt.detail.value) return;
     const value = JSON.parse(evt.detail.value)
     if(!value) return;
     if (value === 1) {

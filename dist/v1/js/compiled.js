@@ -2398,9 +2398,8 @@ function loadCardData(markers) {
     document.getElementById('submit-cont').innerHTML = '';
     console.log(evt.detail.value);
     aside.classList.add('open');
-    if (!evt.detail.value) return;
     var value = JSON.parse(evt.detail.value);
-
+    if (!value) return;
     if (value === 1) {
       ApplicationState.knownLocation = false;
       ApplicationState.venue = '';
@@ -2688,7 +2687,6 @@ function loadNearByLocations(o, map, location) {
     var infowindow = new google.maps.InfoWindow();
     var result = [];
     var lastOpen = void 0;
-
     var tx = db.transaction(['map']);
     var store = tx.objectStore('map');
     var index = store.index('bounds');
@@ -3142,16 +3140,16 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true);
     } catch (e) {
-      resolve({
-        latitude: 28.549173600000003,
-        longitude: 77.25055569999999,
-        accuracy: 24
-      });
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
+      // resolve({
+      //   latitude: 28.549173600000003,
+      //   longitude: 77.25055569999999,
+      //   accuracy: 24
       // })
+      html5Geolocation().then(function (location) {
+        resolve(location);
+      }).catch(function (error) {
+        reject(error);
+      });
     }
   });
 }
