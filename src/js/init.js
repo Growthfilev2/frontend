@@ -196,7 +196,7 @@ function startApp() {
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(auth.uid, 15);
+    const req = window.indexedDB.open(auth.uid, 6);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -210,98 +210,23 @@ function startApp() {
       if (!evt.oldVersion) {
         createObjectStores(db, auth.uid)
       } else {
-        if (evt.oldVersion < 4) {
-          const subscriptionStore = req.transaction.objectStore('subscriptions')
-          subscriptionStore.createIndex('status', 'status');
-        }
-        if (evt.oldVersion < 5) {
-          var tx = req.transaction;
-
-          const mapStore = tx.objectStore('map');
-          mapStore.createIndex('bounds', ['latitude', 'longitude']);
-
-        }
-        if (evt.oldVersion < 6) {
-          var tx = req.transaction;
-          const childrenStore = tx.objectStore('children')
-          childrenStore.createIndex('officeTemplate', ['office', 'template']);
-
-          childrenStore.createIndex('employees', 'employee');
-          childrenStore.createIndex('employeeOffice', ['employee', 'office'])
-          childrenStore.createIndex('team', 'team')
-          childrenStore.createIndex('teamOffice', ['team', 'office'])
-          const myNumber = firebase.auth().currentUser.phoneNumber;
-
-          childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
-            const cursor = event.target.result;
-            if (!cursor) {
-              console.log("finished modiying children")
-              return;
-            }
-            cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-            if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
-              cursor.value.team = 1
-            }
-            cursor.update(cursor.value)
-            cursor.continue();
-          };
-
-          tx.oncomplete = function () {
-
-            console.log("finsihed backlog")
-          }
-        }
-        if (evt.oldVersion < 7) {
-          var tx = req.transaction;
-          const mapStore = tx.objectStore('map')
-          mapStore.createIndex('office', 'office');
-          mapStore.createIndex('status', 'status');
-          mapStore.createIndex('selection', ['office', 'status', 'location']);
-        }
-        if (evt.oldVersion < 8) {
-          var tx = req.transaction;
-          const listStore = tx.objectStore('list')
+        var tx = req.transaction;
+        if (evt.oldVersion <= 5) {
+          const subscriptionStore = tx.objectStore('subscriptions');
           const calendar = tx.objectStore('calendar')
-
-          listStore.createIndex('office', 'office');
-          calendar.createIndex('office', 'office')
-        }
-        if (evt.oldVersion < 9) {
-          var tx = req.transaction;
           const userStore = tx.objectStore('users');
-          userStore.createIndex('mobile', 'mobile');
-
           const addendumStore = tx.objectStore('addendum');
-          addendumStore.createIndex('user', 'user');
-          addendumStore.createIndex('timestamp', 'timestamp')
-        }
-        if (evt.oldVersion <= 10) {
-          var tx = req.transaction;
-          const subscriptionStore = tx.objectStore('subscriptions')
-          subscriptionStore.createIndex('count', 'count');
-        }
-        if (evt.oldVersion <= 11) {
-          var tx = req.transaction;
-          const userStore = tx.objectStore('users')
-          userStore.createIndex('timestamp', 'timestamp')
-        }
-        if (evt.oldVersion <= 12) {
-          var tx = req.transaction;
+          const mapStore = tx.objectStore('map');
           const activityStore = tx.objectStore('activity')
-          activityStore.createIndex('status', 'status')
-        }
-        if (evt.oldVersion <= 13) {
-          var tx = req.transaction;
-          const subscriptions = tx.objectStore('subscriptions')
-          subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
-          const addendum = tx.objectStore('addendum')
-          addendum.createIndex('key', 'key')
-          addendum.createIndex('KeyTimestamp',['timestamp','key'])
-        }
+          const childrenStore = tx.objectStore('children');
 
-        if(evt.oldVersion <= 14) {
-          var tx = req.transaction;
-          const users = tx.objectStore('users');
+          subscriptionStore.createIndex('status', 'status');
+          subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
+          calendar.createIndex('office', 'office');
+
+
+          userStore.createIndex('mobile', 'mobile');
+          userStore.createIndex('timestamp', 'timestamp')
           users.createIndex('NAME_SEARCH','NAME_SEARCH')
         
           users.openCursor().onsuccess = function(event){
@@ -317,10 +242,46 @@ function startApp() {
             }
 
             cursor.continue();  
-          }
+          };
+
+          addendumStore.createIndex('user', 'user');
+          addendumStore.createIndex('timestamp', 'timestamp')
+          addendum.createIndex('key', 'key')
+          addendum.createIndex('KeyTimestamp',['timestamp','key'])
+
+          mapStore.createIndex('office', 'office');
+          mapStore.createIndex('status', 'status');
+          mapStore.createIndex('selection', ['office', 'status', 'location']);
+          
+          activityStore.createIndex('status', 'status');
+
+
+       
+          childrenStore.createIndex('officeTemplate', ['office', 'template']);
+          childrenStore.createIndex('employees', 'employee');
+          childrenStore.createIndex('employeeOffice', ['employee', 'office'])
+          childrenStore.createIndex('team', 'team')
+          childrenStore.createIndex('teamOffice', ['team', 'office']);
+
+               
+          const myNumber = firebase.auth().currentUser.phoneNumber;
+
+          childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
+            const cursor = event.target.result;
+            if (!cursor) {
+              console.log("finished modiying children")
+              return;
+            }
+            cursor.value.employee = cursor.value.attachment['Employee Contact'].value
+            if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
+              cursor.value.team = 1
+            }
+            cursor.update(cursor.value)
+            cursor.continue();
+          };
+          
         }
-
-
+        
       };
     }
     req.onsuccess = function () {
