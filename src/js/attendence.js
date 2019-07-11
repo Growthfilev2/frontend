@@ -8,7 +8,7 @@ function attendenceView(){
     const header = getHeader('app-header', backIcon,'');
     document.getElementById('app-current-panel').innerHTML = `<div class='attendence-section pt-20'>
     ${applyLeave()}
-    ${attendenceCards()}
+
     </div>
     `
     
