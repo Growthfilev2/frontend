@@ -185,13 +185,14 @@ function firebaseUiConfig() {
 
 
 function userSignedOut() {
+  firebase.auth().appVerificationDisabledForTesting = true;
   ui = new firebaseui.auth.AuthUI(firebase.auth())
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
 
 function startApp() {
-
+  const dbName = firebase.auth().currentUser.uid
     if (appKey.getMode() === 'production') {
       if (!native.getInfo()) {
         redirect();
@@ -202,7 +203,7 @@ function startApp() {
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(firebase.auth().currentUser.uid,5);
+    const req = window.indexedDB.open(dbName,5);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -214,7 +215,7 @@ function startApp() {
       }
 
       if (!evt.oldVersion) {
-        createObjectStores(db, auth.uid)
+        createObjectStores(db, dbName)
       } else {
         var tx = req.transaction;
         if (evt.oldVersion <= 4) {
