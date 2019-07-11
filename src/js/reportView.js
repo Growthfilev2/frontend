@@ -33,7 +33,7 @@ function reportView() {
         document.querySelector('.apply-leave').addEventListener('click',function(){
           addView(leaveSubs[0]);
         })
-        return
+       
       })
       return
     }
@@ -52,8 +52,9 @@ function reportView() {
         document.querySelector('.apply-claim').addEventListener('click',function(){
           addView(claimSubs[0]);
         })
-        return
+
       })
+      return;
     }
     const promiseArray = []
     const incentives = ['customer','order','enquiry','collection']
@@ -63,16 +64,23 @@ function reportView() {
 
     Promise.all(promiseArray).then(function(incentiveSubs){
       console.log(incentiveSubs);
-      const mergedSubs = [].concat.apply([],incentiveSubs)
-    document.getElementById('app-current-panel').innerHTML = `<div class='incentives-section mdc-top-app-bar--fixed-adjust-with-tabs'>
+   
+      document.getElementById('app-current-panel').innerHTML = `<div class='incentives-section mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>
+
+      </div>
+      </div>`
+      if(!mergedSubs.length) {
+        document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
+        return
+      }
+      document.querySelector('.incentives-section .content').innerHTML = `
       <ul class='mdc-list'>
       ${mergedSubs.map(function(incentive){
           return `<li class='mdc-list-item'>Create New ${incentive.template}</li>`
       }).join("")}
       </ul>
-      </div>
-      </div>`
+     `
       const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
       ul.listen('MDCList:action',function(evt){
         addView(mergedSubs[evt.detail.index])

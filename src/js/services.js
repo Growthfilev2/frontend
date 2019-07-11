@@ -426,7 +426,7 @@ function getSubscription(office, template) {
       })[0]
     }
      
-     return resolve(result)
+     return resolve(result[0])
     }
  
     tx.onerror = function () {
