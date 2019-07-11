@@ -7,7 +7,8 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion:3
+  iframeVersion:3,
+  idToken:''
 }
 
 

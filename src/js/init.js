@@ -130,12 +130,28 @@ window.addEventListener("load", function () {
     incompatibleDialog.open();
     return;
   }
-  startApp(true)
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      document.getElementById("main-layout-app").style.display = 'none'
+      userSignedOut()
+      return;
+    }
+    startApp()
+  });
+  firebase
+  .auth()
+  .addAuthTokenListener(function (idToken) {
+    if(firebase.auth().currentUser) {
+      ApplicationState.idToken = idToken;
+    }
+  }).catch(function(error){
+    console.log(error);
+  })
 })
 
 
 
-function firebaseUiConfig(value, redirect) {
+function firebaseUiConfig() {
 
   return {
     callbacks: {
@@ -161,7 +177,7 @@ function firebaseUiConfig(value, redirect) {
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
-        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '',
+       
       }
     ]
 
@@ -178,21 +194,13 @@ function userSignedOut() {
 
 function startApp() {
 
-  firebase.auth().onAuthStateChanged(function (auth) {
-
-    if (!auth) {
-      // document.getElementById('start-loader').classList.add('hidden')
-      document.getElementById("main-layout-app").style.display = 'none'
-      userSignedOut()
-      return
-    }
-
     if (appKey.getMode() === 'production') {
       if (!native.getInfo()) {
         redirect();
         return;
       }
     }
+
     localStorage.setItem('error', JSON.stringify({}));
     
 
@@ -344,7 +352,7 @@ function startApp() {
           profileCheck();
           requestCreator('Null').then(console.log).catch(function (error) {
             snacks(error.response.message, 'Okay', (function () {
-              startApp(true)
+              startApp()
             }))
           })
         })
@@ -359,7 +367,6 @@ function startApp() {
       })
     }
 
-  })
 }
 
 
