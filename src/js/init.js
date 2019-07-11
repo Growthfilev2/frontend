@@ -256,7 +256,7 @@ function startApp() {
           mapStore.createIndex('office', 'office');
           mapStore.createIndex('status', 'status');
           mapStore.createIndex('selection', ['office', 'status', 'location']);
-          
+          mapStore.createIndex('bounds', 'bounds');
           activityStore.createIndex('status', 'status');
 
 
