@@ -291,6 +291,7 @@ function startApp() {
       };
     }
     req.onsuccess = function () {
+      console.log("after that ? ")
       db = req.result;
 
       if (!areObjectStoreValid(db.objectStoreNames)) {
