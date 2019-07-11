@@ -196,7 +196,7 @@ function startApp() {
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(auth.uid, 6);
+    const req = window.indexedDB.open(auth.uid,5);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -211,7 +211,7 @@ function startApp() {
         createObjectStores(db, auth.uid)
       } else {
         var tx = req.transaction;
-        if (evt.oldVersion <= 5) {
+        if (evt.oldVersion <= 4) {
           const subscriptionStore = tx.objectStore('subscriptions');
           const calendar = tx.objectStore('calendar')
           const userStore = tx.objectStore('users');
@@ -223,7 +223,6 @@ function startApp() {
           subscriptionStore.createIndex('status', 'status');
           subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
           calendar.createIndex('office', 'office');
-
 
           userStore.createIndex('mobile', 'mobile');
           userStore.createIndex('timestamp', 'timestamp')
@@ -281,7 +280,9 @@ function startApp() {
           };
           
         }
-        
+        tx.oncomplete = function(){
+          console.log("completed all backlog");
+        }
       };
     }
     req.onsuccess = function () {
@@ -319,9 +320,7 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-      // reportView();
-      // ApplicationState.office = 'Puja Capital'
-      // return;
+   
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
