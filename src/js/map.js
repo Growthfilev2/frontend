@@ -147,11 +147,11 @@ function loadCardData(markers) {
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
-          getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
-            if (!checkInSub) return getSuggestions()
+          getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
+            if (!checkInSub.length) return getSuggestions()
+            cardProd.open();
             
-            cardProd.open()
-            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            requestCreator('create', setVenueForCheckIn('', checkInSub[0])).then(function () {
               snacks('Check-in created');
               cardProd.close()
               getSuggestions()
@@ -174,8 +174,8 @@ function loadCardData(markers) {
     ApplicationState.knownLocation = true;
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
-    getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
-      if (!result) return getSuggestions();
+    getSubscription(value.office, 'check-in').then(function (result) {
+      if (!result.length) return getSuggestions();
       
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -185,7 +185,7 @@ function loadCardData(markers) {
       confirm.root_.onclick = function () {
         confirm.root_.classList.add('hidden')
         cardProd.open();
-        requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+        requestCreator('create', setVenueForCheckIn(value, result[0])).then(function () {
         snacks('Check-in created');
         cardProd.close();
         getSuggestions();
@@ -362,16 +362,16 @@ function setFilePath(base64) {
     getUniqueOfficeCount().then(function (offices) {
       if (!offices.length) return;
       if (offices.length == 1) {
-        getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
-          if(!sub) {
+        getSubscription(offices[0], 'check-in').then(function (sub) {
+          if(!sub.length) {
             snacks('Check-in Subscription not available')
             history.back();
             return
           }
-          sub.attachment.Photo.value = url
-          sub.attachment.Comment.value = textValue;
+          sub[0].attachment.Photo.value = url
+          sub[0].attachment.Comment.value = textValue;
           progressBar.open();
-          requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
+          requestCreator('create', setVenueForCheckIn('', sub[0])).then(function () {
             getSuggestions()
             snacks('Check-In Created')
           }).catch(function (error) {
@@ -413,8 +413,8 @@ function setFilePath(base64) {
         dialog.listen('MDCDialog:closed', function (evt) {
           if (evt.detail.action !== 'accept') return;
 
-          getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
-            if(!sub) {
+          getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
+            if(!sub.length) {
               snacks('Check-in Subscription not available')
               history.back();
               return

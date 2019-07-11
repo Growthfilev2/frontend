@@ -616,20 +616,14 @@ function deleteByIndex(store, activitiesToRemove) {
 
 
 function updateSubscription(subscription, tx) {
-  let count = 0;
   const store = tx.objectStore('subscriptions');
   const index = store.index('officeTemplate');
   index.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
     const cursor = event.target.result;
     if (!cursor) {
-      subscription.count = count;
       store.put(subscription)
       return;
     }
-    if (cursor.value.count) {
-      count = cursor.value.count;
-    }
-
     const deleteReq = cursor.delete();
     deleteReq.onsuccess = function () {
       console.log('deleted')

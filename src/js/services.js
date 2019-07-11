@@ -411,16 +411,24 @@ function getRootRecord() {
   })
 }
 
-function getSubscription(office, template, status) {
+function getSubscription(office, template) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['subscriptions']);
     const subscription = tx.objectStore('subscriptions')
     const officeTemplateCombo = subscription.index('validSubscription')
-    const range = IDBKeyRange.only([office, template, status])
-    officeTemplateCombo.get(range).onsuccess = function (event) {
-      if (!event.target.result) return resolve(null);
-      return resolve(event.target.result)
+
+    const range = IDBKeyRange.bound([office, template, 'CONFIRMED'],[office, template, 'PENDING'])
+    officeTemplateCombo.getAll(range).onsuccess = function (event) {
+     result = event.target.result;
+     if(result.length > 1) {
+      return result.sort(function(a,b){
+        return b.timestamp - a.timestamp
+      })[0]
     }
+     
+     return resolve(result)
+    }
+ 
     tx.onerror = function () {
       return reject({
         message: tx.error,

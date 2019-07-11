@@ -358,7 +358,8 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-      // profileView();
+      // reportView();
+      // ApplicationState.office = 'Puja Capital'
       // return;
       requestCreator('now', {
         device: native.getInfo(),
@@ -890,18 +891,41 @@ function setVenueForCheckIn(venueData, value) {
 
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
-    let offices = []
-    const tx = db.transaction(['children']);
+    let offices = [];
+  
+    const tx = db.transaction(['children','subscriptions']);
     const childrenStore = tx.objectStore('children').index('employees');
+    const subscriptionStore = tx.objectStore('subscriptions');
+
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) return;
-
+      if (!cursor) {
+        if(offices.length) return
+        subscriptionStore.openCursor().onsuccess = function(subscriptionStoreEvnet){
+          const subscriptionsCursor = subscriptionStoreEvnet.target.result;
+          if(!subscriptionsCursor) return
+          if(subscriptionsCursor.value.status === 'CANCELLED') {
+            subscriptionsCursor.continue();
+            return
+          };
+          if(offices.indexOf(subscriptionsCursor.value.office) > -1) {
+            subscriptionsCursor.continue();
+            return;
+          }
+          offices.push(subscriptionsCursor.value.office)
+          subscriptionsCursor.continue();
+        }
+        return
+      };
+      if(cursor.value.status ==='CANCELLED') {
+        cursor.continue();
+        return;
+      }
       offices.push(cursor.value.office)
       cursor.continue()
-    }
-    tx.oncomplete = function () {
-      console.log(offices)
+    };
+
+    tx.oncomplete = function () {    
       return resolve(offices);
     }
     tx.onerror = function () {

@@ -261,9 +261,7 @@ function homeView(suggestedTemplates) {
     history.pushState(['addView'], null, null);
     addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
   });
-  Promise.all([getSubscription(ApplicationState.office,'attendance regularization','CONFIRMED'),getSubscription(ApplicationState.office,'leave','CONFIRMED'),getSubscription(ApplicationState.office,'expense claim','CONFIRMED')]).then(function(result){
-    
-  }).catch(console.log)
+
 }
 
 
