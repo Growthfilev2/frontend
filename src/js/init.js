@@ -187,7 +187,6 @@ function firebaseUiConfig() {
 function userSignedOut() {
 
   ui = new firebaseui.auth.AuthUI(firebase.auth())
-  firebase.auth().appVerificationDisabledForTesting = true;
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
