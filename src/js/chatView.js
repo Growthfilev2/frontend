@@ -536,9 +536,6 @@ function createActivityActionMenu(addendumId, activityId) {
         }, {
             name: 'Share',
             icon: 'share'
-        }, {
-            name: 'Edit',
-            icon: 'edit'
         }]
 
         if (activity.status === 'CANCELLED') {
