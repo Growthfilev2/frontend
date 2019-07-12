@@ -2,8 +2,9 @@ var contactsUl;
 var chatsUl;
 let currentChatsArray = [];
 let currentContactsArray = [];
+
 function chatView() {
-  
+
     document.getElementById('start-load').classList.add('hidden');
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
@@ -11,12 +12,17 @@ function chatView() {
     </a>`
 
     const header = getHeader('app-header', backIcon, searchIcon);
+    if (!document.getElementById('search-btn')) return;
+    document.getElementById('search-btn').addEventListener('click', function () {
+        history.pushState(['searchChats'], null, null)
+        search()
+    })
     document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
-    readLatestChats();
-    getOtherContacts()
+    readLatestChats(true);
+    getOtherContacts(true);
 }
 
 function chatDom() {
@@ -70,7 +76,7 @@ function search() {
         let currentChats = '';
         let currentContacts = '';
         currentChatsArray = [];
-        currentContactsArray  = [];
+        currentContactsArray = [];
         searchable.bound.onsuccess = function (event) {
             const cursor = event.target.result
             if (!cursor) return
@@ -85,27 +91,25 @@ function search() {
             } else {
                 currentContacts += userLi(cursor.value)
                 currentContactsArray.push(cursor.value)
-            }                
+            }
             cursor.continue()
         }
         searchable.tx.oncomplete = function () {
             const chatsEl = document.getElementById('chats')
             const contactsEl = document.getElementById('all-contacts')
             const noResultEl = document.getElementById('no-result-found');
-            
-            if(noResultEl) {
-                if(!currentChatsArray.length && !currentContactsArray.length) {
+
+            if (noResultEl) {
+                if (!currentChatsArray.length && !currentContactsArray.length) {
                     noResultEl.innerHTML = 'No Results Found'
-                }
-                else {
+                } else {
                     noResultEl.innerHTML = ''
                 }
             }
             if (chatsEl) {
                 if (!currentChatsArray.length) {
                     document.querySelector('.chats-container').classList.add("hidden")
-                }
-                else {
+                } else {
                     document.querySelector('.chats-container').classList.remove("hidden")
                 }
                 chatsEl.innerHTML = currentChats
@@ -113,8 +117,7 @@ function search() {
             if (contactsEl) {
                 if (!currentContacts) {
                     document.querySelector('.contacts-container').classList.add("hidden")
-                }
-                else {
+                } else {
                     document.querySelector('.contacts-container').classList.remove("hidden")
                 }
                 contactsEl.innerHTML = currentContacts;
@@ -138,27 +141,25 @@ function getSearchBound(evt) {
     let STORE_OR_INDEX = tx.objectStore('users')
     let bound = null
     let direction = 'next'
-    if(!evt.target.value) {
-        if(history.state[0] === 'searchChats') {
-            indexName =  'timestamp'
+    if (!evt.target.value) {
+        if (history.state[0] === 'searchChats') {
+            indexName = 'timestamp'
             direction = 'prev'
         }
-    }
-    else {
+    } else {
         if (isNumber(value)) {
             indexName = 'mobile'
             value = formatNumber(value);
-        }
-         else {
+        } else {
             indexName = 'NAME_SEARCH'
             value = value.toLowerCase();
         };
         bound = IDBKeyRange.bound(value, value + '\uffff');
-        STORE_OR_INDEX =   STORE_OR_INDEX.index(indexName)
+        STORE_OR_INDEX = STORE_OR_INDEX.index(indexName)
     }
-    
-    STORE_OR_INDEX = STORE_OR_INDEX.openCursor(bound,direction)
-    
+
+    STORE_OR_INDEX = STORE_OR_INDEX.openCursor(bound, direction)
+
     return {
         tx: tx,
         bound: STORE_OR_INDEX
@@ -181,11 +182,11 @@ function formatNumber(numberString) {
     return number.replace(/ +/g, "");
 }
 
-function getOtherContacts(){
+function getOtherContacts(initList) {
     currentContactsArray = [];
-    const tx = db.transaction('users','readwrite');
+    const tx = db.transaction('users', 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
-    
+
     const myNumber = firebase.auth().currentUser.phoneNumber;
     let currentContacts = ''
     index.openCursor("").onsuccess = function (event) {
@@ -208,23 +209,21 @@ function getOtherContacts(){
                 currentContacts = 'No Contacts Found'
             };
             contactsEl.innerHTML = currentContacts;
+            if(!initList) return;
             contactsUl = new mdc.list.MDCList(contactsEl);
             initializeContactList(contactsUl)
         }
     }
 }
 
-function readLatestChats() {
+function readLatestChats(initList) {
     var v1 = performance.now();
-    document.querySelector('.user-chats').classList.add('hidden')
     currentChatsArray = [];
-    // currentContactsArray = [];
-    const tx = db.transaction('users','readwrite');
+    const tx = db.transaction('users', 'readwrite');
     const index = tx.objectStore('users').index('timestamp');
     const myNumber = firebase.auth().currentUser.phoneNumber
     let currentChats = '';
-    const range = IDBKeyRange.bound(0,1909889900000)
-    // let currentContacts = ''
+    const range = IDBKeyRange.bound(0, 1909889900000)
 
     index.openCursor(range, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
@@ -233,56 +232,39 @@ function readLatestChats() {
             cursor.continue();
             return;
         };
-        if(ApplicationState.currentChatSlected === cursor.value.mobile) {
-                cursor.value.count = 0;
-                const update = cursor.update(cursor.value);
-                update.onsuccess = function(){
-                    ApplicationState.currentChatSlected = null;
-                    console.log("count reset")
+        if (ApplicationState.currentChatSlected === cursor.value.mobile) {
+            cursor.value.count = 0;
+            const update = cursor.update(cursor.value);
+            update.onsuccess = function () {
+                ApplicationState.currentChatSlected = null;
+                console.log("count reset")
             }
         }
-        // if (cursor.value.timestamp) {
-            currentChats += userLi(cursor.value)
-            currentChatsArray.push(cursor.value)
-        // }
-        //  else {
-        //     currentContacts += userLi(cursor.value)
-        //     currentContactsArray.push(cursor.value)
-        // }
+
+        currentChats += userLi(cursor.value)
+        currentChatsArray.push(cursor.value)
+
         cursor.continue();
     }
     tx.oncomplete = function () {
         const chatsEl = document.getElementById('chats')
-        // const contactsEl = document.getElementById('all-contacts')
+
         let chatsUl;
-        // let contactsUl;
+
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden")
             if (!currentChatsArray.length) {
                 currentChats = 'No Chat Found. '
             }
             chatsEl.innerHTML = currentChats
+            if(!initList) return;
             chatsUl = new mdc.list.MDCList(chatsEl);
-            initializeChatList(chatsUl)
+            initializeChatList(chatsUl);
+            var v2 = performance.now();
+            console.log('performance', v2 - v1)
         }
-        // if (contactsEl) {
-        //     document.querySelector('.contacts-container').classList.remove("hidden")
-        //     if (!currentContacts) {
-        //         currentContacts = 'No Contacts Found'
-        //     };
-        //     contactsEl.innerHTML = currentContacts;
-        //     contactsUl = new mdc.list.MDCList(contactsEl);
-        //     initializeContactList(contactsUl)
-        // }
-        document.querySelector('.user-chats').classList.remove('hidden')
-
-        var v2 = performance.now();
-        console.log('performance',v2 - v1)
-        if (!document.getElementById('search-btn')) return;
-            document.getElementById('search-btn').addEventListener('click', function () {
-                history.pushState(['searchChats'],null,null)
-                search()    
-            })
+     
+     
     }
 }
 
@@ -291,28 +273,25 @@ function initializeChatList(chatsUl) {
 
     chatsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentChatsArray[evt.detail.index]
-        if(history.state[0] === 'searchChats') {
+        if (history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
-        }
-        else {
+        } else {
             history.pushState(['enterChat', userRecord], null, null)
-
         }
         enterChat(userRecord);
     })
 }
 
-function initializeContactList(contactsUl){
+function initializeContactList(contactsUl) {
     contactsUl.listen('MDCList:action', function (evt) {
         const userRecord = currentContactsArray[evt.detail.index]
-        if(history.state[0] === 'searchChats') {
+        if (history.state[0] === 'searchChats') {
             history.replaceState(['enterChat', userRecord], null, null)
-        }
-        else {
+        } else {
             history.pushState(['enterChat', userRecord], null, null)
         }
         enterChat(userRecord);
-    })   
+    })
 }
 
 function userLi(value) {
@@ -549,8 +528,8 @@ function createActivityActionMenu(addendumId, activityId) {
         <p class='card-time mdc-typography--subtitle1 mb-0 mt-0'>Created On ${formatCreatedTime(activity.timestamp)}</p>
         <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ${activity.creator.displayName || activity.creator.phoneNumber}</span>`
         if (!activity.canEdit) {
-            showViewDialog(heading,activity,'view-form')
-    
+            showViewDialog(heading, activity, 'view-form')
+
             return
         };
         const items = [{
@@ -603,7 +582,7 @@ function createActivityActionMenu(addendumId, activityId) {
         menu.listen('MDCMenu:selected', function (evt) {
             switch (items[evt.detail.index].name) {
                 case 'View':
-                showViewDialog(heading,activity,'view-form')
+                    showViewDialog(heading, activity, 'view-form')
                     break;
                 case 'Edit':
                     break;
@@ -627,24 +606,24 @@ function createActivityActionMenu(addendumId, activityId) {
 
 }
 
-function showViewDialog(heading,activity,id){
+function showViewDialog(heading, activity, id) {
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
     dialog.open()
     dialog.buttons_[1].classList.add('hidden')
     dialog.autoStackButtons = false;
-    
-    dialog.listen("MDCDialog:opened",function(evt){
+
+    dialog.listen("MDCDialog:opened", function (evt) {
         const venueEl = document.getElementById('venue-container')
         const scheduleEl = document.getElementById('schedule-container');
-        if(venueEl) {
+        if (venueEl) {
             const venueList = new mdc.list.MDCList(venueEl);
-            venueList.singleSelection  = true;
-            venueList.layout()    
-         
+            venueList.singleSelection = true;
+            venueList.layout()
+
         }
-        if(scheduleEl) {
+        if (scheduleEl) {
             const scheduleList = new mdc.list.MDCList(venueEl);
-            scheduleList.layout()    
+            scheduleList.layout()
         }
     })
 }
@@ -826,14 +805,14 @@ function share(activity) {
                 searchInitBack(searchInit)
             }
             searchInit.trailingIcon_.root_.onclick = function () {
-               searchInitCancel(searchInit)
+                searchInitCancel(searchInit)
             }
         })
     });
 
 }
 
-function searchInitBack(searchInit){
+function searchInitBack(searchInit) {
     document.getElementById('search-users').classList.add('hidden')
     document.getElementById('app-header').classList.remove("hidden")
     searchInit.value = "";
@@ -841,7 +820,7 @@ function searchInitBack(searchInit){
 
 }
 
-function searchInitCancel(searchInit){
+function searchInitCancel(searchInit) {
     searchInit.value = "";
     searchInit.input_.dispatchEvent(new Event('input'));
 }
@@ -1075,16 +1054,15 @@ function dynamicAppendChats(addendums) {
         if (addendum.isComment) {
             parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp))
         } else {
-            if(addendum.user === history.state[1].mobile) {
+            if (addendum.user === history.state[1].mobile) {
                 parent.appendChild(actionBoxDom(addendum))
-            }
-            else {
-                db.transaction('activity').objectStore('activity').get(addendum.activityId).onsuccess = function(evt){
+            } else {
+                db.transaction('activity').objectStore('activity').get(addendum.activityId).onsuccess = function (evt) {
                     const activity = evt.target.result;
-                    const showActionAddendum = activity.assignees.filter(function(val){
+                    const showActionAddendum = activity.assignees.filter(function (val) {
                         return val.phoneNumber === history.state[1].mobile
                     })
-                    if(!showActionAddendum.length) return;
+                    if (!showActionAddendum.length) return;
                     parent.appendChild(actionBoxDom(addendum))
                 }
             }
@@ -1119,7 +1097,7 @@ function getUserChats(userRecord) {
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
         } else {
-            if(cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
+            if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
                 timeLine += actionBox(cursor.value)
             }
         }

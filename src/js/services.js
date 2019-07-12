@@ -371,7 +371,7 @@ function handleComponentUpdation(readResponse) {
     default:
       case 'chatView':
       if(!readResponse.response.addendum.length) return;
-      readLatestChats();
+      readLatestChats(false);
       break;
   }
 
