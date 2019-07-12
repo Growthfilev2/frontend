@@ -445,7 +445,6 @@ function handleLongPress(e) {
 function actionBox(value, position, photo) {
     return `<a href="callback=createActivityActionMenu('${value.addendumId}','${value.activityId}')" class="message ${position}" ${native.getName() === 'Android' ? 'onclick="handleLongPress(event)"':`onclick="createActivityActionMenu('${value.addendumId}','${value.activityId}')"`}>
     <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> </div>
-   
     ${value.comment}
     <span class="metadata">
         <span class="time">
@@ -454,23 +453,6 @@ function actionBox(value, position, photo) {
     </span>
   </a>`
 
-    return `
-    <div class='action-box-container'>
-    <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> 
-    </div>
-   
-    <div class="message-wrapper ${position}" onclick="createActivityActionMenu('${value.addendumId}','${value.activityId}')">
-    <img class="circle-wrapper" src=${photo} onerror="imgErr(this)">
-    <div class="text-wrapper">${value.comment}
-    <span class="metadata">
-    <span class="time">
-        ${moment(value.timestamp).format('hh:mm')}
-    </span>
-    </span>
-    </div>
-    </div>
-    </div>
-   `
 }
 
 
