@@ -202,7 +202,7 @@ function getOtherContacts(initList) {
     }
     tx.oncomplete = function () {
         const contactsEl = document.getElementById('all-contacts')
-        let contactsUl;
+       
         if (contactsEl) {
             document.querySelector('.contacts-container').classList.remove("hidden")
             if (!currentContacts) {
@@ -248,8 +248,6 @@ function readLatestChats(initList) {
     }
     tx.oncomplete = function () {
         const chatsEl = document.getElementById('chats')
-
-        let chatsUl;
 
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden")

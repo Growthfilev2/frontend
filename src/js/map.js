@@ -149,6 +149,7 @@ function loadCardData(markers) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
           getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
+            console.log(checkInSub)
             if (!checkInSub) return getSuggestions()
             cardProd.open();
 
