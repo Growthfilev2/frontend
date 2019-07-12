@@ -163,9 +163,7 @@
   margin: 10.66667px auto;
   padding: 0px;
 }
-.aciton-info * {
-  pointer-events: none
-}
+
 
 .message-wrapper.aciton-info .text-wrapper {
   text-align: center;

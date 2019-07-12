@@ -327,7 +327,11 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-   
+      // history.pushState(['chatView'],null,null)
+      // chatView('+919000000000')
+      // return;
+      mapView();
+      return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',

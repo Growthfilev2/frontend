@@ -428,16 +428,21 @@ function enterChat(userRecord) {
 
 
 
-function actionBox(value) {
+function actionBox(value,position,photo) {
+ 
+  
     return `
     <div class='action-box-container'>
     <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> 
     </div>
    
-    <div class="message-wrapper aciton-info" onclick="createActivityActionMenu('${value.addendumId}','${value.activityId}')">
+    <div class="message-wrapper ${position}" onclick="createActivityActionMenu('${value.addendumId}','${value.activityId}')">
+    <img class="circle-wrapper" src=${photo} onerror="imgErr(this)">
     <div class="text-wrapper">${value.comment}
     <span class="metadata">
-    <i class='material-icons'>info</i>
+    <span class="time">
+        ${moment(value.timestamp).format('hh:mm')}
+    </span>
     </span>
     </div>
     </div>
@@ -536,6 +541,9 @@ function createActivityActionMenu(addendumId, activityId) {
         }, {
             name: 'Share',
             icon: 'share'
+        }, {
+            name: 'Reply',
+            icon: 'reply'
         }]
 
         if (activity.status === 'CANCELLED') {
@@ -579,7 +587,8 @@ function createActivityActionMenu(addendumId, activityId) {
                 case 'View':
                     showViewDialog(heading, activity, 'view-form')
                     break;
-                case 'Edit':
+                case 'Reply':
+                    reply(activity)
                     break;
                 case 'Share':
                     share(activity)
@@ -1082,18 +1091,21 @@ function getUserChats(userRecord) {
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
+    
         if (cursor.value.user === myNumber) {
             position = 'me';
             image = myImage
         } else {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
-        }
+        };
+
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
-        } else {
+        }
+         else {
             if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
-                timeLine += actionBox(cursor.value)
+                timeLine += actionBox(cursor.value,position,image);
             }
         }
         cursor.continue();
