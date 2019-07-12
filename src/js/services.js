@@ -365,9 +365,13 @@ function handleComponentUpdation(readResponse) {
       getSuggestions()
       break;
     case 'enterChat':
+    if(!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
       break;
     default:
+      case 'chatView':
+      if(!readResponse.response.addendum.length) return;
+      readLatestChats();
       break;
   }
 

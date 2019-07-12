@@ -16,6 +16,7 @@ function chatView() {
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
     readLatestChats();
+    getOtherContacts()
 }
 
 function chatDom() {
@@ -179,20 +180,53 @@ function formatNumber(numberString) {
     }
     return number.replace(/ +/g, "");
 }
-function readLatestChats() {
-    var v1 = performance.now();
-    document.querySelector('.user-chats').classList.add('hidden')
-    currentChatsArray = [];
+
+function getOtherContacts(){
     currentContactsArray = [];
     const tx = db.transaction('users','readwrite');
     const index = tx.objectStore('users').index('timestamp');
     
+    const myNumber = firebase.auth().currentUser.phoneNumber;
+    let currentContacts = ''
+    index.openCursor("").onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.mobile === myNumber) {
+            cursor.continue();
+            return;
+        };
+        currentContacts += userLi(cursor.value)
+        currentContactsArray.push(cursor.value)
+        cursor.continue();
+    }
+    tx.oncomplete = function () {
+        const contactsEl = document.getElementById('all-contacts')
+        let contactsUl;
+        if (contactsEl) {
+            document.querySelector('.contacts-container').classList.remove("hidden")
+            if (!currentContacts) {
+                currentContacts = 'No Contacts Found'
+            };
+            contactsEl.innerHTML = currentContacts;
+            contactsUl = new mdc.list.MDCList(contactsEl);
+            initializeContactList(contactsUl)
+        }
+    }
+}
+
+function readLatestChats() {
+    var v1 = performance.now();
+    document.querySelector('.user-chats').classList.add('hidden')
+    currentChatsArray = [];
+    // currentContactsArray = [];
+    const tx = db.transaction('users','readwrite');
+    const index = tx.objectStore('users').index('timestamp');
     const myNumber = firebase.auth().currentUser.phoneNumber
     let currentChats = '';
-   
-    let currentContacts = ''
+    const range = IDBKeyRange.bound(0,1909889900000)
+    // let currentContacts = ''
 
-    index.openCursor(null, 'prev').onsuccess = function (event) {
+    index.openCursor(range, 'prev').onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.mobile === myNumber) {
@@ -205,22 +239,23 @@ function readLatestChats() {
                 update.onsuccess = function(){
                     ApplicationState.currentChatSlected = null;
                     console.log("count reset")
-                }
+            }
         }
-        if (cursor.value.timestamp) {
+        // if (cursor.value.timestamp) {
             currentChats += userLi(cursor.value)
             currentChatsArray.push(cursor.value)
-        } else {
-            currentContacts += userLi(cursor.value)
-            currentContactsArray.push(cursor.value)
-        }
+        // }
+        //  else {
+        //     currentContacts += userLi(cursor.value)
+        //     currentContactsArray.push(cursor.value)
+        // }
         cursor.continue();
     }
     tx.oncomplete = function () {
         const chatsEl = document.getElementById('chats')
-        const contactsEl = document.getElementById('all-contacts')
+        // const contactsEl = document.getElementById('all-contacts')
         let chatsUl;
-        let contactsUl;
+        // let contactsUl;
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden")
             if (!currentChatsArray.length) {
@@ -230,26 +265,24 @@ function readLatestChats() {
             chatsUl = new mdc.list.MDCList(chatsEl);
             initializeChatList(chatsUl)
         }
-        if (contactsEl) {
-            document.querySelector('.contacts-container').classList.remove("hidden")
-            if (!currentContacts) {
-                currentContacts = 'No Contacts Found'
-            };
-            contactsEl.innerHTML = currentContacts;
-            contactsUl = new mdc.list.MDCList(contactsEl);
-            initializeContactList(contactsUl)
-        }
+        // if (contactsEl) {
+        //     document.querySelector('.contacts-container').classList.remove("hidden")
+        //     if (!currentContacts) {
+        //         currentContacts = 'No Contacts Found'
+        //     };
+        //     contactsEl.innerHTML = currentContacts;
+        //     contactsUl = new mdc.list.MDCList(contactsEl);
+        //     initializeContactList(contactsUl)
+        // }
         document.querySelector('.user-chats').classList.remove('hidden')
 
         var v2 = performance.now();
         console.log('performance',v2 - v1)
         if (!document.getElementById('search-btn')) return;
-        if (chatsUl && contactsUl) {
             document.getElementById('search-btn').addEventListener('click', function () {
                 history.pushState(['searchChats'],null,null)
                 search()    
             })
-        }
     }
 }
 
