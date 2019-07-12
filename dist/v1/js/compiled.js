@@ -94,7 +94,7 @@ function attendenceView() {
 
 function applyLeave() {
 
-    return '<button class="mdc-button" id=\'apply-leave\'>\n    <i class="material-icons mdc-button__icon" aria-hidden="true">today</i>\n    <span class="mdc-button__label">Apply For A New Leave</span>\n  </button>';
+    return '<button class="mdc-button apply-leave">\n   <i class="material-icons mdc-button__icon" aria-hidden="true">today</i>\n   <span class="mdc-button__label">Apply For A New Leave</span>\n </button>';
 }
 
 function attendenceCards() {
@@ -106,6 +106,7 @@ var contactsUl;
 var chatsUl;
 var currentChatsArray = [];
 var currentContactsArray = [];
+
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
@@ -113,11 +114,17 @@ function chatView() {
     var searchIcon = '<a class=\'mdc-top-app-bar__action-item material-icons\' id=\'search-btn\'>\n        search\n    </a>';
 
     var header = getHeader('app-header', backIcon, searchIcon);
+    if (!document.getElementById('search-btn')) return;
+    document.getElementById('search-btn').addEventListener('click', function () {
+        history.pushState(['searchChats'], null, null);
+        search();
+    });
     document.getElementById('app-header').classList.remove("hidden");
     document.getElementById('app-current-panel').innerHTML = chatDom();
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
-    readLatestChats();
+    readLatestChats(true);
+    getOtherContacts(true);
 }
 
 function chatDom() {
@@ -247,20 +254,51 @@ function formatNumber(numberString) {
     }
     return number.replace(/ +/g, "");
 }
-function readLatestChats() {
-    var v1 = performance.now();
-    document.querySelector('.user-chats').classList.add('hidden');
-    currentChatsArray = [];
+
+function getOtherContacts(initList) {
     currentContactsArray = [];
     var tx = db.transaction('users', 'readwrite');
     var index = tx.objectStore('users').index('timestamp');
 
     var myNumber = firebase.auth().currentUser.phoneNumber;
-    var currentChats = '';
-
     var currentContacts = '';
+    index.openCursor("").onsuccess = function (event) {
+        var cursor = event.target.result;
+        if (!cursor) return;
+        if (cursor.value.mobile === myNumber) {
+            cursor.continue();
+            return;
+        };
+        currentContacts += userLi(cursor.value);
+        currentContactsArray.push(cursor.value);
+        cursor.continue();
+    };
+    tx.oncomplete = function () {
+        var contactsEl = document.getElementById('all-contacts');
 
-    index.openCursor(null, 'prev').onsuccess = function (event) {
+        if (contactsEl) {
+            document.querySelector('.contacts-container').classList.remove("hidden");
+            if (!currentContacts) {
+                currentContacts = 'No Contacts Found';
+            };
+            contactsEl.innerHTML = currentContacts;
+            if (!initList) return;
+            contactsUl = new mdc.list.MDCList(contactsEl);
+            initializeContactList(contactsUl);
+        }
+    };
+}
+
+function readLatestChats(initList) {
+    var v1 = performance.now();
+    currentChatsArray = [];
+    var tx = db.transaction('users', 'readwrite');
+    var index = tx.objectStore('users').index('timestamp');
+    var myNumber = firebase.auth().currentUser.phoneNumber;
+    var currentChats = '';
+    var range = IDBKeyRange.bound(0, 1909889900000);
+
+    index.openCursor(range, 'prev').onsuccess = function (event) {
         var cursor = event.target.result;
         if (!cursor) return;
         if (cursor.value.mobile === myNumber) {
@@ -275,48 +313,26 @@ function readLatestChats() {
                 console.log("count reset");
             };
         }
-        if (cursor.value.timestamp) {
-            currentChats += userLi(cursor.value);
-            currentChatsArray.push(cursor.value);
-        } else {
-            currentContacts += userLi(cursor.value);
-            currentContactsArray.push(cursor.value);
-        }
+
+        currentChats += userLi(cursor.value);
+        currentChatsArray.push(cursor.value);
+
         cursor.continue();
     };
     tx.oncomplete = function () {
         var chatsEl = document.getElementById('chats');
-        var contactsEl = document.getElementById('all-contacts');
-        var chatsUl = void 0;
-        var contactsUl = void 0;
+
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden");
             if (!currentChatsArray.length) {
                 currentChats = 'No Chat Found. ';
             }
             chatsEl.innerHTML = currentChats;
+            if (!initList) return;
             chatsUl = new mdc.list.MDCList(chatsEl);
             initializeChatList(chatsUl);
-        }
-        if (contactsEl) {
-            document.querySelector('.contacts-container').classList.remove("hidden");
-            if (!currentContacts) {
-                currentContacts = 'No Contacts Found';
-            };
-            contactsEl.innerHTML = currentContacts;
-            contactsUl = new mdc.list.MDCList(contactsEl);
-            initializeContactList(contactsUl);
-        }
-        document.querySelector('.user-chats').classList.remove('hidden');
-
-        var v2 = performance.now();
-        console.log('performance', v2 - v1);
-        if (!document.getElementById('search-btn')) return;
-        if (chatsUl && contactsUl) {
-            document.getElementById('search-btn').addEventListener('click', function () {
-                history.pushState(['searchChats'], null, null);
-                search();
-            });
+            var v2 = performance.now();
+            console.log('performance', v2 - v1);
         }
     };
 }
@@ -418,16 +434,26 @@ function enterChat(userRecord) {
     header.root_.classList.remove('hidden');
     console.log(header);
 
-    document.getElementById('app-current-panel').innerHTML = '\n        <div class="wrapper">\n        <div class="inner" id="inner">\n    \n        <div class="content" id="content">\n\n        </div>\n      \n        <div class="bottom" id="bottom">\n        <div class="conversation-compose">\n        \n        <div id=\'comment-textarea\' class="mdc-text-field text-field mdc-text-field--fullwidth mdc-text-field--no-label  mdc-text-field--textarea">\n        \n        <textarea id="text-field-fullwidth-textarea-helper" class="mdc-text-field__input mdc-text-field__input  input-msg">\n        </textarea>\n        \n        </div>\n        \n        <button id=\'comment-send\' class="mdc-fab send mdc-theme--primary-bg mdc-theme-on--primary" aria-label="Favorite">\n        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>\n        </button>\n        </div>\n        \n        </div>\n        </div>\n        </div>\n        </div>';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                  <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus="">\n                  <div class="input-space-right"></div>\n                  <button class="send">\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
     getUserChats(userRecord);
 }
 
-function actionBox(value) {
-    return '\n    <div class=\'action-box-container\'>\n    <div class=\'menu-container mdc-menu-surface--anchor\' id="' + value.addendumId + '"> \n    </div>\n   \n    <div class="message-wrapper aciton-info" onclick="createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')">\n    <div class="text-wrapper">' + value.comment + '\n    <span class="metadata">\n    <i class=\'material-icons\'>info</i>\n    </span>\n    </div>\n    </div>\n    </div>\n   ';
+function handleLongPress(e) {
+
+    e.preventDefault();
+
+    return false;
+}
+
+function actionBox(value, position, photo) {
+    return '<a href="callback=createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')" class="message ' + position + '" ' + (native.getName() === 'Android' ? 'onclick="handleLongPress(event)"' : 'onclick="createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')"') + '>\n    <div class=\'menu-container mdc-menu-surface--anchor\' id="' + value.addendumId + '"> </div>\n   \n    ' + value.comment + '\n    <span class="metadata">\n        <span class="time">\n           ' + moment(value.timestamp).format('hh:mm') + '\n        </span>\n    </span>\n  </a>';
+
+    return '\n    <div class=\'action-box-container\'>\n    <div class=\'menu-container mdc-menu-surface--anchor\' id="' + value.addendumId + '"> \n    </div>\n   \n    <div class="message-wrapper ' + position + '" onclick="createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')">\n    <img class="circle-wrapper" src=' + photo + ' onerror="imgErr(this)">\n    <div class="text-wrapper">' + value.comment + '\n    <span class="metadata">\n    <span class="time">\n        ' + moment(value.timestamp).format('hh:mm') + '\n    </span>\n    </span>\n    </div>\n    </div>\n    </div>\n   ';
 }
 
 function messageBox(comment, position, image, time) {
-    return '<div class="message-wrapper ' + position + '">\n    <img class="circle-wrapper" src=' + image + ' onerror="imgErr(this)">\n    <div class="text-wrapper">' + comment + '\n    <span class="metadata">\n        <span class="time">\n            ' + moment(time).format('hh:mm') + '\n        </span>\n    </span>\n    </div>\n    </div>';
+
+    return ' <div class="message ' + position + '">\n    ' + comment + '\n    <span class="metadata">\n        <span class="time">' + moment(time).format('hh:mm') + '</span\n    </span>\n  </div>';
 }
 
 function messageBoxDom(comment, position, image, time) {
@@ -490,7 +516,7 @@ function actionBoxDom(value) {
 }
 
 function createActivityActionMenu(addendumId, activityId) {
-    console.log("long press");
+
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         var activity = event.target.result;
         if (!activity) return;
@@ -507,8 +533,8 @@ function createActivityActionMenu(addendumId, activityId) {
             name: 'Share',
             icon: 'share'
         }, {
-            name: 'Edit',
-            icon: 'edit'
+            name: 'Reply',
+            icon: 'reply'
         }];
 
         if (activity.status === 'CANCELLED') {
@@ -551,7 +577,8 @@ function createActivityActionMenu(addendumId, activityId) {
                 case 'View':
                     showViewDialog(heading, activity, 'view-form');
                     break;
-                case 'Edit':
+                case 'Reply':
+                    reply(activity);
                     break;
                 case 'Share':
                     share(activity);
@@ -919,18 +946,20 @@ function getUserChats(userRecord) {
     index.openCursor(range).onsuccess = function (event) {
         var cursor = event.target.result;
         if (!cursor) return;
+
         if (cursor.value.user === myNumber) {
             position = 'me';
             image = myImage;
         } else {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg';
-        }
+        };
+
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp);
         } else {
             if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
-                timeLine += actionBox(cursor.value);
+                timeLine += actionBox(cursor.value, position, image);
             }
         }
         cursor.continue();
@@ -939,46 +968,51 @@ function getUserChats(userRecord) {
         parent.innerHTML = timeLine;
         setBottomScroll();
 
-        var btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
-        var commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'));
-        var form = document.querySelector('.conversation-compose');
-        var bottom = document.getElementById('bottom');
-        btn.root_.addEventListener('click', function () {
+        // const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
+        // const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
+        // const form = document.querySelector('.conversation-compose');
+        // const bottom = document.getElementById('bottom')
+        // btn.root_.addEventListener('click', function () {
 
-            if (!commentInit.value.trim()) return;
-            progressBar.open();
-            requestCreator('dm', {
-                comment: commentInit.value,
-                assignee: userRecord.mobile
-            }).then(function () {
-                if (!parent) return;
-                parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL));
-                commentInit.value = '';
-                resetCommentField(bottom, form, commentInit.input_);
-                setBottomScroll();
-                progressBar.close();
-            }).catch(function (error) {
-                progressBar.close();
-                commentInit.value = '';
-                snacks(error.response.message);
-            });
-        });
-        commentInit.input_.addEventListener('input', function () {
-            if (this.scrollHeight >= 200) return;
+        //     if (!commentInit.value.trim()) return;
+        //     progressBar.open()
+        //     requestCreator('dm', {
+        //         comment: commentInit.value,
+        //         assignee: userRecord.mobile
+        //     }).then(function () {
+        //         if (!parent) return;
+        //         parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
+        //         commentInit.value = ''
+        //         resetCommentField(bottom, form, commentInit.input_)
+        //         setBottomScroll()
+        //         progressBar.close()
 
-            this.style.paddingTop = '10px';
+        //     }).catch(function (error) {
+        //         progressBar.close()
+        //         commentInit.value = ''
+        //         snacks(error.response.message);
 
-            this.style.lineHeight = '1';
-            this.style.height = '5px';
-            this.style.height = this.scrollHeight + "px";
-            form.style.minHeight = '56px';
-            form.style.height = 'auto';
-            bottom.style.height = this.scrollHeight + 20 + 'px';
-            //not
-            if (!this.value.trim()) {
-                resetCommentField(bottom, form, this);
-            }
-        });
+        //     })
+        // });
+        // commentInit.input_.addEventListener('input', function () {
+        //     if (this.scrollHeight >= 200) return;
+
+        //     this.style.paddingTop = '10px';
+
+        //     this.style.lineHeight = '1'
+        //     this.style.height = '5px'
+        //     this.style.height = (this.scrollHeight) + "px";
+        //     form.style.minHeight = '56px';
+        //     form.style.height = 'auto'
+        //     bottom.style.height = (this.scrollHeight + 20) + 'px'
+        //     //not
+        //     if (!this.value.trim()) {
+        //         resetCommentField(bottom, form, this)
+
+        //     }
+
+
+        // });
     };
 }
 
@@ -989,9 +1023,10 @@ function resetCommentField(bottom, form, input) {
 }
 
 function setBottomScroll() {
-    var el = document.getElementById('inner');
+
+    var el = document.querySelector('.conversation-container');
     if (!el) return;
-    el.scrollTo(0, el.scrollHeight);
+    el.scrollTop = el.scrollHeight;
 }
 function claimsView() {
     document.getElementById('app-header').classList.remove("hidden");
@@ -1442,7 +1477,6 @@ function homeView(suggestedTemplates) {
     history.pushState(['addView'], null, null);
     addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value));
   });
-  Promise.all([getSubscription(ApplicationState.office, 'attendance regularization', 'CONFIRMED'), getSubscription(ApplicationState.office, 'leave', 'CONFIRMED'), getSubscription(ApplicationState.office, 'expense claim', 'CONFIRMED')]).then(function (result) {}).catch(console.log);
 }
 
 function pendinglist(activities) {
@@ -1580,10 +1614,22 @@ window.addEventListener("load", function () {
     incompatibleDialog.open();
     return;
   }
-  startApp(true);
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      document.getElementById("main-layout-app").style.display = 'none';
+      userSignedOut();
+      return;
+    }
+    startApp();
+  });
+  firebase.auth().addAuthTokenListener(function (idToken) {
+    if (firebase.auth().currentUser) {
+      ApplicationState.idToken = idToken;
+    }
+  });
 });
 
-function firebaseUiConfig(value, redirect) {
+function firebaseUiConfig() {
 
   return {
     callbacks: {
@@ -1606,236 +1652,198 @@ function firebaseUiConfig(value, redirect) {
         size: 'invisible', // 'invisible' or 'compact'
         badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
       },
-      defaultCountry: 'IN',
-      defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : ''
+      defaultCountry: 'IN'
+
     }]
 
   };
 }
 
 function userSignedOut() {
+
   ui = new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
 function startApp() {
-
-  firebase.auth().onAuthStateChanged(function (auth) {
-
-    if (!auth) {
-      // document.getElementById('start-loader').classList.add('hidden')
-      document.getElementById("main-layout-app").style.display = 'none';
-      userSignedOut();
+  var dbName = firebase.auth().currentUser.uid;
+  if (appKey.getMode() === 'production') {
+    if (!native.getInfo()) {
+      redirect();
       return;
     }
+  }
 
-    if (appKey.getMode() === 'production') {
-      if (!native.getInfo()) {
-        redirect();
-        return;
-      }
-    }
-    localStorage.setItem('error', JSON.stringify({}));
+  localStorage.setItem('error', JSON.stringify({}));
 
-    var req = window.indexedDB.open(auth.uid, 15);
+  var req = window.indexedDB.open(dbName, 5);
 
-    req.onupgradeneeded = function (evt) {
-      db = req.result;
-      db.onerror = function () {
-        handleError({
-          message: db.error.message + ' from startApp on upgradeneeded'
-        });
-        return;
-      };
-
-      if (!evt.oldVersion) {
-        createObjectStores(db, auth.uid);
-      } else {
-        if (evt.oldVersion < 4) {
-          var subscriptionStore = req.transaction.objectStore('subscriptions');
-          subscriptionStore.createIndex('status', 'status');
-        }
-        if (evt.oldVersion < 5) {
-          var tx = req.transaction;
-
-          var mapStore = tx.objectStore('map');
-          mapStore.createIndex('bounds', ['latitude', 'longitude']);
-        }
-        if (evt.oldVersion < 6) {
-          var tx = req.transaction;
-          var childrenStore = tx.objectStore('children');
-          childrenStore.createIndex('officeTemplate', ['office', 'template']);
-
-          childrenStore.createIndex('employees', 'employee');
-          childrenStore.createIndex('employeeOffice', ['employee', 'office']);
-          childrenStore.createIndex('team', 'team');
-          childrenStore.createIndex('teamOffice', ['team', 'office']);
-          var myNumber = firebase.auth().currentUser.phoneNumber;
-
-          childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
-            var cursor = event.target.result;
-            if (!cursor) {
-              console.log("finished modiying children");
-              return;
-            }
-            cursor.value.employee = cursor.value.attachment['Employee Contact'].value;
-            if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
-              cursor.value.team = 1;
-            }
-            cursor.update(cursor.value);
-            cursor.continue();
-          };
-
-          tx.oncomplete = function () {
-
-            console.log("finsihed backlog");
-          };
-        }
-        if (evt.oldVersion < 7) {
-          var tx = req.transaction;
-          var _mapStore = tx.objectStore('map');
-          _mapStore.createIndex('office', 'office');
-          _mapStore.createIndex('status', 'status');
-          _mapStore.createIndex('selection', ['office', 'status', 'location']);
-        }
-        if (evt.oldVersion < 8) {
-          var tx = req.transaction;
-          var listStore = tx.objectStore('list');
-          var calendar = tx.objectStore('calendar');
-
-          listStore.createIndex('office', 'office');
-          calendar.createIndex('office', 'office');
-        }
-        if (evt.oldVersion < 9) {
-          var tx = req.transaction;
-          var userStore = tx.objectStore('users');
-          userStore.createIndex('mobile', 'mobile');
-
-          var addendumStore = tx.objectStore('addendum');
-          addendumStore.createIndex('user', 'user');
-          addendumStore.createIndex('timestamp', 'timestamp');
-        }
-        if (evt.oldVersion <= 10) {
-          var tx = req.transaction;
-          var _subscriptionStore = tx.objectStore('subscriptions');
-          _subscriptionStore.createIndex('count', 'count');
-        }
-        if (evt.oldVersion <= 11) {
-          var tx = req.transaction;
-          var _userStore = tx.objectStore('users');
-          _userStore.createIndex('timestamp', 'timestamp');
-        }
-        if (evt.oldVersion <= 12) {
-          var tx = req.transaction;
-          var activityStore = tx.objectStore('activity');
-          activityStore.createIndex('status', 'status');
-        }
-        if (evt.oldVersion <= 13) {
-          var tx = req.transaction;
-          var subscriptions = tx.objectStore('subscriptions');
-          subscriptions.createIndex('validSubscription', ['office', 'template', 'status']);
-          var addendum = tx.objectStore('addendum');
-          addendum.createIndex('key', 'key');
-          addendum.createIndex('KeyTimestamp', ['timestamp', 'key']);
-        }
-
-        if (evt.oldVersion <= 14) {
-          var tx = req.transaction;
-          var users = tx.objectStore('users');
-          users.createIndex('NAME_SEARCH', 'NAME_SEARCH');
-
-          users.openCursor().onsuccess = function (event) {
-            var cursor = event.target.result;
-            if (!cursor) return;
-            if (!cursor.value.timestamp) {
-              cursor.value.timestamp = '';
-            }
-            cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
-            var update = cursor.update(cursor.value);
-            update.onsuccess = function () {
-              console.log("updated user ", cursor.value);
-            };
-
-            cursor.continue();
-          };
-        }
-      };
+  req.onupgradeneeded = function (evt) {
+    db = req.result;
+    db.onerror = function () {
+      handleError({
+        message: db.error.message + ' from startApp on upgradeneeded'
+      });
+      return;
     };
-    req.onsuccess = function () {
-      db = req.result;
 
-      if (!areObjectStoreValid(db.objectStoreNames)) {
-        db.close();
-        console.log(auth);
-        var deleteIDB = indexedDB.deleteDatabase(auth.uid);
-        deleteIDB.onsuccess = function () {
-          window.location.reload();
-        };
-        deleteIDB.onblocked = function () {
-          snacks('Please Re-Install The App');
-        };
-        deleteIDB.onerror = function () {
-          snacks('Please Re-Install The App');
-        };
-        return;
-      }
-      var startLoad = document.querySelector('#start-load');
-      startLoad.classList.remove('hidden');
-      console.log("run app");
-      document.getElementById("main-layout-app").style.display = 'block';
+    if (!evt.oldVersion) {
+      createObjectStores(db, dbName);
+    } else {
+      var tx = req.transaction;
+      if (evt.oldVersion <= 4) {
+        var subscriptionStore = tx.objectStore('subscriptions');
+        var calendar = tx.objectStore('calendar');
+        var userStore = tx.objectStore('users');
+        var addendumStore = tx.objectStore('addendum');
+        var mapStore = tx.objectStore('map');
+        var activityStore = tx.objectStore('activity');
+        var childrenStore = tx.objectStore('children');
 
-      // ga('set', 'userId', '12345')
+        subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status']);
+        calendar.createIndex('office', 'office');
 
-      var texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
+        userStore.createIndex('mobile', 'mobile');
+        userStore.createIndex('timestamp', 'timestamp');
+        userStore.createIndex('NAME_SEARCH', 'NAME_SEARCH');
 
-      var index = 0;
-      var interval = setInterval(function () {
-        if (index == texts.length - 1) {
-          clearInterval(interval);
-        }
-        startLoad.querySelector('p').textContent = texts[index];
-        index++;
-      }, index + 1 * 1000);
-      // profileView();
-      // return;
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: '',
-        registerToken: native.getFCMToken()
-      }).then(function (response) {
-        if (response.updateClient) {
-          updateApp();
-          return;
-        }
-        if (response.revokeSession) {
-          revokeSession();
-          return;
+        userStore.openCursor().onsuccess = function (event) {
+          var cursor = event.target.result;
+          if (!cursor) return;
+          if (!cursor.value.timestamp) {
+            cursor.value.timestamp = '';
+          }
+          cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
+          var update = cursor.update(cursor.value);
+          update.onsuccess = function () {
+            console.log("updated user ", cursor.value);
+          };
+
+          cursor.continue();
         };
-        getRootRecord().then(function (rootRecord) {
-          if (!rootRecord.fromTime) {
-            requestCreator('Null').then(profileCheck).catch(function (error) {
-              snacks(error.response.message, 'Okay');
-            });
+
+        addendumStore.createIndex('user', 'user');
+        addendumStore.createIndex('timestamp', 'timestamp');
+        addendumStore.createIndex('key', 'key');
+        addendumStore.createIndex('KeyTimestamp', ['timestamp', 'key']);
+
+        mapStore.createIndex('office', 'office');
+        mapStore.createIndex('status', 'status');
+        mapStore.createIndex('selection', ['office', 'status', 'location']);
+        mapStore.createIndex('bounds', 'bounds');
+        activityStore.createIndex('status', 'status');
+
+        childrenStore.createIndex('officeTemplate', ['office', 'template']);
+        childrenStore.createIndex('employees', 'employee');
+        childrenStore.createIndex('employeeOffice', ['employee', 'office']);
+        childrenStore.createIndex('team', 'team');
+        childrenStore.createIndex('teamOffice', ['team', 'office']);
+
+        var myNumber = firebase.auth().currentUser.phoneNumber;
+
+        childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
+          var cursor = event.target.result;
+          if (!cursor) {
+            console.log("finished modiying children");
             return;
           }
-          profileCheck();
-          requestCreator('Null').then(console.log).catch(function (error) {
-            snacks(error.response.message, 'Okay', function () {
-              startApp(true);
-            });
+          cursor.value.employee = cursor.value.attachment['Employee Contact'].value;
+          if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
+            cursor.value.team = 1;
+          }
+          cursor.update(cursor.value);
+          cursor.continue();
+        };
+      }
+      tx.oncomplete = function () {
+        console.log("completed all backlog");
+      };
+    };
+  };
+  req.onsuccess = function () {
+    console.log("after that ? ");
+    db = req.result;
+
+    if (!areObjectStoreValid(db.objectStoreNames)) {
+      db.close();
+      console.log(auth);
+      var deleteIDB = indexedDB.deleteDatabase(auth.uid);
+      deleteIDB.onsuccess = function () {
+        window.location.reload();
+      };
+      deleteIDB.onblocked = function () {
+        snacks('Please Re-Install The App');
+      };
+      deleteIDB.onerror = function () {
+        snacks('Please Re-Install The App');
+      };
+      return;
+    }
+    var startLoad = document.querySelector('#start-load');
+    startLoad.classList.remove('hidden');
+    console.log("run app");
+    document.getElementById("main-layout-app").style.display = 'block';
+
+    // ga('set', 'userId', '12345')
+
+    var texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
+
+    var index = 0;
+    var interval = setInterval(function () {
+      if (index == texts.length - 1) {
+        clearInterval(interval);
+      }
+      startLoad.querySelector('p').textContent = texts[index];
+      index++;
+    }, index + 1 * 1000);
+    // history.pushState(['chatView'],null,null)
+    // chatView('+919000000000')
+    // return;
+    // mapView();
+    // return;
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: '',
+      registerToken: native.getFCMToken()
+    }).then(function (response) {
+      if (response.updateClient) {
+        updateApp();
+        return;
+      }
+      if (response.revokeSession) {
+        revokeSession();
+        return;
+      };
+      getRootRecord().then(function (rootRecord) {
+        if (!rootRecord.fromTime) {
+          requestCreator('Null').then(profileCheck).catch(function (error) {
+            if (error.response.apiRejection) {
+              snacks(error.response.message, 'Okay');
+            }
           });
+          return;
+        }
+        profileCheck();
+        requestCreator('Null').then(console.log).catch(function (error) {
+          if (error.response.apiRejection) {
+            snacks(error.response.message, 'Okay', function () {
+              startApp();
+            });
+          }
         });
-      }).catch(function (error) {
-        console.log(error);
+      });
+    }).catch(function (error) {
+      if (error.response.apiRejection) {
         snacks(error.response.message, 'Retry');
-      });
-    };
-    req.onerror = function () {
-      handleError({
-        message: req.error.message + ' from startApp'
-      });
-    };
-  });
+      }
+    });
+  };
+  req.onerror = function () {
+    handleError({
+      message: req.error.message + ' from startApp',
+      body: ''
+    });
+  };
 }
 
 function miniProfileCard(content, headerTitle, action) {
@@ -2209,17 +2217,40 @@ function setVenueForCheckIn(venueData, value) {
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     var offices = [];
-    var tx = db.transaction(['children']);
+
+    var tx = db.transaction(['children', 'subscriptions']);
     var childrenStore = tx.objectStore('children').index('employees');
+    var subscriptionStore = tx.objectStore('subscriptions');
+
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       var cursor = event.target.result;
-      if (!cursor) return;
-
+      if (!cursor) {
+        if (offices.length) return;
+        subscriptionStore.openCursor().onsuccess = function (subscriptionStoreEvnet) {
+          var subscriptionsCursor = subscriptionStoreEvnet.target.result;
+          if (!subscriptionsCursor) return;
+          if (subscriptionsCursor.value.status === 'CANCELLED') {
+            subscriptionsCursor.continue();
+            return;
+          };
+          if (offices.indexOf(subscriptionsCursor.value.office) > -1) {
+            subscriptionsCursor.continue();
+            return;
+          }
+          offices.push(subscriptionsCursor.value.office);
+          subscriptionsCursor.continue();
+        };
+        return;
+      };
+      if (cursor.value.status === 'CANCELLED') {
+        cursor.continue();
+        return;
+      }
       offices.push(cursor.value.office);
       cursor.continue();
     };
+
     tx.oncomplete = function () {
-      console.log(offices);
       return resolve(offices);
     };
     tx.onerror = function () {
@@ -2272,7 +2303,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       resolve(nearest);
     };
     tx.onerror = function () {
-      reject(tx.error);
+      reject({ message: tx.error, body: '' });
     };
   });
 }
@@ -2285,7 +2316,8 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion: 3
+  iframeVersion: 3,
+  idToken: ''
 };
 
 function mapView() {
@@ -2412,10 +2444,11 @@ function loadCardData(markers) {
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value;
-          getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
+          getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
+            console.log(checkInSub);
             if (!checkInSub) return getSuggestions();
-
             cardProd.open();
+
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close();
@@ -2439,7 +2472,7 @@ function loadCardData(markers) {
     ApplicationState.knownLocation = true;
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
-    getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
+    getSubscription(value.office, 'check-in').then(function (result) {
       if (!result) return getSuggestions();
 
       document.getElementById('submit-cont').innerHTML = '<button id=\'confirm\' class=\'mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light\'>\n        <span class=\'mdc-button__label\'>Confirm</span>\n        </button>';
@@ -2567,7 +2600,7 @@ function setFilePath(base64) {
     getUniqueOfficeCount().then(function (offices) {
       if (!offices.length) return;
       if (offices.length == 1) {
-        getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
+        getSubscription(offices[0], 'check-in').then(function (sub) {
           if (!sub) {
             snacks('Check-in Subscription not available');
             history.back();
@@ -2599,7 +2632,7 @@ function setFilePath(base64) {
         dialog.listen('MDCDialog:closed', function (evt) {
           if (evt.detail.action !== 'accept') return;
 
-          getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
+          getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
             if (!sub) {
               snacks('Check-in Subscription not available');
               history.back();
@@ -2851,7 +2884,9 @@ function setDetails() {
 }
 
 function createBaseDetails() {
-  return '   <div class="basic-info seperator">\n\n  <h1 class="mdc-typography--headline5 mb-0 mt-0" id=\'view-name\'>\n      ' + (firebase.auth().currentUser.displayName || '-') + '</h1>\n  <h1 class="mdc-typography--headline6 mb-0 mt-0">\n  <svg class=\'meta-icon\' fill=\'#cccccc\' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>\n  <span id=\'view-email\'>\n          ' + firebase.auth().currentUser.email + '\n      </span>\n\n  </h1>\n  <h1 class="mdc-typography--headline6 mt-0"> \n  <svg class=\'meta-icon\' fill=\'#cccccc\' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>\n  <span\n          class="mdc-typography--headline6">+91</span> 9999288921\n  </h1>\n</div>';
+  var auth = firebase.auth().currentUser;
+
+  return '   <div class="basic-info seperator">\n\n  <h1 class="mdc-typography--headline5 mb-0 mt-0" id=\'view-name\'>\n      ' + (auth.displayName || '-') + '</h1>\n  <h1 class="mdc-typography--headline6 mb-0 mt-0">\n  <svg class=\'meta-icon\' fill=\'#cccccc\' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>\n  <span id=\'view-email\'>\n          ' + auth.email + '\n      </span>\n\n  </h1>\n  <h1 class="mdc-typography--headline6 mt-0"> \n  <svg class=\'meta-icon\' fill=\'#cccccc\' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>\n  <span\n          class="mdc-typography--headline6">' + auth.phoneNumber.substring(0, 3) + '</span> ' + auth.phoneNumber.substring(3, auth.phoneNumber.length) + '\n  </h1>\n</div>';
 }
 
 function createUserDetails() {
@@ -2991,26 +3026,71 @@ function reportView() {
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
   document.getElementById('tabs').innerHTML = showTabs();
-  setTimeout(function () {
-    tabList.activateTab(1);
-  }, 0);
+
   var tabList = new mdc.tabBar.MDCTabBar(document.querySelector('#tabs .mdc-tab-bar'));
-  console.log(tabList);
+  setTimeout(function () {
+    tabList.activateTab(0);
+  }, 0);
 
   tabList.listen('MDCTabBar:activated', function (evt) {
-    document.getElementById('app-current-panel').innerHTML = '';
+
     if (!evt.detail.index) {
-      document.getElementById('app-current-panel').innerHTML = '<div class=\'attendence-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs\'>\n    ' + applyLeave() + '\n    ' + attendenceCards() + '\n    </div>\n    ';
+      document.getElementById('app-current-panel').innerHTML = '<div class=\'attendence-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs\'>\n      <div class=\'content\'>\n      \n      </div>\n      </div>';
+      getSubscription(ApplicationState.office, 'leave').then(function (leaveSubs) {
+        if (!leaveSubs) {
+          document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>';
+          return;
+        }
+        document.querySelector('.attendence-section .content').innerHTML = '' + applyLeave();
+        document.querySelector('.apply-leave').addEventListener('click', function () {
+          addView(leaveSubs);
+        });
+      });
       return;
     }
     if (evt.detail.index == 1) {
-      document.getElementById('app-current-panel').innerHTML = '<div class=\'mdc-top-app-bar--fixed-adjust-with-tabs\'>' + emptyClaims() + '</div>';
+
+      document.getElementById('app-current-panel').innerHTML = '<div class=\'claims-section mdc-top-app-bar--fixed-adjust-with-tabs\'>\n      <div class=\'content\'>\n      </div>\n      </div>';
+      getSubscription(ApplicationState.office, 'expense claim').then(function (claimSubs) {
+        if (!claimSubs) {
+          document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>';
+          return;
+        }
+        document.querySelector('.claims-section .content').innerHTML = '' + emptyClaims();
+        document.querySelector('.apply-claim').addEventListener('click', function () {
+          addView(claimSubs);
+        });
+      });
+      return;
     }
+    var promiseArray = [];
+    var incentives = ['customer', 'order', 'enquiry', 'collection'];
+    incentives.forEach(function (name) {
+      promiseArray.push(getSubscription(ApplicationState.office, name));
+    });
+
+    Promise.all(promiseArray).then(function (incentiveSubs) {
+      console.log(incentiveSubs);
+
+      document.getElementById('app-current-panel').innerHTML = '<div class=\'incentives-section mdc-top-app-bar--fixed-adjust-with-tabs\'>\n      <div class=\'content\'>\n\n      </div>\n      </div>';
+      if (!incentiveSubs.length) {
+        document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>';
+        return;
+      }
+      document.querySelector('.incentives-section .content').innerHTML = '\n      <ul class=\'mdc-list\'>\n      ' + incentiveSubs.map(function (incentive) {
+        return '' + (incentive ? '<li class=\'mdc-list-item\'>Create New ' + incentive.template + '</li>' : '');
+      }).join("") + '\n      </ul>\n     ';
+      var ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'));
+      ul.listen('MDCList:action', function (evt) {
+        addView(incentiveSubs[evt.detail.index]);
+      });
+    }).catch(console.log);
   });
 }
 
 function showTabs() {
-  return '<div class="mdc-tab-bar" role="tablist">\n    <div class="mdc-tab-scroller">\n      <div class="mdc-tab-scroller__scroll-area">\n        <div class="mdc-tab-scroller__scroll-content">\n          <button class="mdc-tab mdc-tab--active" role="tab" aria-selected="true" tabindex="0">\n            <span class="mdc-tab__content">\n              <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">fingerprint</span>\n              <span class="mdc-tab__text-label mdc-theme--on-primary">Attendence</span>\n            </span>\n            <span class="mdc-tab-indicator mdc-tab-indicator--active">\n              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n            </span>\n            <span class="mdc-tab__ripple"></span>\n          </button>\n          <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n          <span class="mdc-tab__content">\n            <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">assignment</span>\n            <span class="mdc-tab__text-label mdc-theme--on-primary">reimbursement</span>\n          </span>\n          <span class="mdc-tab-indicator">\n            <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n          </span>\n          <span class="mdc-tab__ripple"></span>\n        </button>\n        <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n        <span class="mdc-tab__content">\n         \n          <span class="mdc-tab__text-label mdc-theme--on-primary">Report 1</span>\n        </span>\n        <span class="mdc-tab-indicator">\n          <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n        </span>\n        <span class="mdc-tab__ripple"></span>\n      </button>\n      <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n        <span class="mdc-tab__content">\n          <span class="mdc-tab__text-label mdc-theme--on-primary">Report 2</span>\n        </span>\n        <span class="mdc-tab-indicator">\n          <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n        </span>\n        <span class="mdc-tab__ripple"></span>\n      </button><button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n      <span class="mdc-tab__content">\n        <span class="mdc-tab__text-label mdc-theme--on-primary">Report 3</span>\n      </span>\n      <span class="mdc-tab-indicator">\n        <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n      </span>\n      <span class="mdc-tab__ripple"></span>\n    </button><button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n    <span class="mdc-tab__content">\n      <span class="mdc-tab__icon material-icons" aria-hidden="true">favorite</span>\n      <span class="mdc-tab__text-label mdc-theme--on-primary">Report 4</span>\n    </span>\n    <span class="mdc-tab-indicator">\n      <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n    </span>\n    <span class="mdc-tab__ripple"></span>\n  </button>\n        </div>\n      </div>\n    </div>\n  </div>';
+
+  return '<div class="mdc-tab-bar" role="tablist">\n    <div class="mdc-tab-scroller">\n      <div class="mdc-tab-scroller__scroll-area">\n        <div class="mdc-tab-scroller__scroll-content">\n          <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n            <span class="mdc-tab__content">\n              <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">fingerprint</span>\n              <span class="mdc-tab__text-label mdc-theme--on-primary">Attendence</span>\n            </span>\n            <span class="mdc-tab-indicator">\n              <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n            </span>\n            <span class="mdc-tab__ripple"></span>\n          </button>\n          <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n          <span class="mdc-tab__content">\n            <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">assignment</span>\n            <span class="mdc-tab__text-label mdc-theme--on-primary">reimbursement</span>\n          </span>\n          <span class="mdc-tab-indicator">\n            <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n          </span>\n          <span class="mdc-tab__ripple"></span>\n        </button>\n        <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">\n        <span class="mdc-tab__content">\n         \n          <span class="mdc-tab__text-label mdc-theme--on-primary">Incentives</span>\n        </span>\n        <span class="mdc-tab-indicator">\n          <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>\n        </span>\n        <span class="mdc-tab__ripple"></span>\n      </button>\n   \n        </div>\n      </div>\n    </div>\n  </div>';
 }
 var apiHandler = new Worker('js/apiHandler.js');
 
@@ -3260,7 +3340,7 @@ function requestCreator(requestType, requestBody) {
     body: '',
     meta: {
       user: {
-        token: '',
+        token: ApplicationState.idToken,
         uid: auth.uid,
         displayName: auth.displayName,
         photoURL: auth.photoURL,
@@ -3270,20 +3350,18 @@ function requestCreator(requestType, requestBody) {
     }
   };
 
-  auth.getIdToken(false).then(function (token) {
-    requestGenerator.meta.user.token = token;
-    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
+    requestGenerator.body = requestBody;
+    apiHandler.postMessage(requestGenerator);
+  } else {
+    getRootRecord().then(function (rootRecord) {
+      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       requestGenerator.body = requestBody;
+      requestBody['geopoint'] = ApplicationState.location;
       apiHandler.postMessage(requestGenerator);
-    } else {
-      getRootRecord().then(function (rootRecord) {
-        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-        requestGenerator.body = requestBody;
-        requestBody['geopoint'] = ApplicationState.location;
-        apiHandler.postMessage(requestGenerator);
-      });
-    }
-  }).catch(console.log);
+    });
+  }
+
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
       console.log(event);
@@ -3366,9 +3444,13 @@ function handleComponentUpdation(readResponse) {
       getSuggestions();
       break;
     case 'enterChat':
+      if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum);
       break;
     default:
+    case 'chatView':
+      if (!readResponse.response.addendum.length) return;
+      readLatestChats(false);
       break;
   }
 }
@@ -3409,16 +3491,24 @@ function getRootRecord() {
   });
 }
 
-function getSubscription(office, template, status) {
+function getSubscription(office, template) {
   return new Promise(function (resolve) {
     var tx = db.transaction(['subscriptions']);
     var subscription = tx.objectStore('subscriptions');
     var officeTemplateCombo = subscription.index('validSubscription');
-    var range = IDBKeyRange.only([office, template, status]);
-    officeTemplateCombo.get(range).onsuccess = function (event) {
-      if (!event.target.result) return resolve(null);
-      return resolve(event.target.result);
+
+    var range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING']);
+    officeTemplateCombo.getAll(range).onsuccess = function (event) {
+      result = event.target.result;
+      if (result.length > 1) {
+        return result.sort(function (a, b) {
+          return b.timestamp - a.timestamp;
+        })[0];
+      }
+
+      return resolve(result[0]);
     };
+
     tx.onerror = function () {
       return reject({
         message: tx.error,

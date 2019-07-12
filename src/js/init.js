@@ -330,8 +330,8 @@ function startApp() {
       // history.pushState(['chatView'],null,null)
       // chatView('+919000000000')
       // return;
-      mapView();
-      return;
+      // mapView();
+      // return;
       requestCreator('now', {
         device: native.getInfo(),
         from: '',

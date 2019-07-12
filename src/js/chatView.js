@@ -202,14 +202,14 @@ function getOtherContacts(initList) {
     }
     tx.oncomplete = function () {
         const contactsEl = document.getElementById('all-contacts')
-       
+
         if (contactsEl) {
             document.querySelector('.contacts-container').classList.remove("hidden")
             if (!currentContacts) {
                 currentContacts = 'No Contacts Found'
             };
             contactsEl.innerHTML = currentContacts;
-            if(!initList) return;
+            if (!initList) return;
             contactsUl = new mdc.list.MDCList(contactsEl);
             initializeContactList(contactsUl)
         }
@@ -255,14 +255,14 @@ function readLatestChats(initList) {
                 currentChats = 'No Chat Found. '
             }
             chatsEl.innerHTML = currentChats
-            if(!initList) return;
+            if (!initList) return;
             chatsUl = new mdc.list.MDCList(chatsEl);
             initializeChatList(chatsUl);
             var v2 = performance.now();
             console.log('performance', v2 - v1)
         }
-     
-     
+
+
     }
 }
 
@@ -394,43 +394,66 @@ function enterChat(userRecord) {
 
 
     document.getElementById('app-current-panel').innerHTML = `
-        <div class="wrapper">
-        <div class="inner" id="inner">
-    
-        <div class="content" id="content">
-
-        </div>
+    <div class="page">
+    <div class="marvel-device nexus5">
+   
       
-        <div class="bottom" id="bottom">
-        <div class="conversation-compose">
-        
-        <div id='comment-textarea' class="mdc-text-field text-field mdc-text-field--fullwidth mdc-text-field--no-label  mdc-text-field--textarea">
-        
-        <textarea id="text-field-fullwidth-textarea-helper" class="mdc-text-field__input mdc-text-field__input  input-msg">
-        </textarea>
-        
+      
+      
+      <div class="screen">
+        <div class="screen-container">
+          
+          <div class="chat">
+            <div class="chat-container">
+              
+              <div class="conversation">
+                <div class="conversation-container">
+                <div id='content'>
+                </div>
+            
+                <form class="conversation-compose">
+                  <div class="input-space-left"></div>
+                  <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus="">
+                  <div class="input-space-right"></div>
+                  <button class="send">
+                      <div class="circle">
+                        <i class="material-icons">send</i>
+                      </div>
+                    </button>
+                </form>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        <button id='comment-send' class="mdc-fab send mdc-theme--primary-bg mdc-theme-on--primary" aria-label="Favorite">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
-        </button>
-        </div>
-        
-        </div>
-        </div>
-        </div>
-        </div>`
+      </div>
+    </div>
+  </div>
+        `
     getUserChats(userRecord)
 
 }
 
 
+function handleLongPress(e) {
 
+    e.preventDefault();
 
+    return false;
 
-function actionBox(value,position,photo) {
- 
-  
+}
+
+function actionBox(value, position, photo) {
+    return `<a href="callback=createActivityActionMenu('${value.addendumId}','${value.activityId}')" class="message ${position}" ${native.getName() === 'Android' ? 'onclick="handleLongPress(event)"':`onclick="createActivityActionMenu('${value.addendumId}','${value.activityId}')"`}>
+    <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> </div>
+   
+    ${value.comment}
+    <span class="metadata">
+        <span class="time">
+           ${moment(value.timestamp).format('hh:mm')}
+        </span>
+    </span>
+  </a>`
+
     return `
     <div class='action-box-container'>
     <div class='menu-container mdc-menu-surface--anchor' id="${value.addendumId}"> 
@@ -450,17 +473,16 @@ function actionBox(value,position,photo) {
    `
 }
 
+
 function messageBox(comment, position, image, time) {
-    return `<div class="message-wrapper ${position}">
-    <img class="circle-wrapper" src=${image} onerror="imgErr(this)">
-    <div class="text-wrapper">${comment}
+
+    return ` <div class="message ${position}">
+    ${comment}
     <span class="metadata">
-        <span class="time">
-            ${moment(time).format('hh:mm')}
-        </span>
+        <span class="time">${moment(time).format('hh:mm')}</span
     </span>
-    </div>
-    </div>`
+  </div>`
+
 }
 
 function messageBoxDom(comment, position, image, time) {
@@ -523,7 +545,7 @@ function actionBoxDom(value) {
 }
 
 function createActivityActionMenu(addendumId, activityId) {
-    console.log("long press")
+
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         const activity = event.target.result;
         if (!activity) return;
@@ -1091,7 +1113,7 @@ function getUserChats(userRecord) {
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
-    
+
         if (cursor.value.user === myNumber) {
             position = 'me';
             image = myImage
@@ -1102,10 +1124,9 @@ function getUserChats(userRecord) {
 
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp)
-        }
-         else {
+        } else {
             if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
-                timeLine += actionBox(cursor.value,position,image);
+                timeLine += actionBox(cursor.value, position, image);
             }
         }
         cursor.continue();
@@ -1114,52 +1135,51 @@ function getUserChats(userRecord) {
         parent.innerHTML = timeLine;
         setBottomScroll();
 
+        // const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
+        // const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
+        // const form = document.querySelector('.conversation-compose');
+        // const bottom = document.getElementById('bottom')
+        // btn.root_.addEventListener('click', function () {
 
-        const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
-        const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
-        const form = document.querySelector('.conversation-compose');
-        const bottom = document.getElementById('bottom')
-        btn.root_.addEventListener('click', function () {
+        //     if (!commentInit.value.trim()) return;
+        //     progressBar.open()
+        //     requestCreator('dm', {
+        //         comment: commentInit.value,
+        //         assignee: userRecord.mobile
+        //     }).then(function () {
+        //         if (!parent) return;
+        //         parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
+        //         commentInit.value = ''
+        //         resetCommentField(bottom, form, commentInit.input_)
+        //         setBottomScroll()
+        //         progressBar.close()
 
-            if (!commentInit.value.trim()) return;
-            progressBar.open()
-            requestCreator('dm', {
-                comment: commentInit.value,
-                assignee: userRecord.mobile
-            }).then(function () {
-                if (!parent) return;
-                parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
-                commentInit.value = ''
-                resetCommentField(bottom, form, commentInit.input_)
-                setBottomScroll()
-                progressBar.close()
+        //     }).catch(function (error) {
+        //         progressBar.close()
+        //         commentInit.value = ''
+        //         snacks(error.response.message);
 
-            }).catch(function (error) {
-                progressBar.close()
-                commentInit.value = ''
-                snacks(error.response.message);
+        //     })
+        // });
+        // commentInit.input_.addEventListener('input', function () {
+        //     if (this.scrollHeight >= 200) return;
 
-            })
-        });
-        commentInit.input_.addEventListener('input', function () {
-            if (this.scrollHeight >= 200) return;
+        //     this.style.paddingTop = '10px';
 
-            this.style.paddingTop = '10px';
+        //     this.style.lineHeight = '1'
+        //     this.style.height = '5px'
+        //     this.style.height = (this.scrollHeight) + "px";
+        //     form.style.minHeight = '56px';
+        //     form.style.height = 'auto'
+        //     bottom.style.height = (this.scrollHeight + 20) + 'px'
+        //     //not
+        //     if (!this.value.trim()) {
+        //         resetCommentField(bottom, form, this)
 
-            this.style.lineHeight = '1'
-            this.style.height = '5px'
-            this.style.height = (this.scrollHeight) + "px";
-            form.style.minHeight = '56px';
-            form.style.height = 'auto'
-            bottom.style.height = (this.scrollHeight + 20) + 'px'
-            //not
-            if (!this.value.trim()) {
-                resetCommentField(bottom, form, this)
-
-            }
+        //     }
 
 
-        });
+        // });
     }
 }
 
@@ -1171,7 +1191,8 @@ function resetCommentField(bottom, form, input) {
 }
 
 function setBottomScroll() {
-    const el = document.getElementById('inner')
+
+    const el = document.querySelector('.conversation-container');
     if (!el) return;
-    el.scrollTo(0, el.scrollHeight);
+    el.scrollTop = el.scrollHeight;
 }
