@@ -15,11 +15,11 @@ function attendenceView(){
 }
 
 function applyLeave(){
-  
-    return `<button class="mdc-button" id='apply-leave'>
-    <i class="material-icons mdc-button__icon" aria-hidden="true">today</i>
-    <span class="mdc-button__label">Apply For A New Leave</span>
-  </button>`
+   
+   return `<button class="mdc-button apply-leave">
+   <i class="material-icons mdc-button__icon" aria-hidden="true">today</i>
+   <span class="mdc-button__label">Apply For A New Leave</span>
+ </button>`
 }
 
 function attendenceCards(){

@@ -67,7 +67,7 @@ function geolocationApi(body) {
           longitude: response.location.lng,
           accuracy: response.accuracy,
           provider: body,
-          lastLocationTime:Date.now()
+          lastLocationTime: Date.now()
         });
       }
     };
@@ -164,7 +164,7 @@ function handleGeoLocationApi() {
 }
 
 function iosLocationError(error) {
-  return new Promise(function(resolve,reject){
+  return new Promise(function (resolve, reject) {
     html5Geolocation().then(function (location) {
       ApplicationState.location = location;
       return resolve(location)
@@ -181,7 +181,7 @@ function html5Geolocation() {
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
         provider: 'HTML5',
-        lastLocationTime:Date.now()
+        lastLocationTime: Date.now()
       })
     }, function (error) {
       reject({
@@ -254,7 +254,7 @@ function requestCreator(requestType, requestBody) {
     body: '',
     meta: {
       user: {
-        token: '',
+        token: ApplicationState.idToken,
         uid: auth.uid,
         displayName: auth.displayName,
         photoURL: auth.photoURL,
@@ -264,20 +264,18 @@ function requestCreator(requestType, requestBody) {
     }
   };
 
-  auth.getIdToken(false).then(function (token) {
-    requestGenerator.meta.user.token = token;
-    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
+  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
+    requestGenerator.body = requestBody;
+    apiHandler.postMessage(requestGenerator);
+  } else {
+    getRootRecord().then(function (rootRecord) {
+      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       requestGenerator.body = requestBody;
+      requestBody['geopoint'] = ApplicationState.location;
       apiHandler.postMessage(requestGenerator);
-    } else {
-      getRootRecord().then(function (rootRecord) {
-        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-        requestGenerator.body = requestBody;
-        requestBody['geopoint'] = ApplicationState.location;
-        apiHandler.postMessage(requestGenerator);
-      });
-    }
-  }).catch(console.log)
+    });
+  }
+
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
       console.log(event)
@@ -350,26 +348,30 @@ function officeRemovalSuccess(data) {
   return
 }
 
-function updateIosLocation(geopointIos){
-  
- ApplicationState.location = geopointIos;
- ApplicationState.lastLocationTime = Date.now();
- var iosLocation = new CustomEvent('iosLocation', {
-  "detail":  ApplicationState.location 
-});
-window.dispatchEvent(iosLocation)
+function updateIosLocation(geopointIos) {
+
+  ApplicationState.location = geopointIos;
+  ApplicationState.lastLocationTime = Date.now();
+  var iosLocation = new CustomEvent('iosLocation', {
+    "detail": ApplicationState.location
+  });
+  window.dispatchEvent(iosLocation)
 }
 
 function handleComponentUpdation(readResponse) {
-  if(!history.state) return;
+  if (!history.state) return;
   switch (history.state[0]) {
     case 'homeView':
       getSuggestions()
       break;
     case 'enterChat':
+    if(!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
       break;
     default:
+      case 'chatView':
+      if(!readResponse.response.addendum.length) return;
+      readLatestChats(false);
       break;
   }
 
@@ -411,16 +413,24 @@ function getRootRecord() {
   })
 }
 
-function getSubscription(office, template, status) {
+function getSubscription(office, template) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['subscriptions']);
     const subscription = tx.objectStore('subscriptions')
     const officeTemplateCombo = subscription.index('validSubscription')
-    const range = IDBKeyRange.only([office, template, status])
-    officeTemplateCombo.get(range).onsuccess = function (event) {
-      if (!event.target.result) return resolve(null);
-      return resolve(event.target.result)
+
+    const range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
+    officeTemplateCombo.getAll(range).onsuccess = function (event) {
+      result = event.target.result;
+      if (result.length > 1) {
+        return result.sort(function (a, b) {
+          return b.timestamp - a.timestamp
+        })[0]
+      }
+
+      return resolve(result[0])
     }
+
     tx.onerror = function () {
       return reject({
         message: tx.error,

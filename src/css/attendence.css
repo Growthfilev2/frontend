@@ -1,7 +1,7 @@
 .attendence-section {
 
 }
-.attendence-section #apply-leave {
+.attendence-section .mdc-button {
   margin: 0 auto;
   display: block;
 }

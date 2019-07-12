@@ -7,7 +7,8 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion:3
+  iframeVersion:3,
+  idToken:''
 }
 
 
@@ -147,10 +148,10 @@ function loadCardData(markers) {
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value
-          getSubscription(evt.detail.value, 'check-in', 'CONFIRMED').then(function (checkInSub) {
+          getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
             if (!checkInSub) return getSuggestions()
-            
-            cardProd.open()
+            cardProd.open();
+
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()
@@ -174,7 +175,7 @@ function loadCardData(markers) {
     ApplicationState.knownLocation = true;
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
-    getSubscription(value.office, 'check-in', 'CONFIRMED').then(function (result) {
+    getSubscription(value.office, 'check-in').then(function (result) {
       if (!result) return getSuggestions();
       
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
@@ -362,7 +363,7 @@ function setFilePath(base64) {
     getUniqueOfficeCount().then(function (offices) {
       if (!offices.length) return;
       if (offices.length == 1) {
-        getSubscription(offices[0], 'check-in', 'CONFIRMED').then(function (sub) {
+        getSubscription(offices[0], 'check-in').then(function (sub) {
           if(!sub) {
             snacks('Check-in Subscription not available')
             history.back();
@@ -413,7 +414,7 @@ function setFilePath(base64) {
         dialog.listen('MDCDialog:closed', function (evt) {
           if (evt.detail.action !== 'accept') return;
 
-          getSubscription(offices[list.selectedIndex], 'check-in', 'CONFIRMED').then(function (sub) {
+          getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
             if(!sub) {
               snacks('Check-in Subscription not available')
               history.back();

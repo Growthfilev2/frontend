@@ -130,12 +130,26 @@ window.addEventListener("load", function () {
     incompatibleDialog.open();
     return;
   }
-  startApp(true)
+  firebase.auth().onAuthStateChanged(function (auth) {
+    if (!auth) {
+      document.getElementById("main-layout-app").style.display = 'none'
+      userSignedOut()
+      return;
+    }
+    startApp()
+  });
+  firebase
+  .auth()
+  .addAuthTokenListener(function (idToken) {
+    if(firebase.auth().currentUser) {
+      ApplicationState.idToken = idToken;
+    }
+  })
 })
 
 
 
-function firebaseUiConfig(value, redirect) {
+function firebaseUiConfig() {
 
   return {
     callbacks: {
@@ -161,7 +175,7 @@ function firebaseUiConfig(value, redirect) {
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
-        defaultNationalNumber: value ? firebase.auth().currentUser.phoneNumber : '',
+       
       }
     ]
 
@@ -171,32 +185,26 @@ function firebaseUiConfig(value, redirect) {
 
 
 function userSignedOut() {
+
   ui = new firebaseui.auth.AuthUI(firebase.auth())
+  firebase.auth().appVerificationDisabledForTesting = true;
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
 
 function startApp() {
-
-  firebase.auth().onAuthStateChanged(function (auth) {
-
-    if (!auth) {
-      // document.getElementById('start-loader').classList.add('hidden')
-      document.getElementById("main-layout-app").style.display = 'none'
-      userSignedOut()
-      return
-    }
-
+  const dbName = firebase.auth().currentUser.uid
     if (appKey.getMode() === 'production') {
       if (!native.getInfo()) {
         redirect();
         return;
       }
     }
+
     localStorage.setItem('error', JSON.stringify({}));
     
 
-    const req = window.indexedDB.open(auth.uid, 15);
+    const req = window.indexedDB.open(dbName,5);
 
     req.onupgradeneeded = function (evt) {
       db = req.result;
@@ -208,28 +216,60 @@ function startApp() {
       }
 
       if (!evt.oldVersion) {
-        createObjectStores(db, auth.uid)
+        createObjectStores(db, dbName)
       } else {
-        if (evt.oldVersion < 4) {
-          const subscriptionStore = req.transaction.objectStore('subscriptions')
-          subscriptionStore.createIndex('status', 'status');
-        }
-        if (evt.oldVersion < 5) {
-          var tx = req.transaction;
-
+        var tx = req.transaction;
+        if (evt.oldVersion <= 4) {
+          const subscriptionStore = tx.objectStore('subscriptions');
+          const calendar = tx.objectStore('calendar')
+          const userStore = tx.objectStore('users');
+          const addendumStore = tx.objectStore('addendum');
           const mapStore = tx.objectStore('map');
-          mapStore.createIndex('bounds', ['latitude', 'longitude']);
+          const activityStore = tx.objectStore('activity')
+          const childrenStore = tx.objectStore('children');
 
-        }
-        if (evt.oldVersion < 6) {
-          var tx = req.transaction;
-          const childrenStore = tx.objectStore('children')
+          subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
+          calendar.createIndex('office', 'office');
+
+          userStore.createIndex('mobile', 'mobile');
+          userStore.createIndex('timestamp', 'timestamp')
+          userStore.createIndex('NAME_SEARCH','NAME_SEARCH')
+        
+          userStore.openCursor().onsuccess = function(event){
+            const cursor = event.target.result;
+            if(!cursor) return;
+            if(!cursor.value.timestamp) {
+                cursor.value.timestamp = '';
+            }
+            cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
+            const update =  cursor.update(cursor.value)
+            update.onsuccess = function(){
+              console.log("updated user ",cursor.value)
+            }
+
+            cursor.continue();  
+          };
+
+          addendumStore.createIndex('user', 'user');
+          addendumStore.createIndex('timestamp', 'timestamp')
+          addendumStore.createIndex('key', 'key')
+          addendumStore.createIndex('KeyTimestamp',['timestamp','key'])
+
+          mapStore.createIndex('office', 'office');
+          mapStore.createIndex('status', 'status');
+          mapStore.createIndex('selection', ['office', 'status', 'location']);
+          mapStore.createIndex('bounds', 'bounds');
+          activityStore.createIndex('status', 'status');
+
+
+       
           childrenStore.createIndex('officeTemplate', ['office', 'template']);
-
           childrenStore.createIndex('employees', 'employee');
           childrenStore.createIndex('employeeOffice', ['employee', 'office'])
           childrenStore.createIndex('team', 'team')
-          childrenStore.createIndex('teamOffice', ['team', 'office'])
+          childrenStore.createIndex('teamOffice', ['team', 'office']);
+
+               
           const myNumber = firebase.auth().currentUser.phoneNumber;
 
           childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
@@ -245,85 +285,15 @@ function startApp() {
             cursor.update(cursor.value)
             cursor.continue();
           };
-
-          tx.oncomplete = function () {
-
-            console.log("finsihed backlog")
-          }
+          
         }
-        if (evt.oldVersion < 7) {
-          var tx = req.transaction;
-          const mapStore = tx.objectStore('map')
-          mapStore.createIndex('office', 'office');
-          mapStore.createIndex('status', 'status');
-          mapStore.createIndex('selection', ['office', 'status', 'location']);
+        tx.oncomplete = function(){
+          console.log("completed all backlog");
         }
-        if (evt.oldVersion < 8) {
-          var tx = req.transaction;
-          const listStore = tx.objectStore('list')
-          const calendar = tx.objectStore('calendar')
-
-          listStore.createIndex('office', 'office');
-          calendar.createIndex('office', 'office')
-        }
-        if (evt.oldVersion < 9) {
-          var tx = req.transaction;
-          const userStore = tx.objectStore('users');
-          userStore.createIndex('mobile', 'mobile');
-
-          const addendumStore = tx.objectStore('addendum');
-          addendumStore.createIndex('user', 'user');
-          addendumStore.createIndex('timestamp', 'timestamp')
-        }
-        if (evt.oldVersion <= 10) {
-          var tx = req.transaction;
-          const subscriptionStore = tx.objectStore('subscriptions')
-          subscriptionStore.createIndex('count', 'count');
-        }
-        if (evt.oldVersion <= 11) {
-          var tx = req.transaction;
-          const userStore = tx.objectStore('users')
-          userStore.createIndex('timestamp', 'timestamp')
-        }
-        if (evt.oldVersion <= 12) {
-          var tx = req.transaction;
-          const activityStore = tx.objectStore('activity')
-          activityStore.createIndex('status', 'status')
-        }
-        if (evt.oldVersion <= 13) {
-          var tx = req.transaction;
-          const subscriptions = tx.objectStore('subscriptions')
-          subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
-          const addendum = tx.objectStore('addendum')
-          addendum.createIndex('key', 'key')
-          addendum.createIndex('KeyTimestamp',['timestamp','key'])
-        }
-
-        if(evt.oldVersion <= 14) {
-          var tx = req.transaction;
-          const users = tx.objectStore('users');
-          users.createIndex('NAME_SEARCH','NAME_SEARCH')
-        
-          users.openCursor().onsuccess = function(event){
-            const cursor = event.target.result;
-            if(!cursor) return;
-            if(!cursor.value.timestamp) {
-                cursor.value.timestamp = '';
-            }
-            cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
-            const update =  cursor.update(cursor.value)
-            update.onsuccess = function(){
-              console.log("updated user ",cursor.value)
-            }
-
-            cursor.continue();  
-          }
-        }
-
-
       };
     }
     req.onsuccess = function () {
+      console.log("after that ? ")
       db = req.result;
 
       if (!areObjectStoreValid(db.objectStoreNames)) {
@@ -358,8 +328,7 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-      // profileView();
-      // return;
+   
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -376,29 +345,34 @@ function startApp() {
         getRootRecord().then(function (rootRecord) {
           if (!rootRecord.fromTime) {
             requestCreator('Null').then(profileCheck).catch(function (error) {
-              snacks(error.response.message, 'Okay')
+              if(error.response.apiRejection) {
+                snacks(error.response.message, 'Okay')
+              }
             })
             return;
           }
           profileCheck();
           requestCreator('Null').then(console.log).catch(function (error) {
-            snacks(error.response.message, 'Okay', (function () {
-              startApp(true)
-            }))
+            if(error.response.apiRejection) {
+              snacks(error.response.message, 'Okay', (function () {
+                startApp()
+              }))
+            }
           })
         })
       }).catch(function (error) {
-        console.log(error)
-        snacks(error.response.message, 'Retry')
+        if(error.response.apiRejection) {
+          snacks(error.response.message, 'Retry')
+        }
       })
     }
     req.onerror = function () {
       handleError({
-        message: `${req.error.message} from startApp`
+        message: `${req.error.message} from startApp`,
+        body:''
       })
     }
 
-  })
 }
 
 
@@ -890,18 +864,41 @@ function setVenueForCheckIn(venueData, value) {
 
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
-    let offices = []
-    const tx = db.transaction(['children']);
+    let offices = [];
+  
+    const tx = db.transaction(['children','subscriptions']);
     const childrenStore = tx.objectStore('children').index('employees');
+    const subscriptionStore = tx.objectStore('subscriptions');
+
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) return;
-
+      if (!cursor) {
+        if(offices.length) return
+        subscriptionStore.openCursor().onsuccess = function(subscriptionStoreEvnet){
+          const subscriptionsCursor = subscriptionStoreEvnet.target.result;
+          if(!subscriptionsCursor) return
+          if(subscriptionsCursor.value.status === 'CANCELLED') {
+            subscriptionsCursor.continue();
+            return
+          };
+          if(offices.indexOf(subscriptionsCursor.value.office) > -1) {
+            subscriptionsCursor.continue();
+            return;
+          }
+          offices.push(subscriptionsCursor.value.office)
+          subscriptionsCursor.continue();
+        }
+        return
+      };
+      if(cursor.value.status ==='CANCELLED') {
+        cursor.continue();
+        return;
+      }
       offices.push(cursor.value.office)
       cursor.continue()
-    }
-    tx.oncomplete = function () {
-      console.log(offices)
+    };
+
+    tx.oncomplete = function () {    
       return resolve(offices);
     }
     tx.onerror = function () {
@@ -954,7 +951,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       resolve(nearest)
     }
     tx.onerror = function () {
-      reject(tx.error)
+      reject({message:tx.error,body:''})
     }
 
   })

@@ -260,7 +260,6 @@ function homeView(suggestedTemplates) {
     history.pushState(['addView'], null, null);
     addView(JSON.parse(suggestedInit.listElements[evt.detail.index].dataset.value))
   });
- 
 }
 
 
