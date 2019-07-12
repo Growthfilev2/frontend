@@ -185,8 +185,9 @@ function firebaseUiConfig() {
 
 
 function userSignedOut() {
-  firebase.auth().appVerificationDisabledForTesting = true;
+
   ui = new firebaseui.auth.AuthUI(firebase.auth())
+  firebase.auth().appVerificationDisabledForTesting = true;
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
@@ -344,25 +345,31 @@ function startApp() {
         getRootRecord().then(function (rootRecord) {
           if (!rootRecord.fromTime) {
             requestCreator('Null').then(profileCheck).catch(function (error) {
-              snacks(error.response.message, 'Okay')
+              if(error.response.apiRejection) {
+                snacks(error.response.message, 'Okay')
+              }
             })
             return;
           }
           profileCheck();
           requestCreator('Null').then(console.log).catch(function (error) {
-            snacks(error.response.message, 'Okay', (function () {
-              startApp()
-            }))
+            if(error.response.apiRejection) {
+              snacks(error.response.message, 'Okay', (function () {
+                startApp()
+              }))
+            }
           })
         })
       }).catch(function (error) {
-        console.log(error)
-        snacks(error.response.message, 'Retry')
+        if(error.response.apiRejection) {
+          snacks(error.response.message, 'Retry')
+        }
       })
     }
     req.onerror = function () {
       handleError({
-        message: `${req.error.message} from startApp`
+        message: `${req.error.message} from startApp`,
+        body:''
       })
     }
 
@@ -944,7 +951,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       resolve(nearest)
     }
     tx.onerror = function () {
-      reject(tx.error)
+      reject({message:tx.error,body:''})
     }
 
   })

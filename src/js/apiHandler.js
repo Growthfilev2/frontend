@@ -2,14 +2,13 @@ importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.mi
 
 let deviceInfo;
 let currentDevice;
+let meta;
 
-// get Device time
+
 function getTime() {
   return Date.now()
 }
 
-// dictionary object with key as the worker's onmessage event data and value as
-// function name
 
 const requestFunctionCaller = {
   dm: comment,
@@ -31,13 +30,30 @@ function sendSuccessRequestToMainThread(response, success) {
 
 
 function sendErrorRequestToMainThread(error) {
-  self.postMessage({
-    response: error,
-    success: false
-  })
+  console.log(error)
+  const errorObject = {
+    response : {
+      message:error.message,
+      apiRejection:false
+    },
+    success:false
+  }
+  if(error.stack) {
+    errorObject.response.stack = error.stack
+  };
+
+  if(error.code) {
+    errorObject.response.apiRejection = true
+  }
+  else {
+    instant(JSON.stringify(errorObject.response),meta)
+  }
+
+  self.postMessage(errorObject)
 }
 
 self.onmessage = function (event) {
+  meta = event.data.meta;
 
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
@@ -60,7 +76,6 @@ self.onmessage = function (event) {
             };
             return;
           };
-
           self.postMessage({
             response: response,
             success: true
@@ -235,7 +250,6 @@ function statusChange(body, meta) {
 
 function share(body, meta) {
 
-  // return new Promise(function (resolve, reject) {
   const req = {
     method: 'PATCH',
     url: `${meta.apiUrl}activities/share`,
@@ -244,42 +258,24 @@ function share(body, meta) {
   }
   return http(req)
 
-  http(req)
-    .then(function (success) {
-      resolve(true)
-    })
-    .catch(sendApiFailToMainThread)
-  // })
+ 
 }
 
 
 
 
 function update(body, meta) {
-  // return new Promise(function (resolve, reject) {
   const req = {
     method: 'PATCH',
     url: `${meta.apiUrl}activities/update`,
     body: JSON.stringify(body),
     token: meta.user.token
   }
-
   return http(req)
-  // .then(function (success) {
-
-  //   resolve(true)
-
-  // instantUpdateDB(body, 'update', meta.user).then(function () {
-  // })
-  // })
-  // .catch(sendApiFailToMainThread)
-  // })
 }
 
 function create(requestBody, meta) {
-  // console.log(createReq)
-  // const promiseArray = [];
-  // createReq.forEach(function (requestBody) {
+ 
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}activities/create`,
@@ -287,14 +283,7 @@ function create(requestBody, meta) {
     token: meta.user.token
   }
   return http(req)
-  //   promiseArray.push(http(req))
-  // })
-  // return new Promise(function (resolve, reject) {
-  //   if (!promiseArray.length) return;
-  //   Promise.all(promiseArray).then(function () {
-  //     resolve(true)
-  //   }).catch(sendApiFailToMainThread)
-  // })
+
 }
 
 function removeFromOffice(offices, meta, db) {
@@ -448,7 +437,7 @@ function updateMap(venue, tx) {
 
   const mapObjectStore = tx.objectStore('map')
   const mapActivityIdIndex = mapObjectStore.index('activityId')
-  if(!venue.activityId) return;
+  if (!venue.activityId) return;
   mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
     const cursor = event.target.result
     if (!cursor) {
@@ -463,7 +452,8 @@ function updateMap(venue, tx) {
     }
     deleteRecordReq.onerror = function () {
       instant({
-        message: deleteRecordReq.error.message
+        message: deleteRecordReq.error.message,
+        meta
       })
     }
   }
@@ -504,7 +494,8 @@ function updateCalendar(activity, tx) {
     }
     recordDeleteReq.onerror = function () {
       instant({
-        message: recordDeleteReq.error.message
+        message: recordDeleteReq.error.message,
+        meta
       })
     }
   }
@@ -537,83 +528,38 @@ function putAttachment(activity, tx, param) {
 
 }
 
-function removeUserFromAssigneeInActivity(db, userActivityId) {
-  if (!userActivityId.length) return;
-  const activityTx = db.transaction(['activity'], 'readwrite')
-  const activityObjectStore = activityTx.objectStore('activity')
-  userActivityId.forEach(function (data) {
-    activityObjectStore.get(data.id).onsuccess = function (event) {
-      const record = event.target.result;
-      if (!record) return;
-      const indexOfUser = record.assignees.indexOf(data.user)
-      if (indexOfUser > -1) {
-        record.assignees.splice(indexOfUser, 1)
-        activityObjectStore.put(record)
-      }
-    }
-  })
+function removeUserFromAssigneeInActivity(addendum,updateTx) {
+  const activityObjectStore = updateTx.objectStore('activity')
+  activityObjectStore.get(addendum.activityId).onsuccess = function (event) {
+    const record = event.target.result;
+    if (!record) return;
+  
+    const indexOfUser = record.assignees.findIndex(function(assignee){
+      return assignee.phoneNumber === addendum.user
+    })
 
-  activityTx.oncomplete = function () {
-    console.log('user removed from assignee in activity where he once was if that activity existed')
+    if (indexOfUser > -1) {
+      record.assignees.splice(indexOfUser, 1)
+
+      activityObjectStore.put(record)
+    }
   }
 }
 
-function removeActivityFromDB(db, myActivities, param) {
-  if (!myActivities.length) return;
-  const transaction = db.transaction(['activity', 'list', 'children'], 'readwrite')
-  const activityObjectStore = transaction.objectStore('activity');
-  const listStore = transaction.objectStore('list');
-  const chidlrenObjectStore = transaction.objectStore('children');
-  myActivities.forEach(function (id) {
-    activityObjectStore.delete(id);
-    listStore.delete(id);
-    chidlrenObjectStore.delete(id);
-  })
+function removeActivityFromDB(id,updateTx) {
+  if (!id) return;
 
-  transaction.oncomplete = function () {
-    mapAndCalendarRemovalRequest(activitiesToRemove, param)
-  }
+  const activityObjectStore = updateTx.objectStore('activity');
+  const listStore = updateTx.objectStore('list');
+  const chidlrenObjectStore = updateTx.objectStore('children');
+  const calendarObjectStore = updateTx.objectStore('calendar').index('activityId')
+  const mapObjectStore = updateTx.objectStore('map').index('activityId')
+  activityObjectStore.delete(id);
+  listStore.delete(id);
+  chidlrenObjectStore.delete(id);
+  removeByIndex(calendarObjectStore, id)
+  removeByIndex(mapObjectStore, id);
 }
-
-function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
-
-  const req = indexedDB.open(param.user.uid)
-  req.onsuccess = function () {
-    const db = req.result;
-    const tx = db.transaction(['calendar', 'map'], 'readwrite')
-    const calendarObjectStore = tx.objectStore('calendar').index('activityId')
-    const mapObjectStore = tx.objectStore('map').index('activityId')
-
-    deleteByIndex(calendarObjectStore, activitiesToRemove)
-    deleteByIndex(mapObjectStore, activitiesToRemove)
-    tx.oncomplete = function () {
-      console.log("activity is removed from all stores")
-    }
-    tx.onerror = function () {
-
-      instant({
-        message: transaction.error.message
-      })
-    }
-
-  }
-}
-
-
-function deleteByIndex(store, activitiesToRemove) {
-  activitiesToRemove.forEach(function (id) {
-    store.openCursor(id).onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      const deleteReq = cursor.delete();
-      deleteReq.onsuccess = function () {
-        cursor.continue()
-      }
-    }
-  })
-}
-
-
 
 function updateSubscription(subscription, tx) {
   const store = tx.objectStore('subscriptions');
@@ -630,9 +576,6 @@ function updateSubscription(subscription, tx) {
       cursor.continue();
     }
   }
-
-
-
 }
 
 
@@ -640,7 +583,7 @@ function createListStore(activity, tx) {
 
   const requiredData = {
     'activityId': activity.activityId,
-    
+
     'timestamp': activity.timestamp,
     'activityName': activity.activityName,
     'status': activity.status
@@ -660,8 +603,7 @@ function createListStore(activity, tx) {
 }
 
 function successResponse(read, param, db, resolve, reject) {
-  const removeActivitiesForUser = []
-  const removeActivitiesForOthers = []
+
   const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
@@ -672,48 +614,36 @@ function successResponse(read, param, db, resolve, reject) {
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
-        removeActivitiesForUser.push(addendum.activityId)
+        removeActivityFromDB(addendum.activityId,updateTx);
       } else {
-        removeActivitiesForOthers.push({
-          id: addendum.activityId,
-          user: addendum.user
-        })
+        removeUserFromAssigneeInActivity(addendum,updateTx)
       }
-    }
+    };
 
-    
 
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
-        counter[addendum.user]  ? counter[addendum.user] + 1 : counter[addendum.user] = 1
-        
+        counter[addendum.user] ? counter[addendum.user] + 1 : counter[addendum.user] = 1
+
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee
         userTimestamp[addendum.assignee] = addendum;
-        counter[addendum.assignee]  ? counter[addendum.assignee] + 1 :  counter[addendum.assignee] =1 
-
       }
       addendumObjectStore.add(addendum)
     } else {
       userTimestamp[addendum.user] = addendum;
-      counter[addendum.user]  ? counter[addendum.user] + 1 :  counter[addendum.user] = 1
+      if (addendum.user !== param.user.phoneNumber) {
+        counter[addendum.user] ? counter[addendum.user] + 1 : counter[addendum.user] = 1
+      }
     }
   })
 
-  removeActivityFromDB(db, removeActivitiesForUser, param)
-  removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
 
-  if (read.locations) {
-    read.locations.forEach(function (location) {
-      updateMap(location, updateTx)
-    })
-
-  }
-
-
-
+  read.locations.forEach(function (location) {
+    updateMap(location, updateTx)
+  })
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
@@ -721,9 +651,7 @@ function successResponse(read, param, db, resolve, reject) {
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
-    // if (activity.hidden === 0) {
-    //   createListStore(activity, updateTx)
-    // };
+
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;
@@ -734,7 +662,7 @@ function successResponse(read, param, db, resolve, reject) {
         selfRecord.displayName = user.displayName;
         selfRecord.photoURL = user.photoURL;
         selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
-        if(!selfRecord.timestamp) {
+        if (!selfRecord.timestamp) {
           selfRecord.timestamp = ''
         }
         userStore.put(selfRecord)
@@ -755,16 +683,15 @@ function successResponse(read, param, db, resolve, reject) {
         record.assignees.forEach(function (user) {
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(currentAddendum);
-          if(number === param.user.phoneNumber)  {
+          if (number === param.user.phoneNumber) {
             userStore.get(user.phoneNumber).onsuccess = function (event) {
               const selfRecord = event.target.result;
               if (!selfRecord) return;
               selfRecord.comment = currentAddendum.comment
               selfRecord.timestamp = currentAddendum.timestamp
-              if(selfRecord.count) {
+              if (selfRecord.count) {
                 selfRecord.count += counter[number];
-              }
-              else {
+              } else {
                 selfRecord.count = counter[number];
               }
               userStore.put(selfRecord)
@@ -777,16 +704,15 @@ function successResponse(read, param, db, resolve, reject) {
               if (!userRecord) return;
               userRecord.comment = currentAddendum.comment
               userRecord.timestamp = currentAddendum.timestamp
-              if(userRecord.count) {
+              if (userRecord.count) {
                 userRecord.count += counter[number];
-              }
-              else {
+              } else {
                 userRecord.count = counter[number];
               }
               userStore.put(userRecord)
             }
             return;
-          } 
+          }
         })
       }
       return;
@@ -798,10 +724,11 @@ function successResponse(read, param, db, resolve, reject) {
       if (userRecord) {
         userRecord.comment = currentAddendum.comment
         userRecord.timestamp = currentAddendum.timestamp
-        if(userRecord.count) {
+        if (!counter[number]) return userStore.put(userRecord);
+
+        if (userRecord.count) {
           userRecord.count += counter[number];
-        }
-        else {
+        } else {
           userRecord.count = counter[number];
         }
         userStore.put(userRecord)
@@ -852,13 +779,12 @@ function updateIDB(config) {
         url: `${config.meta.apiUrl}read?from=${time}`,
         data: null,
         token: config.meta.user.token
-      }
+      };
+
 
       http(req)
         .then(function (response) {
-
           return successResponse(response, config.meta, config.db, resolve, reject);
-
         }).catch(function (error) {
           return reject(error)
         })
