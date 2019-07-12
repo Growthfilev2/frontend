@@ -25,13 +25,13 @@ function reportView() {
       </div>
       </div>`
       getSubscription(ApplicationState.office,'leave').then(function(leaveSubs){
-        if(!leaveSubs.length) {
+        if(!leaveSubs) {
           document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>'
           return
         }
         document.querySelector('.attendence-section .content').innerHTML = `${applyLeave()}`;
         document.querySelector('.apply-leave').addEventListener('click',function(){
-          addView(leaveSubs[0]);
+          addView(leaveSubs);
         })
        
       })
@@ -44,13 +44,13 @@ function reportView() {
       </div>
       </div>`
       getSubscription(ApplicationState.office,'expense claim').then(function(claimSubs){
-        if(!claimSubs.length) {
+        if(!claimSubs) {
           document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
           return
         }
         document.querySelector('.claims-section .content').innerHTML = `${emptyClaims()}`;
         document.querySelector('.apply-claim').addEventListener('click',function(){
-          addView(claimSubs[0]);
+          addView(claimSubs);
         })
 
       })
@@ -70,20 +70,20 @@ function reportView() {
 
       </div>
       </div>`
-      if(!mergedSubs.length) {
+      if(!incentiveSubs.length) {
         document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
         return
       }
       document.querySelector('.incentives-section .content').innerHTML = `
       <ul class='mdc-list'>
-      ${mergedSubs.map(function(incentive){
-          return `<li class='mdc-list-item'>Create New ${incentive.template}</li>`
+      ${incentiveSubs.map(function(incentive){
+      return `${incentive ? `<li class='mdc-list-item'>Create New ${incentive.template}</li>` :''}`
       }).join("")}
       </ul>
      `
       const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
       ul.listen('MDCList:action',function(evt){
-        addView(mergedSubs[evt.detail.index])
+        addView(incentiveSubs[evt.detail.index])
       })
     }).catch(console.log)
   })

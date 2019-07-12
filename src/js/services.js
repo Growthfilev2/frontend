@@ -374,7 +374,7 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
   }
-
+  
 }
 
 function runRead(value) {
