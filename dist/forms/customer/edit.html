@@ -25,9 +25,6 @@
                         id="logo">perm_identity</i>
                     <div class="mdc-line-ripple"></div>
                 </div>
-                <div class="mdc-text-field-helper-line">
-                    <div class="mdc-text-field-helper-text"></div>
-                </div>
             </div>
 
             <div class="form-component">
@@ -174,13 +171,13 @@
         function setContact(contactObject, type) {
             if (type === 'First Contact') {
                 customerContact.value = contactObject.phoneNumber;
-                customerAuths[contactObject.phoneNumber] = contactObject
+                customerAuths[type] = contactObject
             
                 cusomerSecondContact.root_.classList.remove('hidden')
             }
             if (type === 'Second Contact') {
                 cusomerSecondContact.value = contactObject.phoneNumber;
-                customerAuths[contactObject.phoneNumber] = contactObject
+                customerAuths[type] = contactObject
             }
         }
     </script>
