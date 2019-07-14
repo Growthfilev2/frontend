@@ -1,3 +1,19 @@
+:root {
+    --mdc-theme-primary: #89273E;
+    --mdc-theme-secondary: #cccccc;
+    --mdc-theme-background: #cccccc;
+    --mdc-theme-on-primary: #ffffff;
+    --mdc-theme-on-secondary: #ffffff;
+  
+    --mdc-theme-text-primary-on-light: #FFFFFF;
+    --mdc-theme-text-primary-on-dark: #cccccc;
+  
+    --mdc-theme-text-secondary-on-light: #67c9ff;
+    --mdc-theme-text-secondary-on-dark: #006bc1;
+  }
+
+
+
 body {
     margin: 0;
 }
@@ -32,7 +48,7 @@ body {
     margin: auto;
 }
 .forms .form-list {
-    padding-top: 20px;
+    padding-top: 0px;
     padding-bottom: 50px;
 }
 .forms .form-list .form-component {

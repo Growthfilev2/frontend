@@ -6,7 +6,7 @@ function addView(sub) {
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
     // hideBottomNav();
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/frontend/dist/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
     console.log(db);
     document.getElementById('form-iframe').addEventListener("load", function (ev) {
         document.getElementById('form-iframe').contentWindow.init(sub);
@@ -82,6 +82,16 @@ function setContactForSecondCustomerFailed(exceptionMessage) {
         message: exceptionMessage,
         body: ''
     });
+}
+
+function expenseClaimImage(base64) {
+    var frameDoc = document.getElementById('form-iframe').contentWindow.document;
+    var el = frameDoc.getElementById('expense-image');
+    if (el) {
+        frameDoc.querySelector('.add-photo-container').classList.add('hidden');
+        frameDoc.querySelector('.mdc-image-list--masonry').classList.remove('hidden');
+        el.src = 'data:image/jpg;base64,' + base64;
+    };
 }
 function attendenceView() {
     document.getElementById('app-header').classList.remove("hidden");
@@ -535,11 +545,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
             items.push({
                 name: 'Share',
                 icon: 'share'
-            }, {
-                name: 'Reply',
-                icon: 'reply'
             });
-
             if (activity.status === 'CANCELLED') {
                 items.push({
                     name: 'Confirm',
@@ -791,6 +797,7 @@ function share(activity) {
         });
     });
 }
+
 function closeSearchBar() {
 
     document.getElementById('search-users').classList.add('hidden');
@@ -975,12 +982,13 @@ function getUserChats(userRecord) {
         setBottomScroll();
         var form = document.querySelector('.conversation-compose');
         form.addEventListener('submit', function (e) {
-            progressBar.open();
+
             e.preventDefault();
             var input = e.target.input;
             var val = input.value;
 
             if (val) {
+                progressBar.open();
                 requestCreator('dm', {
                     comment: val,
                     assignee: userRecord.mobile
@@ -1021,7 +1029,7 @@ function claimsView() {
 
 function emptyClaims() {
 
-    return '<div class=\'empty-claims-section\'>\n        <h3 class=\'mdc-typography--headline6\'>No open claims pending for payment</h3>\n        <button class=\'mdc-button\'>\n        <span class=\'mdc-button--label\'>Create A New Claim</span>\n        </button>\n    </div>';
+    return '<div class=\'empty-claims-section\'>\n        <h3 class=\'mdc-typography--headline6\'>No open claims pending for payment</h3>\n        <button class=\'mdc-button\' id=\'apply-claim\'>\n             <span class=\'mdc-button--label\'>Create A New Claim</span>\n        </button>\n    </div>';
 }
 
 function getCellularInformation() {
@@ -1217,7 +1225,7 @@ function createSimpleMenu(items, id) {
 }
 
 function menuItemMap(item, geopoint) {
-    var li = createElement('li', { className: 'mdc-list-item' });
+    var li = createElement('li', { className: 'mdc-list-item map-menu-item' });
     li.setAttribute('role', 'menuitem');
     var spanTag = '<a target="_blank") href=\'comgooglemaps://?center=' + geopoint._latitude + ',' + geopoint._longitude + '\' class="mdc-list-item__text" on>' + item.name + '</span>';
     if (native.getName() === 'Android') {
@@ -2646,9 +2654,7 @@ function setFilePath(base64) {
 
   var image = new Image();
   image.onload = function () {
-    var sizeInBytes = 4 * Math.ceil(image.src.length / 3) * 0.5624896334383812;
-    var sizeInKb = sizeInBytes / 1000;
-    snacks('image width : ' + image.width + ' , image Height ' + image.height + ' , image size ' + sizeInKb);
+
     var orientation = getOrientation(image);
     content.style.backgroundImage = 'url(' + url + ')';
     if (orientation == 'landscape' || orientation == 'sqaure') {
@@ -3048,7 +3054,7 @@ function reportView() {
           return;
         }
         document.querySelector('.claims-section .content').innerHTML = '' + emptyClaims();
-        document.querySelector('.apply-claim').addEventListener('click', function () {
+        document.getElementById('apply-claim').addEventListener('click', function () {
           addView(claimSubs);
         });
       });

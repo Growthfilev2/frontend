@@ -25,7 +25,9 @@ html {
   align-items: center;
   justify-content: center;
 }
-
+.marvel-device {
+  width: 100%;
+}
 .marvel-device .screen {
   text-align: left;
 }
@@ -462,14 +464,12 @@ html {
 
 
 /** view-form**/
-#view-form .mdc-dialog__container {
-  /* width: 100%; */
+#view-form .mdc-card {
+box-shadow: none;
 }
 
-#view-form .mdc-dialog__container .mdc-dialog__surface {
-  /* width: inherit;
-max-height:80%; */
-}
+
+
 
 #view-form .mdc-dialog__content {
   padding: 0px;
@@ -479,6 +479,7 @@ max-height:80%; */
   padding: 20px 24px;
   padding-top: 0px;
   padding-bottom: 0px;
+  max-height: 300px;
 }
 
 #view-form .mdc-card .view-card .mdc-list {
@@ -521,6 +522,10 @@ max-height:80%; */
   right: 20px;
   left: auto !important;
 
+}
+.map-menu-item a {
+  text-decoration: none;
+  color: #000;
 
 }
 

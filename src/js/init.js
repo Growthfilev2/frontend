@@ -445,8 +445,7 @@ function checkForPhoto() {
     const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
 
     document.getElementById('choose').addEventListener('change', function (evt) {
-   
-    
+  
       const files = document.getElementById('choose').files
       if(!files.length) return;
         const file = files[0];

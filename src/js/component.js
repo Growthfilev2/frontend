@@ -226,7 +226,7 @@ function createSimpleMenu(items,id){
 }
 
 function menuItemMap(item,geopoint){
-    const li = createElement('li',{className:'mdc-list-item'})
+    const li = createElement('li',{className:'mdc-list-item map-menu-item'})
     li.setAttribute('role','menuitem');
     let spanTag = `<a target="_blank") href='comgooglemaps://?center=${geopoint._latitude},${geopoint._longitude}' class="mdc-list-item__text" on>${item.name}</span>`
     if(native.getName() === 'Android') {

@@ -440,9 +440,7 @@ function setFilePath(base64) {
 
   const image = new Image();
   image.onload = function () {
-    var sizeInBytes = 4 * Math.ceil((image.src.length / 3))*0.5624896334383812;
-    var sizeInKb=sizeInBytes/1000;
-    snacks('image width : ' + image.width + ' , image Height ' + image.height+ ' , image size ' + sizeInKb)
+   
     const orientation = getOrientation(image);
     content.style.backgroundImage = `url(${url})`
     if (orientation == 'landscape' || orientation == 'sqaure') {

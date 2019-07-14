@@ -26,9 +26,9 @@
             </div>
             <div class="form-component">
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='amount'>
+                id="total-amount">
                     <input class=" mdc-text-field__input" type="number">
-                    <label for="input" class="mdc-floating-label" id="cc">Total Amount</label>
+                    <label for="input" class="mdc-floating-label">Total Amount</label>
                     <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">payment</i>
                     <div class="mdc-line-ripple"></div>
                 </div>
@@ -36,55 +36,62 @@
             <div class="form-component">
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
                     id='start-date'>
-                    <input class=" mdc-text-field__input" type="text">
-                    <label for="input" class="mdc-floating-label" id="cc">Expense Start Date</label>
+                    <input class=" mdc-text-field__input" type="date">
+                    <label for="input" class="mdc-floating-label">Expense Start Date</label>
                     <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">today</i>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
             <div class="form-component">
-                    <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                        id='end-date'>
-                        <input class=" mdc-text-field__input" type="text">
-                        <label for="input" class="mdc-floating-label" id="cc">Expense End Date</label>
-                        <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">today</i>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
+                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='end-date'>
+                    <input class=" mdc-text-field__input" type="date">
+                    <label for="input" class="mdc-floating-label">Expense End Date</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">today</i>
+                    <div class="mdc-line-ripple"></div>
                 </div>
+            </div>
             <hr>
             <div class="form-component">
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
                     id='vendor-name'>
                     <input class=" mdc-text-field__input" type="text">
-                    <label for="input" class="mdc-floating-label" id="cc">Name Of The Vendor</label>
-                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">account_circlr</i>
+                    <label for="input" class="mdc-floating-label" >Name Of The Vendor</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
+                        id="logo">account_circle</i>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
             <div class="form-component">
-                <div>
-                    <span>Expense Photo</span>
-                    <button class="mdc-fab mdc-theme--primary-bg">
-                        <span class="material-icons mdc-fab--icon mdc-theme--on-primary">camera</span>
-                    </button>
-                </div>
-            </div>
-            <div class="form-component">
-                    <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                        id='ref-no'>
-                        <input class=" mdc-text-field__input" type="text">
-                        <label for="input" class="mdc-floating-label" id="cc">Reference Number </label>
-                        <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">phone</i>
-                        <div class="mdc-line-ripple"></div>
+                <div style="
+                    display: inline-flex;
+                    align-items: center;
+                    width: 100%;"
+                    class="add-photo-container"
+                    >
+                    <label class="mdc-image-list__label">Add A photo ?</label>
+                    <div class="mdc-fab mdc-fab--mini mdc-list-item__meta mdc-theme--primary-bg" id='add-photo'>
+                        <i class="material-icons mdc-theme--on-primary" >add_a_photo</i>
                     </div>
+                </div>
+                <ul class="mdc-image-list my-image-list  mdc-image-list--masonry hidden">
+                    <li class="mdc-image-list__item">
+                        <img class="mdc-image-list__image" src="../../v1/img/placeholder.png" id='expense-image'>
+                        <div class="mdc-image-list__supporting mdc-theme--primary-bg">
+                            <span class="mdc-image-list__label mdc-theme--on-primary">Expense Photo</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
+         
             <hr>
 
             <div class="form-component">
-                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='reason'>
-                    <textarea class="mdc-text-field__input" rows="4" cols="100"></textarea>
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
+                    id='description'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
                     <div class="mdc-notched-outline">
                         <div class="mdc-notched-outline__leading"></div>
                         <div class="mdc-notched-outline__notch">
@@ -107,34 +114,47 @@
 
     <script type=" text/javascript">
         parent.window.mdc.autoInit();
-       
 
+        function createDate(dateObject) {
+            let month = dateObject.getMonth() +1;
+            let date = dateObject.getDate()
+            if(month < 10) {
+                month = '0'+month
+            }
+            if(date < 10) {
+                date = '0'+date
+            }
+            return `${dateObject.getFullYear()}-${month}-${date}`
+        }
         function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-            const vendorName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-contact'))
-            cusomerSecondContact = new parent.mdc.textField.MDCTextField(document.getElementById(
-                'customer-second-contact'))
+            const vendorName = new parent.mdc.textField.MDCTextField(document.getElementById('vendor-name'))
+            const totalAmount = new parent.mdc.textField.MDCTextField(document.getElementById('total-amount'));
+            const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
+            const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
+            const details = new parent.mdc.textField.MDCTextField(document.getElementById('description'));
+            console.log(createDate(new Date()))
+            startDate.value = createDate(new Date())
+            endDate.value = createDate(new Date())
+            document.getElementById('add-photo').addEventListener('click',function(){
+                if(parent.native.getName() === 'Android') {
+                    AndroidInterface.startCamera("expenseClaimImage");
 
-            const customerName = new parent.mdc.textField.MDCTextField(document.getElementById('customer-name'))
-            const customerAddress = new parent.mdc.textField.MDCTextField(document.getElementById('address'))
-            console.log(customerContact.foundation_.adapter_.getNativeInput())
-
-            customerContact.input_.addEventListener('click', function () {
-                AndroidInterface.getContact("setContactForCustomer");
-            });
-            cusomerSecondContact.input_.addEventListener('click', function () {
-                AndroidInterface.getContact("setContactForSecondCustomer");
-            });
+                    return;
+                }
+                webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
+            })
             const tx = parent.db.transaction(['children'])
-            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'customer-type'])
+            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'expense-type'])
             tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
                 const cursor = event.target.result;
-                console.log(cursor)
+              
                 if (!cursor) return;
                 if (cursor.value.status === 'CANCELLED') {
                     cursor.continue();
                     return;
                 }
+                console.log(cursor.value)
                 select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
                         ${cursor.value.attachment.Name.value}
                       </option>`
@@ -152,39 +172,26 @@
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-                const vd = subscriptionTemplate.venue[0];
-                copy.attachment.Name.value = customerName.value;
-                copy.attachment['Customer Type'].value = select.value;
+                const scheduleDescriptor = copy.schedule[0];
 
-                copy.attachment['First Contact'].value = customerContact.value;
-                copy.attachment['Second Contact'].value = cusomerSecondContact.value;
-                copy.status = 'PENDING'
-                copy.venue = [{
-                    venueDescriptor: vd,
-                    address: customerAddress.value,
-                    location: customerName.value,
-                    geopoint: {
-                        latitude: parent.ApplicationState.location.latitude,
-                        longitude: parent.ApplicationState.location.longitude
-                    }
+                copy.attachment.Amount.value = totalAmount.value;
+                copy.attachment['Expense Type'].value = select.value;
+                copy.attachment.Reason.value = details.value;
+                copy.attachment['Vendor Name'].value = vendorName.value;
+                copy.attachment['Photo'].value = document.getElementById('expense-image').src;
+
+                copy.schedule = [{
+                    name :scheduleDescriptor,
+                    startTime :Date.parse(startDate.value),
+                    endTime:Date.parse(endDate.value)
                 }]
+
                 copy.share = []
-                copy.customerAuths = customerAuths
                 parent.sendFormToParent(copy)
             })
         }
 
-        function setContact(contactObject, type) {
-            if (type === 'First Contact') {
-                customerContact.value = contactObject.phoneNumber;
-                customerAuths.push(contactObject)
-                cusomerSecondContact.root_.classList.remove('hidden')
-            }
-            if (type === 'Second Contact') {
-                cusomerSecondContact.value = contactObject.phoneNumber;
-                customerAuths.push(contactObject)
-            }
-        }
+       
     </script>
 </body>
 

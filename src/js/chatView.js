@@ -131,7 +131,7 @@ function search() {
 
     searchInit.leadingIcon_.root_.onclick = function () {
         history.back();
-    
+
     }
     searchInit.trailingIcon_.root_.onclick = function () {
         searchInitCancel(searchInit);
@@ -440,12 +440,12 @@ function actionBoxDom(value, position) {
     const div = createElement('div', {
         className: `message ${position} menu-action`
     })
-    div.addEventListener('touchstart',function(event){
-        touchStart(event,value.addendumId,value.activityId,value.location._latitude,value.location._longitude);
+    div.addEventListener('touchstart', function (event) {
+        touchStart(event, value.addendumId, value.activityId, value.location._latitude, value.location._longitude);
     })
-    div.addEventListener('touchend',touchEnd)
-    div.addEventListener('touchcancel',touchCancel);
-    div.addEventListener('touchmove',touchMove);
+    div.addEventListener('touchend', touchEnd)
+    div.addEventListener('touchcancel', touchCancel);
+    div.addEventListener('touchmove', touchMove);
     div.innerHTML = actionBoxContent(value)
     return div
 }
@@ -557,11 +557,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
             items.push({
                 name: 'Share',
                 icon: 'share'
-            }, {
-                name: 'Reply',
-                icon: 'reply'
             })
-
             if (activity.status === 'CANCELLED') {
                 items.push({
                     name: 'Confirm',
@@ -840,7 +836,8 @@ function share(activity) {
     });
 
 }
-function closeSearchBar(){
+
+function closeSearchBar() {
 
     document.getElementById('search-users').classList.add('hidden')
     document.getElementById('app-header').classList.remove("hidden")
@@ -1081,10 +1078,10 @@ function dynamicAppendChats(addendums) {
     addendums.forEach(function (addendum) {
         let position = 'them';
         if (!parent) return;
-        if(addendum.user === myNumber){
+        if (addendum.user === myNumber) {
             position = 'me'
         }
-        if(addendum.user === history.state[1].mobile || addendum.user === myNumber) {
+        if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
             if (addendum.isComment) {
                 parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp))
                 return;
@@ -1134,12 +1131,13 @@ function getUserChats(userRecord) {
         setBottomScroll();
         const form = document.querySelector('.conversation-compose');
         form.addEventListener('submit', function (e) {
-            progressBar.open()
+
             e.preventDefault();
             var input = e.target.input;
             const val = input.value;
 
             if (val) {
+                progressBar.open()
                 requestCreator('dm', {
                     comment: val,
                     assignee: userRecord.mobile
