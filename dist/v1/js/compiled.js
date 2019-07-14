@@ -6,7 +6,7 @@ function addView(sub) {
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
     // hideBottomNav();
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/frontend/dist/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
     console.log(db);
     document.getElementById('form-iframe').addEventListener("load", function (ev) {
         document.getElementById('form-iframe').contentWindow.init(sub);
@@ -106,6 +106,9 @@ var contactsUl;
 var chatsUl;
 var currentChatsArray = [];
 var currentContactsArray = [];
+var menu = void 0;
+var timer = null;
+var duration = 800;
 
 function chatView() {
 
@@ -203,7 +206,6 @@ function search() {
 
     searchInit.leadingIcon_.root_.onclick = function () {
         history.back();
-        // searchInitBack(searchInit)
     };
     searchInit.trailingIcon_.root_.onclick = function () {
         searchInitCancel(searchInit);
@@ -434,144 +436,153 @@ function enterChat(userRecord) {
     header.root_.classList.remove('hidden');
     console.log(header);
 
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                  <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus="">\n                  <div class="input-space-right"></div>\n                  <button class="send">\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                  <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus="" id=\'comment-input\'>\n                  <div class="input-space-right"></div>\n                  <button class="send" id=\'comment-send\'>\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
     getUserChats(userRecord);
 }
 
-function handleLongPress(e) {
-
-    e.preventDefault();
-
-    return false;
+function actionBoxDom(value, position) {
+    var div = createElement('div', {
+        className: 'message ' + position + ' menu-action'
+    });
+    div.addEventListener('touchstart', function (event) {
+        touchStart(event, value.addendumId, value.activityId, value.location._latitude, value.location._longitude);
+    });
+    div.addEventListener('touchend', touchEnd);
+    div.addEventListener('touchcancel', touchCancel);
+    div.addEventListener('touchmove', touchMove);
+    div.innerHTML = actionBoxContent(value);
+    return div;
 }
 
-function actionBox(value, position, photo) {
-    return '<a href="callback=createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')" class="message ' + position + '" ' + (native.getName() === 'Android' ? 'onclick="handleLongPress(event)"' : 'onclick="createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')"') + '>\n    <div class=\'menu-container mdc-menu-surface--anchor\' id="' + value.addendumId + '"> </div>\n   \n    ' + value.comment + '\n    <span class="metadata">\n        <span class="time">\n           ' + moment(value.timestamp).format('hh:mm') + '\n        </span>\n    </span>\n  </a>';
+function actionBoxContent(value) {
 
-    return '\n    <div class=\'action-box-container\'>\n    <div class=\'menu-container mdc-menu-surface--anchor\' id="' + value.addendumId + '"> \n    </div>\n   \n    <div class="message-wrapper ' + position + '" onclick="createActivityActionMenu(\'' + value.addendumId + '\',\'' + value.activityId + '\')">\n    <img class="circle-wrapper" src=' + photo + ' onerror="imgErr(this)">\n    <div class="text-wrapper">' + value.comment + '\n    <span class="metadata">\n    <span class="time">\n        ' + moment(value.timestamp).format('hh:mm') + '\n    </span>\n    </span>\n    </div>\n    </div>\n    </div>\n   ';
+    return '\n    <div class=\'menu-container mdc-menu-surface--anchor\' id="' + value.addendumId + '"> </div>\n    ' + value.comment + '\n<span class="metadata">\n    <span class="time">\n    ' + moment(value.timestamp).format('hh:mm') + '\n    </span>\n    <span class=\'tick\'>\n        <i class=\'material-icons\'>info</i>\n    </span>\n</span>';
 }
 
-function messageBox(comment, position, image, time) {
-
-    return ' <div class="message ' + position + '">\n    ' + comment + '\n    <span class="metadata">\n        <span class="time">' + moment(time).format('hh:mm') + '</span\n    </span>\n  </div>';
+function actionBox(value, position) {
+    return '\n    <div class="message ' + position + ' menu-action" ontouchstart="touchStart(event,\'' + value.addendumId + '\',\'' + value.activityId + '\',\'' + value.location._latitude + '\',\'' + value.location._longitude + '\')" ontouchEnd="touchEnd(event)" ontouchmove="touchMove(event)" ontouchcancel="touchCancel(event)">  \n    ' + actionBoxContent(value) + '\n    </div>\n  ';
 }
 
-function messageBoxDom(comment, position, image, time) {
-    var wrapper = createElement('div', {
-        className: 'message-wrapper ' + position
-    });
-    var imageEl = createElement('img', {
-        className: 'circle-wrapper',
-        src: image
-    });
-    var text = createElement('div', {
-        className: 'text-wrapper',
-        textContent: comment
-    });
-    var metadata = createElement('span', {
-        className: 'metadata'
-    });
-    var timeEl = createElement('span', {
-        className: 'time',
-        textContent: moment(time).format('hh:mm')
-    });
-    wrapper.appendChild(imageEl);
-    metadata.appendChild(timeEl);
-    text.appendChild(metadata);
-    wrapper.appendChild(text);
-    return wrapper;
-}
-
-function actionBoxDom(value) {
-    var container = createElement('div', {
-        className: 'action-box-container'
-    });
-    var menuCont = createElement('div', {
-        id: value.addendumId,
-        className: 'menu-container mdc-menu-surface--anchor'
-    });
-    var wrapper = createElement('div', {
-        className: 'message-wrapper aciton-info'
-    });
-    wrapper.onclick = function () {
-        createActivityActionMenu(value.addendumId, value.activityId);
+function handleLongPress(addendumId, activityId, _latitude, _longitude) {
+    console.log('long press at ' + addendumId + ' : activity id ' + activityId + ' : at ' + _latitude + ' & ' + _longitude);
+    clearTimeout(timer);
+    var geopoint = {
+        _latitude: _latitude,
+        _longitude: _longitude
     };
-    var text = createElement('div', {
-        className: 'text-wrapper',
-        textContent: value.comment
-    });
-    var metadata = createElement('span', {
-        className: 'metadata'
-    });
-    var icon = createElement('i', {
-        className: 'material-icons',
-        textContent: 'info'
-    });
-    metadata.appendChild(icon);
-    text.appendChild(metadata);
-    wrapper.appendChild(text);
-    container.appendChild(menuCont);
-    container.appendChild(wrapper);
-    return container;
+    if (menu) {
+        menu.open = false;
+        menu = null;
+    }
+    createActivityActionMenu(addendumId, activityId, geopoint);
+};
+
+function touchStart(event, addendumId, activityId, _latitude, _longitude) {
+    console.log('touchStart', event);
+
+    timer = setTimeout(function () {
+        handleLongPress(addendumId, activityId, _latitude, _longitude);
+    }, duration);
 }
 
-function createActivityActionMenu(addendumId, activityId) {
+function touchEnd(event) {
+    clearTimeout(timer);
+    console.log('touchEnd', event);
+}
+
+function touchMove(event) {
+    clearTimeout(timer);
+
+    console.log('touchMove', event);
+}
+
+function touchCancel(event) {
+    clearTimeout(timer);
+
+    console.log('touchCancel', event);
+}
+
+function messageBoxContent(comment, time) {
+    return ' ' + comment + '\n    <span class="metadata">\n        <span class="time">' + moment(time).format('hh:mm') + '</span\n    </span>\n  </div>';
+}
+
+function messageBox(comment, position, time) {
+
+    return ' <div class="message ' + position + '">\n    ' + messageBoxContent(comment, time) + '\n    ';
+}
+
+function messageBoxDom(comment, position, time) {
+
+    var div = createElement('div', {
+        className: 'message ' + position
+    });
+    div.innerHTML = messageBoxContent(comment, time);
+
+    return div;
+}
+
+function createActivityActionMenu(addendumId, activityId, geopoint) {
 
     db.transaction('activity').objectStore('activity').get(activityId).onsuccess = function (event) {
         var activity = event.target.result;
         if (!activity) return;
         var heading = activity.activityName + '\n        <p class=\'card-time mdc-typography--subtitle1 mb-0 mt-0\'>Created On ' + formatCreatedTime(activity.timestamp) + '</p>\n        <span class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mt-0">by ' + (activity.creator.displayName || activity.creator.phoneNumber) + '</span>';
-        if (!activity.canEdit) {
-            showViewDialog(heading, activity, 'view-form');
-
-            return;
-        };
         var items = [{
             name: 'View',
             icon: 'info'
-        }, {
-            name: 'Share',
-            icon: 'share'
-        }, {
-            name: 'Reply',
-            icon: 'reply'
         }];
+        if (activity.canEdit) {
+            items.push({
+                name: 'Share',
+                icon: 'share'
+            }, {
+                name: 'Reply',
+                icon: 'reply'
+            });
 
-        if (activity.status === 'CANCELLED') {
-            items.push({
-                name: 'Confirm',
-                icon: 'check'
-            });
-            items.push({
-                name: 'Undo',
-                icon: 'undo'
-            });
-        }
-        if (activity.status === 'PENDING') {
-            items.push({
-                name: 'Confirm',
-                icon: 'check'
-            });
-            items.push({
-                name: 'Delete',
-                icon: 'delete'
-            });
-        }
-        if (activity.status === 'CONFIRMED') {
-            items.push({
-                name: 'Undo',
-                icon: 'undo'
-            });
-            items.push({
-                name: 'Delete',
-                icon: 'delete'
-            });
-        }
+            if (activity.status === 'CANCELLED') {
+                items.push({
+                    name: 'Confirm',
+                    icon: 'check'
+                });
+                items.push({
+                    name: 'Undo',
+                    icon: 'undo'
+                });
+            }
+            if (activity.status === 'PENDING') {
+                items.push({
+                    name: 'Confirm',
+                    icon: 'check'
+                });
+                items.push({
+                    name: 'Delete',
+                    icon: 'delete'
+                });
+            }
+            if (activity.status === 'CONFIRMED') {
+                items.push({
+                    name: 'Undo',
+                    icon: 'undo'
+                });
+                items.push({
+                    name: 'Delete',
+                    icon: 'delete'
+                });
+            }
+        };
+
         var joinedId = addendumId + activityId;
         document.getElementById(addendumId).innerHTML = createSimpleMenu(items, joinedId);
-        var menu = new mdc.menu.MDCMenu(document.getElementById(joinedId));
+        document.getElementById(joinedId).appendChild(menuItemMap({
+            name: 'Map',
+            icon: 'map'
+        }, geopoint));
+
+        menu = new mdc.menu.MDCMenu(document.getElementById(joinedId));
         menu.open = true;
         menu.root_.classList.add('align-right-menu');
+
         menu.listen('MDCMenu:selected', function (evt) {
             switch (items[evt.detail.index].name) {
                 case 'View':
@@ -780,10 +791,14 @@ function share(activity) {
         });
     });
 }
+function closeSearchBar() {
 
-function searchInitBack(searchInit) {
     document.getElementById('search-users').classList.add('hidden');
     document.getElementById('app-header').classList.remove("hidden");
+}
+
+function searchInitBack(searchInit) {
+    closeSearchBar();
     searchInit.value = "";
     searchInit.input_.dispatchEvent(new Event('input'));
 }
@@ -800,6 +815,7 @@ function activityDomCustomer(activityRecord) {
 
 function addAssignee(record, userArray) {
     progressBar.open();
+    closeSearchBar();
     requestCreator('share', {
         activityId: record.activityId,
         share: userArray
@@ -904,29 +920,19 @@ function createStatusChange(status) {
 function dynamicAppendChats(addendums) {
     var parent = document.getElementById('content');
     var myNumber = firebase.auth().currentUser.phoneNumber;
-    addendums.forEach(function (addendum) {
-        var position = '';
-        var image = '';
 
-        position = 'them';
-        image = history.state[1].photoURL;
+    addendums.forEach(function (addendum) {
+        var position = 'them';
         if (!parent) return;
-        if (addendum.isComment && addendum.user === myNumber) return;
-        if (addendum.isComment) {
-            parent.appendChild(messageBoxDom(addendum.comment, position, image, addendum.timestamp));
-        } else {
-            if (addendum.user === history.state[1].mobile) {
-                parent.appendChild(actionBoxDom(addendum));
-            } else {
-                db.transaction('activity').objectStore('activity').get(addendum.activityId).onsuccess = function (evt) {
-                    var activity = evt.target.result;
-                    var showActionAddendum = activity.assignees.filter(function (val) {
-                        return val.phoneNumber === history.state[1].mobile;
-                    });
-                    if (!showActionAddendum.length) return;
-                    parent.appendChild(actionBoxDom(addendum));
-                };
+        if (addendum.user === myNumber) {
+            position = 'me';
+        }
+        if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
+            if (addendum.isComment) {
+                parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp));
+                return;
             }
+            parent.appendChild(actionBoxDom(addendum, position));
         }
     });
     setBottomScroll();
@@ -956,10 +962,10 @@ function getUserChats(userRecord) {
         };
 
         if (cursor.value.isComment) {
-            timeLine += messageBox(cursor.value.comment, position, image, cursor.value.timestamp);
+            timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp);
         } else {
             if (cursor.value.user === myNumber || cursor.value.user === userRecord.mobile) {
-                timeLine += actionBox(cursor.value, position, image);
+                timeLine += actionBox(cursor.value, position);
             }
         }
         cursor.continue();
@@ -967,52 +973,29 @@ function getUserChats(userRecord) {
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll();
+        var form = document.querySelector('.conversation-compose');
+        form.addEventListener('submit', function (e) {
+            progressBar.open();
+            e.preventDefault();
+            var input = e.target.input;
+            var val = input.value;
 
-        // const btn = new mdc.ripple.MDCRipple(document.getElementById('comment-send'));
-        // const commentInit = new mdc.textField.MDCTextField(document.getElementById('comment-textarea'))
-        // const form = document.querySelector('.conversation-compose');
-        // const bottom = document.getElementById('bottom')
-        // btn.root_.addEventListener('click', function () {
-
-        //     if (!commentInit.value.trim()) return;
-        //     progressBar.open()
-        //     requestCreator('dm', {
-        //         comment: commentInit.value,
-        //         assignee: userRecord.mobile
-        //     }).then(function () {
-        //         if (!parent) return;
-        //         parent.appendChild(messageBoxDom(commentInit.value, 'me', firebase.auth().currentUser.photoURL))
-        //         commentInit.value = ''
-        //         resetCommentField(bottom, form, commentInit.input_)
-        //         setBottomScroll()
-        //         progressBar.close()
-
-        //     }).catch(function (error) {
-        //         progressBar.close()
-        //         commentInit.value = ''
-        //         snacks(error.response.message);
-
-        //     })
-        // });
-        // commentInit.input_.addEventListener('input', function () {
-        //     if (this.scrollHeight >= 200) return;
-
-        //     this.style.paddingTop = '10px';
-
-        //     this.style.lineHeight = '1'
-        //     this.style.height = '5px'
-        //     this.style.height = (this.scrollHeight) + "px";
-        //     form.style.minHeight = '56px';
-        //     form.style.height = 'auto'
-        //     bottom.style.height = (this.scrollHeight + 20) + 'px'
-        //     //not
-        //     if (!this.value.trim()) {
-        //         resetCommentField(bottom, form, this)
-
-        //     }
-
-
-        // });
+            if (val) {
+                requestCreator('dm', {
+                    comment: val,
+                    assignee: userRecord.mobile
+                }).then(function () {
+                    parent.appendChild(messageBoxDom(val, 'me', Date.now()));
+                    setBottomScroll();
+                    input.value = '';
+                    progressBar.close();
+                }).catch(function (error) {
+                    input.value = '';
+                    progressBar.close();
+                    snacks(error.response.message);
+                });
+            }
+        });
     };
 }
 
@@ -1231,6 +1214,18 @@ function createSimpleMenu(items, id) {
     return '\n    <div class="mdc-menu mdc-menu-surface" id="' + id + '">\n    <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">\n    ' + items.map(function (item) {
         return ' <li class="mdc-list-item" role="menuitem">\n        <span class="mdc-list-item__graphic mdc-menu__selection-group-icon">\n        <i class=\'material-icons\'>' + item.icon + '</i>\n        </span>\n        <span class="mdc-list-item__text">' + item.name + '</span>\n        </li>';
     }).join("") + '\n    </ul>\n    </div>\n  ';
+}
+
+function menuItemMap(item, geopoint) {
+    var li = createElement('li', { className: 'mdc-list-item' });
+    li.setAttribute('role', 'menuitem');
+    var spanTag = '<a target="_blank") href=\'comgooglemaps://?center=' + geopoint._latitude + ',' + geopoint._longitude + '\' class="mdc-list-item__text" on>' + item.name + '</span>';
+    if (native.getName() === 'Android') {
+        spanTag = '<a href=\'geo:' + geopoint._latitude + ',' + geopoint._longitude + '\' class="mdc-list-item__text">' + item.name + '</a>';
+    }
+
+    li.innerHTML = '<span class="mdc-list-item__graphic mdc-menu__selection-group-icon">\n    <i class=\'material-icons\'>' + item.icon + '</i>\n    </span>\n    ' + spanTag;
+    return li;
 }
 function AppKeys() {
     this.mode = 'dev';
@@ -1796,11 +1791,7 @@ function startApp() {
       startLoad.querySelector('p').textContent = texts[index];
       index++;
     }, index + 1 * 1000);
-    // history.pushState(['chatView'],null,null)
-    // chatView('+919000000000')
-    // return;
-    // mapView();
-    // return;
+
     requestCreator('now', {
       device: native.getInfo(),
       from: '',
@@ -2449,14 +2440,14 @@ function loadCardData(markers) {
             if (!checkInSub) return getSuggestions();
             cardProd.open();
 
-            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
-              snacks('Check-in created');
-              cardProd.close();
-              getSuggestions();
-            }).catch(function (error) {
-              snacks(error.response.message);
-              cardProd.close();
-            });
+            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            snacks('Check-in created');
+            cardProd.close();
+            getSuggestions();
+            // }).catch(function (error) {
+            //   snacks(error.response.message);
+            //   cardProd.close()
+            // })
           });
         });
         if (offices.length == 1) {

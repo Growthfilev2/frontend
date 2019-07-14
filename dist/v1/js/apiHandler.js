@@ -609,11 +609,13 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
+
     activityObjectStore.put(activity);
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
 
+    console.log(activity.assignees);
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         var selfRecord = event.target.result;
