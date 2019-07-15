@@ -17,10 +17,10 @@ function getTommorowDate(){
     return  new Date(tomorrow.setDate(today.getDate() +1))
 }
 
-function showSecondDate(event) {
+function showSecondDate(event,className,dataName) {
     event.target.classList.add('hidden')
-    document.querySelector('.end-date-container').classList.remove('hidden');
-    
+    document.querySelector('.'+className).classList.remove('hidden');
+    document.querySelector(`[data-name="${dataName}"]`).removeEventListener('change',initializeSchedules)
 }
 
 
@@ -50,4 +50,23 @@ function getDropDownContent(office,template,indexName){
         }
      
     })
+}
+function removeList(event){
+    
+    event.target.parentNode.remove();
+
+}
+
+function createProductAmount(product){
+    const li = parent.createElement('li',{className:'mdc-list-item'})
+    li.dataset.product = product;
+
+    li.innerHTML = `<span class="mdc-list-item__graphic material-icons" aria-hidden="true" style="
+    margin-right: 10px;
+    color:red
+    ">clear</span>
+    ${product}
+    <input class="mdc-list-item__meta amount-input" aria-hidden="true" placeholder="Add Amount" type='number'>
+    `
+    return  li;
 }

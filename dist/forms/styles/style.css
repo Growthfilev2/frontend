@@ -170,3 +170,11 @@ body {
 #product-2,#product-3 {
     width: 49%;
 }
+
+.amount-input {
+
+    border: 1px solid black;
+    color: black;
+    padding-left: 5px;
+    
+}
