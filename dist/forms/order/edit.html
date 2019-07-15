@@ -144,21 +144,17 @@
 
         let listInit;
 
-        function initializeSchedules(event) {
-            document.querySelector(`[data-name="${event.target.dataset.name} end date"]`).value = event.target.value
-        }
-
+      
 
         function init(subscriptionTemplate) {
+          
             const formEl = document.getElementById('form');
-
-
             const tomorrowDate = getTommorowDate()
 
             const paymentStartDate = new parent.mdc.textField.MDCTextField(document.getElementById(
                 'payment-start-date'))
             const paymentEndDate = new parent.mdc.textField.MDCTextField(document.getElementById('payment-end-date'))
-            
+
             const deliveryStartDate = new parent.mdc.textField.MDCTextField(document.getElementById(
                 'delivery-start-date'))
             const deliveryEndDate = new parent.mdc.textField.MDCTextField(document.getElementById('delivery-end-date'))
@@ -166,14 +162,8 @@
 
             paymentStartDate.value = createDate(tomorrowDate)
             deliveryStartDate.value = createDate(tomorrowDate)
+            initializeDates(subscriptionTemplate)
 
-            subscriptionTemplate.schedule.forEach(function (name) {
-                const el = document.querySelector(`[data-name="${name}"]`)
-                el.addEventListener('change', initializeSchedules);
-
-                document.querySelector(`[data-name="${name} end date"]`).value = el.value
-
-            });
             const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
             const product = new parent.mdc.select.MDCSelect(document.getElementById('product'))
 
@@ -202,16 +192,16 @@
                         listInit = new parent.mdc.list.MDCList(listEl);
                         if (listEl.querySelector(`[data-product="${evt.detail.value}"]`)) return;
                         const li = createProductAmount(evt.detail.value)
-                        li.querySelector('.mdc-list-item__graphic').onclick = function(event){
+                        li.querySelector('.mdc-list-item__graphic').onclick = function (event) {
                             removeList(event);
 
-                            if(!listInit.listElements.length) {
+                            if (!listInit.listElements.length) {
                                 product.selectedIndex = 0;
                             }
                         }
                         listEl.appendChild(li);
                     })
-                    
+
                 }
             });
 
@@ -221,22 +211,9 @@
                 copy.attachment['Estimated Order Value'].value = orderValue.value;
                 copy.attachment['Special Instruction'].value = instruction.value;
                 copy.attachment['Customer'].value = customer.value
-                const newSchedules = [];
-                subscriptionTemplate.schedule.forEach(function(name){
-                    const startDate = document.querySelector(`[data-name="${name}"]`);
-                    const startTime = document.querySelector(`[data-name="${name} start time"]`);
-                    const endDate = document.querySelector(`[data-name="${name} end date"]`);
-                    const endTime = document.querySelector(`[data-name="${name} end time"]`);
-
-                    newSchedules.push({
-                        name:name,
-                        startTime:parent.moment(startDate.value + ' ' +startTime.value).valueOf(),
-                        endTime:parent.moment(endDate.value + ' ' +endTime.value).valueOf(),
-                    })
-                    
-                })
+               
              
-                copy.schedule = newSchedules
+                copy.schedule = getNewSchedule(subscriptionTemplate)
                 copy.share = []
                 console.log(copy);
                 const requestArray = []
