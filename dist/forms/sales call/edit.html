@@ -61,7 +61,8 @@
                     <div class="mdc-line-ripple"></div>
                 </div>
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
-                    <input class=" mdc-text-field__input" type="time" data-name="Installation Date end time" value="12:00">
+                    <input class=" mdc-text-field__input" type="time" data-name="Installation Date end time"
+                        value="12:00">
                     <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
@@ -84,8 +85,9 @@
 
         startDate.value = createDate(new Date())
         endDate.value = createDate(new Date())
-        
+
         var formEl = document.getElementById('form');
+
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate)
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
@@ -102,7 +104,7 @@
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-              
+
                 copy.attachment['Customer'].value = customer.value;
                 copy.attachment['Product'].value = product.value;
 
