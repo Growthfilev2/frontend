@@ -23,33 +23,44 @@
                     <label class="mdc-floating-label">Type Of Expense</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
-               
+
             </div>
             <div class="form-component">
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                id="total-amount">
+                    id="total-amount">
                     <input class=" mdc-text-field__input" type="number">
                     <label for="input" class="mdc-floating-label">Total Amount</label>
                     <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">payment</i>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
-            <div class="form-component">
-                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='start-date'>
+            <div class="form-component schedules">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
                     <input class=" mdc-text-field__input" type="date">
                     <label for="input" class="mdc-floating-label">Expense Start Date</label>
-                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">today</i>
+
                     <div class="mdc-line-ripple"></div>
                 </div>
-            </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-time'>
+                    <input class=" mdc-text-field__input" type="time" value="12:00">
+                    <label for="input" class="mdc-floating-label">Expense Start Time</label>
 
-            <div class="form-component">
-                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='end-date'>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <p class="text-center mdc-typography--body1 mb-0 mdc-theme--primary" onclick="showSecondDate(event)">Add
+                    End Time</p>
+            </div>
+            <div class="form-component end-date-container hidden schedules">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
                     <input class=" mdc-text-field__input" type="date">
-                    <label for="input" class="mdc-floating-label">Expense End Date</label>
-                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">today</i>
+                    <label for="input" class="mdc-floating-label">End Date</label>
+
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
+                    <input class=" mdc-text-field__input" type="time" value="12:00">
+                    <label for="input" class="mdc-floating-label">End Time</label>
+
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
@@ -58,7 +69,7 @@
                 <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
                     id='vendor-name'>
                     <input class=" mdc-text-field__input" type="text">
-                    <label for="input" class="mdc-floating-label" >Name Of The Vendor</label>
+                    <label for="input" class="mdc-floating-label">Name Of The Vendor</label>
                     <i class="material-icons mdc-text-field__icon" tabindex="0" role="button"
                         id="logo">account_circle</i>
                     <div class="mdc-line-ripple"></div>
@@ -69,12 +80,10 @@
                 <div style="
                     display: inline-flex;
                     align-items: center;
-                    width: 100%;"
-                    class="add-photo-container"
-                    >
+                    width: 100%;" class="add-photo-container">
                     <label class="mdc-image-list__label">Add A photo ?</label>
                     <div class="mdc-fab mdc-fab--mini mdc-list-item__meta mdc-theme--primary-bg" id='add-photo'>
-                        <i class="material-icons mdc-theme--on-primary" >add_a_photo</i>
+                        <i class="material-icons mdc-theme--on-primary">add_a_photo</i>
                     </div>
                 </div>
                 <ul class="mdc-image-list my-image-list  mdc-image-list--masonry hidden">
@@ -86,7 +95,7 @@
                     </li>
                 </ul>
             </div>
-         
+
             <hr>
 
             <div class="form-component">
@@ -116,20 +125,35 @@
     </script>
     <script>
         parent.window.mdc.autoInit();
+        let photo  = '';
 
-   
+        function setExpenseImage() {
+            const el = frameDoc.getElementById('expense-image')
+            document.querySelector('.add-photo-container').classList.add('hidden');
+            document.querySelector('.mdc-image-list--masonry').classList.remove('hidden')
+            el.src = `data:image/jpg;base64,${base64}`;
+            photo = `data:image/jpg;base64,${base64}`;
+        }
+
+
         function init(subscriptionTemplate) {
             const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
             const vendorName = new parent.mdc.textField.MDCTextField(document.getElementById('vendor-name'))
             const totalAmount = new parent.mdc.textField.MDCTextField(document.getElementById('total-amount'));
             const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
+            const startTime = new parent.mdc.textField.MDCTextField(document.getElementById('start-time'));
+
             const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
+            const endTime = new parent.mdc.textField.MDCTextField(document.getElementById('end-time'));
+
             const details = new parent.mdc.textField.MDCTextField(document.getElementById('description'));
-         
-            startDate.value = createDate(new Date())
-            endDate.value = createDate(new Date())
-            document.getElementById('add-photo').addEventListener('click',function(){
-                if(parent.native.getName() === 'Android') {
+            const tomorrow = getTommorowDate();
+
+            startDate.value = createDate(tomorrow)
+            endDate.value = createDate(tomorrow)
+
+            document.getElementById('add-photo').addEventListener('click', function () {
+                if (parent.native.getName() === 'Android') {
                     AndroidInterface.startCamera("expenseClaimImage");
 
                     return;
@@ -141,7 +165,7 @@
             const totalLeveTypes = []
             tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
                 const cursor = event.target.result;
-              
+
                 if (!cursor) return;
                 if (cursor.value.status === 'CANCELLED') {
                     cursor.continue();
@@ -159,7 +183,7 @@
 
                     select.foundation_.adapter_.addClass('hidden')
                 }
-              
+
             }
             console.log(parent)
             var formEl = document.getElementById('form');
@@ -173,20 +197,18 @@
                 copy.attachment['Expense Type'].value = select.value;
                 copy.attachment.Reason.value = details.value;
                 copy.attachment['Vendor Name'].value = vendorName.value;
-                copy.attachment['Photo'].value = document.getElementById('expense-image').src;
-
+                copy.attachment['Photo'].value = photo;
+                
                 copy.schedule = [{
-                    name :scheduleDescriptor,
-                    startTime :Date.parse(startDate.value),
-                    endTime:Date.parse(endDate.value)
+                    name: scheduleDescriptor,
+                    startTime: parent.moment(startDate.value + ' ' + startTime.value).valueOf(),
+                    endTime: parent.moment(endDate.value + ' ' + endTime.value).valueOf()
                 }]
 
                 copy.share = []
                 parent.sendFormToParent(copy)
             })
         }
-
-       
     </script>
 </body>
 

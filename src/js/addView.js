@@ -94,11 +94,6 @@ function setContactForSecondCustomerFailed(exceptionMessage){
 }
 
 function expenseClaimImage(base64) {
-    const frameDoc = document.getElementById('form-iframe').contentWindow.document;
-    const el = frameDoc.getElementById('expense-image')
-    if(el) {
-        frameDoc.querySelector('.add-photo-container').classList.add('hidden');
-        frameDoc.querySelector('.mdc-image-list--masonry').classList.remove('hidden')
-        el.src = `data:image/jpg;base64,${base64}`;
-    };
+    document.getElementById('form-iframe').contentWindow.setExpenseImage(base64);
+  
 }

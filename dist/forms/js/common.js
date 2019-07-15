@@ -16,3 +16,9 @@ function getTommorowDate(){
     const tomorrow = new Date();
     return  new Date(tomorrow.setDate(today.getDate() +1))
 }
+
+function showSecondDate(event) {
+    event.target.classList.add('hidden')
+    document.querySelector('.end-date-container').classList.remove('hidden');
+    
+}
