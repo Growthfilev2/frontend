@@ -34,7 +34,6 @@ function getDropDownContent(office,template,indexName){
         const keyRange = IDBKeyRange.only([office, template])
         tx.objectStore('children').index(indexName).openCursor(keyRange).onsuccess = function (event) {
             const cursor = event.target.result;
-            console.log(cursor)
             if (!cursor) return;
             if (cursor.value.status === 'CANCELLED') {
                 cursor.continue();

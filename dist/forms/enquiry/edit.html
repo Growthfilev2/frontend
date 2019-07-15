@@ -8,27 +8,30 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/style.css" rel="stylesheet" type="text/css">
-    
-    
+
+
 </head>
 
 <body>
     <form class='forms mdc-card' id='form'>
 
         <div class="form-list">
-
-            <div class="form-component">
-                    <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
-                    id='company-name'>
-                    <input class=" mdc-text-field__input" type="text">
-                    <label for="input" class="mdc-floating-label">From</label>
-                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button">business</i>
+            <div class="form-component customer-select-container">
+                <div class="mdc-select" id='customer'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                        <option value="new-customer" disabled>New Customer</option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Customer</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
-            <div class="form-component product-select">
-                <div class="mdc-select">
+
+            <div class="form-component product-select-container hidden">
+                <div class="mdc-select" id='product'>
+
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
@@ -37,9 +40,9 @@
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
-          
+
             <div class="form-component">
-                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='reason'>
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='enquiry'>
                     <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
                     <div class="mdc-notched-outline">
                         <div class="mdc-notched-outline__leading"></div>
@@ -58,40 +61,43 @@
     <script src="../js/common.js"></script>
     <script>
         parent.window.mdc.autoInit();
-        const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+        const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'));
+        const product = new parent.mdc.select.MDCSelect(document.getElementById('product'));
         const enquiry = new parent.mdc.textField.MDCTextField(document.getElementById('enquiry'));
-        const companyName = new parent.mdc.textField.MDCTextField(document.getElementById('company-name'))
         var formEl = document.getElementById('form');
 
         function init(subscriptionTemplate) {
-            const tx = parent.db.transaction(['children'])
-            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'product'])
-            tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
-                const cursor = event.target.result;
-              
-                if (!cursor) return;
-                if (cursor.value.status === 'CANCELLED') {
-                    cursor.continue();
-                    return;
+            getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
+                if (result.string) {
+                    document.querySelector('.product-select-container').classList.remove("hidden")
+                    product.nativeControl_.innerHTML += result.string
                 }
-                totalLeveTypes.push(cursor.value)
-                select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
-                        ${cursor.value.attachment.Name.value}
-                      </option>`
-                cursor.continue();
-            };
+            })
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+                customer.nativeControl_.innerHTML += result.string;
+                parent.getSubscription(subscriptionTemplate.office, 'customer').then(function (subscription) {
+                    if (subscription) {
+                        customer.nativeControl_[1].disabled = false;
+                    }
+                    customer.listen('MDCSelect:change', function (evt) {
+                        if (evt.detail.value === 'new-customer') {
+                            addView(subscription);
+                            return
+                        }
+                    })
+                })
+            });
 
-            tx.oncomplete = function () {
-                if (select.nativeControl_.children.length <= 1) {
-                  document.querySelector('.product-select').classList.add("hidden")
-                }
-            }
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
                 copy.attachment['Enquiry'].value = enquiry.value;
-                copy.attachment['Company Name'].value = companyName.value;
-                copy.attachment['Product'].value = select.value;
+                try {
+                    copy.attachment['Customer'].value = customer.value;
+                }catch(e){
+                    console.log(e)
+                }
+                copy.attachment['Product'].value = product.value;
                 copy.share = []
                 parent.sendFormToParent(copy)
             })
