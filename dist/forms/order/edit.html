@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <script src="../../v1/external/js/material.min.js"></script>
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+            <div class="form-component">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Delivery Period</label>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-start-date'>
+                    <input class="mdc-text-field__input" type="date">
+                    <label class="mdc-floating-label">Start Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-emd-date'>
+                    <input class="mdc-text-field__input" type="date">
+                    <label class="mdc-floating-label">End Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+            </div>
+            <div class="form-component">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Payment Period</label>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='payment-start-date'>
+
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Start</label>
+                </div>
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='payment-end-date'>
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">End</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Closure Date</label>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='closure-date-start-time'>
+
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Start</label>
+                </div>
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='closure-date-end-time'>
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">End</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='order-value'>
+                    <input class="mdc-text-field__input" type="text">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Estimated Order Value</label>
+                </div>
+            </div>
+            <div class="form-component">
+                    <div class="mdc-text-field mdc-text-field--with-leading-icon hidden"
+                        data-mdc-auto-init="MDCTextField" id='quantity'>
+                        <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                            role="button">contacts</i>
+                        <input class="mdc-text-field__input" type="number">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">Quantity</label>
+                    </div>
+                </div>
+
+            <div class="customer-container hidden">
+                <div class="form-component">
+                    <div class="mdc-select hidden" id='customer'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" disabled selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Select Customer</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-container hidden">
+                <div class="form-component">
+                    <div class="mdc-select" id='product'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Choose Product</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='instruction'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Special Instruction/label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <input type="submit" value="Create Order" class="mdc-button submit-btn">
+            </div>
+    </form>
+    </div>
+
+    </div>
+
+
+    <script src="../js/common.js">
+    </script>
+    <script>
+        window.mdc.autoInit();
+
+        function init(subscriptionTemplate) {
+      
+            const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
+            const product = new parent.mdc.select.MDCSelect(document.getElementById('product'))
+            const quantity = new parent.mdc.textField.MDCTextField(document.getElementById('quantity'))
+            const orderValue = new parent.mdc.textField.MDCTextField(document.getElementById('order-value'))
+            const instruction = new parent.mdc.textField.MDCTextField(document.getElementById('instruction'))
+
+            const tx = parent.db.transaction(['children'])
+            const keyRangeCustomer = IDBKeyRange.only([subscriptionTemplate.office, 'customer'])
+            const keyRangeProduct = IDBKeyRange.only([subscriptionTemplate.office, 'product'])
+            const index = tx.objectStore('children').index('officeTemplate')
+
+            const customers = []
+            let customerString = '';
+
+            index.openCursor(keyRangeCustomer).onsuccess = function (event) {
+                const cursor = event.target.result;
+
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
+                    cursor.continue();
+                    return;
+                }
+                customers.push(cursor.value);
+
+                customerString += ` <option value='${JSON.stringify(cursor.value)}'>
+                        ${cursor.value.attachment.Name.value}
+                      </option>`
+                cursor.continue();
+            }
+            const products = [];
+            let productString = ''
+            index.openCursor(keyRangeProduct).onsuccess = function (event) {
+                const cursor = event.target.result;
+
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
+                    cursor.continue();
+                    return;
+                }
+                products.push(cursor.value)
+                productString += ` <option value='${JSON.stringify(cursor.value)}'>
+                    ${cursor.value.attachment.Name.value}
+                </option>`
+                cursor.continue();
+            }
+            tx.oncomplete = function () {
+                        
+                if (customers.length) {
+                    customer.nativeControl_.innerHTML += customerString
+                    document.querySelector('.customer-container').classList.remove('hidden')
+                
+                }
+                if (products.length) {
+                    document.querySelector('.product-container').classList.remove('hidden');
+                    product.nativeControl_.innerHTML += productString;
+                }
+            }
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Estimated Order Value'].value = orderValue.value;
+                copy.attachment['Quantity'].value = quantity.value;
+                copy.attachment['Special Instruction'].value = instruction.value;
+                copy.attachment['Customer'].value = customer.value
+                copy.attachment['product'].value = product.value
+
+                copy.share = []
+                parent.sendFormToParent(copy)
+            })
+        }
+    </script>
+</body>
+
+</html>

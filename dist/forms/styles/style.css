@@ -12,6 +12,73 @@
     --mdc-theme-text-secondary-on-dark: #006bc1;
   }
 
+  .margin-auto {
+    margin: 0 auto;
+  }
+  
+  .mt-10 {
+    margin-top: 10px;
+  }
+  
+  .mt-20 {
+    margin-top: 20px;
+  }
+  
+  .p-10 {
+    padding: 10px;
+  }
+  
+  .mb-0 {
+    margin-bottom: 0px !important;
+  }
+  
+  .mb-10 {
+    margin-bottom: 10px;
+  }
+  
+  .mt-0 {
+    margin-top: 0px !important;
+  }
+  
+  .mr-0 {
+    margin-right: 0px;
+  }
+  
+  .ml-0 {
+    margin-left: 0px;
+  }
+  
+  .pb-20 {
+    padding-bottom: 20px;
+  }
+  
+  .pt-20 {
+    padding-top: 20px;
+  }
+  
+  .pt-10 {
+    padding-top: 10px;
+  }
+  
+  .pl-20 {
+    padding-left: 20px;
+  }
+  
+  .pr-20 {
+    padding-right: 20px;
+  }
+  
+  .hidden {
+    display: none !important;
+  }
+  
+  .text-center {
+    text-align: center
+  }
+  
+  .resize-veritcal {
+    resize: vertical;
+  }
 
 
 body {
@@ -66,9 +133,12 @@ body {
 .forms .form-list .form-component .mdc-text-field, .forms .form-list .form-component .mdc-select {
     width: 100%
 }
+.forms .form-list .product-container .form-component {
+    width: auto;
+}
 @media (max-width:660px) {
     .forms {
-        width:90vw;
+        width:95vw;
         height: fit-content;
     }
 }
@@ -76,4 +146,27 @@ body {
     .forms .form-list .form-component .mdc-text-field,.forms .form-list .form-component .mdc-select {
         width: 100%;
     }
+}
+.forms .form-list .form-component.schedules .mdc-text-field  {
+    width: 49%;
+}
+
+
+
+
+/** DSR **/
+.product-container h3 {
+    padding-left: 20px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+
+}
+.meta-products {
+    padding-left: 20px;
+    width: inherit;
+    padding-right: 20px;
+
+}
+#product-2,#product-3 {
+    width: 49%;
 }

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    <script src="../../v1/external/js/material.min.js"></script>
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+            <div class="form-component">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Visit Date</label>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='visit-date-start-time'>
+
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Start</label>
+                </div>
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='visit-date-end-time'>
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">End</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Follow Up</label>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='follow-up-start-time'>
+
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Start</label>
+                </div>
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='follow-up-end-time'>
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">End</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Closure Date</label>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='closure-date-start-time'>
+
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Start</label>
+                </div>
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='closure-date-end-time'>
+                    <input class="mdc-text-field__input" type="date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">End</label>
+                </div>
+            </div>
+            <div class="customer-container hidden">
+                <div class="form-component">
+                    <div class="mdc-select hidden" id='customer'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" disabled selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Select Customer</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+
+            <div class="form-component">
+                    <div class="mdc-text-field mdc-text-field--with-leading-icon hidden" data-mdc-auto-init="MDCTextField"
+                        id='first-contact'>
+                        <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                            role="button">contacts</i>
+                        <input class="mdc-text-field__input" type="tel">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">Primary Contact</label>
+                    </div>
+                </div>
+                <div class="form-component">
+                    <div class="mdc-text-field mdc-text-field--with-leading-icon hidden" data-mdc-auto-init="MDCTextField"
+                        id='second-contact'>
+                        <i class="material-icons mdc-text-field__icon mdc-theme--primary" tabindex="0"
+                            role="button">contacts</i>
+                        <input class="mdc-text-field__input" type="tel">
+                        <div class="mdc-line-ripple"></div>
+                        <label class="mdc-floating-label">Secondary Contact</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-container hidden">
+                <h3 class="mdc-typography--headline6">Choose Product</h3>
+                <div class="form-component">
+
+                    <div class="mdc-select" id='product-1'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Product 1</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+                <div class="meta-products hidden">
+
+
+                    <div class="mdc-select" id='product-2'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Product 2</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                    <div class="mdc-select" id='product-3'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Product 3</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='Comment'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Extra Details</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <input type="submit" value="CREATE DSR" class="mdc-button submit-btn">
+            </div>
+    </form>
+    </div>
+
+    </div>
+
+
+    <script src="../js/common.js">
+    </script>
+    <script>
+        window.mdc.autoInit();
+
+        function init(subscriptionTemplate) {
+            const firstContact = new parent.mdc.textField.MDCTextField(document.getElementById('first-contact'))
+            const secondContact = new parent.mdc.textField.MDCTextField(document.getElementById('second-contact'))
+            const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
+            const productOne = new parent.mdc.select.MDCSelect(document.getElementById('product-1'))
+            const productTwo = new parent.mdc.select.MDCSelect(document.getElementById('product-2'))
+            const productThree = new parent.mdc.select.MDCSelect(document.getElementById('product-3'))
+
+
+            const tx = parent.db.transaction(['children'])
+            const keyRangeCustomer = IDBKeyRange.only([subscriptionTemplate.office, 'customer'])
+            const keyRangeProduct = IDBKeyRange.only([subscriptionTemplate.office, 'product'])
+
+            const index = tx.objectStore('children').index('officeTemplate')
+            const customers = []
+            let customerString = '';
+
+            index.openCursor(keyRangeCustomer).onsuccess = function (event) {
+                const cursor = event.target.result;
+
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
+                    cursor.continue();
+                    return;
+                }
+                customers.push(cursor.value);
+
+                customerString += ` <option value='${JSON.stringify(cursor.value)}'>
+                        ${cursor.value.attachment.Name.value}
+                      </option>`
+                cursor.continue();
+            }
+            const products = [];
+            let productString = ''
+            index.openCursor(keyRangeProduct).onsuccess = function (event) {
+                const cursor = event.target.result;
+
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
+                    cursor.continue();
+                    return;
+                }
+                products.push(cursor.value)
+                productString += ` <option value='${JSON.stringify(cursor.value)}'>
+                    ${cursor.value.attachment.Name.value}
+                </option>`
+                cursor.continue();
+            }
+            tx.oncomplete = function () {
+                productOne.nativeControl_.innerHTML += productString;
+                productTwo.nativeControl_.innerHTML += productString;
+                productThree.nativeControl_.innerHTML += productString;
+                customer.nativeControl_.innerHTML += customerString
+                console.log(products)
+                if (customers.length) {
+                    customer.root_.classList.remove('hidden');
+                    customer.listen('MDCSelect:change', function (evt) {
+                        if (!evt.detail.value) {
+                            firstContact.root_.classList.add('hidden')
+                            secondContact.root_.classList.add('hidden')
+                            firstContact.value = ''
+                            secondContact.value = ''
+                            return;
+                        }
+                        const value = JSON.parse(evt.detail.value);
+                        firstContact.root_.classList.remove('hidden')
+                        secondContact.root_.classList.remove('hidden')
+                        firstContact.value = value.attachment['First Contact'].value
+                        secondContact.value = value.attachment['Second Contact'].value
+                    })
+
+                }
+                if (products.length) {
+                    document.querySelector('.product-container').classList.remove('hidden');
+                    productOne.listen('MDCSelect:change', function (evt) {
+                        if (!evt.detail.value) {
+                            document.querySelector('.meta-products').classList.add('hidden')
+                            productTwo.value = '';
+                            productThree.value = '';
+                            return;
+                        };
+                        const value = JSON.parse(evt.detail.value);
+                        document.querySelector('.meta-products').classList.remove('hidden');
+                    })
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

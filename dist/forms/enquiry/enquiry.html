@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+    
+    
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+
+            <div class="form-component">
+                    <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='company-name'>
+                    <input class=" mdc-text-field__input" type="text">
+                    <label for="input" class="mdc-floating-label">From</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button">business</i>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component product-select">
+                <div class="mdc-select">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Product</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+          
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='reason'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Enquiry</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <input type="submit" value="Create Enquiry" class="mdc-button submit-btn">
+            </div>
+        </div>
+    </form>
+    <script src="../js/common.js"></script>
+    <script>
+        parent.window.mdc.autoInit();
+        const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+        const enquiry = new parent.mdc.textField.MDCTextField(document.getElementById('enquiry'));
+        const companyName = new parent.mdc.textField.MDCTextField(document.getElementById('company-name'))
+        var formEl = document.getElementById('form');
+
+        function init(subscriptionTemplate) {
+            const tx = parent.db.transaction(['children'])
+            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'product'])
+            tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
+                const cursor = event.target.result;
+              
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
+                    cursor.continue();
+                    return;
+                }
+                totalLeveTypes.push(cursor.value)
+                select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
+                        ${cursor.value.attachment.Name.value}
+                      </option>`
+                cursor.continue();
+            };
+
+            tx.oncomplete = function () {
+                if (select.nativeControl_.children.length <= 1) {
+                  document.querySelector('.product-select').classList.add("hidden")
+                }
+            }
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Enquiry'].value = enquiry.value;
+                copy.attachment['Company Name'].value = companyName.value;
+                copy.attachment['Product'].value = select.value;
+                copy.share = []
+                parent.sendFormToParent(copy)
+            })
+        }
+    </script>
+</body>
+
+</html>
