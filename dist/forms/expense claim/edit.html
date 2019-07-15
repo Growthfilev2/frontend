@@ -14,7 +14,7 @@
     <form class='forms mdc-card' id='form'>
 
         <div class="form-list">
-            <div class="form-component">
+            <div class="form-component expense-type-select-container hidden">
                 <div class="mdc-select">
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
@@ -36,30 +36,30 @@
             </div>
             <div class="form-component schedules">
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
-                    <input class=" mdc-text-field__input" type="date">
+                    <input class=" mdc-text-field__input" type="date" data-name='Expense Date'>
                     <label for="input" class="mdc-floating-label">Expense Start Date</label>
 
                     <div class="mdc-line-ripple"></div>
                 </div>
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-time'>
-                    <input class=" mdc-text-field__input" type="time" value="12:00">
-                    <label for="input" class="mdc-floating-label">Expense Start Time</label>
+                    <input class=" mdc-text-field__input" type="time" value="12:00" data-name='Expense Date start time'>
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Expense Start Time</label>
 
                     <div class="mdc-line-ripple"></div>
                 </div>
-                <p class="text-center mdc-typography--body1 mb-0 mdc-theme--primary" onclick="showSecondDate(event,'end-date-container')">Add
+                <p class="text-center mdc-typography--body1 mb-0 mdc-theme--primary" onclick="showSecondDate(event,'end-date-container','Expense Date')">Add
                     End Time</p>
             </div>
             <div class="form-component end-date-container hidden schedules">
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
-                    <input class=" mdc-text-field__input" type="date">
+                    <input class=" mdc-text-field__input" type="date" data-name='Expense Date end date'>
                     <label for="input" class="mdc-floating-label">End Date</label>
 
                     <div class="mdc-line-ripple"></div>
                 </div>
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
-                    <input class=" mdc-text-field__input" type="time" value="12:00">
-                    <label for="input" class="mdc-floating-label">End Time</label>
+                    <input class=" mdc-text-field__input" type="time" value="12:00" data-name='Expense Date end time'>
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
 
                     <div class="mdc-line-ripple"></div>
                 </div>
@@ -141,16 +141,14 @@
             const vendorName = new parent.mdc.textField.MDCTextField(document.getElementById('vendor-name'))
             const totalAmount = new parent.mdc.textField.MDCTextField(document.getElementById('total-amount'));
             const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
-            const startTime = new parent.mdc.textField.MDCTextField(document.getElementById('start-time'));
-
+          
             const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
-            const endTime = new parent.mdc.textField.MDCTextField(document.getElementById('end-time'));
-
             const details = new parent.mdc.textField.MDCTextField(document.getElementById('description'));
             const tomorrow = getTommorowDate();
 
             startDate.value = createDate(tomorrow)
             endDate.value = createDate(tomorrow)
+            initializeDates(subscriptionTemplate)
 
             document.getElementById('add-photo').addEventListener('click', function () {
                 if (parent.native.getName() === 'Android') {
@@ -160,31 +158,14 @@
                 }
                 webkit.messageHandlers.startCamera.postMessage("expenseClaimImage")
             })
-            const tx = parent.db.transaction(['children'])
-            const keyRange = IDBKeyRange.only([subscriptionTemplate.office, 'expense-type'])
-            const totalLeveTypes = []
-            tx.objectStore('children').index('officeTemplate').openCursor(keyRange).onsuccess = function (event) {
-                const cursor = event.target.result;
 
-                if (!cursor) return;
-                if (cursor.value.status === 'CANCELLED') {
-                    cursor.continue();
-                    return;
-                }
-                console.log(cursor.value)
-                totalLeveTypes.push(cursor.value)
-                select.nativeControl_.innerHTML += ` <option value="${cursor.value.attachment.Name.value}">
-                        ${cursor.value.attachment.Name.value}
-                      </option>`
-                cursor.continue();
-            }
-            tx.oncomplete = function () {
-                if (select.nativeControl_.children.length <= 1) {
-
-                    select.foundation_.adapter_.addClass('hidden')
-                }
-
-            }
+            getDropDownContent(subscriptionTemplate.office,'expense-type','officeTemplate').then(function(result){
+                if(!result.string) return;
+                select.nativeControl_.innerHTML += result.string;
+                document.querySelector('.expense-type-select-container').classList.remove('hidden');
+                
+            })
+         
             console.log(parent)
             var formEl = document.getElementById('form');
 
@@ -199,11 +180,7 @@
                 copy.attachment['Vendor Name'].value = vendorName.value;
                 copy.attachment['Photo'].value = photo;
                 
-                copy.schedule = [{
-                    name: scheduleDescriptor,
-                    startTime: parent.moment(startDate.value + ' ' + startTime.value).valueOf(),
-                    endTime: parent.moment(endDate.value + ' ' + endTime.value).valueOf()
-                }]
+                copy.schedule = getNewSchedule(subscriptionTemplate)
 
                 copy.share = []
                 parent.sendFormToParent(copy)
