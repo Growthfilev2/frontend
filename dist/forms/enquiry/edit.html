@@ -74,6 +74,7 @@
                 }
             })
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+ 
                 customer.nativeControl_.innerHTML += result.string;
                 parent.getSubscription(subscriptionTemplate.office, 'customer').then(function (subscription) {
                     if (subscription) {

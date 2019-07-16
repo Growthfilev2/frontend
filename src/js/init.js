@@ -581,7 +581,8 @@ function checkForRecipient() {
         progCard.open();
         requestCreator('updateAuth', {
           email: emailInit.value,
-          phoneNumber: firebase.auth().currentUser.phoneNumber
+          phoneNumber: firebase.auth().currentUser.phoneNumber,
+          displayName:firebase.auth().currentUser.displayName
         }).then(function () {
           snacks('Verification Link has been Sent to ' + emailInit.value)
           openMap();
@@ -618,7 +619,8 @@ function checkForRecipient() {
         progCard.open();
         requestCreator('updateAuth', {
           email: currentEmail,
-          phoneNumber: firebase.auth().currentUser.phoneNumber
+          phoneNumber: firebase.auth().currentUser.phoneNumber,
+          displayName:firebase.auth().currentUser.displayName
         }).then(function () {
           progCard.close();
           snacks('Verification Link has been Sent to ' + currentEmail)
