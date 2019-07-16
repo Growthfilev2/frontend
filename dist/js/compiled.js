@@ -352,9 +352,10 @@ function readLatestChats(initList) {
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden");
             if (!currentChatsArray.length) {
-                currentChats = 'No Chat Found. ';
+                chatsEl.innerHTML = '<h3 class=\'mdc-typography--headline5 mdc-theme--primary>No Chats found</h3>\n                <p class=\'mt-0 \'>Choose From Below or Search</p>\n                ';
+            } else {
+                chatsEl.innerHTML = currentChats;
             }
-            chatsEl.innerHTML = currentChats;
             if (!initList) return;
             chatsUl = new mdc.list.MDCList(chatsEl);
             initializeChatList(chatsUl);
@@ -1124,7 +1125,8 @@ function getCellularInformation() {
 function removeFalseCellIds(cellTowers) {
     var max_value = 2147483647;
     var filtered = cellTowers.filter(function (tower) {
-        return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
+        // return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
+        return tower.cellId = -1;
     });
 
     return filtered;
@@ -2035,7 +2037,7 @@ function simpleInputField() {}
 
 function profileCheck() {
   history.state = null;
-  document.getElementById('start-load').classList.add('hidden');
+
   var auth = firebase.auth().currentUser;
   if (!auth.displayName) {
     var content = '\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'name\'>\n    <input class="mdc-text-field__input" required>\n    <div class="mdc-notched-outline">\n      <div class="mdc-notched-outline__leading"></div>\n      <div class="mdc-notched-outline__notch">\n        <label class="mdc-floating-label">Name</label>\n      </div>\n      <div class="mdc-notched-outline__trailing"></div>\n    </div>\n  </div>\n  ';
@@ -2323,9 +2325,12 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
 }
 
 function openMap() {
+  document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function (location) {
+    document.getElementById('start-load').classList.add('hidden');
     mapView(location);
   }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden');
     mapView();
     handleError(error);
   });
@@ -3174,47 +3179,6 @@ function fetchCurrentTime(serverTime) {
   return Date.now() + serverTime;
 }
 
-//TODO MOVE TO WORKER
-function geolocationApi(body) {
-  return new Promise(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + appKey.getMapKey(), true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-
-    xhr.onreadystatechange = function () {
-
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 400) {
-          return reject({
-            message: xhr.response,
-            body: JSON.parse(body)
-          });
-        }
-        var response = JSON.parse(xhr.response);
-        if (!response) {
-          return reject({
-            message: 'Response From geolocation Api ' + response,
-            body: JSON.parse(body)
-          });
-        }
-        resolve({
-          latitude: response.location.lat,
-          longitude: response.location.lng,
-          accuracy: response.accuracy,
-          provider: body,
-          lastLocationTime: Date.now()
-        });
-      }
-    };
-    xhr.onerror = function () {
-      reject({
-        message: xhr
-      });
-    };
-    xhr.send(body);
-  });
-}
-
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
@@ -3228,30 +3192,30 @@ function manageLocation() {
 function getLocation() {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
-      html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        handleGeoLocationApi().then(function (cellLocation) {
-          if (htmlLocation.accuracy < cellLocation.accuracy) {
-            return resolve(htmlLocation);
-          }
-          return resolve(cellLocation);
-        }).catch(function (error) {
-          return resolve(htmlLocation);
-        });
-      }).catch(function (htmlError) {
-        handleGeoLocationApi().then(function (location) {
-          return resolve(location);
-        }).catch(function (error) {
-          return reject({
-            message: 'Both HTML and Geolocation failed to fetch location',
-            body: {
-              html5: htmlError,
-              geolocation: error
-            },
-            'locationError': true
-          });
-        });
+      // html5Geolocation().then(function (htmlLocation) {
+      // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+      handleGeoLocationApi().then(function (cellLocation) {
+        // if (htmlLocation.accuracy < cellLocation.accuracy) {
+        //   return resolve(htmlLocation);
+        // }
+        return resolve(cellLocation);
+      }).catch(function (error) {
+        return reject(error);
       });
+      // }).catch(function (htmlError) {
+      //   handleGeoLocationApi().then(function (location) {
+      //     return resolve(location);
+      //   }).catch(function (error) {
+      //     return reject({
+      //       message: 'Both HTML and Geolocation failed to fetch location',
+      //       body: {
+      //         html5: htmlError,
+      //         geolocation: error,
+      //       },
+      //       'locationError': true
+      //     })
+      //   })
+      // })
       return;
     }
 
@@ -3262,17 +3226,12 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true);
     } catch (e) {
-      resolve({
-        latitude: 28.549173600000003,
-        longitude: 77.25055569999999,
-        accuracy: 24,
-        lastLocationTime: Date.now()
+
+      html5Geolocation().then(function (location) {
+        resolve(location);
+      }).catch(function (error) {
+        reject(error);
       });
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
-      // })
     }
   });
 }
@@ -3288,8 +3247,8 @@ function handleGeoLocationApi() {
     if (!Object.keys(body).length) {
       reject("empty object from getCellularInformation");
     }
-    geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
-      return resolve(cellLocation);
+    requestCreator('geolocationApi', body).then(function (result) {
+      return resolve(result.response);
     }).catch(function (error) {
       reject(error);
     });
@@ -3389,6 +3348,7 @@ function requestCreator(requestType, requestBody) {
         photoURL: auth.photoURL,
         phoneNumber: auth.phoneNumber
       },
+      key: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl()
     }
   };
@@ -3398,7 +3358,8 @@ function requestCreator(requestType, requestBody) {
     'Null': true,
     'backblaze': true,
     'removeFromOffice': true,
-    'updateAuth': true
+    'updateAuth': true,
+    'geolocationApi': true
   };
 
   if (nonLocationRequest[requestType]) {

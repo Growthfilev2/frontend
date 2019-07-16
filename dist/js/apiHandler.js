@@ -17,6 +17,7 @@ var requestFunctionCaller = {
   backblaze: backblaze,
   updateAuth: updateAuth,
   comment: comment
+
 };
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -50,6 +51,12 @@ function sendErrorRequestToMainThread(error) {
 
 self.onmessage = function (event) {
   meta = event.data.meta;
+  if (event.data.type === 'geolocationApi') {
+    geolocationApi(event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(function (error) {
+      self.postMessage(error);
+    });
+    return;
+  }
 
   var req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
@@ -216,6 +223,47 @@ function comment(body, meta) {
     token: meta.user.token
   };
   return http(req);
+}
+
+function geolocationApi(body, meta) {
+
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.key, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onreadystatechange = function () {
+
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 400) {
+          return reject({
+            message: xhr.response,
+            body: body
+          });
+        }
+        var response = JSON.parse(xhr.response);
+        if (!response) {
+          return reject({
+            message: 'Response From geolocation Api ' + response,
+            body: body
+          });
+        }
+        resolve({
+          latitude: response.location.lat,
+          longitude: response.location.lng,
+          accuracy: response.accuracy,
+          provider: body,
+          lastLocationTime: Date.now()
+        });
+      }
+    };
+    xhr.onerror = function () {
+      reject({
+        message: xhr
+      });
+    };
+    xhr.send(JSON.stringify(body));
+  });
 }
 
 function dm(body, meta) {
