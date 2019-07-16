@@ -15,16 +15,18 @@
     <form class='forms mdc-card' id='form'>
 
         <div class="form-list">
-            <div class="form-component customer-select-container hidden">
+            <div class="form-component customer-select-container">
                 <div class="mdc-select" id='customer'>
                     <i class="mdc-select__dropdown-icon"></i>
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
+                        <option value="new-customer" disabled>New Customer</option>
                     </select>
-                    <label class="mdc-floating-label">Select Customer</label>
+                    <label class="mdc-floating-label">Choose Customer</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
+
 
 
             <div class="form-component schedules">
@@ -51,8 +53,7 @@
                     <div class="mdc-line-ripple"></div>
                 </div>
                 <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
-                    <input class=" mdc-text-field__input" type="time" data-name="Follow Up Date end time"
-                        value="12:00">
+                    <input class=" mdc-text-field__input" type="time" data-name="Follow Up Date end time" value="12:00">
                     <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
@@ -80,17 +81,25 @@
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate)
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
                 customer.nativeControl_.innerHTML += result.string;
-                document.querySelector('.customer-select-container').classList.remove('hidden')
-            })
-
+                parent.getSubscription(subscriptionTemplate.office, 'customer').then(function (subscription) {
+                    if (subscription) {
+                        customer.nativeControl_[1].disabled = false;
+                    }
+                    customer.listen('MDCSelect:change', function (evt) {
+                        if (evt.detail.value === 'new-customer') {
+                            addView(subscription);
+                            return
+                        }
+                    })
+                })
+            });
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
 
                 copy.attachment['Customer'].value = customer.value;
-              
+
 
                 copy.schedule = getNewSchedule(subscriptionTemplate)
 
