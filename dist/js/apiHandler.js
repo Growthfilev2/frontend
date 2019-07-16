@@ -115,6 +115,7 @@ function http(request) {
       if (xhr.readyState === 4) {
 
         if (!xhr.status || xhr.status > 226) {
+          if (!xhr.response) return;
           var errorObject = JSON.parse(xhr.response);
           var apiFailBody = {
             res: JSON.parse(xhr.response),

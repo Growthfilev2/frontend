@@ -4,7 +4,7 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/style.css" rel="stylesheet" type="text/css">
@@ -15,18 +15,7 @@
     <form class='forms mdc-card' id='form'>
 
         <div class="form-list">
-            <div class="form-component customer-select-container hidden">
-                <div class="mdc-select" id='customer'>
-                    <i class="mdc-select__dropdown-icon"></i>
-                    <select class="mdc-select__native-control">
-                        <option value="" selected></option>
-                    </select>
-                    <label class="mdc-floating-label">Select Customer</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
-
-
+        
             <div class="form-component schedules">
                 <p class="mdc-typography--headline6 mb-0 mt-0">Event Date</label>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
@@ -91,7 +80,6 @@
 
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate)
-         
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));

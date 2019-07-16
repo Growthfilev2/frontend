@@ -4,7 +4,7 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/style.css" rel="stylesheet" type="text/css">
@@ -37,19 +37,18 @@
     <script src="../js/common.js"></script>
     <script>
         parent.window.mdc.autoInit();
-        const work = new parent.mdc.select.MDCSelect(document.getElementById('admin-work'));
+        const work = new parent.mdc.textField.MDCTextField(document.getElementById('admin-work'));
         var formEl = document.getElementById('form');
-
         function init(subscriptionTemplate) {
-           
 
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-                copy.attachment['Admin Work'].value = work.value;
+                copy.attachment['Details'].value = work.value;
                 copy.share = []
                 parent.sendFormToParent(copy)
             })
+
         }
     </script>
 </body>

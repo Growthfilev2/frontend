@@ -4,11 +4,9 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
-
+    <link href="../../external/css/material.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/style.css" rel="stylesheet" type="text/css">
-
 </head>
 
 <body>
@@ -32,7 +30,7 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Select Product</label>
+                    <label class="mdc-floating-label">Product Demonstrated</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
@@ -89,14 +87,14 @@
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate)
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
+                if (!result.string) return;
                 customer.nativeControl_.innerHTML += result.string;
                 document.querySelector('.customer-select-container').classList.remove('hidden')
 
             })
 
             getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
+                if (!result.string) return;
                 product.nativeControl_.innerHTML += result.string;
                 document.querySelector('.product-select-container').classList.remove('hidden')
 
@@ -108,7 +106,7 @@
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
               
                 copy.attachment['Customer'].value = customer.value;
-                copy.attachment['Product'].value = product.value;
+                copy.attachment['Product Demonstrated'].value = product.value;
                 
                 copy.schedule = getNewSchedule(subscriptionTemplate)
 

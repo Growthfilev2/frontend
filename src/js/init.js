@@ -526,7 +526,7 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    // return openMap();
+    return openMap();
     if (auth.email && auth.emailVerified) return openMap();
    
     const reportList = getReportNameString(result);

@@ -6,7 +6,7 @@ function addView(sub) {
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
     // hideBottomNav();
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/frontend/dist/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
     console.log(db);
     document.getElementById('form-iframe').addEventListener("load", function (ev) {
         document.getElementById('form-iframe').contentWindow.init(sub);
@@ -1971,7 +1971,7 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   var auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    // return openMap();
+    return openMap();
     if (auth.email && auth.emailVerified) return openMap();
 
     var reportList = getReportNameString(result);
@@ -2003,7 +2003,8 @@ function checkForRecipient() {
         progCard.open();
         requestCreator('updateAuth', {
           email: _emailInit.value,
-          phoneNumber: firebase.auth().currentUser.phoneNumber
+          phoneNumber: firebase.auth().currentUser.phoneNumber,
+          displayName: firebase.auth().currentUser.displayName
         }).then(function () {
           snacks('Verification Link has been Sent to ' + _emailInit.value);
           openMap();
@@ -2031,7 +2032,8 @@ function checkForRecipient() {
         _progCard.open();
         requestCreator('updateAuth', {
           email: currentEmail,
-          phoneNumber: firebase.auth().currentUser.phoneNumber
+          phoneNumber: firebase.auth().currentUser.phoneNumber,
+          displayName: firebase.auth().currentUser.displayName
         }).then(function () {
           _progCard.close();
           snacks('Verification Link has been Sent to ' + currentEmail);
@@ -2898,7 +2900,9 @@ function profileView() {
     }).then(function () {
       if (!isEmailValid(newEmail, currentEmail)) return history.back();
       requestCreator('updateAuth', {
-        email: emailInit.value
+        email: emailInit.value,
+        phoneNumber: auth.phoneNumber,
+        displayName: auth.displayName
       }).then(function () {
         snacks('Verification Link has been Sent to ' + emailInit.value);
         history.back();
@@ -3389,8 +3393,16 @@ function requestCreator(requestType, requestBody) {
       apiUrl: appKey.getBaseUrl()
     }
   };
+  var nonLocationRequest = {
+    'instant': true,
+    'now': true,
+    'Null': true,
+    'backblaze': true,
+    'removeFromOffice': true,
+    'updateAuth': true
+  };
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
+  if (nonLocationRequest[requestType]) {
     requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {

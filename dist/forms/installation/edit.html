@@ -4,7 +4,7 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/style.css" rel="stylesheet" type="text/css">
@@ -38,7 +38,7 @@
             </div>
 
             <div class="form-component schedules">
-                <p class="mdc-typography--headline6 mb-0 mt-0">Demo Date</label>
+                <p class="mdc-typography--headline6 mb-0 mt-0">Installation Date</label>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
                         <input class=" mdc-text-field__input" type="date" data-name="Installation Date">
                         <label for="input" class="mdc-floating-label">Start Date</label>
@@ -91,13 +91,13 @@
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate)
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
+                if (!result.string) return;
                 customer.nativeControl_.innerHTML += result.string;
                 document.querySelector('.customer-select-container').classList.remove('hidden')
             })
 
             getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
+                if (!result.string) return;
                 product.nativeControl_.innerHTML += result.string;
                 document.querySelector('.product-select-container').classList.remove('hidden')
             })
@@ -106,9 +106,9 @@
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-
+                console.log(product)
                 copy.attachment['Customer'].value = customer.value;
-                copy.attachment['Product'].value = product.value;
+                copy.attachment['Product Installed'].value = product.value;
 
                 copy.schedule = getNewSchedule(subscriptionTemplate)
 

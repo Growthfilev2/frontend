@@ -4,7 +4,7 @@
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link href="../styles/style.css" rel="stylesheet" type="text/css">
@@ -36,7 +36,7 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Choose Product</label>
+                    <label class="mdc-floating-label">Product To Be Serviced</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div class="form-component">
-                <input type="submit" value="Create Enquiry" class="mdc-button submit-btn">
+                <input type="submit" value="Create Service Call" class="mdc-button submit-btn">
             </div>
         </div>
     </form>
@@ -81,7 +81,7 @@
                     }
                     customer.listen('MDCSelect:change', function (evt) {
                         if (evt.detail.value === 'new-customer') {
-                            addView(subscription);
+                            parent.addView(subscription);
                             return
                         }
                     })
@@ -93,7 +93,7 @@
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
                 copy.attachment['Details'].value = details.value;
                 copy.attachment['Customer'].value = customer.value;
-                copy.attachment['Product'].value = product.value;
+                copy.attachment['Product To Be Serviced'].value = product.value;
                 copy.share = []
                 parent.sendFormToParent(copy)
             })
