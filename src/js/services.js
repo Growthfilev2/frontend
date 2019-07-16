@@ -269,6 +269,21 @@ function requestCreator(requestType, requestBody) {
     apiHandler.postMessage(requestGenerator);
   } else {
     getRootRecord().then(function (rootRecord) {
+      if(isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime,60)) {
+        manageLocation().then(function(location){
+          if(isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location,location))) {
+            startApp();
+            return;
+          };
+          
+          ApplicationState.location = location;
+          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+          requestGenerator.body = requestBody;
+          requestBody['geopoint'] = ApplicationState.location;
+          apiHandler.postMessage(requestGenerator);
+        }).catch(locationErrorDialog)
+        return;
+      }
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       requestGenerator.body = requestBody;
       requestBody['geopoint'] = ApplicationState.location;
@@ -377,9 +392,13 @@ function handleComponentUpdation(readResponse) {
   
 }
 
+function backgroundTransition(){
+  startApp()
+}
+
 function runRead(value) {
 
-  if (!value || value.read) {
+  if (value.read) {
     firebase.auth().currentUser.reload();
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
     return;

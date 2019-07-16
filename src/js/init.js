@@ -327,11 +327,7 @@ function startApp() {
         startLoad.querySelector('p').textContent = texts[index]
         index++;
       }, index + 1 * 1000);
-      // history.pushState(['chatView'],null,null)
-      // chatView('+919000000000')
-      // return;
-      mapView();
-      return;
+    
       requestCreator('now', {
         device: native.getInfo(),
         from: '',
@@ -532,9 +528,7 @@ CanvasDimension.prototype.getNewDimension = function(){
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (!result.length) return mapView();
-    return mapView();
-    if (auth.email && auth.emailVerified) return mapView();
+    if(auth.email && auth.emailVerified) return mapView();
 
     const text = getReportNameString(result)
     if (!auth.email) {
@@ -549,10 +543,13 @@ function checkForRecipient() {
           <div class="mdc-notched-outline__trailing"></div>
       </div>
     </div>`
-
+      
       const button = `<div class="mdc-card__actions">
     <div class="mdc-card__action-icons"></div>
     <div class="mdc-card__action-buttons">
+    ${!result.length ? `<button class="mdc-button" id='skip'>
+    <span class="mdc-button__label">SKIP</span>
+    </button>` :''}
     <button class="mdc-button" id='addEmail'>
       <span class="mdc-button__label">UPDATE</span>
       <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
@@ -562,10 +559,14 @@ function checkForRecipient() {
 
 
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add You Email Address</span>', button)
+      
+      new mdc.ripple.MDCRipple(document.getElementById('skip')).root_.addEventListener('click',function(evt){
+        mapView();
+        return;
+      })
+
       const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-
-
       new mdc.ripple.MDCRipple(document.getElementById('addEmail')).root_.addEventListener('click', function (evt) {
         if (!emailInit.value) {
           emailInit.focus();
@@ -589,12 +590,18 @@ function checkForRecipient() {
       const currentEmail = firebase.auth().currentUser.email
       const content = `<h3 class='mdc-typography--headline6 mt-0'>${text}</h3>
       <h3 class='mdc-typography--body1'>Click To Send a verification Email</h3>
+      ${!result.length ? ` <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id='skip'>
+      <span class="mdc-button__label">SKIP</span>
+      </button>` : ''};
+
       <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id='sendVerification'>
       <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>
       </button>`
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '')
+      new mdc.ripple.MDCRipple(document.getElementById('skip')).root_.addEventListener('click', function (evt) {
+        return mapView()
+      });
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-
       new mdc.ripple.MDCRipple(document.getElementById('sendVerification')).root_.addEventListener('click', function (evt) {
         progCard.open();
         requestCreator('updateAuth', {
@@ -615,31 +622,15 @@ function checkForRecipient() {
 
 function getReportNameString(result) {
   let string = ''
-  let base = 'You are a recipient in '
+  let base = 'You are a recipient for Reports in '
   const offices = {}
+
   result.forEach(function (report) {
-    if (!offices[report.office]) {
-      offices[report.office] = [report.attachment.Name.value]
-    } else {
-      offices[report.office].push(report.attachment.Name.value)
-    }
-  })
-
-  const keys = Object.keys(offices)
-  keys.forEach(function (office, idx) {
-    const reportNames = offices[office].join(',')
-    console.log(idx)
-
-    base += ' ' + reportNames + ' For ' + office + ' &'
-
-
+    offices[report.office];
 
   })
-  const lastChar = base[base.length - 1];
-  if (lastChar === '&') {
-    return base.substring(0, base.length - 1)
-  }
-  return base;
+  return Object.keys(offices).join(",")
+
 }
 
 
