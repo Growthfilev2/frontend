@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+            <div class="form-component leave-type-select-container hidden">
+                <div class="mdc-select">
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Select Type of leave</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <p id="leave-type-helper-text" class="mdc-select-helper-text hidden" aria-hidden="true">
+
+                </p>
+            </div>
+            <div class="form-component schedules">
+                <p class="mdc-typography--headline6 mb-0 mt-0">Leave Dates</label>
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Leave Dates">
+                        <label for="input" class="mdc-floating-label">Start Date</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-time'>
+                        <input class=" mdc-text-field__input" type="time" data-name="Leave Dates start time" value="12:00">
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                    <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
+                        onclick="showSecondDate(event,'end-date-container','Leave Dates')">Add Return
+                        Date</label>
+            </div>
+            <div class="form-component end-date-container hidden schedules">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
+                    <input class=" mdc-text-field__input" type="date" data-name="Leave Dates end date">
+                    <label for="input" class="mdc-floating-label">End Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
+                    <input class=" mdc-text-field__input" type="time" data-name="Leave Dates end time" value="12:00">
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='reason'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Reason</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <input type="submit" value="Apply Leave" class="mdc-button submit-btn">
+            </div>
+        </div>
+    </form>
+    <script src="../js/common.js"></script>
+    <script>
+        parent.window.mdc.autoInit();
+
+
+        const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
+        const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
+        const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
+
+        const tomorrowDate = getTommorowDate();
+        startDate.value = createDate(tomorrowDate)
+        endDate.value = createDate(tomorrowDate)
+
+        const reason = new parent.mdc.textField.MDCTextField(document.getElementById('reason'));
+        var formEl = document.getElementById('form');
+
+
+        function init(subscriptionTemplate) {
+            initializeDates(subscriptionTemplate)
+            getDropDownContent(subscriptionTemplate.office, 'leave-type', 'officeTemplate').then(function (result) {
+                if (!result.data.length) return;
+                select.nativeControl_.innerHTML += result.string;
+
+                document.querySelector('.leave-type-select-container').classList.remove('hidden');
+                const helperText = document.getElementById('leave-type-helper-text')
+                select.listen('MDCSelect:change', function (evt) {
+
+                    if (!evt.detail.value) {
+                        helperText.textContent = "";
+                        helperText.classList.add('hidden')
+                        return;
+                    }
+                    helperText.classList.remove('hidden')
+                    helperText.textContent =
+                        `You have ${result.data[evt.detail.index -1].attachment['Annual Limit'].value} ${evt.detail.value} Remaining`
+                })
+
+
+            })
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                const scheduleDescriptor = copy.schedule[0];
+                copy.attachment['Leave Type'].value = select.value;
+                copy.attachment.Reason.value = reason.value;
+                copy.schedule = getNewSchedule(subscriptionTemplate)
+
+                copy.share = []
+                parent.sendFormToParent(copy)
+            })
+        }
+    </script>
+</body>
+
+</html>

@@ -20,8 +20,24 @@ function addView(sub) {
 
 function sendFormToParent(formData) {
     progressBar.open();
+    
     const customerAuths = formData.customerAuths;
     delete formData.customerAuths;
+    if(Array.isArray(formData)) {
+        const prom = []
+        formData.forEach(function(form){
+         prom.push(requestCreator('create',form))
+        })
+        Promise.all(prom).then(function(){
+            progressBar.close();
+            successDialog();
+            getSuggestions();
+        }).catch(function(error){
+            progressBar.close();
+            snacks(error.response.message,'Okay')
+        })
+        return;
+    }
     requestCreator('create', formData).then(function () {
             progressBar.close();
             successDialog()
@@ -49,6 +65,7 @@ function sendFormToParent(formData) {
       
                 return;
             }
+           
             getSuggestions();
             
         })
@@ -92,4 +109,7 @@ function setContactForSecondCustomerFailed(exceptionMessage){
     })
 }
 
-
+function expenseClaimImage(base64) {
+    document.getElementById('form-iframe').contentWindow.setExpenseImage(base64);
+  
+}

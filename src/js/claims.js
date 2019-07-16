@@ -12,8 +12,8 @@ function emptyClaims(){
 
     return  `<div class='empty-claims-section'>
         <h3 class='mdc-typography--headline6'>No open claims pending for payment</h3>
-        <button class='mdc-button'>
-        <span class='mdc-button--label'>Create A New Claim</span>
+        <button class='mdc-button' id='apply-claim'>
+             <span class='mdc-button--label'>Create A New Claim</span>
         </button>
     </div>`
 }

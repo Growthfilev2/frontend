@@ -49,7 +49,7 @@ function reportView() {
           return
         }
         document.querySelector('.claims-section .content').innerHTML = `${emptyClaims()}`;
-        document.querySelector('.apply-claim').addEventListener('click',function(){
+        document.getElementById('apply-claim').addEventListener('click',function(){
           addView(claimSubs);
         })
 

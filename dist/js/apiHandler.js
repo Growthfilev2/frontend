@@ -9,13 +9,14 @@ function getTime() {
 }
 
 var requestFunctionCaller = {
-  dm: comment,
+  dm: dm,
   statusChange: statusChange,
   share: share,
   update: update,
   create: create,
   backblaze: backblaze,
-  updateAuth: updateAuth
+  updateAuth: updateAuth,
+  comment: comment
 };
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -207,6 +208,16 @@ function putServerTime(data) {
 }
 
 function comment(body, meta) {
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'activities/comment',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function dm(body, meta) {
   console.log(body);
   var req = {
     method: 'POST',
@@ -330,7 +341,7 @@ function removeByIndex(index, range) {
 function updateAuth(body, meta) {
   var req = {
     method: 'POST',
-    url: meta.apiUrl + 'update-auth',
+    url: 'https://growthfile.com/json?action=update-auth',
     body: JSON.stringify(body),
     token: meta.user.token
   };
@@ -491,6 +502,11 @@ function putAttachment(activity, tx, param) {
 }
 
 function removeUserFromAssigneeInActivity(addendum, updateTx) {
+<<<<<<< HEAD:dist/js/apiHandler.js
+=======
+  var addendumStore = updateTx.objectStore('addendum').index('user');
+  removeByIndex(addendumStore, addendum.user);
+>>>>>>> mapView:dist/v1/js/apiHandler.js
   var activityObjectStore = updateTx.objectStore('activity');
   activityObjectStore.get(addendum.activityId).onsuccess = function (event) {
     var record = event.target.result;
@@ -516,11 +532,20 @@ function removeActivityFromDB(id, updateTx) {
   var chidlrenObjectStore = updateTx.objectStore('children');
   var calendarObjectStore = updateTx.objectStore('calendar').index('activityId');
   var mapObjectStore = updateTx.objectStore('map').index('activityId');
+<<<<<<< HEAD:dist/js/apiHandler.js
+=======
+  var addendumStore = updateTx.objectStore('addendum').index('activityId');
+
+>>>>>>> mapView:dist/v1/js/apiHandler.js
   activityObjectStore.delete(id);
   listStore.delete(id);
   chidlrenObjectStore.delete(id);
   removeByIndex(calendarObjectStore, id);
   removeByIndex(mapObjectStore, id);
+<<<<<<< HEAD:dist/js/apiHandler.js
+=======
+  removeByIndex(addendumStore, id);
+>>>>>>> mapView:dist/v1/js/apiHandler.js
 }
 
 function updateSubscription(subscription, tx) {
@@ -604,11 +629,16 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
+
     activityObjectStore.put(activity);
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
 
+<<<<<<< HEAD:dist/js/apiHandler.js
+=======
+    console.log(activity.assignees);
+>>>>>>> mapView:dist/v1/js/apiHandler.js
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         var selfRecord = event.target.result;

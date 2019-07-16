@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+            <div class="form-component">
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='amount'>
+                    <input class="mdc-text-field__input" type="number">
+                    <label class="mdc-floating-label">Amount</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+            <div class="form-component employee-datalist hidden">
+                <label class="mdc-typography--headline6 mdc-theme--primary">Paid To :</label>
+                <input list="employees">
+                <datalist id="employees">
+                </datalist>
+            </div>
+            <div class="form-component">
+
+                <div class="mdc-text-field  mdc-text-field--with-leading-icon" data-mdc-auto-init="MDCTextField"
+                    id='payment-mode'>
+                    <input class=" mdc-text-field__input" type="text">
+                    <label for="input" class="mdc-floating-label" id="cc">Payment Mode</label>
+                    <i class="material-icons mdc-text-field__icon" tabindex="0" role="button" id="logo">payment</i>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+            </div>
+            <div class="form-component">
+
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='ref-number'>
+                    <input class=" mdc-text-field__input" type="text">
+                    <label for="input" class="mdc-floating-label" id="cc">Reference Number</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+            </div>
+
+            <div class="form-component">
+                <input type="submit" value="Create Order" class="mdc-button submit-btn">
+            </div>
+    </form>
+    </div>
+
+    </div>
+
+
+    <script src="../js/common.js">
+    </script>
+    <script>
+        parent.window.mdc.autoInit();
+
+        function init(subscriptionTemplate) {
+            
+            const amount = new parent.mdc.select.MDCSelect(document.getElementById('amount'))
+            const paymentMode = new parent.mdc.select.MDCSelect(document.getElementById('payment-mode'))
+            const ref = new parent.mdc.textField.MDCTextField(document.getElementById('ref-number'))
+          
+
+            const tx = parent.db.transaction(['children'])
+            const keyRangeEmployee = IDBKeyRange.only([subscriptionTemplate.office, 'employee'])
+            const index = tx.objectStore('children').index('officeTemplate')
+            let employeeString = '';
+
+            index.openCursor(keyRangeEmployee).onsuccess = function (event) {
+                const cursor = event.target.result;
+
+                if (!cursor) return;
+                if (cursor.value.status === 'CANCELLED') {
+                    cursor.continue();
+                    return;
+                }
+                if(cursor.value.attachment['Employee Contact'] === parent.firebase.auth().currentUser.phoneNumber) {
+                    cursor.continue();
+                    return;
+                }
+
+                customers.push(cursor.value);
+
+                employeeString += ` <option value='${cursor.value.attachment.Name.Value}'></option>`
+                cursor.continue();
+            }
+    
+          
+          tx.oncomplete = function () {
+
+                if (employeeString) {
+                    document.querySelector('.employee-datalist').classList.remove('hidden')
+                    document.getElementById('employees').innerHTML = employeeString;
+                }
+                
+            }
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Amount'].value = amount.value;
+                copy.attachment['Mode Of Payment'].value = paymentMode.value;
+                copy.attachment['Reference Number'].value = ref.value;
+                copy.attachment['Paid To'].value = document.getElementById('employees').value;
+                copy.share = []
+                parent.sendFormToParent(copy)
+            })
+        }
+    </script>
+</body>
+
+</html>
