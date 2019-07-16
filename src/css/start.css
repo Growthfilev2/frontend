@@ -90,6 +90,12 @@
 #updateName {
     float: right;
 }
-#sendVerification {
+#sendVerification,#skip {
     width: 100%;
+}
+#
+.list-li-small {
+    max-height: 48px;
+    height: auto;
+    min-height: 30px;
 }

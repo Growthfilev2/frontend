@@ -139,12 +139,12 @@ window.addEventListener("load", function () {
     startApp()
   });
   firebase
-  .auth()
-  .addAuthTokenListener(function (idToken) {
-    if(firebase.auth().currentUser) {
-      ApplicationState.idToken = idToken;
-    }
-  })
+    .auth()
+    .addAuthTokenListener(function (idToken) {
+      if (firebase.auth().currentUser) {
+        ApplicationState.idToken = idToken;
+      }
+    })
 })
 
 
@@ -175,7 +175,7 @@ function firebaseUiConfig() {
           badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
         },
         defaultCountry: 'IN',
-       
+
       }
     ]
 
@@ -193,184 +193,184 @@ function userSignedOut() {
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
-    if (appKey.getMode() === 'production') {
-      if (!native.getInfo()) {
-        redirect();
-        return;
-      }
+  if (appKey.getMode() === 'production') {
+    if (!native.getInfo()) {
+      redirect();
+      return;
+    }
+  }
+
+  localStorage.setItem('error', JSON.stringify({}));
+
+
+  const req = window.indexedDB.open(dbName, 5);
+
+  req.onupgradeneeded = function (evt) {
+    db = req.result;
+    db.onerror = function () {
+      handleError({
+        message: `${db.error.message} from startApp on upgradeneeded`
+      })
+      return;
     }
 
-    localStorage.setItem('error', JSON.stringify({}));
-    
+    if (!evt.oldVersion) {
+      createObjectStores(db, dbName)
+    } else {
+      var tx = req.transaction;
+      if (evt.oldVersion <= 4) {
+        const subscriptionStore = tx.objectStore('subscriptions');
+        const calendar = tx.objectStore('calendar')
+        const userStore = tx.objectStore('users');
+        const addendumStore = tx.objectStore('addendum');
+        const mapStore = tx.objectStore('map');
+        const activityStore = tx.objectStore('activity')
+        const childrenStore = tx.objectStore('children');
 
-    const req = window.indexedDB.open(dbName,5);
+        subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
+        calendar.createIndex('office', 'office');
 
-    req.onupgradeneeded = function (evt) {
-      db = req.result;
-      db.onerror = function () {
-        handleError({
-          message: `${db.error.message} from startApp on upgradeneeded`
-        })
-        return;
-      }
+        userStore.createIndex('mobile', 'mobile');
+        userStore.createIndex('timestamp', 'timestamp')
+        userStore.createIndex('NAME_SEARCH', 'NAME_SEARCH')
 
-      if (!evt.oldVersion) {
-        createObjectStores(db, dbName)
-      } else {
-        var tx = req.transaction;
-        if (evt.oldVersion <= 4) {
-          const subscriptionStore = tx.objectStore('subscriptions');
-          const calendar = tx.objectStore('calendar')
-          const userStore = tx.objectStore('users');
-          const addendumStore = tx.objectStore('addendum');
-          const mapStore = tx.objectStore('map');
-          const activityStore = tx.objectStore('activity')
-          const childrenStore = tx.objectStore('children');
+        userStore.openCursor().onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (!cursor) return;
+          if (!cursor.value.timestamp) {
+            cursor.value.timestamp = '';
+          }
+          cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
+          const update = cursor.update(cursor.value)
+          update.onsuccess = function () {
+            console.log("updated user ", cursor.value)
+          }
 
-          subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
-          calendar.createIndex('office', 'office');
-
-          userStore.createIndex('mobile', 'mobile');
-          userStore.createIndex('timestamp', 'timestamp')
-          userStore.createIndex('NAME_SEARCH','NAME_SEARCH')
-        
-          userStore.openCursor().onsuccess = function(event){
-            const cursor = event.target.result;
-            if(!cursor) return;
-            if(!cursor.value.timestamp) {
-                cursor.value.timestamp = '';
-            }
-            cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
-            const update =  cursor.update(cursor.value)
-            update.onsuccess = function(){
-              console.log("updated user ",cursor.value)
-            }
-
-            cursor.continue();  
-          };
-
-          addendumStore.createIndex('user', 'user');
-          addendumStore.createIndex('timestamp', 'timestamp')
-          addendumStore.createIndex('key', 'key')
-          addendumStore.createIndex('KeyTimestamp',['timestamp','key'])
-
-          mapStore.createIndex('office', 'office');
-          mapStore.createIndex('status', 'status');
-          mapStore.createIndex('selection', ['office', 'status', 'location']);
-          mapStore.createIndex('bounds', 'bounds');
-          activityStore.createIndex('status', 'status');
-
-
-       
-          childrenStore.createIndex('officeTemplate', ['office', 'template']);
-          childrenStore.createIndex('employees', 'employee');
-          childrenStore.createIndex('employeeOffice', ['employee', 'office'])
-          childrenStore.createIndex('team', 'team')
-          childrenStore.createIndex('teamOffice', ['team', 'office']);
-
-               
-          const myNumber = firebase.auth().currentUser.phoneNumber;
-
-          childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
-            const cursor = event.target.result;
-            if (!cursor) {
-              console.log("finished modiying children")
-              return;
-            }
-            cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-            if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
-              cursor.value.team = 1
-            }
-            cursor.update(cursor.value)
-            cursor.continue();
-          };
-          
-        }
-        tx.oncomplete = function(){
-          console.log("completed all backlog");
-        }
-      };
-    }
-    req.onsuccess = function () {
-      console.log("after that ? ")
-      db = req.result;
-
-      if (!areObjectStoreValid(db.objectStoreNames)) {
-        db.close();
-        console.log(auth)
-        const deleteIDB = indexedDB.deleteDatabase(auth.uid);
-        deleteIDB.onsuccess = function () {
-          window.location.reload();
-        }
-        deleteIDB.onblocked = function () {
-          snacks('Please Re-Install The App')
-        }
-        deleteIDB.onerror = function () {
-          snacks('Please Re-Install The App')
-        }
-        return;
-      }
-      const startLoad = document.querySelector('#start-load')
-      startLoad.classList.remove('hidden');
-      console.log("run app")
-      document.getElementById("main-layout-app").style.display = 'block'
-    
-      // ga('set', 'userId', '12345')
-
-      const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
-
-      let index = 0;
-      var interval = setInterval(function () {
-        if (index == texts.length - 1) {
-          clearInterval(interval)
-        }
-        startLoad.querySelector('p').textContent = texts[index]
-        index++;
-      }, index + 1 * 1000);
-    
-      requestCreator('now', {
-        device: native.getInfo(),
-        from: '',
-        registerToken: native.getFCMToken()
-      }).then(function (response) {
-        if (response.updateClient) {
-          updateApp()
-          return
-        }
-        if (response.revokeSession) {
-          revokeSession();
-          return
+          cursor.continue();
         };
-        getRootRecord().then(function (rootRecord) {
-          if (!rootRecord.fromTime) {
-            requestCreator('Null').then(profileCheck).catch(function (error) {
-              if(error.response.apiRejection) {
-                snacks(error.response.message, 'Okay')
-              }
-            })
+
+        addendumStore.createIndex('user', 'user');
+        addendumStore.createIndex('timestamp', 'timestamp')
+        addendumStore.createIndex('key', 'key')
+        addendumStore.createIndex('KeyTimestamp', ['timestamp', 'key'])
+
+        mapStore.createIndex('office', 'office');
+        mapStore.createIndex('status', 'status');
+        mapStore.createIndex('selection', ['office', 'status', 'location']);
+        mapStore.createIndex('bounds', 'bounds');
+        activityStore.createIndex('status', 'status');
+
+
+
+        childrenStore.createIndex('officeTemplate', ['office', 'template']);
+        childrenStore.createIndex('employees', 'employee');
+        childrenStore.createIndex('employeeOffice', ['employee', 'office'])
+        childrenStore.createIndex('team', 'team')
+        childrenStore.createIndex('teamOffice', ['team', 'office']);
+
+
+        const myNumber = firebase.auth().currentUser.phoneNumber;
+
+        childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (!cursor) {
+            console.log("finished modiying children")
             return;
           }
-          profileCheck();
-          requestCreator('Null').then(console.log).catch(function (error) {
-            if(error.response.apiRejection) {
-              snacks(error.response.message, 'Okay', (function () {
-                startApp()
-              }))
+          cursor.value.employee = cursor.value.attachment['Employee Contact'].value
+          if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
+            cursor.value.team = 1
+          }
+          cursor.update(cursor.value)
+          cursor.continue();
+        };
+
+      }
+      tx.oncomplete = function () {
+        console.log("completed all backlog");
+      }
+    };
+  }
+  req.onsuccess = function () {
+    console.log("after that ? ")
+    db = req.result;
+
+    if (!areObjectStoreValid(db.objectStoreNames)) {
+      db.close();
+      console.log(auth)
+      const deleteIDB = indexedDB.deleteDatabase(auth.uid);
+      deleteIDB.onsuccess = function () {
+        window.location.reload();
+      }
+      deleteIDB.onblocked = function () {
+        snacks('Please Re-Install The App')
+      }
+      deleteIDB.onerror = function () {
+        snacks('Please Re-Install The App')
+      }
+      return;
+    }
+    const startLoad = document.querySelector('#start-load')
+    startLoad.classList.remove('hidden');
+    console.log("run app")
+    document.getElementById("main-layout-app").style.display = 'block'
+
+    // ga('set', 'userId', '12345')
+
+    const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
+
+    let index = 0;
+    var interval = setInterval(function () {
+      if (index == texts.length - 1) {
+        clearInterval(interval)
+      }
+      startLoad.querySelector('p').textContent = texts[index]
+      index++;
+    }, index + 1 * 1000);
+
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: '',
+      registerToken: native.getFCMToken()
+    }).then(function (response) {
+      if (response.updateClient) {
+        updateApp()
+        return
+      }
+      if (response.revokeSession) {
+        revokeSession();
+        return
+      };
+      getRootRecord().then(function (rootRecord) {
+        if (!rootRecord.fromTime) {
+          requestCreator('Null').then(profileCheck).catch(function (error) {
+            if (error.response.apiRejection) {
+              snacks(error.response.message, 'Okay')
             }
           })
-        })
-      }).catch(function (error) {
-        if(error.response.apiRejection) {
-          snacks(error.response.message, 'Retry')
+          return;
         }
+        profileCheck();
+        requestCreator('Null').then(console.log).catch(function (error) {
+          if (error.response.apiRejection) {
+            snacks(error.response.message, 'Okay', (function () {
+              startApp()
+            }))
+          }
+        })
       })
-    }
-    req.onerror = function () {
-      handleError({
-        message: `${req.error.message} from startApp`,
-        body:''
-      })
-    }
+    }).catch(function (error) {
+      if (error.response.apiRejection) {
+        snacks(error.response.message, 'Retry')
+      }
+    })
+  }
+  req.onerror = function () {
+    handleError({
+      message: `${req.error.message} from startApp`,
+      body: ''
+    })
+  }
 
 }
 
@@ -445,31 +445,31 @@ function checkForPhoto() {
     const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
 
     document.getElementById('choose').addEventListener('change', function (evt) {
-  
+
       const files = document.getElementById('choose').files
-      if(!files.length) return;
-        const file = files[0];
-        var fileReader = new FileReader();
-        fileReader.onload = function (fileLoadEvt) {
-          const srcData = fileLoadEvt.target.result;
-          const image = new Image();
-          image.src = srcData;
-          image.onload = function(){
-            const newDataUrl = resizeAndCompressImage(image);
-            document.getElementById('image-update').src = newDataUrl;
-            progCard.open();
-            requestCreator('backblaze', {
-              'imageBase64': newDataUrl
-            }).then(function () {
-              progCard.close();
-              checkForRecipient()
-            }).catch(function (error) {
-              progCard.close();
-              snacks(error.response.message)
-            })
-          }
+      if (!files.length) return;
+      const file = files[0];
+      var fileReader = new FileReader();
+      fileReader.onload = function (fileLoadEvt) {
+        const srcData = fileLoadEvt.target.result;
+        const image = new Image();
+        image.src = srcData;
+        image.onload = function () {
+          const newDataUrl = resizeAndCompressImage(image);
+          document.getElementById('image-update').src = newDataUrl;
+          progCard.open();
+          requestCreator('backblaze', {
+            'imageBase64': newDataUrl
+          }).then(function () {
+            progCard.close();
+            checkForRecipient()
+          }).catch(function (error) {
+            progCard.close();
+            snacks(error.response.message)
+          })
         }
-        fileReader.readAsDataURL(file);
+      }
+      fileReader.readAsDataURL(file);
     })
     return
   }
@@ -477,9 +477,9 @@ function checkForPhoto() {
 }
 
 
-function resizeAndCompressImage(image){
+function resizeAndCompressImage(image) {
   var canvas = document.createElement('canvas');
-  const canvasDimension = new CanvasDimension(image.width,image.height);
+  const canvasDimension = new CanvasDimension(image.width, image.height);
   canvasDimension.setMaxHeight(screen.height)
   canvasDimension.setMaxWidth(screen.width);
   const newDimension = canvasDimension.getNewDimension()
@@ -487,51 +487,54 @@ function resizeAndCompressImage(image){
   canvas.height = newDimension.height;
   var ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0, newDimension.width, newDimension.height);
-  const newDataUrl = canvas.toDataURL('image/jpeg',0.5);
+  const newDataUrl = canvas.toDataURL('image/jpeg', 0.5);
   return newDataUrl;
 
 }
 
-function CanvasDimension(width,height){
-this.MAX_HEIGHT = ''
-this.MAX_WIDTH =''
-this.width = width;
-this.height = height;
+function CanvasDimension(width, height) {
+  this.MAX_HEIGHT = ''
+  this.MAX_WIDTH = ''
+  this.width = width;
+  this.height = height;
 }
-CanvasDimension.prototype.setMaxWidth = function(MAX_WIDTH) {
+CanvasDimension.prototype.setMaxWidth = function (MAX_WIDTH) {
   this.MAX_WIDTH = MAX_WIDTH
 }
-CanvasDimension.prototype.setMaxHeight = function(MAX_HEIGHT) {
+CanvasDimension.prototype.setMaxHeight = function (MAX_HEIGHT) {
   this.MAX_HEIGHT = MAX_HEIGHT
 }
-CanvasDimension.prototype.getNewDimension = function(){
-  if(this.width > this.height) {
-    if(this.width > this.MAX_WIDTH) {
-      this.height *= this.MAX_WIDTH/ this.width;
+CanvasDimension.prototype.getNewDimension = function () {
+  if (this.width > this.height) {
+    if (this.width > this.MAX_WIDTH) {
+      this.height *= this.MAX_WIDTH / this.width;
       this.width = this.MAX_WIDTH;
     }
-  }
-  else {
-    if(this.height > this.MAX_HEIGHT) {
+  } else {
+    if (this.height > this.MAX_HEIGHT) {
       this.width *= this.MAX_HEIGHT / this.height;
       this.height = this.MAX_HEIGHT
     }
   }
-  
+
   return {
-    width:this.width,
-    height:this.height
+    width: this.width,
+    height: this.height
   }
 }
 
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if(auth.email && auth.emailVerified) return mapView();
+    if (auth.email && auth.emailVerified) return mapView();
+   
+    const reportList = getReportNameString(result);
 
-    const text = getReportNameString(result)
-    if (!auth.email) {
-      const content = `<h3 class='mdc-typography--headline6 mt-0'>${text}</h3>
+    if (auth.email) {
+
+      const content = `
+     ${result.length ? reportList : ''}
+     <h3 class='mdc-typography--body1 text-center'>You have not Added your Email Address. Enter Email to continue</h3>
     <div class="mdc-text-field mdc-text-field--outlined" id='email'>
        <input class="mdc-text-field__input" required>
       <div class="mdc-notched-outline">
@@ -542,13 +545,13 @@ function checkForRecipient() {
           <div class="mdc-notched-outline__trailing"></div>
       </div>
     </div>`
-      
+
       const button = `<div class="mdc-card__actions">
     <div class="mdc-card__action-icons"></div>
     <div class="mdc-card__action-buttons">
-    ${!result.length ? `<button class="mdc-button" id='skip'>
+    <button class="mdc-button hidden" id='skip'>
     <span class="mdc-button__label">SKIP</span>
-    </button>` :''}
+    </button>
     <button class="mdc-button" id='addEmail'>
       <span class="mdc-button__label">UPDATE</span>
       <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
@@ -557,16 +560,20 @@ function checkForRecipient() {
  </div>`
 
 
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add You Email Address</span>', button)
-      
-      new mdc.ripple.MDCRipple(document.getElementById('skip')).root_.addEventListener('click',function(evt){
-        mapView();
-        return;
-      })
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add Email</span>', button)
+      const addEmail = document.getElementById('addEmail');
+      const skip = document.getElementById('skip')
+      if (!result.length) {
+        skip.classList.remove('hidden')
+        skip.addEventListener('click', function (evt) {
+          mapView();
+          return;
+        })
+      }
 
       const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-      new mdc.ripple.MDCRipple(document.getElementById('addEmail')).root_.addEventListener('click', function (evt) {
+      addEmail.addEventListener('click', function (evt) {
         if (!emailInit.value) {
           emailInit.focus();
           return
@@ -574,7 +581,7 @@ function checkForRecipient() {
         progCard.open();
         requestCreator('updateAuth', {
           email: emailInit.value,
-          phoneNumber:firebase.auth().currentUser.phoneNumber
+          phoneNumber: firebase.auth().currentUser.phoneNumber
         }).then(function () {
           snacks('Verification Link has been Sent to ' + emailInit.value)
           mapView();
@@ -587,25 +594,31 @@ function checkForRecipient() {
 
     if (!auth.emailVerified) {
       const currentEmail = firebase.auth().currentUser.email
-      const content = `<h3 class='mdc-typography--headline6 mt-0'>${text}</h3>
-      <h3 class='mdc-typography--body1'>Click To Send a verification Email</h3>
-      ${!result.length ? ` <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id='skip'>
+      const content = `
+      ${result.length ? reportList : ''}
+      <h3 class='mdc-typography--body1 text-center'>Please Verify your email</h3>
+       <button class="mdc-button hidden" id='skip'>
       <span class="mdc-button__label">SKIP</span>
-      </button>` : ''};
-
-      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id='sendVerification'>
+      </button>
+      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id='sendVerification'>
       <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>
       </button>`
+
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '')
-      new mdc.ripple.MDCRipple(document.getElementById('skip')).root_.addEventListener('click', function (evt) {
-        return mapView()
-      });
+      const skip = document.getElementById('skip');
+      const verify = document.getElementById('sendVerification')
+      if (!result.length) {
+        skip.classList.remove('hidden')
+        skip.addEventListener('click', function (evt) {
+          return mapView()
+        });
+      }
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-      new mdc.ripple.MDCRipple(document.getElementById('sendVerification')).root_.addEventListener('click', function (evt) {
+      verify.addEventListener('click', function (evt) {
         progCard.open();
         requestCreator('updateAuth', {
           email: currentEmail,
-          phoneNumber:firebase.auth().currentUser.phoneNumber
+          phoneNumber: firebase.auth().currentUser.phoneNumber
         }).then(function () {
           progCard.close();
           snacks('Verification Link has been Sent to ' + currentEmail)
@@ -620,16 +633,20 @@ function checkForRecipient() {
 }
 
 function getReportNameString(result) {
-  let string = ''
-  let base = 'You are a recipient for Reports in '
   const offices = {}
-
   result.forEach(function (report) {
-    offices[report.office];
-
+    offices[report.office] = true;
   })
-  return Object.keys(offices).join(",")
-
+  console.log(offices)
+  const ul = ` <h3 class="mdc-typography--headline6 mb-0 mt-0 text-center">You are a recipient for Reports in</h3>
+  <ul class='mdc-list'>
+  ${Object.keys(offices).map(function(office){
+    return `<li class='mdc-list-item list-li-small'>
+          ${office}
+    </li>`
+  }).join("")}
+  </ul>`
+  return ul;
 }
 
 
@@ -741,7 +758,7 @@ function createObjectStores(db, uid) {
   users.createIndex('count', 'count')
   users.createIndex('mobile', 'mobile')
   users.createIndex('timestamp', 'timestamp')
-  users.createIndex('NAME_SEARCH','NAME_SEARCH')
+  users.createIndex('NAME_SEARCH', 'NAME_SEARCH')
   const addendum = db.createObjectStore('addendum', {
     autoIncrement: true
   })
@@ -749,7 +766,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('activityId', 'activityId')
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key')
-  addendum.createIndex('KeyTimestamp',['timestamp','key'])
+  addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
@@ -858,23 +875,23 @@ function setVenueForCheckIn(venueData, value) {
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     let offices = [];
-  
-    const tx = db.transaction(['children','subscriptions']);
+
+    const tx = db.transaction(['children', 'subscriptions']);
     const childrenStore = tx.objectStore('children').index('employees');
     const subscriptionStore = tx.objectStore('subscriptions');
 
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
       if (!cursor) {
-        if(offices.length) return
-        subscriptionStore.openCursor().onsuccess = function(subscriptionStoreEvnet){
+        if (offices.length) return
+        subscriptionStore.openCursor().onsuccess = function (subscriptionStoreEvnet) {
           const subscriptionsCursor = subscriptionStoreEvnet.target.result;
-          if(!subscriptionsCursor) return
-          if(subscriptionsCursor.value.status === 'CANCELLED') {
+          if (!subscriptionsCursor) return
+          if (subscriptionsCursor.value.status === 'CANCELLED') {
             subscriptionsCursor.continue();
             return
           };
-          if(offices.indexOf(subscriptionsCursor.value.office) > -1) {
+          if (offices.indexOf(subscriptionsCursor.value.office) > -1) {
             subscriptionsCursor.continue();
             return;
           }
@@ -883,7 +900,7 @@ function getUniqueOfficeCount() {
         }
         return
       };
-      if(cursor.value.status ==='CANCELLED') {
+      if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
       }
@@ -891,7 +908,7 @@ function getUniqueOfficeCount() {
       cursor.continue()
     };
 
-    tx.oncomplete = function () {    
+    tx.oncomplete = function () {
       return resolve(offices);
     }
     tx.onerror = function () {
@@ -944,7 +961,10 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       resolve(nearest)
     }
     tx.onerror = function () {
-      reject({message:tx.error,body:''})
+      reject({
+        message: tx.error,
+        body: ''
+      })
     }
 
   })

@@ -330,7 +330,7 @@ function removeByIndex(index, range) {
 function updateAuth(body, meta) {
   var req = {
     method: 'POST',
-    url: meta.apiUrl + 'update-auth',
+    url: 'http://growthfile.com/json?action=update-auth',
     body: JSON.stringify(body),
     token: meta.user.token
   };

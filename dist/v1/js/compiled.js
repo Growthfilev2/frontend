@@ -15,8 +15,24 @@ function addView(sub) {
 
 function sendFormToParent(formData) {
     progressBar.open();
+
     var customerAuths = formData.customerAuths;
     delete formData.customerAuths;
+    if (Array.isArray(formData)) {
+        var prom = [];
+        formData.forEach(function (form) {
+            prom.push(requestCreator('create', form));
+        });
+        Promise.all(prom).then(function () {
+            progressBar.close();
+            successDialog();
+            getSuggestions();
+        }).catch(function (error) {
+            progressBar.close();
+            snacks(error.response.message, 'Okay');
+        });
+        return;
+    }
     requestCreator('create', formData).then(function () {
         progressBar.close();
         successDialog();
@@ -44,6 +60,7 @@ function sendFormToParent(formData) {
 
             return;
         }
+
         getSuggestions();
     }).catch(function (error) {
         progressBar.close();
@@ -85,13 +102,7 @@ function setContactForSecondCustomerFailed(exceptionMessage) {
 }
 
 function expenseClaimImage(base64) {
-    var frameDoc = document.getElementById('form-iframe').contentWindow.document;
-    var el = frameDoc.getElementById('expense-image');
-    if (el) {
-        frameDoc.querySelector('.add-photo-container').classList.add('hidden');
-        frameDoc.querySelector('.mdc-image-list--masonry').classList.remove('hidden');
-        el.src = 'data:image/jpg;base64,' + base64;
-    };
+    document.getElementById('form-iframe').contentWindow.setExpenseImage(base64);
 }
 function attendenceView() {
     document.getElementById('app-header').classList.remove("hidden");
@@ -446,7 +457,7 @@ function enterChat(userRecord) {
     header.root_.classList.remove('hidden');
     console.log(header);
 
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                  <input class="input-msg" name="input" placeholder="Type a message" autocomplete="off" autofocus="" id=\'comment-input\'>\n                  <div class="input-space-right"></div>\n                  <button class="send" id=\'comment-send\'>\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                                    \n                  <input class="input-msg" data-name="dm" data-param="assignee" data-param-value="' + userRecord.mobile + '" name="input" placeholder="Type a message" autocomplete="on" autofocus="" id=\'comment-input\'>\n                  <div class="input-space-right"></div>\n                  <button class="send" id=\'comment-send\'>\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
     getUserChats(userRecord);
 }
 
@@ -540,6 +551,9 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
         var items = [{
             name: 'View',
             icon: 'info'
+        }, {
+            name: 'Reply',
+            icon: 'reply'
         }];
         if (activity.canEdit) {
             items.push({
@@ -613,6 +627,15 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
                     break;
             }
         });
+    };
+}
+
+function reply(activity) {
+    var input = document.querySelector('.conversation-compose input');
+    if (input) {
+        input.dataset.name = 'comment';
+        input.dataset.param = 'activityId';
+        input.dataset.paramValue = activity.activityId;
     };
 }
 
@@ -980,29 +1003,35 @@ function getUserChats(userRecord) {
     tx.oncomplete = function () {
         parent.innerHTML = timeLine;
         setBottomScroll();
+
         var form = document.querySelector('.conversation-compose');
+
         form.addEventListener('submit', function (e) {
 
             e.preventDefault();
             var input = e.target.input;
             var val = input.value;
+            if (!val) return;
 
-            if (val) {
-                progressBar.open();
-                requestCreator('dm', {
-                    comment: val,
-                    assignee: userRecord.mobile
-                }).then(function () {
-                    parent.appendChild(messageBoxDom(val, 'me', Date.now()));
-                    setBottomScroll();
-                    input.value = '';
-                    progressBar.close();
-                }).catch(function (error) {
-                    input.value = '';
-                    progressBar.close();
-                    snacks(error.response.message);
-                });
-            }
+            progressBar.open();
+            var param = input.dataset.param;
+            var paramValue = input.dataset.paramValue;
+            requestCreator(input.dataset.name, {
+                comment: val,
+                param: paramValue
+            }).then(function () {
+                parent.appendChild(messageBoxDom(val, 'me', Date.now()));
+                setBottomScroll();
+                input.value = '';
+                progressBar.close();
+            }).catch(function (error) {
+                input.value = '';
+                progressBar.close();
+                snacks(error.response.message);
+            });
+            input.dataset.name = 'dm';
+            input.dataset.param = 'assignee';
+            input.dataset.paramValue = userRecord.mobile;
         });
     };
 }
@@ -1328,12 +1357,13 @@ function getPendingLocationActivities() {
       }
 
       var match = void 0;
-      Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
-        if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
-          console.log(cursor.value);
-          match = cursor.value;
-        }
-      });
+      // Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
+      //   if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
+      //     console.log(cursor.value)
+      //     match = cursor.value
+      //   }
+      // });
+
       if (!match) {
         cursor.continue();
         return;
@@ -1937,21 +1967,28 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   var auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (!result.length) return mapView();
-    return mapView();
     if (auth.email && auth.emailVerified) return mapView();
 
     var text = getReportNameString(result);
     if (!auth.email) {
       var content = '<h3 class=\'mdc-typography--headline6 mt-0\'>' + text + '</h3>\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'email\'>\n       <input class="mdc-text-field__input" required>\n      <div class="mdc-notched-outline">\n          <div class="mdc-notched-outline__leading"></div>\n          <div class="mdc-notched-outline__notch">\n                <label class="mdc-floating-label">Email</label>\n          </div>\n          <div class="mdc-notched-outline__trailing"></div>\n      </div>\n    </div>';
 
-      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
+      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button" id=\'skip\'>\n    <span class="mdc-button__label">SKIP</span>\n    </button>\n    <button class="mdc-button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
 
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add You Email Address</span>', button);
+      var addEmail = document.getElementById('addEmail');
+      var skip = document.getElementById('skip');
+      if (!result.length) {
+        skip.classList.remove('hidden');
+        skip.addEventListener('click', function (evt) {
+          mapView();
+          return;
+        });
+      }
+
       var _emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
       var progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'));
-
-      new mdc.ripple.MDCRipple(document.getElementById('addEmail')).root_.addEventListener('click', function (evt) {
+      addEmail.addEventListener('click', function (evt) {
         if (!_emailInit.value) {
           _emailInit.focus();
           return;
@@ -1971,11 +2008,19 @@ function checkForRecipient() {
 
     if (!auth.emailVerified) {
       var currentEmail = firebase.auth().currentUser.email;
-      var _content = '<h3 class=\'mdc-typography--headline6 mt-0\'>' + text + '</h3>\n      <h3 class=\'mdc-typography--body1\'>Click To Send a verification Email</h3>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id=\'sendVerification\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(_content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '');
-      var _progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'));
+      var _content = '<h3 class=\'mdc-typography--headline6 mt-0\'>' + text + '</h3>\n      <h3 class=\'mdc-typography--body1\'>Click To Send a verification Email</h3>\n       <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary hidden" id=\'skip\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id=\'sendVerification\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
 
-      new mdc.ripple.MDCRipple(document.getElementById('sendVerification')).root_.addEventListener('click', function (evt) {
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(_content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '');
+      var _skip = document.getElementById('skip');
+      var verify = document.getElementById('sendVerification');
+      if (!result.length) {
+        _skip.classList.remove('hidden');
+        _skip.addEventListener('click', function (evt) {
+          return mapView();
+        });
+      }
+      var _progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'));
+      verify.addEventListener('click', function (evt) {
         _progCard.open();
         requestCreator('updateAuth', {
           email: currentEmail,
@@ -1994,28 +2039,13 @@ function checkForRecipient() {
 
 function getReportNameString(result) {
   var string = '';
-  var base = 'You are a recipient in ';
+  var base = 'You are a recipient for Reports in ';
   var offices = {};
+
   result.forEach(function (report) {
-    if (!offices[report.office]) {
-      offices[report.office] = [report.attachment.Name.value];
-    } else {
-      offices[report.office].push(report.attachment.Name.value);
-    }
+    offices[report.office];
   });
-
-  var keys = Object.keys(offices);
-  keys.forEach(function (office, idx) {
-    var reportNames = offices[office].join(',');
-    console.log(idx);
-
-    base += ' ' + reportNames + ' For ' + office + ' &';
-  });
-  var lastChar = base[base.length - 1];
-  if (lastChar === '&') {
-    return base.substring(0, base.length - 1);
-  }
-  return base;
+  return Object.keys(offices).join(",");
 }
 
 function simpleInputField() {}
@@ -2302,7 +2332,10 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       resolve(nearest);
     };
     tx.onerror = function () {
-      reject({ message: tx.error, body: '' });
+      reject({
+        message: tx.error,
+        body: ''
+      });
     };
   });
 }
@@ -3217,16 +3250,16 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true);
     } catch (e) {
-      // resolve({
-      //   latitude: 28.549173600000003,
-      //   longitude: 77.25055569999999,
-      //   accuracy: 24
-      // })
-      html5Geolocation().then(function (location) {
-        resolve(location);
-      }).catch(function (error) {
-        reject(error);
+      resolve({
+        latitude: 28.549173600000003,
+        longitude: 77.25055569999999,
+        accuracy: 24
       });
+      // html5Geolocation().then(function (location) {
+      //   resolve(location)
+      // }).catch(function (error) {
+      //   reject(error)
+      // })
     }
   });
 }
@@ -3352,6 +3385,21 @@ function requestCreator(requestType, requestBody) {
     apiHandler.postMessage(requestGenerator);
   } else {
     getRootRecord().then(function (rootRecord) {
+      if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
+        manageLocation().then(function (location) {
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, location))) {
+            startApp();
+            return;
+          };
+
+          ApplicationState.location = location;
+          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+          requestGenerator.body = requestBody;
+          requestBody['geopoint'] = ApplicationState.location;
+          apiHandler.postMessage(requestGenerator);
+        }).catch(locationErrorDialog);
+        return;
+      }
       requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       requestGenerator.body = requestBody;
       requestBody['geopoint'] = ApplicationState.location;
@@ -3452,9 +3500,18 @@ function handleComponentUpdation(readResponse) {
   }
 }
 
+function backgroundTransition() {
+  if (!isLastLocationOlderThanThreshold(ApplicationState.lastLocationTime, 60)) return;
+  manageLocation().then(function (location) {
+    if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, location))) return;
+    mapView();
+    requestCreator('Null').then(console.log).catch(console.log);
+  });
+}
+
 function runRead(value) {
 
-  if (!value || value.read) {
+  if (value.read) {
     firebase.auth().currentUser.reload();
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log);
     return;

@@ -393,7 +393,12 @@ function handleComponentUpdation(readResponse) {
 }
 
 function backgroundTransition(){
-  startApp()
+  if(!isLastLocationOlderThanThreshold(ApplicationState.lastLocationTime,60)) return;
+  manageLocation().then(function(location) {
+    if(!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location,location))) return
+    mapView();
+    requestCreator('Null').then(console.log).catch(console.log)
+  })
 }
 
 function runRead(value) {
