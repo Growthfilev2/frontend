@@ -17,23 +17,35 @@ function reportView() {
   }, 0)
 
   tabList.listen('MDCTabBar:activated', function (evt) {
- 
+
     if (!evt.detail.index) {
       document.getElementById('app-current-panel').innerHTML = `<div class='attendence-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>
       
       </div>
       </div>`
-      getSubscription(ApplicationState.office,'leave').then(function(leaveSubs){
-        if(!leaveSubs) {
+      Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
+        const leaveSub = result[0]
+        const arSub = result[1]
+        if (!leaveSub) {
           document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>'
           return
         }
         document.querySelector('.attendence-section .content').innerHTML = `${applyLeave()}`;
-        document.querySelector('.apply-leave').addEventListener('click',function(){
-          addView(leaveSubs);
+        document.querySelector('.apply-leave').addEventListener('click', function () {
+          addView(leaveSub);
         })
-       
+
+        // if (arSub) {
+        //   document.querySelector('.attendence-section .content').innerHTML += `${applyAr()}`;
+        //   document.querySelector('.apply-ar').addEventListener('click', function () {
+        //     arSub.forDate = {
+        //       startTime:new Date(),
+        //       endTime:new Date()
+        //     }
+        //     addView(arSub);
+        //   })
+        // }
       })
       return
     }
@@ -43,13 +55,13 @@ function reportView() {
       <div class='content'>
       </div>
       </div>`
-      getSubscription(ApplicationState.office,'expense claim').then(function(claimSubs){
-        if(!claimSubs) {
+      getSubscription(ApplicationState.office, 'expense claim').then(function (claimSubs) {
+        if (!claimSubs) {
           document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
           return
         }
         document.querySelector('.claims-section .content').innerHTML = `${emptyClaims()}`;
-        document.getElementById('apply-claim').addEventListener('click',function(){
+        document.getElementById('apply-claim').addEventListener('click', function () {
           addView(claimSubs);
         })
 
@@ -57,20 +69,20 @@ function reportView() {
       return;
     }
     const promiseArray = []
-    const incentives = ['customer','order','enquiry','collection']
-    incentives.forEach(function(name){
-      promiseArray.push(getSubscription(ApplicationState.office,name))
+    const incentives = ['customer', 'order', 'collection']
+    incentives.forEach(function (name) {
+      promiseArray.push(getSubscription(ApplicationState.office, name))
     });
 
-    Promise.all(promiseArray).then(function(incentiveSubs){
+    Promise.all(promiseArray).then(function (incentiveSubs) {
       console.log(incentiveSubs);
-   
+
       document.getElementById('app-current-panel').innerHTML = `<div class='incentives-section mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>
 
       </div>
       </div>`
-      if(!incentiveSubs.length) {
+      if (!incentiveSubs.length) {
         document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
         return
       }
@@ -82,7 +94,7 @@ function reportView() {
       </ul>
      `
       const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
-      ul.listen('MDCList:action',function(evt){
+      ul.listen('MDCList:action', function (evt) {
         addView(incentiveSubs[evt.detail.index])
       })
     }).catch(console.log)
