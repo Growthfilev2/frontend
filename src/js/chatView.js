@@ -255,9 +255,14 @@ function readLatestChats(initList) {
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden")
             if (!currentChatsArray.length) {
-                currentChats = 'No Chat Found. '
+                chatsEl.innerHTML = `<h3 class='mdc-typography--headline5 mdc-theme--primary>No Chats found</h3>
+                <p class='mt-0 '>Choose From Below or Search</p>
+                `
+                
             }
-            chatsEl.innerHTML = currentChats
+            else {
+                chatsEl.innerHTML = currentChats
+            }
             if (!initList) return;
             chatsUl = new mdc.list.MDCList(chatsEl);
             initializeChatList(chatsUl);

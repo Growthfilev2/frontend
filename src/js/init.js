@@ -974,7 +974,6 @@ function openMap(){
   document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function(location){
     document.getElementById('start-load').classList.add('hidden');
-
     mapView(location)
   }).catch(function(error){
     document.getElementById('start-load').classList.add('hidden');
