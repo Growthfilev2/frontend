@@ -1,6 +1,5 @@
 function addView(sub) {
    
-   
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template.toUpperCase()}</span>

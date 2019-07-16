@@ -356,6 +356,7 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
+  firebase.auth().currentUser.reload();
   requestCreator('Null').then(console.log).catch(console.log)
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
@@ -368,7 +369,6 @@ function backgroundTransition() {
 function runRead(value) {
 
   if (value) {
-    firebase.auth().currentUser.reload();
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
     return;
   }
