@@ -185,7 +185,7 @@ function firebaseUiConfig() {
 
 
 function userSignedOut() {
-
+  debugger;
   ui = new firebaseui.auth.AuthUI(firebase.auth())
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
@@ -547,10 +547,10 @@ function checkForRecipient() {
       const button = `<div class="mdc-card__actions">
     <div class="mdc-card__action-icons"></div>
     <div class="mdc-card__action-buttons">
-    <button class="mdc-button hidden" id='skip'>
+    <button class="mdc-button mdc-card__action mdc-card__action--button hidden" id='skip'>
     <span class="mdc-button__label">SKIP</span>
     </button>
-    <button class="mdc-button" id='addEmail'>
+    <button class="mdc-button mdc-card__action mdc-card__action--button" id='addEmail'>
       <span class="mdc-button__label">UPDATE</span>
       <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
     </button>
@@ -596,10 +596,10 @@ function checkForRecipient() {
       const content = `
       ${result.length ? reportList : ''}
       <h3 class='mdc-typography--body1 text-center'>Please Verify your email</h3>
-       <button class="mdc-button hidden" id='skip'>
+       <button class="mdc-button hidden" id='skip' style='width:100%'>
       <span class="mdc-button__label">SKIP</span>
       </button>
-      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id='sendVerification'>
+      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id='sendVerification' style='width:100%'>
       <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>
       </button>`
 
@@ -680,7 +680,6 @@ function profileCheck() {
     const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
     const nameInput = new mdc.textField.MDCTextField(document.getElementById('name'))
     console.log(nameInput)
-    history.pushState(['profileCheck'], null, null)
     new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
       if (!nameInput.value) {
         nameInput.focus();

@@ -134,7 +134,11 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
-        if (!offices.length) return getSuggestions();
+        // if (!offices.length) return getSuggestions();
+        if(!offices.length) {
+          showNoOfficeFound();
+          return;
+        }
 
         document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
         const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
@@ -207,6 +211,13 @@ function loadCardData(markers) {
   }
 
 };
+
+function showNoOfficeFound(){
+  const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>`
+  const dialog = new Dialog('No Office Found',content).create('simple');
+  dialog.scrimClickAction = ''
+  dialog.open();
+}
 
 function getAllSubscriptions() {
   return new Promise(function (resolve, reject) {

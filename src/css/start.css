@@ -91,9 +91,9 @@
     float: right;
 }
 #sendVerification,#skip {
-    width: 100%;
+    /* width: 100%; */
 }
-#
+
 .list-li-small {
     max-height: 48px;
     height: auto;
