@@ -315,15 +315,13 @@ function startApp() {
     console.log("run app")
     document.getElementById("main-layout-app").style.display = 'block'
 
-    // ga('set', 'userId', '12345')
-
     const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
 
     let index = 0;
     var interval = setInterval(function () {
       if (index == texts.length - 1) {
         clearInterval(interval)
-      }
+      };
       startLoad.querySelector('p').textContent = texts[index]
       index++;
     }, index + 1 * 1000);
@@ -526,7 +524,6 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    return openMap();
     if (auth.email && auth.emailVerified) return openMap();
    
     const reportList = getReportNameString(result);

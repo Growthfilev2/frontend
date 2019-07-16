@@ -118,6 +118,10 @@ function applyLeave() {
     return '<button class="mdc-button apply-leave">\n   <i class="material-icons mdc-button__icon" aria-hidden="true">today</i>\n   <span class="mdc-button__label">Apply For A New Leave</span>\n </button>';
 }
 
+function applyAr() {
+    return '<button class="mdc-button apply-ar mt-10">\n    <span class="mdc-button__label">Apply For Attendance Regularization</span>\n  </button>';
+}
+
 function attendenceCards() {
     return '<div class=\'cards-container mdc-layout-grid__inner mt-20 pt-20\'>\n    ' + [1, 2, 3].map(function () {
         return '<div class="mdc-card mdc-layout-grid__cell">\n        <div class="mdc-card__primary-action demo-card__primary-action">\n        <div class="">\n            <h2 class="demo-card__title mdc-typography mdc-typography--headline6">Our Changing Planet</h2>\n            <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2">by Kurt Wagner</h3>\n        </div>\n        <div class="demo-card__secondary mdc-typography mdc-typography--body2">Visit ten places on our planet that are undergoing the biggest changes today.</div>\n        <div class="card-actions mt-20">\n        <button class="mdc-button" style="\n/* width: 100%; */\n">\n            <span class="mdc-button__label" style="\ntext-align: left;\n">Regularize Attendece</span>\n        </button><button class="mdc-button" style="\n/* margin: 0 auto; */\n/* display: block; */\n/* width: 100%; */\n">\n            <span class="mdc-button__label">Apply Leave</span>\n        </button>\n        \n        </div>\n        </div>\n \n    </div>';
@@ -1971,7 +1975,6 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   var auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    return openMap();
     if (auth.email && auth.emailVerified) return openMap();
 
     var reportList = getReportNameString(result);
@@ -3080,15 +3083,28 @@ function reportView() {
 
     if (!evt.detail.index) {
       document.getElementById('app-current-panel').innerHTML = '<div class=\'attendence-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs\'>\n      <div class=\'content\'>\n      \n      </div>\n      </div>';
-      getSubscription(ApplicationState.office, 'leave').then(function (leaveSubs) {
-        if (!leaveSubs) {
+      Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
+        var leaveSub = result[0];
+        var arSub = result[1];
+        if (!leaveSub) {
           document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>';
           return;
         }
         document.querySelector('.attendence-section .content').innerHTML = '' + applyLeave();
         document.querySelector('.apply-leave').addEventListener('click', function () {
-          addView(leaveSubs);
+          addView(leaveSub);
         });
+
+        // if (arSub) {
+        //   document.querySelector('.attendence-section .content').innerHTML += `${applyAr()}`;
+        //   document.querySelector('.apply-ar').addEventListener('click', function () {
+        //     arSub.forDate = {
+        //       startTime:new Date(),
+        //       endTime:new Date()
+        //     }
+        //     addView(arSub);
+        //   })
+        // }
       });
       return;
     }
@@ -3108,7 +3124,7 @@ function reportView() {
       return;
     }
     var promiseArray = [];
-    var incentives = ['customer', 'order', 'enquiry', 'collection'];
+    var incentives = ['customer', 'order', 'collection'];
     incentives.forEach(function (name) {
       promiseArray.push(getSubscription(ApplicationState.office, name));
     });

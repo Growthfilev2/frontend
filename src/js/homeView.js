@@ -4,6 +4,7 @@ function getSuggestions() {
     return;
   }
   if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
+
   return getSubsWithVenue().then(homeView)
 }
 
@@ -130,17 +131,18 @@ function getSubsWithVenue() {
 
 
 function handleNav(evt) {
-  // const state = history.state[0]
-  // if(state === 'homeView') return getSuggestions();
+
   return history.back();
 }
 
-function homePanel() {
+function homePanel(suggestionLength) {
   return ` <div class="container home-container">
   ${topNavCard()}
   <div class='work-tasks'>
-      <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>
-      <h3 class="mdc-list-group__subheader">Suggestions</h3>
+      ${suggestionLength ? `<h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>`:
+        `<h3 class="mdc-list-group__subheader mdc-typography--headline5 text-center mdc-theme--primary">All Tasks Completed</h3>`
+      }
+      <h3 class="mdc-list-group__subheader">${suggestionLength ? 'Suggestions' :''}</h3>
       <div id='pending-location-tasks'></div>
       <div id='suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
@@ -198,9 +200,8 @@ function homeView(suggestedTemplates) {
   history.pushState(['homeView'], null, null)
   const panel = document.getElementById('app-current-panel')
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
- 
-  panel.innerHTML = homePanel();
-  const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('suggestion-progress'))
+  const suggestionLength = suggestedTemplates.length
+  panel.innerHTML = homePanel(suggestionLength);
   if(document.getElementById('camera')) {
 
     document.getElementById('camera').addEventListener('click', function () {
@@ -222,37 +223,8 @@ function homeView(suggestedTemplates) {
     reportView();
   })
   
+  if(!suggestedTemplates.length) return;
 
-  if (ApplicationState.knownLocation) {
-    getPendingLocationActivities().then(function (activities) {
-      if(!document.getElementById('pending-location-tasks'))  return;
-      
-      document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
-      const ul = new mdc.list.MDCList(document.getElementById('confirm-tasks'))
-      ul.singleSelection = true;
-      console.log(ul)
-      ul.listen('MDCList:action', function (evt) {
-        console.log(activities[evt.detail.index])
-        const activityClicked = activities[evt.detail.index];
-        progCard.open();
-    
-        requestCreator('statusChange',{
-          activityId: activityClicked.activityId,
-          status: 'CONFIRMED'
-        }).then(function(){
-          progCard.close();
-          ul.listElements[evt.detail.index].classList.add('slide-right');
-          setTimeout(function(){
-            ul.listElements[evt.detail.index].classList.add('hidden');
-          },500)
-        }).catch(function(error){
-          progCard.close();
-          snacks(error.response.message)
-          ul.foundation_.adapter_.setCheckedCheckboxOrRadioAtIndex(evt.detail.index,false)      
-        })
-      })
-    })
-  }
   document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   suggestedInit.singleSelection = true;

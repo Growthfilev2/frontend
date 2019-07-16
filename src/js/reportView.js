@@ -46,7 +46,7 @@ function reportView() {
         //     addView(arSub);
         //   })
         // }
-      })
+      }).catch(console.log)
       return
     }
     if (evt.detail.index == 1) {
@@ -76,26 +76,29 @@ function reportView() {
 
     Promise.all(promiseArray).then(function (incentiveSubs) {
       console.log(incentiveSubs);
+      const subs = incentiveSubs.filter(function( element ) {
+        return element !== undefined;
+     });
 
       document.getElementById('app-current-panel').innerHTML = `<div class='incentives-section mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>
 
       </div>
       </div>`
-      if (!incentiveSubs.length) {
+      if (!subs.length) {
         document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
         return
       }
       document.querySelector('.incentives-section .content').innerHTML = `
       <ul class='mdc-list'>
-      ${incentiveSubs.map(function(incentive){
+      ${subs.map(function(incentive){
       return `${incentive ? `<li class='mdc-list-item'>Create New ${incentive.template}</li>` :''}`
       }).join("")}
       </ul>
      `
       const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
       ul.listen('MDCList:action', function (evt) {
-        addView(incentiveSubs[evt.detail.index])
+        addView(subs[evt.detail.index])
       })
     }).catch(console.log)
   })
