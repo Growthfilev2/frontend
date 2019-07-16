@@ -32,13 +32,13 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Select Product</label>
+                    <label class="mdc-floating-label">Select Products For Training</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
             <div class="form-component schedules">
-                <p class="mdc-typography--headline6 mb-0 mt-0">Demo Date</label>
+                <p class="mdc-typography--headline6 mb-0 mt-0">Training Date</label>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
                         <input class=" mdc-text-field__input" type="date" data-name="Training Date">
                         <label for="input" class="mdc-floating-label">Start Date</label>
@@ -51,7 +51,7 @@
                         <div class="mdc-line-ripple"></div>
                     </div>
                     <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
-                        onclick="showSecondDate(event,'end-date-container','Training Date')">Add Return
+                        onclick="showSecondDate(event,'end-date-container','Training Date')">Add End
                         Date</label>
             </div>
             <div class="form-component end-date-container hidden schedules">
@@ -91,13 +91,13 @@
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate)
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
+                if (!result.string) return;
                 customer.nativeControl_.innerHTML += result.string;
                 document.querySelector('.customer-select-container').classList.remove('hidden')
             })
 
             getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
-                if (!result.data.length) return;
+                if (!result.string) return;
                 product.nativeControl_.innerHTML += result.string;
                 document.querySelector('.product-select-container').classList.remove('hidden')
             })
@@ -108,10 +108,8 @@
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
 
                 copy.attachment['Customer'].value = customer.value;
-                copy.attachment['Product'].value = product.value;
-
+                copy.attachment['Products For Training'].value = product.value;
                 copy.schedule = getNewSchedule(subscriptionTemplate)
-
                 copy.share = []
                 parent.sendFormToParent(copy)
             })

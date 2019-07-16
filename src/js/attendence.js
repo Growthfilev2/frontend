@@ -22,6 +22,12 @@ function applyLeave(){
  </button>`
 }
 
+function applyAr(){
+    return `<button class="mdc-button apply-ar mt-10">
+    <span class="mdc-button__label">Apply For Attendance Regularization</span>
+  </button>`
+}
+
 function attendenceCards(){
     return `<div class='cards-container mdc-layout-grid__inner mt-20 pt-20'>
     ${[1,2,3].map(function(){

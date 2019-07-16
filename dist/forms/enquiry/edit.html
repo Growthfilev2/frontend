@@ -82,7 +82,7 @@
                     }
                     customer.listen('MDCSelect:change', function (evt) {
                         if (evt.detail.value === 'new-customer') {
-                            addView(subscription);
+                            parent.addView(subscription);
                             return
                         }
                     })

@@ -43,7 +43,7 @@
                         <div class="mdc-line-ripple"></div>
                     </div>
                     <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
-                        onclick="showSecondDate(event,'end-date-container','Follow Up Date')">Add Return
+                        onclick="showSecondDate(event,'end-date-container','Follow Up Date')">Add End
                         Date</label>
             </div>
             <div class="form-component end-date-container hidden schedules">
@@ -88,7 +88,7 @@
                     }
                     customer.listen('MDCSelect:change', function (evt) {
                         if (evt.detail.value === 'new-customer') {
-                            addView(subscription);
+                            parent.addView(subscription);
                             return
                         }
                     })
@@ -99,8 +99,6 @@
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
 
                 copy.attachment['Customer'].value = customer.value;
-
-
                 copy.schedule = getNewSchedule(subscriptionTemplate)
 
                 copy.share = []

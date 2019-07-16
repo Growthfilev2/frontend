@@ -34,10 +34,22 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Choose Invoice</label>
+                    <label class="mdc-floating-label">Choose Invoice Number</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
+
+            <div class="form-component collection-select-container hidden">
+                    <div class="mdc-select" id='collection'>
+    
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Choose collection </label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
 
             <div class="form-component">
                 <div class="mdc-text-field"  data-mdc-auto-init="MDCTextField"
@@ -47,14 +59,12 @@
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
-            <div class="form-component collection-select-container hidden">
-                    <div class="mdc-select" id='collection'>
-    
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <select class="mdc-select__native-control">
-                            <option value="" selected></option>
-                        </select>
-                        <label class="mdc-floating-label">Choose collection </label>
+         
+            <div class="form-component">
+                    <div class="mdc-text-field"  data-mdc-auto-init="MDCTextField"
+                        id='ref-number'>
+                        <input class=" mdc-text-field__input" type="number">
+                        <label for="input" class="mdc-floating-label" id="cc">Reference Number</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
                 </div>
@@ -70,6 +80,7 @@
         const collection = new parent.mdc.select.MDCSelect(document.getElementById('collection'));
         const invoice = new parent.mdc.select.MDCSelect(document.getElementById('invoice'));
         const amount = new parent.mdc.textField.MDCTextField(document.getElementById('amount'));
+        const ref = new parent.mdc.textField.MDCTextField(document.getElementById('ref-number'));
 
         var formEl = document.getElementById('form');
         function init(subscriptionTemplate) {
@@ -95,9 +106,11 @@
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-                copy.attachment['invoice'].value = invoice.value;
+                copy.attachment['Invoice Number'].value = invoice.value;
                 copy.attachment['Customer'].value = customer.value;
                 copy.attachment['collection'].value = collection.value;
+                copy.attachment['Amount Received'].value = amount.value,
+                copy.attachment['Reference Number'].value = ref.value
                 copy.share = []
                 parent.sendFormToParent(copy)
             })

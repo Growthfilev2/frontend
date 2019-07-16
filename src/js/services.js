@@ -264,12 +264,12 @@ function requestCreator(requestType, requestBody) {
     }
   };
   const nonLocationRequest = {
-    'instant':true,
-     'now':true,
-     'Null':true,
-     'backblaze':true,
-     'removeFromOffice':true,
-     'updateAuth':true
+    'instant': true,
+    'now': true,
+    'Null': true,
+    'backblaze': true,
+    'removeFromOffice': true,
+    'updateAuth': true
   }
 
   if (nonLocationRequest[requestType]) {
@@ -454,12 +454,14 @@ function getSubscription(office, template) {
     const range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
     officeTemplateCombo.getAll(range).onsuccess = function (event) {
       result = event.target.result;
+      console.log(result);
+      
       if (result.length > 1) {
-        return result.sort(function (a, b) {
+        return resolve(result.sort(function (a, b) {
           return b.timestamp - a.timestamp
-        })[0]
+        })[0])
       }
-
+      
       return resolve(result[0])
     }
 

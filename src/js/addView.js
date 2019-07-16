@@ -1,4 +1,6 @@
 function addView(sub) {
+   
+   
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">${sub.template.toUpperCase()}</span>
@@ -9,7 +11,7 @@ function addView(sub) {
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
     `
     
     console.log(db)
