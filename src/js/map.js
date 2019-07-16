@@ -7,7 +7,7 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion:3,
+  iframeVersion:5,
   idToken:''
 }
 
@@ -153,14 +153,14 @@ function loadCardData(markers) {
             if (!checkInSub) return getSuggestions()
             cardProd.open();
 
-            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()
               getSuggestions()
-            }).catch(function (error) {
-              snacks(error.response.message);
-              cardProd.close()
-            })
+            // }).catch(function (error) {
+            //   snacks(error.response.message);
+            //   cardProd.close()
+            // })
           });
         });
         if (offices.length == 1) {
@@ -440,9 +440,7 @@ function setFilePath(base64) {
 
   const image = new Image();
   image.onload = function () {
-    var sizeInBytes = 4 * Math.ceil((image.src.length / 3))*0.5624896334383812;
-    var sizeInKb=sizeInBytes/1000;
-    snacks('image width : ' + image.width + ' , image Height ' + image.height+ ' , image size ' + sizeInKb)
+   
     const orientation = getOrientation(image);
     content.style.backgroundImage = `url(${url})`
     if (orientation == 'landscape' || orientation == 'sqaure') {

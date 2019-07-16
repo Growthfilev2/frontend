@@ -32,21 +32,20 @@ function sendSuccessRequestToMainThread(response, success) {
 function sendErrorRequestToMainThread(error) {
   console.log(error)
   const errorObject = {
-    response : {
-      message:error.message,
-      apiRejection:false
+    response: {
+      message: error.message,
+      apiRejection: false
     },
-    success:false
+    success: false
   }
-  if(error.stack) {
+  if (error.stack) {
     errorObject.response.stack = error.stack
   };
 
-  if(error.code) {
+  if (error.code) {
     errorObject.response.apiRejection = true
-  }
-  else {
-    instant(JSON.stringify(errorObject.response),meta)
+  } else {
+    instant(JSON.stringify(errorObject.response), meta)
   }
 
   self.postMessage(errorObject)
@@ -258,7 +257,7 @@ function share(body, meta) {
   }
   return http(req)
 
- 
+
 }
 
 
@@ -275,7 +274,7 @@ function update(body, meta) {
 }
 
 function create(requestBody, meta) {
- 
+
   const req = {
     method: 'POST',
     url: `${meta.apiUrl}activities/create`,
@@ -528,13 +527,15 @@ function putAttachment(activity, tx, param) {
 
 }
 
-function removeUserFromAssigneeInActivity(addendum,updateTx) {
+function removeUserFromAssigneeInActivity(addendum, updateTx) {
+  const addendumStore = updateTx.objectStore('addendum').index('user');
+  removeByIndex(addendumStore, addendum.user)
   const activityObjectStore = updateTx.objectStore('activity')
   activityObjectStore.get(addendum.activityId).onsuccess = function (event) {
     const record = event.target.result;
     if (!record) return;
-  
-    const indexOfUser = record.assignees.findIndex(function(assignee){
+
+    const indexOfUser = record.assignees.findIndex(function (assignee) {
       return assignee.phoneNumber === addendum.user
     })
 
@@ -546,7 +547,7 @@ function removeUserFromAssigneeInActivity(addendum,updateTx) {
   }
 }
 
-function removeActivityFromDB(id,updateTx) {
+function removeActivityFromDB(id, updateTx) {
   if (!id) return;
 
   const activityObjectStore = updateTx.objectStore('activity');
@@ -554,11 +555,14 @@ function removeActivityFromDB(id,updateTx) {
   const chidlrenObjectStore = updateTx.objectStore('children');
   const calendarObjectStore = updateTx.objectStore('calendar').index('activityId')
   const mapObjectStore = updateTx.objectStore('map').index('activityId')
+  const addendumStore = updateTx.objectStore('addendum').index('activityId');
+
   activityObjectStore.delete(id);
   listStore.delete(id);
   chidlrenObjectStore.delete(id);
   removeByIndex(calendarObjectStore, id)
   removeByIndex(mapObjectStore, id);
+  removeByIndex(addendumStore, id)
 }
 
 function updateSubscription(subscription, tx) {
@@ -614,9 +618,9 @@ function successResponse(read, param, db, resolve, reject) {
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
-        removeActivityFromDB(addendum.activityId,updateTx);
+        removeActivityFromDB(addendum.activityId, updateTx);
       } else {
-        removeUserFromAssigneeInActivity(addendum,updateTx)
+        removeUserFromAssigneeInActivity(addendum, updateTx)
       }
     };
 
@@ -647,11 +651,14 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
+
     activityObjectStore.put(activity);
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
 
+  
+  console.log(activity.assignees)
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;

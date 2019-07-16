@@ -2,14 +2,11 @@ importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.mi
 
 var deviceInfo = void 0;
 var currentDevice = void 0;
+var meta = void 0;
 
-// get Device time
 function getTime() {
   return Date.now();
 }
-
-// dictionary object with key as the worker's onmessage event data and value as
-// function name
 
 var requestFunctionCaller = {
   dm: comment,
@@ -29,13 +26,29 @@ function sendSuccessRequestToMainThread(response, success) {
 }
 
 function sendErrorRequestToMainThread(error) {
-  self.postMessage({
-    response: error,
+  console.log(error);
+  var errorObject = {
+    response: {
+      message: error.message,
+      apiRejection: false
+    },
     success: false
-  });
+  };
+  if (error.stack) {
+    errorObject.response.stack = error.stack;
+  };
+
+  if (error.code) {
+    errorObject.response.apiRejection = true;
+  } else {
+    instant(JSON.stringify(errorObject.response), meta);
+  }
+
+  self.postMessage(errorObject);
 }
 
 self.onmessage = function (event) {
+  meta = event.data.meta;
 
   var req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
@@ -58,7 +71,6 @@ self.onmessage = function (event) {
             };
             return;
           };
-
           self.postMessage({
             response: response,
             success: true
@@ -218,7 +230,6 @@ function statusChange(body, meta) {
 
 function share(body, meta) {
 
-  // return new Promise(function (resolve, reject) {
   var req = {
     method: 'PATCH',
     url: meta.apiUrl + 'activities/share',
@@ -226,38 +237,20 @@ function share(body, meta) {
     token: meta.user.token
   };
   return http(req);
-
-  http(req).then(function (success) {
-    resolve(true);
-  }).catch(sendApiFailToMainThread);
-  // })
 }
 
 function update(body, meta) {
-  // return new Promise(function (resolve, reject) {
   var req = {
     method: 'PATCH',
     url: meta.apiUrl + 'activities/update',
     body: JSON.stringify(body),
     token: meta.user.token
   };
-
   return http(req);
-  // .then(function (success) {
-
-  //   resolve(true)
-
-  // instantUpdateDB(body, 'update', meta.user).then(function () {
-  // })
-  // })
-  // .catch(sendApiFailToMainThread)
-  // })
 }
 
 function create(requestBody, meta) {
-  // console.log(createReq)
-  // const promiseArray = [];
-  // createReq.forEach(function (requestBody) {
+
   var req = {
     method: 'POST',
     url: meta.apiUrl + 'activities/create',
@@ -265,14 +258,6 @@ function create(requestBody, meta) {
     token: meta.user.token
   };
   return http(req);
-  //   promiseArray.push(http(req))
-  // })
-  // return new Promise(function (resolve, reject) {
-  //   if (!promiseArray.length) return;
-  //   Promise.all(promiseArray).then(function () {
-  //     resolve(true)
-  //   }).catch(sendApiFailToMainThread)
-  // })
 }
 
 function removeFromOffice(offices, meta, db) {
@@ -430,7 +415,8 @@ function updateMap(venue, tx) {
     };
     deleteRecordReq.onerror = function () {
       instant({
-        message: deleteRecordReq.error.message
+        message: deleteRecordReq.error.message,
+        meta: meta
       });
     };
   };
@@ -471,7 +457,8 @@ function updateCalendar(activity, tx) {
     };
     recordDeleteReq.onerror = function () {
       instant({
-        message: recordDeleteReq.error.message
+        message: recordDeleteReq.error.message,
+        meta: meta
       });
     };
   };
@@ -503,95 +490,53 @@ function putAttachment(activity, tx, param) {
   store.put(commonSet);
 }
 
-function removeUserFromAssigneeInActivity(db, userActivityId) {
-  if (!userActivityId.length) return;
-  var activityTx = db.transaction(['activity'], 'readwrite');
-  var activityObjectStore = activityTx.objectStore('activity');
-  userActivityId.forEach(function (data) {
-    activityObjectStore.get(data.id).onsuccess = function (event) {
-      var record = event.target.result;
-      if (!record) return;
-      var indexOfUser = record.assignees.indexOf(data.user);
-      if (indexOfUser > -1) {
-        record.assignees.splice(indexOfUser, 1);
-        activityObjectStore.put(record);
-      }
-    };
-  });
+function removeUserFromAssigneeInActivity(addendum, updateTx) {
+  var addendumStore = updateTx.objectStore('addendum').index('user');
+  removeByIndex(addendumStore, addendum.user);
+  var activityObjectStore = updateTx.objectStore('activity');
+  activityObjectStore.get(addendum.activityId).onsuccess = function (event) {
+    var record = event.target.result;
+    if (!record) return;
 
-  activityTx.oncomplete = function () {
-    console.log('user removed from assignee in activity where he once was if that activity existed');
+    var indexOfUser = record.assignees.findIndex(function (assignee) {
+      return assignee.phoneNumber === addendum.user;
+    });
+
+    if (indexOfUser > -1) {
+      record.assignees.splice(indexOfUser, 1);
+
+      activityObjectStore.put(record);
+    }
   };
 }
 
-function removeActivityFromDB(db, myActivities, param) {
-  if (!myActivities.length) return;
-  var transaction = db.transaction(['activity', 'list', 'children'], 'readwrite');
-  var activityObjectStore = transaction.objectStore('activity');
-  var listStore = transaction.objectStore('list');
-  var chidlrenObjectStore = transaction.objectStore('children');
-  myActivities.forEach(function (id) {
-    activityObjectStore.delete(id);
-    listStore.delete(id);
-    chidlrenObjectStore.delete(id);
-  });
+function removeActivityFromDB(id, updateTx) {
+  if (!id) return;
 
-  transaction.oncomplete = function () {
-    mapAndCalendarRemovalRequest(activitiesToRemove, param);
-  };
-}
+  var activityObjectStore = updateTx.objectStore('activity');
+  var listStore = updateTx.objectStore('list');
+  var chidlrenObjectStore = updateTx.objectStore('children');
+  var calendarObjectStore = updateTx.objectStore('calendar').index('activityId');
+  var mapObjectStore = updateTx.objectStore('map').index('activityId');
+  var addendumStore = updateTx.objectStore('addendum').index('activityId');
 
-function mapAndCalendarRemovalRequest(activitiesToRemove, param) {
-
-  var req = indexedDB.open(param.user.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    var tx = db.transaction(['calendar', 'map'], 'readwrite');
-    var calendarObjectStore = tx.objectStore('calendar').index('activityId');
-    var mapObjectStore = tx.objectStore('map').index('activityId');
-
-    deleteByIndex(calendarObjectStore, activitiesToRemove);
-    deleteByIndex(mapObjectStore, activitiesToRemove);
-    tx.oncomplete = function () {
-      console.log("activity is removed from all stores");
-    };
-    tx.onerror = function () {
-
-      instant({
-        message: transaction.error.message
-      });
-    };
-  };
-}
-
-function deleteByIndex(store, activitiesToRemove) {
-  activitiesToRemove.forEach(function (id) {
-    store.openCursor(id).onsuccess = function (event) {
-      var cursor = event.target.result;
-      if (!cursor) return;
-      var deleteReq = cursor.delete();
-      deleteReq.onsuccess = function () {
-        cursor.continue();
-      };
-    };
-  });
+  activityObjectStore.delete(id);
+  listStore.delete(id);
+  chidlrenObjectStore.delete(id);
+  removeByIndex(calendarObjectStore, id);
+  removeByIndex(mapObjectStore, id);
+  removeByIndex(addendumStore, id);
 }
 
 function updateSubscription(subscription, tx) {
-  var count = 0;
   var store = tx.objectStore('subscriptions');
   var index = store.index('officeTemplate');
   index.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
     var cursor = event.target.result;
     if (!cursor) {
-      subscription.count = count;
       store.put(subscription);
       return;
     }
-    if (cursor.value.count) {
-      count = cursor.value.count;
-    }
-
     var deleteReq = cursor.delete();
     deleteReq.onsuccess = function () {
       console.log('deleted');
@@ -623,8 +568,7 @@ function createListStore(activity, tx) {
 }
 
 function successResponse(read, param, db, resolve, reject) {
-  var removeActivitiesForUser = [];
-  var removeActivitiesForOthers = [];
+
   var updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
   var addendumObjectStore = updateTx.objectStore('addendum');
   var activityObjectStore = updateTx.objectStore('activity');
@@ -635,14 +579,11 @@ function successResponse(read, param, db, resolve, reject) {
   read.addendum.forEach(function (addendum) {
     if (addendum.unassign) {
       if (addendum.user == param.user.phoneNumber) {
-        removeActivitiesForUser.push(addendum.activityId);
+        removeActivityFromDB(addendum.activityId, updateTx);
       } else {
-        removeActivitiesForOthers.push({
-          id: addendum.activityId,
-          user: addendum.user
-        });
+        removeUserFromAssigneeInActivity(addendum, updateTx);
       }
-    }
+    };
 
     if (addendum.isComment) {
       if (addendum.assignee === param.user.phoneNumber) {
@@ -652,33 +593,29 @@ function successResponse(read, param, db, resolve, reject) {
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee;
         userTimestamp[addendum.assignee] = addendum;
-        counter[addendum.assignee] ? counter[addendum.assignee] + 1 : counter[addendum.assignee] = 1;
       }
       addendumObjectStore.add(addendum);
     } else {
       userTimestamp[addendum.user] = addendum;
-      counter[addendum.user] ? counter[addendum.user] + 1 : counter[addendum.user] = 1;
+      if (addendum.user !== param.user.phoneNumber) {
+        counter[addendum.user] ? counter[addendum.user] + 1 : counter[addendum.user] = 1;
+      }
     }
   });
 
-  removeActivityFromDB(db, removeActivitiesForUser, param);
-  removeUserFromAssigneeInActivity(db, removeActivitiesForOthers, param);
-
-  if (read.locations) {
-    read.locations.forEach(function (location) {
-      updateMap(location, updateTx);
-    });
-  }
+  read.locations.forEach(function (location) {
+    updateMap(location, updateTx);
+  });
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
+
     activityObjectStore.put(activity);
 
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
-    // if (activity.hidden === 0) {
-    //   createListStore(activity, updateTx)
-    // };
+
+    console.log(activity.assignees);
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         var selfRecord = event.target.result;
@@ -750,6 +687,8 @@ function successResponse(read, param, db, resolve, reject) {
       if (userRecord) {
         userRecord.comment = currentAddendum.comment;
         userRecord.timestamp = currentAddendum.timestamp;
+        if (!counter[number]) return userStore.put(userRecord);
+
         if (userRecord.count) {
           userRecord.count += counter[number];
         } else {
@@ -805,7 +744,6 @@ function updateIDB(config) {
       };
 
       http(req).then(function (response) {
-
         return successResponse(response, config.meta, config.db, resolve, reject);
       }).catch(function (error) {
         return reject(error);

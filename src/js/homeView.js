@@ -27,7 +27,7 @@ function getKnownLocationSubs() {
 
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
-          result.push(cursor.value)
+           result.push(cursor.value)
 
         }
       })
@@ -58,12 +58,13 @@ function getPendingLocationActivities() {
       }
       
       let match;
-      Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
-        if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
-          console.log(cursor.value)
-          match = cursor.value
-        }
-      })
+      // Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
+      //   if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
+      //     console.log(cursor.value)
+      //     match = cursor.value
+      //   }
+      // });
+
       if (!match) {
         cursor.continue();
         return;

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../v1/external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+
+
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+            <div class="form-component customer-select-container">
+                <div class="mdc-select" id='customer'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                        <option value="new-customer" disabled>New Customer</option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Customer</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+
+            <div class="form-component product-select-container hidden">
+                <div class="mdc-select" id='product'>
+
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Product</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='details'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Details</label>
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <input type="submit" value="Create Enquiry" class="mdc-button submit-btn">
+            </div>
+        </div>
+    </form>
+    <script src="../js/common.js"></script>
+    <script>
+        parent.window.mdc.autoInit();
+        const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'));
+        const product = new parent.mdc.select.MDCSelect(document.getElementById('product'));
+        const details = new parent.mdc.textField.MDCTextField(document.getElementById('details'));
+        var formEl = document.getElementById('form');
+
+        function init(subscriptionTemplate) {
+            getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
+                if (result.string) {
+                    document.querySelector('.product-select-container').classList.remove("hidden")
+                    product.nativeControl_.innerHTML += result.string
+                }
+            })
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+                customer.nativeControl_.innerHTML += result.string;
+                parent.getSubscription(subscriptionTemplate.office, 'customer').then(function (subscription) {
+                    if (subscription) {
+                        customer.nativeControl_[1].disabled = false;
+                    }
+                    customer.listen('MDCSelect:change', function (evt) {
+                        if (evt.detail.value === 'new-customer') {
+                            addView(subscription);
+                            return
+                        }
+                    })
+                })
+            });
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Details'].value = details.value;
+                copy.attachment['Customer'].value = customer.value;
+                copy.attachment['Product'].value = product.value;
+                copy.share = []
+                parent.sendFormToParent(copy)
+            })
+        }
+    </script>
+</body>
+
+</html>
