@@ -263,8 +263,16 @@ function requestCreator(requestType, requestBody) {
       apiUrl: appKey.getBaseUrl()
     }
   };
+  const nonLocationRequest = {
+    'instant':true,
+     'now':true,
+     'Null':true,
+     'backblaze':true,
+     'removeFromOffice':true,
+     'updateAuth':true
+  }
 
-  if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze' || requestType === 'removeFromOffice') {
+  if (nonLocationRequest[requestType]) {
     requestGenerator.body = requestBody;
     apiHandler.postMessage(requestGenerator);
   } else {
