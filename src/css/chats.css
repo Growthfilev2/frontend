@@ -477,7 +477,7 @@ box-shadow: none;
 
 #view-form .mdc-card .view-card {
   padding: 20px 24px;
-  padding-top: 0px;
+
   padding-bottom: 0px;
   max-height: 300px;
 }
@@ -503,8 +503,14 @@ box-shadow: none;
   text-decoration: none;
 }
 
+#attachment-container h1 {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 #assignee-container #share {
-  max-height: 150px;
+ 
   overflow-y: auto;
 }
 
