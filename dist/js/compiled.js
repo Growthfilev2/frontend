@@ -1312,6 +1312,7 @@ function getSuggestions() {
     return;
   }
   if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
+
   return getSubsWithVenue().then(homeView);
 }
 
@@ -1433,13 +1434,12 @@ function getSubsWithVenue() {
 }
 
 function handleNav(evt) {
-  // const state = history.state[0]
-  // if(state === 'homeView') return getSuggestions();
+
   return history.back();
 }
 
-function homePanel() {
-  return ' <div class="container home-container">\n  ' + topNavCard() + '\n  <div class=\'work-tasks\'>\n      <h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>\n      <h3 class="mdc-list-group__subheader">Suggestions</h3>\n      <div id=\'pending-location-tasks\'></div>\n      <div id=\'suggestions-container\'></div>\n      <div id=\'action-button\' class=\'attendence-claims-btn-container mdc-layout-grid__inner\'>\n      </div>\n\n      <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id=\'reports\'>\n      <span class="material-icons mdc-fab__icon">description</span>\n      <span class="mdc-fab__label">My Reports</span>\n     </button>\n  </div>\n</div>';
+function homePanel(suggestionLength) {
+  return ' <div class="container home-container">\n  ' + topNavCard() + '\n  <div class=\'work-tasks\'>\n      ' + (suggestionLength ? '<h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>' : '<h3 class="mdc-list-group__subheader mdc-typography--headline5 text-center mdc-theme--primary">All Tasks Completed</h3>') + '\n      <h3 class="mdc-list-group__subheader">' + (suggestionLength ? 'Suggestions' : '') + '</h3>\n      <div id=\'pending-location-tasks\'></div>\n      <div id=\'suggestions-container\'></div>\n      <div id=\'action-button\' class=\'attendence-claims-btn-container mdc-layout-grid__inner\'>\n      </div>\n\n      <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id=\'reports\'>\n      <span class="material-icons mdc-fab__icon">description</span>\n      <span class="mdc-fab__label">My Reports</span>\n     </button>\n  </div>\n</div>';
 }
 
 function topNavCard() {
@@ -1455,9 +1455,8 @@ function homeView(suggestedTemplates) {
   history.pushState(['homeView'], null, null);
   var panel = document.getElementById('app-current-panel');
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
-
-  panel.innerHTML = homePanel();
-  var progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('suggestion-progress'));
+  var suggestionLength = suggestedTemplates.length;
+  panel.innerHTML = homePanel(suggestionLength);
   if (document.getElementById('camera')) {
 
     document.getElementById('camera').addEventListener('click', function () {
@@ -1479,36 +1478,8 @@ function homeView(suggestedTemplates) {
     reportView();
   });
 
-  if (ApplicationState.knownLocation) {
-    getPendingLocationActivities().then(function (activities) {
-      if (!document.getElementById('pending-location-tasks')) return;
+  if (!suggestedTemplates.length) return;
 
-      document.getElementById('pending-location-tasks').innerHTML = pendinglist(activities);
-      var ul = new mdc.list.MDCList(document.getElementById('confirm-tasks'));
-      ul.singleSelection = true;
-      console.log(ul);
-      ul.listen('MDCList:action', function (evt) {
-        console.log(activities[evt.detail.index]);
-        var activityClicked = activities[evt.detail.index];
-        progCard.open();
-
-        requestCreator('statusChange', {
-          activityId: activityClicked.activityId,
-          status: 'CONFIRMED'
-        }).then(function () {
-          progCard.close();
-          ul.listElements[evt.detail.index].classList.add('slide-right');
-          setTimeout(function () {
-            ul.listElements[evt.detail.index].classList.add('hidden');
-          }, 500);
-        }).catch(function (error) {
-          progCard.close();
-          snacks(error.response.message);
-          ul.foundation_.adapter_.setCheckedCheckboxOrRadioAtIndex(evt.detail.index, false);
-        });
-      });
-    });
-  }
   document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates);
   var suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'));
   suggestedInit.singleSelection = true;
@@ -1701,7 +1672,7 @@ function firebaseUiConfig() {
 }
 
 function userSignedOut() {
-
+  debugger;
   ui = new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
@@ -1825,15 +1796,13 @@ function startApp() {
     console.log("run app");
     document.getElementById("main-layout-app").style.display = 'block';
 
-    // ga('set', 'userId', '12345')
-
     var texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait'];
 
     var index = 0;
     var interval = setInterval(function () {
       if (index == texts.length - 1) {
         clearInterval(interval);
-      }
+      };
       startLoad.querySelector('p').textContent = texts[index];
       index++;
     }, index + 1 * 1000);
@@ -1983,7 +1952,7 @@ function checkForRecipient() {
 
       var content = '\n     ' + (result.length ? reportList : '') + '\n     <h3 class=\'mdc-typography--body1 text-center\'>You have not Added your Email Address. Enter Email to continue</h3>\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'email\'>\n       <input class="mdc-text-field__input" required>\n      <div class="mdc-notched-outline">\n          <div class="mdc-notched-outline__leading"></div>\n          <div class="mdc-notched-outline__notch">\n                <label class="mdc-floating-label">Email</label>\n          </div>\n          <div class="mdc-notched-outline__trailing"></div>\n      </div>\n    </div>';
 
-      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button hidden" id=\'skip\'>\n    <span class="mdc-button__label">SKIP</span>\n    </button>\n    <button class="mdc-button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
+      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button mdc-card__action mdc-card__action--button hidden" id=\'skip\'>\n    <span class="mdc-button__label">SKIP</span>\n    </button>\n    <button class="mdc-button mdc-card__action mdc-card__action--button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
 
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add Email</span>', button);
       var addEmail = document.getElementById('addEmail');
@@ -2019,7 +1988,7 @@ function checkForRecipient() {
 
     if (!auth.emailVerified) {
       var currentEmail = firebase.auth().currentUser.email;
-      var _content = '\n      ' + (result.length ? reportList : '') + '\n      <h3 class=\'mdc-typography--body1 text-center\'>Please Verify your email</h3>\n       <button class="mdc-button hidden" id=\'skip\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id=\'sendVerification\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
+      var _content = '\n      ' + (result.length ? reportList : '') + '\n      <h3 class=\'mdc-typography--body1 text-center\'>Please Verify your email</h3>\n       <button class="mdc-button hidden" id=\'skip\' style=\'width:100%\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id=\'sendVerification\' style=\'width:100%\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
 
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(_content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '');
       var _skip = document.getElementById('skip');
@@ -2075,7 +2044,6 @@ function profileCheck() {
     var progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'));
     var nameInput = new mdc.textField.MDCTextField(document.getElementById('name'));
     console.log(nameInput);
-    history.pushState(['profileCheck'], null, null);
     new mdc.ripple.MDCRipple(document.getElementById('updateName')).root_.addEventListener('click', function () {
       if (!nameInput.value) {
         nameInput.focus();
@@ -2484,7 +2452,11 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
-        if (!offices.length) return getSuggestions();
+        // if (!offices.length) return getSuggestions();
+        if (!offices.length) {
+          showNoOfficeFound();
+          return;
+        }
 
         document.getElementById('office-cont').innerHTML = '' + mdcDefaultSelect(offices, 'Choose Office', 'choose-office');
         var selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
@@ -2554,6 +2526,13 @@ function loadCardData(markers) {
     selectVenue.selectedIndex = 0;
   }
 };
+
+function showNoOfficeFound() {
+  var content = '<h3 class=\'mdc-typography--headline6\'>No Office Found For ' + firebase.auth().currentUser.phoneNumber + '</h3>';
+  var dialog = new Dialog('No Office Found', content).create('simple');
+  dialog.scrimClickAction = '';
+  dialog.open();
+}
 
 function getAllSubscriptions() {
   return new Promise(function (resolve, reject) {
@@ -3105,7 +3084,7 @@ function reportView() {
         //     addView(arSub);
         //   })
         // }
-      });
+      }).catch(console.log);
       return;
     }
     if (evt.detail.index == 1) {
@@ -3131,18 +3110,21 @@ function reportView() {
 
     Promise.all(promiseArray).then(function (incentiveSubs) {
       console.log(incentiveSubs);
+      var subs = incentiveSubs.filter(function (element) {
+        return element !== undefined;
+      });
 
       document.getElementById('app-current-panel').innerHTML = '<div class=\'incentives-section mdc-top-app-bar--fixed-adjust-with-tabs\'>\n      <div class=\'content\'>\n\n      </div>\n      </div>';
-      if (!incentiveSubs.length) {
+      if (!subs.length) {
         document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>';
         return;
       }
-      document.querySelector('.incentives-section .content').innerHTML = '\n      <ul class=\'mdc-list\'>\n      ' + incentiveSubs.map(function (incentive) {
+      document.querySelector('.incentives-section .content').innerHTML = '\n      <ul class=\'mdc-list\'>\n      ' + subs.map(function (incentive) {
         return '' + (incentive ? '<li class=\'mdc-list-item\'>Create New ' + incentive.template + '</li>' : '');
       }).join("") + '\n      </ul>\n     ';
       var ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'));
       ul.listen('MDCList:action', function (evt) {
-        addView(incentiveSubs[evt.detail.index]);
+        addView(subs[evt.detail.index]);
       });
     }).catch(console.log);
   });
@@ -3592,10 +3574,12 @@ function getSubscription(office, template) {
     var range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING']);
     officeTemplateCombo.getAll(range).onsuccess = function (event) {
       result = event.target.result;
+      console.log(result);
+
       if (result.length > 1) {
-        return result.sort(function (a, b) {
+        return resolve(result.sort(function (a, b) {
           return b.timestamp - a.timestamp;
-        })[0];
+        })[0]);
       }
 
       return resolve(result[0]);
