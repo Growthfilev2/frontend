@@ -115,6 +115,7 @@ function http(request) {
       if (xhr.readyState === 4) {
 
         if (!xhr.status || xhr.status > 226) {
+          if (!xhr.response) return;
           var errorObject = JSON.parse(xhr.response);
           var apiFailBody = {
             res: JSON.parse(xhr.response),
@@ -502,11 +503,8 @@ function putAttachment(activity, tx, param) {
 }
 
 function removeUserFromAssigneeInActivity(addendum, updateTx) {
-<<<<<<< HEAD:dist/js/apiHandler.js
-=======
   var addendumStore = updateTx.objectStore('addendum').index('user');
   removeByIndex(addendumStore, addendum.user);
->>>>>>> mapView:dist/v1/js/apiHandler.js
   var activityObjectStore = updateTx.objectStore('activity');
   activityObjectStore.get(addendum.activityId).onsuccess = function (event) {
     var record = event.target.result;
@@ -532,20 +530,14 @@ function removeActivityFromDB(id, updateTx) {
   var chidlrenObjectStore = updateTx.objectStore('children');
   var calendarObjectStore = updateTx.objectStore('calendar').index('activityId');
   var mapObjectStore = updateTx.objectStore('map').index('activityId');
-<<<<<<< HEAD:dist/js/apiHandler.js
-=======
   var addendumStore = updateTx.objectStore('addendum').index('activityId');
 
->>>>>>> mapView:dist/v1/js/apiHandler.js
   activityObjectStore.delete(id);
   listStore.delete(id);
   chidlrenObjectStore.delete(id);
   removeByIndex(calendarObjectStore, id);
   removeByIndex(mapObjectStore, id);
-<<<<<<< HEAD:dist/js/apiHandler.js
-=======
   removeByIndex(addendumStore, id);
->>>>>>> mapView:dist/v1/js/apiHandler.js
 }
 
 function updateSubscription(subscription, tx) {
@@ -635,10 +627,7 @@ function successResponse(read, param, db, resolve, reject) {
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
 
-<<<<<<< HEAD:dist/js/apiHandler.js
-=======
     console.log(activity.assignees);
->>>>>>> mapView:dist/v1/js/apiHandler.js
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         var selfRecord = event.target.result;
