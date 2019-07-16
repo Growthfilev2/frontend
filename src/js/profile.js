@@ -107,7 +107,9 @@ Choose Image
     }).then(function () {
       if (!isEmailValid(newEmail, currentEmail)) return history.back();
       requestCreator('updateAuth', {
-        email: emailInit.value
+        email: emailInit.value,
+        phoneNumber:auth.phoneNumber,
+        displayName:auth.displayName
       }).then(function () {
         snacks('Verification Link has been Sent to ' + emailInit.value);
         history.back();
