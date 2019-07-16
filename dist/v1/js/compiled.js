@@ -457,7 +457,7 @@ function enterChat(userRecord) {
     header.root_.classList.remove('hidden');
     console.log(header);
 
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                                    \n                  <input class="input-msg" data-name="dm" data-param="assignee" data-param-value="' + userRecord.mobile + '" name="input" placeholder="Type a message" autocomplete="on" autofocus="" id=\'comment-input\'>\n                  <div class="input-space-right"></div>\n                  <button class="send" id=\'comment-send\'>\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class="page">\n    <div class="marvel-device nexus5">\n   \n      \n      \n      \n      <div class="screen">\n        <div class="screen-container">\n          \n          <div class="chat">\n            <div class="chat-container">\n              \n              <div class="conversation">\n                <div class="conversation-container">\n                <div id=\'content\'>\n                </div>\n            \n                <form class="conversation-compose">\n                  <div class="input-space-left"></div>\n                                    \n                  <input class="input-msg" data-name="dm" data-param="assignee" data-param-value="' + userRecord.mobile + '" name="input" placeholder="Type a message" autocomplete="off"  id=\'comment-input\'>\n                  <div class="input-space-right"></div>\n                  <button class="send" id=\'comment-send\'>\n                      <div class="circle">\n                        <i class="material-icons">send</i>\n                      </div>\n                    </button>\n                </form>\n              </div>\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n  </div>\n        ';
     getUserChats(userRecord);
 }
 
@@ -485,7 +485,6 @@ function actionBox(value, position) {
 }
 
 function handleLongPress(addendumId, activityId, _latitude, _longitude) {
-    console.log('long press at ' + addendumId + ' : activity id ' + activityId + ' : at ' + _latitude + ' & ' + _longitude);
     clearTimeout(timer);
     var geopoint = {
         _latitude: _latitude,
@@ -499,7 +498,6 @@ function handleLongPress(addendumId, activityId, _latitude, _longitude) {
 };
 
 function touchStart(event, addendumId, activityId, _latitude, _longitude) {
-    console.log('touchStart', event);
 
     timer = setTimeout(function () {
         handleLongPress(addendumId, activityId, _latitude, _longitude);
@@ -508,19 +506,14 @@ function touchStart(event, addendumId, activityId, _latitude, _longitude) {
 
 function touchEnd(event) {
     clearTimeout(timer);
-    console.log('touchEnd', event);
 }
 
 function touchMove(event) {
     clearTimeout(timer);
-
-    console.log('touchMove', event);
 }
 
 function touchCancel(event) {
     clearTimeout(timer);
-
-    console.log('touchCancel', event);
 }
 
 function messageBoxContent(comment, time) {
@@ -632,6 +625,8 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
 
 function reply(activity) {
     var input = document.querySelector('.conversation-compose input');
+    input.dispatchEvent(new Event('focus'));
+    input.placeholder = 'Type your reply';
     if (input) {
         input.dataset.name = 'comment';
         input.dataset.param = 'activityId';
@@ -952,13 +947,15 @@ function dynamicAppendChats(addendums) {
     var myNumber = firebase.auth().currentUser.phoneNumber;
 
     addendums.forEach(function (addendum) {
-        var position = 'them';
         if (!parent) return;
+
+        var position = 'them';
         if (addendum.user === myNumber) {
             position = 'me';
         }
         if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
             if (addendum.isComment) {
+                if (addendum.user === myNumber) return;
                 parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp));
                 return;
             }
@@ -1005,6 +1002,11 @@ function getUserChats(userRecord) {
         setBottomScroll();
 
         var form = document.querySelector('.conversation-compose');
+        form.querySelector('input').addEventListener('focus', function (evt) {
+            setTimeout(function () {
+                setBottomScroll();
+            }, 500);
+        });
 
         form.addEventListener('submit', function (e) {
 
@@ -1016,10 +1018,11 @@ function getUserChats(userRecord) {
             progressBar.open();
             var param = input.dataset.param;
             var paramValue = input.dataset.paramValue;
-            requestCreator(input.dataset.name, {
-                comment: val,
-                param: paramValue
-            }).then(function () {
+            var requestBody = {
+                comment: val
+            };
+            requestBody[param] = paramValue;
+            requestCreator(input.dataset.name, requestBody).then(function () {
                 parent.appendChild(messageBoxDom(val, 'me', Date.now()));
                 setBottomScroll();
                 input.value = '';
@@ -1032,6 +1035,7 @@ function getUserChats(userRecord) {
             input.dataset.name = 'dm';
             input.dataset.param = 'assignee';
             input.dataset.paramValue = userRecord.mobile;
+            input.placeholder = 'Type a message';
         });
     };
 }
@@ -1967,21 +1971,24 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   var auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (auth.email && auth.emailVerified) return mapView();
+    // return openMap();
+    if (auth.email && auth.emailVerified) return openMap();
 
-    var text = getReportNameString(result);
+    var reportList = getReportNameString(result);
+
     if (!auth.email) {
-      var content = '<h3 class=\'mdc-typography--headline6 mt-0\'>' + text + '</h3>\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'email\'>\n       <input class="mdc-text-field__input" required>\n      <div class="mdc-notched-outline">\n          <div class="mdc-notched-outline__leading"></div>\n          <div class="mdc-notched-outline__notch">\n                <label class="mdc-floating-label">Email</label>\n          </div>\n          <div class="mdc-notched-outline__trailing"></div>\n      </div>\n    </div>';
 
-      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button" id=\'skip\'>\n    <span class="mdc-button__label">SKIP</span>\n    </button>\n    <button class="mdc-button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
+      var content = '\n     ' + (result.length ? reportList : '') + '\n     <h3 class=\'mdc-typography--body1 text-center\'>You have not Added your Email Address. Enter Email to continue</h3>\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'email\'>\n       <input class="mdc-text-field__input" required>\n      <div class="mdc-notched-outline">\n          <div class="mdc-notched-outline__leading"></div>\n          <div class="mdc-notched-outline__notch">\n                <label class="mdc-floating-label">Email</label>\n          </div>\n          <div class="mdc-notched-outline__trailing"></div>\n      </div>\n    </div>';
 
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add You Email Address</span>', button);
+      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button hidden" id=\'skip\'>\n    <span class="mdc-button__label">SKIP</span>\n    </button>\n    <button class="mdc-button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
+
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add Email</span>', button);
       var addEmail = document.getElementById('addEmail');
       var skip = document.getElementById('skip');
       if (!result.length) {
         skip.classList.remove('hidden');
         skip.addEventListener('click', function (evt) {
-          mapView();
+          openMap();
           return;
         });
       }
@@ -1999,7 +2006,7 @@ function checkForRecipient() {
           phoneNumber: firebase.auth().currentUser.phoneNumber
         }).then(function () {
           snacks('Verification Link has been Sent to ' + _emailInit.value);
-          mapView();
+          openMap();
           progCard.close();
         }).catch(console.log);
       });
@@ -2008,7 +2015,7 @@ function checkForRecipient() {
 
     if (!auth.emailVerified) {
       var currentEmail = firebase.auth().currentUser.email;
-      var _content = '<h3 class=\'mdc-typography--headline6 mt-0\'>' + text + '</h3>\n      <h3 class=\'mdc-typography--body1\'>Click To Send a verification Email</h3>\n       <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary hidden" id=\'skip\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary" id=\'sendVerification\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
+      var _content = '\n      ' + (result.length ? reportList : '') + '\n      <h3 class=\'mdc-typography--body1 text-center\'>Please Verify your email</h3>\n       <button class="mdc-button hidden" id=\'skip\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id=\'sendVerification\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
 
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(_content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '');
       var _skip = document.getElementById('skip');
@@ -2016,7 +2023,7 @@ function checkForRecipient() {
       if (!result.length) {
         _skip.classList.remove('hidden');
         _skip.addEventListener('click', function (evt) {
-          return mapView();
+          return openMap();
         });
       }
       var _progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'));
@@ -2028,7 +2035,7 @@ function checkForRecipient() {
         }).then(function () {
           _progCard.close();
           snacks('Verification Link has been Sent to ' + currentEmail);
-          mapView();
+          openMap();
         }).catch(console.log);
       });
 
@@ -2038,14 +2045,15 @@ function checkForRecipient() {
 }
 
 function getReportNameString(result) {
-  var string = '';
-  var base = 'You are a recipient for Reports in ';
   var offices = {};
-
   result.forEach(function (report) {
-    offices[report.office];
+    offices[report.office] = true;
   });
-  return Object.keys(offices).join(",");
+  console.log(offices);
+  var ul = ' <h3 class="mdc-typography--headline6 mb-0 mt-0 text-center">You are a recipient for Reports in</h3>\n  <ul class=\'mdc-list\'>\n  ' + Object.keys(offices).map(function (office) {
+    return '<li class=\'mdc-list-item list-li-small\'>\n          ' + office + '\n    </li>';
+  }).join("") + '\n  </ul>';
+  return ul;
 }
 
 function simpleInputField() {}
@@ -2339,6 +2347,15 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
     };
   });
 }
+
+function openMap() {
+  manageLocation().then(function (location) {
+    mapView(location);
+  }).catch(function (error) {
+    mapView();
+    handleError(error);
+  });
+}
 var map;
 var globMark;
 var o = void 0;
@@ -2352,7 +2369,7 @@ ApplicationState = {
   idToken: ''
 };
 
-function mapView() {
+function mapView(location) {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
   var panel = document.getElementById('app-current-panel');
@@ -2360,83 +2377,76 @@ function mapView() {
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust');
   document.getElementById('map-view').style.height = '100%';
 
-  manageLocation().then(function (location) {
-    ApplicationState.location = location;
-    firebase.auth().currentUser.reload();
-    console.log("auth relaoderd");
+  if (!location) {
     document.getElementById('start-load').classList.add('hidden');
-
-    var latLng = {
-      lat: location.latitude,
-      lng: location.longitude
-    };
-    console.log(latLng);
-    var offsetBounds = new GetOffsetBounds(location, 0.5);
-
-    o = {
-      north: offsetBounds.north(),
-      south: offsetBounds.south(),
-      east: offsetBounds.east(),
-      west: offsetBounds.west()
-    };
-    if (!document.getElementById('map')) return;
-    map = new google.maps.Map(document.getElementById('map'), {
-      center: latLng,
-      zoom: 18,
-      // maxZoom:18,
-      disableDefaultUI: true,
-
-      restriction: {
-        latLngBounds: {
-          north: offsetBounds.north(),
-          south: offsetBounds.south(),
-          east: offsetBounds.east(),
-          west: offsetBounds.west()
-        },
-        strictBounds: true
-        // strictBounds: false,
-      }
-      // mapTypeId: google.maps.MapTypeId.ROADMAP
-    });
-
-    var marker = new google.maps.Marker({
-      position: latLng,
-      icon: 'https://www.robotwoods.com/dev/misc/bluecircle.png'
-    });
-    marker.setMap(map);
-
-    var radiusCircle = new google.maps.Circle({
-      strokeColor: '#89273E',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#89273E',
-      fillOpacity: 0.35,
-      map: map,
-      center: latLng,
-      radius: location.accuracy
-    });
-
-    google.maps.event.addListenerOnce(map, 'idle', function () {
-      console.log('idle_once');
-      // createForm('Puja Capital', 'customer','',location)
-      // return
-
-      // map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
-      loadNearByLocations(o, map, location).then(function (markers) {
-        loadCardData(markers);
-      });
-    });
-  }).catch(function (error) {
-    console.log(error);
-    // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    document.getElementById('start-load').classList.add('hidden');
-
     document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>';
     var btn = new mdc.ripple.MDCRipple(document.getElementById('try-again'));
     btn.root_.onclick = function () {
       document.getElementById('start-load').classList.remove('hidden');
-      mapView();
+      openMap();
     };
+    return;
+  }
+  ApplicationState.location = location;
+  firebase.auth().currentUser.reload();
+  console.log("auth relaoderd");
+  document.getElementById('start-load').classList.add('hidden');
+
+  var latLng = {
+    lat: location.latitude,
+    lng: location.longitude
+  };
+  console.log(latLng);
+  var offsetBounds = new GetOffsetBounds(location, 0.5);
+
+  o = {
+    north: offsetBounds.north(),
+    south: offsetBounds.south(),
+    east: offsetBounds.east(),
+    west: offsetBounds.west()
+  };
+  if (!document.getElementById('map')) return;
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: latLng,
+    zoom: 18,
+    // maxZoom:18,
+    disableDefaultUI: true,
+
+    restriction: {
+      latLngBounds: {
+        north: offsetBounds.north(),
+        south: offsetBounds.south(),
+        east: offsetBounds.east(),
+        west: offsetBounds.west()
+      },
+      strictBounds: true
+
+    }
+
+  });
+
+  var marker = new google.maps.Marker({
+    position: latLng,
+    icon: 'https://www.robotwoods.com/dev/misc/bluecircle.png'
+  });
+  marker.setMap(map);
+
+  var radiusCircle = new google.maps.Circle({
+    strokeColor: '#89273E',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#89273E',
+    fillOpacity: 0.35,
+    map: map,
+    center: latLng,
+    radius: location.accuracy
+  });
+
+  google.maps.event.addListenerOnce(map, 'idle', function () {
+    console.log('idle_once');
+    loadNearByLocations(o, map, location).then(function (markers) {
+      loadCardData(markers);
+    });
   });
 }
 
@@ -2481,14 +2491,14 @@ function loadCardData(markers) {
             if (!checkInSub) return getSuggestions();
             cardProd.open();
 
-            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
-            snacks('Check-in created');
-            cardProd.close();
-            getSuggestions();
-            // }).catch(function (error) {
-            //   snacks(error.response.message);
-            //   cardProd.close()
-            // })
+            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              snacks('Check-in created');
+              cardProd.close();
+              getSuggestions();
+            }).catch(function (error) {
+              snacks(error.response.message);
+              cardProd.close();
+            });
           });
         });
         if (offices.length == 1) {
@@ -2785,16 +2795,16 @@ function loadNearByLocations(o, map, location) {
 
       marker.setMap(map);
       var content = '<span>' + cursor.value.activityId + '</span>';
-      // google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-      //   return function () {
-      //     if (lastOpen) {
-      //       lastOpen.close();
-      //     };
-      //     infowindow.setContent(content);
-      //     infowindow.open(map, marker);
-      //     lastOpen = infowindow;
-      //   };
-      // })(marker, content, infowindow));
+      google.maps.event.addListener(marker, 'click', function (marker, content, infowindow) {
+        return function () {
+          if (lastOpen) {
+            lastOpen.close();
+          };
+          infowindow.setContent(content);
+          infowindow.open(map, marker);
+          lastOpen = infowindow;
+        };
+      }(marker, content, infowindow));
       result.push(cursor.value);
       bounds.extend(marker.getPosition());
       cursor.continue();
@@ -3205,7 +3215,6 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      ApplicationState.location = location;
       resolve(location);
     }).catch(function (error) {
       reject(error);
@@ -3253,7 +3262,8 @@ function getLocation() {
       resolve({
         latitude: 28.549173600000003,
         longitude: 77.25055569999999,
-        accuracy: 24
+        accuracy: 24,
+        lastLocationTime: Date.now()
       });
       // html5Geolocation().then(function (location) {
       //   resolve(location)
@@ -3283,14 +3293,14 @@ function handleGeoLocationApi() {
   });
 }
 
-function iosLocationError(error) {
-  return new Promise(function (resolve, reject) {
-    html5Geolocation().then(function (location) {
-      ApplicationState.location = location;
-      return resolve(location);
-    }).catch(reject);
-    handleError(error);
-  });
+function iosLocationError(iosError) {
+  html5Geolocation().then(function (geopoint) {
+    var iosLocation = new CustomEvent('iosLocation', {
+      "detail": geopoint
+    });
+    window.dispatchEvent(iosLocation);
+  }).catch(locationErrorDialog);
+  handleError(iosError);
 }
 
 function html5Geolocation() {
@@ -3386,16 +3396,16 @@ function requestCreator(requestType, requestBody) {
   } else {
     getRootRecord().then(function (rootRecord) {
       if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-        manageLocation().then(function (location) {
-          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, location))) {
-            startApp();
+        manageLocation().then(function (geopoint) {
+          ApplicationState.lastLocationTime = geopoint.lastLocationTime;
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+            mapView(geopoint);
             return;
           };
 
-          ApplicationState.location = location;
           requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
           requestGenerator.body = requestBody;
-          requestBody['geopoint'] = ApplicationState.location;
+          requestBody['geopoint'] = geopoint;
           apiHandler.postMessage(requestGenerator);
         }).catch(locationErrorDialog);
         return;
@@ -3425,14 +3435,13 @@ function locationErrorDialog(error) {
   var dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
-    resetScroll();
-    listView();
+    mapView();
     handleError(error);
   });
 }
 
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
-  if (!lastLocationTime) return true;
+
   var currentTime = moment(moment().valueOf());
   var duration = moment.duration(currentTime.diff(lastLocationTime));
   var difference = duration.asSeconds();
@@ -3473,11 +3482,9 @@ function officeRemovalSuccess(data) {
 }
 
 function updateIosLocation(geopointIos) {
-
-  ApplicationState.location = geopointIos;
-  ApplicationState.lastLocationTime = Date.now();
+  geopointIos.lastLocationTime = Date.now();
   var iosLocation = new CustomEvent('iosLocation', {
-    "detail": ApplicationState.location
+    "detail": geopointIos
   });
   window.dispatchEvent(iosLocation);
 }
@@ -3501,17 +3508,20 @@ function handleComponentUpdation(readResponse) {
 }
 
 function backgroundTransition() {
-  if (!isLastLocationOlderThanThreshold(ApplicationState.lastLocationTime, 60)) return;
-  manageLocation().then(function (location) {
-    if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, location))) return;
-    mapView();
-    requestCreator('Null').then(console.log).catch(console.log);
+  if (!firebase.auth().currentUser) return;
+  if (!history.state) return;
+  requestCreator('Null').then(console.log).catch(console.log);
+  if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
+  manageLocation().then(function (geopoint) {
+    ApplicationState.location.lastLocationTime = geopoint.lastLocationTime;
+    if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return;
+    mapView(geopoint);
   });
 }
 
 function runRead(value) {
 
-  if (value.read) {
+  if (value) {
     firebase.auth().currentUser.reload();
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log);
     return;

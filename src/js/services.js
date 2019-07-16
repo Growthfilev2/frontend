@@ -85,7 +85,6 @@ function geolocationApi(body) {
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      ApplicationState.location = location
       resolve(location)
     }).catch(function (error) {
       reject(error);
@@ -133,7 +132,8 @@ function getLocation() {
       resolve({
         latitude: 28.549173600000003,
         longitude: 77.25055569999999,
-        accuracy: 24
+        accuracy: 24,
+        lastLocationTime: Date.now()
       })
       // html5Geolocation().then(function (location) {
       //   resolve(location)
@@ -163,14 +163,14 @@ function handleGeoLocationApi() {
   })
 }
 
-function iosLocationError(error) {
-  return new Promise(function (resolve, reject) {
-    html5Geolocation().then(function (location) {
-      ApplicationState.location = location;
-      return resolve(location)
-    }).catch(reject)
-    handleError(error);
-  })
+function iosLocationError(iosError) {
+  html5Geolocation().then(function (geopoint) {
+    var iosLocation = new CustomEvent('iosLocation', {
+      "detail": geopoint
+    });
+    window.dispatchEvent(iosLocation)
+  }).catch(locationErrorDialog)
+  handleError(iosError)
 }
 
 function html5Geolocation() {
@@ -269,17 +269,17 @@ function requestCreator(requestType, requestBody) {
     apiHandler.postMessage(requestGenerator);
   } else {
     getRootRecord().then(function (rootRecord) {
-      if(isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime,60)) {
-        manageLocation().then(function(location){
-          if(isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location,location))) {
-            startApp();
+      if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
+        manageLocation().then(function (geopoint) {
+          ApplicationState.lastLocationTime = geopoint.lastLocationTime;
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+            mapView(geopoint);
             return;
           };
-          
-          ApplicationState.location = location;
+
           requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
           requestGenerator.body = requestBody;
-          requestBody['geopoint'] = ApplicationState.location;
+          requestBody['geopoint'] = geopoint;
           apiHandler.postMessage(requestGenerator);
         }).catch(locationErrorDialog)
         return;
@@ -312,14 +312,13 @@ function locationErrorDialog(error) {
   const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
-    resetScroll()
-    listView();
+    mapView()
     handleError(error);
   })
 }
 
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
-  if (!lastLocationTime) return true;
+
   var currentTime = moment(moment().valueOf());
   var duration = moment.duration(currentTime.diff(lastLocationTime));
   var difference = duration.asSeconds();
@@ -364,11 +363,9 @@ function officeRemovalSuccess(data) {
 }
 
 function updateIosLocation(geopointIos) {
-
-  ApplicationState.location = geopointIos;
-  ApplicationState.lastLocationTime = Date.now();
+  geopointIos.lastLocationTime = Date.now()
   var iosLocation = new CustomEvent('iosLocation', {
-    "detail": ApplicationState.location
+    "detail": geopointIos
   });
   window.dispatchEvent(iosLocation)
 }
@@ -380,30 +377,33 @@ function handleComponentUpdation(readResponse) {
       getSuggestions()
       break;
     case 'enterChat':
-    if(!readResponse.response.addendum.length) return;
+      if (!readResponse.response.addendum.length) return;
       dynamicAppendChats(readResponse.response.addendum)
       break;
     default:
-      case 'chatView':
-      if(!readResponse.response.addendum.length) return;
+    case 'chatView':
+      if (!readResponse.response.addendum.length) return;
       readLatestChats(false);
       break;
   }
-  
+
 }
 
-function backgroundTransition(){
-  if(!isLastLocationOlderThanThreshold(ApplicationState.lastLocationTime,60)) return;
-  manageLocation().then(function(location) {
-    if(!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location,location))) return
-    mapView();
-    requestCreator('Null').then(console.log).catch(console.log)
+function backgroundTransition() {
+  if (!firebase.auth().currentUser) return
+  if (!history.state) return;
+  requestCreator('Null').then(console.log).catch(console.log)
+  if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
+  manageLocation().then(function (geopoint) {
+    ApplicationState.location.lastLocationTime = geopoint.lastLocationTime;
+    if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
+    mapView(geopoint);
   })
 }
 
 function runRead(value) {
 
-  if (value.read) {
+  if (value) {
     firebase.auth().currentUser.reload();
     requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
     return;

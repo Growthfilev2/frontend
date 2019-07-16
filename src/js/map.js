@@ -7,13 +7,13 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion:5,
-  idToken:''
+  iframeVersion: 5,
+  idToken: ''
 }
 
 
 
-function mapView() {
+function mapView(location) {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
   const panel = document.getElementById('app-current-panel')
@@ -21,88 +21,81 @@ function mapView() {
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
 
-  manageLocation().then(function (location) {
-    ApplicationState.location = location
-    firebase.auth().currentUser.reload()
-    console.log("auth relaoderd")
-    document.getElementById('start-load').classList.add('hidden');
-
-    const latLng = {
-      lat: location.latitude,
-      lng: location.longitude
-    }
-    console.log(latLng)
-    const offsetBounds = new GetOffsetBounds(location, 0.5);
-
-
-    o = {
-      north: offsetBounds.north(),
-      south: offsetBounds.south(),
-      east: offsetBounds.east(),
-      west: offsetBounds.west()
-    };
-    if (!document.getElementById('map')) return;
-    map = new google.maps.Map(document.getElementById('map'), {
-      center: latLng,
-      zoom: 18,
-      // maxZoom:18,
-      disableDefaultUI: true,
-
-      restriction: {
-        latLngBounds: {
-          north: offsetBounds.north(),
-          south: offsetBounds.south(),
-          east: offsetBounds.east(),
-          west: offsetBounds.west()
-        },
-        strictBounds: true,
-        // strictBounds: false,
-      },
-      // mapTypeId: google.maps.MapTypeId.ROADMAP
-    })
-
-    var marker = new google.maps.Marker({
-      position: latLng,
-      icon: 'https://www.robotwoods.com/dev/misc/bluecircle.png'
-    });
-    marker.setMap(map);
-
-    var radiusCircle = new google.maps.Circle({
-      strokeColor: '#89273E',
-      strokeOpacity: 0.8,
-      strokeWeight: 2,
-      fillColor: '#89273E',
-      fillOpacity: 0.35,
-      map: map,
-      center: latLng,
-      radius: location.accuracy
-    });
-
-
-    google.maps.event.addListenerOnce(map, 'idle', function () {
-      console.log('idle_once');
-      // createForm('Puja Capital', 'customer','',location)
-      // return
-
-      // map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].clear();
-      loadNearByLocations(o, map, location).then(function (markers) {
-        loadCardData(markers)
-      })
-    });
-
-
-  }).catch(function (error) {
-    console.log(error);
-    // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+  if (!location) {
     document.getElementById('start-load').classList.add('hidden')
-
     document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>'
     const btn = new mdc.ripple.MDCRipple(document.getElementById('try-again'))
     btn.root_.onclick = function () {
       document.getElementById('start-load').classList.remove('hidden')
-      mapView();
+      openMap();
     }
+    return
+  }
+  ApplicationState.location = location
+  firebase.auth().currentUser.reload()
+  console.log("auth relaoderd")
+  document.getElementById('start-load').classList.add('hidden');
+
+  const latLng = {
+    lat: location.latitude,
+    lng: location.longitude
+  }
+  console.log(latLng)
+  const offsetBounds = new GetOffsetBounds(location, 0.5);
+
+
+  o = {
+    north: offsetBounds.north(),
+    south: offsetBounds.south(),
+    east: offsetBounds.east(),
+    west: offsetBounds.west()
+  };
+  if (!document.getElementById('map')) return;
+  map = new google.maps.Map(document.getElementById('map'), {
+    center: latLng,
+    zoom: 18,
+    // maxZoom:18,
+    disableDefaultUI: true,
+
+    restriction: {
+      latLngBounds: {
+        north: offsetBounds.north(),
+        south: offsetBounds.south(),
+        east: offsetBounds.east(),
+        west: offsetBounds.west()
+      },
+      strictBounds: true,
+
+    },
+
   })
+
+  var marker = new google.maps.Marker({
+    position: latLng,
+    icon: 'https://www.robotwoods.com/dev/misc/bluecircle.png'
+  });
+  marker.setMap(map);
+
+  var radiusCircle = new google.maps.Circle({
+    strokeColor: '#89273E',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#89273E',
+    fillOpacity: 0.35,
+    map: map,
+    center: latLng,
+    radius: location.accuracy
+  });
+
+
+  google.maps.event.addListenerOnce(map, 'idle', function () {
+    console.log('idle_once');
+    loadNearByLocations(o, map, location).then(function (markers) {
+      loadCardData(markers)
+    })
+  });
+
+
 }
 
 
@@ -135,7 +128,7 @@ function loadCardData(markers) {
     console.log(evt.detail.value)
     aside.classList.add('open')
     const value = JSON.parse(evt.detail.value)
-    if(!value) return;
+    if (!value) return;
     if (value === 1) {
       ApplicationState.knownLocation = false;
       ApplicationState.venue = '';
@@ -153,14 +146,14 @@ function loadCardData(markers) {
             if (!checkInSub) return getSuggestions()
             cardProd.open();
 
-            // requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()
               getSuggestions()
-            // }).catch(function (error) {
-            //   snacks(error.response.message);
-            //   cardProd.close()
-            // })
+            }).catch(function (error) {
+              snacks(error.response.message);
+              cardProd.close()
+            })
           });
         });
         if (offices.length == 1) {
@@ -178,7 +171,7 @@ function loadCardData(markers) {
     ApplicationState.office = value.office;
     getSubscription(value.office, 'check-in').then(function (result) {
       if (!result) return getSuggestions();
-      
+
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
         </button>`
@@ -188,9 +181,9 @@ function loadCardData(markers) {
         confirm.root_.classList.add('hidden')
         cardProd.open();
         requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
-        snacks('Check-in created');
-        cardProd.close();
-        getSuggestions();
+          snacks('Check-in created');
+          cardProd.close();
+          getSuggestions();
         }).catch(function (error) {
           console.log(error)
           confirm.root_.classList.remove('hidden');
@@ -308,14 +301,14 @@ function mapDom() {
 function snapView() {
   // localStorage.setItem('snap_office', office)
   history.pushState(['snapView'], null, null)
-  if(native.getName() ==="Android") {
+  if (native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
     return
   }
   webkit.messageHandlers.startCamera.postMessage("setFilePath")
 }
 
-function setFilePathFailed(error){
+function setFilePathFailed(error) {
   snacks(error);
 }
 
@@ -365,7 +358,7 @@ function setFilePath(base64) {
       if (!offices.length) return;
       if (offices.length == 1) {
         getSubscription(offices[0], 'check-in').then(function (sub) {
-          if(!sub) {
+          if (!sub) {
             snacks('Check-in Subscription not available')
             history.back();
             return
@@ -416,7 +409,7 @@ function setFilePath(base64) {
           if (evt.detail.action !== 'accept') return;
 
           getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
-            if(!sub) {
+            if (!sub) {
               snacks('Check-in Subscription not available')
               history.back();
               return
@@ -440,7 +433,7 @@ function setFilePath(base64) {
 
   const image = new Image();
   image.onload = function () {
-   
+
     const orientation = getOrientation(image);
     content.style.backgroundImage = `url(${url})`
     if (orientation == 'landscape' || orientation == 'sqaure') {
@@ -568,16 +561,16 @@ function loadNearByLocations(o, map, location) {
 
       marker.setMap(map);
       const content = `<span>${cursor.value.activityId}</span>`
-      // google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-      //   return function () {
-      //     if (lastOpen) {
-      //       lastOpen.close();
-      //     };
-      //     infowindow.setContent(content);
-      //     infowindow.open(map, marker);
-      //     lastOpen = infowindow;
-      //   };
-      // })(marker, content, infowindow));
+      google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+        return function () {
+          if (lastOpen) {
+            lastOpen.close();
+          };
+          infowindow.setContent(content);
+          infowindow.open(map, marker);
+          lastOpen = infowindow;
+        };
+      })(marker, content, infowindow));
       result.push(cursor.value)
       bounds.extend(marker.getPosition())
       cursor.continue();

@@ -417,7 +417,7 @@ function enterChat(userRecord) {
                 <form class="conversation-compose">
                   <div class="input-space-left"></div>
                                     
-                  <input class="input-msg" data-name="dm" data-param="assignee" data-param-value="${userRecord.mobile}" name="input" placeholder="Type a message" autocomplete="on" autofocus="" id='comment-input'>
+                  <input class="input-msg" data-name="dm" data-param="assignee" data-param-value="${userRecord.mobile}" name="input" placeholder="Type a message" autocomplete="off"  id='comment-input'>
                   <div class="input-space-right"></div>
                   <button class="send" id='comment-send'>
                       <div class="circle">
@@ -475,7 +475,6 @@ function actionBox(value, position) {
 }
 
 function handleLongPress(addendumId, activityId, _latitude, _longitude) {
-    console.log(`long press at ${addendumId} : activity id ${activityId} : at ${_latitude} & ${_longitude}`)
     clearTimeout(timer);
     const geopoint = {
         _latitude: _latitude,
@@ -490,7 +489,6 @@ function handleLongPress(addendumId, activityId, _latitude, _longitude) {
 };
 
 function touchStart(event, addendumId, activityId, _latitude, _longitude) {
-    console.log('touchStart', event);
 
     timer = setTimeout(function () {
         handleLongPress(addendumId, activityId, _latitude, _longitude)
@@ -499,19 +497,16 @@ function touchStart(event, addendumId, activityId, _latitude, _longitude) {
 
 function touchEnd(event) {
     clearTimeout(timer)
-    console.log('touchEnd', event)
 }
 
 function touchMove(event) {
     clearTimeout(timer)
 
-    console.log('touchMove', event)
 }
 
 function touchCancel(event) {
     clearTimeout(timer)
 
-    console.log('touchCancel', event)
 }
 
 
@@ -637,12 +632,13 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
 
 function reply(activity) {
     const input = document.querySelector('.conversation-compose input')
+    input.dispatchEvent(new Event('focus'));
+    input.placeholder = 'Type your reply'
     if (input) {
         input.dataset.name = 'comment'
         input.dataset.param = 'activityId'
         input.dataset.paramValue = activity.activityId
     };
-    
 }
 
 function showViewDialog(heading, activity, id) {
@@ -1090,13 +1086,15 @@ function dynamicAppendChats(addendums) {
     const myNumber = firebase.auth().currentUser.phoneNumber;
 
     addendums.forEach(function (addendum) {
-        let position = 'them';
         if (!parent) return;
+        
+        let position = 'them';
         if (addendum.user === myNumber) {
             position = 'me'
         }
         if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
             if (addendum.isComment) {
+                if(addendum.user === myNumber) return;
                 parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp))
                 return;
             }
@@ -1145,7 +1143,11 @@ function getUserChats(userRecord) {
         setBottomScroll();
 
         const form = document.querySelector('.conversation-compose');
-
+        form.querySelector('input').addEventListener('focus',function(evt){
+            setTimeout(function(){
+                setBottomScroll();
+            },500)
+        })
 
         form.addEventListener('submit', function (e) {
 
@@ -1157,10 +1159,11 @@ function getUserChats(userRecord) {
             progressBar.open()
             const param = input.dataset.param
             const paramValue = input.dataset.paramValue
-            requestCreator(input.dataset.name,{
-                comment:val,
-                param:paramValue
-            }).then(function () {
+            const requestBody = {
+                comment:val
+            }
+            requestBody[param]  = paramValue
+            requestCreator(input.dataset.name,requestBody).then(function () {
                 parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                 setBottomScroll();
                 input.value = ''
@@ -1173,6 +1176,7 @@ function getUserChats(userRecord) {
             input.dataset.name = 'dm';
             input.dataset.param = 'assignee'
             input.dataset.paramValue = userRecord.mobile
+            input.placeholder = 'Type a message'
         });
     }
 }

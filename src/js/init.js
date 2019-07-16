@@ -526,11 +526,12 @@ CanvasDimension.prototype.getNewDimension = function () {
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    if (auth.email && auth.emailVerified) return mapView();
+    // return openMap();
+    if (auth.email && auth.emailVerified) return openMap();
    
     const reportList = getReportNameString(result);
 
-    if (auth.email) {
+    if (!auth.email) {
 
       const content = `
      ${result.length ? reportList : ''}
@@ -566,7 +567,7 @@ function checkForRecipient() {
       if (!result.length) {
         skip.classList.remove('hidden')
         skip.addEventListener('click', function (evt) {
-          mapView();
+          openMap();
           return;
         })
       }
@@ -584,7 +585,7 @@ function checkForRecipient() {
           phoneNumber: firebase.auth().currentUser.phoneNumber
         }).then(function () {
           snacks('Verification Link has been Sent to ' + emailInit.value)
-          mapView();
+          openMap();
           progCard.close();
 
         }).catch(console.log)
@@ -610,7 +611,7 @@ function checkForRecipient() {
       if (!result.length) {
         skip.classList.remove('hidden')
         skip.addEventListener('click', function (evt) {
-          return mapView()
+          return openMap()
         });
       }
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
@@ -622,7 +623,7 @@ function checkForRecipient() {
         }).then(function () {
           progCard.close();
           snacks('Verification Link has been Sent to ' + currentEmail)
-          mapView();
+          openMap();
         }).catch(console.log)
       })
 
@@ -967,5 +968,14 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
       })
     }
 
+  })
+}
+
+function openMap(){
+  manageLocation().then(function(location){
+    mapView(location)
+  }).catch(function(error){
+    mapView()
+    handleError(error)
   })
 }

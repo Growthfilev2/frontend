@@ -9,13 +9,14 @@ function getTime() {
 }
 
 var requestFunctionCaller = {
-  dm: comment,
+  dm: dm,
   statusChange: statusChange,
   share: share,
   update: update,
   create: create,
   backblaze: backblaze,
-  updateAuth: updateAuth
+  updateAuth: updateAuth,
+  comment: comment
 };
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -207,6 +208,16 @@ function putServerTime(data) {
 }
 
 function comment(body, meta) {
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'activities/comment',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function dm(body, meta) {
   console.log(body);
   var req = {
     method: 'POST',
@@ -330,7 +341,7 @@ function removeByIndex(index, range) {
 function updateAuth(body, meta) {
   var req = {
     method: 'POST',
-    url: 'http://growthfile.com/json?action=update-auth',
+    url: 'https://growthfile.com/json?action=update-auth',
     body: JSON.stringify(body),
     token: meta.user.token
   };

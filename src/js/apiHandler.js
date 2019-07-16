@@ -11,13 +11,14 @@ function getTime() {
 
 
 const requestFunctionCaller = {
-  dm: comment,
+  dm: dm,
   statusChange: statusChange,
   share: share,
   update: update,
   create: create,
   backblaze: backblaze,
-  updateAuth: updateAuth
+  updateAuth: updateAuth,
+  comment:comment
 }
 
 function sendSuccessRequestToMainThread(response, success) {
@@ -123,6 +124,7 @@ function http(request) {
 
 
         if (!xhr.status || xhr.status > 226) {
+          if(!xhr.response) return;
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
             res: JSON.parse(xhr.response),
@@ -220,9 +222,17 @@ function putServerTime(data) {
   })
 }
 
+function comment(body,meta) {
+  const req = {
+    method: 'POST',
+    url: `${meta.apiUrl}activities/comment`,
+    body: JSON.stringify(body),
+    token: meta.user.token
+  }
+  return http(req)
+}
 
-
-function comment(body, meta) {
+function dm(body, meta) {
   console.log(body)
   const req = {
     method: 'POST',
@@ -363,7 +373,7 @@ function removeByIndex(index, range) {
 function updateAuth(body, meta) {
   const req = {
     method: 'POST',
-    url: `http://growthfile.com/json?action=update-auth`,
+    url: `https://growthfile.com/json?action=update-auth`,
     body: JSON.stringify(body),
     token: meta.user.token
   }

@@ -127,8 +127,8 @@
         parent.window.mdc.autoInit();
         let photo  = '';
 
-        function setExpenseImage() {
-            const el = frameDoc.getElementById('expense-image')
+        function setExpenseImage(base64) {
+            const el = document.getElementById('expense-image')
             document.querySelector('.add-photo-container').classList.add('hidden');
             document.querySelector('.mdc-image-list--masonry').classList.remove('hidden')
             el.src = `data:image/jpg;base64,${base64}`;

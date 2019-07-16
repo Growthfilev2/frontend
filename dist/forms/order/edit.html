@@ -144,10 +144,10 @@
 
         let listInit;
 
-      
+
 
         function init(subscriptionTemplate) {
-          
+
             const formEl = document.getElementById('form');
             const tomorrowDate = getTommorowDate()
 
@@ -211,22 +211,22 @@
                 copy.attachment['Estimated Order Value'].value = orderValue.value;
                 copy.attachment['Special Instruction'].value = instruction.value;
                 copy.attachment['Customer'].value = customer.value
-               
-             
+
+
                 copy.schedule = getNewSchedule(subscriptionTemplate)
                 copy.share = []
                 console.log(copy);
                 const requestArray = []
-                if (!listInit) {
+                if (!listInit.listElements.length) {
                     parent.sendFormToParent(copy)
                     return
                 }
                 listInit.listElements.forEach(function (el) {
-                    if (el.querySelector('input').value) {
-                        copy.attachment['Product'].value = el.dataset.product;
-                        copy.attachment['Quantity'].value = Number(el.querySelector('input').value);
-                        requestArray.push(copy)
-                    }
+
+                    copy.attachment['Product'].value = el.dataset.product;
+                    copy.attachment['Quantity'].value = Number(el.querySelector('input').value);
+                    requestArray.push(copy)
+
                 })
                 parent.sendFormToParent(requestArray)
             })
