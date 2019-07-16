@@ -5,7 +5,7 @@ function addView(sub) {
     header.root_.classList.remove('hidden');
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust');
 
-    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/frontend/dist/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
+    document.getElementById('app-current-panel').innerHTML = '\n    <div class=\'banner\'></div>\n    <iframe id=\'form-iframe\' src=\'' + window.location.origin + '/forms/' + sub.template + '/edit.html?var=' + ApplicationState.iframeVersion + '\'></iframe>\n    ';
 
     console.log(db);
     document.getElementById('form-iframe').addEventListener("load", function (ev) {
@@ -630,6 +630,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
 function reply(activity) {
     var input = document.querySelector('.conversation-compose input');
     input.dispatchEvent(new Event('focus'));
+    input.focus();
     input.placeholder = 'Type your reply';
     if (input) {
         input.dataset.name = 'comment';
@@ -1273,7 +1274,7 @@ function menuItemMap(item, geopoint) {
     return li;
 }
 function AppKeys() {
-    this.mode = 'dev';
+    this.mode = 'production';
 };
 AppKeys.prototype.getMode = function () {
     return this.mode;
@@ -1504,7 +1505,7 @@ function templateList(suggestedTemplates) {
 var appKey = new AppKeys();
 var progressBar = void 0;
 var snackBar = void 0;
-var ui = void 0;
+
 var send = void 0;
 var change = void 0;
 var next = void 0;
@@ -1671,7 +1672,8 @@ function firebaseUiConfig() {
 }
 
 function userSignedOut() {
-  ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+  var ui = new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
@@ -2526,7 +2528,7 @@ function loadCardData(markers) {
 };
 
 function showNoOfficeFound() {
-  var content = '<h3 class=\'mdc-typography--headline6\'>No Office Found For ' + firebase.auth().currentUser.phoneNumber + '</h3>';
+  var content = '<h3 class=\'mdc-typography--headline6\'>No Office Found For ' + firebase.auth().currentUser.phoneNumber + '</h3>\n  <p>Please Contact Your Administrator</p>\n  ';
   var dialog = new Dialog('No Office Found', content).create('simple');
   dialog.scrimClickAction = '';
   dialog.open();
@@ -2776,7 +2778,7 @@ function loadNearByLocations(o, map, location) {
       });
 
       marker.setMap(map);
-      var content = '<span>' + cursor.value.activityId + '</span>';
+      var content = '<span>' + cursor.value.location + '</span>';
       google.maps.event.addListener(marker, 'click', function (marker, content, infowindow) {
         return function () {
           if (lastOpen) {

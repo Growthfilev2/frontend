@@ -213,7 +213,9 @@ function loadCardData(markers) {
 };
 
 function showNoOfficeFound(){
-  const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>`
+  const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>
+  <p>Please Contact Your Administrator</p>
+  `
   const dialog = new Dialog('No Office Found',content).create('simple');
   dialog.scrimClickAction = ''
   dialog.open();
@@ -571,7 +573,7 @@ function loadNearByLocations(o, map, location) {
 
 
       marker.setMap(map);
-      const content = `<span>${cursor.value.activityId}</span>`
+      const content = `<span>${cursor.value.location}</span>`
       google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
         return function () {
           if (lastOpen) {

@@ -1,7 +1,7 @@
 const appKey = new AppKeys();
 let progressBar;
 let snackBar;
-let ui;
+
 let send;
 let change;
 let next;
@@ -185,7 +185,8 @@ function firebaseUiConfig() {
 
 
 function userSignedOut() {
-  ui = new firebaseui.auth.AuthUI(firebase.auth())
+
+ var ui = new firebaseui.auth.AuthUI(firebase.auth())
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
