@@ -573,7 +573,7 @@ function loadNearByLocations(o, map, location) {
 
 
       marker.setMap(map);
-      const content = `<span>${cursor.value.activityId}</span>`
+      const content = `<span>${cursor.value.location}</span>`
       google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
         return function () {
           if (lastOpen) {
