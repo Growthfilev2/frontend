@@ -633,6 +633,7 @@ function createActivityActionMenu(addendumId, activityId, geopoint) {
 function reply(activity) {
     const input = document.querySelector('.conversation-compose input')
     input.dispatchEvent(new Event('focus'));
+    input.focus()
     input.placeholder = 'Type your reply'
     if (input) {
         input.dataset.name = 'comment'
