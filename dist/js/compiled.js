@@ -2034,7 +2034,7 @@ function simpleInputField() {}
 
 function profileCheck() {
   history.state = null;
-  document.getElementById('start-load').classList.add('hidden');
+
   var auth = firebase.auth().currentUser;
   if (!auth.displayName) {
     var content = '\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'name\'>\n    <input class="mdc-text-field__input" required>\n    <div class="mdc-notched-outline">\n      <div class="mdc-notched-outline__leading"></div>\n      <div class="mdc-notched-outline__notch">\n        <label class="mdc-floating-label">Name</label>\n      </div>\n      <div class="mdc-notched-outline__trailing"></div>\n    </div>\n  </div>\n  ';
@@ -2322,9 +2322,13 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
 }
 
 function openMap() {
+  document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function (location) {
+    document.getElementById('start-load').classList.add('hidden');
+
     mapView(location);
   }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden');
     mapView();
     handleError(error);
   });
