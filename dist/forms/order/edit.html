@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+
+            <div class="form-component customer-select-container hidden">
+                <div class="mdc-select" id='customer'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Select Customer</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+            <div class="form-component schedules">
+                <p class="mdc-typography--body1 mdc-theme--primary mt-0">Delivery Date</p>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-start-date'>
+                    <input class="mdc-text-field__input" type="date" data-name='Delivery Date'>
+                    <label class="mdc-floating-label">Start Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" type="time" value="12:00" data-name='Delivery Date start time'>
+                    <label class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
+                    onclick="showSecondDate(event,'delivery-end-date-container','Delivery Date')">
+                    Add Delivery Last Date
+                </p>
+
+            </div>
+            <div class="form-component schedules delivery-end-date-container hidden">
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-end-date'>
+                    <input class="mdc-text-field__input" type="date" data-name='Delivery Date end date'>
+                    <label class="mdc-floating-label">End Date</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-end-time'>
+                    <input class="mdc-text-field__input" type="time" value="12:00" data-name='Delivery Date end time'>
+                    <label class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+
+            <div class="form-component schedules">
+                <p class="mdc-typography--body1 mdc-theme--primary  mt-0">Payment Date</p>
+                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='payment-start-date'>
+
+                    <input class="mdc-text-field__input" type="date" data-name="Payment Date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Start Date</label>
+                </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                    <input class=" mdc-text-field__input" type="time" value="12:00" data-name="Payment Date start time">
+                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+                <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
+                    onclick="showSecondDate(event,'payment-end-date-container','Payment Date')">
+                    Add Payment Last Date
+                </p>
+            </div>
+
+            <div class="form-component payment-end-date-container hidden schedules">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='payment-end-date'>
+                    <input class="mdc-text-field__input" type="date" data-name="Payment Date end date">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">End Date</label>
+                </div>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" type="time" value="12:00" data-name="Payment Date end time">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label  mdc-floating-label--float-above">End Time</label>
+                </div>
+            </div>
+
+            <div class="product-select-container hidden">
+                <div class="form-component">
+                    <div class="mdc-select" id='product'>
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Choose Product</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                    <ul class="mdc-list" id='product-amount-list'>
+
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='order-value'>
+                    <input class="mdc-text-field__input" type="number">
+                    <div class="mdc-line-ripple"></div>
+                    <label class="mdc-floating-label">Estimated Order Value</label>
+                </div>
+            </div>
+            <div class="form-component">
+                <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField"
+                    id='instruction'>
+                    <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
+                    <div class="mdc-notched-outline">
+                        <div class="mdc-notched-outline__leading"></div>
+                        <div class="mdc-notched-outline__notch">
+                            <label for="textarea" class="mdc-floating-label">Special Instruction
+                        </div>
+                        <div class="mdc-notched-outline__trailing"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-component">
+                <input type="submit" value="Create Order" class="mdc-button submit-btn">
+            </div>
+    </form>
+    </div>
+
+    </div>
+
+
+    <script src="../js/common.js">
+    </script>
+    <script>
+        parent.window.mdc.autoInit();
+
+        let listInit;
+
+
+
+        function init(subscriptionTemplate) {
+
+            const formEl = document.getElementById('form');
+            const tomorrowDate = getTommorowDate()
+
+            const paymentStartDate = new parent.mdc.textField.MDCTextField(document.getElementById(
+                'payment-start-date'))
+            const paymentEndDate = new parent.mdc.textField.MDCTextField(document.getElementById('payment-end-date'))
+
+            const deliveryStartDate = new parent.mdc.textField.MDCTextField(document.getElementById(
+                'delivery-start-date'))
+            const deliveryEndDate = new parent.mdc.textField.MDCTextField(document.getElementById('delivery-end-date'))
+
+
+            paymentStartDate.value = createDate(tomorrowDate)
+            deliveryStartDate.value = createDate(tomorrowDate)
+            initializeDates(subscriptionTemplate)
+
+            const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
+            const product = new parent.mdc.select.MDCSelect(document.getElementById('product'))
+
+
+            const orderValue = new parent.mdc.textField.MDCTextField(document.getElementById('order-value'))
+            const instruction = new parent.mdc.textField.MDCTextField(document.getElementById('instruction'))
+
+
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+
+                if (result.string) {
+                    document.querySelector('.customer-select-container').classList.remove('hidden');
+                    customer.nativeControl_.innerHTML += result.string
+                }
+            });
+
+            getDropDownContent(subscriptionTemplate.office, 'product', 'officeTemplate').then(function (result) {
+                if (result.string) {
+                    const el = document.querySelector('.product-select-container');
+                    el.classList.remove('hidden');
+
+                    product.nativeControl_.innerHTML += result.string;
+                    product.listen('MDCSelect:change', function (evt) {
+                        if (!evt.detail.value) return
+                        const listEl = document.getElementById('product-amount-list')
+                        listInit = new parent.mdc.list.MDCList(listEl);
+                        if (listEl.querySelector(`[data-product="${evt.detail.value}"]`)) return;
+                        const li = createProductAmount(evt.detail.value)
+                        li.querySelector('.mdc-list-item__graphic').onclick = function (event) {
+                            removeList(event);
+
+                            if (!listInit.listElements.length) {
+                                product.selectedIndex = 0;
+                            }
+                        }
+                        listEl.appendChild(li);
+                    })
+
+                }
+            });
+
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Estimated Order Value'].value = orderValue.value;
+                copy.attachment['Special Instruction'].value = instruction.value;
+                copy.attachment['Customer'].value = customer.value
+
+
+                copy.schedule = getNewSchedule(subscriptionTemplate)
+                copy.share = []
+                console.log(copy);
+                const requestArray = []
+                if (!listInit.listElements.length) {
+                    parent.sendFormToParent(copy)
+                    return
+                }
+                listInit.listElements.forEach(function (el) {
+
+                    copy.attachment['Product'].value = el.dataset.product;
+                    copy.attachment['Quantity'].value = Number(el.querySelector('input').value);
+                    requestArray.push(copy)
+
+                })
+                parent.sendFormToParent(requestArray)
+            })
+        }
+    </script>
+</body>
+
+</html>

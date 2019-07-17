@@ -1,153 +1,402 @@
-function profileView(pushState) {
-  if (pushState) {
-    history.pushState(['profileView'], null, null);
-  }
-  if (window.addEventListener) {
-    window.removeEventListener('scroll', handleScroll, false)
-  }
+function profileView() {
 
-  document.body.style.backgroundColor = '#eeeeee';
-  const sectionStart = document.getElementById('section-start');
-  sectionStart.innerHTML = ''
-  sectionStart.appendChild(headerBackIcon())
-  var req = indexedDB.open(firebase.auth().currentUser.uid);
-  req.onsuccess = function () {
-    var db = req.result;
-    getUserRecord(db, firebase.auth().currentUser.phoneNumber).then(function (userRecord) {
+  document.getElementById('start-load').classList.add('hidden');
+  document.getElementById('app-header').classList.remove('hidden')
+  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
-      if (!document.getElementById('app-current-panel')) return;
-      document.getElementById('app-current-panel').innerHTML = createProfilePanel(userRecord).outerHTML;
-      if (native.getName() === 'Android') {
-        document.getElementById('uploadProfileImage').addEventListener('click', function () {
-          try {
-            AndroidInterface.openImagePicker();
-          } catch (e) {
-            sendExceptionObject(e, 'CATCH Type 10:AndroidInterface.openImagePicker at profileview', []);
-          }
-        })
-      } else {
-        document.getElementById('uploadProfileImage').addEventListener('change', function () {
-          readUploadedFile()
-        });
+  const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
+  const auth = firebase.auth().currentUser
+  auth.reload();
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Profile</span>`
+  const editIcon = ` <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Edit" id='edit-profile'>edit</a>
+  <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
+  `
+  const header = getHeader('app-header', backIcon, editIcon);
+
+  header.setScrollTarget(document.getElementById('main-content'));
+
+  const root = `<div class="mdc-card demo-card" id='profile-card'>
+  <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
+  
+  <div class="mdc-card__media mdc-card__media--16-9 demo-card__media"
+  style="background-image: url(${firebase.auth().currentUser.photoURL || './img/empty-user-big.jpg'});" onerror="imgErr(this)">
+
+</div>
+<button class='mdc-button overlay-text'>
+<i class='material-icons mdc-button__icon mdc-theme--on-primary'>add_a_photo</i>
+<span class='mdc-button__label mdc-theme--on-primary'>
+Choose Image
+</span>
+<input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
+</button>
+<div id='base-details'></div>
+<div id='user-details'></div>  
+<div class="mdc-card__actions">
+<div class="mdc-card__action-buttons">
+    <span class="mdc-typography--headline6 last-logged-in-time">${lastSignInTime}</span>
+</div>
+</div>
+`
+  document.getElementById('app-current-panel').innerHTML = root;
+  setDetails()
+  let newName;
+  let newEmail;
+  const currentName = auth.displayName;
+  const currentEmail = auth.email;
+  let imageSrc = firebase.auth().currentUser.photoURL;
+
+  document.getElementById('edit-profile').addEventListener('click', function (evt) {
+    console.log(header);
+    header.iconRipples_[0].root_.classList.add('hidden')
+    header.iconRipples_[1].root_.classList.remove('hidden')
+    history.pushState(['edit-profile'], null, null);
+    document.getElementById('base-details').innerHTML = ''
+    document.querySelector('.mdc-card .mdc-card__actions').classList.add('hidden')
+    document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
+    nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
+    emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
+
+
+    const imageBckg = document.querySelector('.mdc-card__media');
+    imageBckg.classList.add('reduced-brightness');
+    document.querySelector('.mdc-button.overlay-text').classList.add('show');
+
+    const input = document.getElementById('choose-profile-image')
+    document.querySelector('.overlay-text').style.opacity = 1;
+
+    input.addEventListener('change', function (evt) {
+
+      const files = input.files
+      if (!files.length) return;
+      const file = files[0];
+      var fileReader = new FileReader();
+      fileReader.onload = function (fileLoadEvt) {
+        const image = new Image();
+        image.src = fileLoadEvt.target.result;
+        image.onload = function () {
+          const newSrc = resizeAndCompressImage(image);
+          imageBckg.style.backgroundImage = `url(${newSrc})`
+          imageSrc = newSrc;
+        }
       }
+      fileReader.readAsDataURL(file);
+    })
 
-      changeDisplayName();
-      changeEmailAddress();
-    });
-  }
+  })
+  document.getElementById('save-profile').addEventListener('click', function () {
+    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')
+    newName = nameInit.value;
+    newEmail = emailInit.value;
+    progressBar.foundation_.open();
+
+    if (imageSrc !== firebase.auth().currentUser.photoURL) {
+      requestCreator('backblaze', {
+        imageBase64: imageSrc
+      }).then(function () {
+        snacks('Profile Picture set successfully')
+        auth.reload()
+      }).catch(function (error) {
+        snacks(error.response.message)
+      });
+    }
+    if (newName !== auth.displayName) {
+      auth.updateProfile({
+        displayName: newName
+      }).then(function () {
+        snacks('Username Updated Successfully')
+        auth.reload()
+      })
+    }
+
+    if (newEmail !== auth.email) {
+      if (!newEmail) {
+        snacks('Please Enter A Valid Email Address')
+        return;
+      }
+      auth.updateEmail(newEmail).then(function () {
+        auth.sendEmailVerification().then(function () {
+          snacks('Verification Link has been Sent')
+          history.back()
+        }).catch(function (verificationError) {
+          snacks(verificationError.message)
+
+        })
+      }).catch(function (error) {
+        progressBar.foundation_.close();
+        if (error.code === 'auth/requires-recent-login') {
+          redirectParam.updateEmail = newEmail;
+          redirectParam.verify = false;
+          redirectParam.functionName = 'getSuggestions'
+          showReLoginDialog('Email Update', 'Please login again to update your email address')
+          return
+        }
+        handleError({
+          message: error.code,
+          body: JSON.stringify(error)
+        })
+      })
+      return;
+    }
+    history.back();
+  })
 
 }
 
 
-function createProfilePanel(userRecord) {
-
-  var profileView = document.createElement('div');
-  profileView.id = 'profile-view--container';
-  profileView.className = 'mdc-top-app-bar--fixed-adjust mdc-theme--background';
-
-  var uploadBtn = document.createElement('button');
-  uploadBtn.className = 'mdc-fab';
-  if (native.getName() === 'Android') {
-    uploadBtn.id = 'uploadProfileImage'
-  }
-
-  var label = document.createElement('label');
-  label.setAttribute('for', 'uploadProfileImage');
-  var btnText = document.createElement('span');
-  btnText.className = 'mdc-fab__icon material-icons';
-  btnText.textContent = 'add_a_photo';
-
-  label.appendChild(btnText);
-  uploadBtn.appendChild(label);
-  let fileInput;
-  if (native.getName() !== 'Android') {
-    fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.style.display = 'none';
-    fileInput.id = 'uploadProfileImage';
-    fileInput.accept = 'image/jpeg;';
-  }
-
-  var profileImgCont = document.createElement('div');
-  profileImgCont.id = 'profile--image-container';
-  profileImgCont.className = 'profile-container--main';
-
-  const dataObject = document.createElement('object');
-  dataObject.type = 'image/jpeg';
-  dataObject.data = userRecord.photoURL || './img/empty-user-big.jpg';
-  dataObject.id = 'user-profile--image';
-
-  var profileImg = document.createElement('img');
-  profileImg.src = './img/empty-user-big.jpg';
-  profileImg.className = 'empty-user-profile'
-  dataObject.appendChild(profileImg);
-
-  var overlay = document.createElement('div');
-  overlay.className = 'insert-overlay';
-
-  profileImgCont.appendChild(dataObject);
-  profileImgCont.appendChild(overlay);
-  profileImgCont.appendChild(uploadBtn);
-  if (native.getName() !== 'Android') {
-    label.appendChild(fileInput);
-  }
-
-  var nameChangeCont = document.createElement('div');
-  nameChangeCont.id = 'name--change-container';
-  nameChangeCont.className = 'profile-psuedo-card';
-
-  var toggleBtnName = document.createElement('button');
-  toggleBtnName.className = 'mdc-icon-button material-icons hidden';
-  toggleBtnName.id = 'edit--name';
-
-  toggleBtnName.setAttribute('aria-hidden', 'true');
-  toggleBtnName.setAttribute('aria-pressed', 'false');
-  toggleBtnName.textContent = 'check';
-  const currentName = firebase.auth().currentUser.displayName;
 
 
-  nameChangeCont.innerHTML = `<div class="mdc-text-field" id='name-change-field'>
-        <input autocomplete="off" type="text"  placeholder="${currentName ? '' : 'Enter Your Name'}"  id="pre-filled-name" class="mdc-text-field__input" value="${currentName ? currentName : ''}">
-        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-name">
-         Your Name
-        </label>
-        <div class="mdc-line-ripple"></div>
+
+
+
+function setDetails() {
+  progressBar.foundation_.close();
+  document.getElementById('base-details').innerHTML = createBaseDetails()
+  document.getElementById('user-details').innerHTML = createUserDetails();
+  createViewProfile()
+
+}
+
+function createBaseDetails() {
+  const auth = firebase.auth().currentUser;
+
+  return `   <div class="basic-info seperator">
+
+  <h1 class="mdc-typography--headline5 mb-0 mt-0" id='view-name'>
+      ${auth.displayName || '-'}</h1>
+  <h1 class="mdc-typography--headline6 mb-0 mt-0">
+  <svg class='meta-icon' fill='#cccccc' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+  <span id='view-email'>
+          ${auth.email}
+      </span>
+
+  </h1>
+  <h1 class="mdc-typography--headline6 mt-0"> 
+  <svg class='meta-icon' fill='#cccccc' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+  <span
+          class="mdc-typography--headline6">${auth.phoneNumber.substring(0,3)}</span> ${auth.phoneNumber.substring(3,auth.phoneNumber.length)}
+  </h1>
+</div>`
+}
+
+function createUserDetails() {
+  return `
+  <div class="mdc-tab-bar" role="tablist">
+  <div class="mdc-tab-scroller">
+      <div class="mdc-tab-scroller__scroll-area">
+          <div class="mdc-tab-scroller__scroll-content" id='tab-scroller'>
+          </div>
       </div>
-      `
+  </div>
+</div>
+<div id='my-details' class='pt-10'></div>
 
-  nameChangeCont.appendChild(toggleBtnName);
+`
+}
 
-  var emailCont = document.createElement('div');
-  emailCont.id = 'email--change-container';
-  emailCont.className = 'profile-psuedo-card';
+function createViewProfile() {
 
-  var toggleBtnEmail = document.createElement('button');
-  toggleBtnEmail.className = 'mdc-icon-button material-icons hidden';
-  toggleBtnEmail.id = 'edit--email';
-  toggleBtnEmail.setAttribute('aria-hidden', 'true');
-  toggleBtnEmail.setAttribute('aria-pressed', 'false');
-  toggleBtnEmail.textContent = 'check';
-  const currentEmail = firebase.auth().currentUser.email;
+  getEmployeeDetails(IDBKeyRange.only(firebase.auth().currentUser.phoneNumber), 'employees').then(function (myCreds) {
+    let officeDom = '';
 
-  emailCont.innerHTML = `<div class="mdc-text-field" id='email-change-field'>
-        <input  autocomplete="off" type="text" id="pre-filled-email" class="mdc-text-field__input" value="${currentEmail ? currentEmail : ''}" placeholder="${currentEmail ? '' : 'Enter your Email'}">
-        <label class="mdc-floating-label mdc-floating-label--float-above" for="pre-filled-email">
-         Your Email
-        </label>
-        <div class="mdc-line-ripple"></div>
+    myCreds.forEach(function (activity) {
+
+      officeDom += addTabs(activity.office);
+    })
+    document.getElementById('tab-scroller').innerHTML = officeDom;
+    const tabInit = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'));
+    //minor hack
+    setTimeout(function () {
+      tabInit.activateTab(0);
+    }, 0)
+    tabInit.listen('MDCTabBar:activated', function (evt) {
+
+      const me = myCreds[evt.detail.index];
+      const selectedOffice = me.office;
+
+      const mySupervisors = [me.attachment['First Supervisor'].value, me.attachment['Second Supervisor'].value]
+
+      document.getElementById('my-details').innerHTML = fillUserDetails(me);
+      Promise.all([getEmployeeDetails([selectedOffice, 'recipient'], 'officeTemplate'), getEmployeeDetails([selectedOffice, 'leave-type'], 'officeTemplate'), getEmployeeDetails([1, selectedOffice], 'teamOffice')]).then(function (results) {
+        const reports = results[0];
+        const leaves = results[1];
+        const myTeam = results[2];
+        console.log(results);
+
+        if (reports.length) {
+          document.getElementById('reports').innerHTML = ` <h1 class="mdc-typography--subtitle1 mt-0">
+                          Reports :
+                          ${reports.map(function(report){
+                              return `<span>${report.attachment.Name.value}</span>  <span class="dot"></span>`
+                          }).join("")}
+                          </h1>`
+        }
+
+        if (leaves.length) {
+          document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
+                          Remaining Leaves
+                          ${leaves.map(function(leave,idx){
+                             return `<h1 class="mdc-typography--headline6 mt-0 ${leaves.length - idx == 1 ? '' :'mb-0'}">${leave.attachment.Name.value} : ${leave.attachment['Annual Limit'].value}</h1>`
+                          }).join("")}
+                      </h1>`
+        }
+        const tx = db.transaction(['users']);
+        const store = tx.objectStore('users');
+        let team = '';
+        let supers = '';
+
+        mySupervisors.forEach(function (value) {
+          store.get(value).onsuccess = function (event) {
+            const record = event.target.result;
+            if (!record) return;
+            supers += addUserChips(record)
+
+          }
+        })
+
+        if (myTeam.length) {
+          myTeam.forEach(function (member) {
+            store.get(member.attachment['Employee Contact'].value).onsuccess = function (event) {
+              const record = event.target.result;
+              if (!record) return;
+              team += addUserChips(record)
+            }
+          })
+        };
+
+        tx.oncomplete = function () {
+          if (supers) {
+            document.getElementById('supervisors').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Supervisors</h1>
+                  <div class="mdc-chip-set supervisor">
+                  ${supers}
+                  </div>
+                  `
+          }
+          if (team) {
+
+            document.getElementById('my-team').innerHTML = `<h1 class="mdc-typography--headline6 mt-0 mb-0">Team</h1>
+                  <div class="mdc-chip-set">
+                  ${team}
+                  </div>`
+          }
+        }
+
+      })
+    })
+  })
+}
+
+function createEditProfile(name, email) {
+
+  return ` ${nameField(name)}
+
+  ${emailField(email,'This Will Be Used For Sending Reports')}
+    `
+}
+
+function nameField(name) {
+  return `<div class="mdc-typography mdc-typography--body2 p-10" id='card-body-edit'>
+  <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
+
+  <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+      <input class="mdc-text-field__input" value="${name}">
+      <div class="mdc-line-ripple"></div>
+      <label class="mdc-floating-label ${name ? 'mdc-floating-label--float-above' :''}">Name</label>
+  </div>
+  <div class="mdc-text-field-helper-line">
+      <div id="username-helper-text" class="mdc-text-field-helper-text" aria-hidden="true">
+       This will be displayed on your public profile
+
       </div>
-      `
+  </div>`
+}
+
+function emailField(email, label, setFocus) {
+  return `<div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='email'>
+  <svg class='mdc-text-field__icon' xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
+  <input class="mdc-text-field__input" type='email' value="${email}" autofocus=${setFocus ? 'true':'false'}>
+  <div class="mdc-line-ripple"></div>
+  <label class="mdc-floating-label ${email ? 'mdc-floating-label--float-above' :''} ">Email</label>
+</div>
+<div class="mdc-text-field-helper-line">
+  <div id="username-helper-text" class="mdc-text-field-helper-text" aria-hidden="true">
+      ${label}
+  </div>
+</div>`
+}
+
+function addTabs(name) {
 
 
-  emailCont.appendChild(toggleBtnEmail);
+  return ` <button class="mdc-tab" role="tab">
+        <span class="mdc-tab__content">
+            <span class="mdc-tab__text-label">${name}</span>
+        </span>
+        <span class="mdc-tab-indicator">
+            <span
+                class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
+        </span>
+        <span class="mdc-tab__ripple"></span>
+    </button>`
 
 
-  profileView.appendChild(profileImgCont);
-  profileView.appendChild(nameChangeCont);
-  profileView.appendChild(emailCont);
-  return profileView
+}
+
+function addUserChips(user) {
+  return `
+  <div class="mdc-chip">
+    ${user.photoURL ? `<img class="mdc-chip__icon mdc-chip__icon--leading" src=${user.photoURL} onerror="imgErr(this)">`:`
+    
+    <svg class="mdc-chip__icon mdc-chip__icon--leading" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.33-2.34 2.37-3.47C10.5 13.1 9.66 13 9 13z"/></svg>`}
+    <div class="mdc-chip__text">${user.displayName || user.mobile}</div>
+</div>`
 
 
+}
+
+function fillUserDetails(user) {
+  const notAllowedFields = {
+    'First Supervisor': true,
+    'Second Supervisor': true,
+    'Employee Contact': true,
+    'Name': true
+  }
+  const template = `<div class="office-info seperator">
+${Object.keys(user.attachment).map(function(attachmentNames){
+    return `${notAllowedFields[attachmentNames] ? '': `${user.attachment[attachmentNames].value ? `<h1 class="mdc-typography--subtitle1 mt-0">
+    ${attachmentNames} : ${user.attachment[attachmentNames].value}
+</h1>`:''}`}` 
+
+}).join("")}
+
+<h1 class="mdc-typography--subtitle1 mt-0">
+    Joined : ${moment(firebase.auth().currentUser.metadata.creationTime).format("Do MMM YYYY")}
+</h1>
+
+<div id='reports'>
+
+</div>
+</div>
+<div class="hierchy pt-10 seperator">
+<div id='supervisors'>
+</div>
+
+<div id='my-team' style='padding-bottom:10px'>
+</div>
+</div>
+
+<div class="meta-hidden-details">
+<div id='leaves'>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+`
+  return template
 }
 
 function timeDiff(lastSignInTime) {
@@ -156,190 +405,11 @@ function timeDiff(lastSignInTime) {
   return moment(currentDate).diff(moment(authSignInTime), 'minutes');
 }
 
-function newSignIn(value, field) {
-  const dialog = new Dialog('', createElement('div', {
-    id: 'refresh-login'
-  })).create();
-  dialog.open();
-  dialog.listen('MDCDialog:opened', function (evt) {
-    try {
-      if (!ui) {
-        ui = new firebaseui.auth.AuthUI(firebase.auth())
-      }
-      ui.start('#refresh-login', firebaseUiConfig(value));
-      setTimeout(function () {
-        document.querySelector('.firebaseui-id-phone-number').disabled = true;
-        document.querySelector('.firebaseui-label').remove();
-        document.querySelector('.firebaseui-title').textContent = 'Verify your phone Number to Update your Email address';
-      }, 500)
 
-    } catch (e) {
-      // dialogSelector.remove();
-      console.log(e);
-      handleError({
-        message: `${e.message} from newSignIn function during email updation`
-      });
-      snacks('Please try again later');
-    }
-  })
-  // document.getElementById('dialog-container').innerHTML = dialog({id:'updateEmailDialog',showCancel:true,showAccept:false,headerText:false,content:false}).outerHTML
-  // const dialogSelector = document.querySelector('#updateEmailDialog')
-  // dialogSelector.querySelector('section').id = 'refresh-login'
-  // var emailDialog = new mdc.dialog.MDCDialog(dialogSelector);
-
-
-
-}
-
-function readUploadedFile(image) {
-  if (native.getName() === 'Android') {
-    sendBase64ImageToBackblaze(image);
-    return;
+function isEmailValid(newEmail, currentEmail) {
+  if (!newEmail) {
+    return false;
   }
+  return !(newEmail === currentEmail)
 
-  var file = document.getElementById('uploadProfileImage').files[0];
-  var reader = new FileReader();
-
-  reader.addEventListener("load", function () {
-    sendBase64ImageToBackblaze(reader.result);
-    return;
-  }, false);
-
-  if (file) {
-    reader.readAsDataURL(file);
-  }
-}
-
-function sendBase64ImageToBackblaze(base64) {
-  var selector = document.getElementById('user-profile--image');
-  var container = document.getElementById('profile--image-container');
-  const pre = 'data:image/jpeg;base64,';
-  if (selector) {
-    selector.data = pre + base64;
-  }
-  if (container) {
-    document.getElementById('profile--image-container').appendChild(loader('profile--loader'));
-  }
-  var body = {
-    'imageBase64': pre + base64
-  };
-  requestCreator('backblaze', body);
-}
-
-function authUpdatedError(error) {
-  progressBar.foundation_.close();
-  snacks(error.message);
-}
-
-function changeDisplayName() {
-  const nameField = document.getElementById('name-change-field')
-  const name = new mdc.textField.MDCTextField(nameField)
-  const nameChangeButton = document.getElementById('edit--name')
-  const currentName = firebase.auth().currentUser.displayName
-
-  nameField.addEventListener('click', function () {
-    document.getElementById('pre-filled-name').placeholder = ''
-    nameChangeButton.classList.remove('hidden')
-    nameField.classList.add('short');
-
-  })
-
-  nameField.addEventListener('keydown', function (event) {
-    if (event.keyCode == 13) {
-      updateName(name.value);
-    }
-  })
-
-  nameChangeButton.addEventListener('click', function () {
-    updateName(name.value)
-  })
-
-}
-
-function updateName(name) {
-
-  if (!name) {
-    snacks('Please Enter a Name');
-    return;
-  }
-  progressBar.foundation_.open()
-  firebase.auth().currentUser.updateProfile({
-    displayName: name
-  }).then(successDialog).catch(function (error) {
-    progressBar.foundation_.close();
-    snacks('Please Try again later');
-    handleError({
-      message: `${error} at updateProfile in changeDisplayName`
-    })
-  })
-}
-
-function changeEmailAddress() {
-  const emailField = document.getElementById('email-change-field')
-  const email = new mdc.textField.MDCTextField(emailField)
-  const editEmail = document.getElementById('edit--email');
-
-  emailField.addEventListener('click', function () {
-    document.getElementById('pre-filled-email').placeholder = ''
-    editEmail.classList.remove('hidden');
-    emailField.classList.add('short');
-
-  })
-
-  emailField.addEventListener('keydown', function (event) {
-    if (event.keyCode == 13) {
-      emailValidation(email)
-    }
-  })
-
-  editEmail.addEventListener('click', function () {
-    emailValidation(email)
-  })
-}
-
-function emailValidation(emailField) {
-  const auth = firebase.auth().currentUser;
-
-
-  const value = emailField.value
-  if (!value) {
-    snacks('Enter a valid Email Id');
-    return;
-  }
-  if (value === auth.email && auth.emailVerified) {
-    snacks('You have already set this as your email address');
-    return;
-  }
-  if (timeDiff(auth.metadata.lastSignInTime) <= 2) {
-    updateEmail(auth, value);
-  } else {
-    newSignIn(value, emailField);
-  }
-}
-
-function updateEmail(user, email) {
-  progressBar.foundation_.open();
-  user.updateEmail(email).then(function () {
-    emailUpdateSuccess(true)
-  }).catch(authUpdatedError);
-}
-
-function emailUpdateSuccess(showSuccessDialog) {
-  var user = firebase.auth().currentUser;
-  user.sendEmailVerification().then(function () {
-    emailVerificationSuccess(showSuccessDialog)
-  }).catch(emailVerificationError);
-}
-
-function emailVerificationSuccess(showSuccessDialog) {
-  if (showSuccessDialog) {
-    successDialog();
-    document.getElementById('dialog-container').innerHTML = ''
-  };
-  snacks('Verification link has been send to your email address');
-}
-
-function emailVerificationError(error) {
-  snacks(error.message);
-  progressBar.foundation_.close();
 }

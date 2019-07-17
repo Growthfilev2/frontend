@@ -1,94 +1,153 @@
-<!-- Only when no cache is present and can't reach url-->
+<!DOCTYPE html>
 <html>
 
 <head>
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <style>
-        @-webkit-keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+  <title>Growthfile</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="shortcut icon" type="image/png" href="img/favicon.png" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link type="text/css" rel="stylesheet" href="external/css/firebaseui.css" />
 
-        @-moz-keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .fade-in {
-            opacity: 0;
-            /* make things invisible upon start */
-            -webkit-animation: fadeIn ease-in 1;
-            /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
-            -moz-animation: fadeIn ease-in 1;
-            animation: fadeIn ease-in 1;
-
-            -webkit-animation-fill-mode: forwards;
-            /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
-            -moz-animation-fill-mode: forwards;
-            animation-fill-mode: forwards;
-
-            -webkit-animation-duration: 1s;
-            -moz-animation-duration: 1s;
-            animation-duration: 1s;
-        }
-
-        .fade-in.two {
-            -webkit-animation-delay: 0.6s;
-            -moz-animation-delay: 0.6s;
-            animation-delay: 0.6s;
-        }
-
-        .reload-btn {
-            width: 50%;
-            padding: 10px;
-            border: 0px;
-            border-radius: 5px;
-            color: white;
-            background-color: #0399f4;
-        }
-
-        .container {
-            text-align: center;
-        }
-
-        .box {
-            position: absolute;
-            top: 30%;
-        }
-
-        h1 {
-            text-transform: uppercase;
-            color: #0399f4;
-        }
-    </style>
+  <link href="external/css/material.min.css" rel="stylesheet" type="text/css">
+  <link href="css/bundle.css" rel="stylesheet" type="text/css">
+  <script>
+    window.ga = window.ga || function () {
+      (ga.q = ga.q || []).push(arguments)
+    };
+    ga.l = +new Date;
+    ga('create', 'UA-139388420-3', 'auto');
+    ga('send', 'pageview');
+  </script>
+  <script async src='https://www.google-analytics.com/analytics.js'></script>
 </head>
 
-<body>
-    <div class="container">
-        <div class="box fade-in two">
-            <h1>You are Using Old Version Of Growthfile</h1>
-            <p>Please Update Your App</p>
-        </div>
-    </div>
-</body>
 
+<body class="mdc-typography">
+    <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
+        <div class='mdc-top-app-bar__row'>
+          <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
+    
+          </section>
+          <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
+          </section>
+        </div>
+        <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed">
+          <div class="mdc-linear-progress__buffering-dots"></div>
+          <div class="mdc-linear-progress__buffer"></div>
+          <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+            <span class="mdc-linear-progress__bar-inner"></span>
+          </div>
+          <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+            <span class="mdc-linear-progress__bar-inner"></span>
+          </div>
+        </div>
+        <div id='tabs'></div>
+      </header>
+      <aside class="mdc-drawer mdc-drawer--modal">
+          <div class="mdc-drawer__header">
+              <img src="">
+    
+              <h3 class="mdc-drawer__title mdc-theme--text-primary-on-light"></h3>
+             
+            </div>
+          <div class="mdc-drawer__content">
+            <nav class="mdc-list">
+              <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
+                <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
+                <span class="mdc-list-item__text">Inbox</span>
+              </a>
+              <a class="mdc-list-item" href="#">
+                <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
+                <span class="mdc-list-item__text">Outgoing</span>
+              </a>
+              <a class="mdc-list-item" href="#">
+                <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
+                <span class="mdc-list-item__text">Drafts</span>
+              </a>
+            </nav>
+          </div>
+        </aside>
+      
+        <div class="mdc-drawer-scrim"></div>
+    
+      <div id='start-load' class="hidden">
+        <div class="lds-roller">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+        <p></p>
+      </div>
+      </div>
+    
+      <div class="success--container hidden" id="success-animation">
+        <div class="success--check"></div>
+      </div>
+    
+      <div id="growthfile">
+    
+        <div id='main-content'>
+          <div id='login-container'></div>
+    
+          <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
+    
+            <div class="mdc-layout-grid__cell--span-12" id="app-current-panel">
+    
+            </div>
+    
+            <div class="mdc-layout-grid__cell--span-12">
+              <div class="mdc-bottom-navigation hidden">
+              
+                <ul class="mdc-bottom-navigation__list mdc-list" id='nav-list'>
+                  <li class="mdc-list-item mdc-bottom-navigation__list-item"
+                    data-state='snapView'>
+                    <span class="material-icons mdc-bottom-navigation__list-item__icon">photo_camera</span>
+                  </span>
+    
+                  <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='homeView'>
+                    <span class="material-icons mdc-bottom-navigation__list-item__icon">home
+                    </span>
+                  </span>
+                  <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='chatView'>
+                    <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
+                  </span>;
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+      </div>
+    
+      <div id="snackbar-container">
+        <div class="mdc-snackbar">
+          <div class="mdc-snackbar__surface">
+            <div class="mdc-snackbar__label" role="status" aria-live="polite">
+            </div>
+            <div class="mdc-snackbar__actions">
+              <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='dialog-container'></div>
+  <script src='external/js/firebase-app.js'></script>
+  <script src='external/js/firebase-auth.js'></script>
+  <script src="external/js/firebaseui.js"></script>
+  <script src='external/js/material.min.js'></script>
+  <script src="js/compiled.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+  <script type="text/javascript"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ" async>
+  </script>
+</body>
 
 </html>

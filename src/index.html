@@ -6,36 +6,52 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <script src='https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js' defer></script>
-  <script src='https://www.gstatic.com/firebasejs/5.4.1/firebase-auth.js' defer></script>
-  <script src="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.js" defer></script>
+  <script src='external/js/firebase-app.js' defer></script>
+  <script src='external/js/firebase-auth.js' defer></script>
+  <script src="external/js/firebaseui.js" defer></script>
   <script type="text/javascript"
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&libraries=places"></script>
 
-  <script src='https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js' defer
+  <script src='external/js/material.min.js' defer
     crossorigin="anonymous"></script>
-  <script src="external/js/moment.min.js" defer crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" defer crossorigin="anonymous"></script>
 
-  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.0.0/firebaseui.css" / defer>
+  <link type="text/css" rel="stylesheet" href="external/css/firebaseui.css" / defer>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" async>
 
-  <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet"
+  <link href="external/css/material.min.css" rel="stylesheet"
     type="text/css">
 
   <link href="css/app.css" rel="stylesheet" type="text/css">
+  <link href="css/start.css" rel="stylesheet" type="text/css"> 
+  <link href="css/bottomNav.css" rel="stylesheet" type="text/css">
+  <link href="css/map.css" rel="stylesheet" type="text/css">
+  <link href="css/claims.css" rel="stylesheet" type="text/css">
+  <link href="css/attendence.css" rel="stylesheet" type="text/css">
+  <link href="css/reportView.css" rel="stylesheet" type="text/css">
+
+  <link href="css/snap.css" rel="stylesheet" type="text/css">
+  <link href="css/profile.css" rel="stylesheet" type="text/css">
+  <link href="css/chats.css" rel="stylesheet" type="text/css">
+  <link href="css/home.css" rel="stylesheet" type="text/css">
 
   <script src="js/config.js" defer></script>
   <script src="js/component.js" defer></script>
+  <!-- <script src="js/exmaple.js"></script> -->
   <script src="js/init.js" defer crossorigin="anonymous"></script>
   <script src="js/services.js" defer></script>
-  <script src="js/panel.js" defer async></script>
+  <script src="js/map.js" defer></script>
+  <script src="js/homeView.js" defer></script>
+  <script src="js/addView.js" defer></script>
   <script src="js/profile.js" defer async></script>
-  <script src="js/conversation.js" defer async></script>
-  <script src="js/selector.js" defer async></script>
-  <script src="js/searchDB.js" defer async></script>
-  <script>
-     window.ga = window.ga || function () {
+  <script src="js/chatView.js" defer async></script>
+  <script src="js/claims.js" defer async></script>
+  <script src="js/attendence.js" defer async></script>
+  <script src="js/reportView.js" defer async></script>
+
+<script>
+    window.ga = window.ga || function () {
       (ga.q = ga.q || []).push(arguments)
     };
     ga.l = +new Date;
@@ -46,9 +62,10 @@
 </head>
 
 <body class="mdc-typography">
-  <header class='mdc-top-app-bar mdc-top-app-bar--fixed mdc-elevation--z1'>
+  <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
+
       </section>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-end' id='section-end'>
       </section>
@@ -63,39 +80,101 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
+    <div id='tabs'></div>
   </header>
+  <aside class="mdc-drawer mdc-drawer--modal">
+      <div class="mdc-drawer__header">
+          <img src="">
 
-  <div class="showbox" id='start-loader'>
-    <svg class="circular" viewBox="25 25 50 50">
-      <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
-    </svg>
+          <h3 class="mdc-drawer__title mdc-theme--text-primary-on-light"></h3>
+         
+        </div>
+      <div class="mdc-drawer__content">
+        <nav class="mdc-list">
+          <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
+            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
+            <span class="mdc-list-item__text">Inbox</span>
+          </a>
+          <a class="mdc-list-item" href="#">
+            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
+            <span class="mdc-list-item__text">Outgoing</span>
+          </a>
+          <a class="mdc-list-item" href="#">
+            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
+            <span class="mdc-list-item__text">Drafts</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+  
+    <div class="mdc-drawer-scrim"></div>
+
+  <div id='start-load' class="hidden">
+    <div class="lds-roller">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p></p>
   </div>
+  </div>
+
   <div class="success--container hidden" id="success-animation">
     <div class="success--check"></div>
   </div>
 
-  <div id="growthfile" class="mdc-top-app-bar--fixed-adjust">
-    <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
+  <div id="growthfile">
 
-      <div class="mdc-layout-grid__cell--span-12" id="app-current-panel"></div>
+    <div id='main-content'>
+      <div id='login-container'></div>
 
-      <div id="snackbar-container">
-        <div class="mdc-snackbar">
-          <div class="mdc-snackbar__surface">
-            <div class="mdc-snackbar__label" role="status" aria-live="polite">
-            </div>
-            <div class="mdc-snackbar__actions">
-              <button type="button" class="mdc-button mdc-snackbar__action">Retry</button>
-            </div>
-          </div>
+      <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
+
+        <div id="app-current-panel">
+
         </div>
+
+        <!-- <div class="mdc-layout-grid__cell--span-12">
+          <div class="mdc-bottom-navigation hidden">
+          
+            <ul class="mdc-bottom-navigation__list mdc-list" id='nav-list'>
+              <li class="mdc-list-item mdc-bottom-navigation__list-item"
+                data-state='snapView'>
+                <span class="material-icons mdc-bottom-navigation__list-item__icon">photo_camera</span>
+              </span>
+
+              <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='homeView'>
+                <span class="material-icons mdc-bottom-navigation__list-item__icon">home
+                </span>
+              </span>
+              <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='chatView'>
+                <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
+              </span>;
+            </ul>
+          </div>
+        </div> -->
       </div>
-      <div id='dialog-container'></div>
     </div>
 
   </div>
-  
 
+  <div id="snackbar-container">
+    <div class="mdc-snackbar">
+      <div class="mdc-snackbar__surface">
+        <div class="mdc-snackbar__label" role="status" aria-live="polite">
+        </div>
+        <div class="mdc-snackbar__actions">
+          <button type="button" class="mdc-button mdc-snackbar__action">Okay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id='dialog-container'></div>
 </body>
 
 </html>

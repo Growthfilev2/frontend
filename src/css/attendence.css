@@ -1,0 +1,18 @@
+.attendence-section {
+
+}
+.attendence-section .mdc-button {
+  margin: 0 auto;
+  display: block;
+}
+.cards-container {
+  background-color: #cccccc47;
+}
+.cards-container .mdc-card {
+    width: 90%;
+    margin: auto;
+    padding: 20px;
+}
+.cards-container .mdc-card .card-actions {
+  /* margin-top:  */
+}

@@ -7,9 +7,6 @@
       "**/node_modules/**"
     ],
     "rewrites": [{
-      "source": "growthfile-testing.firebaseapp.com/v1/**",
-      "destination": "/v1/index.html"
-    },{
       "source": "growthfile-testing.firebaseapp.com",
       "destination": "index.html"
     }],
@@ -17,7 +14,7 @@
         "source": "**/*.@(jpg|jpeg|gif|png)",
         "headers": [{
           "key": "Cache-Control",
-          "value": "max-age=10800"
+          "value": "max-age=10000"
         }]
       }, {
         "source": "**/*.@(js)",
@@ -26,20 +23,20 @@
           "value": "*"
         }, {
           "key": "Cache-Control",
-          "value": "max-age=10800"
+          "value": "max-age=10000"
         }]
       },
       {
         "source": "**/*.@(css)",
         "headers": [{
           "key": "Cache-Control",
-          "value": "max-age=10800"
+          "value": "max-age=10000"
         }]
       },{
         "source": "/v1/**",
         "headers": [{
           "key": "Cache-Control",
-          "value": "max-age=10800"
+          "value": "max-age=10000"
         }]
       }]
   }
