@@ -214,7 +214,7 @@ function requestCreator(requestType, requestBody) {
     body: '',
     meta: {
       user: {
-        token: ApplicationState.idToken,
+        token: '',
         uid: auth.uid,
         displayName: auth.displayName,
         photoURL: auth.photoURL,
@@ -233,33 +233,36 @@ function requestCreator(requestType, requestBody) {
     'updateAuth': true,
     'geolocationApi': true
   }
-
-  if (nonLocationRequest[requestType]) {
-    requestGenerator.body = requestBody;
-    apiHandler.postMessage(requestGenerator);
-  } else {
-    getRootRecord().then(function (rootRecord) {
-      if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
-        manageLocation().then(function (geopoint) {
-          ApplicationState.lastLocationTime = geopoint.lastLocationTime;
-          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-            mapView(geopoint);
-            return;
-          };
-
-          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
-          requestGenerator.body = requestBody;
-          requestBody['geopoint'] = geopoint;
-          apiHandler.postMessage(requestGenerator);
-        }).catch(locationErrorDialog)
-        return;
-      }
-      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+  auth.getIdToken(false).then(function (token) {
+    requestGenerator.meta.user.token = token
+    if (nonLocationRequest[requestType]) {
       requestGenerator.body = requestBody;
-      requestBody['geopoint'] = ApplicationState.location;
       apiHandler.postMessage(requestGenerator);
-    });
-  }
+    } else {
+      getRootRecord().then(function (rootRecord) {
+        if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
+          manageLocation().then(function (geopoint) {
+            ApplicationState.lastLocationTime = geopoint.lastLocationTime;
+            if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+              mapView(geopoint);
+              return;
+            };
+  
+            requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+            requestGenerator.body = requestBody;
+            requestBody['geopoint'] = geopoint;
+            apiHandler.postMessage(requestGenerator);
+          }).catch(locationErrorDialog)
+          return;
+        }
+        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+        requestGenerator.body = requestBody;
+        requestBody['geopoint'] = ApplicationState.location;
+        apiHandler.postMessage(requestGenerator);
+      });
+    }
+  
+  });
 
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {

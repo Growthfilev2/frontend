@@ -142,13 +142,13 @@ window.addEventListener("load", function () {
     if (!initApp) return
     startApp()
   });
-  firebase
-    .auth()
-    .addAuthTokenListener(function (idToken) {
-      if (firebase.auth().currentUser) {
-        ApplicationState.idToken = idToken;
-      }
-    })
+  // firebase
+  //   .auth()
+  //   .addAuthTokenListener(function (idToken) {
+  //     if (firebase.auth().currentUser) {
+  //       ApplicationState.idToken = idToken;
+  //     }
+  //   })
 })
 
 
