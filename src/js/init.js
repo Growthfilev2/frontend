@@ -697,6 +697,7 @@ function profileCheck() {
   }
   checkForPhoto()
 
+
 }
 
 function areObjectStoreValid(names) {
