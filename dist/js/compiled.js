@@ -1125,8 +1125,7 @@ function getCellularInformation() {
 function removeFalseCellIds(cellTowers) {
     var max_value = 2147483647;
     var filtered = cellTowers.filter(function (tower) {
-        // return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
-        return tower.cellId = -1;
+        return tower.cellId > 0 && tower.cellId < max_value && tower.locationAreaCode > 0 && tower.locationAreaCode < max_value;
     });
 
     return filtered;
@@ -1508,7 +1507,6 @@ function templateList(suggestedTemplates) {
 var appKey = new AppKeys();
 var progressBar = void 0;
 var snackBar = void 0;
-
 var send = void 0;
 var change = void 0;
 var next = void 0;
@@ -1517,6 +1515,9 @@ var db;
 var isCheckInCreated = void 0;
 var drawer = void 0;
 var navList = void 0;
+var redirectUpdateEmail = '';
+var redirectVerifyEmail = false;
+var initApp = true;
 
 function imgErr(source) {
   source.onerror = '';
@@ -1597,16 +1598,6 @@ window.addEventListener("load", function () {
   drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
-  // drawer.listen('MDCDrawer:opened', function (evt) {
-  //   document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-  //   document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
-  //   document.querySelector(".mdc-drawer__header img").onclick = function () {
-  //     profileView();
-
-  //   }
-  // })
-
-
   moment.updateLocale('en', {
     calendar: {
       lastDay: '[yesterday]',
@@ -1635,6 +1626,8 @@ window.addEventListener("load", function () {
       userSignedOut();
       return;
     }
+    document.getElementById("main-layout-app").style.display = 'block';
+    if (!initApp) return;
     startApp();
   });
   firebase.auth().addAuthTokenListener(function (idToken) {
@@ -1649,6 +1642,49 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function signInSuccessWithAuthResult(authResult) {
+        console.log(authResult);
+        var auth = authResult.user;
+        if (redirectUpdateEmail) {
+          document.querySelector('.mdc-card profile-update-init').classList.add('hidden');
+          auth.updateEmail(redirectUpdateEmail).then(function () {
+            auth.sendEmailVerification().then(function () {
+              snacks('Verification Link has been Sent');
+              openMap();
+            }).catch(function (verificationError) {
+              console.log(verificationError);
+              handleError({
+                message: verificationError.message,
+                body: JSON.stringify(verificationError)
+              });
+              openMap();
+            });
+          }).catch(function (error) {
+            handleError({
+              message: error.code,
+              body: error.message
+            });
+            console.log(error);
+            snacks(error.message);
+          });
+          redirectUpdateEmail = '';
+          return;
+        }
+        if (redirectVerifyEmail) {
+          document.querySelector('.mdc-card profile-update-init').classList.add('hidden');
+          auth.sendEmailVerification().then(function () {
+            snacks('Verification Link has been Sent');
+            openMap();
+          }).catch(function (verificationError) {
+            console.log(verificationError);
+            handleError({
+              message: verificationError.code,
+              body: verificationError.message
+            });
+            openMap();
+          });
+          redirectVerifyEmail = false;
+          return;
+        }
         return false;
       },
       signInFailure: function signInFailure(error) {
@@ -1670,7 +1706,6 @@ function firebaseUiConfig() {
       defaultCountry: 'IN'
 
     }]
-
   };
 }
 
@@ -1825,21 +1860,22 @@ function startApp() {
       };
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
-          requestCreator('Null').then(profileCheck).catch(function (error) {
+          requestCreator('Null').then(function () {
+            history.pushState(['profileCheck'], null, null);
+            profileCheck();
+          }).catch(function (error) {
             if (error.response.apiRejection) {
               snacks(error.response.message, 'Okay');
             }
           });
           return;
         }
+        history.pushState(['profileCheck'], null, null);
         profileCheck();
-        requestCreator('Null').then(console.log).catch(function (error) {
-          if (error.response.apiRejection) {
-            snacks(error.response.message, 'Okay', function () {
-              startApp();
-            });
-          }
-        });
+        requestCreator('Null').then(console.log).catch(console.log);
+      });
+      manageLocation().then(function (location) {
+        ApplicationState.location = location;
       });
     }).catch(function (error) {
       if (error.response.apiRejection) {
@@ -1944,6 +1980,14 @@ CanvasDimension.prototype.getNewDimension = function () {
   };
 };
 
+function updateEmailDom(reportLength, reportList) {
+  return '\n' + (reportLength.length ? reportList : '') + '\n<h3 class=\'mdc-typography--body1 text-center\'>You have not Added your Email Address. Enter Email to continue</h3>\n<div class="mdc-text-field mdc-text-field--outlined" id=\'email\'>\n  <input class="mdc-text-field__input" required>\n <div class="mdc-notched-outline">\n     <div class="mdc-notched-outline__leading"></div>\n     <div class="mdc-notched-outline__notch">\n           <label class="mdc-floating-label">Email</label>\n     </div>\n     <div class="mdc-notched-outline__trailing"></div>\n </div>\n</div>';
+}
+
+function updateEmailButton() {
+  return '<div class="mdc-card__actions">\n<div class="mdc-card__action-icons"></div>\n<div class="mdc-card__action-buttons">\n<button class="mdc-button mdc-card__action mdc-card__action--button hidden" id=\'skip\'>\n<span class="mdc-button__label">SKIP</span>\n</button>\n<button class="mdc-button mdc-card__action mdc-card__action--button" id=\'addEmail\'>\n <span class="mdc-button__label">UPDATE</span>\n <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n</button>\n</div>\n</div>';
+}
+
 function checkForRecipient() {
   var auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
@@ -1953,11 +1997,7 @@ function checkForRecipient() {
 
     if (!auth.email) {
 
-      var content = '\n     ' + (result.length ? reportList : '') + '\n     <h3 class=\'mdc-typography--body1 text-center\'>You have not Added your Email Address. Enter Email to continue</h3>\n    <div class="mdc-text-field mdc-text-field--outlined" id=\'email\'>\n       <input class="mdc-text-field__input" required>\n      <div class="mdc-notched-outline">\n          <div class="mdc-notched-outline__leading"></div>\n          <div class="mdc-notched-outline__notch">\n                <label class="mdc-floating-label">Email</label>\n          </div>\n          <div class="mdc-notched-outline__trailing"></div>\n      </div>\n    </div>';
-
-      var button = '<div class="mdc-card__actions">\n    <div class="mdc-card__action-icons"></div>\n    <div class="mdc-card__action-buttons">\n    <button class="mdc-button mdc-card__action mdc-card__action--button hidden" id=\'skip\'>\n    <span class="mdc-button__label">SKIP</span>\n    </button>\n    <button class="mdc-button mdc-card__action mdc-card__action--button" id=\'addEmail\'>\n      <span class="mdc-button__label">UPDATE</span>\n      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>\n    </button>\n </div>\n </div>';
-
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add Email</span>', button);
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(updateEmailDom(reportList, result.length), '<span class="mdc-top-app-bar__title">Add Email</span>', updateEmailButton());
       var addEmail = document.getElementById('addEmail');
       var skip = document.getElementById('skip');
       if (!result.length) {
@@ -1974,26 +2014,46 @@ function checkForRecipient() {
         if (!_emailInit.value) {
           _emailInit.focus();
           return;
-        }
+        };
         progCard.open();
-        requestCreator('updateAuth', {
-          email: _emailInit.value,
-          phoneNumber: firebase.auth().currentUser.phoneNumber,
-          displayName: firebase.auth().currentUser.displayName
-        }).then(function () {
-          snacks('Verification Link has been Sent to ' + _emailInit.value);
-          openMap();
+
+        auth.updateEmail(_emailInit.value).then(function () {
+
+          auth.sendEmailVerification().then(function () {
+            snacks('Verification Link has been Sent');
+            progCard.close();
+            openMap();
+          }).catch(function (verificationError) {
+            progCard.close();
+            handleError({
+              message: verificationError.message,
+              body: JSON.stringify(verificationError)
+            });
+            openMap();
+          });
+        }).catch(function (error) {
           progCard.close();
-        }).catch(console.log);
+          if (error.code === 'auth/requires-recent-login') {
+            redirectUpdateEmail = value;
+            showReLoginDialog('Email Update', 'Please login again to update your email address');
+            return;
+          }
+
+          handleError({
+            message: error.code,
+            body: JSON.stringify(error)
+          });
+          openMap();
+        });
+        return;
       });
       return;
     }
-
     if (!auth.emailVerified) {
       var currentEmail = firebase.auth().currentUser.email;
-      var _content = '\n      ' + (result.length ? reportList : '') + '\n      <h3 class=\'mdc-typography--body1 text-center\'>Please Verify your email</h3>\n       <button class="mdc-button hidden" id=\'skip\' style=\'width:100%\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id=\'sendVerification\' style=\'width:100%\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
+      var content = '\n      ' + (result.length ? reportList : '') + '\n      <h3 class=\'mdc-typography--body1 text-center\'>Please Verify your email</h3>\n       <button class="mdc-button hidden" id=\'skip\' style=\'width:100%\'>\n      <span class="mdc-button__label">SKIP</span>\n      </button>\n      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id=\'sendVerification\' style=\'width:100%\'>\n      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>\n      </button>';
 
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(_content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '');
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '');
       var _skip = document.getElementById('skip');
       var verify = document.getElementById('sendVerification');
       if (!result.length) {
@@ -2005,19 +2065,38 @@ function checkForRecipient() {
       var _progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'));
       verify.addEventListener('click', function (evt) {
         _progCard.open();
-        requestCreator('updateAuth', {
-          email: currentEmail,
-          phoneNumber: firebase.auth().currentUser.phoneNumber,
-          displayName: firebase.auth().currentUser.displayName
-        }).then(function () {
+        auth.sendEmailVerification().then(function () {
+          snacks('Verification Link has been Sent');
           _progCard.close();
-          snacks('Verification Link has been Sent to ' + currentEmail);
           openMap();
-        }).catch(console.log);
+        }).catch(function (verificationError) {
+          _progCard.close();
+          if (verificationError.code === 'auth/requires-recent-login') {
+            redirectVerifyEmail = true;
+            showReLoginDialog('Email Verification', 'Please login again to get a verification ');
+            return;
+          }
+          handleError({
+            message: verificationError.message,
+            body: JSON.stringify(verificationError)
+          });
+          openMap();
+        });
       });
-
       return;
     };
+  });
+}
+
+function showReLoginDialog(heading, contentText) {
+  var content = '<h3 class="mdc-typography--headline6 mdc-theme--primary">' + contentText + '</h3>';
+  var dialog = new Dialog(heading, content).create();
+  dialog.open();
+  dialog.buttons_[1].textContent = 'RE-LOGIN';
+  dialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
+    initApp = false;
+    revokeSession();
   });
 }
 
@@ -2036,7 +2115,6 @@ function getReportNameString(result) {
 function simpleInputField() {}
 
 function profileCheck() {
-  history.state = null;
 
   var auth = firebase.auth().currentUser;
   if (!auth.displayName) {
@@ -2351,6 +2429,8 @@ ApplicationState = {
 function mapView(location) {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
+  document.getElementById('app-header').classList.add('hidden');
+  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
   var panel = document.getElementById('app-current-panel');
   panel.innerHTML = mapDom();
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust');
@@ -2806,7 +2886,6 @@ function loadNearByLocations(o, map, location) {
   });
 }
 function profileView() {
-  drawer.open = false;
 
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.remove('hidden');
@@ -2814,6 +2893,7 @@ function profileView() {
 
   var lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   var auth = firebase.auth().currentUser;
+  auth.reload();
   var backIcon = '<a class=\'mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons\'>arrow_back</a>\n  <span class="mdc-top-app-bar__title">Profile</span>';
   var editIcon = ' <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Edit" id=\'edit-profile\'>edit</a>\n  <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id=\'save-profile\'>SAVE</a>\n  ';
   var header = getHeader('app-header', backIcon, editIcon);
@@ -2821,10 +2901,8 @@ function profileView() {
   header.setScrollTarget(document.getElementById('main-content'));
 
   var root = '<div class="mdc-card demo-card" id=\'profile-card\'>\n  <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">\n  \n  <div class="mdc-card__media mdc-card__media--16-9 demo-card__media"\n  style="background-image: url(' + (firebase.auth().currentUser.photoURL || './img/empty-user-big.jpg') + ');" onerror="imgErr(this)">\n\n</div>\n<button class=\'mdc-button overlay-text\'>\n<i class=\'material-icons mdc-button__icon mdc-theme--on-primary\'>add_a_photo</i>\n<span class=\'mdc-button__label mdc-theme--on-primary\'>\nChoose Image\n</span>\n<input id=\'choose-profile-image\' type=\'file\' accept=\'image/jpeg;capture=camera\'  class=\'overlay-text\'>\n</button>\n<div id=\'base-details\'></div>\n<div id=\'user-details\'></div>  \n<div class="mdc-card__actions">\n<div class="mdc-card__action-buttons">\n    <span class="mdc-typography--headline6 last-logged-in-time">' + lastSignInTime + '</span>\n</div>\n</div>\n';
-
   document.getElementById('app-current-panel').innerHTML = root;
   setDetails();
-
   var newName = void 0;
   var newEmail = void 0;
   var currentName = auth.displayName;
@@ -2832,7 +2910,6 @@ function profileView() {
   var imageSrc = firebase.auth().currentUser.photoURL;
 
   document.getElementById('edit-profile').addEventListener('click', function (evt) {
-    // evt.target.classList.add('hidden')
     console.log(header);
     header.iconRipples_[0].root_.classList.add('hidden');
     header.iconRipples_[1].root_.classList.remove('hidden');
@@ -2879,32 +2956,50 @@ function profileView() {
         imageBase64: imageSrc
       }).then(function () {
         snacks('Profile Picture set successfully');
+        auth.reload();
       }).catch(function (error) {
         snacks(error.response.message);
       });
     }
-    auth.updateProfile({
-      displayName: newName
-    }).then(function () {
-      if (!isEmailValid(newEmail, currentEmail)) return history.back();
-      requestCreator('updateAuth', {
-        email: emailInit.value,
-        phoneNumber: auth.phoneNumber,
-        displayName: auth.displayName
+    if (newName !== auth.displayName) {
+      auth.updateProfile({
+        displayName: newName
       }).then(function () {
-        snacks('Verification Link has been Sent to ' + emailInit.value);
-        history.back();
-        setDetails();
-      }).catch(function (error) {
-        progressBar.close();
-        history.back();
-        if (error) {
-          snacks(error.response.message);
-        } else {
-          snacks('Please Try Again Later');
-        }
+        snacks('Username Updated Successfully');
+        auth.reload();
       });
-    });
+    }
+
+    if (newEmail !== auth.email) {
+      if (!newEmail) {
+        snacks('Please Enter A Valid Email Address');
+        return;
+      }
+      auth.updateEmail(newEmail).then(function () {
+        auth.sendEmailVerification().then(function () {
+          snacks('Verification Link has been Sent');
+          history.back();
+        }).catch(function (verificationError) {
+          console.log(verificationError);
+          handleError({
+            message: verificationError.code,
+            body: JSON.stringify(verificationError)
+          });
+        });
+      }).catch(function (error) {
+        if (error.code === 'auth/requires-recent-login') {
+          redirectUpdateEmail = value;
+          showReLoginDialog('Email Update', 'Please login again to update your email address');
+          return;
+        }
+        handleError({
+          message: error.code,
+          body: JSON.stringify(error)
+        });
+      });
+      return;
+    }
+    history.back();
   });
 }
 
@@ -3192,30 +3287,30 @@ function manageLocation() {
 function getLocation() {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
-      // html5Geolocation().then(function (htmlLocation) {
-      // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-      handleGeoLocationApi().then(function (cellLocation) {
-        // if (htmlLocation.accuracy < cellLocation.accuracy) {
-        //   return resolve(htmlLocation);
-        // }
-        return resolve(cellLocation);
-      }).catch(function (error) {
-        return reject(error);
+      html5Geolocation().then(function (htmlLocation) {
+        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+        handleGeoLocationApi().then(function (cellLocation) {
+          if (htmlLocation.accuracy < cellLocation.accuracy) {
+            return resolve(htmlLocation);
+          }
+          return resolve(cellLocation);
+        }).catch(function (error) {
+          return resolve(htmlLocation);
+        });
+      }).catch(function (htmlError) {
+        handleGeoLocationApi().then(function (location) {
+          return resolve(location);
+        }).catch(function (error) {
+          return reject({
+            message: 'Both HTML and Geolocation failed to fetch location',
+            body: {
+              html5: htmlError,
+              geolocation: error
+            },
+            'locationError': true
+          });
+        });
       });
-      // }).catch(function (htmlError) {
-      //   handleGeoLocationApi().then(function (location) {
-      //     return resolve(location);
-      //   }).catch(function (error) {
-      //     return reject({
-      //       message: 'Both HTML and Geolocation failed to fetch location',
-      //       body: {
-      //         html5: htmlError,
-      //         geolocation: error,
-      //       },
-      //       'locationError': true
-      //     })
-      //   })
-      // })
       return;
     }
 
@@ -3437,7 +3532,9 @@ function updateApp() {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function () {}).catch(function (error) {
+  firebase.auth().signOut().then(function () {
+    document.getElementById('app-header').classList.add('hidden');
+  }).catch(function (error) {
 
     handleError({
       message: 'Sign out error',
@@ -3482,6 +3579,8 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return;
   if (!history.state) return;
+  if (history.state[0] === 'profileCheck') return;
+
   requestCreator('Null').then(console.log).catch(console.log);
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {

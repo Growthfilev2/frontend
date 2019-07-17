@@ -119,15 +119,15 @@ Choose Image
           snacks('Verification Link has been Sent')
           history.back()
         }).catch(function (verificationError) {
-          console.log(verificationError)
-          handleError({
-            message: verificationError.code,
-            body: JSON.stringify(verificationError)
-          })
+          snacks(verificationError.message)
+
         })
       }).catch(function (error) {
+        progressBar.foundation_.close();
         if (error.code === 'auth/requires-recent-login') {
-          redirectUpdateEmail = value;
+          redirectParam.updateEmail = newEmail;
+          redirectParam.verify = false;
+          redirectParam.functionName = 'getSuggestions'
           showReLoginDialog('Email Update', 'Please login again to update your email address')
           return
         }

@@ -9,8 +9,12 @@ var db;
 let isCheckInCreated;
 let drawer;
 let navList;
-let redirectUpdateEmail = '';
-let redirectVerifyEmail = false;
+const redirectParam = {
+  updateEmail: '',
+  verify: false,
+  functionName: '',
+}
+
 let initApp = true;
 
 function imgErr(source) {
@@ -130,7 +134,7 @@ window.addEventListener("load", function () {
       return;
     }
     document.getElementById("main-layout-app").style.display = 'block'
-    if(!initApp) return
+    if (!initApp) return
     startApp()
   });
   firebase
@@ -151,47 +155,35 @@ function firebaseUiConfig() {
       signInSuccessWithAuthResult: function (authResult) {
         console.log(authResult)
         const auth = authResult.user
-        if (redirectUpdateEmail) {
-          document.querySelector('.mdc-card profile-update-init').classList.add('hidden')
-          auth.updateEmail(redirectUpdateEmail).then(function () {
+        if(history.state[0] === 'edit-profile') {
+          document.getElementById('app-header').classList.remove('hidden');
+        }
+        
+        if (redirectParam.updateEmail) {
+          auth.updateEmail(redirectParam.updateEmail).then(function () {
             auth.sendEmailVerification().then(function () {
               snacks('Verification Link has been Sent')
-              openMap();
+              window[redirectParam.functionName]()
             }).catch(function (verificationError) {
-              console.log(verificationError)
-              handleError({
-                message: verificationError.message,
-                body: JSON.stringify(verificationError)
-              })
-              openMap()
+              snacks(verificationError.message)
+              window[redirectParam.functionName]()
             })
           }).catch(function (error) {
-            handleError({
-              message: error.code,
-              body: error.message
-            })
-            console.log(error)
             snacks(error.message);
           })
-          redirectUpdateEmail = '';
-          return;
         }
-        if (redirectVerifyEmail) {
-          document.querySelector('.mdc-card profile-update-init').classList.add('hidden');
+
+        if (redirectParam.verify) {
           auth.sendEmailVerification().then(function () {
             snacks('Verification Link has been Sent')
-            openMap();
+            window[redirectParam.functionName]()
           }).catch(function (verificationError) {
             console.log(verificationError)
-            handleError({
-              message: verificationError.code,
-              body: verificationError.message
-            })
-            openMap()
+            snacks(verificationError.message)
+            window[redirectParam.functionName]()
           })
-          redirectVerifyEmail = false;
-          return;
         }
+
         return false;
       },
       signInFailure: function (error) {
@@ -201,21 +193,17 @@ function firebaseUiConfig() {
 
       }
     },
-    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
-    signInOptions: [
-      // Leave the lines as is for the providers you want to offer your users.
-      {
-        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-        recaptchaParameters: {
-          type: 'image', // 'audio'
-          size: 'invisible', // 'invisible' or 'compact'
-          badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
-        },
-        defaultCountry: 'IN',
+    signInOptions: [{
+      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+      recaptchaParameters: {
+        type: 'image', // 'audio'
+        size: 'invisible', // 'invisible' or 'compact'
+        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+      },
+      defaultCountry: 'IN',
 
-      }
-    ]
+    }]
   };
 }
 
@@ -378,8 +366,8 @@ function startApp() {
       };
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
-          requestCreator('Null').then(function(){
-            history.pushState(['profileCheck'],null,null)
+          requestCreator('Null').then(function () {
+            history.pushState(['profileCheck'], null, null)
             profileCheck();
           }).catch(function (error) {
             if (error.response.apiRejection) {
@@ -388,7 +376,7 @@ function startApp() {
           })
           return;
         }
-        history.pushState(['profileCheck'],null,null)
+        history.pushState(['profileCheck'], null, null)
         profileCheck();
         requestCreator('Null').then(console.log).catch(console.log)
       })
@@ -619,9 +607,9 @@ function checkForRecipient() {
           return
         };
         progCard.open();
-      
+
         auth.updateEmail(emailInit.value).then(function () {
-         
+
           auth.sendEmailVerification().then(function () {
             snacks('Verification Link has been Sent')
             progCard.close();
@@ -635,17 +623,16 @@ function checkForRecipient() {
             openMap()
           })
         }).catch(function (error) {
-           progCard.close();
+          progCard.close();
+
           if (error.code === 'auth/requires-recent-login') {
-            redirectUpdateEmail = value;
+            redirectParam.updateEmail = emailInit.value
+            redirectParam.functionName = 'openMap';
             showReLoginDialog('Email Update', 'Please login again to update your email address')
             return
           }
-          
-          handleError({
-            message: error.code,
-            body: JSON.stringify(error)
-          })
+
+          snacks(error.message)
           openMap()
         })
         return
@@ -683,7 +670,9 @@ function checkForRecipient() {
         }).catch(function (verificationError) {
           progCard.close();
           if (verificationError.code === 'auth/requires-recent-login') {
-            redirectVerifyEmail = true;
+            redirectParam.updateEmail = ''
+            redirectParam.verify = true;
+            redirectParam.functionName = 'openMap';
             showReLoginDialog('Email Verification', 'Please login again to get a verification ');
             return;
           }
@@ -738,7 +727,7 @@ function simpleInputField() {
 }
 
 function profileCheck() {
-  
+
   const auth = firebase.auth().currentUser;
   if (!auth.displayName) {
     const content = `

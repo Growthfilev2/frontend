@@ -352,14 +352,12 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
   }
-
 }
 
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-
   requestCreator('Null').then(console.log).catch(console.log)
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
