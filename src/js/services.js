@@ -361,6 +361,7 @@ function backgroundTransition() {
   manageLocation().then(function (geopoint) {
     ApplicationState.location.lastLocationTime = geopoint.lastLocationTime;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
+    document.getElementById('app-header').classList.add("hidden")
     mapView(geopoint);
   })
 }
