@@ -1,19 +1,19 @@
 function profileView() {
-  drawer.open = false;
- 
+
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.remove('hidden')
   document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
+  auth.reload();
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
   const editIcon = ` <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Edit" id='edit-profile'>edit</a>
   <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
   `
   const header = getHeader('app-header', backIcon, editIcon);
-  
+
   header.setScrollTarget(document.getElementById('main-content'));
 
   const root = `<div class="mdc-card demo-card" id='profile-card'>
@@ -38,29 +38,26 @@ Choose Image
 </div>
 </div>
 `
-
   document.getElementById('app-current-panel').innerHTML = root;
   setDetails()
-
   let newName;
   let newEmail;
   const currentName = auth.displayName;
   const currentEmail = auth.email;
   let imageSrc = firebase.auth().currentUser.photoURL;
 
-  document.getElementById('edit-profile').addEventListener('click',function(evt){
-    // evt.target.classList.add('hidden')
-    console.log(header)
+  document.getElementById('edit-profile').addEventListener('click', function (evt) {
+    console.log(header);
     header.iconRipples_[0].root_.classList.add('hidden')
     header.iconRipples_[1].root_.classList.remove('hidden')
-    history.pushState(['edit-profile'],null,null);
+    history.pushState(['edit-profile'], null, null);
     document.getElementById('base-details').innerHTML = ''
     document.querySelector('.mdc-card .mdc-card__actions').classList.add('hidden')
     document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
     nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
     emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
-  
-  
+
+
     const imageBckg = document.querySelector('.mdc-card__media');
     imageBckg.classList.add('reduced-brightness');
     document.querySelector('.mdc-button.overlay-text').classList.add('show');
@@ -68,68 +65,81 @@ Choose Image
     const input = document.getElementById('choose-profile-image')
     document.querySelector('.overlay-text').style.opacity = 1;
 
-    input.addEventListener('change',function(evt){
+    input.addEventListener('change', function (evt) {
 
       const files = input.files
-        if(!files.length) return;
-        const file = files[0];
-        var fileReader = new FileReader();
-        fileReader.onload = function (fileLoadEvt) {
-          const image = new Image();
-          image.src = fileLoadEvt.target.result;
-          image.onload = function(){
+      if (!files.length) return;
+      const file = files[0];
+      var fileReader = new FileReader();
+      fileReader.onload = function (fileLoadEvt) {
+        const image = new Image();
+        image.src = fileLoadEvt.target.result;
+        image.onload = function () {
           const newSrc = resizeAndCompressImage(image);
           imageBckg.style.backgroundImage = `url(${newSrc})`
           imageSrc = newSrc;
-          }
         }
-        fileReader.readAsDataURL(file);
+      }
+      fileReader.readAsDataURL(file);
     })
-  
+
   })
-  document.getElementById('save-profile').addEventListener('click',function(){
+  document.getElementById('save-profile').addEventListener('click', function () {
     document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')
     newName = nameInit.value;
     newEmail = emailInit.value;
     progressBar.foundation_.open();
 
-    if(imageSrc !== firebase.auth().currentUser.photoURL) {
-      requestCreator('backblaze',{
-        imageBase64:imageSrc
-      }).then(function(){
+    if (imageSrc !== firebase.auth().currentUser.photoURL) {
+      requestCreator('backblaze', {
+        imageBase64: imageSrc
+      }).then(function () {
         snacks('Profile Picture set successfully')
-      }).catch(function(error){
+        auth.reload()
+      }).catch(function (error) {
         snacks(error.response.message)
       });
     }
-    auth.updateProfile({
-      displayName: newName
-    }).then(function () {
-      if (!isEmailValid(newEmail, currentEmail)) return history.back();
-      requestCreator('updateAuth', {
-        email: emailInit.value,
-        phoneNumber:auth.phoneNumber,
-        displayName:auth.displayName
+    if (newName !== auth.displayName) {
+      auth.updateProfile({
+        displayName: newName
       }).then(function () {
-        snacks('Verification Link has been Sent to ' + emailInit.value);
-        history.back();
-        setDetails();
-      }).catch(function(error){
-        progressBar.close();
-        history.back();
-        if(error) {
-          snacks(error.response.message)
-        }
-        else {
-          snacks('Please Try Again Later')
-        }
+        snacks('Username Updated Successfully')
+        auth.reload()
       })
-    })
+    }
+
+    if (newEmail !== auth.email) {
+      if (!newEmail) {
+        snacks('Please Enter A Valid Email Address')
+        return;
+      }
+      auth.updateEmail(newEmail).then(function () {
+        auth.sendEmailVerification().then(function () {
+          snacks('Verification Link has been Sent')
+          history.back()
+        }).catch(function (verificationError) {
+          console.log(verificationError)
+          handleError({
+            message: verificationError.code,
+            body: JSON.stringify(verificationError)
+          })
+        })
+      }).catch(function (error) {
+        if (error.code === 'auth/requires-recent-login') {
+          redirectUpdateEmail = value;
+          showReLoginDialog('Email Update', 'Please login again to update your email address')
+          return
+        }
+        handleError({
+          message: error.code,
+          body: JSON.stringify(error)
+        })
+      })
+      return;
+    }
+    history.back();
   })
-  
-
-
-
 
 }
 
@@ -148,7 +158,7 @@ function setDetails() {
 }
 
 function createBaseDetails() {
-  const auth  =  firebase.auth().currentUser;
+  const auth = firebase.auth().currentUser;
 
   return `   <div class="basic-info seperator">
 
@@ -284,7 +294,7 @@ function createEditProfile(name, email) {
     `
 }
 
-function nameField(name){
+function nameField(name) {
   return `<div class="mdc-typography mdc-typography--body2 p-10" id='card-body-edit'>
   <div class="mdc-text-field mdc-text-field--with-leading-icon full-width" id='name'>
 

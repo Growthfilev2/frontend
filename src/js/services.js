@@ -308,7 +308,9 @@ function updateApp() {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function () {}).catch(function (error) {
+  firebase.auth().signOut().then(function () {
+    document.getElementById('app-header').classList.add('hidden');
+  }).catch(function (error) {
 
     handleError({
       message: 'Sign out error',
