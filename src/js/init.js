@@ -1,7 +1,6 @@
 const appKey = new AppKeys();
 let progressBar;
 let snackBar;
-
 let send;
 let change;
 let next;
@@ -10,6 +9,13 @@ var db;
 let isCheckInCreated;
 let drawer;
 let navList;
+const redirectParam = {
+  updateEmail: '',
+  verify: false,
+  functionName: '',
+}
+
+let initApp = true;
 
 function imgErr(source) {
   source.onerror = '';
@@ -95,15 +101,6 @@ window.addEventListener("load", function () {
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
 
-  // drawer.listen('MDCDrawer:opened', function (evt) {
-  //   document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-  //   document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
-  //   document.querySelector(".mdc-drawer__header img").onclick = function () {
-  //     profileView();
-
-  //   }
-  // })
-
 
   moment.updateLocale('en', {
     calendar: {
@@ -136,6 +133,8 @@ window.addEventListener("load", function () {
       userSignedOut()
       return;
     }
+    document.getElementById("main-layout-app").style.display = 'block'
+    if (!initApp) return
     startApp()
   });
   firebase
@@ -154,6 +153,37 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
+        console.log(authResult)
+        const auth = authResult.user
+        if(history.state[0] === 'edit-profile') {
+          document.getElementById('app-header').classList.remove('hidden');
+        }
+        
+        if (redirectParam.updateEmail) {
+          auth.updateEmail(redirectParam.updateEmail).then(function () {
+            auth.sendEmailVerification().then(function () {
+              snacks('Verification Link has been Sent')
+              window[redirectParam.functionName]()
+            }).catch(function (verificationError) {
+              snacks(verificationError.message)
+              window[redirectParam.functionName]()
+            })
+          }).catch(function (error) {
+            snacks(error.message);
+          })
+        }
+
+        if (redirectParam.verify) {
+          auth.sendEmailVerification().then(function () {
+            snacks('Verification Link has been Sent')
+            window[redirectParam.functionName]()
+          }).catch(function (verificationError) {
+            console.log(verificationError)
+            snacks(verificationError.message)
+            window[redirectParam.functionName]()
+          })
+        }
+
         return false;
       },
       signInFailure: function (error) {
@@ -163,22 +193,17 @@ function firebaseUiConfig() {
 
       }
     },
-    // Will use popup for IDP Providers sign-in flow instead of the default, redirect.
     signInFlow: 'popup',
-    signInOptions: [
-      // Leave the lines as is for the providers you want to offer your users.
-      {
-        provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-        recaptchaParameters: {
-          type: 'image', // 'audio'
-          size: 'invisible', // 'invisible' or 'compact'
-          badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
-        },
-        defaultCountry: 'IN',
+    signInOptions: [{
+      provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+      recaptchaParameters: {
+        type: 'image', // 'audio'
+        size: 'invisible', // 'invisible' or 'compact'
+        badge: 'bottomleft' //' bottomright' or 'inline' applies to invisible.
+      },
+      defaultCountry: 'IN',
 
-      }
-    ]
-
+    }]
   };
 }
 
@@ -186,7 +211,7 @@ function firebaseUiConfig() {
 
 function userSignedOut() {
 
- var ui = new firebaseui.auth.AuthUI(firebase.auth())
+  var ui = new firebaseui.auth.AuthUI(firebase.auth())
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
@@ -341,21 +366,22 @@ function startApp() {
       };
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
-          requestCreator('Null').then(profileCheck).catch(function (error) {
+          requestCreator('Null').then(function () {
+            history.pushState(['profileCheck'], null, null)
+            profileCheck();
+          }).catch(function (error) {
             if (error.response.apiRejection) {
               snacks(error.response.message, 'Okay')
             }
           })
           return;
         }
+        history.pushState(['profileCheck'], null, null)
         profileCheck();
-        requestCreator('Null').then(console.log).catch(function (error) {
-          if (error.response.apiRejection) {
-            snacks(error.response.message, 'Okay', (function () {
-              startApp()
-            }))
-          }
-        })
+        requestCreator('Null').then(console.log).catch(console.log)
+      })
+      manageLocation().then(function (location) {
+        ApplicationState.location = location
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {
@@ -521,44 +547,48 @@ CanvasDimension.prototype.getNewDimension = function () {
   }
 }
 
+function updateEmailDom(reportLength, reportList) {
+  return `
+${reportLength.length ? reportList : ''}
+<h3 class='mdc-typography--body1 text-center'>You have not Added your Email Address. Enter Email to continue</h3>
+<div class="mdc-text-field mdc-text-field--outlined" id='email'>
+  <input class="mdc-text-field__input" required>
+ <div class="mdc-notched-outline">
+     <div class="mdc-notched-outline__leading"></div>
+     <div class="mdc-notched-outline__notch">
+           <label class="mdc-floating-label">Email</label>
+     </div>
+     <div class="mdc-notched-outline__trailing"></div>
+ </div>
+</div>`
+
+}
+
+function updateEmailButton() {
+  return `<div class="mdc-card__actions">
+<div class="mdc-card__action-icons"></div>
+<div class="mdc-card__action-buttons">
+<button class="mdc-button mdc-card__action mdc-card__action--button hidden" id='skip'>
+<span class="mdc-button__label">SKIP</span>
+</button>
+<button class="mdc-button mdc-card__action mdc-card__action--button" id='addEmail'>
+ <span class="mdc-button__label">UPDATE</span>
+ <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
+</button>
+</div>
+</div>`
+}
+
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     if (auth.email && auth.emailVerified) return openMap();
-   
+
     const reportList = getReportNameString(result);
 
     if (!auth.email) {
 
-      const content = `
-     ${result.length ? reportList : ''}
-     <h3 class='mdc-typography--body1 text-center'>You have not Added your Email Address. Enter Email to continue</h3>
-    <div class="mdc-text-field mdc-text-field--outlined" id='email'>
-       <input class="mdc-text-field__input" required>
-      <div class="mdc-notched-outline">
-          <div class="mdc-notched-outline__leading"></div>
-          <div class="mdc-notched-outline__notch">
-                <label class="mdc-floating-label">Email</label>
-          </div>
-          <div class="mdc-notched-outline__trailing"></div>
-      </div>
-    </div>`
-
-      const button = `<div class="mdc-card__actions">
-    <div class="mdc-card__action-icons"></div>
-    <div class="mdc-card__action-buttons">
-    <button class="mdc-button mdc-card__action mdc-card__action--button hidden" id='skip'>
-    <span class="mdc-button__label">SKIP</span>
-    </button>
-    <button class="mdc-button mdc-card__action mdc-card__action--button" id='addEmail'>
-      <span class="mdc-button__label">UPDATE</span>
-      <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
-    </button>
- </div>
- </div>`
-
-
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">Add Email</span>', button)
+      document.getElementById('app-current-panel').innerHTML = miniProfileCard(updateEmailDom(reportList, result.length), '<span class="mdc-top-app-bar__title">Add Email</span>', updateEmailButton())
       const addEmail = document.getElementById('addEmail');
       const skip = document.getElementById('skip')
       if (!result.length) {
@@ -575,22 +605,40 @@ function checkForRecipient() {
         if (!emailInit.value) {
           emailInit.focus();
           return
-        }
+        };
         progCard.open();
-        requestCreator('updateAuth', {
-          email: emailInit.value,
-          phoneNumber: firebase.auth().currentUser.phoneNumber,
-          displayName:firebase.auth().currentUser.displayName
-        }).then(function () {
-          snacks('Verification Link has been Sent to ' + emailInit.value)
-          openMap();
+
+        auth.updateEmail(emailInit.value).then(function () {
+
+          auth.sendEmailVerification().then(function () {
+            snacks('Verification Link has been Sent')
+            progCard.close();
+            openMap();
+          }).catch(function (verificationError) {
+            progCard.close();
+            handleError({
+              message: verificationError.message,
+              body: JSON.stringify(verificationError)
+            })
+            openMap()
+          })
+        }).catch(function (error) {
           progCard.close();
 
-        }).catch(console.log)
-      })
-      return
-    }
+          if (error.code === 'auth/requires-recent-login') {
+            redirectParam.updateEmail = emailInit.value
+            redirectParam.functionName = 'openMap';
+            showReLoginDialog('Email Update', 'Please login again to update your email address')
+            return
+          }
 
+          snacks(error.message)
+          openMap()
+        })
+        return
+      })
+      return;
+    }
     if (!auth.emailVerified) {
       const currentEmail = firebase.auth().currentUser.email
       const content = `
@@ -615,21 +663,45 @@ function checkForRecipient() {
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
       verify.addEventListener('click', function (evt) {
         progCard.open();
-        requestCreator('updateAuth', {
-          email: currentEmail,
-          phoneNumber: firebase.auth().currentUser.phoneNumber,
-          displayName:firebase.auth().currentUser.displayName
-        }).then(function () {
+        auth.sendEmailVerification().then(function () {
+          snacks('Verification Link has been Sent')
           progCard.close();
-          snacks('Verification Link has been Sent to ' + currentEmail)
           openMap();
-        }).catch(console.log)
+        }).catch(function (verificationError) {
+          progCard.close();
+          if (verificationError.code === 'auth/requires-recent-login') {
+            redirectParam.updateEmail = ''
+            redirectParam.verify = true;
+            redirectParam.functionName = 'openMap';
+            showReLoginDialog('Email Verification', 'Please login again to get a verification ');
+            return;
+          }
+          handleError({
+            message: verificationError.message,
+            body: JSON.stringify(verificationError)
+          })
+          openMap()
+        })
       })
-
       return;
     };
-
   });
+}
+
+
+
+
+
+function showReLoginDialog(heading, contentText) {
+  const content = `<h3 class="mdc-typography--headline6 mdc-theme--primary">${contentText}</h3>`
+  const dialog = new Dialog(heading, content).create();
+  dialog.open();
+  dialog.buttons_[1].textContent = 'RE-LOGIN'
+  dialog.listen('MDCDialog:closed', function (evt) {
+    if (evt.detail.action !== 'accept') return;
+    initApp = false;
+    revokeSession();
+  })
 }
 
 function getReportNameString(result) {
@@ -655,7 +727,6 @@ function simpleInputField() {
 }
 
 function profileCheck() {
-  history.state = null;
 
   const auth = firebase.auth().currentUser;
   if (!auth.displayName) {
@@ -970,12 +1041,12 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function openMap(){
+function openMap() {
   document.getElementById('start-load').classList.remove('hidden');
-  manageLocation().then(function(location){
+  manageLocation().then(function (location) {
     document.getElementById('start-load').classList.add('hidden');
     mapView(location)
-  }).catch(function(error){
+  }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
     mapView()
     handleError(error)

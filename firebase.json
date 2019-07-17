@@ -7,9 +7,6 @@
       "**/node_modules/**"
     ],
     "rewrites": [{
-      "source": "growthfile-testing.firebaseapp.com/v1/**",
-      "destination": "/v1/index.html"
-    },{
       "source": "growthfile-testing.firebaseapp.com",
       "destination": "index.html"
     }],

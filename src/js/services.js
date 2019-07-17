@@ -88,7 +88,7 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-     
+
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
@@ -109,7 +109,7 @@ function handleGeoLocationApi() {
     if (!Object.keys(body).length) {
       reject("empty object from getCellularInformation");
     }
-    requestCreator('geolocationApi',body).then(function (result) {
+    requestCreator('geolocationApi', body).then(function (result) {
       return resolve(result.response);
     }).catch(function (error) {
       reject(error)
@@ -214,7 +214,7 @@ function requestCreator(requestType, requestBody) {
         photoURL: auth.photoURL,
         phoneNumber: auth.phoneNumber,
       },
-      key:appKey.getMapKey(),
+      key: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl()
     }
   };
@@ -225,7 +225,7 @@ function requestCreator(requestType, requestBody) {
     'backblaze': true,
     'removeFromOffice': true,
     'updateAuth': true,
-    'geolocationApi':true
+    'geolocationApi': true
   }
 
   if (nonLocationRequest[requestType]) {
@@ -308,7 +308,9 @@ function updateApp() {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function () {}).catch(function (error) {
+  firebase.auth().signOut().then(function () {
+    document.getElementById('app-header').classList.add('hidden');
+  }).catch(function (error) {
 
     handleError({
       message: 'Sign out error',
@@ -350,13 +352,13 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
   }
-
 }
 
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
-  firebase.auth().currentUser.reload();
+  firebase.auth().currentUser.reload()
+  if (history.state[0] === 'profileCheck') return;
   requestCreator('Null').then(console.log).catch(console.log)
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
@@ -411,13 +413,13 @@ function getSubscription(office, template) {
     officeTemplateCombo.getAll(range).onsuccess = function (event) {
       result = event.target.result;
       console.log(result);
-      
+
       if (result.length > 1) {
         return resolve(result.sort(function (a, b) {
           return b.timestamp - a.timestamp
         })[0])
       }
-      
+
       return resolve(result[0])
     }
 
