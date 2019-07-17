@@ -373,10 +373,14 @@ function backgroundTransition() {
 }
 
 function runRead(value) {
+  try {
 
-  if (value) {
-    requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
-    return;
+    if (value) {
+      requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
+      return;
+    }
+  }catch(e) {
+    console.log(e)
   }
 }
 
