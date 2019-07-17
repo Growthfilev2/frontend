@@ -59,13 +59,7 @@ function getPendingLocationActivities() {
       }
       
       let match;
-      // Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
-      //   if (cursor.value.attachment[attachmentName].type === ApplicationState.venue.template && cursor.value.attachment[attachmentName].value === ApplicationState.venue.location) {
-      //     console.log(cursor.value)
-      //     match = cursor.value
-      //   }
-      // });
-
+ 
       if (!match) {
         cursor.continue();
         return;

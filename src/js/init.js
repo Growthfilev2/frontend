@@ -366,6 +366,7 @@ function startApp() {
         revokeSession();
         return
       };
+      
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
           requestCreator('Null').then(function () {

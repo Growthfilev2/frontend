@@ -299,7 +299,6 @@ function updateApp() {
   updateAppDialog.listen('MDCDialog:opened', function () {
     const cancelButton = updateAppDialog.buttons_[0];
     cancelButton.setAttribute('disabled', 'true');
-
   })
   updateAppDialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
