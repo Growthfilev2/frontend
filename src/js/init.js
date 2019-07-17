@@ -155,8 +155,10 @@ function firebaseUiConfig() {
       signInSuccessWithAuthResult: function (authResult) {
         console.log(authResult)
         const auth = authResult.user
-        if(history.state[0] === 'edit-profile') {
-          document.getElementById('app-header').classList.remove('hidden');
+        if(history.state) {
+          if(history.state[0] === 'edit-profile') {
+            document.getElementById('app-header').classList.remove('hidden');
+          }
         }
         
         if (redirectParam.updateEmail) {

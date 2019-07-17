@@ -167,11 +167,15 @@ function topNavCard() {
       </div>
       <div class="actions">
         <div class="action">
-          <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i>Camera</span>
+          <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i><span class='ml-10'>Camera</span></span>
         </div>
        
-        <div class="action">
-          <span class="mdc-typography--body1" id='chat'><i class="material-icons">comment</i>Chats</span>
+        <div class="action" style='display:inline-flex;align-items:center' id='chat-container'>
+           <div class='chat-button'>
+           <i class="material-icons">comment</i>
+           <span class='count-badge hidden' id='total-count'></span>
+           </div>
+          <span class="mdc-typography--body1" id='chat'>Chats</span>
         </div>
       </div>
   
@@ -200,7 +204,16 @@ function homeView(suggestedTemplates) {
   const panel = document.getElementById('app-current-panel')
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
   const suggestionLength = suggestedTemplates.length
+
   panel.innerHTML = homePanel(suggestionLength);
+  db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function(event){
+    const rootRecord = event.target.result;
+    if(!rootRecord)  return;
+    if(rootRecord.totalCount) {
+      document.getElementById('total-count').classList.remove('hidden')
+      document.getElementById('total-count').textContent = rootRecord.totalCount
+    }
+  }
   if(document.getElementById('camera')) {
 
     document.getElementById('camera').addEventListener('click', function () {
@@ -208,9 +221,16 @@ function homeView(suggestedTemplates) {
       snapView()
     })
   } 
-  document.getElementById('chat').addEventListener('click', function () {
+  document.getElementById('chat-container').addEventListener('click', function () {
     history.pushState(['chatView'], null, null);
     chatView()
+    const tx =  db.transaction('root','readwrite');
+    const store =  tx.objectStore('root')
+     store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+      const rootRecord = event.target.result;
+      rootRecord.totalCount = 0;
+      store.put(rootRecord)
+    }
   })
   document.getElementById('profile-image-card').addEventListener('click', function () {
     history.pushState(['profileView'], null, null);

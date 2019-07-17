@@ -1445,7 +1445,7 @@ function homePanel(suggestionLength) {
 
 function topNavCard() {
 
-  return '\n    <div class="profile-container mdc-card">\n    <div class="mdc-card__primary-action">\n      <div class="simple">\n  \n        <img src="' + firebase.auth().currentUser.photoURL + '" class="image" id=\'profile-image-card\' onerror="imgErr(this)">\n        <h3 class="mdc-typography--headline6">My Growthfile</h3>\n      </div>\n      <div class="actions">\n        <div class="action">\n          <span class="mdc-typography--body1" id=\'camera\'><i class="material-icons">camera</i>Camera</span>\n        </div>\n       \n        <div class="action">\n          <span class="mdc-typography--body1" id=\'chat\'><i class="material-icons">comment</i>Chats</span>\n        </div>\n      </div>\n  \n    </div>\n    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id=\'suggestion-progress\'>\n    <div class="mdc-linear-progress__buffering-dots"></div>\n    <div class="mdc-linear-progress__buffer"></div>\n    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">\n      <span class="mdc-linear-progress__bar-inner"></span>\n    </div>\n    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">\n      <span class="mdc-linear-progress__bar-inner"></span>\n    </div>\n  </div>\n  </div>\n  \n  ';
+  return '\n    <div class="profile-container mdc-card">\n    <div class="mdc-card__primary-action">\n      <div class="simple">\n  \n        <img src="' + firebase.auth().currentUser.photoURL + '" class="image" id=\'profile-image-card\' onerror="imgErr(this)">\n        <h3 class="mdc-typography--headline6">My Growthfile</h3>\n      </div>\n      <div class="actions">\n        <div class="action">\n          <span class="mdc-typography--body1" id=\'camera\'><i class="material-icons">camera</i><span class=\'ml-10\'>Camera</span></span>\n        </div>\n       \n        <div class="action" style=\'display:inline-flex;align-items:center\' id=\'chat-container\'>\n           <div class=\'chat-button\'>\n           <i class="material-icons">comment</i>\n           <span class=\'count-badge hidden\' id=\'total-count\'></span>\n           </div>\n          <span class="mdc-typography--body1" id=\'chat\'>Chats</span>\n        </div>\n      </div>\n  \n    </div>\n    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id=\'suggestion-progress\'>\n    <div class="mdc-linear-progress__buffering-dots"></div>\n    <div class="mdc-linear-progress__buffer"></div>\n    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">\n      <span class="mdc-linear-progress__bar-inner"></span>\n    </div>\n    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">\n      <span class="mdc-linear-progress__bar-inner"></span>\n    </div>\n  </div>\n  </div>\n  \n  ';
 }
 
 function homeView(suggestedTemplates) {
@@ -1457,7 +1457,16 @@ function homeView(suggestedTemplates) {
   var panel = document.getElementById('app-current-panel');
   document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
   var suggestionLength = suggestedTemplates.length;
+
   panel.innerHTML = homePanel(suggestionLength);
+  db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+    var rootRecord = event.target.result;
+    if (!rootRecord) return;
+    if (rootRecord.totalCount) {
+      document.getElementById('total-count').classList.remove('hidden');
+      document.getElementById('total-count').textContent = rootRecord.totalCount;
+    }
+  };
   if (document.getElementById('camera')) {
 
     document.getElementById('camera').addEventListener('click', function () {
@@ -1465,9 +1474,16 @@ function homeView(suggestedTemplates) {
       snapView();
     });
   }
-  document.getElementById('chat').addEventListener('click', function () {
+  document.getElementById('chat-container').addEventListener('click', function () {
     history.pushState(['chatView'], null, null);
     chatView();
+    var tx = db.transaction('root', 'readwrite');
+    var store = tx.objectStore('root');
+    store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      var rootRecord = event.target.result;
+      rootRecord.totalCount = 0;
+      store.put(rootRecord);
+    };
   });
   document.getElementById('profile-image-card').addEventListener('click', function () {
     history.pushState(['profileView'], null, null);
@@ -1647,8 +1663,10 @@ function firebaseUiConfig() {
       signInSuccessWithAuthResult: function signInSuccessWithAuthResult(authResult) {
         console.log(authResult);
         var auth = authResult.user;
-        if (history.state[0] === 'edit-profile') {
-          document.getElementById('app-header').classList.remove('hidden');
+        if (history.state) {
+          if (history.state[0] === 'edit-profile') {
+            document.getElementById('app-header').classList.remove('hidden');
+          }
         }
 
         if (redirectParam.updateEmail) {
@@ -2527,12 +2545,10 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
-        // if (!offices.length) return getSuggestions();
         if (!offices.length) {
           showNoOfficeFound();
           return;
-        }
-
+        };
         document.getElementById('office-cont').innerHTML = '' + mdcDefaultSelect(offices, 'Choose Office', 'choose-office');
         var selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
         selectOfficeInit.listen('MDCSelect:change', function (evt) {

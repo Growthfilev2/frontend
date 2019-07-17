@@ -22,6 +22,8 @@
  .actions {
     float: right;
     padding: 10px;
+    padding-right: 0px;
+
 }
 
 .actions .action {
@@ -35,13 +37,13 @@
     font-size: 1.3rem;
 }
 
-.actions .action span i {
-    padding-right: 10px;
-    font-size: 28px;
+.actions .action  i {
+    font-size: 30px;
 }
 
 .home-container .mdc-card__primary-action {
     padding: 10px;
+    padding-bottom: 0px;
 }
 
 .home-container .mdc-card__primary-action .simple {
@@ -110,4 +112,31 @@
     position: fixed;
     bottom: 0;
 
+}
+.chat-button {
+    display: inline-block;
+    position: relative;
+    padding: 2px 0px;
+  
+}
+
+#chat {
+    margin-left: 5px;
+}
+
+#total-count.count-badge {
+    background-color: #fa3e3e;
+    position: absolute;
+    top: -5px;
+    right: 0;
+    font-size: 15px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--mdc-theme-primary);
+    text-align: center;
+    display: table-cell;
+    overflow: hidden;
+    vertical-align: middle;
+    color: white;
 }

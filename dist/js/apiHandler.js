@@ -649,7 +649,8 @@ function successResponse(read, param, db, resolve, reject) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user;
         userTimestamp[addendum.user] = addendum;
-        counter[addendum.user] ? counter[addendum.user] + 1 : counter[addendum.user] = 1;
+
+        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
       } else {
         addendum.key = param.user.phoneNumber + addendum.assignee;
         userTimestamp[addendum.assignee] = addendum;
@@ -658,7 +659,7 @@ function successResponse(read, param, db, resolve, reject) {
     } else {
       userTimestamp[addendum.user] = addendum;
       if (addendum.user !== param.user.phoneNumber) {
-        counter[addendum.user] ? counter[addendum.user] + 1 : counter[addendum.user] = 1;
+        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
       }
     }
   });
@@ -680,7 +681,9 @@ function successResponse(read, param, db, resolve, reject) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         var selfRecord = event.target.result;
         if (!selfRecord) {
-          selfRecord = {};
+          selfRecord = {
+            count: 0
+          };
         };
         selfRecord.mobile = user.phoneNumber;
         selfRecord.displayName = user.displayName;
@@ -762,7 +765,8 @@ function successResponse(read, param, db, resolve, reject) {
   read.templates.forEach(function (subscription) {
     updateSubscription(subscription, updateTx);
   });
-  updateRoot(read, updateTx, param.user.uid);
+
+  updateRoot(read, updateTx, param.user.uid, counter);
   updateTx.oncomplete = function () {
     console.log("all completed");
     return resolve(read);
@@ -772,11 +776,20 @@ function successResponse(read, param, db, resolve, reject) {
   };
 }
 
-function updateRoot(read, tx, uid) {
+function updateRoot(read, tx, uid, counter) {
+  var totalCount = 0;
+  Object.keys(counter).forEach(function (number) {
+    totalCount += counter[number];
+  });
   var store = tx.objectStore('root');
   store.get(uid).onsuccess = function (event) {
     var record = event.target.result;
     record.fromTime = read.upto;
+    if (record.totalCount) {
+      record.totalCount += totalCount;
+    } else {
+      record.totalCount = totalCount;
+    }
     console.log('start adding upto');
     store.put(record);
   };
