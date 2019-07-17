@@ -16,6 +16,8 @@ ApplicationState = {
 function mapView(location) {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
+  document.getElementById('app-header').classList.add('hidden')
+  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
   const panel = document.getElementById('app-current-panel')
   panel.innerHTML = mapDom();
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')

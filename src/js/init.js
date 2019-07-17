@@ -341,13 +341,17 @@ function startApp() {
       };
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
-          requestCreator('Null').then(profileCheck).catch(function (error) {
+          requestCreator('Null').then(function(){
+            history.pushState(['profileCheck'],null,null)
+            profileCheck();
+          }).catch(function (error) {
             if (error.response.apiRejection) {
               snacks(error.response.message, 'Okay')
             }
           })
           return;
         }
+        history.pushState(['profileCheck'],null,null)
         profileCheck();
         requestCreator('Null').then(console.log).catch(function (error) {
           if (error.response.apiRejection) {
@@ -655,8 +659,7 @@ function simpleInputField() {
 }
 
 function profileCheck() {
-  history.state = null;
-
+  
   const auth = firebase.auth().currentUser;
   if (!auth.displayName) {
     const content = `
@@ -693,7 +696,6 @@ function profileCheck() {
     return
   }
   checkForPhoto()
-
 
 }
 
