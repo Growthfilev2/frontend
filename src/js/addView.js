@@ -7,12 +7,10 @@ function addView(sub) {
     const header = getHeader('app-header', backIcon, '');
     header.root_.classList.remove('hidden')
     document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
     `
-    
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {
         document.getElementById('form-iframe').contentWindow.init(sub);

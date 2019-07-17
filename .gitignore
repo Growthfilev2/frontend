@@ -1,9 +1,5 @@
 node_modules/
 .firebase/
 firebase.json
-<<<<<<< HEAD
-src/js/config.js
-=======
 .firebaserc
 src/js/config.js
->>>>>>> mapView
