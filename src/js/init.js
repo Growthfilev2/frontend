@@ -730,10 +730,6 @@ function getReportNameString(result) {
 }
 
 
-function simpleInputField() {
-
-}
-
 function profileCheck() {
 
   const auth = firebase.auth().currentUser;
