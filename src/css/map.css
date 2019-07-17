@@ -1,0 +1,140 @@
+#map {
+    height: 90vh;
+    position: relative;
+}
+
+.transparent {
+    background-color: transparent !important;
+}
+
+
+.selection-box-auto button {
+    width: 100%;
+    border-radius: 0px;
+    height: 52px;
+}
+
+.selection-box-auto button span {
+    font-size: 24px;
+}
+
+.selection-box-auto .content-body {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.selection-box-auto .content-body .mdc-select {
+    width: 100%;
+}
+#subscription-list-group {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+#subscription-list-group ul {
+    padding-left: 20px;
+}
+.subscription-list {
+    animation: left_to_right 0.3s ease;
+}
+.subscription-list li {
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(0%);
+}
+.subscription-list li.slide-right{
+    transform: translateX(100%);
+}
+
+.subscription-list:not(#confirm-tasks) li {
+    min-height: 60px;
+    font-size: 22px;
+    /* padding-left: 40px; */
+
+}
+.subscription-list  span{
+    font-size: 22px;
+    
+}
+
+
+  
+  @keyframes left_to_right {
+    from {
+      margin-left: -100%;
+    }
+    to {
+      margin-left: 0;
+    }
+  }
+  @keyframes right_to_left {
+    from {
+      margin-right: -100%;
+    }
+    to {
+      margin-right: 0;
+    }
+  }
+/* .selection-box-auto ul li {
+    padding-right: 0px;
+    padding-left: 0px;
+} */
+
+#select-venue li {
+    background-color: lightgray;
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+#select-venue .mdc-list-item__meta {
+    border-left: 1px solid gray;
+    font-size: 28px;
+    padding-left: 5px;
+}
+
+.mdc-select-custom {
+    width: 100%;
+}
+
+.mdc-select__menu ul li {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-top: 0;
+    line-height: normal;
+    display: block;
+    margin-bottom: 0px;
+}
+
+.card__primary {
+    padding: 0.6rem;
+    text-align: center;
+    font-weight: 400;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.38);
+    color: #89273E
+}
+
+.card__secondary {
+    padding: 0px 16px 0px 16px;
+}
+
+.custom-control i {
+    font-size: 32px;
+
+}
+
+.custom-control.right {
+    margin: 10px;
+
+}
+
+.card-header {
+    position: relative;
+}
+
+/** card-form **/
+
+.form-container .mdc-text-field {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background-color: rgba(224, 224, 224, 0.32);
+    width: 100%;
+}

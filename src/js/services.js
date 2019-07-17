@@ -3,21 +3,13 @@ let apiHandler = new Worker('js/apiHandler.js');
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
-  errorInStorage[error.message] = true
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }
 
-function loader(nameClass) {
-  var div = document.createElement('div');
-  div.className = 'loader ' + nameClass;
-  return div;
-}
 
-
-
-function successDialog() {
-  progressBar.foundation_.close();
+function successDialog(data) {
+  console.log(data)
   const successMark = document.getElementById('success-animation');
   const viewContainer = document.getElementById('growthfile');
   successMark.classList.remove('hidden');
@@ -26,17 +18,21 @@ function successDialog() {
     successMark.classList.add('hidden');
     viewContainer.style.opacity = '1';
   }, 1500);
-  localStorage.removeItem('clickedActivity');
-  resetScroll()
-  listView();
 }
 
-function snacks(message, type) {
+
+function snacks(message, text, callback) {
   snackBar.labelText = message;
   snackBar.open();
-  snackBar.timeoutMs = 10000
-  snackBar.actionButtonText = 'okay';
+  snackBar.timeoutMs = 4000
+  snackBar.actionButtonText = text ? text : 'Okay';
 
+  snackBar.listen('MDCSnackbar:closed', function (evt) {
+    if (evt.detail.reason !== 'action') return;
+    if (callback && typeof callback === 'function') {
+      callback()
+    }
+  })
 }
 
 function fetchCurrentTime(serverTime) {
@@ -44,57 +40,12 @@ function fetchCurrentTime(serverTime) {
 }
 
 
-function geolocationApi(body) {
-
-  return new Promise(function (resolve, reject) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + appKey.getMapKey(), true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-
-    xhr.onreadystatechange = function () {
-
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 400) {
-          return reject({
-            message: xhr.response,
-            body: JSON.parse(body),
-          });
-        }
-        const response = JSON.parse(xhr.response);
-        if (!response) {
-          return reject({
-            message: 'Response From geolocation Api ' + response,
-            body: JSON.parse(body)
-          })
-        }
-        resolve({
-          latitude: response.location.lat,
-          longitude: response.location.lng,
-          accuracy: response.accuracy,
-          provider: body
-        });
-      }
-    };
-    xhr.onerror = function () {
-      reject({
-        message: xhr
-      })
-    }
-    xhr.send(body);
-
-  });
-}
-
-
 
 function manageLocation() {
   return new Promise(function (resolve, reject) {
     getLocation().then(function (location) {
-      if (native.getName() === 'Android') {
-       updateLocationInRoot(location)
-      };
       resolve(location)
-    }).catch(function (error) {  
+    }).catch(function (error) {
       reject(error);
     })
   })
@@ -129,6 +80,7 @@ function getLocation() {
       })
       return;
     }
+
     try {
       webkit.messageHandlers.locationService.postMessage('start');
       window.addEventListener('iosLocation', function _iosLocation(e) {
@@ -136,6 +88,7 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
+
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
@@ -145,72 +98,33 @@ function getLocation() {
   })
 }
 
-
 function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
     let body;
     try {
       body = getCellularInformation();
-     
     } catch (e) {
       reject(e.message);
     }
-
     if (!Object.keys(body).length) {
-
       reject("empty object from getCellularInformation");
     }
-
-    geolocationApi(JSON.stringify(body)).then(function (cellLocation) {
-  
-      return resolve(cellLocation);
+    requestCreator('geolocationApi', body).then(function (result) {
+      return resolve(result.response);
     }).catch(function (error) {
       reject(error)
     })
   })
 }
-function logWifi(ogBody){
-  const req = {message:'Wi-fi Change Log',body:{
-    main : ogBody
-  }}
-  for (let i = 1; i <= 3; i++) {
-    
-    (function(index){
-    
-      setTimeout(function(){
-        if(index ==3) {
-          handleError(req)
-          return;
-        }
-        let result
-        let name;
-        if(index == 1) {
-          name = 'first wifi at '+moment().format('hh:mm:ss')
-        
-        }
-        if(index ==2){
-          name = 'second wifi at '+moment().format('hh:mm:ss')
-         
-        };
-       
-        try {
-         result = getCellularInformation();
-        }catch(e){
-         result = e.message
-        }
-        req.body[name] = result;
-      },i * 2000)
-    })(i)
-  }
-}
 
-function iosLocationError(error) {
-  html5Geolocation().then(function (location) {
-    updateLocationInRoot(location)
-  }).catch(function (error) {
-    reject(error)
-  })
-  handleError(error);
+function iosLocationError(iosError) {
+  html5Geolocation().then(function (geopoint) {
+    var iosLocation = new CustomEvent('iosLocation', {
+      "detail": geopoint
+    });
+    window.dispatchEvent(iosLocation)
+  }).catch(locationErrorDialog)
+  handleError(iosError)
 }
 
 function html5Geolocation() {
@@ -220,83 +134,19 @@ function html5Geolocation() {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         accuracy: position.coords.accuracy,
-        provider: 'HTML5'
+        provider: 'HTML5',
+        lastLocationTime: Date.now()
       })
-
     }, function (error) {
       reject({
         message: error.message
       })
     }, {
+      maximumAge: 0,
       timeout: 5000,
-      maximumAge: 0
+      enableHighAccuracy: false
     })
   })
-}
-
-function updateLocationInRoot(finalLocation) {
-  var previousLocation = {
-    latitude: '',
-    longitude: '',
-    accuracy: '',
-    provider: '',
-    lastLocationTime: ''
-  };
-  var dbName = firebase.auth().currentUser.uid;
-  var req = indexedDB.open(dbName);
-  req.onsuccess = function () {
-    var db = req.result;
-    var tx = db.transaction(['root'], 'readwrite');
-    var rootStore = tx.objectStore('root');
-    rootStore.get(dbName).onsuccess = function (event) {
-      var record = event.target.result;
-      if (record.location) {
-        previousLocation = record.location
-      };
-      record.location = finalLocation;
-      record.location.lastLocationTime = Date.now();
-      rootStore.put(record);
-    };
-
-    tx.oncomplete = function () {
-      if (!previousLocation.latitude) return;
-      if (!previousLocation.longitude) return;
-      if (!finalLocation.latitude) return;
-      if (!finalLocation.longitude) return;
-
-      var distanceBetweenBoth = calculateDistanceBetweenTwoPoints(previousLocation, finalLocation);
-
-      var suggestCheckIn = new CustomEvent("suggestCheckIn", {
-        "detail": {
-          newDay: isNewDay(true),
-          locationChanged: isLocationMoreThanThreshold(distanceBetweenBoth)
-        }
-      });
-      window.dispatchEvent(suggestCheckIn);
-
-      if (native.getName() === 'Ios') {
-        var iosLocation = new CustomEvent('iosLocation', {
-          "detail": finalLocation
-        });
-        window.dispatchEvent(iosLocation)
-      }
-
-    };
-    tx.onerror = function () {
-      handleError({
-        message: `${tx.error.message} from updateLocationInRoot`,
-        body: tx.error.name
-      })
-    }
-
-    req.onerror = function () {
-      handleError({
-        message: `${req.error.message} from updateLocationInRoot`,
-        body: req.error.name
-      });
-      window.dispatchEvent(suggestCheckIn);
-    };
-  }
 }
 
 function toRad(value) {
@@ -305,17 +155,15 @@ function toRad(value) {
 
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
   var R = 6371; // km
-
   var dLat = toRad(newLocation.latitude - oldLocation.latitude);
   var dLon = toRad(newLocation.longitude - oldLocation.longitude);
   var lat1 = toRad(newLocation.latitude);
   var lat2 = toRad(oldLocation.latitude);
-
   var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
-
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var distance = R * c;
   return distance;
+
 }
 
 function isLocationMoreThanThreshold(distance) {
@@ -324,18 +172,6 @@ function isLocationMoreThanThreshold(distance) {
   return false;
 }
 
-function isLocationLessThanThreshold(distance) {
-  var THRESHOLD = 1; //km
-  if (distance <= THRESHOLD) return true;
-  return false;
-}
-
-function sortedByAccuracy(geoData) {
-  var result = geoData.sort(function (a, b) {
-    return a.accuracy - b.accuracy;
-  });
-  return result[0];
-}
 
 function isLocationStatusWorking() {
   const requiredWifi = {
@@ -370,6 +206,7 @@ function isLocationStatusWorking() {
 
 
 function requestCreator(requestType, requestBody) {
+
   var auth = firebase.auth().currentUser;
   if (!auth) return;
   var requestGenerator = {
@@ -377,225 +214,87 @@ function requestCreator(requestType, requestBody) {
     body: '',
     meta: {
       user: {
-        token: '',
+        token: ApplicationState.idToken,
         uid: auth.uid,
         displayName: auth.displayName,
         photoURL: auth.photoURL,
         phoneNumber: auth.phoneNumber,
       },
+      key: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl()
     }
   };
+  const nonLocationRequest = {
+    'instant': true,
+    'now': true,
+    'Null': true,
+    'backblaze': true,
+    'removeFromOffice': true,
+    'updateAuth': true,
+    'geolocationApi': true
+  }
 
-  auth.getIdToken(false).then(function (token) {
-    if (requestType === 'instant' || requestType === 'now' || requestType === 'Null' || requestType === 'backblaze') {
+  if (nonLocationRequest[requestType]) {
+    requestGenerator.body = requestBody;
+    apiHandler.postMessage(requestGenerator);
+  } else {
+    getRootRecord().then(function (rootRecord) {
+      if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
+        manageLocation().then(function (geopoint) {
+          ApplicationState.lastLocationTime = geopoint.lastLocationTime;
+          if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
+            mapView(geopoint);
+            return;
+          };
+
+          requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+          requestGenerator.body = requestBody;
+          requestBody['geopoint'] = geopoint;
+          apiHandler.postMessage(requestGenerator);
+        }).catch(locationErrorDialog)
+        return;
+      }
+      requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
       requestGenerator.body = requestBody;
-      requestGenerator.meta.user.token = token;
+      requestBody['geopoint'] = ApplicationState.location;
       apiHandler.postMessage(requestGenerator);
-    } else {
+    });
+  }
 
-      getRootRecord().then(function (rootRecord) {
-        if(!rootRecord.nowValid) {
-          window.addEventListener('nowValid', function _nowValid(e) {
-         
-            handleRequestCreation(rootRecord,location,requestGenerator,token,requestType,requestBody)
-            window.removeEventListener('nowValid', _nowValid, true);
-          }, true)
-        }
-        else {
-          handleRequestCreation(rootRecord,location,requestGenerator,token,requestType,requestBody)
-        }
-      });
+  return new Promise(function (resolve, reject) {
+    apiHandler.onmessage = function (event) {
+      console.log(event)
+      if (!event.data.success) return reject(event.data)
+      return resolve(event.data)
     }
-  }).catch(console.log)
-
-  // handle the response from apiHandler when operation is completed
-  apiHandler.onmessage = messageReceiver;
-  apiHandler.onerror = onErrorMessage;
+    apiHandler.onerror = function (event) {
+      console.log(event)
+      return reject(event.data)
+    };
+  })
 }
 
-function handleRequestCreation(rootRecord,location,requestGenerator,token,requestType,requestBody){
-  let currlocation = rootRecord.location;
-  let isLocationOld = true;
-  currlocation ? isLocationOld = isLastLocationOlderThanThreshold(location.lastLocationTime, 5) : '';
-  requestGenerator.meta.user.token = token;
-  if (isLocationOld) {
-    manageLocation().then(function (newLocation) {
-      createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,newLocation)
-    }).catch(locationErrorDialog)
-  } else {
-    createRequestBody(requestType, requestBody, requestGenerator, rootRecord.serverTime,currlocation)
-  }
-}
-function createRequestBody(requestType, requestBody, requestGenerator,serverTime, location) {
-
-  if (requestType === 'create') {
-    requestBody.forEach(function (body) {
-      body.timestamp = fetchCurrentTime(serverTime);
-      body.geopoint = location
-    })
-  } else {
-    requestBody['timestamp'] = fetchCurrentTime(serverTime);
-    requestBody['geopoint'] = location;
-  }
-  requestGenerator.body = requestBody;
-  apiHandler.postMessage(requestGenerator);
-}
 
 
 
 function locationErrorDialog(error) {
-  progressBar.foundation_.close();
+
   const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
-    resetScroll()
-    listView();
+    mapView()
     handleError(error);
   })
 }
 
-function isLastLocationOlderThanThreshold(test, threshold) {
-  if (!test) return true;
+function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
+
   var currentTime = moment(moment().valueOf());
-  var duration = moment.duration(currentTime.diff(test));
+  var duration = moment.duration(currentTime.diff(lastLocationTime));
   var difference = duration.asSeconds();
   return difference > threshold
-
 }
 
-var receiverCaller = {
-  'nowValid':nowValid,
-  'initFirstLoad': initFirstLoad,
-  'update-app': updateApp,
-  'removed-from-office': officeRemovalSuccess,
-  'revoke-session': revokeSession,
-  'notification': successDialog,
-  'apiFail': apiFail,
-};
-
-function messageReceiver(response) {
-  receiverCaller[response.data.type](response.data);
-}
-
-
-
-function emailVerify(notification) {
-  if (firebase.auth().currentUser.email && firebase.auth().currentUser.emailVerified) return;
-  if (firebase.auth().currentUser.email) return emailUpdateSuccess();
-  const emailVerifyDialog = new Dialog(notification.title, notification.body).create();
-  emailVerifyDialog.open();
-  emailVerifyDialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept') return;
-    profileView(true);
-  })
-}
-
-function templateDialog(notificationData, isSuggestion,hasMultipleOffice) {
-  const container = createElement('div', {
-    className: 'notification-message',
-    textContent: notificationData.body
-  });
-
-  const ul = createElement('ul', {
-    className: 'mdc-list',
-    id: 'payroll-notification-list'
-  })
-  ul.setAttribute('role', 'radiogroup')
-
-  notificationData.data.forEach(function (data, idx) {
-    ul.appendChild(radioList({
-      labelText: data.template,
-      index: idx,
-      value: data,
-    }))
-  })
-  container.appendChild(ul);
-
-  const payrollDialog = new Dialog(notificationData.title, container).create();
-  payrollDialog.open();
-
-  const radioListInit = new mdc.list.MDCList(ul)
-  radioListInit.singleSelection = true;
-  payrollDialog.listen('MDCDialog:opened', function (evt) {
-    radioListInit.layout();
-    radioListInit.listElements.map(function (el) {
-      return new mdc.ripple.MDCRipple.attachTo(el)
-    })
-  })
-  payrollDialog.listen('MDCDialog:closed', function (evt) {
-    if (evt.detail.action !== 'accept')  return;
-    
-
-    if (!isLocationStatusWorking()) return;
-    const rawValue = document.getElementById('list-radio-item-' + radioListInit.selectedIndex).value
-    if (!rawValue) return;
-
-    const value = JSON.parse(rawValue);
-    let prefill = {
-      schedule:'',
-      attachment:''
-    }
-    if(!isSuggestion) {
-      prefill.schedule = value.schedule
-      prefill.attachment = value.attachment
-      
-    }
-    ga('send', {
-      hitType: 'event',
-      eventCategory: 'suggestion',
-      eventAction: 'click',
-      eventLabel: value.template + ' suggestion selected'
-    });
-    if (!hasMultipleOffice) {
-      createTempRecord(value.office, value.template, prefill);
-      return;
-    }
-    selectorUI({
-      store: 'subscriptions'
-    });
-  })
-}
-function nowValid(){
-  const uid = firebase.auth().currentUser.uid
-
-  const req = indexedDB.open(uid);
-  req.onsuccess = function(){
-    const db = req.result;
-    const tx =  db.transaction('root','readwrite')
-    const store = tx.objectStore('root')
-    store.get(uid).onsuccess = function(event){
-      const record = event.target.result;
-      record.nowValid = true;
-      store.put(record);
-    }
-    tx.oncomplete = function(){
-      
-      var nowEvent = new CustomEvent("nowValid", {
-        "detail": {
-          valid:true
-        }
-      });
-      window.dispatchEvent(nowEvent)
-    }
-  }
- 
-}
-function initFirstLoad(response) {
-  if (history.state[0] !== 'listView') return;
-  if (response.msg.hasOwnProperty('activity')) {
-    if (response.msg.activity.length) {
-      getRootRecord().then(function (record) {
-        updateEl(response.msg.activity, record);
-      })
-    }
-  }
-  if (response.msg.hasOwnProperty('template')) {
-    createActivityIcon()
-  }
-
-  return;
-}
 
 function updateApp() {
   // if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
@@ -606,7 +305,6 @@ function updateApp() {
   updateAppDialog.listen('MDCDialog:opened', function () {
     const cancelButton = updateAppDialog.buttons_[0];
     cancelButton.setAttribute('disabled', 'true');
-
   })
   updateAppDialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
@@ -615,7 +313,9 @@ function updateApp() {
 }
 
 function revokeSession() {
-  firebase.auth().signOut().then(function () {}).catch(function (error) {
+  firebase.auth().signOut().then(function () {
+    document.getElementById('app-header').classList.add('hidden');
+  }).catch(function (error) {
 
     handleError({
       message: 'Sign out error',
@@ -624,84 +324,116 @@ function revokeSession() {
   });
 }
 
-
-function apiFail(data) {
-  if (document.getElementById('send-activity')) {
-    document.getElementById('send-activity').style.display = 'block';
-  }
-
-  if (document.querySelector('.loader')) {
-    document.querySelector('.loader').remove();
-  }
-  if (document.querySelector('.delete-activity')) {
-    document.querySelector('.delete-activity').style.display = 'block';
-  }
-  if (document.querySelector('.undo-delete-loader')) {
-    document.querySelector('.undo-delete-loader').style.display = 'block';
-  }
-  if (document.querySelector('.form-field-status')) {
-    if (document.querySelector('.form-field-status').classList.contains('hidden')) {
-      document.querySelector('.form-field-status').classList.remove('hidden');
-    }
-  }
-  progressBar.foundation_.close();
-  snacks(data.msg.message);
-}
-
 function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
   officeRemoveDialog.open();
   officeRemoveDialog.listen('MDCDialog:closed', function () {
-    document.getElementById('app-current-panel').innerHTML = '';
-    resetScroll()
-    listView();
+
   });
   return
 }
 
-function onErrorMessage(error) {
-
-  const body = {
-    'line-number': error.lineno,
-    'file': error.filename,
-    'col-number': error.colno,
-  }
-  handleError({
-    message: `${error.message} from apiHandler.js at line-number ${error.lineno} and columne-number ${error.colno}`,
-    body: body
+function updateIosLocation(geopointIos) {
+  geopointIos.lastLocationTime = Date.now()
+  var iosLocation = new CustomEvent('iosLocation', {
+    "detail": geopointIos
   });
+  window.dispatchEvent(iosLocation)
 }
 
-function getInputText(selector) {
-  return mdc.textField.MDCTextField.attachTo(document.querySelector(selector));
+function handleComponentUpdation(readResponse) {
+  if (!history.state) return;
+  switch (history.state[0]) {
+    case 'homeView':
+      getSuggestions()
+      break;
+    case 'enterChat':
+      if (!readResponse.response.addendum.length) return;
+      dynamicAppendChats(readResponse.response.addendum)
+      break;
+    default:
+    case 'chatView':
+      if (!readResponse.response.addendum.length) return;
+      readLatestChats(false);
+      break;
+  }
 }
 
+function backgroundTransition() {
+  if (!firebase.auth().currentUser) return
+  if (!history.state) return;
+  firebase.auth().currentUser.reload()
+  if (history.state[0] === 'profileCheck') return;
+  requestCreator('Null').then(console.log).catch(console.log)
+  if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
+  manageLocation().then(function (geopoint) {
+    ApplicationState.location.lastLocationTime = geopoint.lastLocationTime;
+    if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
+    mapView(geopoint);
+  })
+}
 
 function runRead(value) {
-  if (!localStorage.getItem('dbexist')) return
-  if (!value) return requestCreator('Null', value);
-  if (value.read) {
-    requestCreator('Null', value)
+
+  if (value) {
+    requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
     return;
-  };
-
-  setTimeout(function () {
-    if (value.verifyEmail) {
-      const notificationData = JSON.parse(value.verifyEmail)
-      emailVerify(notificationData)
-      return;
-    };
-
-    if (value.payroll) {
-      const notificationData = JSON.parse(value.payroll)
-      templateDialog(notificationData)
-      return;
-    }
-  }, 500)
+  }
 }
 
 function removeChildNodes(parent) {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
   }
+}
+
+function getRootRecord() {
+  return new Promise(function (resolve, reject) {
+    let record;
+    const rootTx = db.transaction(['root'], 'readwrite')
+    const rootStore = rootTx.objectStore('root')
+    rootStore.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+      const data = event.target.result;
+      record = data;
+    }
+
+    rootTx.oncomplete = function () {
+      resolve(record)
+    }
+    rootTx.onerror = function () {
+      reject({
+        message: `${rootTx.error.message} from getRootRecord`
+      })
+    }
+  })
+}
+
+function getSubscription(office, template) {
+  return new Promise(function (resolve) {
+    const tx = db.transaction(['subscriptions']);
+    const subscription = tx.objectStore('subscriptions')
+    const officeTemplateCombo = subscription.index('validSubscription')
+
+    const range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
+    officeTemplateCombo.getAll(range).onsuccess = function (event) {
+      result = event.target.result;
+      console.log(result);
+
+      if (result.length > 1) {
+        return resolve(result.sort(function (a, b) {
+          return b.timestamp - a.timestamp
+        })[0])
+      }
+
+      return resolve(result[0])
+    }
+
+    tx.onerror = function () {
+      return reject({
+        message: tx.error,
+        body: ''
+      })
+    }
+
+  })
 }

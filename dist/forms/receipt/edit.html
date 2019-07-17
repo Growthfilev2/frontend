@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="../../external/css/material.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="../styles/style.css" rel="stylesheet" type="text/css">
+
+
+</head>
+
+<body>
+    <form class='forms mdc-card' id='form'>
+
+        <div class="form-list">
+            <div class="form-component customer-select-container hidden">
+                <div class="mdc-select" id='customer'>
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Customer</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component invoice-select-container hidden">
+                <div class="mdc-select" id='invoice'>
+
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose Invoice Number</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+
+            <div class="form-component collection-select-container hidden">
+                    <div class="mdc-select" id='collection'>
+    
+                        <i class="mdc-select__dropdown-icon"></i>
+                        <select class="mdc-select__native-control">
+                            <option value="" selected></option>
+                        </select>
+                        <label class="mdc-floating-label">Choose collection </label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field"  data-mdc-auto-init="MDCTextField"
+                    id='amount'>
+                    <input class=" mdc-text-field__input" type="number">
+                    <label for="input" class="mdc-floating-label" id="cc">Amount</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
+         
+            <div class="form-component">
+                    <div class="mdc-text-field"  data-mdc-auto-init="MDCTextField"
+                        id='ref-number'>
+                        <input class=" mdc-text-field__input" type="number">
+                        <label for="input" class="mdc-floating-label" id="cc">Reference Number</label>
+                        <div class="mdc-line-ripple"></div>
+                    </div>
+                </div>
+            <div class="form-component">
+                <input type="submit" value="Create Receipt" class="mdc-button submit-btn">
+            </div>
+        </div>
+    </form>
+    <script src="../js/common.js"></script>
+    <script>
+        parent.window.mdc.autoInit();
+        const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'));
+        const collection = new parent.mdc.select.MDCSelect(document.getElementById('collection'));
+        const invoice = new parent.mdc.select.MDCSelect(document.getElementById('invoice'));
+        const amount = new parent.mdc.textField.MDCTextField(document.getElementById('amount'));
+        const ref = new parent.mdc.textField.MDCTextField(document.getElementById('ref-number'));
+
+        var formEl = document.getElementById('form');
+        function init(subscriptionTemplate) {
+            getDropDownContent(subscriptionTemplate.office, 'invoice', 'officeTemplate').then(function (result) {
+                if (result.string) {
+                    document.querySelector('.invoice-select-container').classList.remove("hidden")
+                    invoice.nativeControl_.innerHTML += result.string
+                }
+            })
+            getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
+                customer.nativeControl_.innerHTML += result.string;
+                if(result.string) {
+                    document.querySelector('.customer-select-container').classList.remove('hidden')
+                }
+            });
+            getDropDownContent(subscriptionTemplate.office, 'collection', 'officeTemplate').then(function (result) {
+                if (result.string) {
+                    document.querySelector('.collection-select-container').classList.remove("hidden")
+                    collection.nativeControl_.innerHTML += result.string
+                }
+            })
+           
+            formEl.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
+                copy.attachment['Invoice Number'].value = invoice.value;
+                copy.attachment['Customer'].value = customer.value;
+                copy.attachment['collection'].value = collection.value;
+                copy.attachment['Amount Received'].value = amount.value,
+                copy.attachment['Reference Number'].value = ref.value
+                copy.share = []
+                parent.sendFormToParent(copy)
+            })
+        }
+    </script>
+</body>
+
+</html>
