@@ -9,6 +9,7 @@ var db;
 let isCheckInCreated;
 let drawer;
 let navList;
+
 const redirectParam = {
   updateEmail: '',
   verify: false,

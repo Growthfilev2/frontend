@@ -22,7 +22,7 @@ function mapView(location) {
   panel.innerHTML = mapDom();
   panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
-
+  console.log(location)
   if (!location) {
     document.getElementById('start-load').classList.add('hidden')
     document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>'

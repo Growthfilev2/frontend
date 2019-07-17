@@ -1,1 +1,834 @@
-importScripts("https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js");var deviceInfo=void 0,currentDevice=void 0,meta=void 0;function getTime(){return Date.now()}var requestFunctionCaller={dm:dm,statusChange:statusChange,share:share,update:update,create:create,backblaze:backblaze,updateAuth:updateAuth,comment:comment};function sendSuccessRequestToMainThread(e,t){self.postMessage({response:e,success:!0})}function sendErrorRequestToMainThread(e){console.log(e);var t={response:{message:e.message,apiRejection:!1},success:!1};e.stack&&(t.response.stack=e.stack),e.code?t.response.apiRejection=!0:instant(JSON.stringify(t.response),meta),self.postMessage(t)}function http(s){return new Promise(function(o,n){var r=new XMLHttpRequest;r.open(s.method,s.url,!0),r.setRequestHeader("X-Requested-With","XMLHttpRequest"),r.setRequestHeader("Content-Type","application/json"),r.setRequestHeader("Authorization","Bearer "+s.token),"GET"!==s.method&&(r.timeout=15e3,r.ontimeout=function(){return n({code:400,message:"Request Timed Out. Please Try Again Later"})}),r.onreadystatechange=function(){if(4===r.readyState){if(!r.status||226<r.status){if(!r.response)return;var e=JSON.parse(r.response),t={res:JSON.parse(r.response),url:s.url,data:s.data,device:currentDevice,message:e.message,code:e.code};return n(t)}r.responseText?o(JSON.parse(r.responseText)):o("success")}},r.send(s.body||null)})}function fetchServerTime(a,i,c){return new Promise(function(e,t){currentDevice=a.device;var o=JSON.parse(currentDevice),n=i.apiUrl+"now?deviceId="+o.id+"&appVersion="+o.appVersion+"&os="+o.baseOs+"&deviceBrand="+o.deviceBrand+"&deviceModel="+o.deviceModel+"&registrationToken="+a.registerToken,r=c.transaction(["root"],"readwrite"),s=r.objectStore("root");s.get(i.user.uid).onsuccess=function(e){var t=e.target.result;t&&(t.officesRemoved&&(t.officesRemoved.forEach(function(e){n=n+"&removeFromOffice="+e.replace(" ","%20")}),delete t.officesRemoved),t.venuesSet&&(n+="&venues=true",delete t.venuesSet),s.put(t))},r.oncomplete=function(){http({method:"GET",url:n,body:null,token:i.user.token}).then(e).catch(t)}})}function instant(e,t){http({method:"POST",url:t.apiUrl+"services/logs",body:e,token:t.user.token}).then(function(e){console.log(e)}).catch(console.log)}function putServerTime(r){return console.log(r),new Promise(function(e,t){var o=r.db.transaction(["root"],"readwrite"),n=o.objectStore("root");n.get(r.meta.user.uid).onsuccess=function(e){var t=e.target.result;t.serverTime=r.ts-Date.now(),n.put(t)},o.oncomplete=function(){e({meta:r.meta,db:r.db})}})}function comment(e,t){return http({method:"POST",url:t.apiUrl+"activities/comment",body:JSON.stringify(e),token:t.user.token})}function geolocationApi(r,e){return new Promise(function(t,o){var n=new XMLHttpRequest;n.open("POST","https://www.googleapis.com/geolocation/v1/geolocate?key="+e.key,!0),n.setRequestHeader("Content-Type","application/json"),n.onreadystatechange=function(){if(4===n.readyState){if(400<=n.status)return o({message:n.response,body:r});var e=JSON.parse(n.response);if(!e)return o({message:"Response From geolocation Api "+e,body:r});t({latitude:e.location.lat,longitude:e.location.lng,accuracy:e.accuracy,provider:r,lastLocationTime:Date.now()})}},n.onerror=function(){o({message:n})},n.send(JSON.stringify(r))})}function dm(e,t){return console.log(e),http({method:"POST",url:t.apiUrl+"dm",body:JSON.stringify(e),token:t.user.token})}function statusChange(e,t){return http({method:"PATCH",url:t.apiUrl+"activities/change-status",body:JSON.stringify(e),token:t.user.token})}function share(e,t){return http({method:"PATCH",url:t.apiUrl+"activities/share",body:JSON.stringify(e),token:t.user.token})}function update(e,t){return http({method:"PATCH",url:t.apiUrl+"activities/update",body:JSON.stringify(e),token:t.user.token})}function create(e,t){return http({method:"POST",url:t.apiUrl+"activities/create",body:JSON.stringify(e),token:t.user.token})}function removeFromOffice(r,s,a){return new Promise(function(t,n){var e=a.transaction(["map","calendar","children","list","subscriptions","activity"],"readwrite");e.oncomplete=function(){var e=a.transaction(["root"],"readwrite"),o=e.objectStore("root");o.get(s.user.uid).onsuccess=function(e){var t=e.target.result;t&&(t.officesRemoved=r,o.put(t))},e.oncomplete=function(){console.log("run read after removal"),t({response:"Office Removed",success:!0})},e.onerror=function(e){n({response:e,success:!1})}},e.onerror=function(){console.log(tx.error)},removeActivity(r,e)})}function removeActivity(e,t){var o=t.objectStore("activity").index("office"),n=t.objectStore("list").index("office"),r=t.objectStore("children").index("office"),s=t.objectStore("map").index("office"),a=t.objectStore("calendar").index("office"),i=t.objectStore("subscriptions").index("office");e.forEach(function(e){removeByIndex(o,e),removeByIndex(n,e),removeByIndex(r,e),removeByIndex(s,e),removeByIndex(a,e),removeByIndex(i,e)})}function removeByIndex(e,t){e.openCursor(t).onsuccess=function(e){var t=e.target.result;t&&(t.delete().onsuccess=function(){t.continue()})}}function updateAuth(e,t){return http({method:"POST",url:"https://growthfile.com/json?action=update-auth",body:JSON.stringify(e),token:t.user.token})}function backblaze(e,t){return http({method:"POST",url:t.apiUrl+"services/images",body:JSON.stringify(e),token:t.user.token})}function instantUpdateDB(s,a,e){return new Promise(function(t,o){var r=indexedDB.open(e.uid);r.onsuccess=function(){var e=r.result.transaction(["activity"],"readwrite"),n=e.objectStore("activity");n.get(s.activityId).onsuccess=function(e){var t=e.target.result;if(t.editable=0,"share"===a&&(s.share.forEach(function(e){t.assignees.push(e)}),n.put(t)),"update"===a){t.schedule=s.schedule,t.attachment=s.attachment;for(var o=0;o<t.venue.length;o++)t.venue[o].geopoint={_latitude:s.venue[o].geopoint.latitude,_longitude:s.venue[o].geopoint.longitude};n.put(t)}"status"===a&&(t[a]=s[a],n.put(t))},e.oncomplete=function(){t(!0)},e.onerror=function(){o(!0)}}})}function updateMap(n,e){var r=e.objectStore("map"),t=r.index("activityId");n.activityId&&(t.openCursor(n.activityId).onsuccess=function(e){var t=e.target.result;if(t){var o=t.delete();o.onsuccess=function(){t.continue()},o.onerror=function(){instant({message:o.error.message,meta:meta})}}else r.add(n)})}function updateCalendar(n,e){var r=e.objectStore("calendar");r.index("activityId").openCursor(n.activityId).onsuccess=function(e){var t=e.target.result;if(t){var o=t.delete();o.onsuccess=function(){console.log("remove calendar"),t.continue()},o.onerror=function(){instant({message:o.error.message,meta:meta})}}else n.schedule.forEach(function(e){e.startTime,e.endTime;var t={activityId:n.activityId,scheduleName:e.name,timestamp:n.timestamp,template:n.template,hidden:n.hidden,start:e.startTime,end:e.endTime,status:n.status,office:n.office};r.add(t)})}}function putAttachment(e,t,o){var n=t.objectStore("children"),r={activityId:e.activityId,status:e.status,template:e.template,office:e.office,attachment:e.attachment},s=o.user.phoneNumber;"employee"===e.template&&(r.employee=e.attachment["Employee Contact"].value,e.attachment["First Supervisor"].value!==s&&e.attachment["Second Supervisor"].value!==s||(r.team=1)),n.put(r)}function removeUserFromAssigneeInActivity(n,e){removeByIndex(e.objectStore("addendum").index("user"),n.user);var r=e.objectStore("activity");r.get(n.activityId).onsuccess=function(e){var t=e.target.result;if(t){var o=t.assignees.findIndex(function(e){return e.phoneNumber===n.user});-1<o&&(t.assignees.splice(o,1),r.put(t))}}}function removeActivityFromDB(e,t){if(e){var o=t.objectStore("activity"),n=t.objectStore("list"),r=t.objectStore("children"),s=t.objectStore("calendar").index("activityId"),a=t.objectStore("map").index("activityId"),i=t.objectStore("addendum").index("activityId");o.delete(e),n.delete(e),r.delete(e),removeByIndex(s,e),removeByIndex(a,e),removeByIndex(i,e)}}function updateSubscription(o,e){var n=e.objectStore("subscriptions");n.index("officeTemplate").openCursor([o.office,o.template]).onsuccess=function(e){var t=e.target.result;t?t.delete().onsuccess=function(){console.log("deleted"),t.continue()}:n.put(o)}}function createListStore(o,e){var n={activityId:o.activityId,timestamp:o.timestamp,activityName:o.activityName,status:o.status},r=e.objectStore("list");r.get(o.activityId).onsuccess=function(e){var t=e.target.result;n.createdTime=t?t.createdTime:o.timestamp,r.put(n)}}function successResponse(e,r,t,o,n){var s=t.transaction(["map","calendar","children","list","subscriptions","activity","addendum","root","users"],"readwrite"),a=s.objectStore("addendum"),i=s.objectStore("activity"),c=s.objectStore("users"),u={},d={};e.addendum.forEach(function(e){e.unassign&&(e.user==r.user.phoneNumber?removeActivityFromDB(e.activityId,s):removeUserFromAssigneeInActivity(e,s)),e.isComment?(e.assignee===r.user.phoneNumber?(e.key=r.user.phoneNumber+e.user,d[e.user]=e,u[e.user]?u[e.user]+=1:u[e.user]=1):(e.key=r.user.phoneNumber+e.assignee,d[e.assignee]=e),a.add(e)):(d[e.user]=e).user!==r.user.phoneNumber&&(u[e.user]?u[e.user]+=1:u[e.user]=1)}),e.locations.forEach(function(e){updateMap(e,s)}),e.activities.slice().reverse().forEach(function(e){e.canEdit,e.editable,i.put(e),updateCalendar(e,s),putAttachment(e,s,r),console.log(e.assignees),e.assignees.forEach(function(o){c.get(o.phoneNumber).onsuccess=function(e){var t=e.target.result;t||(t={count:0}),t.mobile=o.phoneNumber,t.displayName=o.displayName,t.photoURL=o.photoURL,t.NAME_SEARCH=o.displayName.toLowerCase(),t.timestamp||(t.timestamp=""),c.put(t)}})}),Object.keys(d).forEach(function(o){var n=d[o],e=n.activityId;console.log(u),e?i.get(e).onsuccess=function(e){var t=e.target.result;t&&t.assignees.forEach(function(e){n.key=r.user.phoneNumber+e.phoneNumber,a.put(n),o!==r.user.phoneNumber?o!==e.phoneNumber||(c.get(o).onsuccess=function(e){var t=e.target.result;t&&(t.comment=n.comment,t.timestamp=n.timestamp,t.count?t.count+=u[o]:t.count=u[o],c.put(t))}):c.get(e.phoneNumber).onsuccess=function(e){var t=e.target.result;t&&(t.comment=n.comment,t.timestamp=n.timestamp,t.count?t.count+=u[o]:t.count=u[o],c.put(t))}})}:c.get(o).onsuccess=function(e){var t=e.target.result;if(t){if(t.comment=n.comment,t.timestamp=n.timestamp,!u[o])return c.put(t);t.count?t.count+=u[o]:t.count=u[o],c.put(t)}}}),e.templates.forEach(function(e){updateSubscription(e,s)}),updateRoot(e,s,r.user.uid,u),s.oncomplete=function(){return console.log("all completed"),o(e)},s.onerror=function(){return n(s.error)}}function updateRoot(o,e,t,n){var r=0;Object.keys(n).forEach(function(e){r+=n[e]});var s=e.objectStore("root");s.get(t).onsuccess=function(e){var t=e.target.result;t.fromTime=o.upto,t.totalCount?t.totalCount+=r:t.totalCount=r,console.log("start adding upto"),s.put(t)}}function updateIDB(a){return new Promise(function(t,o){var e=a.db.transaction(["root"]),n=e.objectStore("root"),r=void 0,s=void 0;n.get(a.meta.user.uid).onsuccess=function(e){r=e.target.result,s=r.fromTime},e.oncomplete=function(){http({method:"GET",url:a.meta.apiUrl+"read?from="+s,data:null,token:a.meta.user.token}).then(function(e){return successResponse(e,a.meta,a.db,t,o)}).catch(function(e){return o(e)})}})}self.onmessage=function(s){if(meta=s.data.meta,"geolocationApi"!==s.data.type){var e=indexedDB.open(s.data.meta.user.uid);e.onsuccess=function(){var n=e.result;if("now"!==s.data.type)"instant"!==s.data.type?"Null"!==s.data.type?requestFunctionCaller[s.data.type](s.data.body,s.data.meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread):updateIDB({meta:s.data.meta,db:n}).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread):instant(s.data.body,s.data.meta);else{var r="";fetchServerTime(s.data.body,s.data.meta,n).then(function(t){var e=n.transaction(["root"],"readwrite"),o=e.objectStore("root");o.get(s.data.meta.user.uid).onsuccess=function(e){(r=e.target.result).serverTime=t.timestamp-Date.now(),o.put(r)},e.oncomplete=function(){t.removeFromOffice?Array.isArray(t.removeFromOffice)&&t.removeFromOffice.length&&removeFromOffice(t.removeFromOffice,s.data.meta,n).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread):self.postMessage({response:t,success:!0})}}).catch(sendErrorRequestToMainThread)}},e.onerror=function(){}}else geolocationApi(s.data.body,s.data.meta).then(sendSuccessRequestToMainThread).catch(function(e){self.postMessage(e)})};
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js');
+
+var deviceInfo = void 0;
+var currentDevice = void 0;
+var meta = void 0;
+
+function getTime() {
+  return Date.now();
+}
+
+var requestFunctionCaller = {
+  dm: dm,
+  statusChange: statusChange,
+  share: share,
+  update: update,
+  create: create,
+  backblaze: backblaze,
+  updateAuth: updateAuth,
+  comment: comment
+
+};
+
+function sendSuccessRequestToMainThread(response, success) {
+  self.postMessage({
+    response: response,
+    success: true
+  });
+}
+
+function sendErrorRequestToMainThread(error) {
+  console.log(error);
+  var errorObject = {
+    response: {
+      message: error.message,
+      apiRejection: false
+    },
+    success: false
+  };
+  if (error.stack) {
+    errorObject.response.stack = error.stack;
+  };
+
+  if (error.code) {
+    errorObject.response.apiRejection = true;
+  } else {
+    instant(JSON.stringify(errorObject.response), meta);
+  }
+
+  self.postMessage(errorObject);
+}
+
+self.onmessage = function (event) {
+  meta = event.data.meta;
+  if (event.data.type === 'geolocationApi') {
+    geolocationApi(event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(function (error) {
+      self.postMessage(error);
+    });
+    return;
+  }
+
+  var req = indexedDB.open(event.data.meta.user.uid);
+  req.onsuccess = function () {
+    var db = req.result;
+
+    if (event.data.type === 'now') {
+      var rootRecord = '';
+      fetchServerTime(event.data.body, event.data.meta, db).then(function (response) {
+        var rootTx = db.transaction(['root'], 'readwrite');
+        var rootObjectStore = rootTx.objectStore('root');
+        rootObjectStore.get(event.data.meta.user.uid).onsuccess = function (event) {
+          rootRecord = event.target.result;
+          rootRecord.serverTime = response.timestamp - Date.now();
+          rootObjectStore.put(rootRecord);
+        };
+        rootTx.oncomplete = function () {
+          if (response.removeFromOffice) {
+            if (Array.isArray(response.removeFromOffice) && response.removeFromOffice.length) {
+              removeFromOffice(response.removeFromOffice, event.data.meta, db).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread);
+            };
+            return;
+          };
+          self.postMessage({
+            response: response,
+            success: true
+          });
+        };
+      }).catch(sendErrorRequestToMainThread);
+
+      return;
+    }
+
+    if (event.data.type === 'instant') {
+      instant(event.data.body, event.data.meta);
+      return;
+    }
+
+    if (event.data.type === 'Null') {
+      updateIDB({
+        meta: event.data.meta,
+        db: db
+      }).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread);
+      return;
+    }
+
+    requestFunctionCaller[event.data.type](event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(sendErrorRequestToMainThread);
+  };
+  req.onerror = function () {};
+};
+
+// Performs XMLHTTPRequest for the API's.
+
+function http(request) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(request.method, request.url, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + request.token);
+    if (request.method !== 'GET') {
+      xhr.timeout = 15000;
+      xhr.ontimeout = function () {
+        return reject({
+          code: 400,
+          message: 'Request Timed Out. Please Try Again Later'
+        });
+      };
+    }
+    xhr.onreadystatechange = function () {
+
+      if (xhr.readyState === 4) {
+
+        if (!xhr.status || xhr.status > 226) {
+          if (!xhr.response) return;
+          var errorObject = JSON.parse(xhr.response);
+          var apiFailBody = {
+            res: JSON.parse(xhr.response),
+            url: request.url,
+            data: request.data,
+            device: currentDevice,
+            message: errorObject.message,
+            code: errorObject.code
+          };
+          return reject(apiFailBody);
+        }
+        xhr.responseText ? resolve(JSON.parse(xhr.responseText)) : resolve('success');
+      }
+    };
+
+    xhr.send(request.body || null);
+  });
+}
+
+function fetchServerTime(body, meta, db) {
+  return new Promise(function (resolve, reject) {
+    currentDevice = body.device;
+    var parsedDeviceInfo = JSON.parse(currentDevice);
+    var url = meta.apiUrl + 'now?deviceId=' + parsedDeviceInfo.id + '&appVersion=' + parsedDeviceInfo.appVersion + '&os=' + parsedDeviceInfo.baseOs + '&deviceBrand=' + parsedDeviceInfo.deviceBrand + '&deviceModel=' + parsedDeviceInfo.deviceModel + '&registrationToken=' + body.registerToken;
+    var tx = db.transaction(['root'], 'readwrite');
+    var rootStore = tx.objectStore('root');
+
+    rootStore.get(meta.user.uid).onsuccess = function (event) {
+      var record = event.target.result;
+      if (!record) return;
+      if (record.officesRemoved) {
+        record.officesRemoved.forEach(function (office) {
+          url = url + ('&removeFromOffice=' + office.replace(' ', '%20'));
+        });
+        delete record.officesRemoved;
+      }
+      if (record.venuesSet) {
+        url = url + "&venues=true";
+        delete record.venuesSet;
+      }
+      rootStore.put(record);
+    };
+    tx.oncomplete = function () {
+
+      var httpReq = {
+        method: 'GET',
+        url: url,
+        body: null,
+        token: meta.user.token
+      };
+
+      http(httpReq).then(resolve).catch(reject);
+    };
+  });
+}
+
+function instant(error, meta) {
+
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'services/logs',
+    body: error,
+    token: meta.user.token
+  };
+  http(req).then(function (response) {
+    console.log(response);
+  }).catch(console.log);
+}
+
+/**
+ * Initialize the indexedDB with database of currently signed in user's uid.
+ */
+
+function putServerTime(data) {
+  console.log(data);
+  return new Promise(function (resolve, reject) {
+    var rootTx = data.db.transaction(['root'], 'readwrite');
+    var rootObjectStore = rootTx.objectStore('root');
+    rootObjectStore.get(data.meta.user.uid).onsuccess = function (event) {
+      var record = event.target.result;
+      record.serverTime = data.ts - Date.now();
+      rootObjectStore.put(record);
+    };
+    rootTx.oncomplete = function () {
+      resolve({
+        meta: data.meta,
+        db: data.db
+      });
+    };
+  });
+}
+
+function comment(body, meta) {
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'activities/comment',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function geolocationApi(body, meta) {
+
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + meta.key, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+
+    xhr.onreadystatechange = function () {
+
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 400) {
+          return reject({
+            message: xhr.response,
+            body: body
+          });
+        }
+        var response = JSON.parse(xhr.response);
+        if (!response) {
+          return reject({
+            message: 'Response From geolocation Api ' + response,
+            body: body
+          });
+        }
+        resolve({
+          latitude: response.location.lat,
+          longitude: response.location.lng,
+          accuracy: response.accuracy,
+          provider: body,
+          lastLocationTime: Date.now()
+        });
+      }
+    };
+    xhr.onerror = function () {
+      reject({
+        message: xhr
+      });
+    };
+    xhr.send(JSON.stringify(body));
+  });
+}
+
+function dm(body, meta) {
+  console.log(body);
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'dm',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function statusChange(body, meta) {
+
+  var req = {
+    method: 'PATCH',
+    url: meta.apiUrl + 'activities/change-status',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function share(body, meta) {
+
+  var req = {
+    method: 'PATCH',
+    url: meta.apiUrl + 'activities/share',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function update(body, meta) {
+  var req = {
+    method: 'PATCH',
+    url: meta.apiUrl + 'activities/update',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function create(requestBody, meta) {
+
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'activities/create',
+    body: JSON.stringify(requestBody),
+    token: meta.user.token
+  };
+  return http(req);
+}
+
+function removeFromOffice(offices, meta, db) {
+  return new Promise(function (resolve, reject) {
+
+    var deleteTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity'], 'readwrite');
+    deleteTx.oncomplete = function () {
+
+      var rootTx = db.transaction(['root'], 'readwrite');
+      var rootStore = rootTx.objectStore('root');
+      rootStore.get(meta.user.uid).onsuccess = function (event) {
+        var record = event.target.result;
+        if (!record) return;
+        record.officesRemoved = offices;
+        rootStore.put(record);
+      };
+      rootTx.oncomplete = function () {
+        console.log("run read after removal");
+        resolve({
+          response: 'Office Removed',
+          success: true
+        });
+      };
+      rootTx.onerror = function (error) {
+
+        reject({
+          response: error,
+          success: false
+        });
+      };
+    };
+
+    deleteTx.onerror = function () {
+      console.log(tx.error);
+    };
+
+    removeActivity(offices, deleteTx);
+  });
+}
+
+function removeActivity(offices, tx) {
+  var activityIndex = tx.objectStore('activity').index('office');
+  var listIndex = tx.objectStore('list').index('office');
+  var childrenIndex = tx.objectStore('children').index('office');
+  var mapindex = tx.objectStore('map').index('office');
+  var calendarIndex = tx.objectStore('calendar').index('office');
+  var subscriptionIndex = tx.objectStore('subscriptions').index('office');
+
+  offices.forEach(function (office) {
+    removeByIndex(activityIndex, office);
+    removeByIndex(listIndex, office);
+    removeByIndex(childrenIndex, office);
+    removeByIndex(mapindex, office);
+    removeByIndex(calendarIndex, office);
+    removeByIndex(subscriptionIndex, office);
+  });
+}
+
+function removeByIndex(index, range) {
+  index.openCursor(range).onsuccess = function (event) {
+    var cursor = event.target.result;
+    if (!cursor) return;
+    var deleteReq = cursor.delete();
+    deleteReq.onsuccess = function () {
+      cursor.continue();
+    };
+  };
+}
+
+function updateAuth(body, meta) {
+  var req = {
+    method: 'POST',
+    url: 'https://growthfile.com/json?action=update-auth',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+
+  return http(req);
+}
+
+function backblaze(body, meta) {
+
+  var req = {
+    method: 'POST',
+    url: meta.apiUrl + 'services/images',
+    body: JSON.stringify(body),
+    token: meta.user.token
+  };
+
+  return http(req);
+}
+
+function instantUpdateDB(data, type, user) {
+  return new Promise(function (resolve, reject) {
+
+    var idbRequest = indexedDB.open(user.uid);
+
+    idbRequest.onsuccess = function () {
+      var db = idbRequest.result;
+      var objStoreTx = db.transaction(['activity'], 'readwrite');
+      var objStore = objStoreTx.objectStore('activity');
+      objStore.get(data.activityId).onsuccess = function (event) {
+        var record = event.target.result;
+        record.editable = 0;
+
+        if (type === 'share') {
+          data.share.forEach(function (number) {
+            record.assignees.push(number);
+          });
+          objStore.put(record);
+        }
+        if (type === 'update') {
+          record.schedule = data.schedule;
+          record.attachment = data.attachment;
+          for (var i = 0; i < record.venue.length; i++) {
+            record.venue[i].geopoint = {
+              '_latitude': data.venue[i].geopoint['latitude'],
+              '_longitude': data.venue[i].geopoint['longitude']
+            };
+          }
+          objStore.put(record);
+        }
+        if (type === 'status') {
+
+          record[type] = data[type];
+          objStore.put(record);
+        }
+      };
+      objStoreTx.oncomplete = function () {
+        resolve(true);
+      };
+      objStoreTx.onerror = function () {
+        reject(true);
+      };
+    };
+  });
+}
+
+function updateMap(venue, tx) {
+
+  var mapObjectStore = tx.objectStore('map');
+  var mapActivityIdIndex = mapObjectStore.index('activityId');
+  if (!venue.activityId) return;
+  mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
+    var cursor = event.target.result;
+    if (!cursor) {
+      mapObjectStore.add(venue);
+      return;
+    }
+
+    var deleteRecordReq = cursor.delete();
+    deleteRecordReq.onsuccess = function () {
+      // console.log("deleted " + cursor.value.activityId)
+      cursor.continue();
+    };
+    deleteRecordReq.onerror = function () {
+      instant({
+        message: deleteRecordReq.error.message,
+        meta: meta
+      });
+    };
+  };
+}
+
+function updateCalendar(activity, tx) {
+
+  var calendarObjectStore = tx.objectStore('calendar');
+  var calendarActivityIndex = calendarObjectStore.index('activityId');
+
+  calendarActivityIndex.openCursor(activity.activityId).onsuccess = function (event) {
+    var cursor = event.target.result;
+    if (!cursor) {
+      activity.schedule.forEach(function (schedule) {
+        var startTime = schedule.startTime;
+        var endTime = schedule.endTime;
+        var record = {
+          activityId: activity.activityId,
+          scheduleName: schedule.name,
+          timestamp: activity.timestamp,
+          template: activity.template,
+          hidden: activity.hidden,
+          start: schedule.startTime,
+          end: schedule.endTime,
+          status: activity.status,
+          office: activity.office
+        };
+        calendarObjectStore.add(record);
+      });
+      return;
+    }
+
+    var recordDeleteReq = cursor.delete();
+    recordDeleteReq.onsuccess = function () {
+      console.log("remove calendar");
+
+      cursor.continue();
+    };
+    recordDeleteReq.onerror = function () {
+      instant({
+        message: recordDeleteReq.error.message,
+        meta: meta
+      });
+    };
+  };
+}
+
+// create attachment record with status,template and office values from activity
+// present inside activity object store.
+
+function putAttachment(activity, tx, param) {
+
+  var store = tx.objectStore('children');
+  var commonSet = {
+    activityId: activity.activityId,
+    status: activity.status,
+    template: activity.template,
+    office: activity.office,
+    attachment: activity.attachment
+  };
+
+  var myNumber = param.user.phoneNumber;
+
+  if (activity.template === 'employee') {
+    commonSet.employee = activity.attachment['Employee Contact'].value;
+    if (activity.attachment['First Supervisor'].value === myNumber || activity.attachment['Second Supervisor'].value === myNumber) {
+      commonSet.team = 1;
+    }
+  }
+
+  store.put(commonSet);
+}
+
+function removeUserFromAssigneeInActivity(addendum, updateTx) {
+  var addendumStore = updateTx.objectStore('addendum').index('user');
+  removeByIndex(addendumStore, addendum.user);
+  var activityObjectStore = updateTx.objectStore('activity');
+  activityObjectStore.get(addendum.activityId).onsuccess = function (event) {
+    var record = event.target.result;
+    if (!record) return;
+
+    var indexOfUser = record.assignees.findIndex(function (assignee) {
+      return assignee.phoneNumber === addendum.user;
+    });
+
+    if (indexOfUser > -1) {
+      record.assignees.splice(indexOfUser, 1);
+
+      activityObjectStore.put(record);
+    }
+  };
+}
+
+function removeActivityFromDB(id, updateTx) {
+  if (!id) return;
+
+  var activityObjectStore = updateTx.objectStore('activity');
+  var listStore = updateTx.objectStore('list');
+  var chidlrenObjectStore = updateTx.objectStore('children');
+  var calendarObjectStore = updateTx.objectStore('calendar').index('activityId');
+  var mapObjectStore = updateTx.objectStore('map').index('activityId');
+  var addendumStore = updateTx.objectStore('addendum').index('activityId');
+
+  activityObjectStore.delete(id);
+  listStore.delete(id);
+  chidlrenObjectStore.delete(id);
+  removeByIndex(calendarObjectStore, id);
+  removeByIndex(mapObjectStore, id);
+  removeByIndex(addendumStore, id);
+}
+
+function updateSubscription(subscription, tx) {
+  var store = tx.objectStore('subscriptions');
+  var index = store.index('officeTemplate');
+  index.openCursor([subscription.office, subscription.template]).onsuccess = function (event) {
+    var cursor = event.target.result;
+    if (!cursor) {
+      store.put(subscription);
+      return;
+    }
+    var deleteReq = cursor.delete();
+    deleteReq.onsuccess = function () {
+      console.log('deleted');
+      cursor.continue();
+    };
+  };
+}
+
+function createListStore(activity, tx) {
+
+  var requiredData = {
+    'activityId': activity.activityId,
+
+    'timestamp': activity.timestamp,
+    'activityName': activity.activityName,
+    'status': activity.status
+  };
+  var listStore = tx.objectStore('list');
+  listStore.get(activity.activityId).onsuccess = function (listEvent) {
+
+    var record = listEvent.target.result;
+    if (!record) {
+      requiredData.createdTime = activity.timestamp;
+    } else {
+      requiredData.createdTime = record.createdTime;
+    }
+    listStore.put(requiredData);
+  };
+}
+
+function successResponse(read, param, db, resolve, reject) {
+
+  var updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
+  var addendumObjectStore = updateTx.objectStore('addendum');
+  var activityObjectStore = updateTx.objectStore('activity');
+  var userStore = updateTx.objectStore('users');
+  var counter = {};
+  var userTimestamp = {};
+
+  read.addendum.forEach(function (addendum) {
+    if (addendum.unassign) {
+      if (addendum.user == param.user.phoneNumber) {
+        removeActivityFromDB(addendum.activityId, updateTx);
+      } else {
+        removeUserFromAssigneeInActivity(addendum, updateTx);
+      }
+    };
+
+    if (addendum.isComment) {
+      if (addendum.assignee === param.user.phoneNumber) {
+        addendum.key = param.user.phoneNumber + addendum.user;
+        userTimestamp[addendum.user] = addendum;
+
+        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
+      } else {
+        addendum.key = param.user.phoneNumber + addendum.assignee;
+        userTimestamp[addendum.assignee] = addendum;
+      }
+      addendumObjectStore.add(addendum);
+    } else {
+      userTimestamp[addendum.user] = addendum;
+      if (addendum.user !== param.user.phoneNumber) {
+        counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1;
+      }
+    }
+  });
+
+  read.locations.forEach(function (location) {
+    updateMap(location, updateTx);
+  });
+
+  read.activities.slice().reverse().forEach(function (activity) {
+    activity.canEdit ? activity.editable == 1 : activity.editable == 0;
+
+    activityObjectStore.put(activity);
+
+    updateCalendar(activity, updateTx);
+    putAttachment(activity, updateTx, param);
+
+    console.log(activity.assignees);
+    activity.assignees.forEach(function (user) {
+      userStore.get(user.phoneNumber).onsuccess = function (event) {
+        var selfRecord = event.target.result;
+        if (!selfRecord) {
+          selfRecord = {
+            count: 0
+          };
+        };
+        selfRecord.mobile = user.phoneNumber;
+        selfRecord.displayName = user.displayName;
+        selfRecord.photoURL = user.photoURL;
+        selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
+        if (!selfRecord.timestamp) {
+          selfRecord.timestamp = '';
+        }
+        userStore.put(selfRecord);
+      };
+    });
+  });
+
+  Object.keys(userTimestamp).forEach(function (number) {
+    var currentAddendum = userTimestamp[number];
+    var activityId = currentAddendum.activityId;
+    console.log(counter);
+
+    if (activityId) {
+      // if is system generated
+      activityObjectStore.get(activityId).onsuccess = function (activityEvent) {
+        var record = activityEvent.target.result;
+        if (!record) return;
+        record.assignees.forEach(function (user) {
+          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
+          addendumObjectStore.put(currentAddendum);
+          if (number === param.user.phoneNumber) {
+            userStore.get(user.phoneNumber).onsuccess = function (event) {
+              var selfRecord = event.target.result;
+              if (!selfRecord) return;
+              selfRecord.comment = currentAddendum.comment;
+              selfRecord.timestamp = currentAddendum.timestamp;
+              if (selfRecord.count) {
+                selfRecord.count += counter[number];
+              } else {
+                selfRecord.count = counter[number];
+              }
+              userStore.put(selfRecord);
+            };
+            return;
+          }
+          if (number === user.phoneNumber) {
+            userStore.get(number).onsuccess = function (event) {
+              var userRecord = event.target.result;
+              if (!userRecord) return;
+              userRecord.comment = currentAddendum.comment;
+              userRecord.timestamp = currentAddendum.timestamp;
+              if (userRecord.count) {
+                userRecord.count += counter[number];
+              } else {
+                userRecord.count = counter[number];
+              }
+              userStore.put(userRecord);
+            };
+            return;
+          }
+        });
+      };
+      return;
+    }
+
+    userStore.get(number).onsuccess = function (event) {
+      var userRecord = event.target.result;
+      if (userRecord) {
+        userRecord.comment = currentAddendum.comment;
+        userRecord.timestamp = currentAddendum.timestamp;
+        if (!counter[number]) return userStore.put(userRecord);
+
+        if (userRecord.count) {
+          userRecord.count += counter[number];
+        } else {
+          userRecord.count = counter[number];
+        }
+        userStore.put(userRecord);
+      }
+    };
+  });
+
+  read.templates.forEach(function (subscription) {
+    updateSubscription(subscription, updateTx);
+  });
+
+  updateRoot(read, updateTx, param.user.uid, counter);
+  updateTx.oncomplete = function () {
+    console.log("all completed");
+    return resolve(read);
+  };
+  updateTx.onerror = function () {
+    return reject(updateTx.error);
+  };
+}
+
+function updateRoot(read, tx, uid, counter) {
+  var totalCount = 0;
+  Object.keys(counter).forEach(function (number) {
+    totalCount += counter[number];
+  });
+  var store = tx.objectStore('root');
+  store.get(uid).onsuccess = function (event) {
+    var record = event.target.result;
+    record.fromTime = read.upto;
+    if (record.totalCount) {
+      record.totalCount += totalCount;
+    } else {
+      record.totalCount = totalCount;
+    }
+    console.log('start adding upto');
+    store.put(record);
+  };
+}
+
+function updateIDB(config) {
+  return new Promise(function (resolve, reject) {
+
+    var tx = config.db.transaction(['root']);
+    var rootObjectStore = tx.objectStore('root');
+    var record = void 0;
+    var time = void 0;
+
+    rootObjectStore.get(config.meta.user.uid).onsuccess = function (event) {
+      record = event.target.result;
+      time = record.fromTime;
+    };
+
+    tx.oncomplete = function () {
+      var req = {
+        method: 'GET',
+        url: config.meta.apiUrl + 'read?from=' + time,
+        data: null,
+        token: config.meta.user.token
+      };
+
+      http(req).then(function (response) {
+        return successResponse(response, config.meta, config.db, resolve, reject);
+      }).catch(function (error) {
+        return reject(error);
+      });
+    };
+  });
+}
