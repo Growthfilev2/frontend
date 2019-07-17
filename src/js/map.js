@@ -34,7 +34,6 @@ function mapView(location) {
     return
   }
   ApplicationState.location = location
-  firebase.auth().currentUser.reload()
   console.log("auth relaoderd")
   document.getElementById('start-load').classList.add('hidden');
 

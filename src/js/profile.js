@@ -6,7 +6,6 @@ function profileView() {
 
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
-  auth.reload();
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
   const editIcon = ` <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Edit" id='edit-profile'>edit</a>
@@ -95,7 +94,6 @@ Choose Image
         imageBase64: imageSrc
       }).then(function () {
         snacks('Profile Picture set successfully')
-        auth.reload()
       }).catch(function (error) {
         snacks(error.response.message)
       });
@@ -105,7 +103,6 @@ Choose Image
         displayName: newName
       }).then(function () {
         snacks('Username Updated Successfully')
-        auth.reload()
       })
     }
 

@@ -362,7 +362,6 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
-  firebase.auth().currentUser.reload()
   if (history.state[0] === 'profileCheck') return;
   requestCreator('Null').then(console.log).catch(console.log)
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
