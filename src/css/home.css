@@ -39,6 +39,7 @@
 
 .actions .action  i {
     font-size: 30px;
+    margin-right: 10px;
 }
 
 .home-container .mdc-card__primary-action {

@@ -6,10 +6,6 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [{
-      "source": "growthfile-207204.firebaseapp.com",
-      "destination": "index.html"
-    }],
     "headers": [{
         "source": "**/*.@(jpg|jpeg|gif|png)",
         "headers": [{
