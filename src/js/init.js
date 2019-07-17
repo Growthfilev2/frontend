@@ -11,6 +11,7 @@ let drawer;
 let navList;
 let redirectUpdateEmail = '';
 let redirectVerifyEmail = false;
+let initApp = true;
 
 function imgErr(source) {
   source.onerror = '';
@@ -96,15 +97,6 @@ window.addEventListener("load", function () {
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
 
 
-  // drawer.listen('MDCDrawer:opened', function (evt) {
-  //   document.querySelector(".mdc-drawer__header .mdc-drawer__title").textContent = firebase.auth().currentUser.displayName || firebase.auth().currentUser.phoneNumber;
-  //   document.querySelector(".mdc-drawer__header img").src = firebase.auth().currentUser.photoURL || '../src/img/empty-user.jpg'
-  //   document.querySelector(".mdc-drawer__header img").onclick = function () {
-  //     profileView();
-
-  //   }
-  // })
-
 
   moment.updateLocale('en', {
     calendar: {
@@ -137,6 +129,8 @@ window.addEventListener("load", function () {
       userSignedOut()
       return;
     }
+    document.getElementById("main-layout-app").style.display = 'block'
+    if(!initApp) return
     startApp()
   });
   firebase
@@ -158,7 +152,7 @@ function firebaseUiConfig() {
         console.log(authResult)
         const auth = authResult.user
         if (redirectUpdateEmail) {
-
+          document.querySelector('.mdc-card profile-update-init').classList.add('hidden')
           auth.updateEmail(redirectUpdateEmail).then(function () {
             auth.sendEmailVerification().then(function () {
               snacks('Verification Link has been Sent')
@@ -174,23 +168,24 @@ function firebaseUiConfig() {
           }).catch(function (error) {
             handleError({
               message: error.code,
-              body: JSON.stringify(error)
+              body: error.message
             })
             console.log(error)
-            
+            snacks(error.message);
           })
           redirectUpdateEmail = '';
           return;
         }
         if (redirectVerifyEmail) {
+          document.querySelector('.mdc-card profile-update-init').classList.add('hidden');
           auth.sendEmailVerification().then(function () {
             snacks('Verification Link has been Sent')
             openMap();
           }).catch(function (verificationError) {
             console.log(verificationError)
             handleError({
-              message: verificationError.message,
-              body: JSON.stringify(verificationError)
+              message: verificationError.code,
+              body: verificationError.message
             })
             openMap()
           })
@@ -391,13 +386,7 @@ function startApp() {
           return;
         }
         profileCheck();
-        requestCreator('Null').then(console.log).catch(function (error) {
-          if (error.response.apiRejection) {
-            snacks(error.response.message, 'Okay', (function () {
-              startApp()
-            }))
-          }
-        })
+        requestCreator('Null').then(console.log).catch(console.log)
       })
       manageLocation().then(function (location) {
         ApplicationState.location = location
@@ -626,8 +615,9 @@ function checkForRecipient() {
           return
         };
         progCard.open();
+      
         auth.updateEmail(emailInit.value).then(function () {
-
+         
           auth.sendEmailVerification().then(function () {
             snacks('Verification Link has been Sent')
             progCard.close();
@@ -641,12 +631,13 @@ function checkForRecipient() {
             openMap()
           })
         }).catch(function (error) {
+           progCard.close();
           if (error.code === 'auth/requires-recent-login') {
             redirectUpdateEmail = value;
             showReLoginDialog('Email Update', 'Please login again to update your email address')
             return
           }
-          progCard.close();
+          
           handleError({
             message: error.code,
             body: JSON.stringify(error)
@@ -689,7 +680,7 @@ function checkForRecipient() {
           progCard.close();
           if (verificationError.code === 'auth/requires-recent-login') {
             redirectVerifyEmail = true;
-            showReLoginDialog();
+            showReLoginDialog('Email Verification', 'Please login again to get a verification ');
             return;
           }
           handleError({
@@ -715,6 +706,7 @@ function showReLoginDialog(heading, contentText) {
   dialog.buttons_[1].textContent = 'RE-LOGIN'
   dialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
+    initApp = false;
     revokeSession();
   })
 }
