@@ -1057,6 +1057,9 @@ function openMap() {
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
     mapView()
-    handleError(error)
+    handleError({
+      message:error.message,
+      body:JSON.stringify(error.stack)
+    })
   })
 }
