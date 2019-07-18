@@ -653,8 +653,8 @@ function showViewDialog(heading, activity, id) {
 
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
     dialog.open();
+    dialog.autoStackButtons = false;
     if(!type) {
-        dialog.buttons_[0].
         dialog.buttons_[1].classList.add("hidden");
     }
     
@@ -874,16 +874,16 @@ function activityDomCustomer(activityRecord) {
     return ` <div class='mdc-card'>
     <div class='view-card'>
 
-        <div id='attachment-container'>
-            ${viewAttachment(activityRecord)}
-        </div>
+    <div id='schedule-container'>
+        <ul class='mdc-list mdc-list--two-line'>
+            ${viewSchedule(activityRecord)}
+        </ul>
+    </div>
+    <div id='attachment-container'>
+        ${viewAttachment(activityRecord)}
+    </div>
      
-        <div id='schedule-container'>
-            <ul class='mdc-list mdc-list--two-line'>
-                ${viewSchedule(activityRecord)}
-            </ul>
-        </div>
-        <div id='schedule-container'></div>
+      
         <div id='assignee-container'>
             <div class="assignees tasks-heading center">
                 <i class="material-icons">share</i>

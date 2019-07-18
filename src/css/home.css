@@ -12,6 +12,10 @@
     padding-left: 0px;
 }
 
+.home-container {
+    padding-top: 20px;
+    
+}
 .home-container .mdc-card__media-content {
     top: auto;
     color: white;

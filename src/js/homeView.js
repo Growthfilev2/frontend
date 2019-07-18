@@ -132,7 +132,7 @@ function handleNav(evt) {
 function homePanel(suggestionLength) {
   return ` <div class="container home-container">
   <div class='work-tasks'>
-      ${suggestionLength ? `<h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>`:
+      ${suggestionLength ? `<h3 class="mdc-list-group__subheader mdc-typography--headline5">What do you want to do ?</h3>`:
         `<h3 class="mdc-list-group__subheader mdc-typography--headline5 text-center mdc-theme--primary">All Tasks Completed</h3>`
       }
       <h3 class="mdc-list-group__subheader">${suggestionLength ? 'Suggestions' :''}</h3>
