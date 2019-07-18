@@ -25,6 +25,7 @@ html {
 .user-chats li .mdc-list-item__meta {
   font-size: 1rem;
 }
+
 .page {
   width: 100%;
   height: 100%;
@@ -32,9 +33,11 @@ html {
   align-items: center;
   justify-content: center;
 }
+
 .marvel-device {
   width: 100%;
 }
+
 .marvel-device .screen {
   text-align: left;
 }
@@ -263,9 +266,11 @@ html {
   padding: 0 0 0 16px;
 
 }
+
 .message.them .metadata .tick {
   color: black;
 }
+
 .message.them:after {
   border-width: 0px 10px 10px 0;
   border-color: transparent #fff transparent transparent;
@@ -279,6 +284,7 @@ html {
   float: right;
   color: white;
 }
+
 .message.me .metadata .tick {
   color: white;
 }
@@ -469,24 +475,22 @@ html {
 }
 
 
-
 /** view-form**/
 #view-form .mdc-card {
-box-shadow: none;
+  box-shadow: none;
 }
 
-
-
-
 #view-form .mdc-dialog__content {
-  padding: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+ 
 }
 
 #view-form .mdc-card .view-card {
   padding: 20px 24px;
+  /* max-height: 300px; */
+  padding-top: 0px;
 
-  padding-bottom: 0px;
-  max-height: 300px;
 }
 
 #view-form .mdc-card .view-card .mdc-list {
@@ -516,8 +520,9 @@ box-shadow: none;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 #assignee-container #share {
- 
+
   overflow-y: auto;
 }
 
@@ -536,6 +541,7 @@ box-shadow: none;
   left: auto !important;
 
 }
+
 .map-menu-item a {
   text-decoration: none;
   color: #000;

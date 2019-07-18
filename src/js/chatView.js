@@ -258,9 +258,8 @@ function readLatestChats(initList) {
                 chatsEl.innerHTML = `<h3 class='mdc-typography--headline5 mdc-theme--primary>No Chats found</h3>
                 <p class='mt-0 '>Choose From Below or Search</p>
                 `
-                
-            }
-            else {
+
+            } else {
                 chatsEl.innerHTML = currentChats
             }
             if (!initList) return;
@@ -647,22 +646,22 @@ function reply(activity) {
 }
 
 function showViewDialog(heading, activity, id) {
-    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
-    dialog.open()
-    dialog.buttons_[1].classList.add('hidden')
-    dialog.autoStackButtons = false;
+    let type = 'simple';
+    if(activity.canEdit) {
+        type = ''
+    }
 
+    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
+    dialog.open();
+    if(!type) {
+        dialog.buttons_[0].
+        dialog.buttons_[1].classList.add("hidden");
+    }
+    
     dialog.listen("MDCDialog:opened", function (evt) {
-        const venueEl = document.getElementById('venue-container')
         const scheduleEl = document.getElementById('schedule-container');
-        if (venueEl) {
-            const venueList = new mdc.list.MDCList(venueEl);
-            venueList.singleSelection = true;
-            venueList.layout()
-
-        }
         if (scheduleEl) {
-            const scheduleList = new mdc.list.MDCList(venueEl);
+            const scheduleList = new mdc.list.MDCList(scheduleEl);
             scheduleList.layout()
         }
     })
@@ -878,11 +877,7 @@ function activityDomCustomer(activityRecord) {
         <div id='attachment-container'>
             ${viewAttachment(activityRecord)}
         </div>
-        <div id='venue-container'>
-            <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
-                ${viewVenue(activityRecord)}
-            </ul>
-        </div>
+     
         <div id='schedule-container'>
             <ul class='mdc-list mdc-list--two-line'>
                 ${viewSchedule(activityRecord)}
@@ -969,11 +964,9 @@ function iconByType(type, name) {
 
 function viewFormAttachmentEl(attachmentName, activityRecord) {
     if (activityRecord.attachment[attachmentName].type === 'base64') {
-        return `<ul class="mdc-image-list my-image-list">
+        return `<ul class="mdc-image-list my-image-list mdc-image-list--masonry">
         <li class="mdc-image-list__item">
-          <div class="mdc-image-list__image-aspect-container">
-            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}" onerror="imgErr(this)">
-          </div>
+        <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}" onerror="imgErr(this)">
           <div class="mdc-image-list__supporting">
             <span class="mdc-image-list__label">${attachmentName}</span>
           </div>
@@ -1092,14 +1085,14 @@ function dynamicAppendChats(addendums) {
 
     addendums.forEach(function (addendum) {
         if (!parent) return;
-        
+
         let position = 'them';
         if (addendum.user === myNumber) {
             position = 'me'
         }
         if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
             if (addendum.isComment) {
-                if(addendum.user === myNumber) return;
+                if (addendum.user === myNumber) return;
                 parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp))
                 return;
             }
@@ -1148,10 +1141,10 @@ function getUserChats(userRecord) {
         setBottomScroll();
 
         const form = document.querySelector('.conversation-compose');
-        form.querySelector('input').addEventListener('focus',function(evt){
-            setTimeout(function(){
+        form.querySelector('input').addEventListener('focus', function (evt) {
+            setTimeout(function () {
                 setBottomScroll();
-            },500)
+            }, 500)
         })
 
         form.addEventListener('submit', function (e) {
@@ -1165,10 +1158,10 @@ function getUserChats(userRecord) {
             const param = input.dataset.param
             const paramValue = input.dataset.paramValue
             const requestBody = {
-                comment:val
+                comment: val
             }
-            requestBody[param]  = paramValue
-            requestCreator(input.dataset.name,requestBody).then(function () {
+            requestBody[param] = paramValue
+            requestCreator(input.dataset.name, requestBody).then(function () {
                 parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                 setBottomScroll();
                 input.value = ''
