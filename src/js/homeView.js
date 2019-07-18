@@ -153,7 +153,7 @@ function homeHeaderStartContent(){
   return `
   <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
   <span class="mdc-list-item__text ml-10">
-  <span class="mdc-list-item__primary-text header-two-line mdc-top-app-bar__title" style='max-width:85%;'>${ApplicationState.venue.location || 'Unkown Location'}</span>
+  <span class="mdc-list-item__primary-text header-two-line mdc-top-app-bar__title" style='max-width:300px;'>${ApplicationState.venue.location || 'Unkown Location'}</span>
   <span class="mdc-list-item__secondary-text mdc-theme--on-primary">${ApplicationState.office}</span>
   </span>`
 }

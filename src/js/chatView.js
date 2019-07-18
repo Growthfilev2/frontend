@@ -649,7 +649,9 @@ function showViewDialog(heading, activity, id) {
     if(activity.canEdit) {
         type = ''
     }
-
+    if(activity.template === 'check-in' && activity.attachment['Photo'].value) {
+        type = ''
+    }
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
     dialog.open();
     dialog.autoStackButtons = false;
