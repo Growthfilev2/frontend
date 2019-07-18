@@ -361,12 +361,11 @@ body {
 
 }
 
-.mdc-text-field.mdc-text-field--with-leading-icon .material-icons,
-.mdc-text-field.mdc-text-field--with-leading-icon input {
+#search-users .material-icons, #search-users input {
   font-size: 24px;
+
 }
-
-
+ 
 /** override **/
 .banner {
   background-color: rgba(0, 0, 0, .1);

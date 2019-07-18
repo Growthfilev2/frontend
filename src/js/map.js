@@ -73,7 +73,7 @@ function mapView(location) {
 
   var marker = new google.maps.Marker({
     position: latLng,
-    icon: 'https://www.robotwoods.com/dev/misc/bluecircle.png'
+    icon: './img/bluecircle.png'
   });
   marker.setMap(map);
 
