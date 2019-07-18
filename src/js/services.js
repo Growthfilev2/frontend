@@ -88,7 +88,6 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      // resolve({latitude:28.123,longitude:77.123,lastLocationTime:Date.now()})
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
@@ -247,7 +246,6 @@ function requestCreator(requestType, requestBody) {
               mapView(geopoint);
               return;
             };
-  
             requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
@@ -382,6 +380,10 @@ function runRead(value) {
       return;
     }
   }catch(e) {
+    handleError({
+      message:e.message,
+      body :JSON.stringify(e)
+    })
     console.log(e)
   }
 }
