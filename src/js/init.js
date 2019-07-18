@@ -389,7 +389,8 @@ function startApp() {
         requestCreator('Null').then(console.log).catch(console.log)
       })
       manageLocation().then(function (location) {
-        ApplicationState.location = location
+        ApplicationState.location = location,
+        localStorage.setItem('currentLocation',JSON.stringify(location))
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {

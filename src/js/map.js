@@ -34,6 +34,7 @@ function mapView(location) {
     return
   }
   ApplicationState.location = location
+  localStorage.setItem('currentLocation',JSON.stringify(location))
   console.log("auth relaoderd")
   document.getElementById('start-load').classList.add('hidden');
 
@@ -154,7 +155,7 @@ function loadCardData(markers) {
             console.log(checkInSub)
             if (!checkInSub) return getSuggestions()
             cardProd.open();
-
+            
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
               snacks('Check-in created');
               cardProd.close()

@@ -154,6 +154,7 @@ function toRad(value) {
 }
 
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
+
   var R = 6371; // km
   var dLat = toRad(newLocation.latitude - oldLocation.latitude);
   var dLon = toRad(newLocation.longitude - oldLocation.longitude);
@@ -178,8 +179,8 @@ function isLocationStatusWorking() {
     'samsung': true,
     'OnePlus': true
   }
-  
-  if(!navigator.onLine) {
+
+  if (!navigator.onLine) {
     const connectionDialog = new Dialog('BROKEN INTERNET CONNECTION', 'Make Sure You have a working Internet Connection').create()
     connectionDialog.open();
     return;
@@ -242,12 +243,13 @@ function requestCreator(requestType, requestBody) {
       getRootRecord().then(function (rootRecord) {
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
-            ApplicationState.lastLocationTime = geopoint.lastLocationTime;
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
               mapView(geopoint);
               return;
             };
-  
+            ApplicationState.location = geopoint;
+            localStorage.setItem('currentLocation', JSON.stringify(geopoint))
+
             requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
@@ -261,7 +263,7 @@ function requestCreator(requestType, requestBody) {
         apiHandler.postMessage(requestGenerator);
       });
     }
-  
+
   });
 
   return new Promise(function (resolve, reject) {
@@ -362,14 +364,57 @@ function handleComponentUpdation(readResponse) {
   }
 }
 
+function hasCheckInCredentialsChanged() {
+
+  return new Promise(function(resolve) {
+    
+    if(!ApplicationState.location) {
+      manageLocation().then(function (geopoint) {
+        resolve({
+          changed:true,
+          location:geopoint
+        })
+      });
+      return
+    }
+    const locationInStorage = JSON.parse(localStorage.getItem("currentLocation"));
+    if (!isLastLocationOlderThanThreshold(locationInStorage.location.lastLocationTime, 60)) return resolve({
+      changed:false,
+      location:null
+    });
+    manageLocation().then(function (geopoint) {
+      if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(locationInStorage.location, geopoint))) return resolve({
+        changed:false,
+        location
+      });
+      return resolve({
+        changed:true,
+        location:geopoint
+      })
+    });
+  })
+}
+
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
+  hasCheckInCredentialsChanged().then(function(credential){
+    if(credential.changed) {
+      ApplicationState.location = geopoint;
+      localStorage.setItem('currentLocation', JSON.stringify(geopoint))
+      mapView(geopoint);
+    }
+  })
   requestCreator('Null').then(console.log).catch(console.log)
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
-    ApplicationState.location.lastLocationTime = geopoint.lastLocationTime;
+    if (!ApplicationState.location) {
+      ApplicationState.location = geopoint;
+      localStorage.setItem('currentLocation', JSON.stringify(geopoint))
+      mapView(geopoint);
+      return;
+    }
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
   })
@@ -381,7 +426,7 @@ function runRead(value) {
       requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
       return;
     }
-  }catch(e) {
+  } catch (e) {
     console.log(e)
   }
 }
