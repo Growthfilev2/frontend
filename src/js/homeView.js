@@ -125,12 +125,12 @@ function getSubsWithVenue() {
 
 
 function handleNav(evt) {
+  console.log(evt)
   return history.back();
 }
 
 function homePanel(suggestionLength) {
   return ` <div class="container home-container">
-  ${topNavCard()}
   <div class='work-tasks'>
       ${suggestionLength ? `<h3 class="mdc-list-group__subheader mdc-typography--headline6">What do you want to do ?</h3>`:
         `<h3 class="mdc-list-group__subheader mdc-typography--headline5 text-center mdc-theme--primary">All Tasks Completed</h3>`
@@ -149,60 +149,45 @@ function homePanel(suggestionLength) {
 </div>`
 }
 
-function topNavCard() {
-
+function homeHeaderStartContent(){
   return `
-    <div class="profile-container mdc-card">
-    <div class="mdc-card__primary-action">
-      <div class="simple">
-  
-        <img src="${firebase.auth().currentUser.photoURL}" class="image" id='profile-image-card' onerror="imgErr(this)">
-        <h3 class="mdc-typography--headline6">My Growthfile</h3>
-      </div>
-      <div class="actions">
-        <div class="action">
-          <span class="mdc-typography--body1" id='camera'><i class="material-icons">camera</i><span class='ml-10'>Camera</span></span>
-        </div>
-       
-        <div class="action" style='display:inline-flex;align-items:center' id='chat-container'>
-           <div class='chat-button'>
-           <i class="material-icons">comment</i>
-           <span class='count-badge hidden' id='total-count'></span>
-           </div>
-          <span class="mdc-typography--body1" id='chat'>Chats</span>
-        </div>
-      </div>
-  
-    </div>
-    <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed" id='suggestion-progress'>
-    <div class="mdc-linear-progress__buffering-dots"></div>
-    <div class="mdc-linear-progress__buffer"></div>
-    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-      <span class="mdc-linear-progress__bar-inner"></span>
-    </div>
-    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-      <span class="mdc-linear-progress__bar-inner"></span>
-    </div>
-  </div>
-  </div>
-  
-  `
+  <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
+  <span class="mdc-list-item__text ml-10">
+  <span class="mdc-list-item__primary-text header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unkown Location'}</span>
+  <span class="mdc-list-item__secondary-text mdc-theme--on-primary">${ApplicationState.office}</span>
+  </span>`
 }
 
 function homeView(suggestedTemplates) {
   progressBar.close();
-  const header = getHeader('app-header', '', '');
-  header.listen('MDCTopAppBar:nav', handleNav);
-  document.getElementById('app-header').classList.add('hidden')
-  history.pushState(['homeView'], null, null)
-  const panel = document.getElementById('app-current-panel')
-  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust')
-  const suggestionLength = suggestedTemplates.length
+ 
+  const actionItems = ` 
+  <a  class="mdc-top-app-bar__action-item pt-0" aria-label="Chat" id='chat'>
+  <div class="action" style='display:inline-flex;align-items:center' id='chat-container'>
+  <div class='chat-button'>
+  <i class="material-icons">comment</i>
+  <span class='count-badge hidden' id='total-count'></span>
+  </div>
+</div>
+</div>
+  </a>
+  <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Add a photo" id='camera'>add_a_photo</a>`
+  
+  const header = getHeader('app-header', homeHeaderStartContent(), actionItems);
+  header.root_.classList.remove('hidden')
+  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
+  history.pushState(['homeView'], null, null)
+  header.listen('MDCTopAppBar:nav', handleNav);
+  
+
+  const panel = document.getElementById('app-current-panel')
+  const suggestionLength = suggestedTemplates.length
   panel.innerHTML = homePanel(suggestionLength);
   db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function(event){
     const rootRecord = event.target.result;
     if(!rootRecord)  return;
+
     if(rootRecord.totalCount) {
       document.getElementById('total-count').classList.remove('hidden')
       document.getElementById('total-count').textContent = rootRecord.totalCount
@@ -226,7 +211,7 @@ function homeView(suggestedTemplates) {
       store.put(rootRecord)
     }
   })
-  document.getElementById('profile-image-card').addEventListener('click', function () {
+  document.getElementById('profile-header-icon').addEventListener('click', function () {
     history.pushState(['profileView'], null, null);
     profileView()
   })

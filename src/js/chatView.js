@@ -9,7 +9,7 @@ const duration = 800;
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>`
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
@@ -38,13 +38,13 @@ function chatDom() {
 <div class="mdc-list-group">
  <h3 id='no-result-found' style='text-align:center'></h3>   
 <div class='chats-container'>
-<h3 class="mdc-list-group__subheader">Chats</h3>
+<h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Chats</h3>
 <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
 
 </ul>
 </div>
 <div class='contacts-container'>
-  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
+  <h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Other Contacts</h3>
   <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
   </ul>
 </div>
@@ -390,8 +390,7 @@ function isToday(comparisonTimestamp) {
 
 function enterChat(userRecord) {
     ApplicationState.currentChatSlected = userRecord.mobile;
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
-        </a>
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `

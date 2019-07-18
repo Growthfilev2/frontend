@@ -137,10 +137,14 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
+        
         if(!offices.length) {
           showNoOfficeFound();
           return;
         };
+
+
+
         document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
         const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
