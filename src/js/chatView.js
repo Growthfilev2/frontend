@@ -9,7 +9,7 @@ const duration = 800;
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>`
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
@@ -38,13 +38,13 @@ function chatDom() {
 <div class="mdc-list-group">
  <h3 id='no-result-found' style='text-align:center'></h3>   
 <div class='chats-container'>
-<h3 class="mdc-list-group__subheader">Chats</h3>
+<h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Chats</h3>
 <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='chats'>
 
 </ul>
 </div>
 <div class='contacts-container'>
-  <h3 class="mdc-list-group__subheader">Other Contacts</h3>
+  <h3 class="mdc-list-group__subheader mdc-list-group__subheader mdc-typography--headline6">Other Contacts</h3>
   <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list" id='all-contacts'>
   </ul>
 </div>
@@ -255,12 +255,10 @@ function readLatestChats(initList) {
         if (chatsEl) {
             document.querySelector('.chats-container').classList.remove("hidden")
             if (!currentChatsArray.length) {
-                chatsEl.innerHTML = `<h3 class='mdc-typography--headline5 mdc-theme--primary>No Chats found</h3>
-                <p class='mt-0 '>Choose From Below or Search</p>
+                chatsEl.innerHTML = `<h3 class="mb-0 mdc-typography--headline5 mdc-theme--primary mb-0 text-center">No Chats found</h3>
+                <p class='text-center'>Choose From Below or Search</p>
                 `
-                
-            }
-            else {
+            } else {
                 chatsEl.innerHTML = currentChats
             }
             if (!initList) return;
@@ -390,8 +388,7 @@ function isToday(comparisonTimestamp) {
 
 function enterChat(userRecord) {
     ApplicationState.currentChatSlected = userRecord.mobile;
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>       
-        </a>
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
         <img src=${userRecord.photoURL || './img/empty-user.jpg'} class='header-image' onerror="imgErr(this)">
         <span class="mdc-top-app-bar__title">${userRecord.displayName || userRecord.mobile}</span>
         `
@@ -648,22 +645,22 @@ function reply(activity) {
 }
 
 function showViewDialog(heading, activity, id) {
-    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create();
-    dialog.open()
-    dialog.buttons_[1].classList.add('hidden')
+    let type = 'simple';
+    if(activity.canEdit) {
+        type = ''
+    }
+
+    const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
+    dialog.open();
     dialog.autoStackButtons = false;
-
+    if(!type) {
+        dialog.buttons_[1].classList.add("hidden");
+    }
+    
     dialog.listen("MDCDialog:opened", function (evt) {
-        const venueEl = document.getElementById('venue-container')
         const scheduleEl = document.getElementById('schedule-container');
-        if (venueEl) {
-            const venueList = new mdc.list.MDCList(venueEl);
-            venueList.singleSelection = true;
-            venueList.layout()
-
-        }
         if (scheduleEl) {
-            const scheduleList = new mdc.list.MDCList(venueEl);
+            const scheduleList = new mdc.list.MDCList(scheduleEl);
             scheduleList.layout()
         }
     })
@@ -876,20 +873,16 @@ function activityDomCustomer(activityRecord) {
     return ` <div class='mdc-card'>
     <div class='view-card'>
 
-        <div id='attachment-container'>
-            ${viewAttachment(activityRecord)}
-        </div>
-        <div id='venue-container'>
-            <ul class="mdc-list mdc-list--two-line mdc-list--avatar-list">
-                ${viewVenue(activityRecord)}
-            </ul>
-        </div>
-        <div id='schedule-container'>
-            <ul class='mdc-list mdc-list--two-line'>
-                ${viewSchedule(activityRecord)}
-            </ul>
-        </div>
-        <div id='schedule-container'></div>
+    <div id='schedule-container'>
+        <ul class='mdc-list mdc-list--two-line'>
+            ${viewSchedule(activityRecord)}
+        </ul>
+    </div>
+    <div id='attachment-container'>
+        ${viewAttachment(activityRecord)}
+    </div>
+     
+      
         <div id='assignee-container'>
             <div class="assignees tasks-heading center">
                 <i class="material-icons">share</i>
@@ -970,11 +963,9 @@ function iconByType(type, name) {
 
 function viewFormAttachmentEl(attachmentName, activityRecord) {
     if (activityRecord.attachment[attachmentName].type === 'base64') {
-        return `<ul class="mdc-image-list my-image-list">
+        return `<ul class="mdc-image-list my-image-list mdc-image-list--masonry">
         <li class="mdc-image-list__item">
-          <div class="mdc-image-list__image-aspect-container">
-            <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}" onerror="imgErr(this)">
-          </div>
+        <img class="mdc-image-list__image" src="${activityRecord.attachment[attachmentName].value}" onerror="imgErr(this)">
           <div class="mdc-image-list__supporting">
             <span class="mdc-image-list__label">${attachmentName}</span>
           </div>
@@ -1093,14 +1084,14 @@ function dynamicAppendChats(addendums) {
 
     addendums.forEach(function (addendum) {
         if (!parent) return;
-        
+
         let position = 'them';
         if (addendum.user === myNumber) {
             position = 'me'
         }
         if (addendum.user === history.state[1].mobile || addendum.user === myNumber) {
             if (addendum.isComment) {
-                if(addendum.user === myNumber) return;
+                if (addendum.user === myNumber) return;
                 parent.appendChild(messageBoxDom(addendum.comment, position, addendum.timestamp))
                 return;
             }
@@ -1149,10 +1140,10 @@ function getUserChats(userRecord) {
         setBottomScroll();
 
         const form = document.querySelector('.conversation-compose');
-        form.querySelector('input').addEventListener('focus',function(evt){
-            setTimeout(function(){
+        form.querySelector('input').addEventListener('focus', function (evt) {
+            setTimeout(function () {
                 setBottomScroll();
-            },500)
+            }, 500)
         })
 
         form.addEventListener('submit', function (e) {
@@ -1166,10 +1157,10 @@ function getUserChats(userRecord) {
             const param = input.dataset.param
             const paramValue = input.dataset.paramValue
             const requestBody = {
-                comment:val
+                comment: val
             }
-            requestBody[param]  = paramValue
-            requestCreator(input.dataset.name,requestBody).then(function () {
+            requestBody[param] = paramValue
+            requestCreator(input.dataset.name, requestBody).then(function () {
                 parent.appendChild(messageBoxDom(val, 'me', Date.now()))
                 setBottomScroll();
                 input.value = ''

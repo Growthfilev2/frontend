@@ -1,10 +1,21 @@
 .image {
-    width: 40px;
-    height: 40px;
     border-radius: 50%;
+    padding: 5px;
+    width: 48px;
+    height: 48px;
 }
 
+.header-two-line.mdc-list-item__primary-text::before {
+    height: auto;
+}
+.header-two-line.mdc-top-app-bar__title {
+    padding-left: 0px;
+}
 
+.home-container {
+    padding-top: 20px;
+    
+}
 .home-container .mdc-card__media-content {
     top: auto;
     color: white;
@@ -122,22 +133,23 @@
 }
 
 #chat {
-    margin-left: 5px;
+    padding-bottom: 0px;
+    padding-top: 5px;
 }
 
 #total-count.count-badge {
-    background-color: #fa3e3e;
+    background-color: white;
     position: absolute;
-    top: -5px;
-    right: 0;
+    top: -7px;
+    right: -7px;
     font-size: 15px;
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background-color: var(--mdc-theme-primary);
+    color: var(--mdc-theme-primary);
     text-align: center;
     display: table-cell;
     overflow: hidden;
     vertical-align: middle;
-    color: white;
+    font-weight: bold;
 }

@@ -19,7 +19,7 @@
 body {
   margin: 0;
   background-color: white;
-  
+
 }
 
 #app-current-panel {
@@ -81,6 +81,10 @@ body {
   margin-left: 0px;
 }
 
+.ml-10 {
+  margin-left: 10px;
+}
+
 .pb-20 {
   padding-bottom: 20px;
 }
@@ -95,6 +99,9 @@ body {
 
 .pl-20 {
   padding-left: 20px;
+}
+.pl-0 {
+  padding-left: 0px;
 }
 
 .pr-20 {
@@ -259,7 +266,6 @@ body {
   }
 }
 
-<<<<<<< HEAD
 .list-photo-header {
   border-radius: 50%;
   width: 40px;
@@ -271,10 +277,9 @@ body {
   border: 2px solid white;
   padding: 0px;
 }
-=======
-/** Dialog **/
->>>>>>> mapView
 
+
+/** Dialog **/
 .mdc-dialog footer .mdc-button:nth-child(1):not([disabled]) {
   color: red;
 }
@@ -287,6 +292,7 @@ body {
   padding: 20px 24px 0px 20px;
   border-bottom: 1px solid lightgray;
 }
+
 .custom-footer {
   display: block;
 }
@@ -309,10 +315,13 @@ body {
 
 
 /** override **/
-
+.mdc-list-item__secondary-text {
+  font-size: 0.95rem;
+}
 .mdc-list-item__graphic.without-icon {
   width: auto;
 }
+
 .mdc-drawer__header {
   padding-top: 16px;
   padding-bottom: 16px;
@@ -339,17 +348,24 @@ body {
   background-color: #cccccc
 }
 
-.mdc-checkbox__background{
+.mdc-checkbox__background {
   width: 50%;
   height: 50%;
   border-radius: 50%;
 }
-.mdc-checkbox__native-control:enabled:checked~.mdc-checkbox__background, .mdc-checkbox__native-control:enabled:indeterminate~.mdc-checkbox__background {
+
+.mdc-checkbox__native-control:enabled:checked~.mdc-checkbox__background,
+.mdc-checkbox__native-control:enabled:indeterminate~.mdc-checkbox__background {
   background-color: var(--mdc-theme-primary);
   border-color: var(--mdc-theme-primary);
 
 }
 
+#search-users .material-icons, #search-users input {
+  font-size: 24px;
+
+}
+ 
 /** override **/
 .banner {
   background-color: rgba(0, 0, 0, .1);
@@ -362,9 +378,18 @@ body {
 }
 
 .header-image {
-  width: 30px;
-  height: 30px;
+  width: 37px;
+  height: 36px;
   border-radius: 50%;
+}
+
+.location-header-title.mdc-top-app-bar__title {
+  font-size: 1.25rem;
+}
+
+.mdc-top-app-bar__title:not(.header-two-line) {
+  font-size: 24px;
+  padding-left: 10px;
 }
 
 .showbox {
@@ -470,8 +495,14 @@ iframe {
 
 
 #app-header #tabs .mdc-tab-indicator__content--underline {
-    border-color: white !important;
+  border-color: white !important;
 }
+
+.mdc-top-app-bar__navigation-icon.material-icons,
+.mdc-top-app-bar__action-item.material-icons {
+  font-size: 30px;
+}
+
 .mdc-top-app-bar--fixed-adjust-with-tabs {
   padding-top: 100px;
 }

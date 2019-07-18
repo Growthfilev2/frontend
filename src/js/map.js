@@ -73,7 +73,7 @@ function mapView(location) {
 
   var marker = new google.maps.Marker({
     position: latLng,
-    icon: 'https://www.robotwoods.com/dev/misc/bluecircle.png'
+    icon: './img/bluecircle.png'
   });
   marker.setMap(map);
 
@@ -137,10 +137,14 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
+        
         if(!offices.length) {
           showNoOfficeFound();
           return;
         };
+
+
+
         document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
         const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
         selectOfficeInit.listen('MDCSelect:change', function (evt) {

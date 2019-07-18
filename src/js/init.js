@@ -88,7 +88,7 @@ window.onpopstate = function (event) {
     getSuggestions();
     return
   }
-
+  
   window[event.state[0]](event.state[1]);
 }
 
