@@ -152,10 +152,8 @@ function homePanel(suggestionLength) {
 function homeHeaderStartContent(){
   return `
   <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
-  <span class="mdc-list-item__text ml-10">
-  <span class="mdc-list-item__primary-text header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unkown Location'}</span>
-  <span class="mdc-list-item__secondary-text mdc-theme--on-primary">${ApplicationState.office}</span>
-  </span>`
+  <span class="header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unkown Location'}</span>
+`
 }
 
 function homeView(suggestedTemplates) {

@@ -12,6 +12,22 @@
     padding-left: 0px;
 }
 
+@media (max-width:320px) {
+    .header-two-line {
+        max-width: 250px;
+    }
+}
+@media (min-width:321px) and (max-width:480px) {
+    .header-two-line {
+        max-width: 300px;
+    }
+}
+@media (min-width:481px) and (max-width:600px) {
+    .header-two-line {
+        max-width: 500px;
+    }
+}
+
 .home-container {
     padding-top: 20px;
     
