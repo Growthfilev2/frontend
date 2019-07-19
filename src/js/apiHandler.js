@@ -520,8 +520,7 @@ function updateMap(venue, tx) {
     deleteRecordReq.onerror = function () {
       instant({
         message: deleteRecordReq.error.message,
-        meta
-      })
+      },meta)
     }
   }
 }
@@ -561,9 +560,8 @@ function updateCalendar(activity, tx) {
     }
     recordDeleteReq.onerror = function () {
       instant({
-        message: recordDeleteReq.error.message,
-        meta
-      })
+        message: recordDeleteReq.error.message
+      },meta)
     }
   }
 }

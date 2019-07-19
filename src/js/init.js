@@ -219,8 +219,6 @@ function startApp() {
   }
 
   localStorage.setItem('error', JSON.stringify({}));
-
-
   const req = window.indexedDB.open(dbName, 5);
 
   req.onupgradeneeded = function (evt) {
@@ -387,7 +385,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: `${req.error.message} from startApp`,
-      body: ''
+      body: JSON.stringify(req.error)
     })
   }
 
