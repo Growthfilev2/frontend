@@ -173,7 +173,7 @@ function homeView(suggestedTemplates) {
   
   const header = getHeader('app-header', homeHeaderStartContent(), actionItems);
   header.root_.classList.remove('hidden')
-  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust',"mdc-layout-grid",'pl-0','pr-0')
 
   history.pushState(['homeView'], null, null)
   header.listen('MDCTopAppBar:nav', handleNav);

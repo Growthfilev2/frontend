@@ -1,8 +1,5 @@
 function profileView() {
 
-  document.getElementById('start-load').classList.add('hidden');
-  document.getElementById('app-header').classList.remove('hidden')
-  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
   const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
   const auth = firebase.auth().currentUser
@@ -12,8 +9,6 @@ function profileView() {
   <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
   `
   const header = getHeader('app-header', backIcon, editIcon);
-
-  header.setScrollTarget(document.getElementById('main-content'));
 
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">

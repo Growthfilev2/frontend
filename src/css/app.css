@@ -1,9 +1,7 @@
-html ,body,#app-current-panel {
+html ,body,#app-current-panel,#map {
   height: 100%;
 }
-#app-current-panel {
-  padding: 0px;
-}
+
 :root {
   --mdc-theme-primary: #89273E;
   --mdc-theme-secondary: #cccccc;
@@ -108,6 +106,9 @@ body {
 
 .pr-20 {
   padding-right: 20px;
+}
+.pr-0 {
+  padding-right: 0px;
 }
 
 .hidden {
