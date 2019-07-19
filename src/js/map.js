@@ -12,25 +12,29 @@ ApplicationState = {
 }
 
 
-
 function mapView(location) {
   history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.add('hidden')
-  document.getElementById('growthfile').classList.remove('mdc-top-app-bar--fixed-adjust');
+  
   const panel = document.getElementById('app-current-panel')
   panel.innerHTML = mapDom();
-  panel.classList.remove('user-detail-bckg', 'mdc-top-app-bar--fixed-adjust')
+  panel.classList.remove('mdc-top-app-bar--fixed-adjust')
   document.getElementById('map-view').style.height = '100%';
+
   console.log(location)
   if (!location) {
-    document.getElementById('start-load').classList.add('hidden')
-    document.getElementById('map').innerHTML = '<div class="center-abs"><p>Failed To Detect You Location</p><button class="mdc-button" id="try-again">Try Again</button></div>'
-    const btn = new mdc.ripple.MDCRipple(document.getElementById('try-again'))
-    btn.root_.onclick = function () {
-      document.getElementById('start-load').classList.remove('hidden')
-      openMap();
-    }
+    panel.innerHTML = `
+    <div class="center-abs location-not-found">
+    <i class='material-icons'>location_off</i>
+    <p class='mdc-typography--headline6'>
+    Failed To Detect Your Location
+    </p>
+    <button class="mdc-button mdc-theme--primary-bg" id="try-again" onclick="openMap()">
+    <span class="mdc-button__label">RETRY</span>
+    </button>
+    </div>`  
+  
     return
   }
   ApplicationState.location = location
@@ -249,14 +253,6 @@ function getAllSubscriptions() {
 
     }
   })
-}
-
-function hideBottomNav() {
-  document.querySelector('.mdc-bottom-navigation').classList.add('hidden');
-}
-
-function showBottomNav() {
-  document.querySelector('.mdc-bottom-navigation').classList.remove('hidden');
 }
 
 

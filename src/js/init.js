@@ -1,15 +1,7 @@
 const appKey = new AppKeys();
 let progressBar;
-let snackBar;
-let send;
-let change;
-let next;
-let emailInit;
 var db;
-let isCheckInCreated;
-let drawer;
-let navList;
-
+let snackBar;
 const redirectParam = {
   updateEmail: '',
   verify: false,
@@ -17,6 +9,7 @@ const redirectParam = {
 }
 
 let initApp = true;
+
 
 function imgErr(source) {
   source.onerror = '';
@@ -98,7 +91,6 @@ window.onpopstate = function (event) {
 window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
-  drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
   topBar.listen('MDCTopAppBar:nav', function (e) {
@@ -134,21 +126,15 @@ window.addEventListener("load", function () {
   }
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
-      document.getElementById("main-layout-app").style.display = 'none'
+      document.getElementById("app-current-panel").classList.add('hidden')
       userSignedOut()
       return;
     }
-    document.getElementById("main-layout-app").style.display = 'block'
+    document.getElementById("app-current-panel").classList.remove('hidden')
     if (!initApp) return
     startApp()
   });
-  // firebase
-  //   .auth()
-  //   .addAuthTokenListener(function (idToken) {
-  //     if (firebase.auth().currentUser) {
-  //       ApplicationState.idToken = idToken;
-  //     }
-  //   })
+  
 })
 
 
@@ -342,10 +328,10 @@ function startApp() {
       }
       return;
     }
+    console.log("run app")
+ 
     const startLoad = document.querySelector('#start-load')
     startLoad.classList.remove('hidden');
-    console.log("run app")
-    document.getElementById("main-layout-app").style.display = 'block'
 
     const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
 

@@ -6,26 +6,15 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1 , minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <script src='external/js/firebase-app.js' defer></script>
-  <script src='external/js/firebase-auth.js' defer></script>
-  <script src="external/js/firebaseui.js" defer></script>
-  <script type="text/javascript"
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&libraries=places" async></script>
-
-  <script src='external/js/material.min.js' defer
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" defer crossorigin="anonymous"></script>
 
   <link type="text/css" rel="stylesheet" href="external/css/firebaseui.css" / defer>
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" async>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" async>
 
-  <link href="external/css/material.min.css" rel="stylesheet"
-    type="text/css">
+  <link href="external/css/material.min.css" rel="stylesheet" type="text/css">
 
   <link href="css/app.css" rel="stylesheet" type="text/css">
-  <link href="css/start.css" rel="stylesheet" type="text/css"> 
-  <link href="css/bottomNav.css" rel="stylesheet" type="text/css">
+  <link href="css/start.css" rel="stylesheet" type="text/css">
   <link href="css/map.css" rel="stylesheet" type="text/css">
   <link href="css/claims.css" rel="stylesheet" type="text/css">
   <link href="css/attendence.css" rel="stylesheet" type="text/css">
@@ -59,32 +48,6 @@
     </div>
     <div id='tabs'></div>
   </header>
-  <aside class="mdc-drawer mdc-drawer--modal">
-      <div class="mdc-drawer__header">
-          <img src="">
-
-          <h3 class="mdc-drawer__title mdc-theme--text-primary-on-light"></h3>
-         
-        </div>
-      <div class="mdc-drawer__content">
-        <nav class="mdc-list">
-          <a class="mdc-list-item mdc-list-item--activated" href="#" aria-current="page">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">inbox</i>
-            <span class="mdc-list-item__text">Inbox</span>
-          </a>
-          <a class="mdc-list-item" href="#">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">send</i>
-            <span class="mdc-list-item__text">Outgoing</span>
-          </a>
-          <a class="mdc-list-item" href="#">
-            <i class="material-icons mdc-list-item__graphic" aria-hidden="true">drafts</i>
-            <span class="mdc-list-item__text">Drafts</span>
-          </a>
-        </nav>
-      </div>
-    </aside>
-  
-    <div class="mdc-drawer-scrim"></div>
 
   <div id='start-load' class="hidden">
     <div class="lds-roller">
@@ -105,40 +68,11 @@
     <div class="success--check"></div>
   </div>
 
-  <div id="growthfile">
+  
+    <div id='login-container'></div>
+    <div id="app-current-panel" class="mdc-layout-grid"></div>
 
-    <div id='main-content'>
-      <div id='login-container'></div>
 
-      <div class="mdc-layout-grid mdc-typography app" id='main-layout-app'>
-
-        <div id="app-current-panel">
-
-        </div>
-
-        <!-- <div class="mdc-layout-grid__cell--span-12">
-          <div class="mdc-bottom-navigation hidden">
-          
-            <ul class="mdc-bottom-navigation__list mdc-list" id='nav-list'>
-              <li class="mdc-list-item mdc-bottom-navigation__list-item"
-                data-state='snapView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">photo_camera</span>
-              </span>
-
-              <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='homeView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">home
-                </span>
-              </span>
-              <li class="mdc-list-item mdc-bottom-navigation__list-item" data-state='chatView'>
-                <span class="material-icons mdc-bottom-navigation__list-item__icon">chat</span>
-              </span>;
-            </ul>
-          </div>
-        </div> -->
-      </div>
-    </div>
-
-  </div>
 
   <div id="snackbar-container">
     <div class="mdc-snackbar">
@@ -151,20 +85,33 @@
       </div>
     </div>
   </div>
-  <div id='dialog-container'></div>
-  <script src="js/config.js" defer></script>
-  <script src="js/component.js" defer></script>
-  <!-- <script src="js/exmaple.js"></script> -->
-  <script src="js/init.js" defer crossorigin="anonymous"></script>
-  <script src="js/services.js" defer></script>
-  <script src="js/map.js" defer></script>
-  <script src="js/homeView.js" defer></script>
-  <script src="js/addView.js" defer></script>
-  <script src="js/profile.js" defer async></script>
-  <script src="js/chatView.js" defer async></script>
-  <script src="js/claims.js" defer async></script>
-  <script src="js/attendence.js" defer async></script>
-  <script src="js/reportView.js" defer async></script>
+  <div id='dialog-container'>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" async>
+  </script>
+  <script type="text/javascript"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&libraries=places" async>
+  </script>
+
+  <script src='external/js/firebase-app.js'></script>
+  <script src='external/js/firebase-auth.js'></script>
+  <script src="external/js/firebaseui.js"></script>
+  <script src='external/js/material.min.js'></script>
+  <script src="js/config.js"></script>
+  <script src="js/component.js"></script>
+  <script src="js/services.js"></script>
+  <script src="js/init.js"></script>
+
+  <script src="js/map.js"></script>
+  <script src="js/homeView.js"></script>
+  <script src="js/addView.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/chatView.js"></script>
+  <script src="js/claims.js"></script>
+  <script src="js/attendence.js"></script>
+  <script src="js/reportView.js"></script>
 </body>
 
 </html>

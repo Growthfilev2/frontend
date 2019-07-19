@@ -1,7 +1,9 @@
-/* html ,body,#growthfile, #main-content,#main-layout-app,#app-current-panel {
+html ,body,#app-current-panel {
   height: 100%;
-} */
-
+}
+#app-current-panel {
+  padding: 0px;
+}
 :root {
   --mdc-theme-primary: #89273E;
   --mdc-theme-secondary: #cccccc;
@@ -120,11 +122,6 @@ body {
   resize: vertical;
 }
 
-.user-detail-bckg {
-  background: #200122;
-  background: -webkit-linear-gradient(to bottom, #89273E, #89273e4a);
-  background: linear-gradient(to bottom, #89273E 80%, #89273e59);
-}
 
 .center-abs {
   position: absolute;
@@ -322,22 +319,6 @@ body {
   width: auto;
 }
 
-.mdc-drawer__header {
-  padding-top: 16px;
-  padding-bottom: 16px;
-  align-items: center;
-  vertical-align: middle;
-
-  background-color: #89273E;
-}
-
-.mdc-drawer__header img {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  float: left;
-  margin-right: 5%;
-}
 
 .mdc-text-field .snap-text {
   caret-color: var(--mdc-theme-on-secondary);
