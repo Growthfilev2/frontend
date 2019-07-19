@@ -12,8 +12,6 @@ html ,body,#app-current-panel,#map {
   --mdc-theme-text-primary-on-light: #FFFFFF;
   --mdc-theme-text-primary-on-dark: #cccccc;
 
-  --mdc-theme-text-secondary-on-light: #67c9ff;
-  --mdc-theme-text-secondary-on-dark: #006bc1;
 }
 
 body {
@@ -490,3 +488,16 @@ iframe {
 }
 
 
+
+/** no location found **/
+.location-not-found {
+  max-width: 400px;
+  height: fit-content;
+}
+.location-not-found i {
+  font-size: 150px;
+
+}
+.location-not-found .mdc-button {
+  width: 200px
+}

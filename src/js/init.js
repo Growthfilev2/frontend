@@ -81,7 +81,7 @@ window.onpopstate = function (event) {
     getSuggestions();
     return
   }
-  
+
   window[event.state[0]](event.state[1]);
 }
 
@@ -130,11 +130,17 @@ window.addEventListener("load", function () {
       userSignedOut()
       return;
     }
+    if (appKey.getMode() === 'production') {
+      if (!native.getInfo()) {
+        redirect();
+        return;
+      }
+    }
     document.getElementById("app-current-panel").classList.remove('hidden')
     if (!initApp) return
     startApp()
   });
-  
+
 })
 
 
@@ -146,12 +152,12 @@ function firebaseUiConfig() {
       signInSuccessWithAuthResult: function (authResult) {
         console.log(authResult)
         const auth = authResult.user
-        if(history.state) {
-          if(history.state[0] === 'edit-profile') {
+        if (history.state) {
+          if (history.state[0] === 'edit-profile') {
             document.getElementById('app-header').classList.remove('hidden');
           }
         }
-        
+
         if (redirectParam.updateEmail) {
           auth.updateEmail(redirectParam.updateEmail).then(function () {
             auth.sendEmailVerification().then(function () {
@@ -211,16 +217,8 @@ function userSignedOut() {
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
-  if (appKey.getMode() === 'production') {
-    if (!native.getInfo()) {
-      redirect();
-      return;
-    }
-  }
-
   localStorage.setItem('error', JSON.stringify({}));
   const req = window.indexedDB.open(dbName, 5);
-
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -327,7 +325,7 @@ function startApp() {
       return;
     }
     console.log("run app")
- 
+
     const startLoad = document.querySelector('#start-load')
     startLoad.classList.remove('hidden');
 
@@ -355,7 +353,7 @@ function startApp() {
         revokeSession();
         return
       };
-      
+
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
           requestCreator('Null').then(function () {
@@ -374,7 +372,7 @@ function startApp() {
       })
       manageLocation().then(function (location) {
         ApplicationState.location = location,
-        localStorage.setItem('currentLocation',JSON.stringify(location))
+          localStorage.setItem('currentLocation', JSON.stringify(location))
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {
@@ -1031,16 +1029,18 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
 }
 
 function openMap() {
+ console.log("start getting location")
   document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function (location) {
-    document.getElementById('start-load').classList.add('hidden');
-    mapView(location)
+      document.getElementById('start-load').classList.add('hidden');
+      mapView(location)
+
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
     mapView()
     handleError({
-      message:error.message,
-      body:JSON.stringify(error.stack)
+      message: error.message,
+      body: JSON.stringify(error.stack)
     })
   })
 }

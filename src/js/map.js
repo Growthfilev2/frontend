@@ -26,15 +26,20 @@ function mapView(location) {
   if (!location) {
     panel.innerHTML = `
     <div class="center-abs location-not-found">
-    <i class='material-icons'>location_off</i>
-    <p class='mdc-typography--headline6'>
+    <i class='material-icons mdc-theme--secondary'>location_off</i>
+    <p class='mdc-typography--headline5'>
     Failed To Detect Your Location
     </p>
-    <button class="mdc-button mdc-theme--primary-bg" id="try-again" onclick="openMap()">
-    <span class="mdc-button__label">RETRY</span>
+    <button class="mdc-button mdc-theme--primary-bg" id='try-again'>
+    <span class="mdc-button__label mdc-theme--on-primary">RETRY</span>
     </button>
     </div>`  
-  
+    document.getElementById('try-again').addEventListener('click',function(evt){
+      console.log(evt);
+      console.log(evt.target.parentNode)
+      evt.target.parentNode.classList.add('hidden')  
+      openMap()
+    })
     return
   }
   ApplicationState.location = location
