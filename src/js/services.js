@@ -390,23 +390,16 @@ function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-  
+
   requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
-    renderMap(geopoint); 
+    renderMap(geopoint);
   })
 }
 
-function runRead(value) {
-  try {
-    if (value) {
-      requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
-      return;
-    }
-  } catch (e) {
-    console.log(e)
-  }
+function runRead() {
+  requestCreator('Null').then(handleComponentUpdation).catch(console.log)
 }
 
 function removeChildNodes(parent) {
@@ -470,4 +463,3 @@ function isEmailValid(email) {
   const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailReg.test(String(email).toLowerCase())
 }
-
