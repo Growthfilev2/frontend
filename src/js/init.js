@@ -601,12 +601,12 @@ function checkForRecipient() {
           emailInit.focus();
           return
         };
-        if(!isEmailValid(emailInit.value)){
-          emailInit.focus();
+        // if(!isEmailValid(emailInit.value)){
+        //   emailInit.focus();
           
-          return;
+        //   return;
           
-        }
+        // }
         
         progCard.open();
 
