@@ -8,16 +8,20 @@ function handleError(error) {
 }
 
 
-function successDialog(data) {
-  console.log(data)
+function successDialog(text) {
+
   const successMark = document.getElementById('success-animation');
-  const viewContainer = document.getElementById('growthfile');
+  const viewContainer = document.getElementById('app-current-panel');
   successMark.classList.remove('hidden');
-  viewContainer.style.opacity = '0.37';
+  document.getElementById('app-header').style.opacity = '0.1'
+  viewContainer.style.opacity = '0.1';
+  successMark.querySelector('.success-text').textContent = text;
   setTimeout(function () {
     successMark.classList.add('hidden');
     viewContainer.style.opacity = '1';
-  }, 1500);
+    document.getElementById('app-header').style.opacity = '1'
+
+  }, 2000);
 }
 
 
@@ -153,6 +157,7 @@ function toRad(value) {
 }
 
 function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
+
   var R = 6371; // km
   var dLat = toRad(newLocation.latitude - oldLocation.latitude);
   var dLon = toRad(newLocation.longitude - oldLocation.longitude);
@@ -166,7 +171,7 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 }
 
 function isLocationMoreThanThreshold(distance) {
-  var THRESHOLD = 1; //km
+  var THRESHOLD = 0.5; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
@@ -177,8 +182,8 @@ function isLocationStatusWorking() {
     'samsung': true,
     'OnePlus': true
   }
-  
-  if(!navigator.onLine) {
+
+  if (!navigator.onLine) {
     const connectionDialog = new Dialog('BROKEN INTERNET CONNECTION', 'Make Sure You have a working Internet Connection').create()
     connectionDialog.open();
     return;
@@ -239,27 +244,42 @@ function requestCreator(requestType, requestBody) {
       apiHandler.postMessage(requestGenerator);
     } else {
       getRootRecord().then(function (rootRecord) {
+        const time = fetchCurrentTime(rootRecord.serverTime);
+        console.log(time)
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
-            ApplicationState.lastLocationTime = geopoint.lastLocationTime;
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-              mapView(geopoint);
+              renderMap(geopoint);
               return;
             };
-            requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+
+            ApplicationState.location = geopoint;
+
+            requestBody['timestamp'] = time
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
+            if (requestBody.template === 'check-in') {
+              ApplicationState.lastCheckInCreated = Date.now()
+              localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+            };
+
             apiHandler.postMessage(requestGenerator);
           }).catch(locationErrorDialog)
           return;
         }
-        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+
+        requestBody['timestamp'] = time
         requestGenerator.body = requestBody;
         requestBody['geopoint'] = ApplicationState.location;
+
+        if (requestBody.template === 'check-in') {
+          ApplicationState.lastCheckInCreated = Date.now()
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+        };
         apiHandler.postMessage(requestGenerator);
       });
     }
-  
+
   });
 
   return new Promise(function (resolve, reject) {
@@ -283,7 +303,6 @@ function locationErrorDialog(error) {
   const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
-    mapView()
     handleError(error);
   })
 }
@@ -291,9 +310,13 @@ function locationErrorDialog(error) {
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
 
   var currentTime = moment(moment().valueOf());
+  console.log(currentTime)
   var duration = moment.duration(currentTime.diff(lastLocationTime));
+  console.log(duration)
   var difference = duration.asSeconds();
+  console.log(difference)
   return difference > threshold
+
 }
 
 
@@ -360,16 +383,17 @@ function handleComponentUpdation(readResponse) {
   }
 }
 
+
+
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
+  
   requestCreator('Null').then(console.log).catch(console.log)
-  if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
-    ApplicationState.location.lastLocationTime = geopoint.lastLocationTime;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
-    mapView(geopoint);
+    renderMap(geopoint); 
   })
 }
 
@@ -379,11 +403,7 @@ function runRead(value) {
       requestCreator('Null', value).then(handleComponentUpdation).catch(console.log)
       return;
     }
-  }catch(e) {
-    handleError({
-      message:e.message,
-      body :JSON.stringify(e)
-    })
+  } catch (e) {
     console.log(e)
   }
 }
@@ -444,3 +464,9 @@ function getSubscription(office, template) {
 
   })
 }
+
+function isEmailValid(email) {
+  const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return emailReg.test(String(email).toLowerCase())
+}
+

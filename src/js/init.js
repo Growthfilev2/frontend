@@ -1,15 +1,7 @@
 const appKey = new AppKeys();
 let progressBar;
-let snackBar;
-let send;
-let change;
-let next;
-let emailInit;
 var db;
-let isCheckInCreated;
-let drawer;
-let navList;
-
+let snackBar;
 const redirectParam = {
   updateEmail: '',
   verify: false,
@@ -17,6 +9,7 @@ const redirectParam = {
 }
 
 let initApp = true;
+
 
 function imgErr(source) {
   source.onerror = '';
@@ -88,7 +81,7 @@ window.onpopstate = function (event) {
     getSuggestions();
     return
   }
-  
+
   window[event.state[0]](event.state[1]);
 }
 
@@ -98,7 +91,6 @@ window.onpopstate = function (event) {
 window.addEventListener("load", function () {
   firebase.initializeApp(appKey.getKeys())
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
-  drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'));
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
   topBar.listen('MDCTopAppBar:nav', function (e) {
@@ -134,21 +126,21 @@ window.addEventListener("load", function () {
   }
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
-      document.getElementById("main-layout-app").style.display = 'none'
+      document.getElementById("app-current-panel").classList.add('hidden')
       userSignedOut()
       return;
     }
-    document.getElementById("main-layout-app").style.display = 'block'
+    if (appKey.getMode() === 'production') {
+      if (!native.getInfo()) {
+        redirect();
+        return;
+      }
+    }
+    document.getElementById("app-current-panel").classList.remove('hidden')
     if (!initApp) return
     startApp()
   });
-  // firebase
-  //   .auth()
-  //   .addAuthTokenListener(function (idToken) {
-  //     if (firebase.auth().currentUser) {
-  //       ApplicationState.idToken = idToken;
-  //     }
-  //   })
+
 })
 
 
@@ -160,12 +152,12 @@ function firebaseUiConfig() {
       signInSuccessWithAuthResult: function (authResult) {
         console.log(authResult)
         const auth = authResult.user
-        if(history.state) {
-          if(history.state[0] === 'edit-profile') {
+        if (history.state) {
+          if (history.state[0] === 'edit-profile') {
             document.getElementById('app-header').classList.remove('hidden');
           }
         }
-        
+
         if (redirectParam.updateEmail) {
           auth.updateEmail(redirectParam.updateEmail).then(function () {
             auth.sendEmailVerification().then(function () {
@@ -225,18 +217,8 @@ function userSignedOut() {
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
-  if (appKey.getMode() === 'production') {
-    if (!native.getInfo()) {
-      redirect();
-      return;
-    }
-  }
-
   localStorage.setItem('error', JSON.stringify({}));
-
-
   const req = window.indexedDB.open(dbName, 5);
-
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -342,10 +324,10 @@ function startApp() {
       }
       return;
     }
+    console.log("run app")
+
     const startLoad = document.querySelector('#start-load')
     startLoad.classList.remove('hidden');
-    console.log("run app")
-    document.getElementById("main-layout-app").style.display = 'block'
 
     const texts = ['Loading Growthfile', 'Getting Your Data', 'Creating Profile', 'Please Wait']
 
@@ -371,7 +353,7 @@ function startApp() {
         revokeSession();
         return
       };
-      
+
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
           requestCreator('Null').then(function () {
@@ -388,9 +370,7 @@ function startApp() {
         profileCheck();
         requestCreator('Null').then(console.log).catch(console.log)
       })
-      manageLocation().then(function (location) {
-        ApplicationState.location = location
-      })
+      
     }).catch(function (error) {
       if (error.response.apiRejection) {
         snacks(error.response.message, 'Retry')
@@ -400,7 +380,7 @@ function startApp() {
   req.onerror = function () {
     handleError({
       message: `${req.error.message} from startApp`,
-      body: ''
+      body: JSON.stringify(req.error)
     })
   }
 
@@ -568,7 +548,11 @@ ${reportLength.length ? reportList : ''}
      </div>
      <div class="mdc-notched-outline__trailing"></div>
  </div>
-</div>`
+</div>
+<div class="mdc-text-field-helper-line">
+  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
+</div>
+`
 
 }
 
@@ -610,10 +594,20 @@ function checkForRecipient() {
       const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
       addEmail.addEventListener('click', function (evt) {
+       const helperText = new MDCTextFieldHelperText(document.querySelector('.mdc-text-field-helper-text'));
+        console.log(helperText)
         if (!emailInit.value) {
+            
           emailInit.focus();
           return
         };
+        if(!isEmailValid(emailInit.value)){
+          emailInit.focus();
+          
+          return;
+          
+        }
+        
         progCard.open();
 
         auth.updateEmail(emailInit.value).then(function () {
@@ -920,6 +914,7 @@ function redirect() {
 
 
 function setVenueForCheckIn(venueData, value) {
+
   const venue = {
     geopoint: {
       latitude: '',
@@ -935,10 +930,13 @@ function setVenueForCheckIn(venueData, value) {
     return value;
 
   }
+
   venue.location = venueData.location;
   venue.address = venueData.address;
+
   venue.geopoint.latitude = venueData.latitude;
   venue.geopoint.longitude = venueData.longitude;
+
   value.venue = [venue]
   value.share = [];
   console.log(value)
@@ -1046,16 +1044,17 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
 }
 
 function openMap() {
+ console.log("start getting location")
   document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function (location) {
-    document.getElementById('start-load').classList.add('hidden');
-    mapView(location)
+      document.getElementById('start-load').classList.add('hidden');
+      mapView(location)
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
     mapView()
     handleError({
-      message:error.message,
-      body:JSON.stringify(error.stack)
+      message: error.message,
+      body: JSON.stringify(error.stack)
     })
   })
 }

@@ -20,9 +20,7 @@ function chatView() {
         history.pushState(['searchChats'], null, null)
         search()
     })
-    document.getElementById('app-header').classList.remove("hidden")
     document.getElementById('app-current-panel').innerHTML = chatDom()
-    document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
     readLatestChats(true);
     getOtherContacts(true);

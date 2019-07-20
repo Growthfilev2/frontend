@@ -74,7 +74,7 @@ self.onmessage = function (event) {
         rootObjectStore.get(event.data.meta.user.uid).onsuccess = function (event) {
           rootRecord = event.target.result
           rootRecord.serverTime = response.timestamp - Date.now()
-          rootObjectStore.put(rootRecord)
+          rootObjectStore.put(rootRecord);
         }
         rootTx.oncomplete = function () {
           if (response.removeFromOffice) {
@@ -520,8 +520,7 @@ function updateMap(venue, tx) {
     deleteRecordReq.onerror = function () {
       instant({
         message: deleteRecordReq.error.message,
-        meta
-      })
+      },meta)
     }
   }
 }
@@ -561,9 +560,8 @@ function updateCalendar(activity, tx) {
     }
     recordDeleteReq.onerror = function () {
       instant({
-        message: recordDeleteReq.error.message,
-        meta
-      })
+        message: recordDeleteReq.error.message
+      },meta)
     }
   }
 }
@@ -727,7 +725,6 @@ function successResponse(read, param, db, resolve, reject) {
     putAttachment(activity, updateTx, param);
 
 
-    console.log(activity.assignees)
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;

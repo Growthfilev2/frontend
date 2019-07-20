@@ -5,8 +5,7 @@ function addView(sub) {
     <span class="mdc-top-app-bar__title">${sub.template.toUpperCase()}</span>
     `
     const header = getHeader('app-header', backIcon, '');
-    header.root_.classList.remove('hidden')
-    document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
     <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
@@ -24,12 +23,14 @@ function sendFormToParent(formData) {
     delete formData.customerAuths;
     if(Array.isArray(formData)) {
         const prom = []
+        const templateName = formData[0].template
         formData.forEach(function(form){
          prom.push(requestCreator('create',form))
         })
         Promise.all(prom).then(function(){
             progressBar.close();
-            successDialog();
+           
+            successDialog(`You Created a ${templateName}`);
             getSuggestions();
         }).catch(function(error){
             progressBar.close();
@@ -39,7 +40,7 @@ function sendFormToParent(formData) {
     }
     requestCreator('create', formData).then(function () {
             progressBar.close();
-            successDialog()
+            successDialog(`You Created a ${formData.template}`);
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
                 ApplicationState.venue = {
@@ -51,7 +52,7 @@ function sendFormToParent(formData) {
                     latitude:formData.venue[0].geopoint.latitude,
                     longitude:formData.venue[0].geopoint.longitude
                 }
-               
+                localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
                 getSuggestions();
                 Object.keys(customerAuths).forEach(function(customerNumber){
                 

@@ -152,10 +152,8 @@ function homePanel(suggestionLength) {
 function homeHeaderStartContent(){
   return `
   <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
-  <span class="mdc-list-item__text ml-10">
-  <span class="mdc-list-item__primary-text header-two-line mdc-top-app-bar__title" style='max-width:300px;'>${ApplicationState.venue.location || 'Unkown Location'}</span>
-  <span class="mdc-list-item__secondary-text mdc-theme--on-primary">${ApplicationState.office}</span>
-  </span>`
+  <span class="header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unkown Location'}</span>
+`
 }
 
 function homeView(suggestedTemplates) {
@@ -175,7 +173,7 @@ function homeView(suggestedTemplates) {
   
   const header = getHeader('app-header', homeHeaderStartContent(), actionItems);
   header.root_.classList.remove('hidden')
-  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust',"mdc-layout-grid",'pl-0','pr-0')
 
   history.pushState(['homeView'], null, null)
   header.listen('MDCTopAppBar:nav', handleNav);

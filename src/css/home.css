@@ -9,11 +9,27 @@
     height: auto;
 }
 .header-two-line.mdc-top-app-bar__title {
-    padding-left: 0px;
+    padding-left: 10px;
+}
+
+@media (max-width:320px) {
+    .header-two-line {
+        max-width: 250px;
+    }
+}
+@media (min-width:321px) and (max-width:480px) {
+    .header-two-line {
+        max-width: 300px;
+    }
+}
+@media (min-width:481px) and (max-width:600px) {
+    .header-two-line {
+        max-width: 500px;
+    }
 }
 
 .home-container {
-    padding-top: 20px;
+    padding-top: 10px;
     
 }
 .home-container .mdc-card__media-content {
