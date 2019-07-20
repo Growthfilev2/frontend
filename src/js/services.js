@@ -390,7 +390,7 @@ function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-
+  
   requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
