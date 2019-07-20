@@ -551,7 +551,11 @@ ${reportLength.length ? reportList : ''}
      </div>
      <div class="mdc-notched-outline__trailing"></div>
  </div>
-</div>`
+</div>
+<div class="mdc-text-field-helper-line">
+  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
+</div>
+`
 
 }
 
@@ -593,10 +597,20 @@ function checkForRecipient() {
       const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
       addEmail.addEventListener('click', function (evt) {
+       const helperText = new MDCTextFieldHelperText(document.querySelector('.mdc-text-field-helper-text'));
+        console.log(helperText)
         if (!emailInit.value) {
+            
           emailInit.focus();
           return
         };
+        if(!isEmailValid(emailInit.value)){
+          emailInit.focus();
+          
+          return;
+          
+        }
+        
         progCard.open();
 
         auth.updateEmail(emailInit.value).then(function () {
