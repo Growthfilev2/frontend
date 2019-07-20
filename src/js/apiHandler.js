@@ -74,7 +74,7 @@ self.onmessage = function (event) {
         rootObjectStore.get(event.data.meta.user.uid).onsuccess = function (event) {
           rootRecord = event.target.result
           rootRecord.serverTime = response.timestamp - Date.now()
-          rootObjectStore.put(rootRecord)
+          rootObjectStore.put(rootRecord);
         }
         rootTx.oncomplete = function () {
           if (response.removeFromOffice) {

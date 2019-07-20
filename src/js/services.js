@@ -245,25 +245,38 @@ function requestCreator(requestType, requestBody) {
       apiHandler.postMessage(requestGenerator);
     } else {
       getRootRecord().then(function (rootRecord) {
+        const time = fetchCurrentTime(rootRecord.serverTime);
+        console.log(time)
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
               renderMap(geopoint);
               return;
             };
-            ApplicationState.location = geopoint;
-            localStorage.setItem('currentLocation', JSON.stringify(geopoint))
 
-            requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+            ApplicationState.location = geopoint;
+
+            requestBody['timestamp'] = time
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
+            if (requestBody.template === 'check-in') {
+              ApplicationState.lastCheckInCreated = Date.now()
+              localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+            };
+
             apiHandler.postMessage(requestGenerator);
           }).catch(locationErrorDialog)
           return;
         }
-        requestBody['timestamp'] = fetchCurrentTime(rootRecord.serverTime);
+
+        requestBody['timestamp'] = time
         requestGenerator.body = requestBody;
         requestBody['geopoint'] = ApplicationState.location;
+
+        if (requestBody.template === 'check-in') {
+          ApplicationState.lastCheckInCreated = Date.now()
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+        };
         apiHandler.postMessage(requestGenerator);
       });
     }
@@ -304,7 +317,7 @@ function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
   var difference = duration.asSeconds();
   console.log(difference)
   return difference > threshold
-  
+
 }
 
 
@@ -371,61 +384,17 @@ function handleComponentUpdation(readResponse) {
   }
 }
 
-function hasCheckInCredentialsChanged() {
 
-  return new Promise(function(resolve) {
-    
-    if(!ApplicationState.location) {
-      manageLocation().then(function (geopoint) {
-        resolve({
-          changed:true,
-          location:geopoint
-        })
-      });
-      return
-    }
-    const locationInStorage = JSON.parse(localStorage.getItem("currentLocation"));
-    if (!isLastLocationOlderThanThreshold(locationInStorage.location.lastLocationTime, 60)) return resolve({
-      changed:false,
-      location:null
-    });
-    manageLocation().then(function (geopoint) {
-      if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(locationInStorage.location, geopoint))) return resolve({
-        changed:false,
-        location
-      });
-      return resolve({
-        changed:true,
-        location:geopoint
-      })
-    });
-  })
-}
 
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-  hasCheckInCredentialsChanged().then(function(credential){
-    if(credential.changed) {
-      ApplicationState.location = geopoint;
-      localStorage.setItem('currentLocation', JSON.stringify(geopoint))
-      renderMap(geopoint);
-    }
-  })
 
   requestCreator('Null').then(console.log).catch(console.log)
-  
-  if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
-    if (!ApplicationState.location) {
-      ApplicationState.location = geopoint;
-      localStorage.setItem('currentLocation', JSON.stringify(geopoint))
-      renderMap(geopoint);
-      return;
-    }
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
-    renderMap(geopoint);
+    renderMap(geopoint); 
   })
 }
 
@@ -497,7 +466,7 @@ function getSubscription(office, template) {
   })
 }
 
-function isEmailValid(email){
+function isEmailValid(email) {
   const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailReg.test(String(email).toLowerCase())
 }

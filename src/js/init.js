@@ -914,6 +914,7 @@ function redirect() {
 
 
 function setVenueForCheckIn(venueData, value) {
+
   const venue = {
     geopoint: {
       latitude: '',
@@ -929,10 +930,13 @@ function setVenueForCheckIn(venueData, value) {
     return value;
 
   }
+
   venue.location = venueData.location;
   venue.address = venueData.address;
+
   venue.geopoint.latitude = venueData.latitude;
   venue.geopoint.longitude = venueData.longitude;
+
   value.venue = [venue]
   value.share = [];
   console.log(value)

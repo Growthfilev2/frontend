@@ -16,7 +16,7 @@ function mapView(location) {
   document.getElementById('start-load').classList.add('hidden');
   document.getElementById('app-header').classList.add('hidden');
   if (!location) {
-    panel.innerHTML = `
+    document.getElementById('app-current-panel').innerHTML = `
     <div class="center-abs location-not-found">
     <i class='material-icons mdc-theme--secondary'>location_off</i>
     <p class='mdc-typography--headline5'>
@@ -36,51 +36,30 @@ function mapView(location) {
   }
 
   ApplicationState.location = location
+  
+  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
+  if(!oldApplicationState) return renderMap(location);
 
-  // let initMap = false
-  // const tx = db.transaction('activity');
-  // const activityStoreIndex = tx.objectStore('activity').index('timestamp');
-  // activityStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
+  if(isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated,300))  return renderMap(location)
 
-  //   const cursor = event.target.result;
-  //   if (!cursor) return;
-
-  //   if (cursor.value.template === 'check-in') {
-  //     const locationInStorage = JSON.parse(localStorage.getItem('currentLocation'));
-      
-  //     if (!isLastLocationOlderThanThreshold(cursor.value.timestamp, 60)) {
-  //       ApplicationState.office = cursor.value.office;
-  //       if (cursor.value.venue[0].location) {
-  //         ApplicationState.venue = cursor.value.venue[0]
-  //         ApplicationState.venue.office = cursor.value.office
-  //         ApplicationState.knownLocation = true;
-  //       }
-  //       return;
-  //     };
-    
-  //     if(!locationInStorage) return initMap = true;
-  //     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(locationInStorage, location))) {
-  //       ApplicationState.office = cursor.value.office;
-  //       if (cursor.value.venue[0].location) {
-  //         ApplicationState.venue = cursor.value.venue[0]
-  //         ApplicationState.venue.office = cursor.value.office
-  //         ApplicationState.knownLocation = true
-  //       }
-  //       return
-  //     };
-  //     initMap = true
-  //     return;
-  //   }
-  //   cursor.continue();
-  // };
-  // tx.oncomplete = function () {
-  //   if(initMap){
-  //   }
-  //   else {
-  //     getSuggestions()
-  //   }
-  // }
-  renderMap(location)
+  if(!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated,60)) {
+    ApplicationState.office = oldApplicationState.office;
+    ApplicationState.venue = oldApplicationState.venue
+    if(oldApplicationState.venue) {
+      ApplicationState.knownLocation = true
+    }
+    return getSuggestions()
+  }
+  
+  if(!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location,location))) {
+    ApplicationState.office = oldApplicationState.office;
+    ApplicationState.venue = oldApplicationState.venue
+    if(oldApplicationState.venue) {
+      ApplicationState.knownLocation = true
+    }
+    return getSuggestions()
+  }
+  renderMap(location);
 }
 
 function renderMap(location) {
@@ -90,8 +69,6 @@ function renderMap(location) {
   const panel = document.getElementById('app-current-panel')
   panel.innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
-
-
 
   console.log("auth relaoderd")
   document.getElementById('start-load').classList.add('hidden');
@@ -170,7 +147,7 @@ function loadCardData(markers) {
   const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
   header.textContent = `Where Are You`;
   el.classList.remove('hidden');
-
+  let checkInData = {}
 
 
   contentBody.innerHTML = `<div>
@@ -194,8 +171,9 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
-
+        
         if (!offices.length) {
+          localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
           showNoOfficeFound();
           return;
         };
@@ -206,16 +184,23 @@ function loadCardData(markers) {
         const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
           if (!evt.detail.value) return;
-          ApplicationState.office = evt.detail.value
+          ApplicationState.office = evt.detail.value;
+          
           getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-            console.log(checkInSub)
-            if (!checkInSub) return getSuggestions()
-            cardProd.open();
+           
+  
+            if (!checkInSub){
+              localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
 
-            requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
+              return getSuggestions()
+            } 
+
+            cardProd.open();
+            
+            const checkInRequestBody = setVenueForCheckIn('', checkInSub);
+            requestCreator('create', checkInRequestBody).then(function () {
               cardProd.close()
               successDialog('Check-In Created')
-
               getSuggestions()
             }).catch(function (error) {
               snacks(error.response.message);
@@ -237,7 +222,11 @@ function loadCardData(markers) {
     ApplicationState.venue = value;
     ApplicationState.office = value.office;
     getSubscription(value.office, 'check-in').then(function (result) {
-      if (!result) return getSuggestions();
+
+      if (!result) {
+        localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+        return getSuggestions()
+      }
 
       document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
         <span class='mdc-button__label'>Confirm</span>
@@ -247,7 +236,10 @@ function loadCardData(markers) {
       confirm.root_.onclick = function () {
         confirm.root_.classList.add('hidden')
         cardProd.open();
-        requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
+        const checkInRequestBody = setVenueForCheckIn(value, result)
+
+        requestCreator('create', checkInRequestBody).then(function () {
+
           successDialog('Check-In Created')
           cardProd.close();
           getSuggestions();
