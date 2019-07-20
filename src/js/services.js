@@ -8,16 +8,20 @@ function handleError(error) {
 }
 
 
-function successDialog(data) {
-  console.log(data)
+function successDialog(text) {
+
   const successMark = document.getElementById('success-animation');
-  const viewContainer = document.getElementById('growthfile');
+  const viewContainer = document.getElementById('app-current-panel');
   successMark.classList.remove('hidden');
-  viewContainer.style.opacity = '0.37';
+  document.getElementById('app-header').style.opacity = '0.1'
+  viewContainer.style.opacity = '0.1';
+  successMark.querySelector('.success-text').textContent = text;
   setTimeout(function () {
     successMark.classList.add('hidden');
     viewContainer.style.opacity = '1';
-  }, 1500);
+    document.getElementById('app-header').style.opacity = '1'
+
+  }, 2000);
 }
 
 
@@ -168,7 +172,7 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 }
 
 function isLocationMoreThanThreshold(distance) {
-  var THRESHOLD = 1; //km
+  var THRESHOLD = 0.5; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }
@@ -244,7 +248,7 @@ function requestCreator(requestType, requestBody) {
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-              mapView(geopoint);
+              renderMap(geopoint);
               return;
             };
             ApplicationState.location = geopoint;
@@ -287,7 +291,6 @@ function locationErrorDialog(error) {
   const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
-    mapView()
     handleError(error);
   })
 }
@@ -295,9 +298,13 @@ function locationErrorDialog(error) {
 function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
 
   var currentTime = moment(moment().valueOf());
+  console.log(currentTime)
   var duration = moment.duration(currentTime.diff(lastLocationTime));
+  console.log(duration)
   var difference = duration.asSeconds();
+  console.log(difference)
   return difference > threshold
+  
 }
 
 
@@ -403,20 +410,22 @@ function backgroundTransition() {
     if(credential.changed) {
       ApplicationState.location = geopoint;
       localStorage.setItem('currentLocation', JSON.stringify(geopoint))
-      mapView(geopoint);
+      renderMap(geopoint);
     }
   })
+
   requestCreator('Null').then(console.log).catch(console.log)
+  
   if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) return;
   manageLocation().then(function (geopoint) {
     if (!ApplicationState.location) {
       ApplicationState.location = geopoint;
       localStorage.setItem('currentLocation', JSON.stringify(geopoint))
-      mapView(geopoint);
+      renderMap(geopoint);
       return;
     }
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
-    mapView(geopoint);
+    renderMap(geopoint);
   })
 }
 
@@ -487,7 +496,6 @@ function getSubscription(office, template) {
 
   })
 }
-
 
 function isEmailValid(email){
   const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;

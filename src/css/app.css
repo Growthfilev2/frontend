@@ -132,6 +132,77 @@ body {
   text-align: center;
 }
 
+/**success **/
+#success-animation svg { 
+  width: 100px;
+  display: block;
+  margin: 40px auto 0;
+}
+
+#success-animation svg .path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 0;
+}
+#success-animation svg .circle {
+  -webkit-animation: dash .9s ease-in-out;
+  animation: dash .9s ease-in-out;
+}
+#success-animation svg .line {
+
+stroke-dashoffset: 1000;
+-webkit-animation: dash .9s .35s ease-in-out forwards;
+animation: dash .9s .35s ease-in-out forwards;
+}
+#success-animation svg .check {
+  stroke-dashoffset: -100;
+  -webkit-animation: dash-check .9s .35s ease-in-out forwards;
+  animation: dash-check .9s .35s ease-in-out forwards;
+}
+#success-animation p {
+  text-align: center;
+  margin: 20px 0 60px;
+  font-size: 1.25em; 
+  font-weight: bold
+
+}
+
+
+@-webkit-keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@-webkit-keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+
+@keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+
 /** custom control **/
 
 .custom-control span {
@@ -384,16 +455,8 @@ body {
 
 
 .success--container {
-  position: absolute;
-  top: 25%;
-  left: 8%;
-  font-size: 40px;
-  border-radius: 50%;
   width: 300px;
-  height: 300px;
-  background-color: var(--mdc-theme-primary);
-  transform: scale(0.38) !important;
-  z-index: 99999;
+  height: fit-content;
 }
 
 .success--check {

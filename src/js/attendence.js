@@ -1,6 +1,6 @@
 function attendenceView(){
     document.getElementById('app-header').classList.remove("hidden")
-    document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+    // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
     <span class="mdc-top-app-bar__title">Attendence</span>
     `

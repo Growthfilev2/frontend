@@ -370,10 +370,7 @@ function startApp() {
         profileCheck();
         requestCreator('Null').then(console.log).catch(console.log)
       })
-      manageLocation().then(function (location) {
-        ApplicationState.location = location,
-          localStorage.setItem('currentLocation', JSON.stringify(location))
-      })
+      
     }).catch(function (error) {
       if (error.response.apiRejection) {
         snacks(error.response.message, 'Retry')
@@ -1048,7 +1045,6 @@ function openMap() {
   manageLocation().then(function (location) {
       document.getElementById('start-load').classList.add('hidden');
       mapView(location)
-
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
     mapView()

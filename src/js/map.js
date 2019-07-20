@@ -8,21 +8,13 @@ ApplicationState = {
   knownLocation: false,
   venue: '',
   iframeVersion: 5,
-  idToken: ''
+
 }
 
 
 function mapView(location) {
-  history.pushState(['mapView'], null, null);
   document.getElementById('start-load').classList.add('hidden');
-  document.getElementById('app-header').classList.add('hidden')
-  
-  const panel = document.getElementById('app-current-panel')
-  panel.innerHTML = mapDom();
-  panel.classList.remove('mdc-top-app-bar--fixed-adjust')
-  document.getElementById('map-view').style.height = '100%';
-
-  console.log(location)
+  document.getElementById('app-header').classList.add('hidden');
   if (!location) {
     panel.innerHTML = `
     <div class="center-abs location-not-found">
@@ -33,17 +25,74 @@ function mapView(location) {
     <button class="mdc-button mdc-theme--primary-bg" id='try-again'>
     <span class="mdc-button__label mdc-theme--on-primary">RETRY</span>
     </button>
-    </div>`  
-    document.getElementById('try-again').addEventListener('click',function(evt){
+    </div>`
+    document.getElementById('try-again').addEventListener('click', function (evt) {
       console.log(evt);
       console.log(evt.target.parentNode)
-      evt.target.parentNode.classList.add('hidden')  
+      evt.target.parentNode.classList.add('hidden')
       openMap()
     })
     return
   }
+
   ApplicationState.location = location
-  localStorage.setItem('currentLocation',JSON.stringify(location))
+
+  // let initMap = false
+  // const tx = db.transaction('activity');
+  // const activityStoreIndex = tx.objectStore('activity').index('timestamp');
+  // activityStoreIndex.openCursor(null, 'prev').onsuccess = function (event) {
+
+  //   const cursor = event.target.result;
+  //   if (!cursor) return;
+
+  //   if (cursor.value.template === 'check-in') {
+  //     const locationInStorage = JSON.parse(localStorage.getItem('currentLocation'));
+      
+  //     if (!isLastLocationOlderThanThreshold(cursor.value.timestamp, 60)) {
+  //       ApplicationState.office = cursor.value.office;
+  //       if (cursor.value.venue[0].location) {
+  //         ApplicationState.venue = cursor.value.venue[0]
+  //         ApplicationState.venue.office = cursor.value.office
+  //         ApplicationState.knownLocation = true;
+  //       }
+  //       return;
+  //     };
+    
+  //     if(!locationInStorage) return initMap = true;
+  //     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(locationInStorage, location))) {
+  //       ApplicationState.office = cursor.value.office;
+  //       if (cursor.value.venue[0].location) {
+  //         ApplicationState.venue = cursor.value.venue[0]
+  //         ApplicationState.venue.office = cursor.value.office
+  //         ApplicationState.knownLocation = true
+  //       }
+  //       return
+  //     };
+  //     initMap = true
+  //     return;
+  //   }
+  //   cursor.continue();
+  // };
+  // tx.oncomplete = function () {
+  //   if(initMap){
+  //   }
+  //   else {
+  //     getSuggestions()
+  //   }
+  // }
+  renderMap(location)
+}
+
+function renderMap(location) {
+
+  localStorage.setItem('currentLocation', JSON.stringify(location));
+  history.pushState(['mapView'], null, null);
+  const panel = document.getElementById('app-current-panel')
+  panel.innerHTML = mapDom();
+  document.getElementById('map-view').style.height = '100%';
+
+
+
   console.log("auth relaoderd")
   document.getElementById('start-load').classList.add('hidden');
 
@@ -106,9 +155,7 @@ function mapView(location) {
     })
   });
 
-
 }
-
 
 
 function loadCardData(markers) {
@@ -147,8 +194,8 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
-        
-        if(!offices.length) {
+
+        if (!offices.length) {
           showNoOfficeFound();
           return;
         };
@@ -164,10 +211,11 @@ function loadCardData(markers) {
             console.log(checkInSub)
             if (!checkInSub) return getSuggestions()
             cardProd.open();
-            
+
             requestCreator('create', setVenueForCheckIn('', checkInSub)).then(function () {
-              snacks('Check-in created');
               cardProd.close()
+              successDialog('Check-In Created')
+
               getSuggestions()
             }).catch(function (error) {
               snacks(error.response.message);
@@ -200,7 +248,7 @@ function loadCardData(markers) {
         confirm.root_.classList.add('hidden')
         cardProd.open();
         requestCreator('create', setVenueForCheckIn(value, result)).then(function () {
-          snacks('Check-in created');
+          successDialog('Check-In Created')
           cardProd.close();
           getSuggestions();
         }).catch(function (error) {
@@ -227,11 +275,11 @@ function loadCardData(markers) {
 
 };
 
-function showNoOfficeFound(){
+function showNoOfficeFound() {
   const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>
   <p>Please Contact Your Administrator</p>
   `
-  const dialog = new Dialog('No Office Found',content).create('simple');
+  const dialog = new Dialog('No Office Found', content).create('simple');
   dialog.scrimClickAction = ''
   dialog.open();
 }
@@ -337,7 +385,7 @@ function setFilePath(base64) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
   header.root_.classList.remove('hidden')
-  document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
+  // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
   const url = `data:image/jpg;base64,${base64}`
   document.getElementById('app-current-panel').innerHTML = `
@@ -388,7 +436,7 @@ function setFilePath(base64) {
           progressBar.open();
           requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
             getSuggestions()
-            snacks('Check-In Created')
+            successDialog('Check-In Created')
           }).catch(function (error) {
             snacks(error.message)
 
@@ -439,7 +487,8 @@ function setFilePath(base64) {
             progressBar.open();
             requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
               getSuggestions()
-              snacks('Check-In Created')
+              successDialog('Check-In Created')
+
             }).catch(function (error) {
               snacks(error.response.message)
             })

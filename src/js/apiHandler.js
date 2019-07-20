@@ -725,7 +725,6 @@ function successResponse(read, param, db, resolve, reject) {
     putAttachment(activity, updateTx, param);
 
 
-    console.log(activity.assignees)
     activity.assignees.forEach(function (user) {
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;
