@@ -298,7 +298,7 @@ function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
 
 
 function updateApp() {
-  // if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
+  if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
 
   updateAppDialog.open();
