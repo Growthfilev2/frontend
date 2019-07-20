@@ -40,6 +40,7 @@ html {
 
 .marvel-device .screen {
   text-align: left;
+  height: 100%;
 }
 
 .screen-container {
@@ -158,10 +159,11 @@ html {
 /* Conversation */
 
 .conversation {
-  height: calc(100% - 12px);
+  /* height: calc(100% - 12px); */
   position: relative;
   background: #efe7dd url("https://cloud.githubusercontent.com/assets/398893/15136779/4e765036-1639-11e6-9201-67e728e86f39.jpg") repeat;
   z-index: 0;
+  height: 100vh;
 }
 
 .conversation ::-webkit-scrollbar {
@@ -433,11 +435,11 @@ html {
   }
 
   .conversation {
-    height: calc(100vh - 55px);
+    /* height: calc(100vh - 55px); */
   }
 
   .conversation .conversation-container {
-    height: calc(100vh - 120px);
+    /* height: calc(100vh - 120px); */
   }
 }
 

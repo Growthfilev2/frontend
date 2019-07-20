@@ -217,6 +217,10 @@
                 copy.share = []
                 console.log(copy);
                 const requestArray = []
+                if(!listInit) {
+                    parent.sendFormToParent(copy)
+                    return
+                }
                 if (!listInit.listElements.length) {
                     parent.sendFormToParent(copy)
                     return

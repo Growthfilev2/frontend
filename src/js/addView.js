@@ -23,12 +23,14 @@ function sendFormToParent(formData) {
     delete formData.customerAuths;
     if(Array.isArray(formData)) {
         const prom = []
+        const templateName = formData[0].template
         formData.forEach(function(form){
          prom.push(requestCreator('create',form))
         })
         Promise.all(prom).then(function(){
             progressBar.close();
-            successDialog();
+           
+            successDialog(`You Created a ${templateName}`);
             getSuggestions();
         }).catch(function(error){
             progressBar.close();
@@ -38,7 +40,7 @@ function sendFormToParent(formData) {
     }
     requestCreator('create', formData).then(function () {
             progressBar.close();
-            successDialog()
+            successDialog(`You Created a ${formData.template}`);
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
                 ApplicationState.venue = {
@@ -50,7 +52,7 @@ function sendFormToParent(formData) {
                     latitude:formData.venue[0].geopoint.latitude,
                     longitude:formData.venue[0].geopoint.longitude
                 }
-               
+                localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
                 getSuggestions();
                 Object.keys(customerAuths).forEach(function(customerNumber){
                 
