@@ -256,6 +256,7 @@ html {
 
 .message:first-child {
   margin: 16px 0 8px;
+  margin-top: 76px;
 }
 
 .message.them {
