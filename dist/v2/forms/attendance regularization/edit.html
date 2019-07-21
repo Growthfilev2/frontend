@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,35 +14,22 @@
     <form class='forms mdc-card' id='form'>
 
         <div class="form-list">
-      
+
             <div class="form-component schedules">
-                <p class="mdc-typography--headline6 mb-0 mt-0">Regularization Dates</label>
+                <p class="mdc-typography--headline6 mb-0 mt-0">Date</label>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
-                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates">
-                        <label for="input" class="mdc-floating-label">Start Date</label>
+                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates start date">
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-time'>
-                        <input class=" mdc-text-field__input" type="time" data-name="Regularization Dates start time" value="12:00">
-                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates end date">
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
-                        onclick="showSecondDate(event,'end-date-container','Regularization Dates')">Add End
-                        Date</label>
+
             </div>
-            <div class="form-component end-date-container hidden schedules">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
-                    <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates end date">
-                    <label for="input" class="mdc-floating-label">End Date</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
-                    <input class=" mdc-text-field__input" type="time" data-name="Regularization Dates end time" value="12:00">
-                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
+
             <div class="form-component">
                 <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='reason'>
                     <textarea class="mdc-text-field__input" rows="2" cols="100"></textarea>
@@ -55,7 +43,7 @@
                 </div>
             </div>
             <div class="form-component">
-                <input type="submit" value="Apply For Regularization" class="mdc-button submit-btn">
+                <input type="submit" value="SUBMIT" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
             </div>
         </div>
     </form>
@@ -63,24 +51,21 @@
     <script>
         parent.window.mdc.autoInit();
 
-
-        const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
-        const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
         const reason = new parent.mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
 
-
         function init(subscriptionTemplate) {
-            startDate.value = createDate(subscriptionTemplate.forDate.startTime)
-            endDate.value = createDate(subscriptionTemplate.forDate.startTime);
-            initializeDates(subscriptionTemplate)
+
+            initializeDates(subscriptionTemplate,createDate(subscriptionTemplate.forDate.startTime))
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-              
+
                 copy.attachment.Reason.value = reason.value;
-                copy.schedule = getNewSchedule(subscriptionTemplate)
                 copy.share = []
+                const newSchedule = getNewSchedule(subscriptionTemplate);
+                if(!newSchedule) return;
+                copy.schedule = newSchedule
                 delete copy.forDate
                 parent.sendFormToParent(copy)
             })

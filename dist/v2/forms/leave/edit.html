@@ -29,12 +29,12 @@
                 <p class="mdc-typography--headline6 mb-0 mt-0">Leave Dates</p>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
                         <input class=" mdc-text-field__input" type="date" data-name="Leave Dates start date">
-                        <label for="input" class="mdc-floating-label">Start Date</label>
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
                         <input class=" mdc-text-field__input" type="date" data-name="Leave Dates end date">
-                        <label for="input" class="mdc-floating-label">End Date</label>
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                 </div>
             </div>
             <div class="form-component">
-                <input type="submit" value="Apply Leave" class="mdc-button submit-btn">
+                <input type="submit" value="Apply Leave" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
             </div>
         </div>
     </form>
@@ -62,12 +62,8 @@
 
 
         const select = new parent.mdc.select.MDCSelect(document.querySelector('.mdc-select'));
-        const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
-        const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
-
         const reason = new parent.mdc.textField.MDCTextField(document.getElementById('reason'));
         var formEl = document.getElementById('form');
-
 
         function init(subscriptionTemplate) {
             initializeDates(subscriptionTemplate,createDate(getTommorowDate()))
