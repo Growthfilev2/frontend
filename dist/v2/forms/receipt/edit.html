@@ -39,35 +39,33 @@
                 </div>
             </div>
 
-            <div class="form-component collection-select-container hidden">
-                    <div class="mdc-select" id='collection'>
-    
-                        <i class="mdc-select__dropdown-icon"></i>
-                        <select class="mdc-select__native-control">
-                            <option value="" selected></option>
-                        </select>
-                        <label class="mdc-floating-label">Choose collection Method</label>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
-                </div>
-
             <div class="form-component">
-                <div class="mdc-text-field"  data-mdc-auto-init="MDCTextField"
-                    id='amount'>
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='amount'>
                     <input class=" mdc-text-field__input" type="number">
                     <label for="input" class="mdc-floating-label" id="cc">Amount Recieved</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
-         
-            <div class="form-component">
-                    <div class="mdc-text-field"  data-mdc-auto-init="MDCTextField"
-                        id='ref-number'>
-                        <input class=" mdc-text-field__input" type="number">
-                        <label for="input" class="mdc-floating-label" id="cc">Reference Number</label>
-                        <div class="mdc-line-ripple"></div>
-                    </div>
+
+            <div class="form-component collection-select-container hidden">
+                <div class="mdc-select" id='collection'>
+
+                    <i class="mdc-select__dropdown-icon"></i>
+                    <select class="mdc-select__native-control">
+                        <option value="" selected></option>
+                    </select>
+                    <label class="mdc-floating-label">Choose collection Method</label>
+                    <div class="mdc-line-ripple"></div>
                 </div>
+            </div>
+
+            <div class="form-component">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='ref-number'>
+                    <input class=" mdc-text-field__input" type="number">
+                    <label for="input" class="mdc-floating-label" id="cc">Reference Number</label>
+                    <div class="mdc-line-ripple"></div>
+                </div>
+            </div>
             <div class="form-component">
                 <input type="submit" value="Create Receipt" class="mdc-button submit-btn">
             </div>
@@ -83,6 +81,7 @@
         const ref = new parent.mdc.textField.MDCTextField(document.getElementById('ref-number'));
 
         var formEl = document.getElementById('form');
+
         function init(subscriptionTemplate) {
             getDropDownContent(subscriptionTemplate.office, 'invoice', 'officeTemplate').then(function (result) {
                 if (result.string) {
@@ -92,7 +91,7 @@
             })
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
                 customer.nativeControl_.innerHTML += result.string;
-                if(result.string) {
+                if (result.string) {
                     document.querySelector('.customer-select-container').classList.remove('hidden')
                 }
             });
@@ -102,7 +101,7 @@
                     collection.nativeControl_.innerHTML += result.string
                 }
             })
-           
+
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
@@ -110,7 +109,7 @@
                 copy.attachment['Customer'].value = customer.value;
                 copy.attachment['collection'].value = collection.value;
                 copy.attachment['Amount Received'].value = amount.value,
-                copy.attachment['Reference Number'].value = ref.value
+                    copy.attachment['Reference Number'].value = ref.value
                 copy.share = []
                 parent.sendFormToParent(copy)
             })
