@@ -21,45 +21,27 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Select Customer</label>
+                    <label class="mdc-floating-label">Chooose Customer</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
             <div class="form-component schedules">
-                <p class="mdc-typography--body1 mdc-theme--primary mt-0">Delivery Date</p>
+                <p class="mdc-typography--body1 mdc-theme--primary mt-0 mb-0">Delivery Date</p>
                 <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-start-date'>
-                    <input class="mdc-text-field__input" type="date" data-name='Delivery Date'>
-                    <label class="mdc-floating-label">Start Date</label>
+                    <input class="mdc-text-field__input" type="date" data-name='Delivery Date start date'>
+                    <label class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
 
-                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField">
-                    <input class="mdc-text-field__input" type="time" value="12:00" data-name='Delivery Date start time'>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-                <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
-                    onclick="showSecondDate(event,'delivery-end-date-container','Delivery Date')">
-                    Add Delivery Last Date
-                </p>
-
-            </div>
-            <div class="form-component schedules delivery-end-date-container hidden">
                 <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-end-date'>
                     <input class="mdc-text-field__input" type="date" data-name='Delivery Date end date'>
-                    <label class="mdc-floating-label">End Date</label>
+                    <label class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
+            
 
-                <div class="mdc-text-field " data-mdc-auto-init="MDCTextField" id='delivery-end-time'>
-                    <input class="mdc-text-field__input" type="time" value="12:00" data-name='Delivery Date end time'>
-                    <label class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
             </div>
-
-
-
+           
             <div class="product-select-container hidden">
                 <div class="form-component">
                     <div class="mdc-select" id='product'>
@@ -79,7 +61,7 @@
 
            
             <div class="form-component">
-                <input type="submit" value="Create Delivery" class="mdc-button submit-btn">
+                <input type="submit" value="SUBMIT" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
             </div>
     </form>
     </div>
@@ -93,25 +75,16 @@
         parent.window.mdc.autoInit();
 
         let listInit;
+        const formEl = document.getElementById('form');
+        const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
 
 
 
         function init(subscriptionTemplate) {
 
-            const formEl = document.getElementById('form');
-            const tomorrowDate = getTommorowDate()
-
       
+            initializeDates(subscriptionTemplate,createDate(new Date()))
 
-            const deliveryStartDate = new parent.mdc.textField.MDCTextField(document.getElementById(
-                'delivery-start-date'))
-            const deliveryEndDate = new parent.mdc.textField.MDCTextField(document.getElementById('delivery-end-date'))
-
-
-            deliveryStartDate.value = createDate(tomorrowDate)
-            initializeDates(subscriptionTemplate)
-
-            const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'))
             const product = new parent.mdc.select.MDCSelect(document.getElementById('product'))
 
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
@@ -152,11 +125,9 @@
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
              
                 copy.attachment['Customer'].value = customer.value
-
-
-                copy.schedule = getNewSchedule(subscriptionTemplate)
                 copy.share = []
-                console.log(copy);
+                if(!getNewSchedule(subscriptionTemplate)) return;
+                copy.schedule = getNewSchedule(subscriptionTemplate)
                 const requestArray = []
                 if(!listInit) {
                     parent.sendFormToParent(copy)
