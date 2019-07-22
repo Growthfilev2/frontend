@@ -84,7 +84,7 @@ function reportView() {
       document.querySelector('.incentives-section .content').innerHTML = `
       <ul class='mdc-list subscription-list'>
       ${subs.map(function(incentive,idx){
-      return `${incentive ? `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'>Create New ${incentive.template}
+      return `${incentive ? `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'> New ${incentive.template} ?
       <span class="mdc-list-item__meta material-icons mdc-theme--primary">
       keyboard_arrow_right
     </span>
