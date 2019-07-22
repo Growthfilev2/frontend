@@ -24,7 +24,7 @@ function getKnownLocationSubs() {
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
-      }
+      };
 
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {

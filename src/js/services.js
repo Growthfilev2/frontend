@@ -256,7 +256,6 @@ function requestCreator(requestType, requestBody) {
             };
 
             ApplicationState.location = geopoint;
-
             requestBody['timestamp'] = time
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
