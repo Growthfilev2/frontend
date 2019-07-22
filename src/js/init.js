@@ -622,7 +622,6 @@ function checkForRecipient() {
               message: verificationError.message,
               body: JSON.stringify(verificationError)
             })
-            openMap()
           })
         }).catch(function (error) {
           progCard.close();
@@ -635,7 +634,7 @@ function checkForRecipient() {
           }
 
           snacks(error.message)
-          openMap()
+          
         })
         return
       })
@@ -682,7 +681,6 @@ function checkForRecipient() {
             message: verificationError.message,
             body: JSON.stringify(verificationError)
           })
-          openMap()
         })
       })
       return;
@@ -1046,6 +1044,8 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
 function openMap() {
  console.log("start getting location")
   document.getElementById('start-load').classList.remove('hidden');
+
+  
   manageLocation().then(function (location) {
       document.getElementById('start-load').classList.add('hidden');
       mapView(location)
