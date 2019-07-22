@@ -32,7 +32,9 @@ function initializeDates(subscriptionTemplate, defaultDateString) {
         const endField = document.querySelector(`[data-name="${name} end date"]`);
         startfield.addEventListener('change',function(evt){
             endField.value = evt.target.value
+            endField.min = evt.target.value
         });
+        endField.min = evt.target.value
         startfield.value = endField.value = defaultDateString
     });
 }

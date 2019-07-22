@@ -19,13 +19,23 @@ function reportView() {
       Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
         const leaveSub = result[0]
         const arSub = result[1]
-        if (!leaveSub) {
-          document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>'
-          return
-        }
-        document.querySelector('.attendence-section .content').innerHTML = `${applyLeave()}`;
-        document.querySelector('.apply-leave').addEventListener('click', function () {
-          addView(leaveSub);
+    
+        document.querySelector('.attendence-section .content').innerHTML =  `<ul class='mdc-list subscription-list' id='attendance-list'>
+        ${result.map(function(sub,idx){
+       
+        return `${sub ? `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'> New ${sub.template} ?
+        <span class="mdc-list-item__meta material-icons mdc-theme--primary">
+        keyboard_arrow_right
+      </span>
+        
+        </li>` :''}`
+        }).join("")}
+        </ul>
+       `
+
+        const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
+        ul.listen('MDCList:action', function (evt) {
+          addView(subs[evt.detail.index])
         })
 
         // if (arSub) {
