@@ -16,38 +16,30 @@ function reportView() {
       
       </div>
       </div>`
-      Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
+      Promise.all([getSubscription(ApplicationState.office, 'leave')]).then(function (result) {
         const leaveSub = result[0]
-        const arSub = result[1]
-    
-        document.querySelector('.attendence-section .content').innerHTML =  `<ul class='mdc-list subscription-list' id='attendance-list'>
+        if (!leaveSub) {
+          document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>'
+          return
+        }
+        document.querySelector('.attendence-section .content').innerHTML = `<ul class='mdc-list subscription-list' id='attendance-list'>
         ${result.map(function(sub,idx){
        
-        return `${sub ? `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'> New ${sub.template} ?
+        return `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'> New ${sub.template} ?
         <span class="mdc-list-item__meta material-icons mdc-theme--primary">
         keyboard_arrow_right
       </span>
-        
-        </li>` :''}`
+      
+        </li>`
         }).join("")}
-        </ul>
-       `
+        </ul>`
 
-        const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
+        const ul = new mdc.list.MDCList(document.getElementById('attendance-list'))
         ul.listen('MDCList:action', function (evt) {
-          addView(subs[evt.detail.index])
+          addView(leaveSub)
         })
 
-        // if (arSub) {
-        //   document.querySelector('.attendence-section .content').innerHTML += `${applyAr()}`;
-        //   document.querySelector('.apply-ar').addEventListener('click', function () {
-        //     arSub.forDate = {
-        //       startTime:new Date(),
-        //       endTime:new Date()
-        //     }
-        //     addView(arSub);
-        //   })
-        // }
+
       }).catch(console.log)
       return
     }
@@ -62,11 +54,22 @@ function reportView() {
           document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
           return
         }
-        document.querySelector('.claims-section .content').innerHTML = `${emptyClaims()}`;
-        document.getElementById('apply-claim').addEventListener('click', function () {
-          addView(claimSubs);
-        })
 
+        document.querySelector('.claims-section .content').innerHTML =
+          `<ul class='mdc-list subscription-list' id='reim-list'>
+         <li class='mdc-list-item mdc-list-item--selected'> New Expense Claim ?
+        <span class="mdc-list-item__meta material-icons mdc-theme--primary">
+        keyboard_arrow_right
+      </span>
+      
+        </li>
+        
+        </ul>`
+
+        const ul = new mdc.list.MDCList(document.getElementById('reim-list'))
+        ul.listen('MDCList:action', function (evt) {
+          addView(claimSubs)
+        })
       })
       return;
     }
@@ -78,9 +81,9 @@ function reportView() {
 
     Promise.all(promiseArray).then(function (incentiveSubs) {
       console.log(incentiveSubs);
-      const subs = incentiveSubs.filter(function( element ) {
+      const subs = incentiveSubs.filter(function (element) {
         return element !== undefined;
-     });
+      });
 
       document.getElementById('app-current-panel').innerHTML = `<div class='incentives-section mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>

@@ -382,7 +382,10 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
-  if (history.state[0] === 'profileCheck') return;
+  if (history.state[0] === 'profileCheck')  {
+    profileCheck();
+    return;
+  };
   
   requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
@@ -453,7 +456,7 @@ function getSubscription(office, template) {
   })
 }
 
-function isEmailValid(email) {
+function emailReg(email) {
   const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailReg.test(String(email).toLowerCase())
 }
