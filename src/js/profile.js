@@ -1,7 +1,7 @@
 function profileView() {
 
 
-  const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
+  const lastSignInTime = moment(firebase.auth().currentUser.metadata.lastSignInTime).format("dddd, MMMM Do YYYY, h:mm:ss a");
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
