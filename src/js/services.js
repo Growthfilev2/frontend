@@ -242,6 +242,7 @@ function requestCreator(requestType, requestBody) {
     if (nonLocationRequest[requestType]) {
       requestGenerator.body = requestBody;
       apiHandler.postMessage(requestGenerator);
+      console.log("going request")
     } else {
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
@@ -249,7 +250,7 @@ function requestCreator(requestType, requestBody) {
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
-              renderMap(geopoint);
+              mapView(geopoint);
               return;
             };
 
@@ -258,10 +259,6 @@ function requestCreator(requestType, requestBody) {
             requestBody['timestamp'] = time
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
-            if (requestBody.template === 'check-in') {
-              ApplicationState.lastCheckInCreated = Date.now()
-              localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-            };
 
             apiHandler.postMessage(requestGenerator);
           }).catch(locationErrorDialog)
@@ -272,10 +269,6 @@ function requestCreator(requestType, requestBody) {
         requestGenerator.body = requestBody;
         requestBody['geopoint'] = ApplicationState.location;
 
-        if (requestBody.template === 'check-in') {
-          ApplicationState.lastCheckInCreated = Date.now()
-          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        };
         apiHandler.postMessage(requestGenerator);
       });
     }
@@ -285,6 +278,7 @@ function requestCreator(requestType, requestBody) {
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
       console.log(event)
+      console.log("request taken")
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
@@ -389,11 +383,12 @@ function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
-
+  
   requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
+    if(!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
-    renderMap(geopoint);
+    mapView(geopoint);
   })
 }
 

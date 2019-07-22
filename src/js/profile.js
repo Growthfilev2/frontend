@@ -1,7 +1,7 @@
 function profileView() {
 
 
-  const lastSignInTime = firebase.auth().currentUser.metadata.lastSignInTime;
+  const lastSignInTime = moment(firebase.auth().currentUser.metadata.lastSignInTime).format("dddd, MMMM Do YYYY, h:mm:ss a");
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
@@ -9,7 +9,6 @@ function profileView() {
   <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
   `
   const header = getHeader('app-header', backIcon, editIcon);
-
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -362,9 +361,7 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 
 }).join("")}
 
-<h1 class="mdc-typography--subtitle1 mt-0">
-    Joined : ${moment(firebase.auth().currentUser.metadata.creationTime).format("Do MMM YYYY")}
-</h1>
+
 
 <div id='reports'>
 
