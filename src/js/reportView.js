@@ -51,13 +51,13 @@ function reportView() {
       </div>`
       getSubscription(ApplicationState.office, 'expense claim').then(function (claimSubs) {
         if (!claimSubs) {
-          document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
+          document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For expense claim</h3>'
           return
         }
 
         document.querySelector('.claims-section .content').innerHTML =
           `<ul class='mdc-list subscription-list' id='reim-list'>
-         <li class='mdc-list-item mdc-list-item--selected'> New Expense Claim ?
+         <li class='mdc-list-item mdc-list-item--selected'> New expense claim ?
         <span class="mdc-list-item__meta material-icons mdc-theme--primary">
         keyboard_arrow_right
       </span>
