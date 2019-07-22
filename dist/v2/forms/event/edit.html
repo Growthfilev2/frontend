@@ -17,34 +17,17 @@
         <div class="form-list">
         
             <div class="form-component schedules">
-                <p class="mdc-typography--headline6 mb-0 mt-0">Event Date</label>
+                <p class="mdc-typography--body1 mdc-theme--primary mt-0 mb-0">Event Date</label>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
                         <input class=" mdc-text-field__input" type="date" data-name="Event Date">
-                        <label for="input" class="mdc-floating-label">Start Date</label>
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-time'>
-                        <input class=" mdc-text-field__input" type="time" data-name="Event Date start time"
-                            value="12:00">
-                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Event Date end date">
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
-                        onclick="showSecondDate(event,'end-date-container','Event Date')">Add End
-                        Date</label>
-            </div>
-            <div class="form-component end-date-container hidden schedules">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
-                    <input class=" mdc-text-field__input" type="date" data-name="Event Date end date">
-                    <label for="input" class="mdc-floating-label">End Date</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
-                    <input class=" mdc-text-field__input" type="time" data-name="Event Date end time"
-                        value="12:00">
-                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
             </div>
             <div class="form-component">
                     <div class="mdc-text-field   mdc-text-field--textarea" data-mdc-auto-init="MDCTextField" id='event-details'>
@@ -60,7 +43,7 @@
                  
                 </div>
             <div class="form-component">
-                <input type="submit" value="Create Event" class="mdc-button submit-btn">
+                <input type="submit" value="Submit" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
             </div>
         </div>
     </form>
@@ -70,23 +53,18 @@
 
         const eventDetail = new parent.mdc.textField.MDCTextField(document.getElementById('event-details'));
 
-        const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
-        const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
-
-        startDate.value = createDate(new Date())
-        endDate.value = createDate(new Date())
-
         var formEl = document.getElementById('form');
 
         function init(subscriptionTemplate) {
-            initializeDates(subscriptionTemplate)
+            initializeDates(subscriptionTemplate,createDate(new Date()))
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
                 copy.attachment['Event Details'].value = eventDetail.value
-                copy.schedule = getNewSchedule(subscriptionTemplate)
-
                 copy.share = []
+                const schedule = getNewSchedule(subscriptionTemplate);
+                if(!schedule) return
+                copy.schedule = schedule
                 parent.sendFormToParent(copy)
             })
         }

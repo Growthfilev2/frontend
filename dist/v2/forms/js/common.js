@@ -28,13 +28,12 @@ function startDateListen(event) {
     document.querySelector(`[data-name="${event.target.dataset.name} end date"]`).value = event.target.value
 }
 
-function initializeDates(subscriptionTemplate) {
+function initializeDates(subscriptionTemplate, defaultDateString) {
 
     subscriptionTemplate.schedule.forEach(function (name) {
-        const el = document.querySelector(`[data-name="${name}"]`)
-        el.addEventListener('change', startDateListen);
-
-        document.querySelector(`[data-name="${name} end date"]`).value = el.value
+        const startfield = document.querySelector(`[data-name="${name} start date"]`);
+        const endField = document.querySelector(`[data-name="${name} end date"]`);
+        startfield.value = endField.value = defaultDateString
 
     });
 }
@@ -42,22 +41,39 @@ function initializeDates(subscriptionTemplate) {
 
 function getNewSchedule(subscriptionTemplate) {
     const newSchedules = []
-    subscriptionTemplate.schedule.forEach(function (name) {
-        const startDate = document.querySelector(`[data-name="${name}"]`);
-        const startTime = document.querySelector(`[data-name="${name} start time"]`);
-        const endDate = document.querySelector(`[data-name="${name} end date"]`);
-        const endTime = document.querySelector(`[data-name="${name} end time"]`);
+    let index = 0;
+    let isScheduleValid = false;
+    const length = subscriptionTemplate.schedule.length;
+    for (index;index < length; index++) {
+        const name = subscriptionTemplate.schedule[index]
 
+        const startDate = document.querySelector(`[data-name="${name} start date"]`).value;
+        const endDate = document.querySelector(`[data-name="${name} end date"]`).value;
+        if (!startDate) {
+            parent.snacks(name + ' start date cannot be blank')
+            break;
+        }
+        if (!endDate) {
+            parent.snacks(name + ' end date cannot be blank')
+            break;
+        }
+        const startDate_UTS = Date.parse(startDate);
+        const endDate_UTS = Date.parse(endDate) 
+        if(startDate_UTS > endDate_UTS) {
+            parent.snacks('start date in ' + name +' cannot be greater than end date');
+            break;
+        }
+        isScheduleValid = true;
         newSchedules.push({
             name: name,
-            startTime: parent.moment(startDate.value + ' ' + startTime.value)
-                .valueOf(),
-            endTime: parent.moment(endDate.value + ' ' + endTime.value).valueOf(),
+            startTime: startDate_UTS,
+            endTime: endDate_UTS,
         })
+    }
+    if(isScheduleValid) return newSchedules;
 
-    })
-    return newSchedules;
-    
+    return ;
+
 }
 
 function getDropDownContent(office, template, indexName) {
@@ -75,9 +91,7 @@ function getDropDownContent(office, template, indexName) {
                 cursor.continue();
                 return;
             }
-            if(template === 'leave-type') {
-                result.data.push(cursor.value)
-            }
+
             result.string += ` <option value="${cursor.value.attachment.Name.value}">
                     ${cursor.value.attachment.Name.value}
                   </option>`

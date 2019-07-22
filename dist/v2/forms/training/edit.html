@@ -21,7 +21,7 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Select Customer</label>
+                    <label class="mdc-floating-label">Choose Customer</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
@@ -32,44 +32,27 @@
                     <select class="mdc-select__native-control">
                         <option value="" selected></option>
                     </select>
-                    <label class="mdc-floating-label">Select Products For Training</label>
+                    <label class="mdc-floating-label">Choose Product</label>
                     <div class="mdc-line-ripple"></div>
                 </div>
             </div>
 
             <div class="form-component schedules">
-                <p class="mdc-typography--headline6 mb-0 mt-0">Training Date</label>
+                <p class="mdc-typography--body1 mdc-theme--primary mt-0 mb-0">Training Date</label>
                     <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
-                        <input class=" mdc-text-field__input" type="date" data-name="Training Date">
-                        <label for="input" class="mdc-floating-label">Start Date</label>
+                        <input class=" mdc-text-field__input" type="date" data-name="Training Date start date">
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-time'>
-                        <input class=" mdc-text-field__input" type="time" data-name="Training Date start time"
-                            value="12:00">
-                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Time</label>
+                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Training Date end date">
+                        <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <p class="mdc-typography--body1 mdc-theme--primary  mb-0 text-center"
-                        onclick="showSecondDate(event,'end-date-container','Training Date')">Add End
-                        Date</label>
             </div>
-            <div class="form-component end-date-container hidden schedules">
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
-                    <input class=" mdc-text-field__input" type="date" data-name="Training Date end date">
-                    <label for="input" class="mdc-floating-label">End Date</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-time'>
-                    <input class=" mdc-text-field__input" type="time" data-name="Training Date end time"
-                        value="12:00">
-                    <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Time</label>
-                    <div class="mdc-line-ripple"></div>
-                </div>
-            </div>
-
+            
             <div class="form-component">
-                <input type="submit" value="Create Training" class="mdc-button submit-btn">
+                <input type="submit" value="SUBMIT" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
             </div>
         </div>
     </form>
@@ -80,16 +63,10 @@
         const customer = new parent.mdc.select.MDCSelect(document.getElementById('customer'));
         const product = new parent.mdc.select.MDCSelect(document.getElementById('product'));
 
-        const startDate = new parent.mdc.textField.MDCTextField(document.getElementById('start-date'));
-        const endDate = new parent.mdc.textField.MDCTextField(document.getElementById('end-date'));
-
-        startDate.value = createDate(new Date())
-        endDate.value = createDate(new Date())
-
         var formEl = document.getElementById('form');
 
         function init(subscriptionTemplate) {
-            initializeDates(subscriptionTemplate)
+            initializeDates(subscriptionTemplate,createDate(new Date()))
             getDropDownContent(subscriptionTemplate.office, 'customer', 'officeTemplate').then(function (result) {
                 if (!result.string) return;
                 customer.nativeControl_.innerHTML += result.string;
@@ -109,8 +86,10 @@
 
                 copy.attachment['Customer'].value = customer.value;
                 copy.attachment['Products For Training'].value = product.value;
-                copy.schedule = getNewSchedule(subscriptionTemplate)
                 copy.share = []
+                const newSchedule = getNewSchedule(subscriptionTemplate);
+                if(!newSchedule) return;
+                copy.schedule = newSchedule
                 parent.sendFormToParent(copy)
             })
         }
