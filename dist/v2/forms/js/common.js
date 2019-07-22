@@ -24,17 +24,16 @@ function showSecondDate(event, className, dataName) {
     document.querySelector(`[data-name="${dataName}"]`).removeEventListener('change', startDateListen)
 }
 
-function startDateListen(event) {
-    document.querySelector(`[data-name="${event.target.dataset.name} end date"]`).value = event.target.value
-}
 
 function initializeDates(subscriptionTemplate, defaultDateString) {
-
     subscriptionTemplate.schedule.forEach(function (name) {
         const startfield = document.querySelector(`[data-name="${name} start date"]`);
         const endField = document.querySelector(`[data-name="${name} end date"]`);
-        startfield.value = endField.value = defaultDateString
-
+        startfield.addEventListener('change',function(evt){
+            endField.value = evt.target.value
+            endField.min = evt.target.value
+        });
+        startfield.value = endField.value = endField.min =  defaultDateString
     });
 }
 

@@ -102,7 +102,14 @@ Choose Image
 
     if (newEmail !== auth.email) {
       if (!newEmail) {
+        snacks('Please Enter An Email Address')
+        progressBar.foundation_.close();
+        return;
+        
+      }
+      if(!emailReg(newEmail))  {
         snacks('Please Enter A Valid Email Address')
+        progressBar.foundation_.close();
         return;
       }
       auth.updateEmail(newEmail).then(function () {

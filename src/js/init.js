@@ -210,7 +210,7 @@ function firebaseUiConfig() {
 
 function userSignedOut() {
 
-  var ui = new firebaseui.auth.AuthUI(firebase.auth())
+  var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());
   ui.start(document.getElementById('login-container'), firebaseUiConfig());
 }
 
@@ -601,11 +601,13 @@ function checkForRecipient() {
           emailInit.focus();
           return
         };
-   
+        if (!emailReg(emailInit.value)) {
+          snacks('Please Enter A Valid Email Address')
+          progCard.close();
+          return;
+        }
         progCard.open();
-
         auth.updateEmail(emailInit.value).then(function () {
-
           auth.sendEmailVerification().then(function () {
             snacks('Verification Link has been Sent')
             progCard.close();
@@ -1040,7 +1042,7 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
 function openMap() {
   console.log("start getting location")
   const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-  if(!oldApplicationState)  {
+  if (!oldApplicationState) {
     document.getElementById('start-load').classList.remove('hidden');
     manageLocation().then(function (location) {
       document.getElementById('start-load').classList.add('hidden');
@@ -1054,6 +1056,21 @@ function openMap() {
       })
     })
     return
+  }
+  if (!oldApplicationState.lastCheckInCreated) {
+    document.getElementById('start-load').classList.remove('hidden');
+    manageLocation().then(function (location) {
+      document.getElementById('start-load').classList.add('hidden');
+      mapView(location)
+    }).catch(function (error) {
+      document.getElementById('start-load').classList.add('hidden');
+      mapView()
+      handleError({
+        message: error.message,
+        body: JSON.stringify(error.stack)
+      })
+    })
+    return;
   }
   if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
     document.getElementById('start-load').classList.remove('hidden');
