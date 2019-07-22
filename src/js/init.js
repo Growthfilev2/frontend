@@ -369,8 +369,9 @@ function startApp() {
         history.pushState(['profileCheck'], null, null)
         profileCheck();
         requestCreator('Null').then(console.log).catch(console.log)
+        console.log("D")
       })
-      
+
     }).catch(function (error) {
       if (error.response.apiRejection) {
         snacks(error.response.message, 'Retry')
@@ -574,6 +575,7 @@ function updateEmailButton() {
 function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+    console.log("openMap")
     if (auth.email && auth.emailVerified) return openMap();
 
     const reportList = getReportNameString(result);
@@ -594,20 +596,20 @@ function checkForRecipient() {
       const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
       const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
       addEmail.addEventListener('click', function (evt) {
-       const helperText = new MDCTextFieldHelperText(document.querySelector('.mdc-text-field-helper-text'));
+        const helperText = new MDCTextFieldHelperText(document.querySelector('.mdc-text-field-helper-text'));
         console.log(helperText)
         if (!emailInit.value) {
-            
+
           emailInit.focus();
           return
         };
-        if(!isEmailValid(emailInit.value)){
+        if (!isEmailValid(emailInit.value)) {
           emailInit.focus();
-          
+
           return;
-          
+
         }
-        
+
         progCard.open();
 
         auth.updateEmail(emailInit.value).then(function () {
@@ -634,7 +636,7 @@ function checkForRecipient() {
           }
 
           snacks(error.message)
-          
+
         })
         return
       })
@@ -1041,14 +1043,40 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function openMap() {
- console.log("start getting location")
-  document.getElementById('start-load').classList.remove('hidden');
+function startMap() {
+  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
+  if (!oldApplicationState) return true
 
-  
+  if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) return true
+
+  if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
+    ApplicationState.office = oldApplicationState.office;
+    ApplicationState.venue = oldApplicationState.venue
+    if (oldApplicationState.venue) {
+      ApplicationState.knownLocation = true
+    }
+    return;
+  }
+
+  return true
+}
+
+
+
+function openMap() {
+  console.log("start getting location")
+
+  if (!startMap()) {
+    document.getElementById('start-load').classList.add('hidden');
+    getSuggestions()
+    return;
+  };
+
+  document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
+    document.getElementById('start-load').classList.add('hidden');
+
+    mapView(location)
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');
     mapView()

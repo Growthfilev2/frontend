@@ -9,7 +9,6 @@ function profileView() {
   <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
   `
   const header = getHeader('app-header', backIcon, editIcon);
-
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   

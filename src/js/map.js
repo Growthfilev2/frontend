@@ -36,40 +36,10 @@ function mapView(location) {
   }
 
   ApplicationState.location = location
-  
-  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-  if(!oldApplicationState) return renderMap(location);
-
-  if(isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated,300))  return renderMap(location)
-
-  if(!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated,60)) {
-    ApplicationState.office = oldApplicationState.office;
-    ApplicationState.venue = oldApplicationState.venue
-    if(oldApplicationState.venue) {
-      ApplicationState.knownLocation = true
-    }
-    return getSuggestions()
-  }
-  
-  if(!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location,location))) {
-    ApplicationState.office = oldApplicationState.office;
-    ApplicationState.venue = oldApplicationState.venue
-    if(oldApplicationState.venue) {
-      ApplicationState.knownLocation = true
-    }
-    return getSuggestions()
-  }
-  renderMap(location);
-}
-
-function renderMap(location) {
-
-  localStorage.setItem('currentLocation', JSON.stringify(location));
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
   panel.innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
-
   console.log("auth relaoderd")
   document.getElementById('start-load').classList.add('hidden');
 
@@ -132,7 +102,10 @@ function renderMap(location) {
     })
   });
 
+
+
 }
+
 
 
 function loadCardData(markers) {
@@ -171,9 +144,9 @@ function loadCardData(markers) {
       ApplicationState.venue = '';
       ApplicationState.office = '';
       getUniqueOfficeCount().then(function (offices) {
-        
+
         if (!offices.length) {
-          localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
           showNoOfficeFound();
           return;
         };
@@ -185,18 +158,18 @@ function loadCardData(markers) {
         selectOfficeInit.listen('MDCSelect:change', function (evt) {
           if (!evt.detail.value) return;
           ApplicationState.office = evt.detail.value;
-          
+
           getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-           
-  
-            if (!checkInSub){
-              localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+
+
+            if (!checkInSub) {
+              localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
 
               return getSuggestions()
-            } 
+            }
 
             cardProd.open();
-            
+
             const checkInRequestBody = setVenueForCheckIn('', checkInSub);
             requestCreator('create', checkInRequestBody).then(function () {
               cardProd.close()
@@ -224,7 +197,7 @@ function loadCardData(markers) {
     getSubscription(value.office, 'check-in').then(function (result) {
 
       if (!result) {
-        localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState))
+        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
         return getSuggestions()
       }
 
@@ -354,12 +327,10 @@ function mapDom() {
                 </div>
               </aside>
             </div>
-
   `
 }
 
 function snapView() {
-  // localStorage.setItem('snap_office', office)
   history.pushState(['snapView'], null, null)
   if (native.getName() === "Android") {
     AndroidInterface.startCamera("setFilePath");
