@@ -152,7 +152,7 @@ function homePanel(suggestionLength) {
 function homeHeaderStartContent(){
   return `
   <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
-  <span class="header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unkown Location'}</span>
+  <span class="header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unknown Location'}</span>
 `
 }
 
