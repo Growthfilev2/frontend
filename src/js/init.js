@@ -576,11 +576,11 @@ function checkForRecipient() {
   const auth = firebase.auth().currentUser;
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
     console.log("openMap")
-    // if (auth.email && auth.emailVerified) return openMap();
+    if (auth.email && auth.emailVerified) return openMap();
 
     const reportList = getReportNameString(result);
 
-    if (auth.email) {
+    if (!auth.email) {
 
       document.getElementById('app-current-panel').innerHTML = miniProfileCard(updateEmailDom(reportList, result.length), '<span class="mdc-top-app-bar__title">Add Email</span>', updateEmailButton())
       const addEmail = document.getElementById('addEmail');
