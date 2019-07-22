@@ -174,6 +174,8 @@ function loadCardData(markers) {
             requestCreator('create', checkInRequestBody).then(function () {
               cardProd.close()
               successDialog('Check-In Created')
+              ApplicationState.lastCheckInCreated = Date.now()
+              localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
               getSuggestions()
             }).catch(function (error) {
               snacks(error.response.message);
@@ -215,6 +217,8 @@ function loadCardData(markers) {
 
           successDialog('Check-In Created')
           cardProd.close();
+          ApplicationState.lastCheckInCreated = Date.now()
+          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
           getSuggestions();
         }).catch(function (error) {
           console.log(error)

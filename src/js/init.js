@@ -1043,39 +1043,58 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
-function startMap() {
-  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-  if (!oldApplicationState) return true
-
-  if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) return true
-
-  if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
-    ApplicationState.office = oldApplicationState.office;
-    ApplicationState.venue = oldApplicationState.venue
-    if (oldApplicationState.venue) {
-      ApplicationState.knownLocation = true
-    }
-    return;
-  }
-
-  return true
-}
-
 
 
 function openMap() {
   console.log("start getting location")
+  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
+  if(!oldApplicationState)  {
+    document.getElementById('start-load').classList.remove('hidden');
+    manageLocation().then(function (location) {
+      document.getElementById('start-load').classList.add('hidden');
+      mapView(location)
+    }).catch(function (error) {
+      document.getElementById('start-load').classList.add('hidden');
+      mapView()
+      handleError({
+        message: error.message,
+        body: JSON.stringify(error.stack)
+      })
+    })
+    return
+  }
+  if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
+    document.getElementById('start-load').classList.remove('hidden');
+    manageLocation().then(function (location) {
+      document.getElementById('start-load').classList.add('hidden');
+      mapView(location)
+    }).catch(function (error) {
+      document.getElementById('start-load').classList.add('hidden');
+      mapView()
+      handleError({
+        message: error.message,
+        body: JSON.stringify(error.stack)
+      })
+    })
+    return;
+  }
 
-  if (!startMap()) {
+  if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
     document.getElementById('start-load').classList.add('hidden');
+    ApplicationState = oldApplicationState
+    console.log(ApplicationState)
     getSuggestions()
     return;
-  };
+  }
+
 
   document.getElementById('start-load').classList.remove('hidden');
   manageLocation().then(function (location) {
     document.getElementById('start-load').classList.add('hidden');
-
+    if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
+      ApplicationState = oldApplicationState
+      return getSuggestions()
+    }
     mapView(location)
   }).catch(function (error) {
     document.getElementById('start-load').classList.add('hidden');

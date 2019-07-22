@@ -260,10 +260,6 @@ function requestCreator(requestType, requestBody) {
             requestBody['timestamp'] = time
             requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
-            if (requestBody.template === 'check-in') {
-              ApplicationState.lastCheckInCreated = Date.now()
-              localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-            };
 
             apiHandler.postMessage(requestGenerator);
           }).catch(locationErrorDialog)
@@ -274,10 +270,6 @@ function requestCreator(requestType, requestBody) {
         requestGenerator.body = requestBody;
         requestBody['geopoint'] = ApplicationState.location;
 
-        if (requestBody.template === 'check-in') {
-          ApplicationState.lastCheckInCreated = Date.now()
-          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        };
         apiHandler.postMessage(requestGenerator);
       });
     }
@@ -395,6 +387,7 @@ function backgroundTransition() {
   
   requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
+    if(!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
   })
