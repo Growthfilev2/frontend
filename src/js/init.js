@@ -599,17 +599,10 @@ function checkForRecipient() {
         const helperText = new MDCTextFieldHelperText(document.querySelector('.mdc-text-field-helper-text'));
         console.log(helperText)
         if (!emailInit.value) {
-
           emailInit.focus();
           return
         };
-        if (!isEmailValid(emailInit.value)) {
-          emailInit.focus();
-
-          return;
-
-        }
-
+   
         progCard.open();
 
         auth.updateEmail(emailInit.value).then(function () {
