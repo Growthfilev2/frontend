@@ -362,9 +362,7 @@ ${Object.keys(user.attachment).map(function(attachmentNames){
 
 }).join("")}
 
-<h1 class="mdc-typography--subtitle1 mt-0">
-    Joined : ${moment(firebase.auth().currentUser.metadata.creationTime).format("Do MMM YYYY")}
-</h1>
+
 
 <div id='reports'>
 
