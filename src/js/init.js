@@ -51,9 +51,10 @@ let native = function () {
       if (!this.getName()) return false;
 
       if (this.getName() === 'Android') {
-        deviceInfo = getAndroidDeviceInformation();
-        localStorage.setItem('deviceInfo', deviceInfo);
-        return deviceInfo
+        if(!localStorage.getItem('deviceInfo')) {
+          localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
+        }
+        return JSON.parse(localStorage.getItem('deviceInfo'))
       }
       return this.getIosInfo();
     }
