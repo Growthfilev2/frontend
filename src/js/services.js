@@ -382,14 +382,11 @@ function handleComponentUpdation(readResponse) {
 function backgroundTransition() {
   if (!firebase.auth().currentUser) return
   if (!history.state) return;
-  if (history.state[0] === 'profileCheck')  {
-    profileCheck();
-    return;
-  };
-  
+  if (history.state[0] === 'profileCheck') return;
+
   requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
-    if(!ApplicationState.location) return;
+    if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
     mapView(geopoint);
   })
