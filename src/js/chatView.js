@@ -1112,7 +1112,10 @@ function getHumanDateString(date){
 }
 
 function dateBox(dateString){
-return `<div class="message date" data-chat-date='${dateString}'>${dateString}</div>`
+return `<div class='date-box'>
+<div class="date" data-chat-date='${dateString}'>${dateString}</div>
+</div>`
+
    
 }
 

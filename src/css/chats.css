@@ -303,7 +303,19 @@ html {
   right: -10px;
 }
 
-.message.date {
+.date-box {
+
+  clear: both;
+  font-size: 15px;
+  padding: 15px;
+  position: relative;
+}
+
+.date-box .date {
+  margin: 0px 0;
+  max-width: 85%;
+  word-wrap: break-word;
+  text-decoration: none;
   background-color: rgba(225, 245, 254, .92);
   border-radius: 7.5px;
   box-shadow: 0 1px 0.5px rgba(0, 0, 0, .13);
