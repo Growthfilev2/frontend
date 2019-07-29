@@ -100,25 +100,6 @@ window.addEventListener("load", function () {
   })
   console.log(topBar);
 
-  moment.updateLocale('en', {
-    calendar: {
-      lastDay: '[yesterday]',
-      sameDay: 'hh:mm',
-      nextDay: '[Tomorrow at] LT',
-      lastWeek: 'dddd',
-      nextWeek: 'dddd [at] LT',
-      sameElse: 'L'
-    },
-    longDateFormat: {
-      LT: "h:mm A",
-      LTS: "h:mm:ss A",
-      L: "DD/MM/YY",
-    },
-    months: [
-      'January', 'February', 'March', 'April', 'May', 'June', 'July',
-      'August', 'September', 'October', 'November', 'December'
-    ]
-  })
 
   if (!window.Worker && !window.indexedDB) {
     const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
@@ -219,7 +200,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 5);
+  const req = window.indexedDB.open(dbName, 6);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -300,6 +281,10 @@ function startApp() {
           cursor.continue();
         };
 
+      }
+      if(evt.oldVersion <= 5) {
+        const subscriptionStore = tx.objectStore('subscriptions');
+        subscriptionStore.createIndex('templateStatus',['template','status'])
       }
       tx.oncomplete = function () {
         console.log("completed all backlog");
@@ -838,7 +823,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
   subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
-
+  subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
   const calendar = db.createObjectStore('calendar', {
@@ -944,30 +929,13 @@ function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     let offices = [];
 
-    const tx = db.transaction(['children', 'subscriptions']);
+    const tx = db.transaction('children');
     const childrenStore = tx.objectStore('children').index('employees');
-    const subscriptionStore = tx.objectStore('subscriptions');
 
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-        if (offices.length) return
-        subscriptionStore.openCursor().onsuccess = function (subscriptionStoreEvnet) {
-          const subscriptionsCursor = subscriptionStoreEvnet.target.result;
-          if (!subscriptionsCursor) return
-          if (subscriptionsCursor.value.status === 'CANCELLED') {
-            subscriptionsCursor.continue();
-            return
-          };
-          if (offices.indexOf(subscriptionsCursor.value.office) > -1) {
-            subscriptionsCursor.continue();
-            return;
-          }
-          offices.push(subscriptionsCursor.value.office)
-          subscriptionsCursor.continue();
-        }
-        return
-      };
+      if (!cursor) return;
+
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;

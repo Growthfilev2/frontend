@@ -1,11 +1,13 @@
 function getSuggestions() {
+
   if (ApplicationState.knownLocation) {
     getKnownLocationSubs().then(homeView);
     return;
   }
-  if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
+  // if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
 
   return getSubsWithVenue().then(homeView)
+
 }
 
 function getKnownLocationSubs() {
@@ -28,7 +30,7 @@ function getKnownLocationSubs() {
 
       Object.keys(cursor.value.attachment).forEach(function (attachmentName) {
         if (cursor.value.attachment[attachmentName].type === venue.template) {
-           result.push(cursor.value)
+          result.push(cursor.value)
 
         }
       })
@@ -57,22 +59,22 @@ function getPendingLocationActivities() {
         cursor.continue();
         return;
       }
-      
+
       let match;
- 
+
       if (!match) {
         cursor.continue();
         return;
       }
       let found = false
       match.schedule.forEach(function (sn) {
-        if(!sn.startTime && !sn.endTime)  return;
+        if (!sn.startTime && !sn.endTime) return;
         if (moment(moment().format('DD-MM-YY')).isBetween(moment(sn.startTime).format('DD-MM-YY'), moment(sn.endTime).format('DD-MM-YY'), null, '[]')) {
           sn.isValid = true
           found = true
         }
       })
-     
+
       if (found) {
         result.push(match);
       }
@@ -149,7 +151,7 @@ function homePanel(suggestionLength) {
 </div>`
 }
 
-function homeHeaderStartContent(){
+function homeHeaderStartContent() {
   return `
   <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
   <span class="header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unknown Location'}</span>
@@ -158,7 +160,7 @@ function homeHeaderStartContent(){
 
 function homeView(suggestedTemplates) {
   progressBar.close();
- 
+
   const actionItems = ` 
   <a  class="mdc-top-app-bar__action-item pt-0" aria-label="Chat" id='chat'>
   <div class="action" style='display:inline-flex;align-items:center' id='chat-container'>
@@ -170,40 +172,41 @@ function homeView(suggestedTemplates) {
 </div>
   </a>
   <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Add a photo" id='camera'>add_a_photo</a>`
-  
+
   const header = getHeader('app-header', homeHeaderStartContent(), actionItems);
   header.root_.classList.remove('hidden')
-  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust',"mdc-layout-grid",'pl-0','pr-0')
+  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
 
   history.pushState(['homeView'], null, null)
   header.listen('MDCTopAppBar:nav', handleNav);
-  
+
 
   const panel = document.getElementById('app-current-panel')
   const suggestionLength = suggestedTemplates.length
   panel.innerHTML = homePanel(suggestionLength);
-  db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function(event){
-    const rootRecord = event.target.result;
-    if(!rootRecord)  return;
 
-    if(rootRecord.totalCount) {
+  db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+    const rootRecord = event.target.result;
+    if (!rootRecord) return;
+
+    if (rootRecord.totalCount) {
       document.getElementById('total-count').classList.remove('hidden')
       document.getElementById('total-count').textContent = rootRecord.totalCount
     }
   }
-  if(document.getElementById('camera')) {
+  if (document.getElementById('camera')) {
 
     document.getElementById('camera').addEventListener('click', function () {
       history.pushState(['snapView'], null, null)
       snapView()
     })
-  } 
+  }
   document.getElementById('chat-container').addEventListener('click', function () {
     history.pushState(['chatView'], null, null);
     chatView()
-    const tx =  db.transaction('root','readwrite');
-    const store =  tx.objectStore('root')
-     store.get(firebase.auth().currentUser.uid).onsuccess = function(event){
+    const tx = db.transaction('root', 'readwrite');
+    const store = tx.objectStore('root')
+    store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
       const rootRecord = event.target.result;
       rootRecord.totalCount = 0;
       store.put(rootRecord)
@@ -214,14 +217,18 @@ function homeView(suggestedTemplates) {
     profileView()
   })
 
-  document.getElementById('reports').addEventListener('click',function(){
-    history.pushState(['reportView'],null,null)
+  document.getElementById('reports').addEventListener('click', function () {
+    history.pushState(['reportView'], null, null)
     reportView();
   })
-  
-  if(!suggestedTemplates.length) return;
 
-  document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
+  if (!suggestedTemplates.length) return;
+  if (ApplicationState.office) {
+    document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
+  } else {
+
+  }
+
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   suggestedInit.singleSelection = true;
   suggestedInit.selectedIndex = 0;
@@ -264,12 +271,13 @@ function pendinglist(activities) {
 function templateList(suggestedTemplates) {
   return `<ul class="mdc-list subscription-list" id='suggested-list'>
   ${suggestedTemplates.map(function(sub){
-  return `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}'>
-      New ${sub.template}  ?
-    <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
-      keyboard_arrow_right
-    </span>
-  </li>`
+    const office  = sub.office;
+    `${document.querySelector(`[data-template="${office}"]`) ? '': `<li class='mdc-list-item' data-value='${JSON.stringify(sub)}' data-office='${sub.office}' data-template='${sub.template}'>
+    New ${sub.template}  ?
+  <span class='mdc-list-item__meta material-icons mdc-theme--primary'>
+    keyboard_arrow_right
+  </span>
+</li>`}`
   }).join("")}
 </ul>`
 }

@@ -36,11 +36,63 @@ function mapView(location) {
   }
 
   ApplicationState.location = location
+  getUniqueOfficeCount().then(function (offices) {
+    ApplicationState.offices = offices;
+    // if (offices.length) return renderMap(location)
+
+    const tx = db.transaction(['activity', 'subscriptions'])
+    const activityStoreCountReq = tx.objectStore('activity').count()
+    const subscriptionStoreCountReq = tx.objectStore('subscriptions').count()
+    let activityStoreSize;
+    let subscriptionStoreSize;
+
+    activityStoreCountReq.onsuccess = function () {
+      activityStoreSize = activityStoreCountReq.result;
+    }
+    subscriptionStoreCountReq.onsuccess = function () {
+      subscriptionStoreSize = subscriptionStoreCountReq.result;
+    }
+    const checkInSubs = []
+    tx.oncomplete = function () {
+      if (!activityStoreSize && !subscriptionStoreSize) return showNoOfficeFound();
+      db.transaction('subscriptions').
+      objectStore('subscriptions').
+      index('templateStatus').
+      openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'],['check-in', 'PENDING']))
+        .onsuccess = function (event) {
+          const cursor = event.target.result;
+          if (!cursor) {
+            if (!checkInSubs.length) return getSuggestions();
+            document.getElementById('start-load').classList.remove('hidden');
+            const prom = []
+            checkInSubs.forEach(function (item) {
+              prom.push(requestCreator('create', setVenueForCheckIn('', item)))
+            })
+
+            Promise.all(prom).then(function () {
+              document.getElementById('start-load').classList.add('hidden');
+              successDialog('Check-in Created');
+              ApplicationState.lastCheckInCreated = Date.now()
+              localStorage.setItem('ApplicationState',JSON.stringify(ApplicationState));
+              getSuggestions();
+            }).catch(function (error) {
+              document.getElementById('start-load').classList.add('hidden');
+              console.log(error);
+            })
+            return
+          };
+          checkInSubs.push(cursor.value)
+          cursor.continue();
+        }
+    }
+  })
+}
+
+function renderMap(location) {
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
   panel.innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
-  console.log("auth relaoderd")
   document.getElementById('start-load').classList.add('hidden');
 
   const latLng = {
@@ -51,26 +103,21 @@ function mapView(location) {
   const offsetBounds = new GetOffsetBounds(location, 0.5);
 
 
-  o = {
+  const o = {
     north: offsetBounds.north(),
     south: offsetBounds.south(),
     east: offsetBounds.east(),
     west: offsetBounds.west()
   };
   if (!document.getElementById('map')) return;
-  map = new google.maps.Map(document.getElementById('map'), {
+  const map = new google.maps.Map(document.getElementById('map'), {
     center: latLng,
     zoom: 18,
     // maxZoom:18,
     disableDefaultUI: true,
 
     restriction: {
-      latLngBounds: {
-        north: offsetBounds.north(),
-        south: offsetBounds.south(),
-        east: offsetBounds.east(),
-        west: offsetBounds.west()
-      },
+      latLngBounds: o,
       strictBounds: true,
 
     },
@@ -101,9 +148,6 @@ function mapView(location) {
       loadCardData(markers)
     })
   });
-
-
-
 }
 
 
@@ -160,8 +204,6 @@ function loadCardData(markers) {
           ApplicationState.office = evt.detail.value;
 
           getSubscription(evt.detail.value, 'check-in').then(function (checkInSub) {
-
-
             if (!checkInSub) {
               localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState))
 

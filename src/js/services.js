@@ -92,7 +92,6 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      // resolve({latitude:28.123,longitude:77.123,lastLocationTime:Date.now()})
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
@@ -293,7 +292,6 @@ function requestCreator(requestType, requestBody) {
 
 
 function locationErrorDialog(error) {
-
   const dialog = new Dialog('Location Error', 'There was a problem in detecting your location. Please try again later').create();
   dialog.open();
   dialog.listen('MDCDialog:closed', function (evt) {
@@ -423,14 +421,18 @@ function getRootRecord() {
   })
 }
 
+
+
+
 function getSubscription(office, template) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['subscriptions']);
     const subscription = tx.objectStore('subscriptions')
-    const officeTemplateCombo = subscription.index('validSubscription')
-
+    let index = subscription.index('validSubscription')
+    
+    
     const range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
-    officeTemplateCombo.getAll(range).onsuccess = function (event) {
+    index.getAll(range).onsuccess = function (event) {
       result = event.target.result;
       console.log(result);
 
