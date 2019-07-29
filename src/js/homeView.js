@@ -4,7 +4,6 @@ function getSuggestions() {
     getKnownLocationSubs().then(homeView);
     return;
   }
-  // if (!ApplicationState.office) return getAllSubscriptions().then(homeView);
 
   return getSubsWithVenue().then(homeView)
 
@@ -100,9 +99,11 @@ function getSubsWithVenue() {
         cursor.continue();
         return;
       }
-      if (cursor.value.office !== office) {
-        cursor.continue();
-        return;
+      if(office) {
+        if (cursor.value.office !== office) {
+          cursor.continue();
+          return;
+        }
       }
 
       if (cursor.value.status === 'CANCELLED') {

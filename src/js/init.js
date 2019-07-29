@@ -51,7 +51,7 @@ let native = function () {
       if (!this.getName()) return false;
 
       if (this.getName() === 'Android') {
-        if(!localStorage.getItem('deviceInfo')) {
+        if (!localStorage.getItem('deviceInfo')) {
           localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
         }
         return JSON.parse(localStorage.getItem('deviceInfo'))
@@ -282,9 +282,9 @@ function startApp() {
         };
 
       }
-      if(evt.oldVersion <= 5) {
+      if (evt.oldVersion <= 5) {
         const subscriptionStore = tx.objectStore('subscriptions');
-        subscriptionStore.createIndex('templateStatus',['template','status'])
+        subscriptionStore.createIndex('templateStatus', ['template', 'status'])
       }
       tx.oncomplete = function () {
         console.log("completed all backlog");
@@ -1006,80 +1006,96 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
+function hasDataInDB() {
+  return new Promise(function (resolve) {
+    const tx = db.transaction(['activity', 'subscriptions'])
+    const activityStoreCountReq = tx.objectStore('activity').count()
+    const subscriptionStoreCountReq = tx.objectStore('subscriptions').count()
+    let activityStoreSize;
+    let subscriptionStoreSize;
+
+    activityStoreCountReq.onsuccess = function () {
+      activityStoreSize = activityStoreCountReq.result;
+    }
+    subscriptionStoreCountReq.onsuccess = function () {
+      subscriptionStoreSize = subscriptionStoreCountReq.result;
+    }
+    tx.oncomplete = function () {
+      if (!activityStoreSize && !subscriptionStoreSize) return resolve(false)
+      return resolve(true)
+    }
+  })
+}
+
 
 
 function openMap() {
-  console.log("start getting location")
-  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-  if (!oldApplicationState) {
-    document.getElementById('start-load').classList.remove('hidden');
-    manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
-    }).catch(function (error) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView()
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error.stack)
-      })
-    })
-    return
-  }
-  if (!oldApplicationState.lastCheckInCreated) {
-    document.getElementById('start-load').classList.remove('hidden');
-    manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
-    }).catch(function (error) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView()
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error.stack)
-      })
-    })
-    return;
-  }
-  if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-    document.getElementById('start-load').classList.remove('hidden');
-    manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
-    }).catch(function (error) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView()
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error.stack)
-      })
-    })
-    return;
-  }
-
-  if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
-    document.getElementById('start-load').classList.add('hidden');
-    ApplicationState = oldApplicationState
-    console.log(ApplicationState)
-    getSuggestions()
-    return;
-  }
-
-
   document.getElementById('start-load').classList.remove('hidden');
-  manageLocation().then(function (location) {
-    document.getElementById('start-load').classList.add('hidden');
-    if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
-      ApplicationState = oldApplicationState
-      return getSuggestions()
+  hasDataInDB().then(function (data) {
+
+    if (!data) return showNoOfficeFound();
+    const tx = db.transaction('subscriptions');
+    const checkInSubs = {};
+    tx.objectStore('subscriptions').index('templateStatus')
+      .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
+      .onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (checkInSubs[cursor.value.office]) {
+          if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+            checkInSubs[cursor.value.office] = cursor.value;
+          }
+        } else {
+          checkInSubs[cursor.value.office] = cursor.value
+        }
+        cursor.continue();
+      }
+    tx.oncomplete = function () {
+      console.log(checkInSubs);
+      if (!Object.keys(checkInSubs).length) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          ApplicationState.location = location;
+          getSuggestions()
+        }).catch(showNoLocationFound)
+        return
+      }
+      ApplicationState.officeWithCheckInSubs = checkInSubs
+
+      const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
+
+      if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          mapView(location)
+        }).catch(showNoLocationFound)
+        return
+      }
+
+      if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          mapView(location)
+        }).catch(showNoLocationFound)
+        return;
+      }
+
+      if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
+        document.getElementById('start-load').classList.add('hidden');
+        ApplicationState = oldApplicationState
+        console.log(ApplicationState)
+        getSuggestions()
+        return;
+      }
+
+      manageLocation().then(function (location) {
+        document.getElementById('start-load').classList.add('hidden');
+        if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
+          ApplicationState = oldApplicationState
+          return getSuggestions()
+        }
+        mapView(location)
+      }).catch(showNoLocationFound)
     }
-    mapView(location)
-  }).catch(function (error) {
-    document.getElementById('start-load').classList.add('hidden');
-    mapView()
-    handleError({
-      message: error.message,
-      body: JSON.stringify(error.stack)
-    })
   })
 }

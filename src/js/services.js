@@ -145,8 +145,8 @@ function html5Geolocation() {
         message: error.message
       })
     }, {
-      maximumAge: 0,
-      timeout: 5000,
+      maximumAge: 1000,
+      timeout: 8000,
       enableHighAccuracy: false
     })
   })
