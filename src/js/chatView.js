@@ -1113,7 +1113,7 @@ function getHumanDateString(date){
 
 function dateBox(timestamp){
 
-    return moment(timestamp).calendar();
+   
 }
 
 
@@ -1140,7 +1140,10 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         };
-        console.log(getHumanDateString(moment(cursor.value.timestamp)))
+        const dateName = getHumanDateString(moment(cursor.value.timestamp))
+        if(!document.querySelector(`[chat-date="${dateName}"]`)) {
+            timeLine += dateBox(dateName)
+        }
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp)
         } else {
