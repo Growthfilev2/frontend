@@ -212,7 +212,9 @@ html {
 
 }
 
-.message:after {
+
+
+.message:after:not(.date) {
   position: absolute;
   content: "";
   width: 0;
@@ -292,15 +294,25 @@ html {
   color: white;
 }
 
-.message.menu-action {
-  /* z-index: 3; */
-}
+
 
 .message.me:after {
   border-width: 0px 0 10px 10px;
   border-color: transparent transparent transparent #bd5668;
   top: 0;
   right: -10px;
+}
+
+.message.date {
+  background-color: rgba(225, 245, 254, .92);
+  border-radius: 7.5px;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, .13);
+  padding: 5px 12px 6px;
+  text-align: center;
+  text-shadow: 0 1px 0 hsla(0, 0%, 100%, .4);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Compose */
@@ -486,7 +498,7 @@ html {
 #view-form .mdc-dialog__content {
   padding-left: 0px;
   padding-right: 0px;
- 
+
 }
 
 #view-form .mdc-card .view-card {

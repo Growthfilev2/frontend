@@ -1111,8 +1111,8 @@ function getHumanDateString(date){
 
 }
 
-function dateBox(timestamp){
-
+function dateBox(dateString){
+return `<div class="message date" data-chat-date='${dateString}'>${dateString}</div>`
    
 }
 
@@ -1128,7 +1128,7 @@ function getUserChats(userRecord) {
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
-    let image = ''
+    let currentDateName = ''
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -1141,9 +1141,10 @@ function getUserChats(userRecord) {
             image = userRecord.photoURL || './img/empty-user.jpg'
         };
         const dateName = getHumanDateString(moment(cursor.value.timestamp))
-        if(!document.querySelector(`[chat-date="${dateName}"]`)) {
+        if(dateName !== currentDateName) {
             timeLine += dateBox(dateName)
         }
+        currentDateName = dateName;
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp)
         } else {
