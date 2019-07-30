@@ -356,12 +356,14 @@ function setFilePath(base64) {
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
     const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
-    sub.attachment.Photo.value = url
-    sub.attachment.Comment.value = textValue;
+ 
     progressBar.open();
 
     if (offices.length == 1) {
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, ApplicationState.officeWithCheckInSubs[offices[0]])).then(function () {
+      const sub = ApplicationState.officeWithCheckInSubs[offices[0]]
+      sub.attachment.Photo.value = url
+      sub.attachment.Comment.value = textValue;
+      requestCreator('create', setVenueForCheckIn(ApplicationState.venue,sub)).then(function () {
         getSuggestions()
         successDialog('Check-In Created')
         progressBar.close()
@@ -382,7 +384,10 @@ function setFilePath(base64) {
 
     dialog.listen('MDCDialog:closed', function (evt) {
       if (evt.detail.action !== 'accept') return;
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, ApplicationState.officeWithCheckInSubs[offices[list.selectedIndex]])).then(function () {
+      const sub = ApplicationState.officeWithCheckInSubs[offices[list.selectedIndex]]
+      sub.attachment.Photo.value = url
+      sub.attachment.Comment.value = textValue;
+      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, sub)).then(function () {
         getSuggestions()
         successDialog('Check-In Created')
         progressBar.close()
@@ -484,7 +489,6 @@ GetOffsetBounds.prototype.west = function () {
 
 function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
-
     var infowindow = new google.maps.InfoWindow();
     const result = []
     let lastOpen;
