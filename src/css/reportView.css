@@ -2,3 +2,7 @@
     text-align: center;
    
 }
+
+.report-cards .demo-card__primary {
+    padding: 0.5rem
+}

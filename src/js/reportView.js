@@ -25,10 +25,15 @@ function reportView() {
         sectionContent.appendChild(listContainer);
         const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
         handleTemplateListClick(listInit)
+
         const dataContainer = createElement('div', {
-          className: 'data-container'
+          className: 'data-container mdc-layout-grid'
         })
-        createTodayStat(dataContainer);
+        const innerGrid = createElement('div',{
+          className:'mdc-layout-grid__inner'
+        })
+        dataContainer.appendChild(innerGrid)
+        createTodayStat(innerGrid);
         sectionContent.appendChild(dataContainer)
       }).catch(console.log)
 
@@ -78,10 +83,10 @@ function createTodayStat(elToAppend) {
   let todayCardString = '';
   const key = myNumber+myNumber
   const tx =  db.transaction('addendum');
- 
+  const result = []
   tx.objectStore('addendum')
     .index('KeyTimestamp')
-    .openCursor(IDBKeyRange.bound([startOfTodayTimestamp,key],[currentTimestamp,key]))
+    .openCursor(IDBKeyRange.bound([startOfTodayTimestamp,key],[currentTimestamp,key]),'prev')
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
@@ -90,24 +95,34 @@ function createTodayStat(elToAppend) {
         return;
       }
       console.log(cursor.value)
-      todayCardString += statCard(cursor.value);
+      result.push(cursor.value)
+    
       cursor.continue();
-    }
+    };
     tx.oncomplete = function(){
-      console.log(todayCardString);
-      elToAppend.innerHTML = todayCardString;
+      const activityTx =  db.transaction('acitvity')
+     result.forEach(function(addendum){
+      activityTx.objectStore('activity').get(addendum.acitivityId).onsuccess = function(activityEvent){
+         const activity = activityEvent.target.result;
+         if(!activity) return;
+           todayCardString += statCard(addendum,activity);
+       }
+     })
+     activityTx.oncomplete = function(){
+       elToAppend.innerHTML = todayCardString;
+     }
     }
 }
 
-function statCard(addendum) {
+function statCard(addendum,activity) {
   return `
-  <div class='mdc-card'>
+  <div class='mdc-card mdc-layout-grid__cell report-cards'>
     <div class="mdc-card__primary-action">
-      <div class="mdc-card__media mdc-card__media--16-9" id='addendum-map' 
-      style="background-image:url('https://maps.googleapis.com/maps/api/staticmap?center=${addendum.location._latitude},${addendum.location._longitude}&zoom=18&size=640x640&scale=2&format=jpg&markers=anchor:bottomright%7cicon:../img/marker.png%7c${addendum.location._latitude},${addendum.location._longitude}&key=${appKey.getMapKey()}')">
-
+      <div class="demo-card__primary">
+      <h2 class="demo-card__title mdc-typography mdc-typography--headline5">${addendum.comment}</h2>
+      <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
+      ${activity.venue.length ? ``:''}
     </div>
-    
   </div>  
 </div>
   `
