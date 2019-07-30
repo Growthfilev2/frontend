@@ -15,7 +15,6 @@ function reportView() {
     </div>`
     const sectionContent = document.querySelector('.tabs-section .content');
     if (!evt.detail.index) {
-
       getSubscription(ApplicationState.office, 'leave').then(function (result) {
         console.log(result);
         sectionContent.innerHTML = templateList(result);
@@ -24,9 +23,8 @@ function reportView() {
       }).catch(console.log)
       return
     }
+
     if (evt.detail.index == 1) {
-
-
       getSubscription(ApplicationState.office, 'expense claim').then(function (result) {
         if (!result.length) {
           sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
@@ -35,10 +33,10 @@ function reportView() {
         sectionContent.innerHTML = templateList(result);
         const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
         handleTemplateListClick(listInit)
-
       })
       return;
-    }
+    };
+
     const promiseArray = []
     const incentives = ['customer', 'order', 'collection']
     incentives.forEach(function (name) {
@@ -47,18 +45,12 @@ function reportView() {
 
     Promise.all(promiseArray).then(function (incentiveSubs) {
       console.log(incentiveSubs);
-
-      const subs = incentiveSubs.filter(function (item) {
-        return item.length > 0
-      });
-
-      if (!subs.length) {
+      const merged = [].concat.apply([], incentiveSubs)
+      if (!merged.length) {
         sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
         return
       }
-      const merged = [].concat.apply([], subs)
       sectionContent.innerHTML = templateList(merged);
-
       const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
       handleTemplateListClick(listInit)
 
