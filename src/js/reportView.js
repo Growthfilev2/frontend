@@ -11,16 +11,27 @@ function reportView() {
   tabList.listen('MDCTabBar:activated', function (evt) {
     document.getElementById('app-current-panel').innerHTML = `<div class='tabs-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
     <div class='content'>
+     
     </div>
     </div>`
     const sectionContent = document.querySelector('.tabs-section .content');
     if (!evt.detail.index) {
       getSubscription(ApplicationState.office, 'leave').then(function (result) {
         console.log(result);
-        sectionContent.innerHTML = templateList(result);
+        const listContainer = createElement('div', {
+          className: 'list-container'
+        })
+        listContainer.innerHTML = templateList(result);
+        sectionContent.appendChild(listContainer);
         const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
         handleTemplateListClick(listInit)
+        const dataContainer = createElement('div', {
+          className: 'data-container'
+        })
+        createTodayStat(dataContainer);
+        sectionContent.appendChild(dataContainer)
       }).catch(console.log)
+
       return
     }
 
@@ -60,12 +71,49 @@ function reportView() {
 }
 
 
+function createTodayStat(elToAppend) {
+  const startOfTodayTimestamp  = moment().startOf('day').valueOf()  
+  const currentTimestamp = moment().valueOf();
+  const myNumber = firebase.auth().currentUser.phoneNumber;
+  let todayCardString = '';
+  const key = myNumber+myNumber
+  const tx =  db.transaction('addendum');
+ 
+  tx.objectStore('addendum')
+    .index('KeyTimestamp')
+    .openCursor(IDBKeyRange.bound([startOfTodayTimestamp,key],[currentTimestamp,key]))
+    .onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.isComment) {
+        cursor.continue();
+        return;
+      }
+      console.log(cursor.value)
+      todayCardString += statCard(cursor.value);
+      cursor.continue();
+    }
+    tx.oncomplete = function(){
+      console.log(todayCardString);
+      elToAppend.innerHTML = todayCardString;
+    }
+}
 
+function statCard(addendum) {
+  return `
+  <div class='mdc-card'>
+    <div class="mdc-card__primary-action">
+      <div class="mdc-card__media mdc-card__media--16-9" id='addendum-map' 
+      style="background-image:url('https://maps.googleapis.com/maps/api/staticmap?center=${addendum.location._latitude},${addendum.location._longitude}&zoom=18&size=640x640&scale=2&format=jpg&markers=anchor:bottomright%7cicon:../img/marker.png%7c${addendum.location._latitude},${addendum.location._longitude}&key=${appKey.getMapKey()}')">
 
+    </div>
+    
+  </div>  
+</div>
+  `
+}
 
 function showTabs() {
-
-
 
   return `<div class="mdc-tab-bar" role="tablist">
     <div class="mdc-tab-scroller">
