@@ -73,7 +73,7 @@ function parseQuery(queryString) {
 function queryPatramsToObject(url) {
     let result = {};
     url.forEach(function (value, key) {
-        if (key === 'macAddress') {
+        if (key === 'macAddress' || key === 'ssid') {
             result[key] = value
         } else {
             result[key] = Number(value)
@@ -87,7 +87,6 @@ function queryPatramsToObject(url) {
 function createElement(tagName, attrs) {
     const el = document.createElement(tagName)
     if (attrs) {
-
         Object.keys(attrs).forEach(function (attr) {
             el[attr] = attrs[attr]
         })

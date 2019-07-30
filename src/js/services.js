@@ -145,8 +145,8 @@ function html5Geolocation() {
         message: error.message
       })
     }, {
-      maximumAge: 1000,
-      timeout: 8000,
+      maximumAge: 0,
+      timeout: 5000,
       enableHighAccuracy: false
     })
   })
@@ -210,81 +210,90 @@ function isLocationStatusWorking() {
 
 
 function requestCreator(requestType, requestBody) {
+  return new Promise(function (resolve, reject) {
 
-  var auth = firebase.auth().currentUser;
-  if (!auth) return;
-  var requestGenerator = {
-    type: requestType,
-    body: '',
-    meta: {
-      user: {
-        token: '',
-        uid: auth.uid,
-        displayName: auth.displayName,
-        photoURL: auth.photoURL,
-        phoneNumber: auth.phoneNumber,
-      },
-      key: appKey.getMapKey(),
-      apiUrl: appKey.getBaseUrl()
+    var auth = firebase.auth().currentUser;
+    var requestGenerator = {
+      type: requestType,
+      body: '',
+      meta: {
+        user: {
+          token: '',
+          uid: auth.uid,
+          displayName: auth.displayName,
+          photoURL: auth.photoURL,
+          phoneNumber: auth.phoneNumber,
+        },
+        key: appKey.getMapKey(),
+        apiUrl: appKey.getBaseUrl()
+      }
+    };
+    const nonLocationRequest = {
+      'instant': true,
+      'now': true,
+      'Null': true,
+      'backblaze': true,
+      'removeFromOffice': true,
+      'updateAuth': true,
+      'geolocationApi': true
     }
-  };
-  const nonLocationRequest = {
-    'instant': true,
-    'now': true,
-    'Null': true,
-    'backblaze': true,
-    'removeFromOffice': true,
-    'updateAuth': true,
-    'geolocationApi': true
-  }
-  auth.getIdToken(false).then(function (token) {
-    requestGenerator.meta.user.token = token
-    if (nonLocationRequest[requestType]) {
-      requestGenerator.body = requestBody;
-      apiHandler.postMessage(requestGenerator);
-      console.log("going request")
-    } else {
+
+
+
+
+    auth.getIdToken(false).then(function (token) {
+      requestGenerator.meta.user.token = token
+      if (nonLocationRequest[requestType]) {
+        requestGenerator.body = requestBody;
+        apiHandler.postMessage(requestGenerator);
+
+        apiHandler.onmessage = function (event) {
+          if (!event.data.success) return reject(event.data)
+          return resolve(event.data)
+        }
+        apiHandler.onerror = function (event) {
+          return reject(event.data)
+        };
+        return
+      }
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
-        console.log(time)
+        requestBody['timestamp'] = time
+
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
               mapView(geopoint);
               return;
             };
-
             ApplicationState.location = geopoint;
-            requestBody['timestamp'] = time
-            requestGenerator.body = requestBody;
             requestBody['geopoint'] = geopoint;
-
+            requestGenerator.body = requestBody;
             apiHandler.postMessage(requestGenerator);
+
+            apiHandler.onmessage = function (event) {
+              if (!event.data.success) return reject(event.data)
+              return resolve(event.data)
+            }
+            apiHandler.onerror = function (event) {
+              return reject(event.data)
+            };
           }).catch(locationErrorDialog)
           return;
         }
-
-        requestBody['timestamp'] = time
-        requestGenerator.body = requestBody;
         requestBody['geopoint'] = ApplicationState.location;
-
+        requestGenerator.body = requestBody;
         apiHandler.postMessage(requestGenerator);
+
+        apiHandler.onmessage = function (event) {
+          if (!event.data.success) return reject(event.data)
+          return resolve(event.data)
+        }
+        apiHandler.onerror = function (event) {
+          return reject(event.data)
+        };
       });
-    }
-
-  });
-
-  return new Promise(function (resolve, reject) {
-    apiHandler.onmessage = function (event) {
-      console.log(event)
-      console.log("request taken")
-      if (!event.data.success) return reject(event.data)
-      return resolve(event.data)
-    }
-    apiHandler.onerror = function (event) {
-      console.log(event)
-      return reject(event.data)
-    };
+    });
   })
 }
 
@@ -358,7 +367,14 @@ function updateIosLocation(geopointIos) {
 }
 
 function handleComponentUpdation(readResponse) {
+  if (readResponse.response.templates.length) {
+    getCheckInSubs().then(function (checkInSubs) {
+      ApplicationState.officeWithCheckInSubs = checkInSubs
+      localStorage.setItem('ApplicationState', ApplicationState);
+    })
+  }
   if (!history.state) return;
+
   switch (history.state[0]) {
     case 'homeView':
       getSuggestions()
@@ -391,7 +407,12 @@ function backgroundTransition() {
 }
 
 function runRead() {
-  requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+  try {
+    if (!firebase.auth().currentUser) return;
+    requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+  } catch (e) {
+
+  }
 }
 
 function removeChildNodes(parent) {
@@ -428,30 +449,20 @@ function getSubscription(office, template) {
   return new Promise(function (resolve) {
     const tx = db.transaction(['subscriptions']);
     const subscription = tx.objectStore('subscriptions')
-    let index = subscription.index('validSubscription')
-    
-    
-    const range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
+    let range;
+    let index;
+
+    if (office) {
+      index = subscription.index('validSubscription')
+      range = IDBKeyRange.bound([office, template, 'CONFIRMED'], [office, template, 'PENDING'])
+    } else {
+      index = subscription.index('templateStatus');
+      range = IDBKeyRange.bound([template, 'CONFIRMED'], [template, 'PENDING'])
+    }
+
     index.getAll(range).onsuccess = function (event) {
-      result = event.target.result;
-      console.log(result);
-
-      if (result.length > 1) {
-        return resolve(result.sort(function (a, b) {
-          return b.timestamp - a.timestamp
-        })[0])
-      }
-
-      return resolve(result[0])
+      return resolve(event.target.result)
     }
-
-    tx.onerror = function () {
-      return reject({
-        message: tx.error,
-        body: ''
-      })
-    }
-
   })
 }
 

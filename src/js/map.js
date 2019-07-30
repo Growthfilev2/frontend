@@ -10,7 +10,7 @@ ApplicationState = {
   iframeVersion: 6,
 }
 
-function showNoLocationFound() {
+function showNoLocationFound(error) {
   document.getElementById('start-load').classList.add('hidden');
   handleError({
     message: error.message,
@@ -58,6 +58,7 @@ function mapView(location) {
     west: offsetBounds.west()
   };
   if (!document.getElementById('map')) return;
+  console.log(google);
 
   const map = new google.maps.Map(document.getElementById('map'), {
     center: latLng,
@@ -259,39 +260,42 @@ function toggleCardHeight(toggle, cardSelector) {
 }
 
 
+function selectionBox() {
+  return `<div  class="overlay selection-box-auto hidden" id='selection-box'>
+<aside class="social" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
+  <div class="card__primary">
+    <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
+    </h2>
+
+  </div>
+  <div role="progressbar"
+    class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+    id='check-in-prog'>
+    <div class="mdc-linear-progress__buffering-dots"></div>
+    <div class="mdc-linear-progress__buffer"></div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+  </div>
+
+  <div class="content-body">
+
+  </div>
+  <div id='submit-cont'>
+  </div>
+</aside>`
+}
 
 
 function mapDom() {
   return `
   <div id='map-view' class=''>
     <div id='map'></div>
-    <div  class="overlay selection-box-auto hidden" id='selection-box'>
-              <aside class="social" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
-                <div class="card__primary">
-                  <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
-                  </h2>
-
-                </div>
-                <div role="progressbar"
-                  class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-                  id='check-in-prog'>
-                  <div class="mdc-linear-progress__buffering-dots"></div>
-                  <div class="mdc-linear-progress__buffer"></div>
-                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-                    <span class="mdc-linear-progress__bar-inner"></span>
-                  </div>
-                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-                    <span class="mdc-linear-progress__bar-inner"></span>
-                  </div>
-                </div>
-
-                <div class="content-body">
-
-                </div>
-                <div id='submit-cont'>
-                </div>
-              </aside>
-            </div>
+      ${selectionBox()}
+    </div>
   `
 }
 
@@ -350,81 +354,42 @@ function setFilePath(base64) {
   });
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
-    getUniqueOfficeCount().then(function (offices) {
-      if (!offices.length) return;
-      if (offices.length == 1) {
-        getSubscription(offices[0], 'check-in').then(function (sub) {
-          if (!sub) {
-            snacks('Check-in Subscription not available')
-            history.back();
-            return
-          }
-          sub.attachment.Photo.value = url
-          sub.attachment.Comment.value = textValue;
-          progressBar.open();
-          requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-            getSuggestions()
-            successDialog('Check-In Created')
-          }).catch(function (error) {
-            snacks(error.message)
+    const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
+    sub.attachment.Photo.value = url
+    sub.attachment.Comment.value = textValue;
+    progressBar.open();
 
-          })
-        })
-        return
-      }
-      if (offices.length > 1) {
-        const template = `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
-              ${offices.map(function(office,idx){
-                return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
-                <span class="mdc-list-item__graphic">
-                  <div class="mdc-radio">
-                    <input class="mdc-radio__native-control"
-                          type="radio"
-                          id='demo-list-radio-item-${idx}'
-                          name="demo-list-radio-item-group"
-                          value="1">
-                    <div class="mdc-radio__background">
-                      <div class="mdc-radio__outer-circle"></div>
-                      <div class="mdc-radio__inner-circle"></div>
-                    </div>
-                  </div>
-                </span>
-                <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
-              </li>`
-              }).join("")}
-            
-            <ul>`
-        const dialog = new Dialog('Send To', template).create();
-        const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
-        dialog.open();
-        dialog.listen('MDCDialog:opened', () => {
-          list.layout();
-          list.singleSelection = true
-        });
-        dialog.listen('MDCDialog:closed', function (evt) {
-          if (evt.detail.action !== 'accept') return;
+    if (offices.length == 1) {
+      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, ApplicationState.officeWithCheckInSubs[offices[0]])).then(function () {
+        getSuggestions()
+        successDialog('Check-In Created')
+        progressBar.close()
+      }).catch(function (error) {
+        snacks(error.message)
+        progressBar.close()
+      })
+      return;
+    }
 
-          getSubscription(offices[list.selectedIndex], 'check-in').then(function (sub) {
-            if (!sub) {
-              snacks('Check-in Subscription not available')
-              history.back();
-              return
-            }
-            sub.attachment.Photo.value = url
-            sub.attachment.Comment.value = textValue;
-            progressBar.open();
-            requestCreator('create', setVenueForCheckIn('', sub)).then(function () {
-              getSuggestions()
-              successDialog('Check-In Created')
+    const dialog = new Dialog('Send To', radioList(offices)).create();
+    const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
+    dialog.open();
+    dialog.listen('MDCDialog:opened', () => {
+      list.layout();
+      list.singleSelection = true
+    });
 
-            }).catch(function (error) {
-              snacks(error.response.message)
-            })
-          })
-        })
-      }
+    dialog.listen('MDCDialog:closed', function (evt) {
+      if (evt.detail.action !== 'accept') return;
+      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, ApplicationState.officeWithCheckInSubs[offices[list.selectedIndex]])).then(function () {
+        getSuggestions()
+        successDialog('Check-In Created')
+        progressBar.close()
+      }).catch(function (error) {
+        progressBar.close()
+        snacks(error.response.message)
+      })
     })
-
   })
 
 
@@ -439,6 +404,8 @@ function setFilePath(base64) {
   }
   image.src = url;
 }
+
+
 
 function mdcDefaultSelect(data, label, id, option) {
   const template = `<div class="mdc-select" id=${id}>
@@ -578,4 +545,27 @@ function loadNearByLocations(o, map, location) {
       return resolve(result)
     }
   })
+}
+
+function radioList(offices) {
+  return `<ul class='mdc-list' role='radiogroup' id='dialog-office'>
+            ${offices.map(function(office,idx){
+              return ` <li class="mdc-list-item" role="radio" aria-checked="${idx ? 'false':'true'}" tabindex=${idx ? '':'0'}>
+              <span class="mdc-list-item__graphic">
+                <div class="mdc-radio">
+                  <input class="mdc-radio__native-control"
+                          type="radio"
+                          id='demo-list-radio-item-${idx}'
+                          name="demo-list-radio-item-group"
+                          value="1">
+                    <div class="mdc-radio__background">
+                      <div class="mdc-radio__outer-circle"></div>
+                      <div class="mdc-radio__inner-circle"></div>
+                    </div>
+                  </div>
+                </span>
+                <label class="mdc-list-item__text" for="demo-list-radio-item-${idx}">${office}</label>
+              </li>`
+              }).join("")}
+            <ul>`
 }

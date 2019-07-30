@@ -48,7 +48,7 @@
     <div id='tabs'></div>
   </header>
 
-  <div id='start-load' class="hidden">
+  <div id='start-load'>
     <div class="lds-roller">
       <div></div>
       <div></div>
@@ -95,9 +95,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" async>
   </script>
-  <script type="text/javascript"
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ" async>
-  </script>
+  
 
   <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>
@@ -116,6 +114,9 @@
   <script src="js/claims.js"></script>
   <script src="js/attendence.js"></script>
   <script src="js/reportView.js"></script>
+  <script type="text/javascript"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCadBqkHUJwdcgKT11rp_XWkbQLFAy80JQ&callback=initializeApp">
+  </script>
 </body>
 
 </html>
