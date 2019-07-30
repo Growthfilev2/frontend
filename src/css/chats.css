@@ -310,7 +310,8 @@ html {
   font-size: 15px;
   padding: 15px;
   position: relative;
-}
+};
+
 .date-box:first-child {
   margin: 16px 0 8px;
   margin-top: 76px;
