@@ -1101,6 +1101,26 @@ function dynamicAppendChats(addendums) {
     setBottomScroll()
 }
 
+function getHumanDateString(date){
+    const today  = moment();
+    const yesterday = moment().subtract(1,'day');
+    
+
+    if(date.isSame(today,'day')) return 'Today';
+    if(date.isSame(yesterday,'day')) return 'Yesterday';
+    return date.format('DD MMMM YYYY')
+    
+
+}
+
+function dateBox(dateString){
+return `<div class='date-box'>
+<div class="date" data-chat-date='${dateString}'>${dateString}</div>
+</div>`
+
+   
+}
+
 
 
 function getUserChats(userRecord) {
@@ -1113,7 +1133,7 @@ function getUserChats(userRecord) {
     const parent = document.getElementById('content');
     let timeLine = ''
     let position = '';
-    let image = ''
+    let currentDateName = ''
     index.openCursor(range).onsuccess = function (event) {
         const cursor = event.target.result;
         if (!cursor) return;
@@ -1125,7 +1145,11 @@ function getUserChats(userRecord) {
             position = 'them';
             image = userRecord.photoURL || './img/empty-user.jpg'
         };
-
+        const dateName = getHumanDateString(moment(cursor.value.timestamp))
+        if(dateName !== currentDateName) {
+            timeLine += dateBox(dateName)
+        }
+        currentDateName = dateName;
         if (cursor.value.isComment) {
             timeLine += messageBox(cursor.value.comment, position, cursor.value.timestamp)
         } else {

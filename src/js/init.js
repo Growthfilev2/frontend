@@ -51,9 +51,10 @@ let native = function () {
       if (!this.getName()) return false;
 
       if (this.getName() === 'Android') {
-        deviceInfo = getAndroidDeviceInformation();
-        localStorage.setItem('deviceInfo', deviceInfo);
-        return deviceInfo
+        if (!localStorage.getItem('deviceInfo')) {
+          localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
+        }
+        return localStorage.getItem('deviceInfo')
       }
       return this.getIosInfo();
     }
@@ -86,38 +87,14 @@ window.onpopstate = function (event) {
 }
 
 
-
-
-window.addEventListener("load", function () {
+function initializeApp(){
   firebase.initializeApp(appKey.getKeys())
+
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  topBar.listen('MDCTopAppBar:nav', function (e) {
-    console.log(e);
-
-  })
   console.log(topBar);
 
-  moment.updateLocale('en', {
-    calendar: {
-      lastDay: '[yesterday]',
-      sameDay: 'hh:mm',
-      nextDay: '[Tomorrow at] LT',
-      lastWeek: 'dddd',
-      nextWeek: 'dddd [at] LT',
-      sameElse: 'L'
-    },
-    longDateFormat: {
-      LT: "h:mm A",
-      LTS: "h:mm:ss A",
-      L: "DD/MM/YY",
-    },
-    months: [
-      'January', 'February', 'March', 'April', 'May', 'June', 'July',
-      'August', 'September', 'October', 'November', 'December'
-    ]
-  })
 
   if (!window.Worker && !window.indexedDB) {
     const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
@@ -141,8 +118,7 @@ window.addEventListener("load", function () {
     startApp()
   });
 
-})
-
+}
 
 
 function firebaseUiConfig() {
@@ -218,7 +194,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 5);
+  const req = window.indexedDB.open(dbName, 6);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -300,6 +276,10 @@ function startApp() {
         };
 
       }
+      if (evt.oldVersion <= 5) {
+        const subscriptionStore = tx.objectStore('subscriptions');
+        subscriptionStore.createIndex('templateStatus', ['template', 'status'])
+      }
       tx.oncomplete = function () {
         console.log("completed all backlog");
       }
@@ -357,6 +337,7 @@ function startApp() {
       getRootRecord().then(function (rootRecord) {
         if (!rootRecord.fromTime) {
           requestCreator('Null').then(function () {
+            document.getElementById('start-load').classList.add('hidden')
             history.pushState(['profileCheck'], null, null)
             profileCheck();
           }).catch(function (error) {
@@ -366,10 +347,11 @@ function startApp() {
           })
           return;
         }
+        document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
         profileCheck();
-        requestCreator('Null').then(console.log).catch(console.log)
-        console.log("D")
+        requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+        
       })
 
     }).catch(function (error) {
@@ -719,9 +701,9 @@ function getReportNameString(result) {
 
 
 function profileCheck() {
-
   const auth = firebase.auth().currentUser;
   if (!auth.displayName) {
+
     const content = `
     <div class="mdc-text-field mdc-text-field--outlined" id='name'>
     <input class="mdc-text-field__input" required>
@@ -837,7 +819,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('template', 'template')
   subscriptions.createIndex('officeTemplate', ['office', 'template'])
   subscriptions.createIndex('validSubscription', ['office', 'template', 'status'])
-
+  subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
   const calendar = db.createObjectStore('calendar', {
@@ -908,33 +890,20 @@ function redirect() {
 
 
 function setVenueForCheckIn(venueData, value) {
-
+  const copy = JSON.parse(JSON.stringify(value))
   const venue = {
     geopoint: {
-      latitude: '',
-      longitude: ''
+      latitude: venueData.latitude || '',
+      longitude: venueData.longitude || ''
     },
-    address: '',
-    location: '',
-    venueDescriptor: value.venue[0]
+    address: venueData.address || '',
+    location: venueData.location || '',
+    venueDescriptor: copy.venue[0]
   }
-  if (!venueData) {
-    value.venue = [venue]
-    value.share = [];
-    return value;
+  copy.share = [];
+  copy.venue = [venue]
+  return copy;
 
-  }
-
-  venue.location = venueData.location;
-  venue.address = venueData.address;
-
-  venue.geopoint.latitude = venueData.latitude;
-  venue.geopoint.longitude = venueData.longitude;
-
-  value.venue = [venue]
-  value.share = [];
-  console.log(value)
-  return value
 }
 
 
@@ -943,30 +912,13 @@ function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     let offices = [];
 
-    const tx = db.transaction(['children', 'subscriptions']);
+    const tx = db.transaction('children');
     const childrenStore = tx.objectStore('children').index('employees');
-    const subscriptionStore = tx.objectStore('subscriptions');
 
     childrenStore.openCursor(firebase.auth().currentUser.phoneNumber).onsuccess = function (event) {
       const cursor = event.target.result
-      if (!cursor) {
-        if (offices.length) return
-        subscriptionStore.openCursor().onsuccess = function (subscriptionStoreEvnet) {
-          const subscriptionsCursor = subscriptionStoreEvnet.target.result;
-          if (!subscriptionsCursor) return
-          if (subscriptionsCursor.value.status === 'CANCELLED') {
-            subscriptionsCursor.continue();
-            return
-          };
-          if (offices.indexOf(subscriptionsCursor.value.office) > -1) {
-            subscriptionsCursor.continue();
-            return;
-          }
-          offices.push(subscriptionsCursor.value.office)
-          subscriptionsCursor.continue();
-        }
-        return
-      };
+      if (!cursor) return;
+
       if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
@@ -1037,80 +989,103 @@ function checkMapStoreForNearByLocation(office, currentLocation) {
   })
 }
 
+function hasDataInDB() {
+  return new Promise(function (resolve) {
+    const tx = db.transaction(['activity', 'subscriptions'])
+    const activityStoreCountReq = tx.objectStore('activity').count()
+    const subscriptionStoreCountReq = tx.objectStore('subscriptions').count()
+    let activityStoreSize;
+    let subscriptionStoreSize;
 
+    activityStoreCountReq.onsuccess = function () {
+      activityStoreSize = activityStoreCountReq.result;
+    }
+    subscriptionStoreCountReq.onsuccess = function () {
+      subscriptionStoreSize = subscriptionStoreCountReq.result;
+    }
+    tx.oncomplete = function () {
+      if (!activityStoreSize && !subscriptionStoreSize) return resolve(false)
+      return resolve(true)
+    }
+  })
+}
+
+function getCheckInSubs(){
+  return new Promise(function(resolve){
+    const checkInSubs = {};
+    const tx = db.transaction('subscriptions');
+    tx.objectStore('subscriptions')
+    .index('templateStatus')
+    .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
+    .onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (checkInSubs[cursor.value.office]) {
+        if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+          checkInSubs[cursor.value.office] = cursor.value;
+        }
+      } else {
+        checkInSubs[cursor.value.office] = cursor.value
+      }
+      cursor.continue();
+    }
+    tx.oncomplete = function(){
+      return resolve(checkInSubs)
+    }
+  })
+}
 
 function openMap() {
-  console.log("start getting location")
-  const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-  if (!oldApplicationState) {
-    document.getElementById('start-load').classList.remove('hidden');
-    manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
-    }).catch(function (error) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView()
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error.stack)
-      })
-    })
-    return
-  }
-  if (!oldApplicationState.lastCheckInCreated) {
-    document.getElementById('start-load').classList.remove('hidden');
-    manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
-    }).catch(function (error) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView()
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error.stack)
-      })
-    })
-    return;
-  }
-  if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
-    document.getElementById('start-load').classList.remove('hidden');
-    manageLocation().then(function (location) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView(location)
-    }).catch(function (error) {
-      document.getElementById('start-load').classList.add('hidden');
-      mapView()
-      handleError({
-        message: error.message,
-        body: JSON.stringify(error.stack)
-      })
-    })
-    return;
-  }
-
-  if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
-    document.getElementById('start-load').classList.add('hidden');
-    ApplicationState = oldApplicationState
-    console.log(ApplicationState)
-    getSuggestions()
-    return;
-  }
-
-
   document.getElementById('start-load').classList.remove('hidden');
-  manageLocation().then(function (location) {
-    document.getElementById('start-load').classList.add('hidden');
-    if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
-      ApplicationState = oldApplicationState
-      return getSuggestions()
-    }
-    mapView(location)
-  }).catch(function (error) {
-    document.getElementById('start-load').classList.add('hidden');
-    mapView()
-    handleError({
-      message: error.message,
-      body: JSON.stringify(error.stack)
+  hasDataInDB().then(function (data) {
+
+    if (!data) return showNoOfficeFound();
+      getCheckInSubs().then(function(checkInSubs){
+
+      console.log(checkInSubs);
+      if (!Object.keys(checkInSubs).length) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          ApplicationState.location = location;
+          getSuggestions()
+        }).catch(showNoLocationFound)
+        return
+      }
+      ApplicationState.officeWithCheckInSubs = checkInSubs
+      const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
+
+      if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          mapView(location)
+        }).catch(showNoLocationFound)
+        return
+      }
+
+      if (isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 300)) {
+        manageLocation().then(function (location) {
+          document.getElementById('start-load').classList.add('hidden');
+          mapView(location)
+        }).catch(showNoLocationFound)
+        return;
+      }
+
+      if (!isLastLocationOlderThanThreshold(oldApplicationState.lastCheckInCreated, 60)) {
+        document.getElementById('start-load').classList.add('hidden');
+        ApplicationState = oldApplicationState
+        console.log(ApplicationState)
+        getSuggestions()
+        return;
+      };
+      
+      manageLocation().then(function (location) {
+        document.getElementById('start-load').classList.add('hidden');
+        if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
+          ApplicationState = oldApplicationState
+          return getSuggestions()
+        }
+        mapView(location)
+      }).catch(showNoLocationFound)
     })
   })
 }

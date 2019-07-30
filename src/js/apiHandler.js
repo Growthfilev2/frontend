@@ -88,9 +88,7 @@ self.onmessage = function (event) {
             success: true
           })
         }
-
       }).catch(sendErrorRequestToMainThread)
-
       return
     }
 
@@ -129,9 +127,8 @@ function http(request) {
       xhr.ontimeout = function () {
         return reject({
           code: 400,
-          message: 'Request Timed Out. Please Try Again Later'
+          message: 'Request Timed Out. Please Try Again Later',
         });
-
       }
     }
     xhr.onreadystatechange = function () {
@@ -143,10 +140,6 @@ function http(request) {
           if (!xhr.response) return;
           const errorObject = JSON.parse(xhr.response)
           const apiFailBody = {
-            res: JSON.parse(xhr.response),
-            url: request.url,
-            data: request.data,
-            device: currentDevice,
             message: errorObject.message,
             code: errorObject.code
           }

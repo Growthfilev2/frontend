@@ -27,9 +27,10 @@ function sendFormToParent(formData) {
         formData.forEach(function(form){
          prom.push(requestCreator('create',form))
         })
-        Promise.all(prom).then(function(){
+      
+       
+        Promise.all(prom).then(function(response){
             progressBar.close();
-           
             successDialog(`You Created a ${templateName}`);
             getSuggestions();
         }).catch(function(error){

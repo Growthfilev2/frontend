@@ -9,37 +9,23 @@ function reportView() {
   }, 0)
 
   tabList.listen('MDCTabBar:activated', function (evt) {
-
+    
     if (!evt.detail.index) {
       document.getElementById('app-current-panel').innerHTML = `<div class='attendence-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>
-      
       </div>
       </div>`
-      Promise.all([getSubscription(ApplicationState.office, 'leave')]).then(function (result) {
-        const leaveSub = result[0]
-        if (!leaveSub) {
+      
+     getSubscription(ApplicationState.office, 'leave').then(function (result) {
+        console.log(result);
+        if(!result.length) {
           document.querySelector('.attendence-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Leave</h3>'
           return
         }
-        document.querySelector('.attendence-section .content').innerHTML = `<ul class='mdc-list subscription-list' id='attendance-list'>
-        ${result.map(function(sub,idx){
-       
-        return `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'> New ${sub.template} ?
-        <span class="mdc-list-item__meta material-icons mdc-theme--primary">
-        keyboard_arrow_right
-      </span>
-      
-        </li>`
-        }).join("")}
-        </ul>`
-
-        const ul = new mdc.list.MDCList(document.getElementById('attendance-list'))
-        ul.listen('MDCList:action', function (evt) {
-          addView(leaveSub)
-        })
-
-
+        
+        document.querySelector('.attendence-section .content').innerHTML = templateList(result);
+        const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+        handleTemplateListClick(listInit)
       }).catch(console.log)
       return
     }
@@ -49,27 +35,15 @@ function reportView() {
       <div class='content'>
       </div>
       </div>`
-      getSubscription(ApplicationState.office, 'expense claim').then(function (claimSubs) {
-        if (!claimSubs) {
-          document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For expense claim</h3>'
+      getSubscription(ApplicationState.office, 'expense claim').then(function (result) {
+        if (!result.length) {
+          document.querySelector('.claims-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
           return
         }
-
-        document.querySelector('.claims-section .content').innerHTML =
-          `<ul class='mdc-list subscription-list' id='reim-list'>
-         <li class='mdc-list-item mdc-list-item--selected'> New expense claim ?
-        <span class="mdc-list-item__meta material-icons mdc-theme--primary">
-        keyboard_arrow_right
-      </span>
-      
-        </li>
+        document.querySelector('.claims-section .content').innerHTML = templateList(result);
+        const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+        handleTemplateListClick(listInit)
         
-        </ul>`
-
-        const ul = new mdc.list.MDCList(document.getElementById('reim-list'))
-        ul.listen('MDCList:action', function (evt) {
-          addView(claimSubs)
-        })
       })
       return;
     }
@@ -81,10 +55,11 @@ function reportView() {
 
     Promise.all(promiseArray).then(function (incentiveSubs) {
       console.log(incentiveSubs);
-      const subs = incentiveSubs.filter(function (element) {
-        return element !== undefined;
+      
+      const subs = incentiveSubs.filter(function (item) {
+        return item.length > 0
       });
-
+     
       document.getElementById('app-current-panel').innerHTML = `<div class='incentives-section mdc-top-app-bar--fixed-adjust-with-tabs'>
       <div class='content'>
 
@@ -94,22 +69,12 @@ function reportView() {
         document.querySelector('.incentives-section .content').innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You are not eligible for incentives</h3>'
         return
       }
-      document.querySelector('.incentives-section .content').innerHTML = `
-      <ul class='mdc-list subscription-list'>
-      ${subs.map(function(incentive,idx){
-      return `${incentive ? `<li class='mdc-list-item ${idx ? '' :'mdc-list-item--selected'}'> New ${incentive.template} ?
-      <span class="mdc-list-item__meta material-icons mdc-theme--primary">
-      keyboard_arrow_right
-    </span>
-      
-      </li>` :''}`
-      }).join("")}
-      </ul>
-     `
-      const ul = new mdc.list.MDCList(document.querySelector('.incentives-section ul'))
-      ul.listen('MDCList:action', function (evt) {
-        addView(subs[evt.detail.index])
-      })
+      const merged = [].concat.apply([],subs)
+      document.querySelector('.incentives-section .content').innerHTML = templateList(merged);
+    
+      const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+      handleTemplateListClick(listInit)
+    
     }).catch(console.log)
   })
 
@@ -120,9 +85,6 @@ function reportView() {
 
 
 function showTabs() {
-
-
-
   return `<div class="mdc-tab-bar" role="tablist">
     <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
