@@ -667,10 +667,11 @@ function createListStore(activity, tx) {
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users','reports'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
-  const userStore = updateTx.objectStore('users')
+  const userStore = updateTx.objectStore('users');
+  const reports = updateTx.objectStore('reports')
   let counter = {};
   let userTimestamp = {}
 
@@ -707,6 +708,14 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.locations.forEach(function (location) {
     updateMap(location, updateTx)
+  });
+
+
+  Object.keys(read.statusObject).forEach(function(officeName){
+   statusObject[officeName].forEach(function(item){
+      item.office = officeName
+      reports.put(item)
+   })
   })
 
   read.activities.slice().reverse().forEach(function (activity) {

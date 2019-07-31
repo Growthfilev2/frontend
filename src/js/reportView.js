@@ -32,9 +32,13 @@ function reportView() {
         const innerGrid = createElement('div', {
           className: 'mdc-layout-grid__inner'
         })
+        
         dataContainer.appendChild(innerGrid)
+        
         createTodayStat(innerGrid);
+        
         sectionContent.appendChild(dataContainer)
+
       }).catch(console.log)
 
       return
@@ -99,14 +103,11 @@ function createTodayStat(elToAppend) {
         cursor.continue();
         return;
       }
-     
-      result.push(cursor.value)
-
+      result.push(cursor.value);
       cursor.continue();
     };
   tx.oncomplete = function () {
     const activityTx = db.transaction('activity')
-   
     result.forEach(function (addendum) {
       activityTx.objectStore('activity').get(addendum.activityId).onsuccess = function (activityEvent) {
         const activity = activityEvent.target.result;
@@ -117,6 +118,7 @@ function createTodayStat(elToAppend) {
     })
     activityTx.oncomplete = function () {
       elToAppend.innerHTML = todayCardString;
+      createMonthlyObject(elToAppend)
     }
   }
 }
@@ -147,6 +149,11 @@ function statCard(addendum, activity) {
 </div>
   `
 }
+
+function createMonthlyObject(elToAppend) {
+
+}
+
 
 function showTabs() {
 

@@ -87,7 +87,7 @@ window.onpopstate = function (event) {
 }
 
 
-function initializeApp(){
+function initializeApp() {
   firebase.initializeApp(appKey.getKeys())
 
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
@@ -194,7 +194,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 6);
+  const req = window.indexedDB.open(dbName, 7);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -280,6 +280,14 @@ function startApp() {
         const subscriptionStore = tx.objectStore('subscriptions');
         subscriptionStore.createIndex('templateStatus', ['template', 'status'])
       }
+      if (evt.oldVersion <= 6) {
+        const reports = db.createObjectStore('reports',{keyPath:'date'});
+        reports.createIndex('statusForDay', 'statusForDay')
+        reports.createIndex('onLeave', 'onLeave')
+        reports.createIndex('distanceTravelled', 'distanceTravelled')
+        reports.createIndex('month', 'month')
+        reports.createIndex('office', 'office')
+      }
       tx.oncomplete = function () {
         console.log("completed all backlog");
       }
@@ -334,25 +342,25 @@ function startApp() {
     //     return
     //   };
 
-      getRootRecord().then(function (rootRecord) {
-        if (!rootRecord.fromTime) {
-          requestCreator('Null').then(function () {
-            document.getElementById('start-load').classList.add('hidden')
-            history.pushState(['profileCheck'], null, null)
-            profileCheck();
-          }).catch(function (error) {
-            if (error.response.apiRejection) {
-              snacks(error.response.message, 'Okay')
-            }
-          })
-          return;
-        }
-        document.getElementById('start-load').classList.add('hidden')
-        history.pushState(['profileCheck'], null, null)
-        profileCheck();
-        requestCreator('Null').then(handleComponentUpdation).catch(console.log)
-        
-      })
+    getRootRecord().then(function (rootRecord) {
+      if (!rootRecord.fromTime) {
+        requestCreator('Null').then(function () {
+          document.getElementById('start-load').classList.add('hidden')
+          history.pushState(['profileCheck'], null, null)
+          profileCheck();
+        }).catch(function (error) {
+          if (error.response.apiRejection) {
+            snacks(error.response.message, 'Okay')
+          }
+        })
+        return;
+      }
+      document.getElementById('start-load').classList.add('hidden')
+      history.pushState(['profileCheck'], null, null)
+      profileCheck();
+      requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+
+    })
 
     // }).catch(function (error) {
     //   if (error.response.apiRejection) {
@@ -865,6 +873,14 @@ function createObjectStores(db, uid) {
     keyPath: 'uid'
   });
 
+  // const reports = db.createObjectStore('reports',{keyPath:'date'});
+  // reports.createIndex('statusForDay', 'statusForDay')
+  // reports.createIndex('onLeave', 'onLeave')
+  // reports.createIndex('distanceTravelled', 'distanceTravelled')
+  // reports.createIndex('month', 'month')
+  
+  // reports.createIndex('office', 'office')
+
   root.put({
     uid: uid,
     fromTime: 0,
@@ -1010,26 +1026,26 @@ function hasDataInDB() {
   })
 }
 
-function getCheckInSubs(){
-  return new Promise(function(resolve){
+function getCheckInSubs() {
+  return new Promise(function (resolve) {
     const checkInSubs = {};
     const tx = db.transaction('subscriptions');
     tx.objectStore('subscriptions')
-    .index('templateStatus')
-    .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
-    .onsuccess = function (event) {
-      const cursor = event.target.result;
-      if (!cursor) return;
-      if (checkInSubs[cursor.value.office]) {
-        if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
-          checkInSubs[cursor.value.office] = cursor.value;
+      .index('templateStatus')
+      .openCursor(IDBKeyRange.bound(['check-in', 'CONFIRMED'], ['check-in', 'PENDING']))
+      .onsuccess = function (event) {
+        const cursor = event.target.result;
+        if (!cursor) return;
+        if (checkInSubs[cursor.value.office]) {
+          if (checkInSubs[cursor.value.office].timestamp <= cursor.value.timestamp) {
+            checkInSubs[cursor.value.office] = cursor.value;
+          }
+        } else {
+          checkInSubs[cursor.value.office] = cursor.value
         }
-      } else {
-        checkInSubs[cursor.value.office] = cursor.value
+        cursor.continue();
       }
-      cursor.continue();
-    }
-    tx.oncomplete = function(){
+    tx.oncomplete = function () {
       return resolve(checkInSubs)
     }
   })
@@ -1040,7 +1056,7 @@ function openMap() {
   hasDataInDB().then(function (data) {
 
     if (!data) return showNoOfficeFound();
-      getCheckInSubs().then(function(checkInSubs){
+    getCheckInSubs().then(function (checkInSubs) {
 
       console.log(checkInSubs);
       if (!Object.keys(checkInSubs).length) {
@@ -1077,7 +1093,7 @@ function openMap() {
         getSuggestions()
         return;
       };
-      
+
       manageLocation().then(function (location) {
         document.getElementById('start-load').classList.add('hidden');
         if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
