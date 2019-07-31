@@ -29,8 +29,8 @@ function reportView() {
         const dataContainer = createElement('div', {
           className: 'data-container mdc-layout-grid'
         })
-        const innerGrid = createElement('div',{
-          className:'mdc-layout-grid__inner'
+        const innerGrid = createElement('div', {
+          className: 'mdc-layout-grid__inner'
         })
         dataContainer.appendChild(innerGrid)
         createTodayStat(innerGrid);
@@ -77,16 +77,17 @@ function reportView() {
 
 
 function createTodayStat(elToAppend) {
-  const startOfTodayTimestamp  = moment().startOf('day').valueOf()  
+  const startOfTodayTimestamp = moment().startOf('day').valueOf()
   const currentTimestamp = moment().valueOf();
   const myNumber = firebase.auth().currentUser.phoneNumber;
   let todayCardString = '';
-  const key = myNumber+myNumber
-  const tx =  db.transaction('addendum');
+  const key = myNumber + myNumber
+  const tx = db.transaction('addendum');
   const result = []
+  console.log(key)
   tx.objectStore('addendum')
     .index('KeyTimestamp')
-    .openCursor(IDBKeyRange.bound([startOfTodayTimestamp,key],[currentTimestamp,key]),'prev')
+    .openCursor(IDBKeyRange.bound([startOfTodayTimestamp, key], [currentTimestamp, key]), 'prev')
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
@@ -94,34 +95,50 @@ function createTodayStat(elToAppend) {
         cursor.continue();
         return;
       }
+      if (cursor.value.key !== key) {
+        cursor.continue();
+        return;
+      }
       console.log(cursor.value)
       result.push(cursor.value)
-    
+
       cursor.continue();
     };
-    tx.oncomplete = function(){
-      const activityTx =  db.transaction('acitvity')
-     result.forEach(function(addendum){
-      activityTx.objectStore('activity').get(addendum.acitivityId).onsuccess = function(activityEvent){
-         const activity = activityEvent.target.result;
-         if(!activity) return;
-           todayCardString += statCard(addendum,activity);
-       }
-     })
-     activityTx.oncomplete = function(){
-       elToAppend.innerHTML = todayCardString;
-     }
+  tx.oncomplete = function () {
+    const activityTx = db.transaction('activity')
+    console.log(result)
+    result.forEach(function (addendum) {
+      activityTx.objectStore('activity').get(addendum.activityId).onsuccess = function (activityEvent) {
+        const activity = activityEvent.target.result;
+        if (!activity) return;
+        todayCardString += statCard(addendum, activity);
+      }
+    })
+    activityTx.oncomplete = function () {
+      elToAppend.innerHTML = todayCardString;
     }
+  }
 }
 
-function statCard(addendum,activity) {
+function statCard(addendum, activity) {
   return `
   <div class='mdc-card mdc-layout-grid__cell report-cards'>
     <div class="mdc-card__primary-action">
       <div class="demo-card__primary">
       <h2 class="demo-card__title mdc-typography mdc-typography--headline5">${addendum.comment}</h2>
       <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
-      ${activity.venue.length ? ``:''}
+      <div class='activity-data'>
+      ${activity.venue.length ?`  <ul class='mdc-list mdc-list--two-line'>
+      ${viewVenue(activity,false)}
+      </ul>` :''}
+      ${activity.schedule.length ?`<ul class='mdc-list mdc-list--two-line'>
+      ${viewSchedule(activity)}
+      </ul>` :''}
+   
+      <div class='attachment-container'>
+      ${viewAttachment(activity)}
+      </div>
+      </div>
     </div>
   </div>  
 </div>
