@@ -18,29 +18,12 @@ function reportView() {
     if (!evt.detail.index) {
       getSubscription(ApplicationState.office, 'leave').then(function (result) {
         console.log(result);
-        const listContainer = createElement('div', {
-          className: 'list-container'
-        })
-        listContainer.innerHTML = templateList(result);
-        sectionContent.appendChild(listContainer);
+        sectionContent.innerHTML = attendanceDom(result);
         const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
         handleTemplateListClick(listInit)
-
-        const dataContainer = createElement('div', {
-          className: 'data-container mdc-layout-grid'
-        })
-        const innerGrid = createElement('div', {
-          className: 'mdc-layout-grid__inner'
-        })
-        
-        dataContainer.appendChild(innerGrid)
-        
-        createTodayStat(innerGrid);
-        
-        sectionContent.appendChild(dataContainer)
-
+        createTodayStat();
+        createMonthlyStat();
       }).catch(console.log)
-
       return
     }
 
@@ -79,8 +62,26 @@ function reportView() {
 
 }
 
+function attendanceDom(leaveSub) {
+  return `<div class='attendance-section'>
 
-function createTodayStat(elToAppend) {
+<div class='data-container mdc-layout-grid'>
+<div class='mdc-layout-grid__inner'>
+<div class='list-container mdc-layout-grid__cell--span-12'>
+  ${templateList(leaveSub)}
+</div>
+</div>
+<div class='today-stat mdc-layout-grid__inner'>
+
+</div>
+<div class='monthly-stat mdc-layout-grid__inner'>
+
+</div>
+</div>
+</div>`
+}
+
+function createTodayStat() {
   const startOfTodayTimestamp = moment().startOf('day').valueOf()
   const currentTimestamp = moment().valueOf();
   const myNumber = firebase.auth().currentUser.phoneNumber;
@@ -112,18 +113,22 @@ function createTodayStat(elToAppend) {
       activityTx.objectStore('activity').get(addendum.activityId).onsuccess = function (activityEvent) {
         const activity = activityEvent.target.result;
         if (!activity) return;
-        console.log(activity)
-        todayCardString += statCard(addendum, activity);
+
+        todayCardString += todayStatCard(addendum, activity);
       }
     })
     activityTx.oncomplete = function () {
-      elToAppend.innerHTML = todayCardString;
-      createMonthlyObject(elToAppend)
+      document.querySelector('.today-stat').innerHTML =
+        `<div class="hr-sect mdc-layout-grid__cell--span-12">Today</div>
+      ${todayCardString};
+    `
     }
   }
 }
 
-function statCard(addendum, activity) {
+
+
+function todayStatCard(addendum, activity) {
   return `
   <div class='mdc-card mdc-layout-grid__cell report-cards'>
     <div class="mdc-card__primary-action">
@@ -139,10 +144,7 @@ function statCard(addendum, activity) {
       ${activity.schedule.length ?`<ul class='mdc-list mdc-list--two-line'>
       ${viewSchedule(activity)}
       </ul>` :''}
-   
-      <div class='attachment-container'>
-      ${viewAttachment(activity)}
-      </div>
+  
       </div>
     </div>
   </div>  
@@ -150,8 +152,55 @@ function statCard(addendum, activity) {
   `
 }
 
-function createMonthlyObject(elToAppend) {
+function monthlyStatCard(value) {
+  `<div class='mdc-card mdc-layout-grid__cell--span-12'>
+    <div class="mdc-card__primary-action">
+      <div class="demo-card__primary">
+      <div class="mdc-list-item__graphic" aria-hidden="true">
+      <span>Thu</span>
+      <p>12</p>
+      </div>
+      <ul class="mdc-list demo-list">
+      <li class="mdc-list-item mdc-ripple-upgraded" tabindex="0" id="" style="">
+      <span class="mdc-list-item__graphic material-icons" aria-hidden="true">wifi</span>
+      
+      </li>
+      Line-item
+      </ul>
+     
+      <div class='card-heading-container'>
+      <h2 class="demo-card__title mdc-typography mdc-typography--headline5">${addendum.comment}</h2>
+      <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
+      </div>
 
+      
+    </div>
+  </div>  
+</div>`
+}
+
+function createMonthlyStat() {
+  const tx = db.transaction('reports');
+  const MAX_STATUS_FOR_DAY_VALUE = 1
+  const CURRENT_MONTH = new Date().getMonth();
+  const monthlyString = ''
+  tx.objectStore('reports')
+    .index('statusForDay')
+    .openCursor(IDBKeyRange.upperBound(MAX_STATUS_FOR_DAY_VALUE, true))
+    .onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.month !== CURRENT_MONTH) {
+        cursor.continue();
+        return;
+      }
+      monthlyString += monthlyStatCard(cursor.value);
+      console.log(cursor.value)
+      cursor.continue();
+    }
+  tx.oncomplete = function () {
+    document.querySelector('.monthly-stat').innerHTML = monthlyStatCard;
+  }
 }
 
 

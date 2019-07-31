@@ -281,13 +281,19 @@ function startApp() {
         subscriptionStore.createIndex('templateStatus', ['template', 'status'])
       }
       if (evt.oldVersion <= 6) {
-        const reports = db.createObjectStore('reports',{keyPath:'date'});
-        reports.createIndex('statusForDay', 'statusForDay')
-        reports.createIndex('onLeave', 'onLeave')
-        reports.createIndex('distanceTravelled', 'distanceTravelled')
+        const reports = db.createObjectStore('reports', {
+          keyPath: 'joinedDate'
+        });
+        reports.createIndex('onLeave', 'onLeave');
+        reports.createIndex('year', 'year')
         reports.createIndex('month', 'month')
+        reports.createIndex('date', 'date')
         reports.createIndex('office', 'office')
-      }
+        reports.createIndex('byOfficeDate',['office','joinedDate'])
+        reports.createIndex('statusForDay', 'statusForDay')
+        reports.createIndex('statusForDayMonth', ['statusForDay','month'])
+      };
+
       tx.oncomplete = function () {
         console.log("completed all backlog");
       }
@@ -328,19 +334,19 @@ function startApp() {
       index++;
     }, index + 1 * 1000);
 
-    // requestCreator('now', {
-    //   device: native.getInfo(),
-    //   from: '',
-    //   registerToken: native.getFCMToken()
-    // }).then(function (response) {
-    //   if (response.updateClient) {
-    //     updateApp()
-    //     return
-    //   }
-    //   if (response.revokeSession) {
-    //     revokeSession();
-    //     return
-    //   };
+    requestCreator('now', {
+      device: native.getInfo(),
+      from: '',
+      registerToken: native.getFCMToken()
+    }).then(function (response) {
+      if (response.updateClient) {
+        updateApp()
+        return
+      }
+      if (response.revokeSession) {
+        revokeSession();
+        return
+      };
 
     getRootRecord().then(function (rootRecord) {
       if (!rootRecord.fromTime) {
@@ -362,11 +368,11 @@ function startApp() {
 
     })
 
-    // }).catch(function (error) {
-    //   if (error.response.apiRejection) {
-    //     snacks(error.response.message, 'Retry')
-    //   }
-    // })
+    }).catch(function (error) {
+      if (error.response.apiRejection) {
+        snacks(error.response.message, 'Retry')
+      }
+    })
   }
   req.onerror = function () {
     handleError({
@@ -869,17 +875,23 @@ function createObjectStores(db, uid) {
   children.createIndex('employeeOffice', ['employee', 'office'])
   children.createIndex('team', 'team')
   children.createIndex('teamOffice', ['team', 'office'])
+
+  const reports = db.createObjectStore('reports', {
+    keyPath: 'joinedDate'
+  });
+ 
+  reports.createIndex('onLeave', 'onLeave')
+  reports.createIndex('year', 'year')
+  reports.createIndex('month', 'month')
+  reports.createIndex('date', 'date')
+  reports.createIndex('office', 'office')
+  reports.createIndex('byOfficeDate', 'joinedDate')
+  reports.createIndex('statusForDay', 'statusForDay')
+  reports.createIndex('statusForDayMonth', ['statusForDay','month'])
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
 
-  // const reports = db.createObjectStore('reports',{keyPath:'date'});
-  // reports.createIndex('statusForDay', 'statusForDay')
-  // reports.createIndex('onLeave', 'onLeave')
-  // reports.createIndex('distanceTravelled', 'distanceTravelled')
-  // reports.createIndex('month', 'month')
-  
-  // reports.createIndex('office', 'office')
 
   root.put({
     uid: uid,

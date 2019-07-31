@@ -92,12 +92,12 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
-      // })
-      resolve({latitude:22.56,longitude:55.67,lastLocationTime:Date.now()})
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
+      // resolve({latitude:22.56,longitude:55.67,lastLocationTime:Date.now()})
     }
   })
 }
@@ -323,7 +323,7 @@ function isLastLocationOlderThanThreshold(lastLocationTime, threshold) {
 
 
 function updateApp() {
-  // if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
+  if (native.getName() !== 'Android') return webkit.messageHandlers.updateApp.postMessage('Update App');
   const updateAppDialog = new Dialog('New Update Avaialble', 'Please Install the Latest version from google play store , to Use Growthfile. Click Okay to Install Lastest Version from Google Play Store.').create()
 
   updateAppDialog.open();
