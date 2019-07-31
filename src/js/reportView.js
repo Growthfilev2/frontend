@@ -99,18 +99,19 @@ function createTodayStat(elToAppend) {
         cursor.continue();
         return;
       }
-      console.log(cursor.value)
+     
       result.push(cursor.value)
 
       cursor.continue();
     };
   tx.oncomplete = function () {
     const activityTx = db.transaction('activity')
-    console.log(result)
+   
     result.forEach(function (addendum) {
       activityTx.objectStore('activity').get(addendum.activityId).onsuccess = function (activityEvent) {
         const activity = activityEvent.target.result;
         if (!activity) return;
+        console.log(activity)
         todayCardString += statCard(addendum, activity);
       }
     })
@@ -125,8 +126,10 @@ function statCard(addendum, activity) {
   <div class='mdc-card mdc-layout-grid__cell report-cards'>
     <div class="mdc-card__primary-action">
       <div class="demo-card__primary">
+      <div class='card-heading-container'>
       <h2 class="demo-card__title mdc-typography mdc-typography--headline5">${addendum.comment}</h2>
       <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
+      </div>
       <div class='activity-data'>
       ${activity.venue.length ?`  <ul class='mdc-list mdc-list--two-line'>
       ${viewVenue(activity,false)}

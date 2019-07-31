@@ -2,7 +2,10 @@
     text-align: center;
    
 }
-
 .report-cards .demo-card__primary {
-    padding: 0.5rem
+    padding: 0.8rem;
+    padding-bottom: 0rem;
+}
+.report-cards .activity-data ul li {
+    padding-left: 0px;
 }
