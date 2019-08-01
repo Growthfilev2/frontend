@@ -92,12 +92,16 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      html5Geolocation().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
+      // html5Geolocation().then(function (location) {
+      //   resolve(location)
+      // }).catch(function (error) {
+      //   reject(error)
+      // })
+      resolve({
+        latitude: 22.56,
+        longitude: 55.67,
+        lastLocationTime: Date.now()
       })
-      // resolve({latitude:22.56,longitude:55.67,lastLocationTime:Date.now()})
     }
   })
 }
@@ -389,9 +393,13 @@ function handleComponentUpdation(readResponse) {
       if (!readResponse.response.addendum.length) return;
       readLatestChats(false);
       break;
-    case 'attendanceView':
-    createTodayStat()
-    break;
+    case 'reportView':
+      const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('#tabs .mdc-tab-bar'))
+      if (!tabBar) return;
+      if (tabList.foundation_.adapter_.getFocusedTabIndex() == 0) {
+        createTodayStat()
+      }
+      break;
   }
 }
 

@@ -1,19 +1,12 @@
-function claimsView(){
-    document.getElementById('app-header').classList.remove("hidden")
-    // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">Reimbursements</span>
-    `
-    const header = getHeader('app-header', backIcon,'');
-    document.getElementById('app-current-panel').innerHTML = emptyClaims();
-}
-
-function emptyClaims(){
-
-    return  `<div class='empty-claims-section'>
-        <h3 class='mdc-typography--headline6'>No open claims pending for payment</h3>
-        <button class='mdc-button' id='apply-claim'>
-             <span class='mdc-button--label'>Create A New Claim</span>
-        </button>
-    </div>`
+function expenseView(sectionContent) {
+   
+    getSubscription(ApplicationState.office, 'expense claim').then(function (result) {
+        if (!result.length) {
+            sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
+            return
+        }
+        sectionContent.innerHTML = templateList(result);
+        const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+        handleTemplateListClick(listInit)
+    })
 }
