@@ -6,6 +6,7 @@ function reportView() {
   const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('#tabs .mdc-tab-bar'))
   setTimeout(function () {
     tabList.activateTab(0);
+
   }, 0)
 
   tabList.listen('MDCTabBar:activated', function (evt) {
@@ -16,6 +17,7 @@ function reportView() {
     </div>`
     const sectionContent = document.querySelector('.tabs-section .content');
     if (!evt.detail.index) {
+      history.pushState(['attendanceView'], null, null)
       Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
         console.log(result);
         const leaveSub = result[0];
@@ -35,6 +37,8 @@ function reportView() {
     }
 
     if (evt.detail.index == 1) {
+      history.pushState(['expenseView'], null, null)
+
       getSubscription(ApplicationState.office, 'expense claim').then(function (result) {
         if (!result.length) {
           sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
@@ -47,6 +51,7 @@ function reportView() {
       return;
     };
 
+    history.pushState(['incentivesView'], null, null)
     const promiseArray = []
     const incentives = ['customer', 'order', 'collection']
     incentives.forEach(function (name) {

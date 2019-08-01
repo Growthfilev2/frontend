@@ -389,6 +389,9 @@ function handleComponentUpdation(readResponse) {
       if (!readResponse.response.addendum.length) return;
       readLatestChats(false);
       break;
+    case 'attendanceView':
+    createTodayStat()
+    break;
   }
 }
 
