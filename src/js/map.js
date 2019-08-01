@@ -136,17 +136,17 @@ function loadCardData(markers) {
         prom.push(requestCreator('create', setVenueForCheckIn('', ApplicationState.officeWithCheckInSubs[office])))
       })
 
-      cardProd.open();
-      Promise.all(prom).then(function () {
-        cardProd.close()
-        successDialog('Check-In Created')
-        ApplicationState.lastCheckInCreated = Date.now()
-        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      // cardProd.open();
+      // Promise.all(prom).then(function () {
+      //   cardProd.close()
+      //   successDialog('Check-In Created')
+      //   ApplicationState.lastCheckInCreated = Date.now()
+      //   localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
         getSuggestions()
-      }).catch(function (error) {
-        snacks(error.response.message);
-        cardProd.close()
-      })
+      // }).catch(function (error) {
+      //   snacks(error.response.message);
+      //   cardProd.close()
+      // })
 
       return;
     }

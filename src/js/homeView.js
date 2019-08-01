@@ -222,7 +222,7 @@ ${ApplicationState.officeWithCheckInSubs ? `<a  class="material-icons mdc-top-ap
   })
 
   document.getElementById('reports').addEventListener('click', function () {
-    history.pushState(['reportView'], null, null)
+    history.pushState(['reportView'],null,null)
     reportView();
   })
 

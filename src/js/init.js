@@ -360,9 +360,7 @@ function startApp() {
         history.pushState(['profileCheck'], null, null)
         profileCheck();
         requestCreator('Null').then(handleComponentUpdation).catch(console.log)
-
       })
-
     }).catch(function (error) {
       if (error.response.apiRejection) {
         snacks(error.response.message, 'Retry')
