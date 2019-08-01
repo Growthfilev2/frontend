@@ -16,14 +16,14 @@
         <div class="form-list">
 
             <div class="form-component schedules">
-                <p class="mdc-typography--body1 mdc-theme--primary  mt-0 mb-0">Date</label>
-                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='start-date'>
+                <p class="mdc-typography--body1 mdc-theme--primary  mt-0 mb-0">Regularization Dates</label>
+                    <div class="mdc-text-field mdc-text-field--disabled" data-mdc-auto-init="MDCTextField" id='start-date' disabled>
                         <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates start date">
                         <label for="input" class="mdc-floating-label mdc-floating-label--float-above">Start Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
-                    <div class="mdc-text-field" data-mdc-auto-init="MDCTextField" id='end-date'>
-                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates end date">
+                    <div class="mdc-text-field mdc-text-field--disabled" data-mdc-auto-init="MDCTextField" id='end-date'>
+                        <input class=" mdc-text-field__input" type="date" data-name="Regularization Dates end date" disabled>
                         <label for="input" class="mdc-floating-label mdc-floating-label--float-above">End Date</label>
                         <div class="mdc-line-ripple"></div>
                     </div>
@@ -43,7 +43,8 @@
                 </div>
             </div>
             <div class="form-component">
-                <input type="submit" value="SUBMIT" class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
+                <input type="submit" value="SUBMIT"
+                    class="mdc-button submit-btn mdc-theme--primary-bg mdc-theme--on-primary">
             </div>
         </div>
     </form>
@@ -55,8 +56,14 @@
         var formEl = document.getElementById('form');
 
         function init(subscriptionTemplate) {
+            console.log(subscriptionTemplate)
+            subscriptionTemplate.schedule.forEach(function (name) {
+                const startfield = document.querySelector(`[data-name="${name} start date"]`);
+                const endField = document.querySelector(`[data-name="${name} end date"]`);
+                
+                startfield.value = endField.value  = createDate(new Date(subscriptionTemplate.date))
+            });
 
-            initializeDates(subscriptionTemplate,createDate(subscriptionTemplate.forDate.startTime))
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
@@ -64,9 +71,9 @@
                 copy.attachment.Reason.value = reason.value;
                 copy.share = []
                 const newSchedule = getNewSchedule(subscriptionTemplate);
-                if(!newSchedule) return;
+                if (!newSchedule) return;
                 copy.schedule = newSchedule
-                delete copy.forDate
+                delete copy.date
                 parent.sendFormToParent(copy)
             })
         }

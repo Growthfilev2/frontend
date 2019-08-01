@@ -26,10 +26,9 @@ function reportView() {
           handleTemplateListClick(listInit)
         }
         createTodayStat();
-        createMonthlyStat({
-          leaveSub,
-          arSub
-        });
+        if (!arSub.length) return;
+
+        createMonthlyStat(arSub[0]);
       })
 
       return
@@ -91,45 +90,46 @@ function attendanceDom(leaveSub) {
 
 function createTodayStat() {
   const startOfTodayTimestamp = moment().startOf('day').valueOf()
+  console.log(startOfTodayTimestamp)
   const currentTimestamp = moment().valueOf();
+  console.log(currentTimestamp)
   const myNumber = firebase.auth().currentUser.phoneNumber;
   let todayCardString = '';
-  const key = myNumber + myNumber
-  const tx = db.transaction('addendum');
   const result = []
-  console.log(key)
-  tx.objectStore('addendum')
-    .index('KeyTimestamp')
-    .openCursor(IDBKeyRange.bound([startOfTodayTimestamp, key], [currentTimestamp, key]), 'prev')
-    .onsuccess = function (event) {
+
+  const activityTx = db.transaction('activity')
+  activityTx.objectStore('activity')
+    .index('timestamp')
+    .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (cursor.value.isComment) {
-        cursor.continue();
-        return;
-      }
-      if (cursor.value.key !== key) {
+      if (cursor.value.creator.phoneNumber !== myNumber) {
         cursor.continue();
         return;
       }
       result.push(cursor.value);
       cursor.continue();
-    };
-  tx.oncomplete = function () {
-    const activityTx = db.transaction('activity')
-    result.forEach(function (addendum) {
-      activityTx.objectStore('activity').get(addendum.activityId).onsuccess = function (activityEvent) {
-        const activity = activityEvent.target.result;
-        if (!activity) return;
+    }
+  activityTx.oncomplete = function () {
+    console.log(result);
+    const addendumTx = db.transaction('addendum');
 
-        todayCardString += todayStatCard(addendum, activity);
-      }
+    result.forEach(function (activity) {
+      addendumTx
+        .objectStore('addendum')
+        .index('activityId')
+        .get(activity.activityId).onsuccess = function (event) {
+          const result = event.target.result;
+
+          console.log(result);
+          todayCardString += todayStatCard(result, activity);
+        }
     })
-    activityTx.oncomplete = function () {
+    addendumTx.oncomplete = function () {
       document.querySelector('.today-stat').innerHTML =
         `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
-      ${todayCardString}
-    `
+    ${todayCardString}
+  `
     }
   }
 }
@@ -142,7 +142,9 @@ function todayStatCard(addendum, activity) {
     <div class="mdc-card__primary-action">
       <div class="demo-card__primary">
       <div class='card-heading-container'>
-      <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${addendum.comment}</h2>
+      <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${activity.activityName}</h2>
+     ${addendum ?`   <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">${addendum.comment}</h3>` :'' }
+   
       <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
       </div>
       <div class='activity-data'>
@@ -161,38 +163,28 @@ function todayStatCard(addendum, activity) {
 }
 
 
-function expandMonthlyList(sfd, subscriptionString) {
-  const subs = JSON.parse(subscriptionString);
-  console.log(subs);
+function monthlyStatCard(value) {
 
-}
-
-function monthlyStatCard(value, subs) {
-  const day = moment(`${value.date}-${value.month}-${value.year}`, 'DD-MM-YYYY').format('ddd')
+  const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
   return `
-  <div class="month-container">
+  <div class="month-container mdc-elevation--z2">
     <div class="month-date-cont">
       <span class='day'>${day}</span>
       <p class='date'>${value.date}</p>
-      <p class='mdc-theme--error sfd'>0.5</p>
+     
     </div>
     <div class='btn-container'>
-    ${value.statusForDay == 0 ? `
-    <button class='mdc-button mdc-theme--primary-bg'>
-       <span class="mdc-button__label mdc-theme--on-primary">Apply Leave</span>
+    <button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${value.year}-${value.month + 1}-${value.date}">
+      <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
     </button>
-    <button class='mdc-button mdc-theme--primary-bg'>
-        <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
-    </button>` :
-    `<button class='mdc-button mdc-theme--primary-bg'>
-        <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
-    </button>`}
+    <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${value.statusForDay}</p>
     </div>
 </div>
   `
 }
 
-function createMonthlyStat(subs) {
+function createMonthlyStat(arSub) {
+  const copy = JSON.parse(JSON.stringify(arSub));
   const tx = db.transaction('reports');
   const MAX_STATUS_FOR_DAY_VALUE = 1
   let monthlyString = ''
@@ -208,17 +200,26 @@ function createMonthlyStat(subs) {
         cursor.continue();
         return;
       }
-      if(month !== cursor.value.month) {
+      if (month !== cursor.value.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = cursor.value.month;
 
-      monthlyString += monthlyStatCard(cursor.value, subs);
-      console.log(cursor.value)
+      monthlyString += monthlyStatCard(cursor.value);
+
       cursor.continue();
     }
   tx.oncomplete = function () {
-    document.querySelector('.monthly-stat').innerHTML = monthlyString
+    document.querySelector('.monthly-stat').innerHTML = monthlyString;
+    [].map.call(document.querySelectorAll('.ar-button'), function (el) {
+      const ripple = new mdc.ripple.MDCRipple(el);
+      el.addEventListener('click', function () {
+
+        copy.date = el.dataset.date
+        history.pushState(['addView'], null, null);
+        addView(copy)
+      })
+    })
   }
 }
 

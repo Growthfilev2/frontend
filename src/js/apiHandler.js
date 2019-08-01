@@ -818,6 +818,7 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
   read.templates.forEach(function (subscription) {
+    
     updateSubscription(subscription, updateTx)
   })
 

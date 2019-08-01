@@ -284,14 +284,9 @@ function startApp() {
         const reports = db.createObjectStore('reports', {
           keyPath: 'joinedDate'
         });
-        reports.createIndex('onLeave', 'onLeave');
-        reports.createIndex('year', 'year')
+
         reports.createIndex('month', 'month')
-        reports.createIndex('date', 'date')
-        reports.createIndex('office', 'office')
-        reports.createIndex('byOfficeDate',['office','joinedDate'])
-        reports.createIndex('statusForDay', 'statusForDay')
-        reports.createIndex('monthDate',['month','date'])
+
       };
 
       tx.oncomplete = function () {
@@ -348,25 +343,25 @@ function startApp() {
         return
       };
 
-    getRootRecord().then(function (rootRecord) {
-      if (!rootRecord.fromTime) {
-        requestCreator('Null').then(function () {
-          document.getElementById('start-load').classList.add('hidden')
-          history.pushState(['profileCheck'], null, null)
-          profileCheck();
-        }).catch(function (error) {
-          if (error.response.apiRejection) {
-            snacks(error.response.message, 'Okay')
-          }
-        })
-        return;
-      }
-      document.getElementById('start-load').classList.add('hidden')
-      history.pushState(['profileCheck'], null, null)
-      profileCheck();
-      requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+      getRootRecord().then(function (rootRecord) {
+        if (!rootRecord.fromTime) {
+          requestCreator('Null').then(function () {
+            document.getElementById('start-load').classList.add('hidden')
+            history.pushState(['profileCheck'], null, null)
+            profileCheck();
+          }).catch(function (error) {
+            if (error.response.apiRejection) {
+              snacks(error.response.message, 'Okay')
+            }
+          })
+          return;
+        }
+        document.getElementById('start-load').classList.add('hidden')
+        history.pushState(['profileCheck'], null, null)
+        profileCheck();
+        requestCreator('Null').then(handleComponentUpdation).catch(console.log)
 
-    })
+      })
 
     }).catch(function (error) {
       if (error.response.apiRejection) {
@@ -879,16 +874,10 @@ function createObjectStores(db, uid) {
   const reports = db.createObjectStore('reports', {
     keyPath: 'joinedDate'
   });
- 
-  reports.createIndex('onLeave', 'onLeave')
-  reports.createIndex('year', 'year')
+
+
   reports.createIndex('month', 'month')
-  reports.createIndex('date', 'date')
-  reports.createIndex('office', 'office')
-  reports.createIndex('byOfficeDate', 'joinedDate')
-  reports.createIndex('statusForDay', 'statusForDay')
-  reports.createIndex('statusForDayMonth', ['statusForDay','month'])
-  reports.createIndex('monthDate',['month','date'])
+
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });
@@ -1109,7 +1098,7 @@ function openMap() {
 
       manageLocation().then(function (location) {
         document.getElementById('start-load').classList.add('hidden');
-        if (!isLocationMoreThanThreshold(oldApplicationState.location, location)) {
+        if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(oldApplicationState.location, location))) {
           ApplicationState = oldApplicationState
           return getSuggestions()
         }
