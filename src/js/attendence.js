@@ -68,7 +68,7 @@ function attendanceDom(leaveSub) {
           .get(activity.activityId).onsuccess = function (event) {
             const result = event.target.result;
   
-            console.log(result);
+           
             todayCardString += todayStatCard(result, activity);
           }
       })
