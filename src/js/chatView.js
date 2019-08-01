@@ -15,6 +15,7 @@ function chatView() {
     </a>`
 
     const header = getHeader('app-header', backIcon, searchIcon);
+    header.root_.classList.remove('hidden')
     if (!document.getElementById('search-btn')) return;
     document.getElementById('search-btn').addEventListener('click', function () {
         history.pushState(['searchChats'], null, null)
@@ -880,6 +881,7 @@ function activityDomCustomer(activityRecord) {
     </div>
     <div id='attachment-container'>
         ${viewAttachment(activityRecord)}
+        
     </div>
      
       
@@ -983,7 +985,7 @@ function viewAttachment(activityRecord) {
     }).join("")}`
 }
 
-function viewVenue(activityRecord) {
+function viewVenue(activityRecord,showMap) {
     return `${activityRecord.venue.map(function(v,idx){
     
         return `
@@ -997,13 +999,16 @@ function viewVenue(activityRecord) {
                     <span class='mdc-list-item__primary-text'>${v.location}</span>
                     <span class='mdc-list-item__secondary-text'>${v.address}</span>
                     </span>
-                     <a class="mdc-list-item__meta material-icons venue-map-intent mdc-theme--primary" aria-hidden="true" href='geo:${v.geopoint._latitude},${v.geopoint._longitude}?q=${v.geopoint._latitude},${v.geopoint._longitude}'>map</a>
+                     ${showMap ? `<a class="mdc-list-item__meta material-icons venue-map-intent mdc-theme--primary" aria-hidden="true" href='geo:${v.geopoint._latitude},${v.geopoint._longitude}?q=${v.geopoint._latitude},${v.geopoint._longitude}'>map</a>`:'' }
               </li>`:''}`
      }).join("")}`
 }
 
 function viewSchedule(activityRecord) {
-    return `${activityRecord.schedule.map(function(sc,idx){
+
+    return `
+    
+    ${activityRecord.schedule.map(function(sc,idx){
             return  `
             <li class="mdc-list-item">
             ${idx == 0 ? `<span class="mdc-list-item__graphic material-icons"

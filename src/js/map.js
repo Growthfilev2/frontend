@@ -7,8 +7,7 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion: 7,
-
+  iframeVersion: 8,
 }
 
 function showNoLocationFound(error) {
@@ -95,10 +94,6 @@ function mapView(location) {
   });
 }
 
-
-
-
-
 function loadCardData(markers) {
 
   const el = document.getElementById('selection-box');
@@ -129,38 +124,30 @@ function loadCardData(markers) {
     const value = JSON.parse(evt.detail.value)
     if (!value) return;
     if (value === 1) {
-      const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
-      ApplicationState.knownLocation = false;
+      const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
       ApplicationState.venue = '';
       ApplicationState.office = '';
-
-
-      document.getElementById('office-cont').innerHTML = `${mdcDefaultSelect(offices,'Choose Office','choose-office')}`
-      const selectOfficeInit = new mdc.select.MDCSelect(document.getElementById('choose-office'));
-      selectOfficeInit.listen('MDCSelect:change', function (evt) {
-        if (!evt.detail.value) return;
-        ApplicationState.office = evt.detail.value;
-        cardProd.open();
-
-        const checkInRequestBody = setVenueForCheckIn('', ApplicationState.officeWithCheckInSubs[evt.detail.value]);
-        requestCreator('create', checkInRequestBody).then(function () {
-          cardProd.close()
-          successDialog('Check-In Created')
-          ApplicationState.lastCheckInCreated = Date.now()
-          localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-          getSuggestions()
-        }).catch(function (error) {
-          snacks(error.response.message);
-          cardProd.close()
-        })
-      });
-
+      ApplicationState.knownLocation = false;
       if (offices.length == 1) {
-        selectOfficeInit.selectedIndex = 1
-      }
-      if (offices.length > 1) {
-        selectOfficeInit.selectedIndex = 0
-      }
+        ApplicationState.office = offices[0];
+      };
+      const prom = []
+      offices.forEach(function (office) {
+        prom.push(requestCreator('create', setVenueForCheckIn('', ApplicationState.officeWithCheckInSubs[office])))
+      })
+
+      cardProd.open();
+      Promise.all(prom).then(function () {
+        cardProd.close()
+        successDialog('Check-In Created')
+        ApplicationState.lastCheckInCreated = Date.now()
+        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+        getSuggestions()
+      }).catch(function (error) {
+        snacks(error.response.message);
+        cardProd.close()
+      })
+
       return;
     }
 
@@ -356,14 +343,14 @@ function setFilePath(base64) {
   submit.root_.addEventListener('click', function () {
     const textValue = textarea.value;
     const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
- 
+
     progressBar.open();
 
     if (offices.length == 1) {
       const sub = ApplicationState.officeWithCheckInSubs[offices[0]]
       sub.attachment.Photo.value = url
       sub.attachment.Comment.value = textValue;
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue,sub)).then(function () {
+      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, sub)).then(function () {
         getSuggestions()
         successDialog('Check-In Created')
         progressBar.close()
@@ -434,18 +421,19 @@ ${option}
 
 
 function mdcSelectVenue(venues, label, id) {
-  let float;
   const template = `<div class="mdc-select" id=${id}>
   <i class="mdc-select__dropdown-icon"></i>
   <select class="mdc-select__native-control">
   <option disabled selected value=${JSON.stringify('0')}></option>
   <option value=${JSON.stringify('1')}>UNKNOWN LOCATION</option>
+
   ${venues.map(function(value){
     return ` <option value='${JSON.stringify(value)}'>
     ${value.location}
     </option>`
-}).join("")}
-  </select>
+  }).join("")}
+  
+</select>
   <label class='mdc-floating-label'>${label}</label>
   <div class="mdc-line-ripple"></div>
 </div>`

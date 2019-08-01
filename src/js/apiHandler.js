@@ -55,11 +55,11 @@ function sendErrorRequestToMainThread(error) {
 
 self.onmessage = function (event) {
   meta = event.data.meta;
-  if(event.data.type === 'geolocationApi') {
-    geolocationApi(event.data.body,event.data.meta).then(sendSuccessRequestToMainThread).catch(function(error){
+  if (event.data.type === 'geolocationApi') {
+    geolocationApi(event.data.body, event.data.meta).then(sendSuccessRequestToMainThread).catch(function (error) {
       self.postMessage(error);
     });
-    return 
+    return
   }
 
   const req = indexedDB.open(event.data.meta.user.uid);
@@ -241,7 +241,7 @@ function comment(body, meta) {
   return http(req)
 }
 
-function geolocationApi(body,meta) {
+function geolocationApi(body, meta) {
 
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
@@ -296,7 +296,7 @@ function dm(body, meta) {
 }
 
 function statusChange(body, meta) {
-  
+
   const req = {
     method: 'PATCH',
     url: `${meta.apiUrl}activities/change-status`,
@@ -513,9 +513,17 @@ function updateMap(venue, tx) {
     deleteRecordReq.onerror = function () {
       instant({
         message: deleteRecordReq.error.message,
-      },meta)
+      }, meta)
     }
   }
+}
+
+function updateReports(statusObject,reportObjectStore) {
+  statusObject.forEach(function (item) {
+      item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
+      item.statusForDay = item.statusForDay || 0;
+      reportObjectStore.put(item)
+    })
 }
 
 function updateCalendar(activity, tx) {
@@ -554,7 +562,7 @@ function updateCalendar(activity, tx) {
     recordDeleteReq.onerror = function () {
       instant({
         message: recordDeleteReq.error.message
-      },meta)
+      }, meta)
     }
   }
 }
@@ -667,10 +675,11 @@ function createListStore(activity, tx) {
 
 function successResponse(read, param, db, resolve, reject) {
 
-  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users'], 'readwrite');
+  const updateTx = db.transaction(['map', 'calendar', 'children', 'list', 'subscriptions', 'activity', 'addendum', 'root', 'users', 'reports'], 'readwrite');
   const addendumObjectStore = updateTx.objectStore('addendum')
   const activityObjectStore = updateTx.objectStore('activity');
-  const userStore = updateTx.objectStore('users')
+  const userStore = updateTx.objectStore('users');
+  const reports = updateTx.objectStore('reports')
   let counter = {};
   let userTimestamp = {}
 
@@ -688,7 +697,7 @@ function successResponse(read, param, db, resolve, reject) {
       if (addendum.assignee === param.user.phoneNumber) {
         addendum.key = param.user.phoneNumber + addendum.user
         userTimestamp[addendum.user] = addendum;
-      
+
         counter[addendum.user] ? counter[addendum.user] += 1 : counter[addendum.user] = 1
 
       } else {
@@ -707,7 +716,10 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.locations.forEach(function (location) {
     updateMap(location, updateTx)
-  })
+  });
+
+  updateReports(read.statusObject,reports)
+
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
@@ -723,7 +735,7 @@ function successResponse(read, param, db, resolve, reject) {
         let selfRecord = event.target.result;
         if (!selfRecord) {
           selfRecord = {
-            count:0
+            count: 0
           }
         };
         selfRecord.mobile = user.phoneNumber;
@@ -806,10 +818,11 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
   read.templates.forEach(function (subscription) {
+    
     updateSubscription(subscription, updateTx)
   })
 
-  updateRoot(read, updateTx, param.user.uid,counter);
+  updateRoot(read, updateTx, param.user.uid, counter);
   updateTx.oncomplete = function () {
     console.log("all completed");
     return resolve(read)
@@ -819,19 +832,18 @@ function successResponse(read, param, db, resolve, reject) {
   }
 }
 
-function updateRoot(read, tx, uid,counter) {
+function updateRoot(read, tx, uid, counter) {
   let totalCount = 0;
-  Object.keys(counter).forEach(function(number){
+  Object.keys(counter).forEach(function (number) {
     totalCount += counter[number]
- })
+  })
   const store = tx.objectStore('root')
   store.get(uid).onsuccess = function (event) {
     const record = event.target.result;
     record.fromTime = read.upto;
-    if(record.totalCount) {
+    if (record.totalCount) {
       record.totalCount += totalCount;
-    }
-    else {
+    } else {
       record.totalCount = totalCount
     }
     console.log('start adding upto')

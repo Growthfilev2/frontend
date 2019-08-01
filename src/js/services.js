@@ -97,6 +97,7 @@ function getLocation() {
       }).catch(function (error) {
         reject(error)
       })
+      // resolve({latitude:22.56,longitude:55.67,lastLocationTime:Date.now()})
     }
   })
 }

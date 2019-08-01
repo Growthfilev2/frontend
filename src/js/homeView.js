@@ -233,7 +233,7 @@ ${ApplicationState.officeWithCheckInSubs ? `<a  class="material-icons mdc-top-ap
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   handleTemplateListClick(suggestedInit);
 
- 
+
 }
 
 function handleTemplateListClick(listInit) {
@@ -260,33 +260,33 @@ function handleTemplateListClick(listInit) {
       </li>`
     }).join("")}
     </ul>`
-    
+
     const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
-    officeTemplateDialog(dialog,ul)
-     ul.listen('MDCList:action', function (event) {
-      history.pushState(['addView'], null, null);   
+    officeTemplateDialog(dialog, ul)
+    ul.listen('MDCList:action', function (event) {
+      history.pushState(['addView'], null, null);
       addView(valueSelectedList[event.detail.index])
       dialog.close()
     })
   });
 }
 
-function officeTemplateDialog(dialog,ul){
-   
+function officeTemplateDialog(dialog, ul) {
+
   ul.singleSelection = true
   ul.selectedIndex = 0;
-  
-  setTimeout(function(){
+
+  setTimeout(function () {
     dialog.root_.querySelector('.mdc-dialog__surface').classList.add('open')
     ul.foundation_.adapter_.focusItemAtIndex(0);
-  },50)
-  
+  }, 50)
+
   dialog.listen('MDCDialog:opened', function () {
     ul.layout();
   })
 
-  dialog.listen('MDCDialog:closing',function(){
+  dialog.listen('MDCDialog:closing', function () {
     dialog.root_.querySelector('.mdc-dialog__surface').classList.remove('open');
   })
   dialog.open();
