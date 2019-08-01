@@ -295,8 +295,6 @@ html {
   color: white;
 }
 
-
-
 .message.me:after {
   border-width: 0px 0 10px 10px;
   border-color: transparent transparent transparent #bd5668;
@@ -305,12 +303,11 @@ html {
 }
 
 .date-box {
-
   clear: both;
   font-size: 15px;
   padding: 15px;
   position: relative;
-};
+}
 
 .date-box:first-child {
   margin: 16px 0 8px;
