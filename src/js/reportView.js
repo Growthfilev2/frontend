@@ -16,14 +16,22 @@ function reportView() {
     </div>`
     const sectionContent = document.querySelector('.tabs-section .content');
     if (!evt.detail.index) {
-      getSubscription(ApplicationState.office, 'leave').then(function (result) {
+      Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
         console.log(result);
-        sectionContent.innerHTML = attendanceDom(result);
-        const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-        handleTemplateListClick(listInit)
+        const leaveSub = result[0];
+        const arSub = result[1];
+        if (leaveSub.length) {
+          sectionContent.innerHTML = attendanceDom(leaveSub);
+          const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+          handleTemplateListClick(listInit)
+        }
         createTodayStat();
-        createMonthlyStat();
-      }).catch(console.log)
+        createMonthlyStat({
+          leaveSub,
+          arSub
+        });
+      })
+
       return
     }
 
@@ -74,7 +82,7 @@ function attendanceDom(leaveSub) {
 <div class='today-stat mdc-layout-grid__inner'>
 
 </div>
-<div class='monthly-stat mdc-layout-grid__inner'>
+<div class='monthly-stat'>
 
 </div>
 </div>
@@ -119,8 +127,8 @@ function createTodayStat() {
     })
     activityTx.oncomplete = function () {
       document.querySelector('.today-stat').innerHTML =
-        `<div class="hr-sect mdc-layout-grid__cell--span-12">Today</div>
-      ${todayCardString};
+        `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
+      ${todayCardString}
     `
     }
   }
@@ -134,7 +142,7 @@ function todayStatCard(addendum, activity) {
     <div class="mdc-card__primary-action">
       <div class="demo-card__primary">
       <div class='card-heading-container'>
-      <h2 class="demo-card__title mdc-typography mdc-typography--headline5">${addendum.comment}</h2>
+      <h2 class="demo-card__title mdc-typography mdc-typography--headline6">${addendum.comment}</h2>
       <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
       </div>
       <div class='activity-data'>
@@ -152,54 +160,65 @@ function todayStatCard(addendum, activity) {
   `
 }
 
-function monthlyStatCard(value) {
-  `<div class='mdc-card mdc-layout-grid__cell--span-12'>
-    <div class="mdc-card__primary-action">
-      <div class="demo-card__primary">
-      <div class="mdc-list-item__graphic" aria-hidden="true">
-      <span>Thu</span>
-      <p>12</p>
-      </div>
-      <ul class="mdc-list demo-list">
-      <li class="mdc-list-item mdc-ripple-upgraded" tabindex="0" id="" style="">
-      <span class="mdc-list-item__graphic material-icons" aria-hidden="true">wifi</span>
-      
-      </li>
-      Line-item
-      </ul>
-     
-      <div class='card-heading-container'>
-      <h2 class="demo-card__title mdc-typography mdc-typography--headline5">${addendum.comment}</h2>
-      <h3 class="demo-card__subtitle mdc-typography mdc-typography--subtitle2 mb-0">at ${moment(activity.timestamp).format('hh:mm a')}</h3>
-      </div>
 
-      
-    </div>
-  </div>  
-</div>`
+function expandMonthlyList(sfd, subscriptionString) {
+  const subs = JSON.parse(subscriptionString);
+  console.log(subs);
+
 }
 
-function createMonthlyStat() {
+function monthlyStatCard(value, subs) {
+  const day = moment(`${value.date}-${value.month}-${value.year}`, 'DD-MM-YYYY').format('ddd')
+  return `
+  <div class="month-container">
+    <div class="month-date-cont">
+      <span class='day'>${day}</span>
+      <p class='date'>${value.date}</p>
+      <p class='mdc-theme--error sfd'>0.5</p>
+    </div>
+    <div class='btn-container'>
+    ${value.statusForDay == 0 ? `
+    <button class='mdc-button mdc-theme--primary-bg'>
+       <span class="mdc-button__label mdc-theme--on-primary">Apply Leave</span>
+    </button>
+    <button class='mdc-button mdc-theme--primary-bg'>
+        <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
+    </button>` :
+    `<button class='mdc-button mdc-theme--primary-bg'>
+        <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
+    </button>`}
+    </div>
+</div>
+  `
+}
+
+function createMonthlyStat(subs) {
   const tx = db.transaction('reports');
   const MAX_STATUS_FOR_DAY_VALUE = 1
-  const CURRENT_MONTH = new Date().getMonth();
-  const monthlyString = ''
+  let monthlyString = ''
+  let month;
+
   tx.objectStore('reports')
-    .index('statusForDay')
-    .openCursor(IDBKeyRange.upperBound(MAX_STATUS_FOR_DAY_VALUE, true))
+    .index('month')
+    .openCursor(null, 'prev')
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (cursor.value.month !== CURRENT_MONTH) {
+      if (cursor.value.statusForDay == MAX_STATUS_FOR_DAY_VALUE) {
         cursor.continue();
         return;
       }
-      monthlyString += monthlyStatCard(cursor.value);
+      if(month !== cursor.value.month) {
+        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
+      }
+      month = cursor.value.month;
+
+      monthlyString += monthlyStatCard(cursor.value, subs);
       console.log(cursor.value)
       cursor.continue();
     }
   tx.oncomplete = function () {
-    document.querySelector('.monthly-stat').innerHTML = monthlyStatCard;
+    document.querySelector('.monthly-stat').innerHTML = monthlyString
   }
 }
 

@@ -94,10 +94,6 @@ function mapView(location) {
   });
 }
 
-
-
-
-
 function loadCardData(markers) {
 
   const el = document.getElementById('selection-box');
@@ -137,8 +133,10 @@ function loadCardData(markers) {
       };
       const prom = []
       offices.forEach(function (office) {
-        prom.push(ApplicationState.officeWithCheckInSubs[office])
+        prom.push(requestCreator('create', setVenueForCheckIn('', ApplicationState.officeWithCheckInSubs[office])))
       })
+
+      cardProd.open();
       Promise.all(prom).then(function () {
         cardProd.close()
         successDialog('Check-In Created')

@@ -1,13 +1,15 @@
-.info-text { 
-    text-align: center;
-   
+.info-text {
+	text-align: center;
+
 }
+
 .report-cards .demo-card__primary {
-    padding: 0.8rem;
-    padding-bottom: 0rem;
+	padding: 0.8rem;
+	padding-bottom: 0rem;
 }
+
 .report-cards .activity-data ul li {
-    padding-left: 0px;
+	padding-left: 0px;
 }
 
 .hr-sect {
@@ -17,6 +19,7 @@
 	color: rgba(0, 0, 0, 0.35);
 	margin: 8px 0px;
 }
+
 .hr-sect::before,
 .hr-sect::after {
 	content: "";
@@ -26,4 +29,49 @@
 	font-size: 0px;
 	line-height: 0px;
 	margin: 0px 8px;
+}
+
+.monthly-stat {
+	 margin-top: 30px;
+}
+
+.month-date-cont {
+	text-align: center;
+	padding-right: 25px;
+}
+
+.month-date-cont .date {
+	font-weight: bold;
+	color: black;
+	margin-top: 5px;
+	margin-bottom: 10px;
+	font-size: 25px;
+}
+
+.month-date-cont .day {
+	text-transform: uppercase;
+	color: #716c6c;
+}
+.month-date-cont .sfd {
+	font-size: 20px;
+	font-weight: 500;
+	margin-top: 5px;
+	
+}
+
+.month-container {
+	display: inline-flex;
+	align-items: unset;
+	width: 100%;
+	margin-top: 10px;
+	padding: 10px;
+}
+
+.month-container .btn-container {
+	width: 100%
+}
+
+.month-container .btn-container button {
+	width: 100%;
+	margin-bottom: 10px;
 }

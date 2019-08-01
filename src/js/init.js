@@ -291,7 +291,7 @@ function startApp() {
         reports.createIndex('office', 'office')
         reports.createIndex('byOfficeDate',['office','joinedDate'])
         reports.createIndex('statusForDay', 'statusForDay')
-        reports.createIndex('statusForDayMonth', ['statusForDay','month'])
+        reports.createIndex('monthDate',['month','date'])
       };
 
       tx.oncomplete = function () {
@@ -888,6 +888,7 @@ function createObjectStores(db, uid) {
   reports.createIndex('byOfficeDate', 'joinedDate')
   reports.createIndex('statusForDay', 'statusForDay')
   reports.createIndex('statusForDayMonth', ['statusForDay','month'])
+  reports.createIndex('monthDate',['month','date'])
   const root = db.createObjectStore('root', {
     keyPath: 'uid'
   });

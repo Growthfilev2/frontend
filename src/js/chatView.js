@@ -15,6 +15,7 @@ function chatView() {
     </a>`
 
     const header = getHeader('app-header', backIcon, searchIcon);
+    header.root_.classList.remove('hidden')
     if (!document.getElementById('search-btn')) return;
     document.getElementById('search-btn').addEventListener('click', function () {
         history.pushState(['searchChats'], null, null)
