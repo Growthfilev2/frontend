@@ -286,9 +286,7 @@ function startApp() {
         });
 
         reports.createIndex('month', 'month')
-
       };
-
       tx.oncomplete = function () {
         console.log("completed all backlog");
       }
@@ -872,7 +870,6 @@ function createObjectStores(db, uid) {
   const reports = db.createObjectStore('reports', {
     keyPath: 'joinedDate'
   });
-
 
   reports.createIndex('month', 'month')
 

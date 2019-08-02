@@ -64,7 +64,7 @@ function showTabs() {
           <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
             <span class="mdc-tab__content">
               <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">fingerprint</span>
-              <span class="mdc-tab__text-label mdc-theme--on-primary">Attendence</span>
+              <span class="mdc-tab__text-label mdc-theme--on-primary">Attendance</span>
             </span>
             <span class="mdc-tab-indicator">
               <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>

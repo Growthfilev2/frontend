@@ -41,7 +41,13 @@ function sendFormToParent(formData) {
     }
     requestCreator('create', formData).then(function () {
             progressBar.close();
-            successDialog(`You Created a ${formData.template}`);
+            if(formData.template === 'attendance regularization') {
+                successDialog(`You Applied for an AR`);
+
+            }
+            else {
+
+            } successDialog(`You Created a ${formData.template}`);
             if (formData.template === 'customer') {
                 ApplicationState.knownLocation = true;
                 ApplicationState.venue = {

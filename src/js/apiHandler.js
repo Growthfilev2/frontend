@@ -519,6 +519,7 @@ function updateMap(venue, tx) {
 }
 
 function updateReports(statusObject,reportObjectStore) {
+  console.log(reportObjectStore)
   statusObject.forEach(function (item) {
       item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
       item.statusForDay = item.statusForDay || 0;

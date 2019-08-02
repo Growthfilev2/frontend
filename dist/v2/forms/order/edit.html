@@ -181,8 +181,8 @@
                     copy.attachment['Product'].value = el.dataset.product;
                     copy.attachment['Quantity'].value = Number(el.querySelector('input').value);
                     requestArray.push(copy)
-
                 })
+               
                 parent.sendFormToParent(requestArray)
             })
         }
