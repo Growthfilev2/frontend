@@ -261,7 +261,8 @@ function requestCreator(requestType, requestBody) {
           return reject(event.data)
         };
         return
-      }
+      };
+      
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
         requestBody['timestamp'] = time

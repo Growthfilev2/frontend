@@ -104,11 +104,11 @@ function loadCardData(markers) {
 
   const header = document.getElementById('card-primary');
   const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
-  header.textContent = `Where Are You`;
+  header.textContent = `Where are you ?`;
   el.classList.remove('hidden');
 
   contentBody.innerHTML = `<div>
-    ${mdcSelectVenue(markers, 'Where Are You ?','select-venue')}
+    ${mdcSelectVenue(markers, 'Choose location','select-venue')}
     <div id='office-cont' class='pt-10'></div>
     <div id='subs-cont' class='pt-10'></div>
     <div id='submit-cont' class='pt-10'></div>

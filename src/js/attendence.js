@@ -113,11 +113,11 @@ function todayStatCard(addendum, activity) {
 }
 
 function renderArCard(statusObject) {
-  if(statusObject.statusForDay == 1) {
+  if (statusObject.statusForDay == 1) {
     return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
-  if(statusObject.onAr) {
-      return `<p class='sfd mt-0 mb-0 mdc-theme--primary'>Applied for AR</p>`
+  if (statusObject.onAr) {
+    return `<p class='sfd mt-0 mb-0 mdc-theme--primary'>Applied for AR</p>`
   }
   return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${statusObject.year}-${statusObject.month + 1}-${statusObject.date}">
   <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
@@ -145,7 +145,7 @@ function monthlyStatCard(value) {
 function createMonthlyStat(arSub) {
   const copy = JSON.parse(JSON.stringify(arSub));
   const tx = db.transaction('reports');
-  const MAX_STATUS_FOR_DAY_VALUE = 1
+  const today = Number(`${new Date().getMonth()}${new Date().getDate()}${new Date().getFullYear()}`)
   let monthlyString = ''
   let month;
 
@@ -155,7 +155,10 @@ function createMonthlyStat(arSub) {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-    
+      if (cursor.value.joinedDate === today) {
+        cursor.continue();
+        return;
+      }
       if (month !== cursor.value.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
