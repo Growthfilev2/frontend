@@ -1,5 +1,3 @@
-let apiHandler = new Worker('js/apiHandler.js');
-
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
@@ -91,18 +89,12 @@ function getLocation() {
         resolve(e.detail)
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
-    }
-     catch (e) {
+    } catch (e) {
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
         reject(error)
       })
-      // resolve({
-      //   latitude: 22.56,
-      //   longitude: 55.67,
-      //   lastLocationTime: Date.now()
-      // })
     }
   })
 }
@@ -216,57 +208,44 @@ function isLocationStatusWorking() {
 
 
 function requestCreator(requestType, requestBody) {
-  return new Promise(function (resolve, reject) {
+  const nonLocationRequest = {
+    'instant': true,
+    'now': true,
+    'Null': true,
+    'backblaze': true,
+    'removeFromOffice': true,
+    'updateAuth': true,
+    'geolocationApi': true
+  }
+  var auth = firebase.auth().currentUser;
+  let apiHandler = new Worker('js/apiHandler.js');
 
-    var auth = firebase.auth().currentUser;
-    var requestGenerator = {
-      type: requestType,
-      body: '',
-      meta: {
-        user: {
-          token: '',
-          uid: auth.uid,
-          displayName: auth.displayName,
-          photoURL: auth.photoURL,
-          phoneNumber: auth.phoneNumber,
-        },
-        key: appKey.getMapKey(),
-        apiUrl: appKey.getBaseUrl()
-      }
-    };
-    const nonLocationRequest = {
-      'instant': true,
-      'now': true,
-      'Null': true,
-      'backblaze': true,
-      'removeFromOffice': true,
-      'updateAuth': true,
-      'geolocationApi': true
+  var requestGenerator = {
+    type: requestType,
+    body: '',
+    meta: {
+      user: {
+        token: '',
+        uid: auth.uid,
+        displayName: auth.displayName,
+        photoURL: auth.photoURL,
+        phoneNumber: auth.phoneNumber,
+      },
+      key: appKey.getMapKey(),
+      apiUrl: appKey.getBaseUrl()
     }
+  };
 
+  auth.getIdToken(false).then(function (token) {
+    requestGenerator.meta.user.token = token
+    if (nonLocationRequest[requestType]) {
+      requestGenerator.body = requestBody;
+      apiHandler.postMessage(requestGenerator);
 
-
-
-    auth.getIdToken(false).then(function (token) {
-      requestGenerator.meta.user.token = token
-      if (nonLocationRequest[requestType]) {
-        requestGenerator.body = requestBody;
-        apiHandler.postMessage(requestGenerator);
-
-        apiHandler.onmessage = function (event) {
-          if (!event.data.success) return reject(event.data)
-          return resolve(event.data)
-        }
-        apiHandler.onerror = function (event) {
-          return reject(event.data)
-        };
-        return
-      };
-      
+    } else {
       getRootRecord().then(function (rootRecord) {
         const time = fetchCurrentTime(rootRecord.serverTime);
         requestBody['timestamp'] = time
-
         if (isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
           manageLocation().then(function (geopoint) {
             if (isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) {
@@ -278,13 +257,6 @@ function requestCreator(requestType, requestBody) {
             requestGenerator.body = requestBody;
             apiHandler.postMessage(requestGenerator);
 
-            apiHandler.onmessage = function (event) {
-              if (!event.data.success) return reject(event.data)
-              return resolve(event.data)
-            }
-            apiHandler.onerror = function (event) {
-              return reject(event.data)
-            };
           }).catch(locationErrorDialog)
           return;
         }
@@ -292,15 +264,19 @@ function requestCreator(requestType, requestBody) {
         requestGenerator.body = requestBody;
         apiHandler.postMessage(requestGenerator);
 
-        apiHandler.onmessage = function (event) {
-          if (!event.data.success) return reject(event.data)
-          return resolve(event.data)
-        }
-        apiHandler.onerror = function (event) {
-          return reject(event.data)
-        };
       });
-    });
+    }
+  });
+  return new Promise(function (resolve, reject) {
+    apiHandler.onmessage = function (event) {
+      apiHandler.terminate()
+      if (!event.data.success) return reject(event.data)
+      return resolve(event.data)
+    }
+    apiHandler.onerror = function (event) {
+      apiHandler.terminate()
+      return reject(event.data)
+    };
   })
 }
 

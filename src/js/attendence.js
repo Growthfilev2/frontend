@@ -155,7 +155,7 @@ function createMonthlyStat(arSub) {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (cursor.value.joinedDate === today) {
+      if (cursor.value.joinedDate >= today) {
         cursor.continue();
         return;
       }
