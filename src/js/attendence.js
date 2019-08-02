@@ -112,6 +112,18 @@ function todayStatCard(addendum, activity) {
     `
 }
 
+function renderArCard(statusObject) {
+  if(statusObject.statusForDay == 1) {
+    return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
+  }
+  if(statusObject.onAr) {
+      return `<p class='sfd mt-0 mb-0 mdc-theme--primary'>Applied for AR</p>`
+  }
+  return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${statusObject.year}-${statusObject.month + 1}-${statusObject.date}">
+  <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
+</button>
+<p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
+}
 
 function monthlyStatCard(value) {
 
@@ -124,12 +136,7 @@ function monthlyStatCard(value) {
        
       </div>
       <div class='btn-container'>
-      ${value.statusForDay < 1 ? ` <button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${value.year}-${value.month + 1}-${value.date}">
-      <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
-    </button>
-    <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${value.statusForDay}</p>
-    ` : ` <p class='present sfd mt-0 mb-0'>Status For Day : ${value.statusForDay}</p>`}
-    
+        ${renderArCard(value)}
       </div>
   </div>
     `
