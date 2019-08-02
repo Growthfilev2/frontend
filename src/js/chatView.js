@@ -1014,7 +1014,7 @@ function viewSchedule(activityRecord) {
             style='background-color:white'></span>`}
             <span class="mdc-list-item__text">
               <span class="mdc-list-item__primary-text">${sc.name}</span>
-              <span class="mdc-list-item__secondary-text">${formatCreatedTime(sc.startTime)} - ${formatCreatedTime(sc.endTime)}</span>
+              <span class="mdc-list-item__secondary-text">${moment(sc.startTime).format('D MMM')} - ${moment(sc.endTime).format('D MMM')}</span>
             </span>
           </li>`
     }).join("")}`
