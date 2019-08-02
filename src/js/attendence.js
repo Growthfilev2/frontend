@@ -124,10 +124,12 @@ function monthlyStatCard(value) {
        
       </div>
       <div class='btn-container'>
-      <button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${value.year}-${value.month + 1}-${value.date}">
-        <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
-      </button>
-      <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${value.statusForDay}</p>
+      ${value.statusForDay < 1 ? ` <button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${value.year}-${value.month + 1}-${value.date}">
+      <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
+    </button>
+    <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${value.statusForDay}</p>
+    ` : ` <p class='present sfd mt-0 mb-0'>Status For Day : ${value.statusForDay}</p>`}
+    
       </div>
   </div>
     `
@@ -146,10 +148,7 @@ function createMonthlyStat(arSub) {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (cursor.value.statusForDay == MAX_STATUS_FOR_DAY_VALUE) {
-        cursor.continue();
-        return;
-      }
+    
       if (month !== cursor.value.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }

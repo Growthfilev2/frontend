@@ -1,18 +1,77 @@
-.attendence-section {
+.report-cards .demo-card__primary {
+  padding: 0.8rem;
+  padding-bottom: 0rem;
+}
 
+.report-cards .activity-data ul li {
+  padding-left: 0px;
 }
-.attendence-section .mdc-button {
-  margin: 0 auto;
-  display: block;
+
+.hr-sect {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.35);
+  margin: 8px 0px;
+  margin-top: 20px;
 }
-.cards-container {
-  background-color: #cccccc47;
+
+.hr-sect::before,
+.hr-sect::after {
+  content: "";
+  flex-grow: 1;
+  background: rgba(0, 0, 0, 0.35);
+  height: 1px;
+  font-size: 0px;
+  line-height: 0px;
+  margin: 0px 8px;
 }
-.cards-container .mdc-card {
-    width: 90%;
-    margin: auto;
-    padding: 20px;
+
+
+
+.month-date-cont {
+  text-align: center;
+  padding-right: 25px;
+  max-width: 54px;
 }
-.cards-container .mdc-card .card-actions {
-  /* margin-top:  */
+
+.month-date-cont .date {
+  font-weight: bold;
+  color: black;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  font-size: 25px;
+}
+
+.month-date-cont .day {
+  text-transform: uppercase;
+  color: #716c6c;
+}
+
+ .sfd {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.sfd.present {
+  color: green;
+}
+
+.month-container {
+  display: table;
+
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.month-container .btn-container {
+  width: 100%;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.month-container .btn-container button {
+  width: 100%;
+  margin-bottom: 10px;
 }
