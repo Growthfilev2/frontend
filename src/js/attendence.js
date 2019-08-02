@@ -1,23 +1,23 @@
 function attendenceView(sectionContent) {
- 
-    Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
-        console.log(result);
-        const leaveSub = result[0];
-        const arSub = result[1];
-        if (leaveSub.length) {
-            sectionContent.innerHTML = attendanceDom(leaveSub);
-            const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
-            handleTemplateListClick(listInit)
-        }
-        createTodayStat();
-        if (!arSub.length) return;
 
-        createMonthlyStat(arSub[0]);
-    })
+  Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
+    console.log(result);
+    const leaveSub = result[0];
+    const arSub = result[1];
+    if (leaveSub.length) {
+      sectionContent.innerHTML = attendanceDom(leaveSub);
+      const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
+      handleTemplateListClick(listInit)
+    }
+    createTodayStat();
+    if (!arSub.length) return;
+
+    createMonthlyStat(arSub[0]);
+  })
 }
 
 function attendanceDom(leaveSub) {
-    return `<div class='attendance-section'>
+  return `<div class='attendance-section'>
   
   <div class='data-container mdc-layout-grid'>
   <div class='mdc-layout-grid__inner'>
@@ -33,58 +33,61 @@ function attendanceDom(leaveSub) {
   </div>
   </div>
   </div>`
-  }
-  
-  function createTodayStat() {
-    const startOfTodayTimestamp = moment().startOf('day').valueOf()
-    console.log(startOfTodayTimestamp)
-    const currentTimestamp = moment().valueOf();
-    console.log(currentTimestamp)
-    const myNumber = firebase.auth().currentUser.phoneNumber;
-    let todayCardString = '';
-    const result = []
-  
-    const activityTx = db.transaction('activity')
-    activityTx.objectStore('activity')
-      .index('timestamp')
-      .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.creator.phoneNumber !== myNumber) {
-          cursor.continue();
-          return;
-        }
-        result.push(cursor.value);
+}
+
+function createTodayStat() {
+  const startOfTodayTimestamp = moment().startOf('day').valueOf()
+  console.log(startOfTodayTimestamp)
+  const currentTimestamp = moment().valueOf();
+  console.log(currentTimestamp)
+  const myNumber = firebase.auth().currentUser.phoneNumber;
+  let todayCardString = '';
+  const result = []
+
+  const activityTx = db.transaction('activity')
+  activityTx.objectStore('activity')
+    .index('timestamp')
+    .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.creator.phoneNumber !== myNumber) {
         cursor.continue();
+        return;
       }
-    activityTx.oncomplete = function () {
-      console.log(result);
-      const addendumTx = db.transaction('addendum');
-  
-      result.forEach(function (activity) {
-        addendumTx
-          .objectStore('addendum')
-          .index('activityId')
-          .get(activity.activityId).onsuccess = function (event) {
-            const result = event.target.result;
-  
-           
-            todayCardString += todayStatCard(result, activity);
-          }
-      })
-      addendumTx.oncomplete = function () {
+      result.push(cursor.value);
+      cursor.continue();
+    }
+  activityTx.oncomplete = function () {
+    console.log(result);
+    const addendumTx = db.transaction('addendum');
+
+    result.forEach(function (activity) {
+      addendumTx
+        .objectStore('addendum')
+        .index('activityId')
+        .get(activity.activityId).onsuccess = function (event) {
+          const result = event.target.result;
+
+
+          todayCardString += todayStatCard(result, activity);
+        }
+    })
+    addendumTx.oncomplete = function () {
+      if (todayCardString) {
+
         document.querySelector('.today-stat').innerHTML =
           `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
-      ${todayCardString}
-    `
+          ${todayCardString}
+          `
       }
     }
   }
-  
-  
-  
-  function todayStatCard(addendum, activity) {
-    return `
+}
+
+
+
+function todayStatCard(addendum, activity) {
+  return `
     <div class='mdc-card mdc-layout-grid__cell report-cards'>
       <div class="mdc-card__primary-action">
         <div class="demo-card__primary">
@@ -107,13 +110,13 @@ function attendanceDom(leaveSub) {
     </div>  
   </div>
     `
-  }
-  
-  
-  function monthlyStatCard(value) {
-  
-    const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
-    return `
+}
+
+
+function monthlyStatCard(value) {
+
+  const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
+  return `
     <div class="month-container mdc-elevation--z2">
       <div class="month-date-cont">
         <span class='day'>${day}</span>
@@ -128,46 +131,44 @@ function attendanceDom(leaveSub) {
       </div>
   </div>
     `
-  }
-  
-  function createMonthlyStat(arSub) {
-    const copy = JSON.parse(JSON.stringify(arSub));
-    const tx = db.transaction('reports');
-    const MAX_STATUS_FOR_DAY_VALUE = 1
-    let monthlyString = ''
-    let month;
-  
-    tx.objectStore('reports')
-      .index('month')
-      .openCursor(null, 'prev')
-      .onsuccess = function (event) {
-        const cursor = event.target.result;
-        if (!cursor) return;
-        if (cursor.value.statusForDay == MAX_STATUS_FOR_DAY_VALUE) {
-          cursor.continue();
-          return;
-        }
-        if (month !== cursor.value.month) {
-          monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
-        }
-        month = cursor.value.month;
-  
-        monthlyString += monthlyStatCard(cursor.value);
-  
+}
+
+function createMonthlyStat(arSub) {
+  const copy = JSON.parse(JSON.stringify(arSub));
+  const tx = db.transaction('reports');
+  const MAX_STATUS_FOR_DAY_VALUE = 1
+  let monthlyString = ''
+  let month;
+
+  tx.objectStore('reports')
+    .index('month')
+    .openCursor(null, 'prev')
+    .onsuccess = function (event) {
+      const cursor = event.target.result;
+      if (!cursor) return;
+      if (cursor.value.statusForDay == MAX_STATUS_FOR_DAY_VALUE) {
         cursor.continue();
+        return;
       }
-    tx.oncomplete = function () {
-      document.querySelector('.monthly-stat').innerHTML = monthlyString;
-      [].map.call(document.querySelectorAll('.ar-button'), function (el) {
-        const ripple = new mdc.ripple.MDCRipple(el);
-        el.addEventListener('click', function () {
-  
-          copy.date = el.dataset.date
-          history.pushState(['addView'], null, null);
-          addView(copy)
-        })
-      })
+      if (month !== cursor.value.month) {
+        monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
+      }
+      month = cursor.value.month;
+
+      monthlyString += monthlyStatCard(cursor.value);
+
+      cursor.continue();
     }
+  tx.oncomplete = function () {
+    document.querySelector('.monthly-stat').innerHTML = monthlyString;
+    [].map.call(document.querySelectorAll('.ar-button'), function (el) {
+      const ripple = new mdc.ripple.MDCRipple(el);
+      el.addEventListener('click', function () {
+
+        copy.date = el.dataset.date
+        history.pushState(['addView'], null, null);
+        addView(copy)
+      })
+    })
   }
-  
-  
+}

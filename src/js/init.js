@@ -873,7 +873,6 @@ function createObjectStores(db, uid) {
     keyPath: 'joinedDate'
   });
 
-
   reports.createIndex('month', 'month')
 
   const root = db.createObjectStore('root', {
