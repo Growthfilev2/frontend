@@ -353,7 +353,7 @@ function handleComponentUpdation(readResponse) {
   if (readResponse.response.templates.length) {
     getCheckInSubs().then(function (checkInSubs) {
       ApplicationState.officeWithCheckInSubs = checkInSubs
-      localStorage.setItem('ApplicationState', ApplicationState);
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     })
   }
   if (!history.state) return;
