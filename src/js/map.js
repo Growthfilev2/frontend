@@ -7,7 +7,7 @@ ApplicationState = {
   location: '',
   knownLocation: false,
   venue: '',
-  iframeVersion: 8,
+  iframeVersion: 9,
 }
 
 function showNoLocationFound(error) {

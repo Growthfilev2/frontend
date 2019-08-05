@@ -148,7 +148,7 @@ function monthlyStatCard(value, arSub) {
 
 function createMonthlyStat(arSub) {
   const tx = db.transaction('reports');
-  const copy = JSON.parse(JSON.stringify(arSub));
+
   const today = Number(`${new Date().getMonth()}${new Date().getDate()}${new Date().getFullYear()}`)
   let monthlyString = ''
   let month;
