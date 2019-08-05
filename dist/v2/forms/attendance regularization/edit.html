@@ -60,14 +60,12 @@
             subscriptionTemplate.schedule.forEach(function (name) {
                 const startfield = document.querySelector(`[data-name="${name} start date"]`);
                 const endField = document.querySelector(`[data-name="${name} end date"]`);
-                
                 startfield.value = endField.value  = createDate(new Date(subscriptionTemplate.date))
             });
 
             formEl.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const copy = JSON.parse(JSON.stringify(subscriptionTemplate));
-
                 copy.attachment.Reason.value = reason.value;
                 copy.share = []
                 const newSchedule = getNewSchedule(subscriptionTemplate);

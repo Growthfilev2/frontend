@@ -1,18 +1,22 @@
 function attendenceView(sectionContent) {
 
-  Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription(ApplicationState.office, 'attendance regularization')]).then(function (result) {
+  Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription('', 'attendance regularization')]).then(function (result) {
     console.log(result);
     const leaveSub = result[0];
-    const arSub = result[1];
+    const arSubs = result[1];
     if (leaveSub.length) {
       sectionContent.innerHTML = attendanceDom(leaveSub);
       const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
       handleTemplateListClick(listInit)
-    }
-    createTodayStat();
-    if (!arSub.length) return;
+    };
 
-    createMonthlyStat(arSub[0]);
+    createTodayStat();
+    if (!arSubs.length) return;
+    const officeAR = {}
+    arSubs.forEach(function (sub) {
+      officeAR[sub.office] = sub
+    })
+    createMonthlyStat(officeAR);
   })
 }
 
@@ -119,13 +123,13 @@ function renderArCard(statusObject) {
   if (statusObject.onAr) {
     return `<p class='sfd mt-0 mb-0 mdc-theme--primary'>Applied for AR</p>`
   }
-  return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-date="${statusObject.year}-${statusObject.month + 1}-${statusObject.date}">
+  return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
   <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
 </button>
 <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
 }
 
-function monthlyStatCard(value) {
+function monthlyStatCard(value, arSub) {
 
   const day = moment(`${value.date}-${value.month + 1}-${value.year}`, 'DD-MM-YYYY').format('ddd')
   return `
@@ -143,8 +147,8 @@ function monthlyStatCard(value) {
 }
 
 function createMonthlyStat(arSub) {
-  const copy = JSON.parse(JSON.stringify(arSub));
   const tx = db.transaction('reports');
+  const copy = JSON.parse(JSON.stringify(arSub));
   const today = Number(`${new Date().getMonth()}${new Date().getDate()}${new Date().getFullYear()}`)
   let monthlyString = ''
   let month;
@@ -159,13 +163,16 @@ function createMonthlyStat(arSub) {
         cursor.continue();
         return;
       }
+      if (!arSub[cursor.value.office]) {
+        cursor.continue();
+        return;
+      }
+
       if (month !== cursor.value.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = cursor.value.month;
-
-      monthlyString += monthlyStatCard(cursor.value);
-
+      monthlyString += monthlyStatCard(cursor.value, arSub);
       cursor.continue();
     }
   tx.oncomplete = function () {
@@ -173,10 +180,9 @@ function createMonthlyStat(arSub) {
     [].map.call(document.querySelectorAll('.ar-button'), function (el) {
       const ripple = new mdc.ripple.MDCRipple(el);
       el.addEventListener('click', function () {
-
-        copy.date = el.dataset.date
         history.pushState(['addView'], null, null);
-        addView(copy)
+        arSub[el.dataset.office].date = el.dataset.date
+        addView(arSub[el.dataset.office])
       })
     })
   }

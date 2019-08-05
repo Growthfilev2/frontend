@@ -7,7 +7,8 @@ function createDate(dateObject) {
     }
     if (date < 10) {
         date = '0' + date
-    }
+    };
+    
     return `${dateObject.getFullYear()}-${month}-${date}`
 }
 
