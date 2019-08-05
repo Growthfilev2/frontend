@@ -194,7 +194,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 7);
+  const req = window.indexedDB.open(dbName, 8);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -286,6 +286,9 @@ function startApp() {
         });
 
         reports.createIndex('month', 'month')
+      };
+      if (evt.oldVersion <= 7) {
+         localStorage.removeItem('ApplicationState')
       };
       tx.oncomplete = function () {
         console.log("completed all backlog");
@@ -1066,7 +1069,7 @@ function openMap() {
       }
       ApplicationState.officeWithCheckInSubs = checkInSubs
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-
+      
       if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
         manageLocation().then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
