@@ -175,8 +175,9 @@ function getHeader(parentSelector,sectionStart,sectionEnd){
     const el = document.getElementById(parentSelector);
     el.querySelector('#section-start').innerHTML = sectionStart;
     el.querySelector('#section-end').innerHTML = sectionEnd;
-    el.querySelector('#tabs').innerHTML = '';
+   
     topAppBar = new mdc.topAppBar.MDCTopAppBar(el)
+  
     // topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
     return topAppBar;
     

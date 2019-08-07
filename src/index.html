@@ -27,6 +27,45 @@
 </head>
 
 <body class="mdc-typography">
+
+  <aside class="mdc-drawer mdc-drawer--modal">
+    <div class="mdc-drawer__header mdc-theme--primary-bg">
+      <img src='./img/empty-user.jpg'>
+      <h3 class="mdc-drawer__title mdc-theme--on-primary">Mail</h3>
+    </div>
+    <div class="mdc-drawer__content">
+      <nav class="mdc-list">
+        <a class="mdc-list-item mdc-list-item--activated" aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">chat</i>
+          <span class="mdc-list-item__text">Chats</span>
+        </a>
+        <a class="mdc-list-item " aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">camera</i>
+          <span class="mdc-list-item__text">Take photo</span>
+        </a>
+        <hr class="mdc-list-divider">
+        <h6 class="mdc-list-group__subheader">Reports</h6>
+        <a class="mdc-list-item " aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">fingerprint</i>
+          <span class="mdc-list-item__text">Attendance</span>
+        </a>
+        <a class="mdc-list-item " aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">assignment</i>
+          <span class="mdc-list-item__text">Claims</span>
+        </a>
+        <a class="mdc-list-item " aria-current="page">
+          <i class="material-icons mdc-list-item__graphic" aria-hidden="true">payment</i>
+          <span class="mdc-list-item__text">Incentives</span>
+        </a>
+        <hr class="mdc-list-divider">
+        <a class="mdc-list-item" href="#" tabindex="-1"><i class="material-icons mdc-list-item__graphic"
+            aria-hidden="true">location_on</i>Change Location</a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="mdc-drawer-scrim"></div>
+  
   <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
@@ -48,7 +87,6 @@
     <div id='tabs'></div>
   </header>
 
-
   <div id='start-load'>
     <div class="lds-roller">
       <div></div>
@@ -66,16 +104,18 @@
 
   <div class="success--container hidden center-abs" id="success-animation">
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-      <circle class="path circle" fill="none" stroke="#89273E" stroke-width="6" stroke-miterlimit="10" cx="65.1" cy="65.1" r="62.1"/>
-      <polyline class="path check" fill="none" stroke="#89273E" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 "/>
+      <circle class="path circle" fill="none" stroke="#89273E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+        cy="65.1" r="62.1" />
+      <polyline class="path check" fill="none" stroke="#89273E" stroke-width="6" stroke-linecap="round"
+        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
     </svg>
     <p class="success-text mdc-theme--primary"></p>
 
   </div>
 
-  
-    <div id='login-container'></div>
-    <div id="app-current-panel"></div>
+
+  <div id='login-container'></div>
+  <div id="app-current-panel"></div>
 
 
 
@@ -96,7 +136,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" async>
   </script>
-  
+
 
   <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>

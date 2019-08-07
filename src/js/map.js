@@ -3,7 +3,6 @@ var globMark;
 let o;
 let selectedSubs;
 ApplicationState = {
-  office: '',
   location: '',
   knownLocation: false,
   venue: '',
@@ -123,7 +122,7 @@ function createUnkownCheckIn(cardProd) {
   })
 
   if(cardProd) {
-    cardProd.close()
+    cardProd.open()
   }
   Promise.all(prom).then(function () {
     if(cardProd) {
@@ -159,7 +158,9 @@ function loadCardData(markers) {
   ul.singleSelection = true;
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
-    if (evt.detail.index === markers.length + 1) return createUnkownCheckIn(cardProd);
+    console.log(evt.detail.index)
+    console.log(markers.length)
+    if (evt.detail.index == markers.length) return createUnkownCheckIn(cardProd);
    
     const selectedVenue = markers[evt.detail.index];
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))

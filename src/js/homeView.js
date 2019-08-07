@@ -131,6 +131,10 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
+  if (history.state[0] === 'homeView') {
+    drawer.open = !drawer.open;
+    return;
+  }
   return history.back();
 }
 
@@ -146,49 +150,29 @@ function homePanel(suggestionLength) {
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
       </div>
 
-      <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
-      <span class="material-icons mdc-fab__icon">description</span>
-      <span class="mdc-fab__label">My Reports</span>
-     </button>
   </div>
 </div>`
 }
 
 function homeHeaderStartContent() {
   return `
-  <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
-  <span class="header-two-line mdc-top-app-bar__title" id='selected-venue-chip'></span>
+  <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button">menu</button>
+  <span class="mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unkown Location'}</span>
 `
 }
 
-function removeSelectedLocation(){
-  const set = createElement("div",{className:'mdc-chip-set'})
-  set.appendChild(createDynamicChips(ApplicationState.venue.location,'selected-venue'))
-  const chipSet = new mdc.chips.MDCChipSet(set)
-  console.log(chipSet)
-  chipSet.listen('MDCChip:removal',function(event){
-    set.removeChild(event.detail.root);
-    openMap();
-  })
-  document.getElementById('selected-venue-chip').appendChild(set)
-  
-}
+
 function homeView(suggestedTemplates) {
 
   progressBar.close();
 
- 
-  const header = getHeader('app-header', homeHeaderStartContent(),'');
-  if(ApplicationState.venue) {
-      removeSelectedLocation()
-  }
-
-  header.root_.classList.remove('hidden')
-  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
 
   history.pushState(['homeView'], null, null)
+  const header = getHeader('app-header', homeHeaderStartContent(), '');
   header.listen('MDCTopAppBar:nav', handleNav);
+  header.root_.classList.remove('hidden')
 
+  document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
 
   const panel = document.getElementById('app-current-panel')
   const suggestionLength = suggestedTemplates.length
@@ -220,16 +204,15 @@ function homeView(suggestedTemplates) {
   //     rootRecord.totalCount = 0;
   //     store.put(rootRecord)
   //   }
-  // })
+  // });
+
   // document.getElementById('profile-header-icon').addEventListener('click', function () {
   //   history.pushState(['profileView'], null, null);
   //   profileView()
   // })
 
-  document.getElementById('reports').addEventListener('click', function () {
-    history.pushState(['reportView'],null,null)
-    reportView();
-  })
+  // history.pushState(['reportView'], null, null)
+  // reportView();
 
   if (!suggestedTemplates.length) return;
 
