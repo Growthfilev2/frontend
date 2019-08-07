@@ -1,7 +1,10 @@
-html ,body,#app-current-panel,#map {
+html ,body,#app-current-panel {
   height: 100%;
 }
-
+#map {
+  height: 55%;
+  display: none
+}
 :root {
   --mdc-theme-primary: #89273E;
   --mdc-theme-secondary: #cccccc;

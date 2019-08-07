@@ -902,29 +902,6 @@ function redirect() {
 }
 
 
-
-
-
-
-function setVenueForCheckIn(venueData, value) {
-  const copy = JSON.parse(JSON.stringify(value))
-  const venue = {
-    geopoint: {
-      latitude: venueData.latitude || '',
-      longitude: venueData.longitude || ''
-    },
-    address: venueData.address || '',
-    location: venueData.location || '',
-    venueDescriptor: copy.venue[0]
-  }
-  copy.share = [];
-  copy.venue = [venue]
-  return copy;
-
-}
-
-
-
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     let offices = [];

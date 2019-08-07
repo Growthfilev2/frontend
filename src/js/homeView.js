@@ -263,7 +263,8 @@ function handleTemplateListClick(listInit) {
 
     const dialog = new Dialog('Choose Office', officeList, 'choose-office-subscription').create('simple');
     const ul = new mdc.list.MDCList(document.getElementById('dialog-office'));
-    officeTemplateDialog(dialog, ul)
+
+    bottomDialog(dialog, ul)
     ul.listen('MDCList:action', function (event) {
       history.pushState(['addView'], null, null);
       addView(valueSelectedList[event.detail.index])
@@ -272,7 +273,7 @@ function handleTemplateListClick(listInit) {
   });
 }
 
-function officeTemplateDialog(dialog, ul) {
+function bottomDialog(dialog, ul) {
 
   ul.singleSelection = true
   ul.selectedIndex = 0;

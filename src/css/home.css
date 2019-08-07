@@ -170,18 +170,37 @@
     font-weight: bold;
 }
 
-#choose-office-subscription .mdc-dialog__container {
+#choose-office-subscription .mdc-dialog__container, #choose-venue .mdc-dialog__container {
 
     bottom: 0;
     position: fixed;
     width: 100%;
     transition: all 450ms cubic-bezier(0.32, 1, 0.23, 1) 0ms;
 }
-#choose-office-subscription .mdc-dialog__surface {
+
+#choose-venue .mdc-dialog__container {
+    height: 45%;
+}
+#choose-venue .mdc-dialog__scrim {
+    background-color: transparent;
+}
+#choose-office-subscription .mdc-dialog__surface,  #choose-venue .mdc-dialog__surface {
     width: 100%;
     transform: translate(0, 100%);
     transition: all 450ms cubic-bezier(0.32, 1, 0.23, 1) 100ms;
 }
-#choose-office-subscription .mdc-dialog__surface.open {
+#choose-office-subscription .mdc-dialog__surface.open, #choose-venue .mdc-dialog__surface.open {
     transform: translate(0, 0);
+}
+#choose-venue .mdc-dialog__surface.open {
+    max-width: 100%;
+}
+#choose-venue .mdc-dialog__content {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+#choose-venue .mdc-dialog__scrim, #choose-venue.mdc-dialog {
+    top: unset;
+    bottom: 0;
+    height: 45%;
 }

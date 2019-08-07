@@ -3,6 +3,9 @@
     background-color: transparent !important;
 }
 
+#selection-box  aside {
+    height: 40%;
+}
 
 .selection-box-auto button {
     width: 100%;
@@ -17,6 +20,10 @@
 .selection-box-auto .content-body {
     padding-top: 10px;
     padding-bottom: 10px;
+ 
+    overflow-y: auto;
+    height: 100%;
+    padding-bottom: 50px;
 }
 
 .selection-box-auto .content-body .mdc-select {
@@ -166,6 +173,7 @@
 
   
   @media screen and (min-width: 640px) {
+
     .overlay {
       padding: 0 19%;
     }
