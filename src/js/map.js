@@ -122,7 +122,9 @@ function createUnkownCheckIn(cardProd) {
     prom.push(requestCreator('create', copy))
   })
 
-  // cardProd.open();
+  if(cardProd) {
+    cardProd.close()
+  }
   Promise.all(prom).then(function () {
     if(cardProd) {
       cardProd.close()
@@ -149,13 +151,30 @@ function loadCardData(markers) {
   document.querySelector('#selection-box #card-primary').textContent = 'Where are you ?';
   document.querySelector('#selection-box .content-body').innerHTML = venues;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
+  const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
 
   const ul = new mdc.list.MDCList(document.getElementById('selected-venue'))
+  ul.singleSelection = true;
+  ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
     if (evt.detail.index === markers.length + 1) return createUnkownCheckIn(cardProd);
-
-    const checkInRequestBody = setVenueForCheckIn(value, ApplicationState.officeWithCheckInSubs[value.office])
-    requestCreator('create', checkInRequestBody).then(function () {
+    const selectedVenue = markers[evt.detail.index];
+    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
+    const vd = copy.venue[0]
+    copy.venue = [{
+      geopoint:{
+        latitude:selectedVenue.latitude,
+        longitude:selectedVenue.longitude
+      },
+      location:selectedVenue.location,
+      address:selectedVenue.address,
+      venueDescriptor:vd
+    }]
+    
+    copy.share = []
+    console.log(copy)
+    cardProd.open();
+    requestCreator('create', copy).then(function () {
       successDialog('Check-In Created')
       cardProd.close();
       ApplicationState.lastCheckInCreated = Date.now()
