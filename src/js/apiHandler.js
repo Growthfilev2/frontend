@@ -522,7 +522,6 @@ function updateReports(statusObject,reportObjectStore) {
   console.log(reportObjectStore)
   statusObject.forEach(function (item) {
       item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
-      item.statusForDay = item.statusForDay || 0;
       reportObjectStore.put(item)
     })
 }
@@ -876,6 +875,8 @@ function updateIDB(config) {
 
       http(req)
         .then(function (response) {
+        
+          console.log(response.statusObject)
           return successResponse(response, config.meta, config.db, resolve, reject);
         }).catch(function (error) {
           return reject(error)

@@ -205,8 +205,6 @@ function isLocationStatusWorking() {
   return true
 }
 
-
-
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
     'instant': true,
@@ -218,6 +216,8 @@ function requestCreator(requestType, requestBody) {
     'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
+  
+ 
   let apiHandler = new Worker('js/apiHandler.js');
 
   var requestGenerator = {
@@ -269,12 +269,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       return reject(event.data)
     };
   })

@@ -131,6 +131,8 @@ function createUnkownCheckIn(cardProd) {
     }
     successDialog('Check-In Created')
     ApplicationState.lastCheckInCreated = Date.now()
+    ApplicationState.venue = ''
+
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions()
   }).catch(function (error) {
@@ -158,6 +160,7 @@ function loadCardData(markers) {
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
     if (evt.detail.index === markers.length + 1) return createUnkownCheckIn(cardProd);
+   
     const selectedVenue = markers[evt.detail.index];
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
     const vd = copy.venue[0]
@@ -178,6 +181,7 @@ function loadCardData(markers) {
       successDialog('Check-In Created')
       cardProd.close();
       ApplicationState.lastCheckInCreated = Date.now()
+      ApplicationState.venue = selectedVenue
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
       getSuggestions();
     }).catch(function (error) {

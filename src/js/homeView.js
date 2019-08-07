@@ -157,27 +157,32 @@ function homePanel(suggestionLength) {
 function homeHeaderStartContent() {
   return `
   <img src="${firebase.auth().currentUser.photoURL}" class="image " id='profile-header-icon' onerror="imgErr(this)">
-  <span class="header-two-line mdc-top-app-bar__title">${ApplicationState.venue.location || 'Unknown Location'}</span>
+  <span class="header-two-line mdc-top-app-bar__title" id='selected-venue-chip'></span>
 `
 }
 
+function removeSelectedLocation(){
+  const set = createElement("div",{className:'mdc-chip-set'})
+  set.appendChild(createDynamicChips(ApplicationState.venue.location,'selected-venue'))
+  const chipSet = new mdc.chips.MDCChipSet(set)
+  console.log(chipSet)
+  chipSet.listen('MDCChip:removal',function(event){
+    set.removeChild(event.detail.root);
+    openMap();
+  })
+  document.getElementById('selected-venue-chip').appendChild(set)
+  
+}
 function homeView(suggestedTemplates) {
 
   progressBar.close();
 
-  const actionItems = ` 
-  <a  class="mdc-top-app-bar__action-item pt-0" aria-label="Chat" id='chat'>
-  <div class="action" style='display:inline-flex;align-items:center' id='chat-container'>
-  <div class='chat-button'>
-  <i class="material-icons">comment</i>
-  <span class='count-badge hidden' id='total-count'></span>
-  </div>
-</div>
-</div>
-  </a>
-${ApplicationState.officeWithCheckInSubs ? `<a  class="material-icons mdc-top-app-bar__action-item" aria-label="Add a photo" id='camera'>add_a_photo</a>`:''}`
+ 
+  const header = getHeader('app-header', homeHeaderStartContent(),'');
+  if(ApplicationState.venue) {
+      removeSelectedLocation()
+  }
 
-  const header = getHeader('app-header', homeHeaderStartContent(), actionItems);
   header.root_.classList.remove('hidden')
   document.getElementById('app-current-panel').classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
 
@@ -198,28 +203,28 @@ ${ApplicationState.officeWithCheckInSubs ? `<a  class="material-icons mdc-top-ap
       document.getElementById('total-count').textContent = rootRecord.totalCount
     }
   }
-  if (document.getElementById('camera')) {
+  // if (document.getElementById('camera')) {
 
-    document.getElementById('camera').addEventListener('click', function () {
-      history.pushState(['snapView'], null, null)
-      snapView()
-    })
-  }
-  document.getElementById('chat-container').addEventListener('click', function () {
-    history.pushState(['chatView'], null, null);
-    chatView()
-    const tx = db.transaction('root', 'readwrite');
-    const store = tx.objectStore('root')
-    store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
-      const rootRecord = event.target.result;
-      rootRecord.totalCount = 0;
-      store.put(rootRecord)
-    }
-  })
-  document.getElementById('profile-header-icon').addEventListener('click', function () {
-    history.pushState(['profileView'], null, null);
-    profileView()
-  })
+  //   document.getElementById('camera').addEventListener('click', function () {
+  //     history.pushState(['snapView'], null, null)
+  //     snapView()
+  //   })
+  // }
+  // document.getElementById('chat-container').addEventListener('click', function () {
+  //   history.pushState(['chatView'], null, null);
+  //   chatView()
+  //   const tx = db.transaction('root', 'readwrite');
+  //   const store = tx.objectStore('root')
+  //   store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
+  //     const rootRecord = event.target.result;
+  //     rootRecord.totalCount = 0;
+  //     store.put(rootRecord)
+  //   }
+  // })
+  // document.getElementById('profile-header-icon').addEventListener('click', function () {
+  //   history.pushState(['profileView'], null, null);
+  //   profileView()
+  // })
 
   document.getElementById('reports').addEventListener('click', function () {
     history.pushState(['reportView'],null,null)
@@ -240,7 +245,6 @@ function handleTemplateListClick(listInit) {
   listInit.singleSelection = true;
   listInit.selectedIndex = 0;
   listInit.listen('MDCList:action', function (evt) {
-
     const el = listInit.listElements[evt.detail.index]
     const officeOfSelectedList = JSON.parse(el.dataset.office)
     const valueSelectedList = JSON.parse(el.dataset.value)
