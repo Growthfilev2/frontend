@@ -64,7 +64,7 @@ function mapView(location) {
 
   const map = new google.maps.Map(document.getElementById('map'), {
     center: latLng,
-    zoom: 20,
+    zoom: 15,
     disableDefaultUI: true,
     restriction: {
       latLngBounds: o,
@@ -101,7 +101,7 @@ function mapView(location) {
   });
 }
 
-function createUnkownCheckIn() {
+function createUnkownCheckIn(cardProd) {
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
@@ -124,31 +124,35 @@ function createUnkownCheckIn() {
 
   // cardProd.open();
   Promise.all(prom).then(function () {
-
-    // cardProd.close()
+    if(cardProd) {
+      cardProd.close()
+    }
     successDialog('Check-In Created')
     ApplicationState.lastCheckInCreated = Date.now()
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions()
   }).catch(function (error) {
     snacks(error.response.message);
-    // cardProd.close()
+    if(cardProd) {
+      cardProd.close()
+    }
   })
 }
 
 function loadCardData(markers) {
   document.getElementById('start-load').classList.add('hidden');
   ApplicationState.knownLocation = true;
-  const venues = `<ul class='mdc-list mdc-list  mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
+  const venues = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${renderVenue(markers)}
 </ul>`
-  const dialog = new Dialog('Where are you ? ', venues, 'choose-venue').create('simple');
-  dialog.open();
-  dialog.scrimClickAction = ''
+
+  document.querySelector('#selection-box #card-primary').textContent = 'Where are you ?';
+  document.querySelector('#selection-box .content-body').innerHTML = venues;
+  document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
+
   const ul = new mdc.list.MDCList(document.getElementById('selected-venue'))
-  bottomDialog(dialog, ul)
   ul.listen('MDCList:action', function (evt) {
-    if (evt.detail.index === markers.length + 1) return createUnkownCheckIn();
+    if (evt.detail.index === markers.length + 1) return createUnkownCheckIn(cardProd);
 
     const checkInRequestBody = setVenueForCheckIn(value, ApplicationState.officeWithCheckInSubs[value.office])
     requestCreator('create', checkInRequestBody).then(function () {
@@ -158,8 +162,6 @@ function loadCardData(markers) {
       localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
       getSuggestions();
     }).catch(function (error) {
-
-
       snacks(error.response.message);
       cardProd.close()
     })
@@ -241,6 +243,33 @@ function getAllSubscriptions() {
     }
   })
 }
+function selectionBox() {
+  return `<div class="selection-box-auto" id='selection-box'>
+
+  <div class="card__primary">
+    <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
+    </h2>
+  </div>
+  <div role="progressbar"
+    class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+    id='check-in-prog'>
+    <div class="mdc-linear-progress__buffering-dots"></div>
+    <div class="mdc-linear-progress__buffer"></div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+  </div>
+
+  <div class="content-body">
+  </div>
+  </div>
+
+
+`
+}
 
 
 
@@ -267,7 +296,7 @@ function mapDom() {
   return `
   <div id='map-view' class=''>
     <div id='map'></div>
-    
+      ${selectionBox()}
     </div>
   `
 }

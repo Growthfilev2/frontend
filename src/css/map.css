@@ -18,12 +18,9 @@
 }
 
 .selection-box-auto .content-body {
-    padding-top: 10px;
-    padding-bottom: 10px;
- 
+    max-height: 300px;
     overflow-y: auto;
-    height: 100%;
-    padding-bottom: 50px;
+    padding: 0px 10px 30px 10px;
 }
 
 .selection-box-auto .content-body .mdc-select {
