@@ -2,7 +2,7 @@ function addView(sub) {
     
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">${sub.template.toUpperCase()}</span>
+    <span class="mdc-top-app-bar__title">${formatTextToTitleCase(sub.template)}</span>
     `
     const header = getHeader('app-header', backIcon, '');
 

@@ -1047,7 +1047,8 @@ function openMap() {
           getSuggestions()
         }).catch(showNoLocationFound)
         return
-      }
+      };
+      
       ApplicationState.officeWithCheckInSubs = checkInSubs
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
       
@@ -1085,4 +1086,18 @@ function openMap() {
       }).catch(showNoLocationFound)
     })
   })
+}
+
+function fillVenueInCheckInSub(sub,venue){
+  const vd = sub.venue[0];
+  sub.venue = [{
+    geopoint: {
+      latitude:  venue.latitude || '',
+      longitude : venue.longitude || ''
+    },
+    location:venue.location || '',
+    address: venue.address  ||'',
+    venueDescriptor : vd
+  }];
+  return sub;
 }

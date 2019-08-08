@@ -90,12 +90,14 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      return resolve({latitude:28.5463559,longitude:77.2520095,lastLocationTime:Date.now()})
-      html5Geolocation().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
-      })
+      // setTimeout(function(){
+        return resolve({latitude:28.5463559,longitude:77.2520095,lastLocationTime:Date.now()})
+      // },5000)
+      // html5Geolocation().then(function (location) {
+      //   resolve(location)
+      // }).catch(function (error) {
+      //   reject(error)
+      // })
     }
   })
 }
@@ -460,4 +462,22 @@ function getSubscription(office, template) {
 function emailReg(email) {
   const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailReg.test(String(email).toLowerCase())
+}
+
+function formatTextToTitleCase(string){
+  const arr = [];
+  for(var i =0;i< string.length;i++){
+    if(i ==0) {
+      arr.push(string[i].toUpperCase())
+    }
+    else {
+      if(string[i -1].toLowerCase() == string[i -1].toUpperCase()) {
+        arr.push(string[i].toUpperCase())
+      }
+      else {
+        arr.push(string[i])
+      }
+    }
+  }
+  return arr.join('')
 }

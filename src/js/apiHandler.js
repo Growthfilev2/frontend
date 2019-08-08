@@ -123,7 +123,7 @@ function http(request) {
     xhr.setRequestHeader('Content-Type', 'application/json')
     xhr.setRequestHeader('Authorization', `Bearer ${request.token}`)
     if (request.method !== 'GET') {
-      xhr.timeout = 15000
+      xhr.timeout = 15000;
       xhr.ontimeout = function () {
         return reject({
           code: 400,
@@ -723,7 +723,7 @@ function successResponse(read, param, db, resolve, reject) {
 
   read.activities.slice().reverse().forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
-
+    activity.activityName = formatTextToTitleCase(activity.activityName)
     activityObjectStore.put(activity);
 
     updateCalendar(activity, updateTx);
@@ -762,6 +762,8 @@ function successResponse(read, param, db, resolve, reject) {
         if (!record) return;
         record.assignees.forEach(function (user) {
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
+      
+          currentAddendum.comment = formatTextToTitleCase(currentAddendum.comment)
           addendumObjectStore.put(currentAddendum);
           if (number === param.user.phoneNumber) {
             userStore.get(user.phoneNumber).onsuccess = function (event) {
@@ -883,4 +885,21 @@ function updateIDB(config) {
         })
     }
   })
+}
+function formatTextToTitleCase(string){
+  const arr = [];
+  for(var i =0;i< string.length;i++){
+    if(i ==0) {
+      arr.push(string[i].toUpperCase())
+    }
+    else {
+      if(string[i -1].toLowerCase() == string[i -1].toUpperCase()) {
+        arr.push(string[i].toUpperCase())
+      }
+      else {
+        arr.push(string[i])
+      }
+    }
+  }
+  return arr.join('')
 }

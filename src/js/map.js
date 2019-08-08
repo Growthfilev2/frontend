@@ -7,6 +7,11 @@ ApplicationState = {
   knownLocation: false,
   venue: '',
   iframeVersion: 9,
+  nearByLocations: []
+}
+var markersObject = {
+  markers: [],
+  infowindow: []
 }
 
 function showNoLocationFound(error) {
@@ -69,15 +74,15 @@ function mapView(location) {
       latLngBounds: o,
       strictBounds: true,
     },
-    zoomControl: true
+
   })
 
   var marker = new google.maps.Marker({
     position: latLng,
     icon: './img/bluecircle.png',
-    map:map
+    map: map
   });
-  
+
   var radiusCircle = new google.maps.Circle({
     strokeColor: '#89273E',
     strokeOpacity: 0.8,
@@ -92,42 +97,35 @@ function mapView(location) {
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
     loadNearByLocations(o, map, location).then(function (markers) {
-
+      ApplicationState.nearByLocations = markers
       if (!markers.length) return createUnkownCheckIn()
       document.getElementById('map').style.display = 'block'
-      loadCardData(markers)
+      loadCardData(markers, map)
     })
   });
 }
 
 function createUnkownCheckIn(cardProd) {
+  document.getElementById('start-load').classList.remove('hidden');
 
   const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
   ApplicationState.knownLocation = false;
   const prom = []
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
-    const vd = copy.venue[0]
-    copy.venue = [{
-      geopoint: {
-        latitude: '',
-        longitude: ''
-      },
-      location: '',
-      address: '',
-      venueDescriptor: vd
-    }]
     copy.share = [];
-    prom.push(requestCreator('create', copy))
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy)))
   })
 
-  if(cardProd) {
+  if (cardProd) {
     cardProd.open()
   }
   Promise.all(prom).then(function () {
-    if(cardProd) {
+    if (cardProd) {
       cardProd.close()
     }
+    document.getElementById('start-load').classList.add('hidden');
+
     successDialog('Check-In Created')
     ApplicationState.lastCheckInCreated = Date.now()
     ApplicationState.venue = ''
@@ -135,22 +133,24 @@ function createUnkownCheckIn(cardProd) {
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions()
   }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden');
+
     snacks(error.response.message);
-    if(cardProd) {
+    if (cardProd) {
       cardProd.close()
     }
   })
 }
 
-function loadCardData(markers) {
+function loadCardData(venues, map) {
   document.getElementById('start-load').classList.add('hidden');
   ApplicationState.knownLocation = true;
-  const venues = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
-  ${renderVenue(markers)}
+  const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
+  ${renderVenue(venues)}
 </ul>`
 
-  document.querySelector('#selection-box #card-primary').textContent = 'Where are you ?';
-  document.querySelector('#selection-box .content-body').innerHTML = venues;
+  document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
+  document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
   const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
 
@@ -158,27 +158,19 @@ function loadCardData(markers) {
   ul.singleSelection = true;
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
-    console.log(evt.detail.index)
-    console.log(markers.length)
-    if (evt.detail.index == markers.length) return createUnkownCheckIn(cardProd);
-   
-    const selectedVenue = markers[evt.detail.index];
+
+    if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd);
+
+    const selectedVenue = venues[evt.detail.index];
+
+    focusMarker(map, markersObject, evt.detail.index)
+
+
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
-    const vd = copy.venue[0]
-    copy.venue = [{
-      geopoint:{
-        latitude:selectedVenue.latitude,
-        longitude:selectedVenue.longitude
-      },
-      location:selectedVenue.location,
-      address:selectedVenue.address,
-      venueDescriptor:vd
-    }]
-    
     copy.share = []
     console.log(copy)
     cardProd.open();
-    requestCreator('create', copy).then(function () {
+    requestCreator('create', fillVenueInCheckInSub(copy,selectedVenue)).then(function () {
       successDialog('Check-In Created')
       cardProd.close();
       ApplicationState.lastCheckInCreated = Date.now()
@@ -267,6 +259,7 @@ function getAllSubscriptions() {
     }
   })
 }
+
 function selectionBox() {
   return `<div class="selection-box-auto" id='selection-box'>
 
@@ -332,6 +325,7 @@ function snapView() {
     return
   }
   webkit.messageHandlers.startCamera.postMessage("setFilePath")
+
 }
 
 function setFilePathFailed(error) {
@@ -377,51 +371,6 @@ function setFilePath(base64) {
       submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
     }
   });
-  submit.root_.addEventListener('click', function () {
-    const textValue = textarea.value;
-    const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
-
-    progressBar.open();
-
-    if (offices.length == 1) {
-      const sub = ApplicationState.officeWithCheckInSubs[offices[0]]
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, sub)).then(function () {
-        getSuggestions()
-        successDialog('Check-In Created')
-        progressBar.close()
-      }).catch(function (error) {
-        snacks(error.message)
-        progressBar.close()
-      })
-      return;
-    }
-
-    const dialog = new Dialog('Send To', radioList(offices)).create();
-    const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
-    dialog.open();
-    dialog.listen('MDCDialog:opened', () => {
-      list.layout();
-      list.singleSelection = true
-    });
-
-    dialog.listen('MDCDialog:closed', function (evt) {
-      if (evt.detail.action !== 'accept') return;
-      const sub = ApplicationState.officeWithCheckInSubs[offices[list.selectedIndex]]
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, sub)).then(function () {
-        getSuggestions()
-        successDialog('Check-In Created')
-        progressBar.close()
-      }).catch(function (error) {
-        progressBar.close()
-        snacks(error.response.message)
-      })
-    })
-  })
-
 
   const image = new Image();
   image.onload = function () {
@@ -433,6 +382,26 @@ function setFilePath(base64) {
     }
   }
   image.src = url;
+
+  submit.root_.addEventListener('click', function () {
+    const textValue = textarea.value;
+
+    const sub = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[photoOffice]))
+
+    sub.attachment.Photo.value = url
+    sub.attachment.Comment.value = textValue;
+    sub.share = []
+    progressBar.open();
+
+    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue)).then(function () {
+      getSuggestions()
+      successDialog('Check-In Created')
+      progressBar.close()
+    }).catch(function (error) {
+      progressBar.close()
+      snacks(error.response.message)
+    })
+  })
 }
 
 
@@ -485,9 +454,13 @@ function getOrientation(image) {
   if (image.width == image.height) return 'square'
 }
 
-function focusMarker(map, latLng, zoom) {
-  map.setZoom(zoom);
-  map.panTo(latLng);
+function focusMarker(map, markersObject, index) {
+  const marker = markersObject.markers[index];
+  const info = markersObject.infowindow[index];
+  info.setContent(`<span>${marker.title}</span>`)
+  info.open(map, marker)
+  map.panTo(marker.position);
+  map.setZoom(18);
 }
 
 function GetOffsetBounds(latlng, offset) {
@@ -512,8 +485,10 @@ GetOffsetBounds.prototype.west = function () {
 }
 
 
-function loadNearByLocations(o, map, location) {
+function loadNearByLocations(o, map) {
   return new Promise(function (resolve, reject) {
+    markersObject.markers = [];
+    markersObject.infowindow = []
     var infowindow = new google.maps.InfoWindow();
     const result = []
     let lastOpen;
@@ -522,7 +497,7 @@ function loadNearByLocations(o, map, location) {
     const index = store.index('bounds');
     const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
     const bounds = map.getBounds();
-   
+
     index.openCursor(idbRange).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
@@ -531,16 +506,16 @@ function loadNearByLocations(o, map, location) {
         cursor.continue();
         return;
       };
-     
+
       result.push(cursor.value)
-   
+
 
       var marker = new google.maps.Marker({
         position: {
           lat: cursor.value.latitude,
           lng: cursor.value.longitude
         },
-
+        title: cursor.value.location,
         icon: {
           url: './img/m.png',
           size: new google.maps.Size(71, 71),
@@ -554,6 +529,7 @@ function loadNearByLocations(o, map, location) {
 
 
       marker.setMap(map);
+
       const content = `<span>${cursor.value.location}</span>`
       google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
         return function () {
@@ -565,6 +541,9 @@ function loadNearByLocations(o, map, location) {
           lastOpen = infowindow;
         };
       })(marker, content, infowindow));
+      markersObject.markers.push(marker)
+      markersObject.infowindow.push(infowindow);
+
       bounds.extend(marker.getPosition())
       cursor.continue();
     }

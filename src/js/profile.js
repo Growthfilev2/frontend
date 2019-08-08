@@ -94,7 +94,7 @@ Choose Image
     }
     if (newName !== auth.displayName) {
       auth.updateProfile({
-        displayName: newName
+        displayName: formatTextToTitleCase(newName)
       }).then(function () {
         snacks('Username Updated Successfully')
       })

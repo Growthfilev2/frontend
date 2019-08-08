@@ -6,6 +6,9 @@
 #selection-box  aside {
     height: 40%;
 }
+#selection-box #card-primary {
+    text-align: left;
+}
 
 .selection-box-auto button {
     width: 100%;
@@ -46,12 +49,12 @@
 
 .subscription-list:not(#confirm-tasks) li {
     min-height: 60px;
-    font-size: 22px;
+    font-size: 20px;
     /* padding-left: 40px; */
 
 }
 .subscription-list  span{
-    font-size: 22px;
+    font-size: 20px;
     
 }
 
