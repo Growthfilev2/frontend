@@ -116,10 +116,7 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  if (history.state[0] === 'homeView') {
-    drawer.open = !drawer.open;
-    return;
-  }
+  
   return history.back();
 }
 
