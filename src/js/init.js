@@ -2,7 +2,6 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-let drawer;
 
 const redirectParam = {
   updateEmail: '',
@@ -95,7 +94,7 @@ function initializeApp() {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  drawer = new mdc.drawer.MDCDrawer(document.querySelector('.mdc-drawer'))
+  
   console.log(topBar);
 
 

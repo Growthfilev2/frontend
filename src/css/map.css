@@ -47,7 +47,7 @@
     transform: translateX(100%);
 }
 
-.subscription-list:not(#confirm-tasks) li {
+.subscription-list:not(#confirm-tasks) li:not(.mdc-list-divider) {
     min-height: 60px;
     font-size: 20px;
     /* padding-left: 40px; */

@@ -133,13 +133,14 @@ function homePanel(suggestionLength) {
       ${Object.keys(ApplicationState.officeWithCheckInSubs).length ? ` <li class='mdc-list-item'>Take Photo
       <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
       </li>`:''}
+      <li class='mdc-list-divider'></li>
     </ul>
   </div>
   <div class='work-tasks'>
       ${suggestionLength ? ``:
         `<h3 class="mdc-list-group__subheader mdc-typography--headline5  mdc-theme--primary">All Tasks Completed</h3>`
       }
-      <h3 class="mdc-list-group__subheader">${suggestionLength ? 'Suggestions' :''}</h3>
+      <h3 class="mdc-list-group__subheader mt-0 mb-0">${suggestionLength ? 'Suggestions' :''}</h3>
       <div id='pending-location-tasks'></div>
       <div id='suggestions-container'></div>
       <div id='action-button' class='attendence-claims-btn-container mdc-layout-grid__inner'>
@@ -238,9 +239,11 @@ function homeView(suggestedTemplates) {
   db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
     const rootRecord = event.target.result;
     if (!rootRecord) return;
-
+   
     if (rootRecord.totalCount) {
-      commonTaskList.listElements[0].querySelector('.mdc-list-item__meta').textContent = ''
+      const el =  commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+      el.classList.remove('material-icons');
+      el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
     }
   }
 
