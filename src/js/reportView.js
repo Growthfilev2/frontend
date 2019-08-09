@@ -1,19 +1,21 @@
 function reportView() {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
+  document.getElementById('app-current-panel').innerHTML = `
+  ${showTabs()}
+  <div class='tabs-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
+  <div class='content'>
+
+  </div>
+  </div>`
 
   document.getElementById('tabs').innerHTML = showTabs()
   const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('#tabs .mdc-tab-bar'))
   setTimeout(function () {
     tabList.activateTab(0);
-
   }, 0)
   tabList.listen('MDCTabBar:activated', function (evt) {
-    document.getElementById('app-current-panel').innerHTML = `<div class='tabs-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
-    <div class='content'>
-
-    </div>
-    </div>`
+  
     const sectionContent = document.querySelector('.tabs-section .content');
     if (!evt.detail.index) {
       attendenceView(sectionContent)
