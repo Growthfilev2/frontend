@@ -157,7 +157,7 @@ function homePanel(suggestionLength) {
 
 function homeHeaderStartContent(locationName) {
   return `
-  <img class="mdc-top-app-bar__navigation-icon mdc-icon-button" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
+  <img class="mdc-top-app-bar__navigation-icon mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
   <span class="mdc-top-app-bar__title">${locationName}</span>
 `
 }

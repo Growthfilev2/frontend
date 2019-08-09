@@ -5,7 +5,7 @@ function reportView() {
   const header = getHeader('app-header', backIcon, '');
   document.getElementById('app-current-panel').innerHTML = `
   ${showTabs()}
-  <div class='tabs-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
+  <div class='tabs-section'>
   <div class='content'>
 
   </div>
@@ -66,8 +66,8 @@ function showTabs() {
         <div class="mdc-tab-scroller__scroll-content">
           <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
             <span class="mdc-tab__content">
-              <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">fingerprint</span>
-              <span class="mdc-tab__text-label mdc-theme--on-primary">Attendance</span>
+              <span class="mdc-tab__icon material-icons" aria-hidden="true">fingerprint</span>
+              <span class="mdc-tab__text-label">Attendance</span>
             </span>
             <span class="mdc-tab-indicator">
               <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
@@ -76,8 +76,8 @@ function showTabs() {
           </button>
           <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
           <span class="mdc-tab__content">
-            <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">assignment</span>
-            <span class="mdc-tab__text-label mdc-theme--on-primary">Reimbursement</span>
+            <span class="mdc-tab__icon material-icons" aria-hidden="true">assignment</span>
+            <span class="mdc-tab__text-label">Reimbursement</span>
           </span>
           <span class="mdc-tab-indicator">
             <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
@@ -86,9 +86,9 @@ function showTabs() {
         </button>
         <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
         <span class="mdc-tab__content">
-        <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">payment</span>
+        <span class="mdc-tab__icon material-icons" aria-hidden="true">payment</span>
 
-          <span class="mdc-tab__text-label mdc-theme--on-primary">Incentives</span>
+          <span class="mdc-tab__text-label">Incentives</span>
         </span>
         <span class="mdc-tab-indicator">
           <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
