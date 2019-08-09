@@ -178,12 +178,17 @@ function homeView(suggestedTemplates) {
   header.listen('MDCTopAppBar:nav', handleNav);
   header.root_.classList.remove('hidden')
 
-  document.querySelector('.mdc-drawer .mdc-drawer__header').addEventListener('click',function(){
+  const drawerHeader =  document.querySelector('.mdc-drawer .mdc-drawer__header')
+  drawerHeader.addEventListener('click',function(){
     drawer.open = false;
     history.pushState(['profileView'],null,null)
     profileView();
   })
-
+  drawer.listen('MDCDrawer:opened',function(){
+    drawerHeader.querySelector('img').src = firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg';
+    drawerHeader.querySelector('mdc-drawer__title').textContent = firebase.auth().currentUser.displayName
+  })
+  
   const panel = document.getElementById('app-current-panel')
 
   panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
