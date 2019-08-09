@@ -98,7 +98,7 @@ function mapView(location) {
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
-    loadNearByLocations(o, map).then(function (markers) {
+    loadNearByLocations(o, map,location).then(function (markers) {
       ApplicationState.nearByLocations = markers
       if (!markers.length) return createUnkownCheckIn()
       document.getElementById('map').style.display = 'block'
@@ -488,7 +488,7 @@ GetOffsetBounds.prototype.west = function () {
 }
 
 
-function loadNearByLocations(o, map) {
+function loadNearByLocations(o, map,location) {
   return new Promise(function (resolve, reject) {
     markersObject.markers = [];
     markersObject.infowindow = []
@@ -509,6 +509,10 @@ function loadNearByLocations(o, map) {
         cursor.continue();
         return;
       };
+      if(calculateDistanceBetweenTwoPoints(location,cursor.value) > 0.5 ) {
+        cursor.continue();
+        return;
+      }
 
       result.push(cursor.value)
 
