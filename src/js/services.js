@@ -100,7 +100,6 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-     
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
@@ -429,7 +428,6 @@ function runRead(type) {
 }
 
 function debounce(func, wait, immeditate) {
-  // debugger;
   var timeout;
   return function () {
     var context = this;
