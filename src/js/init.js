@@ -362,7 +362,7 @@ function startApp() {
         document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
         profileCheck();
-        runRead()
+        runRead({read:'1'})
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {

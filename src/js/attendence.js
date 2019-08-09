@@ -23,7 +23,7 @@ function attendenceView(sectionContent) {
 function attendanceDom(leaveSub) {
   return `<div class='attendance-section'>
   
-  <div class='data-container mdc-layout-grid'>
+  
   <div class='mdc-layout-grid__inner'>
   <div class='list-container mdc-layout-grid__cell--span-12'>
     ${templateList(leaveSub)}
@@ -35,7 +35,7 @@ function attendanceDom(leaveSub) {
   <div class='monthly-stat'>
   
   </div>
-  </div>
+  
   </div>`
 }
 

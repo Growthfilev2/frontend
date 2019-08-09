@@ -1,10 +1,16 @@
 var readStack = [];
+var readDebounce = debounce(function () {
+  requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+}, 1000,false)
+window.addEventListener('callRead', readDebounce);
+
 
 
 
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
+  errorInStorage.device = localStorage.getItem('deviceInfo');
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }
@@ -95,17 +101,17 @@ function getLocation() {
       }, true)
     } catch (e) {
       // setTimeout(function(){
-      return resolve({
-        latitude: 28.5463559,
-        longitude: 77.2520095,
-        lastLocationTime: Date.now()
-      })
-      // },5000)
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
+      // return resolve({
+      //   latitude: 28.5463559,
+      //   longitude: 77.2520095,
+      //   lastLocationTime: Date.now()
       // })
+      // },5000)
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
     }
   })
 }
@@ -280,12 +286,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       return reject(event.data)
     };
   })
@@ -399,7 +405,6 @@ function backgroundTransition() {
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
 
-  runRead();
   manageLocation().then(function (geopoint) {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
@@ -411,15 +416,35 @@ function backgroundTransition() {
 
 function runRead(type) {
   if (!firebase.auth().currentUser) return;
+  if (type.read) {
+    var readEvent = new CustomEvent('callRead', {
+      detail: type.read
+    })
+    window.dispatchEvent(readEvent);
+  }
+  return
 
- 
-  requestCreator('Null').then(function (response) {
-  
-    
-    handleComponentUpdation(response)
-  }).catch(console.log)
+
 
 }
+
+function debounce(func, wait, immeditate) {
+  // debugger;
+  var timeout;
+  return function () {
+    var context = this;
+    var args = arguments;
+    var later = function () {
+      timeout = null;
+      if (!immeditate) func.apply(context, args)
+    }
+    var callNow = immeditate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  }
+}
+
 
 function removeChildNodes(parent) {
   while (parent.firstChild) {
@@ -486,7 +511,7 @@ function formatTextToTitleCase(string) {
       if (string[i - 1].toLowerCase() == string[i - 1].toUpperCase()) {
         arr.push(string[i].toUpperCase())
       } else {
-        arr.push(string[i])
+        arr.push(string[i].toLowerCase())
       }
     }
   }

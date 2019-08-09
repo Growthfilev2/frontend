@@ -7,6 +7,8 @@ function reportView() {
   ${showTabs()}
   <div class='tabs-section'>
   <div class='content'>
+  <div class='data-container mdc-layout-grid'>
+  </div>
 
   </div>
   </div>`
@@ -17,7 +19,7 @@ function reportView() {
   }, 0)
   tabList.listen('MDCTabBar:activated', function (evt) {
   
-    const sectionContent = document.querySelector('.tabs-section .content');
+    const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!evt.detail.index) {
       attendenceView(sectionContent)
       return
@@ -60,7 +62,7 @@ function incentiveView(sectionContent) {
 
 function showTabs() {
 
-  return `<div class="mdc-tab-bar" role="tablist">
+  return `<div class="mdc-tab-bar" role="tablist" style='margin-top:5px;'>
     <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
         <div class="mdc-tab-scroller__scroll-content">

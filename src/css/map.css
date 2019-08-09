@@ -109,6 +109,7 @@
 
 .card__primary {
     padding: 0.6rem;
+    padding-left: 20px;
     text-align: center;
     font-weight: 400;
     border-bottom: 1px solid rgba(0, 0, 0, 0.38);

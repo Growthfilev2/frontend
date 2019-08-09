@@ -116,8 +116,8 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  if(history.state[0] === 'homeView') {
-    history.pushState(['profileView'],null,null)
+  if (history.state[0] === 'homeView') {
+    history.pushState(['profileView'], null, null)
     profileView();
     return;
   }
@@ -190,9 +190,12 @@ function homeView(suggestedTemplates) {
   if (document.getElementById('change-location')) {
     document.getElementById('change-location').addEventListener('click', function (evt) {
       progressBar.open()
+      if (!isLastLocationOlderThanThreshold(ApplicationState.location.lastLocationTime, 60)) {
+        mapView(ApplicationState.location)
+        return
+      };
       manageLocation().then(function (newLocation) {
-        header.root_.classList.add('hidden');
-        panel.classList.remove('mdc-top-app-bar--fixed-adjust', 'mdc-layout-grid', 'pl-0', 'pr-0');
+
         mapView(newLocation);
       }).catch(showNoLocationFound)
     })
@@ -246,19 +249,19 @@ function homeView(suggestedTemplates) {
   db.transaction('root').objectStore('root').get(firebase.auth().currentUser.uid).onsuccess = function (event) {
     const rootRecord = event.target.result;
     if (!rootRecord) return;
-   
+
     if (rootRecord.totalCount) {
-      const el =  commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
+      const el = commonTaskList.listElements[0].querySelector('.mdc-list-item__meta')
       el.classList.remove('material-icons');
       el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
     }
   }
 
   document.getElementById('reports').addEventListener('click', function () {
-    history.pushState(['reportView'],null,null)
+    history.pushState(['reportView'], null, null)
     reportView();
   })
-  
+
   if (!suggestedTemplates.length) return;
   console.log(suggestedTemplates)
   document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)

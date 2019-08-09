@@ -897,7 +897,7 @@ function formatTextToTitleCase(string){
         arr.push(string[i].toUpperCase())
       }
       else {
-        arr.push(string[i])
+        arr.push(string[i].toLowerCase())
       }
     }
   }

@@ -43,9 +43,11 @@ function mapView(location) {
 
   document.getElementById('app-header').classList.add('hidden');
 
+  
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
+  panel.classList.remove('mdc-top-app-bar--fixed-adjust', 'mdc-layout-grid', 'pl-0', 'pr-0');
   panel.innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
 
@@ -96,7 +98,7 @@ function mapView(location) {
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
-    loadNearByLocations(o, map, location).then(function (markers) {
+    loadNearByLocations(o, map).then(function (markers) {
       ApplicationState.nearByLocations = markers
       if (!markers.length) return createUnkownCheckIn()
       document.getElementById('map').style.display = 'block'
@@ -114,7 +116,8 @@ function createUnkownCheckIn(cardProd) {
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
-    prom.push(requestCreator('create', fillVenueInCheckInSub(copy)))
+   
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy,'')))
   })
 
   if (cardProd) {
@@ -158,7 +161,7 @@ function loadCardData(venues, map) {
   ul.singleSelection = true;
   ul.selectedIndex = 0;
   ul.listen('MDCList:action', function (evt) {
-
+    console.log(evt.detail.index)
     if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd);
 
     const selectedVenue = venues[evt.detail.index];
@@ -550,7 +553,6 @@ function loadNearByLocations(o, map) {
     tx.oncomplete = function () {
       map.fitBounds(bounds);
       console.log(result)
-
       return resolve(result)
     }
   })
