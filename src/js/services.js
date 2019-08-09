@@ -389,8 +389,11 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
     case 'reportView':
-      const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
-      if (!tabBar) return;
+      const tabEl = document.querySelector('.mdc-tab-bar')
+      if (!tabEl) return;
+
+      const tabBar = new mdc.tabBar.MDCTabBar(tabEl)
+
       if (tabBar.foundation_.adapter_.getFocusedTabIndex() == 0) {
         const sectionContent = document.querySelector('.tabs-section .data-container');
         if (sectionContent) {
