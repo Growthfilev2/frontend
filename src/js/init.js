@@ -466,7 +466,7 @@ function checkForPhoto() {
             'imageBase64': newDataUrl
           }).then(function () {
             progCard.close();
-            checkForRecipient()
+            openMap();
           }).catch(function (error) {
             progCard.close();
             snacks(error.response.message)
@@ -477,7 +477,8 @@ function checkForPhoto() {
     })
     return
   }
-  checkForRecipient()
+  openMap();
+
 }
 
 
