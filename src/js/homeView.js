@@ -144,6 +144,10 @@ function homePanel(suggestionLength) {
       </div>
 
   </div>
+  <button class="mdc-fab mdc-fab--extended  mdc-theme--primary-bg app-fab--absolute" id='reports'>
+  <span class="material-icons mdc-fab__icon">description</span>
+  <span class="mdc-fab__label">My Reports</span>
+ </button>
 </div>`
 }
 
