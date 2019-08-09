@@ -116,7 +116,10 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-  
+  if(history.state[0] === 'homeView') {
+    drawer.open = !drawer.open;
+    return;
+  }
   return history.back();
 }
 
@@ -174,6 +177,13 @@ function homeView(suggestedTemplates) {
 
   header.listen('MDCTopAppBar:nav', handleNav);
   header.root_.classList.remove('hidden')
+
+  document.querySelector('.mdc-drawer .mdc-drawer__header').addEventListener('click',function(){
+    drawer.open = false;
+    history.pushState(['profileView'],null,null)
+    profileView();
+  })
+
   const panel = document.getElementById('app-current-panel')
 
   panel.classList.add('mdc-top-app-bar--fixed-adjust', "mdc-layout-grid", 'pl-0', 'pr-0')
