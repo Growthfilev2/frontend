@@ -248,6 +248,11 @@ function homeView(suggestedTemplates) {
     }
   }
 
+  document.getElementById('reports').addEventListener('click', function () {
+    history.pushState(['reportView'],null,null)
+    reportView();
+  })
+
   if (!suggestedTemplates.length) return;
   console.log(suggestedTemplates)
   document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
