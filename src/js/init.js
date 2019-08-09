@@ -2,7 +2,6 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-
 const redirectParam = {
   updateEmail: '',
   verify: false,
@@ -94,7 +93,7 @@ function initializeApp() {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-  
+
   console.log(topBar);
 
 
@@ -363,7 +362,7 @@ function startApp() {
         document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
         profileCheck();
-        requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+        runRead()
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {

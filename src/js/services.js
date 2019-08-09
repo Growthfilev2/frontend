@@ -1,3 +1,7 @@
+var readStack = [];
+
+
+
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
@@ -91,7 +95,11 @@ function getLocation() {
       }, true)
     } catch (e) {
       // setTimeout(function(){
-        return resolve({latitude:28.5463559,longitude:77.2520095,lastLocationTime:Date.now()})
+      return resolve({
+        latitude: 28.5463559,
+        longitude: 77.2520095,
+        lastLocationTime: Date.now()
+      })
       // },5000)
       // html5Geolocation().then(function (location) {
       //   resolve(location)
@@ -219,8 +227,8 @@ function requestCreator(requestType, requestBody) {
     'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
-  
- 
+
+
   let apiHandler = new Worker('js/apiHandler.js');
 
   var requestGenerator = {
@@ -391,7 +399,7 @@ function backgroundTransition() {
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
 
-  requestCreator('Null').then(console.log).catch(console.log)
+  runRead();
   manageLocation().then(function (geopoint) {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
@@ -399,13 +407,18 @@ function backgroundTransition() {
   })
 }
 
-function runRead() {
-  try {
-    if (!firebase.auth().currentUser) return;
-    requestCreator('Null').then(handleComponentUpdation).catch(console.log)
-  } catch (e) {
 
-  }
+
+function runRead(type) {
+  if (!firebase.auth().currentUser) return;
+
+ 
+  requestCreator('Null').then(function (response) {
+  
+    
+    handleComponentUpdation(response)
+  }).catch(console.log)
+
 }
 
 function removeChildNodes(parent) {
@@ -464,17 +477,15 @@ function emailReg(email) {
   return emailReg.test(String(email).toLowerCase())
 }
 
-function formatTextToTitleCase(string){
+function formatTextToTitleCase(string) {
   const arr = [];
-  for(var i =0;i< string.length;i++){
-    if(i ==0) {
+  for (var i = 0; i < string.length; i++) {
+    if (i == 0) {
       arr.push(string[i].toUpperCase())
-    }
-    else {
-      if(string[i -1].toLowerCase() == string[i -1].toUpperCase()) {
+    } else {
+      if (string[i - 1].toLowerCase() == string[i - 1].toUpperCase()) {
         arr.push(string[i].toUpperCase())
-      }
-      else {
+      } else {
         arr.push(string[i])
       }
     }
