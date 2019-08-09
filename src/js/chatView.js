@@ -9,7 +9,9 @@ const duration = 800;
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>`
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Chat</span>
+    `
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`
@@ -645,7 +647,7 @@ function reply(activity) {
 
 function showViewDialog(heading, activity, id) {
     let type = 'simple';
-    if(activity.canEdit) {
+    if (activity.canEdit) {
         type = ''
     }
     if(activity.template === 'check-in' && activity.attachment['Photo'].value) {
@@ -654,10 +656,10 @@ function showViewDialog(heading, activity, id) {
     const dialog = new Dialog(heading, activityDomCustomer(activity), id).create(type);
     dialog.open();
     dialog.autoStackButtons = false;
-    if(!type) {
+    if (!type) {
         dialog.buttons_[1].classList.add("hidden");
     }
-    
+
     dialog.listen("MDCDialog:opened", function (evt) {
         const scheduleEl = document.getElementById('schedule-container');
         if (scheduleEl) {
@@ -667,19 +669,17 @@ function showViewDialog(heading, activity, id) {
     })
 }
 
-function createDynamicChips(user, id) {
+
+
+function createDynamicChips(text, id,leadingIcon) {
     const chip = createElement('button', {
         className: 'mdc-chip mdc-chip--selected',
         id: id
     });
 
-    const image = createElement('img', {
-        className: 'mdc-chip__icon mdc-chip__icon--leading',
-        src: user.photoURL || './img/empty-user.jpg'
-    })
-    const text = createElement('div', {
+    const chipText = createElement('div', {
         className: 'mdc-chip__text',
-        textContent: `${user.displayName || user.mobile}`
+        textContent: text
     })
     const trailingIcon = createElement('i', {
         className: 'material-icons mdc-chip__icon mdc-chip__icon--trailing',
@@ -687,8 +687,8 @@ function createDynamicChips(user, id) {
     })
     trailingIcon.setAttribute('tabindex', '0');
     trailingIcon.setAttribute('role', 'button');
-    chip.appendChild(image)
-    chip.appendChild(text)
+    leadingIcon ? chip.appendChild(leadingIcon) :''
+    chip.appendChild(chipText)
     chip.appendChild(trailingIcon)
     return chip
 
@@ -777,8 +777,12 @@ function share(activity) {
                 newSelected[clickedUser.mobile] = true;
                 el.classList.add('selected')
                 el.querySelector('.user-selection-icon').classList.remove('hidden')
-                el.querySelector('.user-selection-icon').classList.add('user-selection-show')
-                const newChip = createDynamicChips(clickedUser, index);
+                el.querySelector('.user-selection-icon').classList.add('user-selection-show');
+                const image = createElement('img', {
+                    className: 'mdc-chip__icon mdc-chip__icon--leading',
+                    src: user.photoURL || './img/empty-user.jpg'
+                })
+                const newChip = createDynamicChips(user.displayName || user.mobile,index,image);
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
                 newChip.scrollIntoView({
@@ -985,7 +989,7 @@ function viewAttachment(activityRecord) {
     }).join("")}`
 }
 
-function viewVenue(activityRecord,showMap) {
+function viewVenue(activityRecord, showMap) {
     return `${activityRecord.venue.map(function(v,idx){
     
         return `
@@ -1106,24 +1110,24 @@ function dynamicAppendChats(addendums) {
     setBottomScroll()
 }
 
-function getHumanDateString(date){
-    const today  = moment();
-    const yesterday = moment().subtract(1,'day');
-    
+function getHumanDateString(date) {
+    const today = moment();
+    const yesterday = moment().subtract(1, 'day');
 
-    if(date.isSame(today,'day')) return 'Today';
-    if(date.isSame(yesterday,'day')) return 'Yesterday';
+
+    if (date.isSame(today, 'day')) return 'Today';
+    if (date.isSame(yesterday, 'day')) return 'Yesterday';
     return date.format('DD MMMM YYYY')
-    
+
 
 }
 
-function dateBox(dateString){
-return `<div class='date-box'>
+function dateBox(dateString) {
+    return `<div class='date-box'>
 <div class="date" data-chat-date='${dateString}'>${dateString}</div>
 </div>`
 
-   
+
 }
 
 
@@ -1151,7 +1155,7 @@ function getUserChats(userRecord) {
             image = userRecord.photoURL || './img/empty-user.jpg'
         };
         const dateName = getHumanDateString(moment(cursor.value.timestamp))
-        if(dateName !== currentDateName) {
+        if (dateName !== currentDateName) {
             timeLine += dateBox(dateName)
         }
         currentDateName = dateName;

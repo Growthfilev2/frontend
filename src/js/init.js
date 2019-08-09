@@ -93,6 +93,7 @@ function initializeApp() {
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
+
   console.log(topBar);
 
 
@@ -360,7 +361,7 @@ function startApp() {
         document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
         profileCheck();
-        requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+        runRead({read:'1'})
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {
@@ -901,29 +902,6 @@ function redirect() {
 }
 
 
-
-
-
-
-function setVenueForCheckIn(venueData, value) {
-  const copy = JSON.parse(JSON.stringify(value))
-  const venue = {
-    geopoint: {
-      latitude: venueData.latitude || '',
-      longitude: venueData.longitude || ''
-    },
-    address: venueData.address || '',
-    location: venueData.location || '',
-    venueDescriptor: copy.venue[0]
-  }
-  copy.share = [];
-  copy.venue = [venue]
-  return copy;
-
-}
-
-
-
 function getUniqueOfficeCount() {
   return new Promise(function (resolve, reject) {
     let offices = [];
@@ -1066,7 +1044,8 @@ function openMap() {
           getSuggestions()
         }).catch(showNoLocationFound)
         return
-      }
+      };
+      
       ApplicationState.officeWithCheckInSubs = checkInSubs
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
       
@@ -1104,4 +1083,18 @@ function openMap() {
       }).catch(showNoLocationFound)
     })
   })
+}
+
+function fillVenueInCheckInSub(sub,venue){
+  const vd = sub.venue[0];
+  sub.venue = [{
+    geopoint: {
+      latitude:  venue.latitude || '',
+      longitude : venue.longitude || ''
+    },
+    location:venue.location || '',
+    address: venue.address  ||'',
+    venueDescriptor : vd
+  }];
+  return sub;
 }

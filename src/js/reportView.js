@@ -1,20 +1,25 @@
 function reportView() {
-  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>
+  <span class="mdc-top-app-bar__title">My Reports</span>
+  `
   const header = getHeader('app-header', backIcon, '');
+  document.getElementById('app-current-panel').innerHTML = `
+  ${showTabs()}
+  <div class='tabs-section'>
+  <div class='content'>
+  <div class='data-container mdc-layout-grid'>
+  </div>
 
-  document.getElementById('tabs').innerHTML = showTabs()
-  const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('#tabs .mdc-tab-bar'))
+  </div>
+  </div>`
+
+  const tabList = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
   setTimeout(function () {
     tabList.activateTab(0);
-
   }, 0)
   tabList.listen('MDCTabBar:activated', function (evt) {
-    document.getElementById('app-current-panel').innerHTML = `<div class='tabs-section pt-20 mdc-top-app-bar--fixed-adjust-with-tabs'>
-    <div class='content'>
-
-    </div>
-    </div>`
-    const sectionContent = document.querySelector('.tabs-section .content');
+  
+    const sectionContent = document.querySelector('.tabs-section .data-container');
     if (!evt.detail.index) {
       attendenceView(sectionContent)
       return
@@ -57,14 +62,14 @@ function incentiveView(sectionContent) {
 
 function showTabs() {
 
-  return `<div class="mdc-tab-bar" role="tablist">
+  return `<div class="mdc-tab-bar" role="tablist" style='margin-top:5px;'>
     <div class="mdc-tab-scroller">
       <div class="mdc-tab-scroller__scroll-area">
         <div class="mdc-tab-scroller__scroll-content">
           <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
             <span class="mdc-tab__content">
-              <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">fingerprint</span>
-              <span class="mdc-tab__text-label mdc-theme--on-primary">Attendance</span>
+              <span class="mdc-tab__icon material-icons" aria-hidden="true">fingerprint</span>
+              <span class="mdc-tab__text-label">Attendance</span>
             </span>
             <span class="mdc-tab-indicator">
               <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
@@ -73,8 +78,8 @@ function showTabs() {
           </button>
           <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
           <span class="mdc-tab__content">
-            <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">assignment</span>
-            <span class="mdc-tab__text-label mdc-theme--on-primary">Reimbursement</span>
+            <span class="mdc-tab__icon material-icons" aria-hidden="true">assignment</span>
+            <span class="mdc-tab__text-label">Reimbursement</span>
           </span>
           <span class="mdc-tab-indicator">
             <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
@@ -83,9 +88,9 @@ function showTabs() {
         </button>
         <button class="mdc-tab" role="tab" aria-selected="false" tabindex="-1">
         <span class="mdc-tab__content">
-        <span class="mdc-tab__icon material-icons mdc-theme--on-primary" aria-hidden="true">payment</span>
+        <span class="mdc-tab__icon material-icons" aria-hidden="true">payment</span>
 
-          <span class="mdc-tab__text-label mdc-theme--on-primary">Incentives</span>
+          <span class="mdc-tab__text-label">Incentives</span>
         </span>
         <span class="mdc-tab-indicator">
           <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>

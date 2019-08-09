@@ -2,13 +2,13 @@ function addView(sub) {
     
 
     const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
-    <span class="mdc-top-app-bar__title">${sub.template}</span>
+    <span class="mdc-top-app-bar__title">${formatTextToTitleCase(sub.template)}</span>
     `
     const header = getHeader('app-header', backIcon, '');
 
     document.getElementById('app-current-panel').innerHTML = `
     <div class='banner'></div>
-    <iframe id='form-iframe' src='${window.location.origin}/v2/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
+    <iframe id='form-iframe' src='${window.location.origin}/frontend/dist/v2/forms/${sub.template}/edit.html?var=${ApplicationState.iframeVersion}'></iframe>
     `
     console.log(db)
     document.getElementById('form-iframe').addEventListener("load", ev => {

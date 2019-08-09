@@ -27,6 +27,8 @@
 </head>
 
 <body class="mdc-typography">
+
+
   <header class='mdc-top-app-bar mdc-top-app-bar--fixed hidden' id='app-header'>
     <div class='mdc-top-app-bar__row'>
       <section class='mdc-top-app-bar__section mdc-top-app-bar__section--align-start' id='section-start'>
@@ -45,9 +47,7 @@
         <span class="mdc-linear-progress__bar-inner"></span>
       </div>
     </div>
-    <div id='tabs'></div>
   </header>
-
 
   <div id='start-load'>
     <div class="lds-roller">
@@ -66,19 +66,18 @@
 
   <div class="success--container hidden center-abs" id="success-animation">
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
-      <circle class="path circle" fill="none" stroke="#89273E" stroke-width="6" stroke-miterlimit="10" cx="65.1" cy="65.1" r="62.1"/>
-      <polyline class="path check" fill="none" stroke="#89273E" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 "/>
+      <circle class="path circle" fill="none" stroke="#89273E" stroke-width="6" stroke-miterlimit="10" cx="65.1"
+        cy="65.1" r="62.1" />
+      <polyline class="path check" fill="none" stroke="#89273E" stroke-width="6" stroke-linecap="round"
+        stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 " />
     </svg>
     <p class="success-text mdc-theme--primary"></p>
 
   </div>
 
-  
-    <div id='login-container'></div>
-    <div id="app-current-panel"></div>
 
-
-
+  <div id='login-container'></div>
+  <div id="app-current-panel"></div>
   <div id="snackbar-container">
     <div class="mdc-snackbar">
       <div class="mdc-snackbar__surface">
@@ -96,7 +95,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" async>
   </script>
-  
+
 
   <script src='external/js/firebase-app.js'></script>
   <script src='external/js/firebase-auth.js'></script>

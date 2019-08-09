@@ -1,6 +1,16 @@
+var readStack = [];
+var readDebounce = debounce(function () {
+  requestCreator('Null').then(handleComponentUpdation).catch(console.log)
+}, 1000,false)
+window.addEventListener('callRead', readDebounce);
+
+
+
+
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
+  errorInStorage.device = localStorage.getItem('deviceInfo');
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }
@@ -90,6 +100,13 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
+      // setTimeout(function(){
+      // return resolve({
+      //   latitude: 28.5463559,
+      //   longitude: 77.2520095,
+      //   lastLocationTime: Date.now()
+      // })
+      // },5000)
       html5Geolocation().then(function (location) {
         resolve(location)
       }).catch(function (error) {
@@ -205,8 +222,6 @@ function isLocationStatusWorking() {
   return true
 }
 
-
-
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
     'instant': true,
@@ -218,6 +233,8 @@ function requestCreator(requestType, requestBody) {
     'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
+
+
   let apiHandler = new Worker('js/apiHandler.js');
 
   var requestGenerator = {
@@ -388,7 +405,6 @@ function backgroundTransition() {
   if (!history.state) return;
   if (history.state[0] === 'profileCheck') return;
 
-  requestCreator('Null').then(console.log).catch(console.log)
   manageLocation().then(function (geopoint) {
     if (!ApplicationState.location) return;
     if (!isLocationMoreThanThreshold(calculateDistanceBetweenTwoPoints(ApplicationState.location, geopoint))) return
@@ -396,14 +412,39 @@ function backgroundTransition() {
   })
 }
 
-function runRead() {
-  try {
-    if (!firebase.auth().currentUser) return;
-    requestCreator('Null').then(handleComponentUpdation).catch(console.log)
-  } catch (e) {
 
+
+function runRead(type) {
+  if (!firebase.auth().currentUser) return;
+  if (type.read) {
+    var readEvent = new CustomEvent('callRead', {
+      detail: type.read
+    })
+    window.dispatchEvent(readEvent);
+  }
+  return
+
+
+
+}
+
+function debounce(func, wait, immeditate) {
+  // debugger;
+  var timeout;
+  return function () {
+    var context = this;
+    var args = arguments;
+    var later = function () {
+      timeout = null;
+      if (!immeditate) func.apply(context, args)
+    }
+    var callNow = immeditate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
   }
 }
+
 
 function removeChildNodes(parent) {
   while (parent.firstChild) {
@@ -459,4 +500,20 @@ function getSubscription(office, template) {
 function emailReg(email) {
   const emailReg = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return emailReg.test(String(email).toLowerCase())
+}
+
+function formatTextToTitleCase(string) {
+  const arr = [];
+  for (var i = 0; i < string.length; i++) {
+    if (i == 0) {
+      arr.push(string[i].toUpperCase())
+    } else {
+      if (string[i - 1].toLowerCase() == string[i - 1].toUpperCase()) {
+        arr.push(string[i].toUpperCase())
+      } else {
+        arr.push(string[i].toLowerCase())
+      }
+    }
+  }
+  return arr.join('')
 }

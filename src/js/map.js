@@ -3,11 +3,15 @@ var globMark;
 let o;
 let selectedSubs;
 ApplicationState = {
-  office: '',
   location: '',
   knownLocation: false,
   venue: '',
   iframeVersion: 9,
+  nearByLocations: []
+}
+var markersObject = {
+  markers: [],
+  infowindow: []
 }
 
 function showNoLocationFound(error) {
@@ -32,17 +36,20 @@ function showNoLocationFound(error) {
   })
 }
 
+
+
 function mapView(location) {
 
-  document.getElementById('start-load').classList.add('hidden');
+
   document.getElementById('app-header').classList.add('hidden');
 
+  
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
+  panel.classList.remove('mdc-top-app-bar--fixed-adjust', 'mdc-layout-grid', 'pl-0', 'pr-0');
   panel.innerHTML = mapDom();
   document.getElementById('map-view').style.height = '100%';
-  document.getElementById('start-load').classList.add('hidden');
 
   const latLng = {
     lat: location.latitude,
@@ -57,24 +64,27 @@ function mapView(location) {
     east: offsetBounds.east(),
     west: offsetBounds.west()
   };
+
   if (!document.getElementById('map')) return;
   console.log(google);
 
   const map = new google.maps.Map(document.getElementById('map'), {
     center: latLng,
-    zoom: 18,
+    zoom: 15,
     disableDefaultUI: true,
     restriction: {
       latLngBounds: o,
       strictBounds: true,
     },
+
   })
 
   var marker = new google.maps.Marker({
     position: latLng,
-    icon: './img/bluecircle.png'
+    icon: './img/bluecircle.png',
+    map: map
   });
-  marker.setMap(map);
+
   var radiusCircle = new google.maps.Circle({
     strokeColor: '#89273E',
     strokeOpacity: 0.8,
@@ -88,111 +98,137 @@ function mapView(location) {
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
-    loadNearByLocations(o, map, location).then(function (markers) {
-      loadCardData(markers)
+    loadNearByLocations(o, map).then(function (markers) {
+      ApplicationState.nearByLocations = markers
+      if (!markers.length) return createUnkownCheckIn()
+      document.getElementById('map').style.display = 'block'
+      loadCardData(markers, map)
     })
   });
 }
 
-function loadCardData(markers) {
+function createUnkownCheckIn(cardProd) {
+  document.getElementById('start-load').classList.remove('hidden');
 
-  const el = document.getElementById('selection-box');
-  const aside = el.querySelector('aside');
+  const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
+  ApplicationState.knownLocation = false;
+  const prom = []
+  offices.forEach(function (office) {
+    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
+    copy.share = [];
+   
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy,'')))
+  })
 
-  const contentBody = el.querySelector('.content-body');
-  contentBody.innerHTML = '';
+  if (cardProd) {
+    cardProd.open()
+  }
+  Promise.all(prom).then(function () {
+    if (cardProd) {
+      cardProd.close()
+    }
+    document.getElementById('start-load').classList.add('hidden');
 
-  const header = document.getElementById('card-primary');
+    successDialog('Check-In Created')
+    ApplicationState.lastCheckInCreated = Date.now()
+    ApplicationState.venue = ''
+
+    localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+    getSuggestions()
+  }).catch(function (error) {
+    document.getElementById('start-load').classList.add('hidden');
+
+    snacks(error.response.message);
+    if (cardProd) {
+      cardProd.close()
+    }
+  })
+}
+
+function loadCardData(venues, map) {
+  document.getElementById('start-load').classList.add('hidden');
+  ApplicationState.knownLocation = true;
+  const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
+  ${renderVenue(venues)}
+</ul>`
+
+  document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
+  document.querySelector('#selection-box .content-body').innerHTML = venuesList;
+  document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
   const cardProd = new mdc.linearProgress.MDCLinearProgress(document.getElementById('check-in-prog'));
-  header.textContent = `Where are you ?`;
-  el.classList.remove('hidden');
 
-  contentBody.innerHTML = `<div>
-    ${mdcSelectVenue(markers, 'Choose location','select-venue')}
-    <div id='office-cont' class='pt-10'></div>
-    <div id='subs-cont' class='pt-10'></div>
-    <div id='submit-cont' class='pt-10'></div>
-    </div>`
+  const ul = new mdc.list.MDCList(document.getElementById('selected-venue'))
+  ul.singleSelection = true;
+  ul.selectedIndex = 0;
+  ul.listen('MDCList:action', function (evt) {
+    console.log(evt.detail.index)
+    if (evt.detail.index == venues.length) return createUnkownCheckIn(cardProd);
 
-  selectVenue = new mdc.select.MDCSelect(document.getElementById('select-venue'));
-  selectVenue.listen('MDCSelect:change', (evt) => {
-    document.getElementById('office-cont').innerHTML = ''
-    document.getElementById('subs-cont').innerHTML = ''
-    document.getElementById('submit-cont').innerHTML = ''
-    console.log(evt.detail.value)
-    aside.classList.add('open')
-    const value = JSON.parse(evt.detail.value)
-    if (!value) return;
-    if (value === 1) {
-      const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
-      ApplicationState.venue = '';
-      ApplicationState.office = '';
-      ApplicationState.knownLocation = false;
-      if (offices.length == 1) {
-        ApplicationState.office = offices[0];
-      };
-      const prom = []
-      offices.forEach(function (office) {
-        prom.push(requestCreator('create', setVenueForCheckIn('', ApplicationState.officeWithCheckInSubs[office])))
-      })
+    const selectedVenue = venues[evt.detail.index];
 
-      cardProd.open();
-      Promise.all(prom).then(function () {
-        cardProd.close()
-        successDialog('Check-In Created')
-        ApplicationState.lastCheckInCreated = Date.now()
-        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        getSuggestions()
-      }).catch(function (error) {
-        snacks(error.response.message);
-        cardProd.close()
-      })
-
-      return;
-    }
-
-    ApplicationState.knownLocation = true;
-    ApplicationState.venue = value;
-    ApplicationState.office = value.office;
+    focusMarker(map, markersObject, evt.detail.index)
 
 
-    document.getElementById('submit-cont').innerHTML = `<button id='confirm' class='mdc-button mdc-theme--primary-bg mdc-theme--text-primary-on-light'>
-        <span class='mdc-button__label'>Confirm</span>
-        </button>`
-    const confirm = new mdc.ripple.MDCRipple(document.getElementById('confirm'));
+    const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[selectedVenue.office]))
+    copy.share = []
+    console.log(copy)
+    cardProd.open();
+    requestCreator('create', fillVenueInCheckInSub(copy,selectedVenue)).then(function () {
+      successDialog('Check-In Created')
+      cardProd.close();
+      ApplicationState.lastCheckInCreated = Date.now()
+      ApplicationState.venue = selectedVenue
+      localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
+      getSuggestions();
+    }).catch(function (error) {
+      snacks(error.response.message);
+      cardProd.close()
+    })
+  })
+};
 
-    confirm.root_.onclick = function () {
-      confirm.root_.classList.add('hidden')
-      cardProd.open();
-      const checkInRequestBody = setVenueForCheckIn(value, ApplicationState.officeWithCheckInSubs[value.office])
-      requestCreator('create', checkInRequestBody).then(function () {
-        successDialog('Check-In Created')
-        cardProd.close();
-        ApplicationState.lastCheckInCreated = Date.now()
-        localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
-        getSuggestions();
-      }).catch(function (error) {
-        console.log(error)
-        confirm.root_.classList.remove('hidden');
-        snacks(error.response.message);
-        cardProd.close()
-      })
-    }
-  });
+function renderVenue(markers) {
 
-  if (!markers.length) {
-    selectVenue.selectedIndex = 1;
-  };
 
   if (markers.length == 1) {
-    selectVenue.selectedIndex = 2;
+    return venueList(markers[0]) + loadUnkwown();
   };
 
   if (markers.length > 1) {
-    selectVenue.selectedIndex = 0;
-  }
+    let string = '';
+    markers.forEach(function (venue) {
+      string += venueList(venue);
+    })
+    string += loadUnkwown();
+    return string;
+  };
+}
 
-};
+function loadUnkwown() {
+  return ` <li class='mdc-list-item venue-list-item  pl-0 pr-0'>
+  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">location_on</span>
+    Unkwown location
+    <span class="mdc-list-item__meta material-icons" aria-hidden="true">keyboard_arrow_right</span>
+  </li>`
+}
+
+
+function venueList(venue) {
+
+
+  return `<li class='mdc-list-item venue-list-item  pl-0 pr-0'>
+    <span class="mdc-list-item__graphic material-icons" aria-hidden="true">location_on</span>
+    <span class="mdc-list-item__text">
+      <span class="mdc-list-item__primary-text">${venue.location}</span>
+      <span class="mdc-list-item__secondary-text">${venue.office}</span>
+    </span>
+    <span class="mdc-list-item__meta material-icons" aria-hidden="true">keyboard_arrow_right</span>
+    </li>
+  
+    `
+
+
+}
 
 function showNoOfficeFound() {
   const content = `<h3 class='mdc-typography--headline6'>No Office Found For ${firebase.auth().currentUser.phoneNumber}</h3>
@@ -227,6 +263,34 @@ function getAllSubscriptions() {
   })
 }
 
+function selectionBox() {
+  return `<div class="selection-box-auto" id='selection-box'>
+
+  <div class="card__primary">
+    <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
+    </h2>
+  </div>
+  <div role="progressbar"
+    class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
+    id='check-in-prog'>
+    <div class="mdc-linear-progress__buffering-dots"></div>
+    <div class="mdc-linear-progress__buffer"></div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+      <span class="mdc-linear-progress__bar-inner"></span>
+    </div>
+  </div>
+
+  <div class="content-body">
+  </div>
+  </div>
+
+
+`
+}
+
 
 
 function toggleCardHeight(toggle, cardSelector) {
@@ -248,36 +312,6 @@ function toggleCardHeight(toggle, cardSelector) {
 }
 
 
-function selectionBox() {
-  return `<div  class="overlay selection-box-auto hidden" id='selection-box'>
-<aside class="social" tabindex="-1" role="dialog" aria-labelledby="modal-label" aria-hidden="true">
-  <div class="card__primary">
-    <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
-    </h2>
-
-  </div>
-  <div role="progressbar"
-    class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-linear-progress--closed"
-    id='check-in-prog'>
-    <div class="mdc-linear-progress__buffering-dots"></div>
-    <div class="mdc-linear-progress__buffer"></div>
-    <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
-      <span class="mdc-linear-progress__bar-inner"></span>
-    </div>
-    <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
-      <span class="mdc-linear-progress__bar-inner"></span>
-    </div>
-  </div>
-
-  <div class="content-body">
-
-  </div>
-  <div id='submit-cont'>
-  </div>
-</aside>`
-}
-
-
 function mapDom() {
   return `
   <div id='map-view' class=''>
@@ -294,6 +328,7 @@ function snapView() {
     return
   }
   webkit.messageHandlers.startCamera.postMessage("setFilePath")
+
 }
 
 function setFilePathFailed(error) {
@@ -305,7 +340,6 @@ function setFilePath(base64) {
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon'><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></a>`
   const header = getHeader('app-header', backIcon, '');
   header.root_.classList.remove('hidden')
-  // document.getElementById('growthfile').classList.add('mdc-top-app-bar--fixed-adjust')
 
   const url = `data:image/jpg;base64,${base64}`
   document.getElementById('app-current-panel').innerHTML = `
@@ -340,51 +374,6 @@ function setFilePath(base64) {
       submit.root_.style.bottom = (this.scrollHeight - 20) + "px";
     }
   });
-  submit.root_.addEventListener('click', function () {
-    const textValue = textarea.value;
-    const offices = Object.keys(ApplicationState.officeWithCheckInSubs);
-
-    progressBar.open();
-
-    if (offices.length == 1) {
-      const sub = ApplicationState.officeWithCheckInSubs[offices[0]]
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, sub)).then(function () {
-        getSuggestions()
-        successDialog('Check-In Created')
-        progressBar.close()
-      }).catch(function (error) {
-        snacks(error.message)
-        progressBar.close()
-      })
-      return;
-    }
-
-    const dialog = new Dialog('Send To', radioList(offices)).create();
-    const list = new mdc.list.MDCList(document.getElementById('dialog-office'))
-    dialog.open();
-    dialog.listen('MDCDialog:opened', () => {
-      list.layout();
-      list.singleSelection = true
-    });
-
-    dialog.listen('MDCDialog:closed', function (evt) {
-      if (evt.detail.action !== 'accept') return;
-      const sub = ApplicationState.officeWithCheckInSubs[offices[list.selectedIndex]]
-      sub.attachment.Photo.value = url
-      sub.attachment.Comment.value = textValue;
-      requestCreator('create', setVenueForCheckIn(ApplicationState.venue, sub)).then(function () {
-        getSuggestions()
-        successDialog('Check-In Created')
-        progressBar.close()
-      }).catch(function (error) {
-        progressBar.close()
-        snacks(error.response.message)
-      })
-    })
-  })
-
 
   const image = new Image();
   image.onload = function () {
@@ -396,6 +385,26 @@ function setFilePath(base64) {
     }
   }
   image.src = url;
+
+  submit.root_.addEventListener('click', function () {
+    const textValue = textarea.value;
+
+    const sub = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[photoOffice]))
+
+    sub.attachment.Photo.value = url
+    sub.attachment.Comment.value = textValue;
+    sub.share = []
+    progressBar.open();
+
+    requestCreator('create', fillVenueInCheckInSub(sub, ApplicationState.venue)).then(function () {
+      getSuggestions()
+      successDialog('Check-In Created')
+      progressBar.close()
+    }).catch(function (error) {
+      progressBar.close()
+      snacks(error.response.message)
+    })
+  })
 }
 
 
@@ -448,9 +457,13 @@ function getOrientation(image) {
   if (image.width == image.height) return 'square'
 }
 
-function focusMarker(map, latLng, zoom) {
-  map.setZoom(zoom);
-  map.panTo(latLng);
+function focusMarker(map, markersObject, index) {
+  const marker = markersObject.markers[index];
+  const info = markersObject.infowindow[index];
+  info.setContent(`<span>${marker.title}</span>`)
+  info.open(map, marker)
+  map.panTo(marker.position);
+  map.setZoom(18);
 }
 
 function GetOffsetBounds(latlng, offset) {
@@ -475,8 +488,10 @@ GetOffsetBounds.prototype.west = function () {
 }
 
 
-function loadNearByLocations(o, map, location) {
+function loadNearByLocations(o, map) {
   return new Promise(function (resolve, reject) {
+    markersObject.markers = [];
+    markersObject.infowindow = []
     var infowindow = new google.maps.InfoWindow();
     const result = []
     let lastOpen;
@@ -484,27 +499,26 @@ function loadNearByLocations(o, map, location) {
     const store = tx.objectStore('map');
     const index = store.index('bounds');
     const idbRange = IDBKeyRange.bound([o.south, o.west], [o.north, o.east]);
-    const bounds = map.getBounds()
-    const checkInOffices = Object.keys(ApplicationState.officeWithCheckInSubs)
+    const bounds = map.getBounds();
+
     index.openCursor(idbRange).onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (calculateDistanceBetweenTwoPoints(location, {
-          latitude: cursor.value.latitude,
-          longitude: cursor.value.longitude
-        }) > 0.5) {
+
+      if (!ApplicationState.officeWithCheckInSubs[cursor.value.office]) {
         cursor.continue();
         return;
-      }
+      };
 
-      if (checkInOffices.indexOf(cursor.value.office) <= -1) return;
+      result.push(cursor.value)
+
 
       var marker = new google.maps.Marker({
         position: {
           lat: cursor.value.latitude,
           lng: cursor.value.longitude
         },
-
+        title: cursor.value.location,
         icon: {
           url: './img/m.png',
           size: new google.maps.Size(71, 71),
@@ -518,6 +532,7 @@ function loadNearByLocations(o, map, location) {
 
 
       marker.setMap(map);
+
       const content = `<span>${cursor.value.location}</span>`
       google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
         return function () {
@@ -529,12 +544,15 @@ function loadNearByLocations(o, map, location) {
           lastOpen = infowindow;
         };
       })(marker, content, infowindow));
-      result.push(cursor.value)
+      markersObject.markers.push(marker)
+      markersObject.infowindow.push(infowindow);
+
       bounds.extend(marker.getPosition())
       cursor.continue();
     }
     tx.oncomplete = function () {
       map.fitBounds(bounds);
+      console.log(result)
       return resolve(result)
     }
   })
