@@ -1,7 +1,7 @@
 var readStack = [];
 var readDebounce = debounce(function () {
   requestCreator('Null').then(handleComponentUpdation).catch(console.log)
-}, 1000,false)
+}, 1000, false)
 window.addEventListener('callRead', readDebounce);
 
 
@@ -389,10 +389,13 @@ function handleComponentUpdation(readResponse) {
       readLatestChats(false);
       break;
     case 'reportView':
-      const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('#tabs .mdc-tab-bar'))
+      const tabBar = new mdc.tabBar.MDCTabBar(document.querySelector('.mdc-tab-bar'))
       if (!tabBar) return;
       if (tabBar.foundation_.adapter_.getFocusedTabIndex() == 0) {
-        createTodayStat()
+        const sectionContent = document.querySelector('.tabs-section .data-container');
+        if (sectionContent) {
+          attendenceView(sectionContent)
+        }
       }
       break;
   }
