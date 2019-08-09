@@ -9,7 +9,9 @@ const duration = 800;
 function chatView() {
 
     document.getElementById('start-load').classList.add('hidden');
-    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>`
+    const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+    <span class="mdc-top-app-bar__title">Chat</span>
+    `
     const searchIcon = `<a class='mdc-top-app-bar__action-item material-icons' id='search-btn'>
         search
     </a>`

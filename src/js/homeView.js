@@ -116,7 +116,11 @@ function getSubsWithVenue() {
 
 function handleNav(evt) {
   console.log(evt)
-
+  if(history.state[0] === 'homeView') {
+    history.pushState(['profileView'],null,null)
+    profileView();
+    return;
+  }
   return history.back();
 }
 
@@ -153,7 +157,7 @@ function homePanel(suggestionLength) {
 
 function homeHeaderStartContent(locationName) {
   return `
-  <button class="material-icons mdc-top-app-bar__navigation-icon mdc-icon-button">menu</button>
+  <img class="mdc-top-app-bar__navigation-icon mdc-icon-button" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
   <span class="mdc-top-app-bar__title">${locationName}</span>
 `
 }
@@ -254,7 +258,7 @@ function homeView(suggestedTemplates) {
     history.pushState(['reportView'],null,null)
     reportView();
   })
-
+  
   if (!suggestedTemplates.length) return;
   console.log(suggestedTemplates)
   document.getElementById('suggestions-container').innerHTML = templateList(suggestedTemplates)
