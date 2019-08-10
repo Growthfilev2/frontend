@@ -41,7 +41,7 @@ function incentiveView(sectionContent) {
   const promiseArray = []
   const incentives = ['customer', 'order', 'collection']
   incentives.forEach(function (name) {
-    promiseArray.push(getSubscription(ApplicationState.office, name))
+    promiseArray.push(getSubscription('', name))
   });
 
   Promise.all(promiseArray).then(function (incentiveSubs) {

@@ -1,11 +1,11 @@
 function attendenceView(sectionContent) {
 
-  Promise.all([getSubscription(ApplicationState.office, 'leave'), getSubscription('', 'attendance regularization')]).then(function (result) {
+  Promise.all([getSubscription('', 'leave'), getSubscription('', 'attendance regularization')]).then(function (result) {
     console.log(result);
     const leaveSub = result[0];
     const arSubs = result[1];
+    sectionContent.innerHTML = attendanceDom(leaveSub);
     if (leaveSub.length) {
-      sectionContent.innerHTML = attendanceDom(leaveSub);
       const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
       handleTemplateListClick(listInit)
     };
@@ -117,20 +117,21 @@ function todayStatCard(addendum, activity) {
 }
 
 function renderArCard(statusObject) {
+
   if (statusObject.statusForDay == 1) {
     return `<p class='present sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
   }
   if (statusObject.onAr) {
     return `<p class='sfd mt-0 mb-0 mdc-theme--primary'>Applied for AR</p>`
   }
-  if(statusObject.hasOwnProperty('statusForDay')) {
-    if(statusObject.statusForDay < 1)  {
-      return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
+
+  if (statusObject.statusForDay < 1) {
+    return `<button class='mdc-button mdc-theme--primary-bg ar-button' data-office="${statusObject.office}"  data-date="${statusObject.year}/${statusObject.month + 1}/${statusObject.date}">
       <span class="mdc-button__label mdc-theme--on-primary">Apply AR</span>
       </button>
       <p class='mdc-theme--error sfd mt-0 mb-0'>Status For Day : ${statusObject.statusForDay}</p>`
-    }
   }
+
 }
 
 function monthlyStatCard(value, arSub) {
@@ -163,22 +164,26 @@ function createMonthlyStat(arSub) {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month}-${cursor.value.year}`,'DD-MM-YYYY').valueOf()
+      const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
       console.log(recordTimestamp);
       if (recordTimestamp > moment().valueOf()) {
         cursor.continue();
         return;
-
       }
       if (!arSub[cursor.value.office]) {
         cursor.continue();
         return;
+      };
+
+      if (!cursor.value.hasOwnProperty('statusForDay')) {
+        cursor.continue();
+        return;
       }
-      console.log(cursor.value);
       if (month !== cursor.value.month) {
         monthlyString += `<div class="hr-sect hr-sect mdc-theme--primary mdc-typography--headline5">${moment(`${cursor.value.month + 1}-${cursor.value.year}`,'MM-YYYY').format('MMMM YYYY')}</div>`
       }
       month = cursor.value.month;
+      console.log(cursor.value);
       monthlyString += monthlyStatCard(cursor.value, arSub);
       cursor.continue();
     }
