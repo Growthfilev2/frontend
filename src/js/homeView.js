@@ -131,7 +131,7 @@ function homePanel(suggestionLength) {
       <li class='mdc-list-item'>Chat
       <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
       </li>
-      ${Object.keys(ApplicationState.officeWithCheckInSubs).length ? ` <li class='mdc-list-item'>Take Photo
+      ${Object.keys(ApplicationState.officeWithCheckInSubs).length ? ` <li class='mdc-list-item'>Photo Check-In
       <span class='mdc-list-item__meta material-icons'>keyboard_arrow_right</span>
       </li>`:''}
       <li class='mdc-list-divider'></li>
