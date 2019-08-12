@@ -414,6 +414,8 @@ function emailUpdation(auth) {
   <span class="mdc-top-app-bar__title">${topBarText}</span>
   `
   const header = getHeader('app-header', backIcon, '');
+  header.root_.classList.remove('hidden');
+
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
 
     document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>
@@ -432,30 +434,53 @@ function emailUpdation(auth) {
       };
       progressBar.open()
       if (emailField.value === firebase.auth().currentUser.email) {
-        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings).then(function () {
-          progressBar.close();
-
-        }).catch(handleEmailError)
+        //   firebase.auth().currentUser.sendEmailVerification().then(function () {
+        snacks('Email Verification Has Been Sent.')
+        progressBar.close();
+        emailVerificationWait()
+        // }).catch(handleEmailError)
         return;
       };
 
-      firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
-        firebase.auth().currentUser.sendEmailVerification(actionCodeSettings).then(function () {
-          progressBar.close()
-        }).catch(handleEmailError)
-      }).catch(handleEmailError)
+      // firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
+      //   firebase.auth().currentUser.sendEmailVerification().then(function () {
+      //     snacks('Email Verification Has Been Sent.')
+      //     progressBar.close()
+      //   }).catch(handleEmailError)
+      // }).catch(handleEmailError)
       return
     })
   });
+}
+
+function emailVerificationWait() {
+  const auth = firebase.auth().currentUser
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
+  <h3 class='mdc-typography--headline6'>Verification Link Has Been Sent To ${firebase.auth().currentUser.email}</h3>
+  <p class='mdc-typography--body1'>Click Continue To Proceed Further</p>
+  <button class='mdc-button mdc-theme--primary-bg mt-10' id='continue'>
+  <span class='mdc-button__label mdc-theme--on-primary'>CONTINUE</span>
+  </button>
+</div>`
+  document.getElementById('continue').addEventListener('click', function (evt) {
+    if (!auth.emailVerified) {
+      firebase.auth().currentUser.reload();
+      snacks('Email Is Not Verified')
+      return;
+    }
+    history.pushState(['reportView'],null,null)
+    reportView()
+  })
 }
 
 function handleEmailError(error) {
   progressBar.close()
   if (error.code === 'auth/requires-recent-login') {
     showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
-
     return;
   }
+  snacks(error.message);
+
 }
 
 function getReportOffices(result) {
@@ -501,15 +526,5 @@ ${reportString}
 </div>
 
 `
-
-}
-
-
-
-function emailTemplate() {
-
-}
-
-function handleEmailVerificationCheck() {
 
 }

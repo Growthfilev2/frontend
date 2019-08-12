@@ -7,20 +7,7 @@ const redirectParam = {
   verify: false,
   functionName: '',
 }
-const actionCodeSettings = {
-  url:window.location.href+firebase.auth().currentUser.email,
-  iOS:{
-    bundleId:'com.Growthfile.GrowthfileNewApp'
-  },
-  android:{
-    packageName:'com.growthfile.growthfileNew',
-    installApp:true,
-    minimumVersion:'21'
-  },
-  handleCodeInApp:false,
-  dynamicLinkDomain:window.location.href,
 
-}
 let initApp = true;
 
 
