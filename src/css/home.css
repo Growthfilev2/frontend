@@ -204,3 +204,9 @@
     bottom: 0;
     height: 45%;
 }
+.update-email {
+    max-width: 640px;
+}
+.update-email .mdc-text-field , .update-email .mdc-button {
+    width: 100%;
+}

@@ -1,5 +1,4 @@
-function expenseView(sectionContent) {
-   
+function expenseView(sectionContent) {   
     getSubscription('', 'expense claim').then(function (result) {
         console.log(result)
         if (!result.length) {
