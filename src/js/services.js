@@ -330,8 +330,9 @@ function updateApp() {
   })
 }
 
-function revokeSession() {
+function revokeSession(init) {
   firebase.auth().signOut().then(function () {
+      initApp = init;
     document.getElementById('app-header').classList.add('hidden');
   }).catch(function (error) {
 

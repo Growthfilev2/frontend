@@ -82,7 +82,10 @@ window.onpopstate = function (event) {
     getSuggestions();
     return
   }
-
+  if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
+    history.go(-1);
+    return;
+  }
   window[event.state[0]](event.state[1]);
 }
 
@@ -115,11 +118,15 @@ function initializeApp() {
       }
     }
     document.getElementById("app-current-panel").classList.remove('hidden')
-    if (!initApp) return
+    if (!initApp) {
+      document.getElementById('app-header').classList.remove('hidden')
+      return
+    }
     startApp()
   });
 
 }
+
 
 
 function firebaseUiConfig() {
@@ -127,38 +134,39 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-        console.log(authResult)
-        const auth = authResult.user
-        if (history.state) {
-          if (history.state[0] === 'edit-profile') {
-            document.getElementById('app-header').classList.remove('hidden');
-          }
-        }
 
-        if (redirectParam.updateEmail) {
-          auth.updateEmail(redirectParam.updateEmail).then(function () {
-            auth.sendEmailVerification().then(function () {
-              snacks('Verification Link has been Sent')
-              window[redirectParam.functionName]()
-            }).catch(function (verificationError) {
-              snacks(verificationError.message)
-              window[redirectParam.functionName]()
-            })
-          }).catch(function (error) {
-            snacks(error.message);
-          })
-        }
+        // console.log(authResult)
+        // const auth = authResult.user
+        // if (history.state) {
+        //   if (history.state[0] === 'edit-profile') {
+        //     document.getElementById('app-header').classList.remove('hidden');
+        //   }
+        // }
 
-        if (redirectParam.verify) {
-          auth.sendEmailVerification().then(function () {
-            snacks('Verification Link has been Sent')
-            window[redirectParam.functionName]()
-          }).catch(function (verificationError) {
-            console.log(verificationError)
-            snacks(verificationError.message)
-            window[redirectParam.functionName]()
-          })
-        }
+        // if (redirectParam.updateEmail) {
+        //   auth.updateEmail(redirectParam.updateEmail).then(function () {
+        //     auth.sendEmailVerification().then(function () {
+        //       snacks('Verification Link has been Sent')
+        //       window[redirectParam.functionName]()
+        //     }).catch(function (verificationError) {
+        //       snacks(verificationError.message)
+        //       window[redirectParam.functionName]()
+        //     })
+        //   }).catch(function (error) {
+        //     snacks(error.message);
+        //   })
+        // }
+
+        // if (redirectParam.verify) {
+        //   auth.sendEmailVerification().then(function () {
+        //     snacks('Verification Link has been Sent')
+        //     window[redirectParam.functionName]()
+        //   }).catch(function (verificationError) {
+        //     console.log(verificationError)
+        //     snacks(verificationError.message)
+        //     window[redirectParam.functionName]()
+        //   })
+        // }
 
         return false;
       },
@@ -195,7 +203,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 8);
+  const req = window.indexedDB.open(dbName, 9);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -289,8 +297,12 @@ function startApp() {
         reports.createIndex('month', 'month')
       };
       if (evt.oldVersion <= 7) {
-         localStorage.removeItem('ApplicationState')
+        localStorage.removeItem('ApplicationState')
       };
+      if (evt.oldVersion <= 8) {
+        const subscriptionStore = tx.objectStore('subscriptions');
+        subscriptionStore.createIndex('report', 'report');
+      }
       tx.oncomplete = function () {
         console.log("completed all backlog");
       }
@@ -341,7 +353,7 @@ function startApp() {
         return
       }
       if (response.revokeSession) {
-        revokeSession();
+        revokeSession(true);
         return
       };
 
@@ -361,7 +373,9 @@ function startApp() {
         document.getElementById('start-load').classList.add('hidden')
         history.pushState(['profileCheck'], null, null)
         profileCheck();
-        runRead({read:'1'})
+        runRead({
+          read: '1'
+        })
       })
     }).catch(function (error) {
       if (error.response.apiRejection) {
@@ -528,34 +542,13 @@ CanvasDimension.prototype.getNewDimension = function () {
   }
 }
 
-function updateEmailDom(reportLength, reportList) {
-  return `
-${reportLength.length ? reportList : ''}
-<h3 class='mdc-typography--body1 text-center'>You have not Added your Email Address. Enter Email to continue</h3>
-<div class="mdc-text-field mdc-text-field--outlined" id='email'>
-  <input class="mdc-text-field__input" required>
- <div class="mdc-notched-outline">
-     <div class="mdc-notched-outline__leading"></div>
-     <div class="mdc-notched-outline__notch">
-           <label class="mdc-floating-label">Email</label>
-     </div>
-     <div class="mdc-notched-outline__trailing"></div>
- </div>
-</div>
-<div class="mdc-text-field-helper-line">
-  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	"></div>
-</div>
-`
 
-}
 
 function updateEmailButton() {
   return `<div class="mdc-card__actions">
 <div class="mdc-card__action-icons"></div>
 <div class="mdc-card__action-buttons">
-<button class="mdc-button mdc-card__action mdc-card__action--button hidden" id='skip'>
-<span class="mdc-button__label">SKIP</span>
-</button>
+
 <button class="mdc-button mdc-card__action mdc-card__action--button" id='addEmail'>
  <span class="mdc-button__label">UPDATE</span>
  <i class="material-icons mdc-button__icon" aria-hidden="true">arrow_forward</i>
@@ -563,121 +556,6 @@ function updateEmailButton() {
 </div>
 </div>`
 }
-
-function checkForRecipient() {
-  const auth = firebase.auth().currentUser;
-  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    console.log("openMap")
-    if (auth.email && auth.emailVerified) return openMap();
-
-    const reportList = getReportNameString(result);
-
-    if (!auth.email) {
-
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(updateEmailDom(reportList, result.length), '<span class="mdc-top-app-bar__title">Add Email</span>', updateEmailButton())
-      const addEmail = document.getElementById('addEmail');
-      const skip = document.getElementById('skip')
-      if (!result.length) {
-        skip.classList.remove('hidden')
-        skip.addEventListener('click', function (evt) {
-          openMap();
-          return;
-        })
-      }
-
-      const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
-      const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-      addEmail.addEventListener('click', function (evt) {
-
-        if (!emailInit.value) {
-          emailInit.focus();
-          return
-        };
-        if (!emailReg(emailInit.value)) {
-          snacks('Please Enter A Valid Email Address')
-          progCard.close();
-          return;
-        }
-        progCard.open();
-        auth.updateEmail(emailInit.value).then(function () {
-          auth.sendEmailVerification().then(function () {
-            snacks('Verification Link has been Sent')
-            progCard.close();
-            openMap();
-          }).catch(function (verificationError) {
-            progCard.close();
-            handleError({
-              message: verificationError.message,
-              body: JSON.stringify(verificationError)
-            })
-          })
-        }).catch(function (error) {
-          progCard.close();
-
-          if (error.code === 'auth/requires-recent-login') {
-            redirectParam.updateEmail = emailInit.value
-            redirectParam.functionName = 'openMap';
-            showReLoginDialog('Email Update', 'Please login again to update your email address')
-            return
-          }
-
-          snacks(error.message)
-
-        })
-        return
-      })
-      return;
-    }
-    if (!auth.emailVerified) {
-      const currentEmail = firebase.auth().currentUser.email
-      const content = `
-      ${result.length ? reportList : ''}
-      <h3 class='mdc-typography--body1 text-center'>Please Verify your email</h3>
-       <button class="mdc-button hidden" id='skip' style='width:100%'>
-      <span class="mdc-button__label">SKIP</span>
-      </button>
-      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id='sendVerification' style='width:100%'>
-      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>
-      </button>`
-
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '')
-      const skip = document.getElementById('skip');
-      const verify = document.getElementById('sendVerification')
-      if (!result.length) {
-        skip.classList.remove('hidden')
-        skip.addEventListener('click', function (evt) {
-          return openMap()
-        });
-      }
-      const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-      verify.addEventListener('click', function (evt) {
-        progCard.open();
-        auth.sendEmailVerification().then(function () {
-          snacks('Verification Link has been Sent')
-          progCard.close();
-          openMap();
-        }).catch(function (verificationError) {
-          progCard.close();
-          if (verificationError.code === 'auth/requires-recent-login') {
-            redirectParam.updateEmail = ''
-            redirectParam.verify = true;
-            redirectParam.functionName = 'openMap';
-            showReLoginDialog('Email Verification', 'Please login again to get a verification ');
-            return;
-          }
-          handleError({
-            message: verificationError.message,
-            body: JSON.stringify(verificationError)
-          })
-        })
-      })
-      return;
-    };
-  });
-}
-
-
-
 
 
 function showReLoginDialog(heading, contentText) {
@@ -687,27 +565,10 @@ function showReLoginDialog(heading, contentText) {
   dialog.buttons_[1].textContent = 'RE-LOGIN'
   dialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
-    initApp = false;
     revokeSession();
   })
 }
 
-function getReportNameString(result) {
-  const offices = {}
-  result.forEach(function (report) {
-    offices[report.office] = true;
-  })
-  console.log(offices)
-  const ul = ` <h3 class="mdc-typography--headline6 mb-0 mt-0 text-center">You are a recipient for Reports in</h3>
-  <ul class='mdc-list'>
-  ${Object.keys(offices).map(function(office){
-    return `<li class='mdc-list-item list-li-small'>
-          ${office}
-    </li>`
-  }).join("")}
-  </ul>`
-  return ul;
-}
 
 
 function profileCheck() {
@@ -832,6 +693,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
+  subscriptions.createIndex('report', 'report');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
@@ -1046,10 +908,10 @@ function openMap() {
         }).catch(showNoLocationFound)
         return
       };
-      
+
       ApplicationState.officeWithCheckInSubs = checkInSubs
       const oldApplicationState = JSON.parse(localStorage.getItem('ApplicationState'));
-      
+
       if (!oldApplicationState || !oldApplicationState.lastCheckInCreated) {
         manageLocation().then(function (location) {
           document.getElementById('start-load').classList.add('hidden');
@@ -1086,16 +948,16 @@ function openMap() {
   })
 }
 
-function fillVenueInCheckInSub(sub,venue){
+function fillVenueInCheckInSub(sub, venue) {
   const vd = sub.venue[0];
   sub.venue = [{
     geopoint: {
-      latitude:  venue.latitude || '',
-      longitude : venue.longitude || ''
+      latitude: venue.latitude || '',
+      longitude: venue.longitude || ''
     },
-    location:venue.location || '',
-    address: venue.address  ||'',
-    venueDescriptor : vd
+    location: venue.location || '',
+    address: venue.address || '',
+    venueDescriptor: vd
   }];
   return sub;
 }

@@ -155,10 +155,10 @@ function homePanel(suggestionLength) {
 </div>`
 }
 
-function homeHeaderStartContent(locationName) {
+function homeHeaderStartContent(name) {
   return `
   <img class="mdc-top-app-bar__navigation-icon mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
-  <span class="mdc-top-app-bar__title">${locationName}</span>
+  <span class="mdc-top-app-bar__title">${name}</span>
 `
 }
 
@@ -172,9 +172,17 @@ function homeView(suggestedTemplates) {
     clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
   }
 
-
-  const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || 'Location'), clearIcon);
-
+  const header = getHeader('app-header', homeHeaderStartContent('Unkown Location'), clearIcon);
+  console.log(header)
+  if (ApplicationState.venue.location) {
+    header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
+  } else {
+    geocodeLatLng(ApplicationState.location).then(function (result) {
+      if (result) {
+        header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
+      }
+    }).catch(console.error)
+  }
 
   header.listen('MDCTopAppBar:nav', handleNav);
   header.root_.classList.remove('hidden')
@@ -256,10 +264,17 @@ function homeView(suggestedTemplates) {
       el.innerHTML = `<div class='chat-count'>${rootRecord.totalCount}</div>`
     }
   }
-
+  const auth = firebase.auth().currentUser
   document.getElementById('reports').addEventListener('click', function () {
-    history.pushState(['reportView'], null, null)
-    reportView();
+    if (auth.email && auth.emailVerified) {
+      history.pushState(['reportView'], null, null)
+      reportView();
+      return
+    };
+
+    history.pushState(['emailUpdation'], null, null)
+    emailUpdation()
+
   })
 
   if (!suggestedTemplates.length) return;
@@ -388,4 +403,232 @@ function templateList(suggestedTemplates) {
   });
 
   return ul.outerHTML;
+}
+
+function updateName() {
+
+  const auth = firebase.auth().currentUser;
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Update Name</span>
+  `
+  const header = getHeader('app-header', backIcon, '');
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
+
+<div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
+  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName}' type='text' >
+ <div class="mdc-notched-outline">
+     <div class="mdc-notched-outline__leading"></div>
+     <div class="mdc-notched-outline__notch">
+           <label for='email' class="mdc-floating-label mdc-floating-label--float-above ">Name</label>
+     </div>
+     <div class="mdc-notched-outline__trailing"></div>
+ </div>
+</div>
+<div class="mdc-text-field-helper-line">
+  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	">
+  </div>
+</div>
+
+<div  class='mb-10 mt-10'>
+<button class='mdc-button mdc-theme--primary-bg' id='name-btn'>
+<span class='mdc-button__label mdc-theme--on-primary'>Update<span>
+</button>
+</div>
+  </div>`
+  const nameField = new mdc.textField.MDCTextField(document.getElementById('name'))
+  nameField.focus();
+  document.getElementById('name-btn').addEventListener('click', function () {
+    if (!nameField.value) {
+      nameField.focus();
+      nameField.foundation_.setValid(false);
+      nameField.foundation_.adapter_.shakeLabel(true);
+      nameField.helperTextContent = 'Name Cannot Be Left Blank';
+      return;
+    }
+    progressBar.open();
+    auth.updateProfile({
+      displayName: formatTextToTitleCase(nameField.value)
+    }).then(function () {
+      progressBar.close();
+      history.back();
+      snacks('Name Updated Successfully')
+    })
+  })
+}
+
+function getEmailViewHeading(auth, updateOnly) {
+  const text = {
+    topBarText: '',
+    heading: '',
+    btnText: 'Update'
+  }
+  if (updateOnly) {
+    text.topBarText = 'Update Email';
+    return text;
+  }
+  if (!auth.email) {
+    text.topBarText = 'Add Email';
+    text.heading = 'Please Add You Email Address To Continue'
+    return text;
+  }
+  text.topBarText = 'Verify Email'
+  text.heading = 'Please Verify Your Email Address To Continue'
+  text.btnText = 'Verify'
+  return text;
+}
+
+function emailUpdation(updateOnly) {
+  const auth = firebase.auth().currentUser;
+  const headings = getEmailViewHeading(auth, updateOnly)
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">${headings.topBarText}</span>
+  `
+  const header = getHeader('app-header', backIcon, '');
+  header.root_.classList.remove('hidden');
+
+  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
+
+    document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>
+        
+    ${updateEmailDom(auth.email, getReportOffices(result), headings)}
+    </div>`
+    const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
+    emailField.focus();
+    document.getElementById('email-btn').addEventListener('click', function () {
+      console.log(emailField)
+
+      if (!emailReg(emailField.value)) {
+        emailField.focus();
+        emailField.foundation_.setValid(false);
+        emailField.foundation_.adapter_.shakeLabel(true);
+        emailField.helperTextContent = 'Enter A Valid Email Id';
+        return;
+      };
+
+      if (updateOnly) {
+        if (emailField.value === firebase.auth().currentUser.email) {
+          emailField.foundation_.setValid(false);
+          emailField.foundation_.adapter_.shakeLabel(true);
+          emailField.helperTextContent = 'New Email Cannot Be Same As Previous Email';
+          return
+        }
+        progressBar.open()
+        firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
+          firebase.auth().currentUser.sendEmailVerification().then(function () {
+            snacks('Email Verification Has Been Sent.')
+            history.pushState(['emailVerificationWait'], null, null)
+            emailVerificationWait(updateOnly)
+            progressBar.close()
+          }).catch(handleEmailError)
+        }).catch(handleEmailError)
+        return
+      }
+      progressBar.open()
+      if (emailField.value === firebase.auth().currentUser.email) {
+        firebase.auth().currentUser.sendEmailVerification().then(function () {
+          snacks('Email Verification Has Been Sent.')
+          progressBar.close();
+          history.pushState(['emailVerificationWait'], null, null)
+          emailVerificationWait()
+        }).catch(handleEmailError)
+        return;
+      };
+
+      firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
+        firebase.auth().currentUser.sendEmailVerification().then(function () {
+          snacks('Email Verification Has Been Sent.')
+          history.pushState(['emailVerificationWait'], null, null)
+          emailVerificationWait()
+          progressBar.close()
+        }).catch(handleEmailError)
+      }).catch(handleEmailError)
+      return
+    })
+  });
+}
+
+function emailVerificationWait(updateOnly) {
+  const auth = firebase.auth().currentUser
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
+  <h3 class='mdc-typography--headline6'>Verification Link Has Been Sent To ${firebase.auth().currentUser.email}</h3>
+  <p class='mdc-typography--body1'>Click Continue To Proceed Further</p>
+  <button class='mdc-button mdc-theme--primary-bg mt-10' id='continue'>
+  <span class='mdc-button__label mdc-theme--on-primary'>CONTINUE</span>
+  </button>
+</div>`
+  document.getElementById('continue').addEventListener('click', function (evt) {
+    progressBar.open()
+    firebase.auth().currentUser.reload();
+    setTimeout(function () {
+      firebase.auth().currentUser.reload();
+      if (!auth.emailVerified) {
+        snacks('Email Not Verified. Try Again');
+        progressBar.close()
+        return;
+      }
+      progressBar.close()
+      if (updateOnly) {
+        history.go(-2);
+        return;
+      }
+      history.pushState(['reportView'], null, null)
+      reportView();
+    }, 2000)
+  })
+}
+
+function handleEmailError(error) {
+  progressBar.close()
+  if (error.code === 'auth/requires-recent-login') {
+    showReLoginDialog('Email Authentication', 'Please Login Again To Complete The Operation');
+    return;
+  }
+  snacks(error.message);
+
+}
+
+function getReportOffices(result) {
+
+  const offices = []
+  result.forEach(function (report, idx) {
+
+    if (offices.indexOf(report.office) > -1) return
+    offices.push(report.office);
+  })
+  return `You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
+}
+
+
+function updateEmailDom(email, reportString, headings) {
+
+  return `
+
+<h3 class='mdc-typography--headline6'>${headings.heading}</h3>
+<p class='report-rec mt-10 mdc-typography--body1'>
+${reportString}
+</p>
+
+<div class="mdc-text-field mdc-text-field--outlined mt-10" id='email'>
+  <input class="mdc-text-field__input" required value='${email}' type='email'>
+ <div class="mdc-notched-outline">
+     <div class="mdc-notched-outline__leading"></div>
+     <div class="mdc-notched-outline__notch">
+           <label for='email' class="mdc-floating-label ${email ? `mdc-floating-label--float-above` :''}">Email</label>
+     </div>
+     <div class="mdc-notched-outline__trailing"></div>
+ </div>
+</div>
+<div class="mdc-text-field-helper-line">
+  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	">
+  </div>
+</div>
+
+<div  class='mb-10 mt-10'>
+<button class='mdc-button mdc-theme--primary-bg' id='email-btn'>
+<span class='mdc-button__label mdc-theme--on-primary'>${headings.btnText}<span>
+</button>
+</div>
+
+`
+
 }

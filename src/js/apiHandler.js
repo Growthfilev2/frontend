@@ -717,7 +717,7 @@ function successResponse(read, param, db, resolve, reject) {
   read.locations.forEach(function (location) {
     updateMap(location, updateTx)
   });
-
+  
   updateReports(read.statusObject,reports)
 
 

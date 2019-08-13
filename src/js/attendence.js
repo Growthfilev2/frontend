@@ -1,23 +1,39 @@
 function attendenceView(sectionContent) {
+  const subs = {}
+  const tx = db.transaction('subscriptions');
+  tx.objectStore('subscriptions')
+    .index('report')
+    .openCursor(IDBKeyRange.only('attendance'))
+    .onsuccess = function (event) {
+      const cursor = event.target.result;
+      if(!cursor) return;
+      if(!subs[cursor.value.template]) {
+        subs[cursor.value.template] = [cursor.value]
+      }
+      else {
+        subs[cursor.value.template].push(cursor.value)
+      }
+      cursor.continue();
+    }
+  tx.oncomplete = function () {
+    console.log(subs)
+    sectionContent.innerHTML = attendanceDom(subs['leave'] || []);
+    createTodayStat();
 
-  Promise.all([getSubscription('', 'leave'), getSubscription('', 'attendance regularization')]).then(function (result) {
-    console.log(result);
-    const leaveSub = result[0];
-    const arSubs = result[1];
-    sectionContent.innerHTML = attendanceDom(leaveSub);
-    if (leaveSub.length) {
+    const leaveSub = subs['leave'];
+    const arSubs = subs['attendance regularization']
+    if (leaveSub) {
       const listInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
       handleTemplateListClick(listInit)
     };
 
-    createTodayStat();
-    if (!arSubs.length) return;
+    if (!arSubs) return;
     const officeAR = {}
     arSubs.forEach(function (sub) {
       officeAR[sub.office] = sub
     })
     createMonthlyStat(officeAR);
-  })
+  }
 }
 
 function attendanceDom(leaveSub) {

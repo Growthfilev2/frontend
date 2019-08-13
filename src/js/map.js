@@ -40,10 +40,9 @@ function showNoLocationFound(error) {
 
 function mapView(location) {
 
-
   document.getElementById('app-header').classList.add('hidden');
 
-  
+
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
@@ -98,10 +97,11 @@ function mapView(location) {
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
-    loadNearByLocations(o, map,location).then(function (markers) {
+    loadNearByLocations(o, map, location).then(function (markers) {
       ApplicationState.nearByLocations = markers
       if (!markers.length) return createUnkownCheckIn()
       document.getElementById('map').style.display = 'block'
+
       loadCardData(markers, map)
     })
   });
@@ -116,8 +116,8 @@ function createUnkownCheckIn(cardProd) {
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
-   
-    prom.push(requestCreator('create', fillVenueInCheckInSub(copy,'')))
+
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, '')))
   })
 
   if (cardProd) {
@@ -132,7 +132,6 @@ function createUnkownCheckIn(cardProd) {
     successDialog('Check-In Created')
     ApplicationState.lastCheckInCreated = Date.now()
     ApplicationState.venue = ''
-
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions()
   }).catch(function (error) {
@@ -151,7 +150,7 @@ function loadCardData(venues, map) {
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${renderVenue(venues)}
 </ul>`
-
+ document.querySelector('#selection-box').classList.remove('hidden')
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
@@ -173,7 +172,7 @@ function loadCardData(venues, map) {
     copy.share = []
     console.log(copy)
     cardProd.open();
-    requestCreator('create', fillVenueInCheckInSub(copy,selectedVenue)).then(function () {
+    requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
       successDialog('Check-In Created')
       cardProd.close();
       ApplicationState.lastCheckInCreated = Date.now()
@@ -264,7 +263,7 @@ function getAllSubscriptions() {
 }
 
 function selectionBox() {
-  return `<div class="selection-box-auto" id='selection-box'>
+  return `<div class="selection-box-auto hidden" id='selection-box'>
 
   <div class="card__primary">
     <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
@@ -488,7 +487,7 @@ GetOffsetBounds.prototype.west = function () {
 }
 
 
-function loadNearByLocations(o, map,location) {
+function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
     markersObject.markers = [];
     markersObject.infowindow = []
@@ -509,7 +508,7 @@ function loadNearByLocations(o, map,location) {
         cursor.continue();
         return;
       };
-      if(calculateDistanceBetweenTwoPoints(location,cursor.value) > 0.5 ) {
+      if (calculateDistanceBetweenTwoPoints(location, cursor.value) > 0.5) {
         cursor.continue();
         return;
       }
@@ -583,4 +582,29 @@ function radioList(offices) {
               </li>`
               }).join("")}
             <ul>`
+}
+
+function geocodeLatLng(geopoint) {
+  return new Promise(function (resolve, reject) {
+
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+      'location': {
+        lat: geopoint.latitude,
+        lng: geopoint.longitude
+      }
+    }, function (results, status) {
+      if (status === 'OK') {
+        if (results[0]) {
+          resolve(results[0].formatted_address);
+          return
+        }
+        return resolve('')
+      }
+      reject({
+        message: status,
+        body: ''
+      })
+    })
+  })
 }

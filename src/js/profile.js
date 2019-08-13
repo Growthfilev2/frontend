@@ -5,139 +5,30 @@ function profileView() {
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
-  const editIcon = ` <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Edit" id='edit-profile'>edit</a>
-  <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
-  `
-  const header = getHeader('app-header', backIcon, editIcon);
+
+  const header = getHeader('app-header', backIcon, '');
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
   <div class="mdc-card__media mdc-card__media--16-9 demo-card__media"
   style="background-image: url(${firebase.auth().currentUser.photoURL || './img/empty-user-big.jpg'});" onerror="imgErr(this)">
+  <button class="mdc-fab mdc-fab--mini mdc-theme--primary-bg" aria-label="Favorite" style="
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+">
+  <span class="mdc-fab__icon material-icons">edit</span>
+  <input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
 
-</div>
-<button class='mdc-button overlay-text'>
-<i class='material-icons mdc-button__icon mdc-theme--on-primary'>add_a_photo</i>
-<span class='mdc-button__label mdc-theme--on-primary'>
-Choose Image
-</span>
-<input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
 </button>
+</div>
+
 <div id='base-details'></div>
 <div id='user-details'></div>  
-<div class="mdc-card__actions">
-<div class="mdc-card__action-buttons">
-    <span class="mdc-typography--headline6 last-logged-in-time">${lastSignInTime}</span>
-</div>
-</div>
+
 `
   document.getElementById('app-current-panel').innerHTML = root;
   setDetails()
-  let newName;
-  let newEmail;
-  const currentName = auth.displayName;
-  const currentEmail = auth.email;
-  let imageSrc = firebase.auth().currentUser.photoURL;
-
-  document.getElementById('edit-profile').addEventListener('click', function (evt) {
-    console.log(header);
-    header.iconRipples_[0].root_.classList.add('hidden')
-    header.iconRipples_[1].root_.classList.remove('hidden')
-    history.pushState(['edit-profile'], null, null);
-    document.getElementById('base-details').innerHTML = ''
-    document.querySelector('.mdc-card .mdc-card__actions').classList.add('hidden')
-    document.querySelector('#user-details').innerHTML = createEditProfile(currentName, currentEmail);
-    nameInit = new mdc.textField.MDCTextField(document.getElementById('name'));
-    emailInit = new mdc.textField.MDCTextField(document.getElementById('email'));
-
-
-    const imageBckg = document.querySelector('.mdc-card__media');
-    imageBckg.classList.add('reduced-brightness');
-    document.querySelector('.mdc-button.overlay-text').classList.add('show');
-
-    const input = document.getElementById('choose-profile-image')
-    document.querySelector('.overlay-text').style.opacity = 1;
-
-    input.addEventListener('change', function (evt) {
-
-      const files = input.files
-      if (!files.length) return;
-      const file = files[0];
-      var fileReader = new FileReader();
-      fileReader.onload = function (fileLoadEvt) {
-        const image = new Image();
-        image.src = fileLoadEvt.target.result;
-        image.onload = function () {
-          const newSrc = resizeAndCompressImage(image);
-          imageBckg.style.backgroundImage = `url(${newSrc})`
-          imageSrc = newSrc;
-        }
-      }
-      fileReader.readAsDataURL(file);
-    })
-
-  })
-  document.getElementById('save-profile').addEventListener('click', function () {
-    document.querySelector('.mdc-card .mdc-card__actions').classList.remove('hidden')
-    newName = nameInit.value;
-    newEmail = emailInit.value;
-    progressBar.foundation_.open();
-
-    if (imageSrc !== firebase.auth().currentUser.photoURL) {
-      requestCreator('backblaze', {
-        imageBase64: imageSrc
-      }).then(function () {
-        snacks('Profile Picture set successfully')
-      }).catch(function (error) {
-        snacks(error.response.message)
-      });
-    }
-    if (newName !== auth.displayName) {
-      auth.updateProfile({
-        displayName: formatTextToTitleCase(newName)
-      }).then(function () {
-        snacks('Username Updated Successfully')
-      })
-    }
-
-    if (newEmail !== auth.email) {
-      if (!newEmail) {
-        snacks('Please Enter An Email Address')
-        progressBar.foundation_.close();
-        return;
-        
-      }
-      if(!emailReg(newEmail))  {
-        snacks('Please Enter A Valid Email Address')
-        progressBar.foundation_.close();
-        return;
-      }
-      auth.updateEmail(newEmail).then(function () {
-        auth.sendEmailVerification().then(function () {
-          snacks('Verification Link has been Sent')
-          history.back()
-        }).catch(function (verificationError) {
-          snacks(verificationError.message)
-
-        })
-      }).catch(function (error) {
-        progressBar.foundation_.close();
-        if (error.code === 'auth/requires-recent-login') {
-          redirectParam.updateEmail = newEmail;
-          redirectParam.verify = false;
-          redirectParam.functionName = 'getSuggestions'
-          showReLoginDialog('Email Update', 'Please login again to update your email address')
-          return
-        }
-        handleError({
-          message: error.code,
-          body: JSON.stringify(error)
-        })
-      })
-      return;
-    }
-    history.back();
-  })
 
 }
 
@@ -151,6 +42,35 @@ function setDetails() {
   progressBar.foundation_.close();
   document.getElementById('base-details').innerHTML = createBaseDetails()
   document.getElementById('user-details').innerHTML = createUserDetails();
+  new mdc.list.MDCList(document.getElementById('basic-info-edit'));
+  const input = document.getElementById('choose-profile-image')
+  input.addEventListener('change', function (evt) {
+
+    const files = input.files
+    if (!files.length) return;
+    const file = files[0];
+    var fileReader = new FileReader();
+    fileReader.onload = function (fileLoadEvt) {
+      progressBar.open()
+      const image = new Image();
+      image.src = fileLoadEvt.target.result;
+      image.onload = function () {
+        const newSrc = resizeAndCompressImage(image);
+        document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${newSrc})`
+        requestCreator('backblaze', {
+          imageBase64: newSrc
+        }).then(function () {
+          progressBar.close()
+          snacks('Profile Picture Update Successfully')
+          firebase.auth().currentUser.reload();
+        }).catch(function (error) {
+          progressBar.close()
+          snacks(error.response.message)
+        });
+      }
+    }
+    fileReader.readAsDataURL(file);
+  })
   createViewProfile()
 
 }
@@ -158,23 +78,23 @@ function setDetails() {
 function createBaseDetails() {
   const auth = firebase.auth().currentUser;
 
-  return `   <div class="basic-info seperator">
-
-  <h1 class="mdc-typography--headline5 mb-0 mt-0" id='view-name'>
-      ${auth.displayName || '-'}</h1>
-  <h1 class="mdc-typography--headline6 mb-0 mt-0">
-  <i class="material-icons meta-icon">email</i>
-  <span id='view-email'>
-          ${auth.email}
-      </span>
-
-  </h1>
-  <h1 class="mdc-typography--headline6 mt-0"> 
-  <i class="material-icons meta-icon">phone</i>
-
-  <span
-          class="mdc-typography--headline6">${auth.phoneNumber.substring(0,3)}</span> ${auth.phoneNumber.substring(3,auth.phoneNumber.length)}
-  </h1>
+  return `<div class="basic-info seperator">
+  <ul class='mdc-list' id='basic-info-edit'>
+  <li class='mdc-list-item'>
+  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">account_box</span>
+  ${auth.displayName}
+  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['updateName'],null,null);updateName()">edit</span>
+  </li>
+  <li class='mdc-list-item'>
+  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">email</span>
+  ${auth.email || '-'}
+  <span class="mdc-list-item__meta material-icons mdc-theme--primary" aria-hidden="true" onclick="history.pushState(['emailUpdation'],null,null);emailUpdation(true)">edit</span>
+  </li>
+  <li class='mdc-list-item'>
+  <span class="mdc-list-item__graphic material-icons" aria-hidden="true">phone</span>
+  ${auth.phoneNumber}
+  </li>
+  </ul>
 </div>`
 }
 
@@ -360,7 +280,7 @@ function fillUserDetails(user) {
     'Employee Contact': true,
     'Name': true
   }
-  const template = `<div class="office-info seperator">
+  const template = `<div class="office-info">
 ${Object.keys(user.attachment).map(function(attachmentNames){
     return `${notAllowedFields[attachmentNames] ? '': `${user.attachment[attachmentNames].value ? `<h1 class="mdc-typography--subtitle1 mt-0">
     ${attachmentNames} : ${user.attachment[attachmentNames].value}
