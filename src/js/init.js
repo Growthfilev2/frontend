@@ -197,7 +197,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 8);
+  const req = window.indexedDB.open(dbName, 9);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -294,6 +294,10 @@ function startApp() {
       if (evt.oldVersion <= 7) {
         localStorage.removeItem('ApplicationState')
       };
+      if(evt.oldVersion <= 8) {
+        const subscriptionStore = tx.objectStore('subscriptions');
+        subscriptionStore.createIndex('report','report');
+      }
       tx.oncomplete = function () {
         console.log("completed all backlog");
       }
@@ -792,6 +796,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
+  subscriptions.createIndex('report','report');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
