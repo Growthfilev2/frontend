@@ -18,6 +18,8 @@ function profileView() {
     right: 1rem;
 ">
   <span class="mdc-fab__icon material-icons">edit</span>
+  <input id='choose-profile-image' type='file' accept='image/jpeg;capture=camera'  class='overlay-text'>
+
 </button>
 </div>
 
