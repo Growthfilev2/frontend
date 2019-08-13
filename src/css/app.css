@@ -413,8 +413,18 @@ body {
 .firebaseui-textfield.mdl-textfield .firebaseui-label::after{
   background: var(--mdc-theme-primary);
 }
- 
-
+.mdl-progress.mdl-progress--indeterminate>.bar1, .mdl-progress.mdl-progress__indeterminate>.bar1 {
+  background: var(--mdc-theme-primary);
+} 
+.mdl-progress>.bufferbar {
+  background-image: linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,var(--mdc-theme-primary),var(--mdc-theme-primary))
+}
+.mdl-progress:not(.mdl-progress--indeterminate):not(.mdl-progress--indeterminate)>.auxbar, .mdl-progress:not(.mdl-progress__indeterminate):not(.mdl-progress__indeterminate)>.auxbar {
+  background-image: linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,var(--mdc-theme-primary),var(--mdc-theme-primary))
+}
+.mdl-spinner--single-color .mdl-spinner__layer-1, .mdl-spinner--single-color .mdl-spinner__layer-2, .mdl-spinner--single-color .mdl-spinner__layer-3, .mdl-spinner--single-color .mdl-spinner__layer-4 {
+  border-color:  var(--mdc-theme-primary);
+}
 /** override **/
 
 .mdc-list-item__secondary-text {
