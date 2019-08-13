@@ -82,7 +82,7 @@ window.onpopstate = function (event) {
     getSuggestions();
     return
   }
-  if(event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait'){
+  if (event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait') {
     history.go(-1);
     return;
   }
@@ -300,9 +300,9 @@ function startApp() {
       if (evt.oldVersion <= 7) {
         localStorage.removeItem('ApplicationState')
       };
-      if(evt.oldVersion <= 8) {
+      if (evt.oldVersion <= 8) {
         const subscriptionStore = tx.objectStore('subscriptions');
-        subscriptionStore.createIndex('report','report');
+        subscriptionStore.createIndex('report', 'report');
       }
       tx.oncomplete = function () {
         console.log("completed all backlog");
@@ -354,7 +354,7 @@ function startApp() {
         return
       }
       if (response.revokeSession) {
-        revokeSession();
+        revokeSession(true);
         return
       };
 
@@ -558,113 +558,6 @@ function updateEmailButton() {
 </div>`
 }
 
-function checkForRecipient() {
-  const auth = firebase.auth().currentUser;
-  getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
-    console.log("openMap")
-    if (auth.email && auth.emailVerified) return openMap();
-
-    const reportList = getReportNameString(result);
-
-    if (!auth.email) {
-
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(updateEmailDom(reportList, result.length), '<span class="mdc-top-app-bar__title">Add Email</span>', updateEmailButton())
-      const addEmail = document.getElementById('addEmail');
-
-      const emailInit = new mdc.textField.MDCTextField(document.getElementById('email'))
-      const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-      addEmail.addEventListener('click', function (evt) {
-
-        if (!emailInit.value) {
-          emailInit.focus();
-          return
-        };
-        if (!emailReg(emailInit.value)) {
-          snacks('Please Enter A Valid Email Address')
-          progCard.close();
-          return;
-        }
-        progCard.open();
-        auth.updateEmail(emailInit.value).then(function () {
-          auth.sendEmailVerification().then(function () {
-            snacks('Verification Link has been Sent')
-            progCard.close();
-            openMap();
-          }).catch(function (verificationError) {
-            progCard.close();
-            handleError({
-              message: verificationError.message,
-              body: JSON.stringify(verificationError)
-            })
-          })
-        }).catch(function (error) {
-          progCard.close();
-
-          if (error.code === 'auth/requires-recent-login') {
-            redirectParam.updateEmail = emailInit.value
-            redirectParam.functionName = 'openMap';
-            showReLoginDialog('Email Update', 'Please login again to update your email address')
-            return
-          }
-
-          snacks(error.message)
-
-        })
-        return
-      })
-      return;
-    }
-    if (!auth.emailVerified) {
-      const currentEmail = firebase.auth().currentUser.email
-      const content = `
-      ${result.length ? reportList : ''}
-      <h3 class='mdc-typography--body1 text-center'>Please Verify your email</h3>
-       <button class="mdc-button hidden" id='skip' style='width:100%'>
-      <span class="mdc-button__label">SKIP</span>
-      </button>
-      <button class="mdc-button mdc-theme--primary-bg mdc-theme--on-primary mt-10 mb-10" id='sendVerification' style='width:100%'>
-      <span class="mdc-button__label">RESEND VERIFICATION MAIL</span>
-      </button>`
-
-      document.getElementById('app-current-panel').innerHTML = miniProfileCard(content, '<span class="mdc-top-app-bar__title">VERIFY YOUR EMAIL ADDRESS</span>', '')
-      const skip = document.getElementById('skip');
-      const verify = document.getElementById('sendVerification')
-      if (!result.length) {
-        skip.classList.remove('hidden')
-        skip.addEventListener('click', function (evt) {
-          return openMap()
-        });
-      }
-      const progCard = new mdc.linearProgress.MDCLinearProgress(document.getElementById('card-progress'))
-      verify.addEventListener('click', function (evt) {
-        progCard.open();
-        auth.sendEmailVerification().then(function () {
-          snacks('Verification Link has been Sent')
-          progCard.close();
-          openMap();
-        }).catch(function (verificationError) {
-          progCard.close();
-          if (verificationError.code === 'auth/requires-recent-login') {
-            redirectParam.updateEmail = ''
-            redirectParam.verify = true;
-            redirectParam.functionName = 'openMap';
-            showReLoginDialog('Email Verification', 'Please login again to get a verification ');
-            return;
-          }
-          handleError({
-            message: verificationError.message,
-            body: JSON.stringify(verificationError)
-          })
-        })
-      })
-      return;
-    };
-  });
-}
-
-
-
-
 
 function showReLoginDialog(heading, contentText) {
   const content = `<h3 class="mdc-typography--headline6 mdc-theme--primary">${contentText}</h3>`
@@ -673,7 +566,6 @@ function showReLoginDialog(heading, contentText) {
   dialog.buttons_[1].textContent = 'RE-LOGIN'
   dialog.listen('MDCDialog:closed', function (evt) {
     if (evt.detail.action !== 'accept') return;
-      initApp = false;
     revokeSession();
   })
 }
@@ -802,7 +694,7 @@ function createObjectStores(db, uid) {
   subscriptions.createIndex('templateStatus', ['template', 'status'])
   subscriptions.createIndex('status', 'status');
   subscriptions.createIndex('count', 'count');
-  subscriptions.createIndex('report','report');
+  subscriptions.createIndex('report', 'report');
   const calendar = db.createObjectStore('calendar', {
     autoIncrement: true
   })
