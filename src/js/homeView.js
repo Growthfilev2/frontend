@@ -595,7 +595,10 @@ function getReportOffices(result) {
     if (offices.indexOf(report.office) > -1) return
     offices.push(report.office);
   })
-  return `You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
+  if(offices.length) {
+    return `You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
+  }
+  return ''
 }
 
 
