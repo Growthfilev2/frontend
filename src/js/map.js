@@ -40,7 +40,6 @@ function showNoLocationFound(error) {
 
 function mapView(location) {
 
-
   document.getElementById('app-header').classList.add('hidden');
 
 
@@ -102,6 +101,7 @@ function mapView(location) {
       ApplicationState.nearByLocations = markers
       if (!markers.length) return createUnkownCheckIn()
       document.getElementById('map').style.display = 'block'
+
       loadCardData(markers, map)
     })
   });
@@ -150,7 +150,7 @@ function loadCardData(venues, map) {
   const venuesList = `<ul class='mdc-list mdc-list pt-0 mdc-list--two-line mdc-list--avatar-list' id='selected-venue'>
   ${renderVenue(venues)}
 </ul>`
-
+ document.querySelector('#selection-box').classList.remove('hidden')
   document.querySelector('#selection-box #card-primary').textContent = 'Choose location';
   document.querySelector('#selection-box .content-body').innerHTML = venuesList;
   document.getElementById('map').style.height = `calc(100vh - ${document.querySelector('#selection-box').offsetHeight - 52}px)`;
@@ -263,7 +263,7 @@ function getAllSubscriptions() {
 }
 
 function selectionBox() {
-  return `<div class="selection-box-auto" id='selection-box'>
+  return `<div class="selection-box-auto hidden" id='selection-box'>
 
   <div class="card__primary">
     <h2 class="demo-card__title mdc-typography mdc-typography--headline6 margin-auto" id='card-primary'>
