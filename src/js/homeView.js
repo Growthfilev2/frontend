@@ -406,7 +406,7 @@ function templateList(suggestedTemplates) {
 }
 
 function updateName() {
-  history.pushState(['updateName'],null,null);
+  
   const auth = firebase.auth().currentUser;
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Update Name</span>
