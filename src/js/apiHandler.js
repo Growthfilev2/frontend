@@ -518,12 +518,12 @@ function updateMap(venue, tx) {
   }
 }
 
-function updateReports(statusObject,reportObjectStore) {
+function updateReports(statusObject, reportObjectStore) {
   console.log(reportObjectStore)
   statusObject.forEach(function (item) {
-      item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
-      reportObjectStore.put(item)
-    })
+    item.joinedDate = Number(`${item.month}${item.date}${item.year}`);
+    reportObjectStore.put(item)
+  })
 }
 
 function updateCalendar(activity, tx) {
@@ -717,8 +717,8 @@ function successResponse(read, param, db, resolve, reject) {
   read.locations.forEach(function (location) {
     updateMap(location, updateTx)
   });
-  
-  updateReports(read.statusObject,reports)
+
+  updateReports(read.statusObject, reports)
 
 
   read.activities.slice().reverse().forEach(function (activity) {
@@ -740,7 +740,9 @@ function successResponse(read, param, db, resolve, reject) {
         };
         selfRecord.mobile = user.phoneNumber;
         selfRecord.displayName = user.displayName;
-        selfRecord.photoURL = user.photoURL;
+        if (!selfRecord.photoURL) {
+          selfRecord.photoURL = user.photoURL;
+        }
         selfRecord.NAME_SEARCH = user.displayName.toLowerCase();
         if (!selfRecord.timestamp) {
           selfRecord.timestamp = ''
@@ -762,7 +764,7 @@ function successResponse(read, param, db, resolve, reject) {
         if (!record) return;
         record.assignees.forEach(function (user) {
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
-      
+
           currentAddendum.comment = formatTextToTitleCase(currentAddendum.comment)
           addendumObjectStore.put(currentAddendum);
           if (number === param.user.phoneNumber) {
@@ -820,7 +822,7 @@ function successResponse(read, param, db, resolve, reject) {
   })
 
   read.templates.forEach(function (subscription) {
-    
+
     updateSubscription(subscription, updateTx)
   })
 
@@ -877,7 +879,7 @@ function updateIDB(config) {
 
       http(req)
         .then(function (response) {
-        
+
           console.log(response.statusObject)
           return successResponse(response, config.meta, config.db, resolve, reject);
         }).catch(function (error) {
@@ -886,17 +888,16 @@ function updateIDB(config) {
     }
   })
 }
-function formatTextToTitleCase(string){
+
+function formatTextToTitleCase(string) {
   const arr = [];
-  for(var i =0;i< string.length;i++){
-    if(i ==0) {
+  for (var i = 0; i < string.length; i++) {
+    if (i == 0) {
       arr.push(string[i].toUpperCase())
-    }
-    else {
-      if(string[i -1].toLowerCase() == string[i -1].toUpperCase()) {
+    } else {
+      if (string[i - 1].toLowerCase() == string[i - 1].toUpperCase()) {
         arr.push(string[i].toUpperCase())
-      }
-      else {
+      } else {
         arr.push(string[i].toLowerCase())
       }
     }
