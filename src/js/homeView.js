@@ -174,12 +174,11 @@ function homeView(suggestedTemplates) {
 
   const header = getHeader('app-header', homeHeaderStartContent('Unkown Location'), clearIcon);
   console.log(header)
-  if(ApplicationState.venue.location) {
+  if (ApplicationState.venue.location) {
     header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
-  }
-  else {
-    geocodeLatLng(ApplicationState.location).then(function(result){
-      if(result){
+  } else {
+    geocodeLatLng(ApplicationState.location).then(function (result) {
+      if (result) {
         header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
       }
     }).catch(console.error)
@@ -406,6 +405,57 @@ function templateList(suggestedTemplates) {
   return ul.outerHTML;
 }
 
+function updateName() {
+  history.pushState(['updateName'],null,null);
+  const auth = firebase.auth().currentUser;
+  const backIcon = `<a class='mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
+  <span class="mdc-top-app-bar__title">Update Name</span>
+  `
+  const header = getHeader('app-header', backIcon, '');
+  document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid'>
+
+<div class="mdc-text-field mdc-text-field--outlined mt-10" id='name'>
+  <input class="mdc-text-field__input" required value='${firebase.auth().currentUser.displayName}' type='text' >
+ <div class="mdc-notched-outline">
+     <div class="mdc-notched-outline__leading"></div>
+     <div class="mdc-notched-outline__notch">
+           <label for='email' class="mdc-floating-label mdc-floating-label--float-above ">Name</label>
+     </div>
+     <div class="mdc-notched-outline__trailing"></div>
+ </div>
+</div>
+<div class="mdc-text-field-helper-line">
+  <div class="mdc-text-field-helper-text mdc-text-field-helper-text--validation-msg	">
+  </div>
+</div>
+
+<div  class='mb-10 mt-10'>
+<button class='mdc-button mdc-theme--primary-bg' id='name-btn'>
+<span class='mdc-button__label mdc-theme--on-primary'>Update<span>
+</button>
+</div>
+  </div>`
+  const nameField = new mdc.textField.MDCTextField(document.getElementById('name'))
+  nameField.focus();
+  document.getElementById('name-btn').addEventListener('click', function () {
+    if(!nameField.value) {
+      nameField.focus();
+      nameField.foundation_.setValid(false);
+      nameField.foundation_.adapter_.shakeLabel(true);
+      nameField.helperTextContent = 'Name Cannot Be Left Blank';
+      return;
+    }
+    progressBar.open();
+    auth.updateProfile({
+      displayName: formatTextToTitleCase(nameField.value)
+    }).then(function () {
+      progressBar.close();
+      history.back();
+      snacks('Name Updated Successfully')
+    })
+  })
+}
+
 function emailUpdation() {
   const auth = firebase.auth().currentUser;
   let topBarText = '';
@@ -430,6 +480,7 @@ function emailUpdation() {
         ${updateEmailDom(auth.email, getReportOffices(result),heading )}
     </div>`
     const emailField = new mdc.textField.MDCTextField(document.getElementById('email'))
+    emailField.focus();
     document.getElementById('email-btn').addEventListener('click', function () {
       console.log(emailField)
 
