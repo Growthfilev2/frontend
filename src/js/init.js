@@ -82,7 +82,10 @@ window.onpopstate = function (event) {
     getSuggestions();
     return
   }
-
+  if(event.state[0] === 'emailUpdation' || event.state[0] === 'emailVerificationWait'){
+    history.go(-1);
+    return;
+  }
   window[event.state[0]](event.state[1]);
 }
 
@@ -115,7 +118,10 @@ function initializeApp() {
       }
     }
     document.getElementById("app-current-panel").classList.remove('hidden')
-    if (!initApp) return
+    if (!initApp) {
+      document.getElementById('app-header').classList.remove('hidden')
+      return
+    }
     startApp()
   });
 
