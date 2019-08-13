@@ -49,6 +49,25 @@ function setDetails() {
   document.getElementById('base-details').innerHTML = createBaseDetails()
   document.getElementById('user-details').innerHTML = createUserDetails();
   new mdc.list.MDCList(document.getElementById('basic-info-edit'));
+  const input = document.getElementById('choose-profile-image')
+
+    input.addEventListener('change', function (evt) {
+
+      const files = input.files
+      if (!files.length) return;
+      const file = files[0];
+      var fileReader = new FileReader();
+      fileReader.onload = function (fileLoadEvt) {
+        const image = new Image();
+        image.src = fileLoadEvt.target.result;
+        image.onload = function () {
+          const newSrc = resizeAndCompressImage(image);
+          imageBckg.style.backgroundImage = `url(${newSrc})`
+          imageSrc = newSrc;
+        }
+      }
+      fileReader.readAsDataURL(file);
+    })
   createViewProfile()
 
 }
