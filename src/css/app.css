@@ -396,8 +396,27 @@ body {
   }
 }
 
+/** firebase ui **/
+.mdl-button--primary.mdl-button--primary {
+  color:var(--mdc-theme-primary);
+
+}
+.mdl-button--raised.mdl-button--colored {
+  background: var(--mdc-theme-primary);
+}
+.mdl-button--raised.mdl-button--colored:hover {
+  background: var(--mdc-theme-primary);
+}
+.mdl-button--raised.mdl-button--colored:active {
+  background: var(--mdc-theme-primary);
+}
+.firebaseui-textfield.mdl-textfield .firebaseui-label::after{
+  background: var(--mdc-theme-primary);
+}
+ 
 
 /** override **/
+
 .mdc-list-item__secondary-text {
   font-size: 0.95rem;
 }
