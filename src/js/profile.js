@@ -5,10 +5,8 @@ function profileView() {
   const auth = firebase.auth().currentUser
   const backIcon = `<a class='mdc-top-app-bar__navigation-icon mdc-top-app-bar__navigation-icon material-icons'>arrow_back</a>
   <span class="mdc-top-app-bar__title">Profile</span>`
-  const editIcon = ` <a  class="material-icons mdc-top-app-bar__action-item" aria-label="Edit" id='edit-profile'>edit</a>
-  <a class=" mdc-top-app-bar__action-item hidden" aria-label="Edit" id='save-profile'>SAVE</a>
-  `
-  const header = getHeader('app-header', backIcon, editIcon);
+ 
+  const header = getHeader('app-header', backIcon, '');
   const root = `<div class="mdc-card demo-card" id='profile-card'>
   <div class="mdc-card__primary-action demo-card__primary-action" tabindex="0">
   
@@ -26,9 +24,7 @@ Choose Image
 <div id='base-details'></div>
 <div id='user-details'></div>  
 <div class="mdc-card__actions">
-<div class="mdc-card__action-buttons">
-    <span class="mdc-typography--headline6 last-logged-in-time">${lastSignInTime}</span>
-</div>
+
 </div>
 `
   document.getElementById('app-current-panel').innerHTML = root;
