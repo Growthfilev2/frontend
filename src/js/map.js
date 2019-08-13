@@ -43,7 +43,7 @@ function mapView(location) {
 
   document.getElementById('app-header').classList.add('hidden');
 
-  
+
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
@@ -98,7 +98,7 @@ function mapView(location) {
 
   google.maps.event.addListenerOnce(map, 'idle', function () {
     console.log('idle_once');
-    loadNearByLocations(o, map,location).then(function (markers) {
+    loadNearByLocations(o, map, location).then(function (markers) {
       ApplicationState.nearByLocations = markers
       if (!markers.length) return createUnkownCheckIn()
       document.getElementById('map').style.display = 'block'
@@ -116,8 +116,8 @@ function createUnkownCheckIn(cardProd) {
   offices.forEach(function (office) {
     const copy = JSON.parse(JSON.stringify(ApplicationState.officeWithCheckInSubs[office]));
     copy.share = [];
-   
-    prom.push(requestCreator('create', fillVenueInCheckInSub(copy,'')))
+
+    prom.push(requestCreator('create', fillVenueInCheckInSub(copy, '')))
   })
 
   if (cardProd) {
@@ -132,7 +132,6 @@ function createUnkownCheckIn(cardProd) {
     successDialog('Check-In Created')
     ApplicationState.lastCheckInCreated = Date.now()
     ApplicationState.venue = ''
-
     localStorage.setItem('ApplicationState', JSON.stringify(ApplicationState));
     getSuggestions()
   }).catch(function (error) {
@@ -173,7 +172,7 @@ function loadCardData(venues, map) {
     copy.share = []
     console.log(copy)
     cardProd.open();
-    requestCreator('create', fillVenueInCheckInSub(copy,selectedVenue)).then(function () {
+    requestCreator('create', fillVenueInCheckInSub(copy, selectedVenue)).then(function () {
       successDialog('Check-In Created')
       cardProd.close();
       ApplicationState.lastCheckInCreated = Date.now()
@@ -488,7 +487,7 @@ GetOffsetBounds.prototype.west = function () {
 }
 
 
-function loadNearByLocations(o, map,location) {
+function loadNearByLocations(o, map, location) {
   return new Promise(function (resolve, reject) {
     markersObject.markers = [];
     markersObject.infowindow = []
@@ -509,7 +508,7 @@ function loadNearByLocations(o, map,location) {
         cursor.continue();
         return;
       };
-      if(calculateDistanceBetweenTwoPoints(location,cursor.value) > 0.5 ) {
+      if (calculateDistanceBetweenTwoPoints(location, cursor.value) > 0.5) {
         cursor.continue();
         return;
       }
@@ -583,4 +582,29 @@ function radioList(offices) {
               </li>`
               }).join("")}
             <ul>`
+}
+
+function geocodeLatLng(geopoint) {
+  return new Promise(function (resolve, reject) {
+
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+      'location': {
+        lat: geopoint.latitude,
+        lng: geopoint.longitude
+      }
+    }, function (results, status) {
+      if (status === 'OK') {
+        if (results[0]) {
+          resolve(results[0].formatted_address);
+          return
+        }
+        return resolve('')
+      }
+      reject({
+        message: status,
+        body: ''
+      })
+    })
+  })
 }

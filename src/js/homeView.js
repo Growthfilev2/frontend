@@ -155,10 +155,10 @@ function homePanel(suggestionLength) {
 </div>`
 }
 
-function homeHeaderStartContent(locationName) {
+function homeHeaderStartContent(name) {
   return `
   <img class="mdc-top-app-bar__navigation-icon mdc-icon-button image" id='profile-header-icon' onerror="imgErr(this)" src=${firebase.auth().currentUser.photoURL || './img/src/empty-user.jpg'}>
-  <span class="mdc-top-app-bar__title">${locationName}</span>
+  <span class="mdc-top-app-bar__title">${name}</span>
 `
 }
 
@@ -172,9 +172,18 @@ function homeView(suggestedTemplates) {
     clearIcon = `<button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="remove" id='change-location'>clear</button>`
   }
 
-
-  const header = getHeader('app-header', homeHeaderStartContent(ApplicationState.venue.location || 'Location'), clearIcon);
-
+  const header = getHeader('app-header', homeHeaderStartContent('Unkown Location'), clearIcon);
+  console.log(header)
+  if(ApplicationState.venue.location) {
+    header.root_.querySelector(".mdc-top-app-bar__title").textContent = ApplicationState.venue.location
+  }
+  else {
+    geocodeLatLng(ApplicationState.location).then(function(result){
+      if(result){
+        header.root_.querySelector(".mdc-top-app-bar__title").textContent = result
+      }
+    }).catch(console.error)
+  }
 
   header.listen('MDCTopAppBar:nav', handleNav);
   header.root_.classList.remove('hidden')
@@ -258,16 +267,14 @@ function homeView(suggestedTemplates) {
   }
   const auth = firebase.auth().currentUser
   document.getElementById('reports').addEventListener('click', function () {
-    // if (auth.email && auth.emailVerified) {
-    //   history.pushState(['reportView'], null, null)
-    //   reportView();
-    //   return
-    // };
-    const auth = {
-      email: '',
-      emailVerified: false
-    }
-    emailUpdation(auth)
+    if (auth.email && auth.emailVerified) {
+      history.pushState(['reportView'], null, null)
+      reportView();
+      return
+    };
+
+    history.pushState(['emailUpdation'], null, null)
+    emailUpdation()
 
   })
 
@@ -399,7 +406,8 @@ function templateList(suggestedTemplates) {
   return ul.outerHTML;
 }
 
-function emailUpdation(auth) {
+function emailUpdation() {
+  const auth = firebase.auth().currentUser;
   let topBarText = '';
   let heading = ''
   if (!auth.email) {
@@ -434,20 +442,23 @@ function emailUpdation(auth) {
       };
       progressBar.open()
       if (emailField.value === firebase.auth().currentUser.email) {
-        //   firebase.auth().currentUser.sendEmailVerification().then(function () {
-        snacks('Email Verification Has Been Sent.')
-        progressBar.close();
-        emailVerificationWait()
-        // }).catch(handleEmailError)
+        firebase.auth().currentUser.sendEmailVerification().then(function () {
+          snacks('Email Verification Has Been Sent.')
+          progressBar.close();
+          history.pushState(['emailVerificationWait'], null, null)
+          emailVerificationWait()
+        }).catch(handleEmailError)
         return;
       };
 
-      // firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
-      //   firebase.auth().currentUser.sendEmailVerification().then(function () {
-      //     snacks('Email Verification Has Been Sent.')
-      //     progressBar.close()
-      //   }).catch(handleEmailError)
-      // }).catch(handleEmailError)
+      firebase.auth().currentUser.updateEmail(emailField.value).then(function () {
+        firebase.auth().currentUser.sendEmailVerification().then(function () {
+          snacks('Email Verification Has Been Sent.')
+          history.pushState(['emailVerificationWait'], null, null)
+          emailVerificationWait()
+          progressBar.close()
+        }).catch(handleEmailError)
+      }).catch(handleEmailError)
       return
     })
   });
@@ -468,7 +479,7 @@ function emailVerificationWait() {
       snacks('Email Is Not Verified')
       return;
     }
-    history.pushState(['reportView'],null,null)
+    history.pushState(['reportView'], null, null)
     reportView()
   })
 }

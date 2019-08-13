@@ -100,12 +100,12 @@ function getLocation() {
         window.removeEventListener('iosLocation', _iosLocation, true);
       }, true)
     } catch (e) {
-      resolve({latitude:28.123,longitude:77.123,lastLocationTime:Date.now()})
-      // html5Geolocation().then(function (location) {
-      //   resolve(location)
-      // }).catch(function (error) {
-      //   reject(error)
-      // })
+      // resolve({latitude:28.123,longitude:77.123,lastLocationTime:Date.now()})
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
     }
   })
 }
