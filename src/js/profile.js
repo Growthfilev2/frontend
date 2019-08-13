@@ -29,12 +29,6 @@ function profileView() {
 `
   document.getElementById('app-current-panel').innerHTML = root;
   setDetails()
-  let newName;
-  let newEmail;
-  const currentName = auth.displayName;
-  const currentEmail = auth.email;
-  let imageSrc = firebase.auth().currentUser.photoURL;
-
 
 }
 
@@ -50,24 +44,33 @@ function setDetails() {
   document.getElementById('user-details').innerHTML = createUserDetails();
   new mdc.list.MDCList(document.getElementById('basic-info-edit'));
   const input = document.getElementById('choose-profile-image')
+  input.addEventListener('change', function (evt) {
 
-    input.addEventListener('change', function (evt) {
-
-      const files = input.files
-      if (!files.length) return;
-      const file = files[0];
-      var fileReader = new FileReader();
-      fileReader.onload = function (fileLoadEvt) {
-        const image = new Image();
-        image.src = fileLoadEvt.target.result;
-        image.onload = function () {
-          const newSrc = resizeAndCompressImage(image);
-          imageBckg.style.backgroundImage = `url(${newSrc})`
-          imageSrc = newSrc;
-        }
+    const files = input.files
+    if (!files.length) return;
+    const file = files[0];
+    var fileReader = new FileReader();
+    fileReader.onload = function (fileLoadEvt) {
+      progressBar.open()
+      const image = new Image();
+      image.src = fileLoadEvt.target.result;
+      image.onload = function () {
+        const newSrc = resizeAndCompressImage(image);
+        document.querySelector('.mdc-card__media.mdc-card__media--16-9').style.backgroundImage = `url(${newSrc})`
+        requestCreator('backblaze', {
+          imageBase64: newSrc
+        }).then(function () {
+          progressBar.close()
+          snacks('Profile Picture Update Successfully')
+          firebase.auth().currentUser.reload();
+        }).catch(function (error) {
+          progressBar.close()
+          snacks(error.response.message)
+        });
       }
-      fileReader.readAsDataURL(file);
-    })
+    }
+    fileReader.readAsDataURL(file);
+  })
   createViewProfile()
 
 }
