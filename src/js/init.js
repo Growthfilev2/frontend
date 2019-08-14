@@ -2,11 +2,6 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-const redirectParam = {
-  updateEmail: '',
-  verify: false,
-  functionName: '',
-}
 
 let initApp = true;
 
@@ -134,40 +129,6 @@ function firebaseUiConfig() {
   return {
     callbacks: {
       signInSuccessWithAuthResult: function (authResult) {
-
-        // console.log(authResult)
-        // const auth = authResult.user
-        // if (history.state) {
-        //   if (history.state[0] === 'edit-profile') {
-        //     document.getElementById('app-header').classList.remove('hidden');
-        //   }
-        // }
-
-        // if (redirectParam.updateEmail) {
-        //   auth.updateEmail(redirectParam.updateEmail).then(function () {
-        //     auth.sendEmailVerification().then(function () {
-        //       snacks('Verification Link has been Sent')
-        //       window[redirectParam.functionName]()
-        //     }).catch(function (verificationError) {
-        //       snacks(verificationError.message)
-        //       window[redirectParam.functionName]()
-        //     })
-        //   }).catch(function (error) {
-        //     snacks(error.message);
-        //   })
-        // }
-
-        // if (redirectParam.verify) {
-        //   auth.sendEmailVerification().then(function () {
-        //     snacks('Verification Link has been Sent')
-        //     window[redirectParam.functionName]()
-        //   }).catch(function (verificationError) {
-        //     console.log(verificationError)
-        //     snacks(verificationError.message)
-        //     window[redirectParam.functionName]()
-        //   })
-        // }
-
         return false;
       },
       signInFailure: function (error) {
