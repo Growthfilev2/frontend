@@ -313,7 +313,7 @@ function startApp() {
           if(!cursor) return;
           const deleteReq = cursor.delete();
           deleteReq.onsuccess = function(){
-            console.log('deleted ar');
+            console.log('deleted claim');
           }
           cursor.continue();
         }

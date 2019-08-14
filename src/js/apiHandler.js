@@ -705,7 +705,7 @@ function successResponse(read, param, db, resolve, reject) {
   updateReports(read.statusObject, reports)
 
 
-  read.activities.slice().reverse().forEach(function (activity) {
+  read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)
     activityObjectStore.put(activity);

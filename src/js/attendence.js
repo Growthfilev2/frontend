@@ -55,6 +55,14 @@ function attendanceDom(leaveSub) {
   </div>`
 }
 
+function a() {
+  const addendumTx = db.transaction('addendum');
+  addendumTx
+  .objectStore('addendum')
+  .index('keyTimestamp')
+  .openCursor()
+}
+
 function createTodayStat() {
   const startOfTodayTimestamp = moment().startOf('day').valueOf()
   console.log(startOfTodayTimestamp)
