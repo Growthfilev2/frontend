@@ -179,7 +179,7 @@ function calculateDistanceBetweenTwoPoints(oldLocation, newLocation) {
 }
 
 function isLocationMoreThanThreshold(distance) {
-  var THRESHOLD = 0.5; //km
+  var THRESHOLD = 1; //km
   if (distance >= THRESHOLD) return true;
   return false;
 }

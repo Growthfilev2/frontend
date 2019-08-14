@@ -55,7 +55,7 @@ function mapView(location) {
     lng: location.longitude
   }
   console.log(latLng)
-  const offsetBounds = new GetOffsetBounds(location, 0.5);
+  const offsetBounds = new GetOffsetBounds(location, 1);
 
   const o = {
     north: offsetBounds.north(),
@@ -508,7 +508,7 @@ function loadNearByLocations(o, map, location) {
         cursor.continue();
         return;
       };
-      if (calculateDistanceBetweenTwoPoints(location, cursor.value) > 0.5) {
+      if (calculateDistanceBetweenTwoPoints(location, cursor.value) > 1) {
         cursor.continue();
         return;
       }

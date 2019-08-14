@@ -203,7 +203,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 9);
+  const req = window.indexedDB.open(dbName, 10);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -302,6 +302,20 @@ function startApp() {
       if (evt.oldVersion <= 8) {
         const subscriptionStore = tx.objectStore('subscriptions');
         subscriptionStore.createIndex('report', 'report');
+      }
+      if(evt.oldVersion <= 9) {
+        const subscriptionStore = tx.objectStore('subscriptions');
+        subscriptionStore
+        .index('template')
+        .openCursor(IDBKeyRange.only('expense claim')).onsuccess = function(){
+          const cursor = event.target.result;
+          if(!cursor) return;
+          const deleteReq = cursor.delete();
+          deleteReq.onsuccess = function(){
+            console.log('deleted ar');
+          }
+          cursor.continue();
+        }
       }
       tx.oncomplete = function () {
         console.log("completed all backlog");
