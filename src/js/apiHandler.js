@@ -493,30 +493,7 @@ function instantUpdateDB(data, type, user) {
 }
 
 
-function updateMap(venue, tx) {
 
-  const mapObjectStore = tx.objectStore('map')
-  const mapActivityIdIndex = mapObjectStore.index('activityId')
-  if (!venue.activityId) return;
-  mapActivityIdIndex.openCursor(venue.activityId).onsuccess = function (event) {
-    const cursor = event.target.result
-    if (!cursor) {
-      mapObjectStore.add(venue);
-      return;
-    }
-
-    let deleteRecordReq = cursor.delete()
-    deleteRecordReq.onsuccess = function () {
-      // console.log("deleted " + cursor.value.activityId)
-      cursor.continue()
-    }
-    deleteRecordReq.onerror = function () {
-      instant({
-        message: deleteRecordReq.error.message,
-      }, meta)
-    }
-  }
-}
 
 function updateReports(statusObject, reportObjectStore) {
   console.log(reportObjectStore)
@@ -713,10 +690,17 @@ function successResponse(read, param, db, resolve, reject) {
     }
   })
 
+  if (read.locations.length) {
 
-  read.locations.forEach(function (location) {
-    updateMap(location, updateTx)
-  });
+    const mapObjectStore = updateTx.objectStore('map')
+    var clearMap = mapObjectStore.clear();
+    clearMap.onsuccess = function () {
+      read.locations.forEach(function (location) {
+        mapObjectStore.add(location);
+      });
+    }
+  }
+
 
   updateReports(read.statusObject, reports)
 
@@ -871,7 +855,7 @@ function updateIDB(config) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${config.meta.apiUrl}read?from=${time}`,
+        url: `${config.meta.apiUrl}read?from=${0}`,
         data: null,
         token: config.meta.user.token
       };
