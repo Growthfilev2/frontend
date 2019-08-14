@@ -203,7 +203,6 @@ function homeView(suggestedTemplates) {
         return
       };
       manageLocation().then(function (newLocation) {
-
         mapView(newLocation);
       }).catch(showNoLocationFound)
     })
