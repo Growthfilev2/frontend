@@ -16,6 +16,7 @@ var markersObject = {
 
 function showNoLocationFound(error) {
   document.getElementById('start-load').classList.add('hidden');
+  document.getElementById('app-header').classList.add('hidden')
   handleError({
     message: error.message,
     body: JSON.stringify(error.stack)

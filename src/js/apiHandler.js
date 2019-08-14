@@ -748,9 +748,10 @@ function successResponse(read, param, db, resolve, reject) {
         if (!record) return;
         record.assignees.forEach(function (user) {
           currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
-
           currentAddendum.comment = formatTextToTitleCase(currentAddendum.comment)
           addendumObjectStore.put(currentAddendum);
+
+
           if (number === param.user.phoneNumber) {
             userStore.get(user.phoneNumber).onsuccess = function (event) {
               const selfRecord = event.target.result;
@@ -855,7 +856,7 @@ function updateIDB(config) {
     tx.oncomplete = function () {
       const req = {
         method: 'GET',
-        url: `${config.meta.apiUrl}read?from=${0}`,
+        url: `${config.meta.apiUrl}read?from=${time}`,
         data: null,
         token: config.meta.user.token
       };

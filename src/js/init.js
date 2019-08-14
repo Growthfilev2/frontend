@@ -203,7 +203,7 @@ function userSignedOut() {
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
   localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 10);
+  const req = window.indexedDB.open(dbName, 11);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
@@ -317,6 +317,10 @@ function startApp() {
           }
           cursor.continue();
         }
+      }
+      if(evt.oldVersion <= 10) {
+        const addendumStore = tx.objectStore('addendum');
+        addendumStore.createIndex('timestamp','timestamp');
       }
       tx.oncomplete = function () {
         console.log("completed all backlog");
@@ -697,6 +701,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key')
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
+  addendum.createIndex('timestamp','timestamp');
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
