@@ -55,46 +55,43 @@ function attendanceDom(leaveSub) {
 }
 
 function createTodayStat() {
+  const startOfTodayTimestamp = moment().startOf('day').valueOf()
+  console.log(startOfTodayTimestamp)
+  const currentTimestamp = moment().valueOf();
+  console.log(currentTimestamp)
   const myNumber = firebase.auth().currentUser.phoneNumber;
-  const startOfDayTimestamp = moment().startOf('day').valueOf()
-  const endOfDayTimestamp = moment().endOf('day').valueOf()
-  const addendumTx = db.transaction('addendum');
-  const key = myNumber + myNumber;
-  const result = [];
   let todayCardString = '';
+  const result = []
 
-  addendumTx
-    .objectStore('addendum')
+  const activityTx = db.transaction('activity')
+  activityTx.objectStore('activity')
     .index('timestamp')
-    .openCursor(IDBKeyRange.bound(startOfDayTimestamp, endOfDayTimestamp),'prev').onsuccess = function (event) {
+    .openCursor(IDBKeyRange.lowerBound(startOfTodayTimestamp), 'prev').onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if (cursor.value.key !== key) {
+      if (cursor.value.creator.phoneNumber !== myNumber) {
         cursor.continue();
         return;
       }
-      if (cursor.value.isComment) {
-        cursor.continue();
-        return;
-      }
-      console.log(cursor.value)
-      result.push(cursor.value)
+      result.push(cursor.value);
       cursor.continue();
     }
-  addendumTx.oncomplete = function () {
-    const activityTx = db.transaction('activity')
-    result.forEach(function (addendum) {
-      activityTx
-        .objectStore('activity')
-        .get(addendum.activityId).onsuccess = function (event) {
-          const record = event.target.result;
-          if (!record) return;
-          todayCardString += todayStatCard(addendum, record);
+  activityTx.oncomplete = function () {
+    console.log(result);
+    const addendumTx = db.transaction('addendum');
+
+    result.forEach(function (activity) {
+      addendumTx
+        .objectStore('addendum')
+        .index('activityId')
+        .get(activity.activityId).onsuccess = function (event) {
+          const result = event.target.result;
+          todayCardString += todayStatCard(result, activity);
         }
-    });
-    
-    activityTx.oncomplete = function () {
+    })
+    addendumTx.oncomplete = function () {
       if (todayCardString) {
+
         document.querySelector('.today-stat').innerHTML =
           `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
           ${todayCardString}

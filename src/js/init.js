@@ -37,6 +37,7 @@ let native = function () {
           deviceInfo[key] = val
         }
       })
+      deviceInfo['idb_version'] = DB_VERSION;
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
@@ -64,7 +65,8 @@ function getAndroidDeviceInformation() {
     'osVersion': AndroidInterface.getOsVersion(),
     'baseOs': AndroidInterface.getBaseOs(),
     'radioVersion': AndroidInterface.getRadioVersion(),
-    'appVersion': Number(AndroidInterface.getAppVersion())
+    'appVersion': Number(AndroidInterface.getAppVersion()),
+    'idb_version':DB_VERSION
   })
 }
 
