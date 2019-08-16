@@ -56,7 +56,6 @@ let native = function () {
   }
 }();
 
-
 function getAndroidDeviceInformation() {
   return JSON.stringify({
     'id': AndroidInterface.getId(),
@@ -87,19 +86,16 @@ window.onpopstate = function (event) {
 
 function initializeApp() {
   firebase.initializeApp(appKey.getKeys())
-
   progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('.mdc-linear-progress'))
   snackBar = new mdc.snackbar.MDCSnackbar(document.querySelector('.mdc-snackbar'));
   topBar = new mdc.topAppBar.MDCTopAppBar(document.querySelector('.mdc-top-app-bar'))
-
-  console.log(topBar);
-
-
+  
   if (!window.Worker && !window.indexedDB) {
     const incompatibleDialog = new Dialog('App Incompatiblity', 'Growthfile is incompatible with this device').create();
     incompatibleDialog.open();
     return;
   }
+  
   firebase.auth().onAuthStateChanged(function (auth) {
     if (!auth) {
       document.getElementById("app-current-panel").classList.add('hidden')
@@ -117,6 +113,7 @@ function initializeApp() {
       document.getElementById('app-header').classList.remove('hidden')
       return
     }
+   
     localStorage.setItem('error', JSON.stringify({}));
     startApp()
   });
@@ -164,7 +161,6 @@ function userSignedOut() {
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
-  
   const req = window.indexedDB.open(dbName, DB_VERSION);
   req.onupgradeneeded = function (evt) {
     db = req.result;
@@ -176,6 +172,9 @@ function startApp() {
     };
     if (!evt.oldVersion) {
       createObjectStores(db, dbName)
+    }
+    else {
+      console.log('version upgrade')
     }
   }
   req.onsuccess = function () {
@@ -254,7 +253,7 @@ function startApp() {
     })
   }
   req.onerror = function () {
-
+    
     handleError({
       message: `${req.error.name}`,
       body: JSON.stringify(req.error.message)
@@ -484,7 +483,7 @@ function profileCheck() {
 }
 
 function areObjectStoreValid(names) {
-  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum']
+  const stores = ['map', 'children', 'calendar', 'root', 'subscriptions', 'list', 'users', 'activity', 'addendum','reports']
 
   for (let index = 0; index < stores.length; index++) {
     const el = stores[index];

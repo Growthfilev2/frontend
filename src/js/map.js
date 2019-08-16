@@ -43,7 +43,6 @@ function mapView(location) {
 
   document.getElementById('app-header').classList.add('hidden');
 
-
   ApplicationState.location = location
   history.pushState(['mapView'], null, null);
   const panel = document.getElementById('app-current-panel')
@@ -57,7 +56,6 @@ function mapView(location) {
   }
   console.log(latLng)
   const offsetBounds = new GetOffsetBounds(location, 1);
-
   const o = {
     north: offsetBounds.north(),
     south: offsetBounds.south(),
