@@ -7,10 +7,10 @@ function attendenceView(sectionContent) {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      if(cursor.value.status === 'CANCELLED') {
+      if (cursor.value.status === 'CANCELLED') {
         cursor.continue();
         return;
-      } 
+      }
       if (!subs[cursor.value.template]) {
         subs[cursor.value.template] = [cursor.value]
       } else {
