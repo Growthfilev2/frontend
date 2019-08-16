@@ -10,7 +10,8 @@ window.addEventListener('callRead', readDebounce);
 function handleError(error) {
   const errorInStorage = JSON.parse(localStorage.getItem('error'));
   if (errorInStorage.hasOwnProperty(error.message)) return;
-  errorInStorage.device = localStorage.getItem('deviceInfo');
+  error.device = localStorage.getItem('deviceInfo');
+  errorInStorage[error.message] = error
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }

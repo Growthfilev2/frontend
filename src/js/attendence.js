@@ -91,11 +91,10 @@ function createTodayStat() {
           if (!record) return;
           todayCardString += todayStatCard(addendum, record);
         }
-    })
-
+    });
+    
     activityTx.oncomplete = function () {
       if (todayCardString) {
-
         document.querySelector('.today-stat').innerHTML =
           `<div class="hr-sect  mdc-theme--primary mdc-typography--headline5 mdc-layout-grid__cell--span-12">Today</div>
           ${todayCardString}

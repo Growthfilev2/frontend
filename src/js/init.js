@@ -2,7 +2,7 @@ const appKey = new AppKeys();
 let progressBar;
 var db;
 let snackBar;
-
+let DB_VERSION = 12;
 let initApp = true;
 
 
@@ -117,6 +117,7 @@ function initializeApp() {
       document.getElementById('app-header').classList.remove('hidden')
       return
     }
+    localStorage.setItem('error', JSON.stringify({}));
     startApp()
   });
 
@@ -163,130 +164,19 @@ function userSignedOut() {
 
 function startApp() {
   const dbName = firebase.auth().currentUser.uid
-  localStorage.setItem('error', JSON.stringify({}));
-  const req = window.indexedDB.open(dbName, 11);
+  
+  const req = window.indexedDB.open(dbName, DB_VERSION);
   req.onupgradeneeded = function (evt) {
     db = req.result;
     db.onerror = function () {
       handleError({
-        message: `${db.error.message} from startApp on upgradeneeded`
+        message: `${db.error.message}`,
       })
       return;
-    }
-
+    };
     if (!evt.oldVersion) {
       createObjectStores(db, dbName)
-    } else {
-      var tx = req.transaction;
-      if (evt.oldVersion <= 4) {
-        const subscriptionStore = tx.objectStore('subscriptions');
-        const calendar = tx.objectStore('calendar')
-        const userStore = tx.objectStore('users');
-        const addendumStore = tx.objectStore('addendum');
-        const mapStore = tx.objectStore('map');
-        const activityStore = tx.objectStore('activity')
-        const childrenStore = tx.objectStore('children');
-
-        subscriptionStore.createIndex('validSubscription', ['office', 'template', 'status'])
-        calendar.createIndex('office', 'office');
-
-        userStore.createIndex('mobile', 'mobile');
-        userStore.createIndex('timestamp', 'timestamp')
-        userStore.createIndex('NAME_SEARCH', 'NAME_SEARCH')
-
-        userStore.openCursor().onsuccess = function (event) {
-          const cursor = event.target.result;
-          if (!cursor) return;
-          if (!cursor.value.timestamp) {
-            cursor.value.timestamp = '';
-          }
-          cursor.value.NAME_SEARCH = cursor.value.displayName.toLowerCase();
-          const update = cursor.update(cursor.value)
-          update.onsuccess = function () {
-            console.log("updated user ", cursor.value)
-          }
-
-          cursor.continue();
-        };
-
-        addendumStore.createIndex('user', 'user');
-        addendumStore.createIndex('timestamp', 'timestamp')
-        addendumStore.createIndex('key', 'key')
-        addendumStore.createIndex('KeyTimestamp', ['timestamp', 'key'])
-
-        mapStore.createIndex('office', 'office');
-        mapStore.createIndex('status', 'status');
-        mapStore.createIndex('selection', ['office', 'status', 'location']);
-        mapStore.createIndex('bounds', 'bounds');
-        activityStore.createIndex('status', 'status');
-
-
-
-        childrenStore.createIndex('officeTemplate', ['office', 'template']);
-        childrenStore.createIndex('employees', 'employee');
-        childrenStore.createIndex('employeeOffice', ['employee', 'office'])
-        childrenStore.createIndex('team', 'team')
-        childrenStore.createIndex('teamOffice', ['team', 'office']);
-
-
-        const myNumber = firebase.auth().currentUser.phoneNumber;
-
-        childrenStore.index('template').openCursor('employee').onsuccess = function (event) {
-          const cursor = event.target.result;
-          if (!cursor) {
-            console.log("finished modiying children")
-            return;
-          }
-          cursor.value.employee = cursor.value.attachment['Employee Contact'].value
-          if (cursor.value.attachment['First Supervisor'].value === myNumber || cursor.value.attachment['Second Supervisor'].value === myNumber) {
-            cursor.value.team = 1
-          }
-          cursor.update(cursor.value)
-          cursor.continue();
-        };
-
-      }
-      if (evt.oldVersion <= 5) {
-        const subscriptionStore = tx.objectStore('subscriptions');
-        subscriptionStore.createIndex('templateStatus', ['template', 'status'])
-      }
-      if (evt.oldVersion <= 6) {
-        const reports = db.createObjectStore('reports', {
-          keyPath: 'joinedDate'
-        });
-
-        reports.createIndex('month', 'month')
-
-      };
-      if (evt.oldVersion <= 7) {
-        localStorage.removeItem('ApplicationState')
-      };
-      if (evt.oldVersion <= 8) {
-        const subscriptionStore = tx.objectStore('subscriptions');
-        subscriptionStore.createIndex('report', 'report');
-      }
-      if(evt.oldVersion <= 9) {
-        const subscriptionStore = tx.objectStore('subscriptions');
-        subscriptionStore
-        .index('template')
-        .openCursor(IDBKeyRange.only('expense claim')).onsuccess = function(){
-          const cursor = event.target.result;
-          if(!cursor) return;
-          const deleteReq = cursor.delete();
-          deleteReq.onsuccess = function(){
-            console.log('deleted claim');
-          }
-          cursor.continue();
-        }
-      }
-      if(evt.oldVersion <= 10) {
-        const addendumStore = tx.objectStore('addendum');
-        addendumStore.createIndex('timestamp','timestamp');
-      }
-      tx.oncomplete = function () {
-        console.log("completed all backlog");
-      }
-    };
+    }
   }
   req.onsuccess = function () {
     console.log("after that ? ")
@@ -364,12 +254,12 @@ function startApp() {
     })
   }
   req.onerror = function () {
+
     handleError({
-      message: `${req.error.message} from startApp`,
-      body: JSON.stringify(req.error)
+      message: `${req.error.name}`,
+      body: JSON.stringify(req.error.message)
     })
   }
-
 }
 
 
@@ -662,7 +552,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key')
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
-  addendum.createIndex('timestamp','timestamp');
+  addendum.createIndex('timestamp', 'timestamp');
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
