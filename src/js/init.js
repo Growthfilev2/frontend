@@ -180,7 +180,7 @@ function startApp() {
     }
   }
   req.onsuccess = function () {
-    console.log("after that ? ")
+    console.log("request success")
     db = req.result;
 
     if (!areObjectStoreValid(db.objectStoreNames)) {
@@ -553,7 +553,7 @@ function createObjectStores(db, uid) {
   addendum.createIndex('user', 'user');
   addendum.createIndex('key', 'key')
   addendum.createIndex('KeyTimestamp', ['timestamp', 'key'])
-  addendum.createIndex('timestamp', 'timestamp');
+
   const subscriptions = db.createObjectStore('subscriptions', {
     autoIncrement: true
   })
@@ -576,7 +576,7 @@ function createObjectStores(db, uid) {
   calendar.createIndex('end', 'end')
   calendar.createIndex('office', 'office')
   calendar.createIndex('urgent', ['status', 'hidden']),
-    calendar.createIndex('onLeave', ['template', 'status', 'office']);
+  calendar.createIndex('onLeave', ['template', 'status', 'office']);
 
   const map = db.createObjectStore('map', {
     autoIncrement: true,

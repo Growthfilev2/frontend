@@ -7,6 +7,10 @@ function expenseView(sectionContent) {
         .onsuccess = function (event) {
             const cursor = event.target.result;
             if(!cursor) return
+            if(cursor.value.status === 'CANCELLED') {
+                cursor.continue();
+                return;
+            }
             subs.push(cursor.value)
             cursor.continue();
 
