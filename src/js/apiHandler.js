@@ -747,10 +747,8 @@ function successResponse(read, param, db, resolve, reject) {
         const record = activityEvent.target.result;
         if (!record) return;
         record.assignees.forEach(function (user) {
-          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
-     
+          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;     
           addendumObjectStore.put(currentAddendum);
-
 
           if (number === param.user.phoneNumber) {
             userStore.get(user.phoneNumber).onsuccess = function (event) {

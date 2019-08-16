@@ -348,7 +348,6 @@ function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
   officeRemoveDialog.open();
   officeRemoveDialog.listen('MDCDialog:closed', function () {
-
   });
   return
 }
@@ -424,9 +423,6 @@ function runRead(type) {
     window.dispatchEvent(readEvent);
   }
   return
-
-
-
 }
 
 function debounce(func, wait, immeditate) {

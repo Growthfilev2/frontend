@@ -543,6 +543,14 @@ function emailUpdation(updateOnly) {
       }).catch(handleEmailError)
       return
     })
+    if(!result.length  && !updateOnly)  {
+      const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
+      skipbtn.root_.classList.remove('hidden')
+      skipbtn.root_.addEventListener('click',function(){
+        history.pushState(['reportView'],null,null);
+        reportView();
+      })
+    }
   });
 }
 
@@ -594,7 +602,7 @@ function getReportOffices(result) {
     if (offices.indexOf(report.office) > -1) return
     offices.push(report.office);
   })
-  if(offices.length) {
+  if (offices.length) {
     return `You Are A Recipient In Reports for ${offices.join(', ').replace(/,(?!.*,)/gmi, ' &')}`
   }
   return ''
@@ -629,8 +637,12 @@ ${reportString}
 <button class='mdc-button mdc-theme--primary-bg' id='email-btn'>
 <span class='mdc-button__label mdc-theme--on-primary'>${headings.btnText}<span>
 </button>
-</div>
 
+<button class='mdc-button mt-10 hidden' id='skip-btn'>
+<span class='mdc-button__label'>SKIP<span>
+</button>
+
+</div>
 `
 
 }
