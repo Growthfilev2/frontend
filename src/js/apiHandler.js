@@ -444,56 +444,6 @@ function backblaze(body, meta) {
   return http(req)
 }
 
-function instantUpdateDB(data, type, user) {
-  return new Promise(function (resolve, reject) {
-
-    const idbRequest = indexedDB.open(user.uid);
-
-    idbRequest.onsuccess = function () {
-      const db = idbRequest.result
-      const objStoreTx = db.transaction(['activity'], 'readwrite')
-      const objStore = objStoreTx.objectStore('activity')
-      objStore.get(data.activityId).onsuccess = function (event) {
-        const record = event.target.result
-        record.editable = 0;
-
-        if (type === 'share') {
-          data.share.forEach(function (number) {
-            record.assignees.push(number);
-          })
-          objStore.put(record)
-        }
-        if (type === 'update') {
-          record.schedule = data.schedule;
-          record.attachment = data.attachment
-          for (var i = 0; i < record.venue.length; i++) {
-            record.venue[i].geopoint = {
-              '_latitude': data.venue[i].geopoint['latitude'],
-              '_longitude': data.venue[i].geopoint['longitude']
-            }
-          }
-          objStore.put(record)
-
-        }
-        if (type === 'status') {
-
-          record[type] = data[type]
-          objStore.put(record)
-        }
-
-      }
-      objStoreTx.oncomplete = function () {
-        resolve(true)
-      }
-      objStoreTx.onerror = function () {
-        reject(true);
-      }
-    }
-  })
-}
-
-
-
 
 function updateReports(statusObject, reportObjectStore) {
   console.log(reportObjectStore)
@@ -703,18 +653,15 @@ function successResponse(read, param, db, resolve, reject) {
 
 
   updateReports(read.statusObject, reports)
-
-
   read.activities.forEach(function (activity) {
     activity.canEdit ? activity.editable == 1 : activity.editable == 0;
     activity.activityName = formatTextToTitleCase(activity.activityName)
     activityObjectStore.put(activity);
-
     updateCalendar(activity, updateTx);
     putAttachment(activity, updateTx, param);
 
-
     activity.assignees.forEach(function (user) {
+
       userStore.get(user.phoneNumber).onsuccess = function (event) {
         let selfRecord = event.target.result;
         if (!selfRecord) {
@@ -736,6 +683,7 @@ function successResponse(read, param, db, resolve, reject) {
     })
   })
 
+
   Object.keys(userTimestamp).forEach(function (number) {
     const currentAddendum = userTimestamp[number]
     const activityId = currentAddendum.activityId
@@ -747,7 +695,7 @@ function successResponse(read, param, db, resolve, reject) {
         const record = activityEvent.target.result;
         if (!record) return;
         record.assignees.forEach(function (user) {
-          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;     
+          currentAddendum.key = param.user.phoneNumber + user.phoneNumber;
           addendumObjectStore.put(currentAddendum);
 
           if (number === param.user.phoneNumber) {

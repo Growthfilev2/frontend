@@ -280,12 +280,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       return reject(event.data)
     };
   })
@@ -333,7 +333,7 @@ function updateApp() {
 
 function revokeSession(init) {
   firebase.auth().signOut().then(function () {
-      initApp = init;
+    initApp = init;
     document.getElementById('app-header').classList.add('hidden');
   }).catch(function (error) {
 
@@ -347,8 +347,7 @@ function revokeSession(init) {
 function officeRemovalSuccess(data) {
   const officeRemoveDialog = new Dialog('Reminder', 'You have been removed from ' + data.msg.join(' & ')).create();
   officeRemoveDialog.open();
-  officeRemoveDialog.listen('MDCDialog:closed', function () {
-  });
+  officeRemoveDialog.listen('MDCDialog:closed', function () {});
   return
 }
 
