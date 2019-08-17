@@ -18,7 +18,7 @@ function expenseView(sectionContent) {
     tx.oncomplete = function () {
         console.log(subs)
         if (!subs.length) {
-            sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Expense Claim</h3>'
+            sectionContent.innerHTML = '<h3 class="info-text mdc-typography--headline4 mdc-theme--secondary">You Cannot Apply For Claim</h3>'
             return
         }
         sectionContent.innerHTML = templateList(subs);

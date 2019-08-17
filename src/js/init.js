@@ -217,12 +217,13 @@ function startApp() {
       device: native.getInfo(),
       from: '',
       registerToken: native.getFCMToken()
-    }).then(function (response) {
-      if (response.updateClient) {
+    }).then(function (res) {
+    
+      if (res.response.updateClient) {
         updateApp()
         return
       }
-      if (response.revokeSession) {
+      if (res.response.revokeSession) {
         revokeSession(true);
         return
       };
