@@ -543,11 +543,11 @@ function emailUpdation(updateOnly) {
       }).catch(handleEmailError)
       return
     })
-    if(!result.length  && !updateOnly)  {
+    if (!result.length && !updateOnly) {
       const skipbtn = new mdc.ripple.MDCRipple(document.getElementById('skip-btn'))
       skipbtn.root_.classList.remove('hidden')
-      skipbtn.root_.addEventListener('click',function(){
-        history.pushState(['reportView'],null,null);
+      skipbtn.root_.addEventListener('click', function () {
+        history.pushState(['reportView'], null, null);
         reportView();
       })
     }

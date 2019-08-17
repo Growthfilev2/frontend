@@ -5,7 +5,6 @@ let snackBar;
 let DB_VERSION = 12;
 let initApp = true;
 
-
 function imgErr(source) {
   source.onerror = '';
   source.src = './img/empty-user.jpg';
@@ -197,7 +196,7 @@ function startApp() {
         snacks('Please Re-Install The App')
       }
       return;
-    }
+    };
     console.log("run app")
 
     const startLoad = document.querySelector('#start-load')
