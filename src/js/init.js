@@ -36,7 +36,7 @@ let native = function () {
           deviceInfo[key] = val
         }
       })
-      deviceInfo['idb_version'] = DB_VERSION;
+     
       localStorage.setItem('deviceInfo', JSON.stringify(deviceInfo))
     },
     getIosInfo: function () {
@@ -49,7 +49,8 @@ let native = function () {
         if (!localStorage.getItem('deviceInfo')) {
           localStorage.setItem('deviceInfo', getAndroidDeviceInformation());
         }
-        return localStorage.getItem('deviceInfo')
+        
+        return localStorage.getItem('deviceInfo');
       }
       return this.getIosInfo();
     }
@@ -65,7 +66,7 @@ function getAndroidDeviceInformation() {
     'baseOs': AndroidInterface.getBaseOs(),
     'radioVersion': AndroidInterface.getRadioVersion(),
     'appVersion': Number(AndroidInterface.getAppVersion()),
-    'idb_version':DB_VERSION
+  
   })
 }
 

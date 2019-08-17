@@ -184,8 +184,9 @@ function createMonthlyStat(arSub) {
     .onsuccess = function (event) {
       const cursor = event.target.result;
       if (!cursor) return;
-      const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
+      const recordTimestamp = moment(`${cursor.value.date}-${cursor.value.month +1}-${cursor.value.year}`, 'DD-MM-YYYY').valueOf()
       console.log(recordTimestamp);
+
       if (recordTimestamp > moment().valueOf()) {
         cursor.continue();
         return;

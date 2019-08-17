@@ -65,7 +65,7 @@ self.onmessage = function (event) {
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
     const db = req.result
-
+    
     if (event.data.type === 'now') {
       let rootRecord = ''
       fetchServerTime(event.data.body, event.data.meta, db).then(function (response) {
@@ -157,7 +157,7 @@ function fetchServerTime(body, meta, db) {
   return new Promise(function (resolve, reject) {
     currentDevice = body.device;
     const parsedDeviceInfo = JSON.parse(currentDevice);
-    let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}`
+    let url = `${meta.apiUrl}now?deviceId=${parsedDeviceInfo.id}&appVersion=${parsedDeviceInfo.appVersion}&os=${parsedDeviceInfo.baseOs}&deviceBrand=${parsedDeviceInfo.deviceBrand}&deviceModel=${parsedDeviceInfo.deviceModel}&registrationToken=${body.registerToken}&idb_version=${db.version}`
     const tx = db.transaction(['root'], 'readwrite');
     const rootStore = tx.objectStore('root');
 
