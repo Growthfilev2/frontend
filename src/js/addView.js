@@ -42,7 +42,7 @@ function sendFormToParent(formData) {
     requestCreator('create', formData).then(function () {
             progressBar.close();
             if(formData.template === 'attendance regularization') {
-                successDialog(`You Applied for AR`);
+                successDialog(`You Applied for an AR`);
 
             }
             else {
