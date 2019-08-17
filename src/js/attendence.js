@@ -11,6 +11,10 @@ function attendenceView(sectionContent) {
         cursor.continue();
         return;
       }
+      if (cursor.value.hidden) {
+        cursor.continue();
+        return;
+      }
       if (!subs[cursor.value.template]) {
         subs[cursor.value.template] = [cursor.value]
       } else {

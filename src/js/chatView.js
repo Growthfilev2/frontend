@@ -778,9 +778,9 @@ function share(activity) {
                 el.querySelector('.user-selection-icon').classList.add('user-selection-show');
                 const image = createElement('img', {
                     className: 'mdc-chip__icon mdc-chip__icon--leading',
-                    src: user.photoURL || './img/empty-user.jpg'
+                    src: clickedUser.photoURL || './img/empty-user.jpg'
                 })
-                const newChip = createDynamicChips(user.displayName || user.mobile,index,image);
+                const newChip = createDynamicChips(clickedUser.displayName || clickedUser.mobile,index,image);
                 chipSetEl.appendChild(newChip)
                 chipInit.addChip(newChip)
                 newChip.scrollIntoView({
