@@ -66,47 +66,47 @@ function manageLocation() {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-    if (native.getName() === 'Android') {
-      // html5Geolocation().then(function (htmlLocation) {
-        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
-        handleGeoLocationApi().then(function (cellLocation) {
-          // if (htmlLocation.accuracy < cellLocation.accuracy) {
-          //   return resolve(htmlLocation);
-          // }
-          return resolve(cellLocation)
-        }).catch(function (error) {
-          return resolve(htmlLocation);
-        })
-      // }).catch(function (htmlError) {
-      //   handleGeoLocationApi().then(function (location) {
-      //     return resolve(location);
-      //   }).catch(function (error) {
-      //     return reject({
-      //       message: 'Both HTML and Geolocation failed to fetch location',
-      //       body: {
-      //         html5: htmlError,
-      //         geolocation: error,
-      //       },
-      //       'locationError': true
-      //     })
-      //   })
-      // })
-      return;
-    }
+    // if (native.getName() === 'Android') {
+    // html5Geolocation().then(function (htmlLocation) {
+    // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+    handleGeoLocationApi().then(function (cellLocation) {
+      // if (htmlLocation.accuracy < cellLocation.accuracy) {
+      //   return resolve(htmlLocation);
+      // }
+      return resolve(cellLocation)
+    }).catch(function (error) {
+      return resolve(htmlLocation);
+    })
+    // }).catch(function (htmlError) {
+    //   handleGeoLocationApi().then(function (location) {
+    //     return resolve(location);
+    //   }).catch(function (error) {
+    //     return reject({
+    //       message: 'Both HTML and Geolocation failed to fetch location',
+    //       body: {
+    //         html5: htmlError,
+    //         geolocation: error,
+    //       },
+    //       'locationError': true
+    //     })
+    //   })
+    // })
+    return;
+    // }
 
-    try {
-      webkit.messageHandlers.locationService.postMessage('start');
-      window.addEventListener('iosLocation', function _iosLocation(e) {
-        resolve(e.detail)
-        window.removeEventListener('iosLocation', _iosLocation, true);
-      }, true)
-    } catch (e) {
-      html5Geolocation().then(function (location) {
-        resolve(location)
-      }).catch(function (error) {
-        reject(error)
-      })
-    }
+    // try {
+    //   webkit.messageHandlers.locationService.postMessage('start');
+    //   window.addEventListener('iosLocation', function _iosLocation(e) {
+    //     resolve(e.detail)
+    //     window.removeEventListener('iosLocation', _iosLocation, true);
+    //   }, true)
+    // } catch (e) {
+    //   html5Geolocation().then(function (location) {
+    //     resolve(location)
+    //   }).catch(function (error) {
+    //     reject(error)
+    //   })
+    // }
   })
 }
 
@@ -115,13 +115,13 @@ function handleGeoLocationApi() {
     let body;
     try {
       // body = getCellularInformation();
-      body = {
-        "considerIp": true,
-        "radioType": "LTE",
-        "carrier": "airtel",
-        "homeMobileNetworkCode": 92,
-        "homeMobileCountryCode": 404
-      }
+      body ={
+        "carrier": "Vodafone IN",
+        "homeMobileNetworkCode": 20,
+        "homeMobileCountryCode": 404,
+        "considerIp": false,
+        "radioType": "LTE"
+    }
     } catch (e) {
       reject(e.message);
     }
@@ -223,7 +223,6 @@ function isLocationStatusWorking() {
   return true
 }
 
-let apiHandler = new Worker('js/apiHandler.js');
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
     'instant': true,
@@ -235,8 +234,7 @@ function requestCreator(requestType, requestBody) {
     'geolocationApi': true
   }
   var auth = firebase.auth().currentUser;
-
-
+  let apiHandler = new Worker('js/apiHandler.js');
 
   var requestGenerator = {
     type: requestType,
@@ -288,12 +286,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      // apiHandler.terminate()
+      apiHandler.terminate()
       return reject(event.data)
     };
   })

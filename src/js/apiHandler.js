@@ -253,6 +253,7 @@ function geolocationApi(body, meta) {
       if (xhr.readyState === 4) {
 
         if (meta.retryCount == 0) {
+          console.log('retry end');
           if (xhr.status >= 400) {
             return reject({
               message: xhr.response,
@@ -266,7 +267,7 @@ function geolocationApi(body, meta) {
               body: body
             })
           }
-
+          console.log('resolve location with retry end')
           return resolve({
             latitude: response.location.lat,
             longitude: response.location.lng,
@@ -278,25 +279,28 @@ function geolocationApi(body, meta) {
         }
 
         if (xhr.status >= 400) {
-
-          geolocationApi(body, meta);
+          console.log('retry again : status')
+          geolocationApi(body, meta)
           meta.retryCount--
           return;
         }
         const response = JSON.parse(xhr.response);
 
         if (!response) {
+          console.log('retry again : no response')
 
           geolocationApi(body, meta);
           meta.retryCount--
           return
         }
         if (response.accuracy >= 35000) {
+          console.log('retry again : large accuracy')
 
           geolocationApi(body, meta);
           meta.retryCount--
           return;
         }
+        console.log('resolve with location')
         return resolve({
           latitude: response.location.lat,
           longitude: response.location.lng,
