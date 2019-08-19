@@ -253,8 +253,11 @@ function geolocationApi(body, meta) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           return reject({
-            message: xhr.response,
-            body: body,
+            message: JSON.parse(xhr.response).error.message,
+            body: {
+              geolocationResponse:JSON.parse(xhr.response),
+              geolocationBody:body
+            },
           });
         }
         const response = JSON.parse(xhr.response);

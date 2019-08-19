@@ -12,6 +12,7 @@ function handleError(error) {
   if (errorInStorage.hasOwnProperty(error.message)) return;
   error.device = localStorage.getItem('deviceInfo');
   errorInStorage[error.message] = error
+
   localStorage.setItem('error', JSON.stringify(errorInStorage));
   requestCreator('instant', JSON.stringify(error))
 }
@@ -76,7 +77,7 @@ function getLocation() {
       // }
       return resolve(cellLocation)
     }).catch(function (error) {
-      return resolve(htmlLocation);
+      return reject(error);
     })
     // }).catch(function (htmlError) {
     //   handleGeoLocationApi().then(function (location) {
@@ -125,7 +126,7 @@ function handleCellularInformation(retry) {
           body = getCellularInformation();
           if (!body.considerIp || retry == 0) {
             clearInterval(interval);
-           
+
             resolve(body)
             return;
           }
@@ -144,29 +145,20 @@ function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
     var retry = 2;
     handleCellularInformation(retry).then(function (body) {
-      if(body.considerIp) {
+      if (body.considerIp) {
         handleError({
-          message:'considerIp is true after retry',
-          body:JSON.stringify(body)
+          message: 'considerIp is true after retry',
+          body: JSON.stringify(body)
         })
       }
       console.log(body);
       requestCreator('geolocationApi', body).then(function (result) {
-        // if (result.accuracy >= 35000) {
-        //   if (retry == 0) {
-        //     return resolve(result);
-        //   }
-        //   handleGeoLocationApi()
-        //   retry--
-        // }
         return resolve(result.response);
-      })
-    }).catch(function (error) {
-      debugger;
-      reject(error)
-    })
+      }).catch(reject)
+    }).catch(reject)
   })
 }
+
 
 function iosLocationError(iosError) {
   html5Geolocation().then(function (geopoint) {

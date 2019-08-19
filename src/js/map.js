@@ -19,7 +19,7 @@ function showNoLocationFound(error) {
   document.getElementById('app-header').classList.add('hidden')
   handleError({
     message: error.message,
-    body: JSON.stringify(error.stack)
+    body: JSON.stringify(error.body)
   })
   document.getElementById('app-current-panel').innerHTML = `
     <div class="center-abs location-not-found">

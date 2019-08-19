@@ -51,7 +51,7 @@ function getCellularInformation() {
           "carrier": "Vodafone IN",
           "homeMobileNetworkCode": 20,
           "homeMobileCountryCode": 404,
-          "considerIp": true,
+          "considerIp": false,
           "radioType": "LTE"
         }
 }
