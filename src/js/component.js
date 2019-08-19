@@ -1,4 +1,3 @@
-
 function getCellularInformation() {
 
     let cellTowerQueryString;
@@ -34,7 +33,7 @@ function getCellularInformation() {
     }
     if (radioType) {
         body.radioType = radioType
-    }  
+    }
 
     if (wifiAccessPointsArray.length) {
         body.wifiAccessPoints = wifiAccessPointsArray
@@ -47,9 +46,9 @@ function getCellularInformation() {
     } else {
         body.considerIp = true
     }
-    return body
+
 }
-                                            
+
 function removeFalseCellIds(cellTowers) {
     const max_value = 2147483647
     const filtered = cellTowers.filter(function (tower) {
@@ -94,18 +93,18 @@ function createElement(tagName, attrs) {
     return el;
 }
 
-function Dialog(title, content,id) {
+function Dialog(title, content, id) {
     this.title = title;
     this.content = content;
     this.id = id;
-   
+
 }
 
 Dialog.prototype.create = function (type) {
     const parent = createElement('div', {
         className: 'mdc-dialog',
         role: 'alertDialog',
-        id:this.id
+        id: this.id
     })
     parent.setAttribute('aria-modal', 'true')
     parent.setAttribute('aria-labelledby', 'Title')
@@ -116,8 +115,8 @@ Dialog.prototype.create = function (type) {
     const surface = createElement('div', {
         className: 'mdc-dialog__surface'
     })
-    const h2 = createElement('h2',{
-        className:'mdc-dialog__title',
+    const h2 = createElement('h2', {
+        className: 'mdc-dialog__title',
     })
     h2.innerHTML = this.title
     const footer = createElement('footer', {
@@ -133,12 +132,12 @@ Dialog.prototype.create = function (type) {
         contentContainer.innerHTML = this.content
     }
 
-   
+
     surface.appendChild(h2)
     surface.appendChild(contentContainer);
     if (type !== 'simple') {
 
-         const cancelButton = createElement('button', {
+        const cancelButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
             textContent: 'Close'
@@ -146,7 +145,7 @@ Dialog.prototype.create = function (type) {
         cancelButton.setAttribute('data-mdc-dialog-action', 'close');
 
 
-         const okButton = createElement('button', {
+        const okButton = createElement('button', {
             className: 'mdc-button mdc-dialog__button',
             type: 'button',
             textContent: 'Okay'
@@ -155,8 +154,8 @@ Dialog.prototype.create = function (type) {
         okButton.setAttribute('data-mdc-dialog-action', 'accept')
         footer.appendChild(cancelButton)
         footer.appendChild(okButton);
-    
-    surface.appendChild(footer)
+
+        surface.appendChild(footer)
     }
 
     container.appendChild(surface)
@@ -171,19 +170,19 @@ Dialog.prototype.create = function (type) {
 }
 
 
-function getHeader(parentSelector,sectionStart,sectionEnd){
+function getHeader(parentSelector, sectionStart, sectionEnd) {
     const el = document.getElementById(parentSelector);
     el.querySelector('#section-start').innerHTML = sectionStart;
     el.querySelector('#section-end').innerHTML = sectionEnd;
-   
+
     topAppBar = new mdc.topAppBar.MDCTopAppBar(el)
-  
+
     // topAppBar.foundation_.adapter_.deregisterNavigationIconInteractionHandler('MDCTopAppBar:nav',handleNav);
     return topAppBar;
-    
+
 }
 
-function createSimpleRadio(id,label){
+function createSimpleRadio(id, label) {
     return `<div class='mdc-radio'>
     <input class="mdc-radio__native-control" type="radio" name="demo-radio-set" id=${id}>
     <div class="mdc-radio__background">
@@ -208,7 +207,7 @@ function createSimpleToggle(id) {
   </div>`
 }
 
-function createSimpleMenu(items,id){
+function createSimpleMenu(items, id) {
     return `
     <div class="mdc-menu mdc-menu-surface" id="${id}">
     <ul class="mdc-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
@@ -225,14 +224,16 @@ function createSimpleMenu(items,id){
   `
 }
 
-function menuItemMap(item,geopoint){
-    const li = createElement('li',{className:'mdc-list-item map-menu-item'})
-    li.setAttribute('role','menuitem');
+function menuItemMap(item, geopoint) {
+    const li = createElement('li', {
+        className: 'mdc-list-item map-menu-item'
+    })
+    li.setAttribute('role', 'menuitem');
     let spanTag = `<a target="_blank") href='comgooglemaps://?center=${geopoint._latitude},${geopoint._longitude}' class="mdc-list-item__text" on>${item.name}</span>`
-    if(native.getName() === 'Android') {
+    if (native.getName() === 'Android') {
         spanTag = `<a href='geo:${geopoint._latitude},${geopoint._longitude}?q=${geopoint._latitude},${geopoint._longitude}' class="mdc-list-item__text">${item.name}</a>`
     }
-    
+
     li.innerHTML = `<span class="mdc-list-item__graphic mdc-menu__selection-group-icon">
     <i class='material-icons'>${item.icon}</i>
     </span>

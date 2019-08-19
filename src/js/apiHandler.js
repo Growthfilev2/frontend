@@ -4,7 +4,6 @@ let deviceInfo;
 let currentDevice;
 let meta;
 
-
 function getTime() {
   return Date.now()
 }
@@ -65,7 +64,7 @@ self.onmessage = function (event) {
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
     const db = req.result
-    
+
     if (event.data.type === 'now') {
       let rootRecord = ''
       fetchServerTime(event.data.body, event.data.meta, db).then(function (response) {
@@ -241,6 +240,7 @@ function comment(body, meta) {
   return http(req)
 }
 
+
 function geolocationApi(body, meta) {
 
   return new Promise(function (resolve, reject) {
@@ -253,8 +253,11 @@ function geolocationApi(body, meta) {
       if (xhr.readyState === 4) {
         if (xhr.status >= 400) {
           return reject({
-            message: xhr.response,
-            body: body,
+            message: JSON.parse(xhr.response).error.message,
+            body: {
+              geolocationResponse:JSON.parse(xhr.response),
+              geolocationBody:body
+            },
           });
         }
         const response = JSON.parse(xhr.response);
