@@ -111,17 +111,29 @@ function getLocation() {
 }
 
 function handleGeoLocationApi() {
+  var retry = 2;
   return new Promise(function (resolve, reject) {
     let body;
     try {
-      // body = getCellularInformation();
-      body ={
+      body = getCellularInformation();
+
+      while (retry) {
+        if (body.considerIp) {
+          body = getCellularInformation();
+          retry--
+        } else {
+          break;
+        }
+      }
+      console.log(body);
+
+      body = {
         "carrier": "Vodafone IN",
         "homeMobileNetworkCode": 20,
         "homeMobileCountryCode": 404,
         "considerIp": false,
         "radioType": "LTE"
-    }
+      }
     } catch (e) {
       reject(e.message);
     }
@@ -129,6 +141,13 @@ function handleGeoLocationApi() {
       reject("empty object from getCellularInformation");
     }
     requestCreator('geolocationApi', body).then(function (result) {
+      if (result.accuracy >= 35000) {
+        if (retry == 0) {
+          return resolve(result);
+        }
+        handleGeoLocationApi()
+        retry--
+      }
       return resolve(result.response);
     }).catch(function (error) {
       reject(error)

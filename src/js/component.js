@@ -1,53 +1,59 @@
 
 function getCellularInformation() {
 
-    let cellTowerQueryString;
-    const mcc = AndroidInterface.getMobileCountryCode()
-    const mnc = AndroidInterface.getMobileNetworkCode()
-    const radioType = AndroidInterface.getRadioType()
-    const carrier = AndroidInterface.getCarrier()
-    const wifiQueryString = AndroidInterface.getWifiAccessPoints()
-    try {
-        cellTowerQueryString = AndroidInterface.getCellTowerInformation();
-    } catch (e) {
-        console.log(e)
-    }
+    // let cellTowerQueryString;
+    // const mcc = AndroidInterface.getMobileCountryCode()
+    // const mnc = AndroidInterface.getMobileNetworkCode()
+    // const radioType = AndroidInterface.getRadioType()
+    // const carrier = AndroidInterface.getCarrier()
+    // const wifiQueryString = AndroidInterface.getWifiAccessPoints()
+    // try {
+    //     cellTowerQueryString = AndroidInterface.getCellTowerInformation();
+    // } catch (e) {
+    //     console.log(e)
+    // }
 
-    let wifiAccessPointsArray = [];
-    let cellTowerArray = [];
-    if (wifiQueryString) {
-        wifiAccessPointsArray = parseQuery(wifiQueryString)
-    };
-    if (cellTowerQueryString) {
-        cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
-    }
-    const body = {}
+    // let wifiAccessPointsArray = [];
+    // let cellTowerArray = [];
+    // if (wifiQueryString) {
+    //     wifiAccessPointsArray = parseQuery(wifiQueryString)
+    // };
+    // if (cellTowerQueryString) {
+    //     cellTowerArray = removeFalseCellIds(parseQuery(cellTowerQueryString))
+    // }
+    // const body = {}
 
-    if (mcc) {
-        body.homeMobileCountryCode = Number(mcc)
-    }
-    if (mnc) {
-        body.homeMobileNetworkCode = Number(mnc)
-    }
-    if (carrier) {
-        body.carrier = carrier
-    }
-    if (radioType) {
-        body.radioType = radioType
-    }  
+    // if (mcc) {
+    //     body.homeMobileCountryCode = Number(mcc)
+    // }
+    // if (mnc) {
+    //     body.homeMobileNetworkCode = Number(mnc)
+    // }
+    // if (carrier) {
+    //     body.carrier = carrier
+    // }
+    // if (radioType) {
+    //     body.radioType = radioType
+    // }  
 
-    if (wifiAccessPointsArray.length) {
-        body.wifiAccessPoints = wifiAccessPointsArray
-    }
-    if (cellTowerArray.length) {
-        body.cellTowers = cellTowerArray;
-    }
-    if (wifiAccessPointsArray.length && cellTowerArray.length) {
-        body.considerIp = false
-    } else {
-        body.considerIp = true
-    }
-    return body
+    // if (wifiAccessPointsArray.length) {
+    //     body.wifiAccessPoints = wifiAccessPointsArray
+    // }
+    // if (cellTowerArray.length) {
+    //     body.cellTowers = cellTowerArray;
+    // }
+    // if (wifiAccessPointsArray.length && cellTowerArray.length) {
+    //     body.considerIp = false
+    // } else {
+    //     body.considerIp = true
+    // }
+    return {
+          "carrier": "Vodafone IN",
+          "homeMobileNetworkCode": 20,
+          "homeMobileCountryCode": 404,
+          "considerIp": false,
+          "radioType": "LTE"
+        }
 }
                                             
 function removeFalseCellIds(cellTowers) {

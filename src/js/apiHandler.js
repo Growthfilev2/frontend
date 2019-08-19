@@ -251,57 +251,20 @@ function geolocationApi(body, meta) {
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
-
-        if (meta.retryCount == 0) {
-          console.log('retry end');
-          if (xhr.status >= 400) {
-            return reject({
-              message: xhr.response,
-              body: body,
-            });
-          }
-          const response = JSON.parse(xhr.response);
-          if (!response) {
-            return reject({
-              message: 'Response From geolocation Api ' + response,
-              body: body
-            })
-          }
-          console.log('resolve location with retry end')
-          return resolve({
-            latitude: response.location.lat,
-            longitude: response.location.lng,
-            accuracy: response.accuracy,
-            provider: body,
-            lastLocationTime: Date.now()
-          });
-
-        }
-
         if (xhr.status >= 400) {
-          console.log('retry again : status')
-          geolocationApi(body, meta)
-          meta.retryCount--
-          return;
+          return reject({
+            message: xhr.response,
+            body: body,
+          });
         }
         const response = JSON.parse(xhr.response);
-
         if (!response) {
-          console.log('retry again : no response')
-
-          geolocationApi(body, meta);
-          meta.retryCount--
-          return
+          return reject({
+            message: 'Response From geolocation Api ' + response,
+            body: body
+          })
         }
-        if (response.accuracy >= 35000) {
-          console.log('retry again : large accuracy')
-
-          geolocationApi(body, meta);
-          meta.retryCount--
-          return;
-        }
-        console.log('resolve with location')
-        return resolve({
+        resolve({
           latitude: response.location.lat,
           longitude: response.location.lng,
           accuracy: response.accuracy,
@@ -310,12 +273,13 @@ function geolocationApi(body, meta) {
         });
       }
     };
-    xhr.send(JSON.stringify(body));
     xhr.onerror = function () {
       reject({
         message: xhr
       })
     }
+    xhr.send(JSON.stringify(body));
+
   });
 
 }
