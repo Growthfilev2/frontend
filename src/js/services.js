@@ -110,6 +110,38 @@ function getLocation() {
   })
 }
 
+function retryGetCellularInformation(retry){
+  return new Promise(function(resolve,reject){
+
+      try {
+        body = getCellularInformation();
+        if(retry ==0) {
+          if(failedMessage) {
+            return reject(failedMessage);
+          };
+          return resolve(body)
+        };
+
+        if(body.considerIp) {
+          setTimeout(function(){
+            retryGetCellularInformation(retry - 1)
+          },1000)
+          return
+        };
+
+        resolve(body);
+      }
+      catch(e){
+        setTimeout(function(){
+          retryGetCellularInformation(retry - 1,e).then(function(){
+            resolve();
+          });
+        },1000)
+      }
+  
+  })
+}
+
 function handleGeoLocationApi() {
   var retry = 2;
   return new Promise(function (resolve, reject) {
@@ -117,14 +149,21 @@ function handleGeoLocationApi() {
     try {
       body = getCellularInformation();
 
-      while (retry) {
-        if (body.considerIp) {
+      if(body.considerIp) {
+        // retryGetCellularInformation(2)
+        var interval = setInterval(function(){
           body = getCellularInformation();
+          if(!body.considerIp || retry == 0) {
+            clearInterval(interval);
+            
+            return;
+          }
           retry--
-        } else {
-          break;
-        }
+        },1000)
+        return;
       }
+
+  
       console.log(body);
 
       body = {
