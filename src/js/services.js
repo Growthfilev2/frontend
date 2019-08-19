@@ -67,48 +67,48 @@ function manageLocation() {
 
 function getLocation() {
   return new Promise(function (resolve, reject) {
-    // if (native.getName() === 'Android') {
-    // html5Geolocation().then(function (htmlLocation) {
-    // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+    if (native.getName() === 'Android') {
+      html5Geolocation().then(function (htmlLocation) {
+        if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
 
-    handleGeoLocationApi().then(function (cellLocation) {
-      // if (htmlLocation.accuracy < cellLocation.accuracy) {
-      //   return resolve(htmlLocation);
-      // }
-      return resolve(cellLocation)
-    }).catch(function (error) {
-      return reject(error);
-    })
-    // }).catch(function (htmlError) {
-    //   handleGeoLocationApi().then(function (location) {
-    //     return resolve(location);
-    //   }).catch(function (error) {
-    //     return reject({
-    //       message: 'Both HTML and Geolocation failed to fetch location',
-    //       body: {
-    //         html5: htmlError,
-    //         geolocation: error,
-    //       },
-    //       'locationError': true
-    //     })
-    //   })
-    // })
-    return;
-    // }
+        handleGeoLocationApi().then(function (cellLocation) {
+          if (htmlLocation.accuracy < cellLocation.accuracy) {
+            return resolve(htmlLocation);
+          }
+          return resolve(cellLocation)
+        }).catch(function (error) {
+          return resolve(htmlLocation);
+        })
+      }).catch(function (htmlError) {
+        handleGeoLocationApi().then(function (location) {
+          return resolve(location);
+        }).catch(function (error) {
+          return reject({
+            message: 'Both HTML and Geolocation failed to fetch location',
+            body: {
+              html5: htmlError,
+              geolocation: error,
+            },
+            'locationError': true
+          })
+        })
+      })
+      return;
+    }
 
-    // try {
-    //   webkit.messageHandlers.locationService.postMessage('start');
-    //   window.addEventListener('iosLocation', function _iosLocation(e) {
-    //     resolve(e.detail)
-    //     window.removeEventListener('iosLocation', _iosLocation, true);
-    //   }, true)
-    // } catch (e) {
-    //   html5Geolocation().then(function (location) {
-    //     resolve(location)
-    //   }).catch(function (error) {
-    //     reject(error)
-    //   })
-    // }
+    try {
+      webkit.messageHandlers.locationService.postMessage('start');
+      window.addEventListener('iosLocation', function _iosLocation(e) {
+        resolve(e.detail)
+        window.removeEventListener('iosLocation', _iosLocation, true);
+      }, true)
+    } catch (e) {
+      html5Geolocation().then(function (location) {
+        resolve(location)
+      }).catch(function (error) {
+        reject(error)
+      })
+    }
   })
 }
 
