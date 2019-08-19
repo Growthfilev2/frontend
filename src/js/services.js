@@ -273,7 +273,7 @@ function requestCreator(requestType, requestBody) {
       },
       key: appKey.getMapKey(),
       apiUrl: appKey.getBaseUrl(),
-      retryCount: 2
+     
     }
   };
 

@@ -164,7 +164,9 @@ function homeHeaderStartContent(name) {
 
 
 function homeView(suggestedTemplates) {
+  try{
 
+  
   progressBar.close();
   history.pushState(['homeView'], null, null);
   let clearIcon = '';
@@ -207,7 +209,7 @@ function homeView(suggestedTemplates) {
       }).catch(showNoLocationFound)
     })
   };
-  const commonTaskList = new mdc.list.MDCList(document.getElementById('common-task-list'));
+  const commonTaskList = new mdc.list.MDCList(document.getElementById('common-task-lis'));
   commonTaskList.listen('MDCList:action', function (commonListEvent) {
     console.log(commonListEvent)
     if (commonListEvent.detail.index == 0) {
@@ -282,7 +284,12 @@ function homeView(suggestedTemplates) {
 
   const suggestedInit = new mdc.list.MDCList(document.getElementById('suggested-list'))
   handleTemplateListClick(suggestedInit);
-
+}catch(e){
+  handleError({
+    message:e.message,
+    body:JSON.stringify(e.stack)
+  })
+}
 
 }
 

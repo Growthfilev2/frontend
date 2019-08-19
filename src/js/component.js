@@ -46,6 +46,7 @@ function getCellularInformation() {
     } else {
         body.considerIp = true
     }
+    return body;
 
 }
 
