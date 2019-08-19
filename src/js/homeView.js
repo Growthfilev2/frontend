@@ -211,6 +211,8 @@ function homeView(suggestedTemplates) {
   commonTaskList.listen('MDCList:action', function (commonListEvent) {
     console.log(commonListEvent)
     if (commonListEvent.detail.index == 0) {
+      history.pushState(['chatView'], null, null);
+      chatView();
       const tx = db.transaction('root', 'readwrite');
       const store = tx.objectStore('root')
       store.get(firebase.auth().currentUser.uid).onsuccess = function (event) {
@@ -218,17 +220,14 @@ function homeView(suggestedTemplates) {
         rootRecord.totalCount = 0;
         store.put(rootRecord)
       }
-      tx.oncomplete = function () {
-        history.pushState(['chatView'], null, null);
-        chatView()
-      }
       return;
     };
 
-    history.pushState(['snapView'], null, null)
+    
     const offices = Object.keys(ApplicationState.officeWithCheckInSubs)
     if (offices.length == 1) {
-      photoOffice = offices[0]
+      photoOffice = offices[0];
+      history.pushState(['snapView'], null, null)
       snapView()
       return
     }
@@ -248,6 +247,7 @@ function homeView(suggestedTemplates) {
     bottomDialog(dialog, ul)
     ul.listen('MDCList:action', function (e) {
       photoOffice = offices[e.detail.index]
+      history.pushState(['snapView'], null, null)
       snapView()
       dialog.close();
     })
@@ -551,7 +551,7 @@ function emailUpdation(updateOnly) {
         reportView();
       })
     }
-  });
+  })
 }
 
 function emailVerificationWait(updateOnly) {
