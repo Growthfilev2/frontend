@@ -67,30 +67,30 @@ function manageLocation() {
 function getLocation() {
   return new Promise(function (resolve, reject) {
     if (native.getName() === 'Android') {
-      html5Geolocation().then(function (htmlLocation) {
+      // html5Geolocation().then(function (htmlLocation) {
         if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
         handleGeoLocationApi().then(function (cellLocation) {
-          if (htmlLocation.accuracy < cellLocation.accuracy) {
-            return resolve(htmlLocation);
-          }
+          // if (htmlLocation.accuracy < cellLocation.accuracy) {
+          //   return resolve(htmlLocation);
+          // }
           return resolve(cellLocation)
         }).catch(function (error) {
           return resolve(htmlLocation);
         })
-      }).catch(function (htmlError) {
-        handleGeoLocationApi().then(function (location) {
-          return resolve(location);
-        }).catch(function (error) {
-          return reject({
-            message: 'Both HTML and Geolocation failed to fetch location',
-            body: {
-              html5: htmlError,
-              geolocation: error,
-            },
-            'locationError': true
-          })
-        })
-      })
+      // }).catch(function (htmlError) {
+      //   handleGeoLocationApi().then(function (location) {
+      //     return resolve(location);
+      //   }).catch(function (error) {
+      //     return reject({
+      //       message: 'Both HTML and Geolocation failed to fetch location',
+      //       body: {
+      //         html5: htmlError,
+      //         geolocation: error,
+      //       },
+      //       'locationError': true
+      //     })
+      //   })
+      // })
       return;
     }
 
@@ -114,7 +114,14 @@ function handleGeoLocationApi() {
   return new Promise(function (resolve, reject) {
     let body;
     try {
-      body = getCellularInformation();
+      // body = getCellularInformation();
+      body = {
+        "considerIp": true,
+        "radioType": "LTE",
+        "carrier": "airtel",
+        "homeMobileNetworkCode": 92,
+        "homeMobileCountryCode": 404
+      }
     } catch (e) {
       reject(e.message);
     }
@@ -216,6 +223,7 @@ function isLocationStatusWorking() {
   return true
 }
 
+let apiHandler = new Worker('js/apiHandler.js');
 function requestCreator(requestType, requestBody) {
   const nonLocationRequest = {
     'instant': true,
@@ -229,7 +237,6 @@ function requestCreator(requestType, requestBody) {
   var auth = firebase.auth().currentUser;
 
 
-  let apiHandler = new Worker('js/apiHandler.js');
 
   var requestGenerator = {
     type: requestType,
@@ -243,7 +250,8 @@ function requestCreator(requestType, requestBody) {
         phoneNumber: auth.phoneNumber,
       },
       key: appKey.getMapKey(),
-      apiUrl: appKey.getBaseUrl()
+      apiUrl: appKey.getBaseUrl(),
+      retryCount: 2
     }
   };
 
@@ -280,12 +288,12 @@ function requestCreator(requestType, requestBody) {
   });
   return new Promise(function (resolve, reject) {
     apiHandler.onmessage = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       if (!event.data.success) return reject(event.data)
       return resolve(event.data)
     }
     apiHandler.onerror = function (event) {
-      apiHandler.terminate()
+      // apiHandler.terminate()
       return reject(event.data)
     };
   })

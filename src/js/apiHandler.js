@@ -4,7 +4,6 @@ let deviceInfo;
 let currentDevice;
 let meta;
 
-
 function getTime() {
   return Date.now()
 }
@@ -65,7 +64,7 @@ self.onmessage = function (event) {
   const req = indexedDB.open(event.data.meta.user.uid);
   req.onsuccess = function () {
     const db = req.result
-    
+
     if (event.data.type === 'now') {
       let rootRecord = ''
       fetchServerTime(event.data.body, event.data.meta, db).then(function (response) {
@@ -241,6 +240,7 @@ function comment(body, meta) {
   return http(req)
 }
 
+
 function geolocationApi(body, meta) {
 
   return new Promise(function (resolve, reject) {
@@ -251,20 +251,53 @@ function geolocationApi(body, meta) {
     xhr.onreadystatechange = function () {
 
       if (xhr.readyState === 4) {
-        if (xhr.status >= 400) {
-          return reject({
-            message: xhr.response,
-            body: body,
+
+        if (meta.retryCount == 0) {
+          if (xhr.status >= 400) {
+            return reject({
+              message: xhr.response,
+              body: body,
+            });
+          }
+          const response = JSON.parse(xhr.response);
+          if (!response) {
+            return reject({
+              message: 'Response From geolocation Api ' + response,
+              body: body
+            })
+          }
+
+          return resolve({
+            latitude: response.location.lat,
+            longitude: response.location.lng,
+            accuracy: response.accuracy,
+            provider: body,
+            lastLocationTime: Date.now()
           });
+
+        }
+
+        if (xhr.status >= 400) {
+
+          geolocationApi(body, meta);
+          meta.retryCount--
+          return;
         }
         const response = JSON.parse(xhr.response);
+
         if (!response) {
-          return reject({
-            message: 'Response From geolocation Api ' + response,
-            body: body
-          })
+
+          geolocationApi(body, meta);
+          meta.retryCount--
+          return
         }
-        resolve({
+        if (response.accuracy >= 35000) {
+
+          geolocationApi(body, meta);
+          meta.retryCount--
+          return;
+        }
+        return resolve({
           latitude: response.location.lat,
           longitude: response.location.lng,
           accuracy: response.accuracy,
@@ -273,13 +306,12 @@ function geolocationApi(body, meta) {
         });
       }
     };
+    xhr.send(JSON.stringify(body));
     xhr.onerror = function () {
       reject({
         message: xhr
       })
     }
-    xhr.send(JSON.stringify(body));
-
   });
 
 }
