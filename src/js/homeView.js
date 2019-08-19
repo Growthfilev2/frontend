@@ -454,7 +454,7 @@ function updateName() {
     }
     progressBar.open();
     auth.updateProfile({
-      displayName: formatTextToTitleCase(nameField.value)
+      displayName: nameField.value.trim()
     }).then(function () {
       progressBar.close();
       history.back();

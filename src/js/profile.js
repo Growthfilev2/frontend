@@ -150,7 +150,7 @@ function createViewProfile() {
                           }).join("")}
                           </h1>`
         }
-
+        
         if (leaves.length) {
           document.getElementById('leaves').innerHTML = `<h1 class="mdc-typography--headline6 mb-0">
                           Remaining Leaves
