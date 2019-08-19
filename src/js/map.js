@@ -554,7 +554,6 @@ function loadNearByLocations(o, map, location) {
     }
     tx.oncomplete = function () {
       map.fitBounds(bounds);
-      console.log(result)
       return resolve(result)
     }
   })

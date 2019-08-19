@@ -484,7 +484,7 @@ function emailUpdation(updateOnly) {
   `
   const header = getHeader('app-header', backIcon, '');
   header.root_.classList.remove('hidden');
-
+  
   getEmployeeDetails(IDBKeyRange.bound(['recipient', 'CONFIRMED'], ['recipient', 'PENDING']), 'templateStatus').then(function (result) {
 
     document.getElementById('app-current-panel').innerHTML = `<div class='mdc-layout-grid update-email'>

@@ -120,8 +120,9 @@ function handleGeoLocationApi() {
     }
     if (!Object.keys(body).length) {
       reject("empty object from getCellularInformation");
-    }
+    };
     requestCreator('geolocationApi', body).then(function (result) {
+    
       return resolve(result.response);
     }).catch(function (error) {
       reject(error)
