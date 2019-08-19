@@ -69,6 +69,7 @@ function getLocation() {
     // if (native.getName() === 'Android') {
     // html5Geolocation().then(function (htmlLocation) {
     // if (htmlLocation.accuracy <= 350) return resolve(htmlLocation);
+
     handleGeoLocationApi().then(function (cellLocation) {
       // if (htmlLocation.accuracy < cellLocation.accuracy) {
       //   return resolve(htmlLocation);
@@ -110,85 +111,58 @@ function getLocation() {
   })
 }
 
-function retryGetCellularInformation(retry){
-  return new Promise(function(resolve,reject){
+function handleCellularInformation(retry) {
+  return new Promise(function (resolve, reject) {
 
-      try {
-        body = getCellularInformation();
-        if(retry ==0) {
-          if(failedMessage) {
-            return reject(failedMessage);
-          };
-          return resolve(body)
-        };
-
-        if(body.considerIp) {
-          setTimeout(function(){
-            retryGetCellularInformation(retry - 1)
-          },1000)
-          return
-        };
-
-        resolve(body);
+    try {
+      body = getCellularInformation();
+      if (!Object.keys(body).length) {
+        reject("empty object from getCellularInformation");
       }
-      catch(e){
-        setTimeout(function(){
-          retryGetCellularInformation(retry - 1,e).then(function(){
-            resolve();
-          });
-        },1000)
+      if (body.considerIp) {
+
+        var interval = setInterval(function () {
+          body = getCellularInformation();
+          if (!body.considerIp || retry == 0) {
+            clearInterval(interval);
+           
+            resolve(body)
+            return;
+          }
+          retry--
+        }, 1000)
+        return;
       }
-  
+      return resolve(body)
+    } catch (e) {
+      reject(e)
+    }
   })
 }
 
 function handleGeoLocationApi() {
-  var retry = 2;
   return new Promise(function (resolve, reject) {
-    let body;
-    try {
-      body = getCellularInformation();
-
+    var retry = 2;
+    handleCellularInformation(retry).then(function (body) {
       if(body.considerIp) {
-        // retryGetCellularInformation(2)
-        var interval = setInterval(function(){
-          body = getCellularInformation();
-          if(!body.considerIp || retry == 0) {
-            clearInterval(interval);
-            
-            return;
-          }
-          retry--
-        },1000)
-        return;
+        handleError({
+          message:'considerIp is true after retry',
+          body:JSON.stringify(body)
+        })
       }
-
-  
       console.log(body);
-
-      body = {
-        "carrier": "Vodafone IN",
-        "homeMobileNetworkCode": 20,
-        "homeMobileCountryCode": 404,
-        "considerIp": false,
-        "radioType": "LTE"
-      }
-    } catch (e) {
-      reject(e.message);
-    }
-    if (!Object.keys(body).length) {
-      reject("empty object from getCellularInformation");
-    }
-    requestCreator('geolocationApi', body).then(function (result) {
-      if (result.accuracy >= 35000) {
-        if (retry == 0) {
-          return resolve(result);
-        }
-        handleGeoLocationApi()
-        retry--
-      }
-      return resolve(result.response);
+      requestCreator('geolocationApi', body).then(function (result) {
+        // if (result.accuracy >= 35000) {
+        //   if (retry == 0) {
+        //     return resolve(result);
+        //   }
+        //   handleGeoLocationApi()
+        //   retry--
+        // }
+        return resolve(result.response);
+      })
     }).catch(function (error) {
+      debugger;
       reject(error)
     })
   })
